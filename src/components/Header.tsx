@@ -1,54 +1,64 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useState } from 'react'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { Menu, X } from 'lucide-react'
+import { mainNav } from '@/config/navigation'
 
 export default function Header() {
-  const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
-    <header className="bg-white border-b border-gray-100">
-      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20">
-          <div className="flex">
-            <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-2xl font-bold text-tiffany hover:text-tiffany-dark transition-colors">
-                Palfare
-              </Link>
-            </div>
-            <div className="hidden sm:ml-8 sm:flex sm:space-x-8">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200">
+      <div className="container">
+        <div className="flex items-center justify-between h-20">
+          <Link href="/" className="text-2xl font-bold text-slate-900">
+            Palfare
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center space-x-8">
+            {mainNav.map((item) => (
               <Link
-                href="/"
-                className={`inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors ${
-                  pathname === '/'
-                    ? 'text-tiffany border-b-2 border-tiffany'
-                    : 'text-gray-500 hover:text-tiffany'
-                }`}
+                key={item.href}
+                href={item.href}
+                className="text-slate-600 hover:text-tiffany transition-colors"
               >
-                Home
+                {item.name}
               </Link>
-              <Link
-                href="/about"
-                className={`inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors ${
-                  pathname === '/about'
-                    ? 'text-tiffany border-b-2 border-tiffany'
-                    : 'text-gray-500 hover:text-tiffany'
-                }`}
-              >
-                About
-              </Link>
-            </div>
-          </div>
-          <div className="flex items-center">
-            <Link
-              href="/create"
-              className="ml-8 inline-flex items-center justify-center px-6 py-3 border border-transparent rounded-full text-sm font-medium text-white bg-tiffany hover:bg-tiffany-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-tiffany transition-colors shadow-sm"
-            >
-              Create Donation Page
-            </Link>
-          </div>
+            ))}
+          </nav>
+
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden p-2 text-slate-600 hover:text-tiffany transition-colors"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
-      </nav>
+
+        {/* Mobile Navigation */}
+        <motion.nav
+          initial={false}
+          animate={{ height: mobileMenuOpen ? 'auto' : 0 }}
+          className="md:hidden"
+        >
+          <div className="py-4 space-y-2">
+            {mainNav.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="block py-2 text-slate-600 hover:text-tiffany transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+        </motion.nav>
+      </div>
     </header>
-  );
+  )
 } 
