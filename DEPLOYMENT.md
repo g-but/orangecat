@@ -1,7 +1,7 @@
 # Palfare Deployment Guide
 
 ## Current Status
-- Branch: `feature/initial-setup`
+- Branch: `main`
 - Last Commit: "Prepare for production deployment to palfare.com"
 - Environment: Production
 - Target Domain: palfare.com
@@ -13,30 +13,35 @@
    - BlockCypher API Key
    - Vercel Deployment Token
 
-## Environment Variables
-Required environment variables for production:
-```env
-NEXT_PUBLIC_SITE_URL=https://palfare.com
-NEXT_PUBLIC_SITE_NAME=Palfare
-NEXT_PUBLIC_BLOCKCYPHER_API_KEY=your_production_api_key
-NODE_ENV=production
-```
+## Environment Variables Setup
+
+### Vercel Environment Variables
+1. Go to Project Settings > Environment Variables
+2. Copy the contents of `.env.example` (excluding comments) into the environment variables section
+3. Replace placeholder values with actual production values
+4. Enable "Automatically expose System Environment Variables"
+5. For sensitive values (like API keys), enable "Sensitive" option
+
+### Local Development
+1. Copy `.env.example` to `.env.local`
+2. Uncomment and update development variables
+3. Never commit `.env.local` to version control
 
 ## Deployment Steps
 
 ### 1. Domain Configuration
 1. Configure DNS records for palfare.com
-2. Set up SSL certificate
+2. Set up SSL certificate (automatic with Vercel)
 3. Configure domain in Vercel
 
 ### 2. Environment Setup
-1. Set environment variables in Vercel
-2. Verify API keys
-3. Configure build settings
+1. Set environment variables in Vercel as described above
+2. Verify API keys are properly configured
+3. Configure build settings in Vercel
 
 ### 3. Deployment Process
-1. Merge `feature/initial-setup` to `main`
-2. Trigger deployment
+1. Push to `main` branch
+2. Vercel will automatically deploy
 3. Verify deployment success
 
 ### 4. Post-Deployment Checks
