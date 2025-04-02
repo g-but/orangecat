@@ -7,7 +7,7 @@ import ClientErrorBoundary from '@/components/ClientErrorBoundary'
 
 const inter = Inter({ subsets: ['latin'] })
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://palfare.com'
 const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Palfare'
 
 export const metadata: Metadata = {
@@ -22,11 +22,16 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     siteName: siteName,
+    url: siteUrl,
   },
   twitter: {
     card: 'summary_large_image',
     title: `${siteName} - Bitcoin Donation Platform`,
     description: 'A platform for accepting Bitcoin donations with ease.',
+  },
+  robots: {
+    index: true,
+    follow: true,
   },
 }
 
