@@ -3,7 +3,10 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['www.blockcypher.com'],
+    domains: ['localhost'],
+  },
+  experimental: {
+    serverActions: true,
   },
   async headers() {
     return [
