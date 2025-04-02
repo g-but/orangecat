@@ -141,7 +141,7 @@ Commit and push your code to a GitHub repository.
 
 > “Replace coercion with cooperation. Replace mandates with trust. Replace bureaucracy with code.”
 
-Palfare is a **non-violent, voluntary system of support**. It’s transparent, censorship-resistant, and built for people who believe accountability beats ideology.
+Palfare is a **non-violent, voluntary system of support**. It's transparent, censorship-resistant, and built for people who believe accountability beats ideology.
 
 ---
 
