@@ -7,9 +7,9 @@ export default function AboutPage() {
   return (
     <div className="bg-white">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-indigo-500 to-purple-600">
+      <div className="relative bg-gradient-to-br from-[#0ABAB5] to-[#0A9A95]">
         <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 mix-blend-multiply" />
+          <div className="absolute inset-0 bg-gradient-to-br from-[#0ABAB5] to-[#0A9A95] mix-blend-multiply" />
         </div>
         <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
           <motion.h1
@@ -24,7 +24,7 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-xl text-indigo-100 max-w-3xl"
+            className="mt-6 text-xl text-white/90 max-w-3xl"
           >
             Palfare makes it simple for anyone to accept Bitcoin donations with a beautiful, customizable page.
           </motion.p>
@@ -96,10 +96,10 @@ export default function AboutPage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 className="pt-6"
               >
-                <div className="flow-root bg-gray-50 rounded-lg px-6 pb-8">
+                <div className="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition-shadow">
                   <div className="-mt-6">
                     <div>
-                      <span className="inline-flex items-center justify-center p-3 bg-indigo-500 rounded-md shadow-lg">
+                      <span className="inline-flex items-center justify-center p-3 bg-[#0ABAB5] rounded-full shadow-lg">
                         <span className="text-3xl">{feature.icon}</span>
                       </span>
                     </div>
@@ -157,7 +157,7 @@ export default function AboutPage() {
                   transition={{ duration: 0.5, delay: index * 0.2 }}
                   className="relative"
                 >
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-md bg-indigo-500 text-white">
+                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-full bg-[#0ABAB5] text-white shadow-lg">
                     {step.step}
                   </div>
                   <div className="ml-16">
@@ -174,7 +174,7 @@ export default function AboutPage() {
       {/* CTA Section */}
       <div className="bg-white">
         <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-          <div className="bg-indigo-700 rounded-lg shadow-xl overflow-hidden">
+          <div className="bg-gradient-to-r from-[#0ABAB5] to-[#0A9A95] rounded-2xl shadow-xl overflow-hidden">
             <div className="pt-16 pb-12 px-6 sm:pt-20 sm:px-16 lg:py-16 lg:pr-0 xl:py-20 xl:px-20">
               <div className="lg:self-center">
                 <motion.h2
@@ -191,7 +191,7 @@ export default function AboutPage() {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="mt-4 text-lg leading-6 text-indigo-200"
+                  className="mt-4 text-lg leading-6 text-white/90"
                 >
                   Create your donation page in minutes and start receiving Bitcoin donations today.
                 </motion.p>
@@ -204,7 +204,7 @@ export default function AboutPage() {
                 >
                   <Link
                     href="/create"
-                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-indigo-600 bg-white hover:bg-indigo-50"
+                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-[#0ABAB5] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors shadow-sm"
                   >
                     Create Your Page
                   </Link>
