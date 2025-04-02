@@ -7,22 +7,25 @@ import ClientErrorBoundary from '@/components/ClientErrorBoundary'
 
 const inter = Inter({ subsets: ['latin'] })
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Palfare'
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
-  title: 'Palfare - Bitcoin Donation Platform',
+  metadataBase: new URL(siteUrl),
+  title: `${siteName} - Bitcoin Donation Platform`,
   description: 'A platform for accepting Bitcoin donations with ease.',
   keywords: ['bitcoin', 'donation', 'crypto', 'blockchain'],
-  authors: [{ name: 'Palfare Team' }],
+  authors: [{ name: `${siteName} Team` }],
   openGraph: {
-    title: 'Palfare - Bitcoin Donation Platform',
+    title: `${siteName} - Bitcoin Donation Platform`,
     description: 'A platform for accepting Bitcoin donations with ease.',
     type: 'website',
     locale: 'en_US',
-    siteName: 'Palfare',
+    siteName: siteName,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Palfare - Bitcoin Donation Platform',
+    title: `${siteName} - Bitcoin Donation Platform`,
     description: 'A platform for accepting Bitcoin donations with ease.',
   },
 }
