@@ -35,7 +35,7 @@ export default class ErrorBoundary extends React.Component<Props, State> {
                 Something went wrong
               </h2>
               <p className="mt-2 text-sm text-gray-600">
-                We're sorry, but something went wrong. Please try refreshing the page.
+                We&apos;re sorry, but something went wrong. Please try refreshing the page.
               </p>
             </div>
             <div>
