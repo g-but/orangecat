@@ -1,11 +1,14 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import ErrorBoundary from '@/components/ErrorBoundary'
+import Header from '@/components/layout/Header'
+import Footer from '@/components/layout/Footer'
+import ClientErrorBoundary from '@/components/ClientErrorBoundary'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
   title: 'Palfare - Bitcoin Donation Platform',
   description: 'A platform for accepting Bitcoin donations with ease.',
   keywords: ['bitcoin', 'donation', 'crypto', 'blockchain'],
@@ -32,9 +35,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ErrorBoundary>
-          {children}
-        </ErrorBoundary>
+        <ClientErrorBoundary>
+          <div className="min-h-screen flex flex-col">
+            <Header />
+            <main className="flex-grow pt-16">{children}</main>
+            <Footer />
+          </div>
+        </ClientErrorBoundary>
       </body>
     </html>
   )
