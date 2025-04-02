@@ -20,6 +20,10 @@ module.exports = {
           800: '#075985',
           900: '#0c4a6e',
         },
+        'tiffany': {
+          DEFAULT: '#0ABAB5',
+          dark: '#0A9A95',
+        },
       },
       fontFamily: {
         sans: ['var(--font-inter)'],
