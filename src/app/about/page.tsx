@@ -1,219 +1,141 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import Link from 'next/link';
+import { Bitcoin, Zap, Shield, Globe, Eye, Settings, ArrowRight } from 'lucide-react';
+
+const values = [
+  {
+    icon: Bitcoin,
+    title: 'Bitcoin First',
+    description: 'We believe in Bitcoin as the future of money and are committed to building tools that make it accessible to everyone.',
+  },
+  {
+    icon: Zap,
+    title: 'Simplicity',
+    description: 'We keep things simple. No unnecessary complexity, no hidden fees, just straightforward Bitcoin donations.',
+  },
+  {
+    icon: Shield,
+    title: 'Privacy',
+    description: 'Your privacy matters. We don\'t require accounts or personal information to use our service.',
+  },
+  {
+    icon: Globe,
+    title: 'Global',
+    description: 'Bitcoin knows no borders. We\'re building tools that work for everyone, everywhere.',
+  },
+];
+
+const steps = [
+  {
+    icon: Settings,
+    title: 'Create Your Page',
+    description: 'Set up your donation page in minutes. Customize your message, add your Bitcoin address, and choose how you want to engage with your community.',
+  },
+  {
+    icon: Eye,
+    title: 'Transparent Transactions',
+    description: 'All Bitcoin transactions are public by nature. We make it easy to view and engage with your transaction history, building trust through transparency.',
+  },
+  {
+    icon: Bitcoin,
+    title: 'Engage & Build Trust',
+    description: 'Comment on incoming and outgoing transactions, explain where funds are going, and interact with your donors. This open dialogue creates a transparent and trustworthy donation ecosystem.',
+  },
+];
 
 export default function AboutPage() {
   return (
-    <div className="bg-white">
-      {/* Hero Section */}
-      <div className="relative bg-gradient-to-br from-[#0ABAB5] to-[#0A9A95]">
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#0ABAB5] to-[#0A9A95] mix-blend-multiply" />
-        </div>
-        <div className="relative max-w-7xl mx-auto py-24 px-4 sm:py-32 sm:px-6 lg:px-8">
-          <motion.h1
+    <main className="min-h-screen pt-20">
+      <section className="section">
+        <div className="container">
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl"
+            className="max-w-3xl mx-auto text-center mb-16"
           >
-            Revolutionizing Bitcoin Donations
-          </motion.h1>
-          <motion.p
+            <h1 className="mb-4">About Palfare</h1>
+            <p className="text-xl text-slate-600">
+              Making Bitcoin donations simple and accessible for everyone
+            </p>
+          </motion.div>
+
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-xl text-white/90 max-w-3xl"
+            className="max-w-3xl mx-auto mb-16"
           >
-            Palfare makes it simple for anyone to accept Bitcoin donations with a beautiful, customizable page.
-          </motion.p>
-        </div>
-      </div>
+            <h2 className="text-2xl font-bold mb-6">Our Mission</h2>
+            <p className="text-slate-600 mb-4">
+              Palfare was created with a simple mission: to make accepting Bitcoin donations as easy as possible. 
+              We believe that Bitcoin is the future of money, and we want to help creators, organizations, and 
+              individuals around the world accept Bitcoin donations without any hassle.
+            </p>
+            <p className="text-slate-600">
+              Our platform is designed to be simple, secure, and accessible to everyone. No accounts required, 
+              no hidden fees, just straightforward Bitcoin donations.
+            </p>
+          </motion.div>
 
-      {/* Value Proposition */}
-      <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-        <div className="text-center">
-          <motion.h2
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="text-3xl font-extrabold text-gray-900 sm:text-4xl"
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="max-w-3xl mx-auto mb-16"
           >
-            Why Choose Palfare?
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-4 text-lg text-gray-500"
-          >
-            We're making Bitcoin donations accessible to everyone
-          </motion.p>
-        </div>
-
-        <div className="mt-20">
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              {
-                title: 'Simple Setup',
-                description: 'Create a beautiful donation page in minutes, no technical knowledge required.',
-                icon: '🚀',
-              },
-              {
-                title: 'Bitcoin First',
-                description: 'Built specifically for Bitcoin, with support for Lightning Network coming soon.',
-                icon: '⚡',
-              },
-              {
-                title: 'Customizable',
-                description: 'Personalize your page with your own branding, colors, and messaging.',
-                icon: '🎨',
-              },
-              {
-                title: 'Secure',
-                description: 'Your Bitcoin address is the only thing we need - no accounts, no passwords.',
-                icon: '🔒',
-              },
-              {
-                title: 'Global',
-                description: 'Accept donations from anywhere in the world, instantly and without borders.',
-                icon: '🌍',
-              },
-              {
-                title: 'Free Forever',
-                description: 'No fees, no hidden costs. We believe in the power of Bitcoin donations.',
-                icon: '💝',
-              },
-            ].map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                className="pt-6"
-              >
-                <div className="flow-root bg-white rounded-2xl px-6 pb-8 shadow-lg hover:shadow-xl transition-shadow">
-                  <div className="-mt-6">
-                    <div>
-                      <span className="inline-flex items-center justify-center p-3 bg-[#0ABAB5] rounded-full shadow-lg">
-                        <span className="text-3xl">{feature.icon}</span>
-                      </span>
-                    </div>
-                    <h3 className="mt-8 text-lg font-medium text-gray-900 tracking-tight">
-                      {feature.title}
-                    </h3>
-                    <p className="mt-5 text-base text-gray-500">{feature.description}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* How It Works */}
-      <div className="bg-gray-50">
-        <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              className="text-3xl font-extrabold text-gray-900 sm:text-4xl"
-            >
-              How It Works
-            </motion.h2>
-          </div>
-
-          <div className="mt-20">
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
-              {[
-                {
-                  step: '1',
-                  title: 'Create Your Page',
-                  description: 'Enter your Bitcoin address and customize your page.',
-                },
-                {
-                  step: '2',
-                  title: 'Share Your Link',
-                  description: 'Share your unique donation page URL with your audience.',
-                },
-                {
-                  step: '3',
-                  title: 'Receive Donations',
-                  description: 'Start receiving Bitcoin donations directly to your wallet.',
-                },
-              ].map((step, index) => (
+            <h2 className="text-2xl font-bold mb-6">How It Works</h2>
+            <div className="space-y-8">
+              {steps.map((step, index) => (
                 <motion.div
-                  key={step.step}
+                  key={step.title}
                   initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.2 }}
-                  className="relative"
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                  className="card"
                 >
-                  <div className="absolute flex items-center justify-center h-12 w-12 rounded-full bg-[#0ABAB5] text-white shadow-lg">
-                    {step.step}
-                  </div>
-                  <div className="ml-16">
-                    <h3 className="text-lg font-medium text-gray-900">{step.title}</h3>
-                    <p className="mt-2 text-base text-gray-500">{step.description}</p>
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-tiffany/10 flex items-center justify-center">
+                      <step.icon className="w-6 h-6 text-tiffany" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold mb-2">{step.title}</h3>
+                      <p className="text-slate-600">{step.description}</p>
+                    </div>
                   </div>
                 </motion.div>
               ))}
             </div>
-          </div>
-        </div>
-      </div>
+          </motion.div>
 
-      {/* CTA Section */}
-      <div className="bg-white">
-        <div className="max-w-7xl mx-auto py-16 px-4 sm:px-6 lg:px-8">
-          <div className="bg-gradient-to-r from-[#0ABAB5] to-[#0A9A95] rounded-2xl shadow-xl overflow-hidden">
-            <div className="pt-16 pb-12 px-6 sm:pt-20 sm:px-16 lg:py-16 lg:pr-0 xl:py-20 xl:px-20">
-              <div className="lg:self-center">
-                <motion.h2
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5 }}
-                  className="text-3xl font-extrabold text-white sm:text-4xl"
-                >
-                  Ready to Start Accepting Bitcoin Donations?
-                </motion.h2>
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                  className="mt-4 text-lg leading-6 text-white/90"
-                >
-                  Create your donation page in minutes and start receiving Bitcoin donations today.
-                </motion.p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            className="max-w-3xl mx-auto"
+          >
+            <h2 className="text-2xl font-bold mb-6 text-center">Our Values</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {values.map((value, index) => (
                 <motion.div
+                  key={value.title}
                   initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  className="mt-8"
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
+                  className="card"
                 >
-                  <Link
-                    href="/create"
-                    className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-[#0ABAB5] bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition-colors shadow-sm"
-                  >
-                    Create Your Page
-                  </Link>
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-tiffany/10 text-tiffany mb-4">
+                    <value.icon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">{value.title}</h3>
+                  <p className="text-slate-600">{value.description}</p>
                 </motion.div>
-              </div>
+              ))}
             </div>
-          </div>
+          </motion.div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 } 
