@@ -2,16 +2,15 @@
 
 ## Current Status
 - Branch: `main`
-- Last Commit: "Prepare for production deployment to palfare.com"
+- Last Commit: "Update environment variable configuration for Vercel best practices"
 - Environment: Production
 - Target Domain: palfare.com
 
 ## Prerequisites
 1. Domain: palfare.com
 2. Hosting: Vercel
-3. API Keys:
-   - BlockCypher API Key
-   - Vercel Deployment Token
+3. API Keys (Optional for initial deployment):
+   - BlockCypher API Key (can be added later for Bitcoin functionality)
 
 ## Environment Variables Setup
 
@@ -21,6 +20,18 @@
 3. Replace placeholder values with actual production values
 4. Enable "Automatically expose System Environment Variables"
 5. For sensitive values (like API keys), enable "Sensitive" option
+
+### Required Variables for Initial Deployment
+```env
+NEXT_PUBLIC_SITE_URL=https://palfare.com
+NEXT_PUBLIC_SITE_NAME=Palfare
+NODE_ENV=production
+```
+
+### Optional Variables (Can be added later)
+```env
+NEXT_PUBLIC_BLOCKCYPHER_API_KEY=your_production_api_key
+```
 
 ### Local Development
 1. Copy `.env.example` to `.env.local`
@@ -35,8 +46,8 @@
 3. Configure domain in Vercel
 
 ### 2. Environment Setup
-1. Set environment variables in Vercel as described above
-2. Verify API keys are properly configured
+1. Set required environment variables in Vercel as described above
+2. Optional: Configure BlockCypher API key when ready to enable Bitcoin functionality
 3. Configure build settings in Vercel
 
 ### 3. Deployment Process
@@ -49,7 +60,7 @@
 - [ ] All routes functional
 - [ ] SSL certificate valid
 - [ ] Forms working
-- [ ] API integrations working
+- [ ] Basic functionality working (Bitcoin features will be disabled until API key is added)
 
 ## Monitoring
 - Vercel Analytics enabled
