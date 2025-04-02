@@ -2,12 +2,18 @@
 
 ## Current Status
 - Branch: `main`
-- Last Commit: "Update environment variable configuration for Vercel best practices"
+- Last Commit: "Make BlockCypher API key optional for initial deployment"
 - Environment: Production
-- Target Domain: palfare.com
+- Target Domains:
+  - Primary: https://www.palfare.com
+  - Redirect: https://palfare.com → https://www.palfare.com
+  - Preview: https://palfare.vercel.app
 
 ## Prerequisites
-1. Domain: palfare.com
+1. Domains:
+   - palfare.com (redirects to www)
+   - www.palfare.com (main production domain)
+   - palfare.vercel.app (preview domain)
 2. Hosting: Vercel
 3. API Keys (Optional for initial deployment):
    - BlockCypher API Key (can be added later for Bitcoin functionality)
@@ -23,7 +29,7 @@
 
 ### Required Variables for Initial Deployment
 ```env
-NEXT_PUBLIC_SITE_URL=https://palfare.com
+NEXT_PUBLIC_SITE_URL=https://www.palfare.com
 NEXT_PUBLIC_SITE_NAME=Palfare
 NODE_ENV=production
 ```
@@ -40,10 +46,10 @@ NEXT_PUBLIC_BLOCKCYPHER_API_KEY=your_production_api_key
 
 ## Deployment Steps
 
-### 1. Domain Configuration
-1. Configure DNS records for palfare.com
-2. Set up SSL certificate (automatic with Vercel)
-3. Configure domain in Vercel
+### 1. Domain Configuration (Already Set Up)
+- ✓ palfare.com redirects to www.palfare.com
+- ✓ www.palfare.com assigned to main branch
+- ✓ palfare.vercel.app assigned to main branch
 
 ### 2. Environment Setup
 1. Set required environment variables in Vercel as described above
@@ -52,11 +58,15 @@ NEXT_PUBLIC_BLOCKCYPHER_API_KEY=your_production_api_key
 
 ### 3. Deployment Process
 1. Push to `main` branch
-2. Vercel will automatically deploy
+2. Vercel will automatically deploy to:
+   - https://www.palfare.com (production)
+   - https://palfare.vercel.app (preview)
 3. Verify deployment success
 
 ### 4. Post-Deployment Checks
-- [ ] Website accessible at https://palfare.com
+- [ ] Website accessible at https://www.palfare.com
+- [ ] Redirect from https://palfare.com working
+- [ ] Preview site at https://palfare.vercel.app working
 - [ ] All routes functional
 - [ ] SSL certificate valid
 - [ ] Forms working
