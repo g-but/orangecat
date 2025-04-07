@@ -6,6 +6,14 @@ import { WalletSection } from '@/components/profile/WalletSection'
 import { TransactionLedger } from '@/components/profile/TransactionLedger'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { AlertTriangle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+// Validate Bitcoin address format
+const isValidBitcoinAddress = (address: string): boolean => {
+  // Basic validation - can be enhanced with more specific checks
+  return /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address) || 
+         /^bc1[ac-hj-np-z02-9]{11,71}$/.test(address)
+}
 
 // Static example data
 const PROFILE_DATA = {
@@ -13,7 +21,6 @@ const PROFILE_DATA = {
   description: 'Building the simplest way to accept Bitcoin donations. Join us in making Bitcoin accessible to everyone.',
   trustScore: 95,
   transparencyScore: 90,
-  walletAddress: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
   transactions: [
     {
       id: '1',
@@ -54,18 +61,31 @@ const PROFILE_DATA = {
 }
 
 export default function DonatePage() {
+  const [walletAddress, setWalletAddress] = useState<string>('')
+  const [isValid, setIsValid] = useState<boolean>(false)
+
+  useEffect(() => {
+    const address = process.env.NEXT_PUBLIC_BITCOIN_ADDRESS
+    if (address) {
+      setWalletAddress(address)
+      setIsValid(isValidBitcoinAddress(address))
+    }
+  }, [])
+
   return (
     <main className="min-h-screen pt-20 bg-gradient-to-b from-white to-slate-50">
-      <div className="bg-yellow-50 border-b border-yellow-200">
-        <div className="container py-4">
-          <div className="flex items-center justify-center gap-2 text-yellow-800">
-            <AlertTriangle className="w-5 h-5" />
-            <p className="text-sm font-medium">
-              <span className="font-bold">DEMONSTRATION ONLY:</span> This is a preview of our donation platform. The Bitcoin address shown is not real. Please do not send any funds. Coming soon!
-            </p>
+      {!isValid && (
+        <div className="bg-red-50 border-b border-red-200">
+          <div className="container py-4">
+            <div className="flex items-center justify-center gap-2 text-red-800">
+              <AlertTriangle className="w-5 h-5" />
+              <p className="text-sm font-medium">
+                <span className="font-bold">WARNING:</span> Invalid Bitcoin address configured. Please check your environment variables.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <section className="section">
         <div className="container">
@@ -85,9 +105,11 @@ export default function DonatePage() {
               transparencyScore={PROFILE_DATA.transparencyScore}
             />
 
-            <WalletSection 
-              walletAddress={PROFILE_DATA.walletAddress}
-            />
+            {isValid && (
+              <WalletSection 
+                walletAddress={walletAddress}
+              />
+            )}
 
             <TransactionLedger 
               transactions={PROFILE_DATA.transactions}
