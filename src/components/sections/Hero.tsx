@@ -25,7 +25,7 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl text-slate-600 mb-8"
           >
-            Palfare makes it simple to receive Bitcoin donations. Create your donation page in seconds and start accepting crypto contributions today.
+            Create your donation page in seconds and start accepting crypto contributions today.
           </motion.p>
 
           <motion.div

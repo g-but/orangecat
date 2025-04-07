@@ -1,0 +1,12 @@
+// Validate Bitcoin address format
+const isValidBitcoinAddress = (address: string): boolean => {
+  // Extract address from URI if needed
+  let cleanAddress = address
+  if (address.startsWith('bitcoin:')) {
+    cleanAddress = address.split('?')[0].replace('bitcoin:', '')
+  }
+  // Enhanced validation including Taproot addresses
+  return /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(cleanAddress) || 
+         /^bc1[ac-hj-np-z02-9]{11,71}$/.test(cleanAddress) ||
+         /^bc1p[a-zA-Z0-9]{58,103}$/.test(cleanAddress) // Added Taproot support
+}

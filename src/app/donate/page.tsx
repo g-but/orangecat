@@ -3,69 +3,62 @@
 import { motion } from 'framer-motion'
 import { ProfileHeader } from '@/components/profile/ProfileHeader'
 import { WalletSection } from '@/components/profile/WalletSection'
-import { TransactionLedger } from '@/components/profile/TransactionLedger'
 import { ProfileStats } from '@/components/profile/ProfileStats'
 import { AlertTriangle } from 'lucide-react'
+import { useEffect, useState } from 'react'
+
+// Validate Bitcoin address format
+const isValidBitcoinAddress = (address: string): boolean => {
+  // Extract address from URI if needed
+  let cleanAddress = address
+  if (address.startsWith('bitcoin:')) {
+    cleanAddress = address.split('?')[0].replace('bitcoin:', '')
+  }
+  
+  // Enhanced validation including Taproot addresses
+  return /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(cleanAddress) || 
+         /^bc1[ac-hj-np-z02-9]{11,71}$/.test(cleanAddress) ||
+         /^bc1p[a-zA-Z0-9]{58,103}$/.test(cleanAddress) // Added Taproot support
+}
 
 // Static example data
 const PROFILE_DATA = {
   name: 'Palfare',
   description: 'Building the simplest way to accept Bitcoin donations. Join us in making Bitcoin accessible to everyone.',
-  trustScore: 95,
-  transparencyScore: 90,
-  walletAddress: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
-  transactions: [
-    {
-      id: '1',
-      amount: 0.01,
-      timestamp: '2024-04-02T12:00:00Z',
-      type: 'incoming' as const,
-      explanation: 'Thank you for supporting our mission! This donation will help us improve our platform and add new features.',
-      likes: 5,
-      dislikes: 0,
-      comments: [
-        { id: '1', author: 'BitcoinEnthusiast', text: 'Great project! Love the transparency.', timestamp: '2024-04-02T12:05:00Z' },
-        { id: '2', author: 'CryptoSupporter', text: 'Keep up the good work!', timestamp: '2024-04-02T12:10:00Z' }
-      ]
-    },
-    {
-      id: '2',
-      amount: 0.05,
-      timestamp: '2024-04-01T15:30:00Z',
-      type: 'incoming' as const,
-      explanation: 'Donation from a community member who believes in our vision.',
-      likes: 3,
-      dislikes: 0,
-      comments: [
-        { id: '3', author: 'BitcoinMaxi', text: 'This is exactly what Bitcoin needs!', timestamp: '2024-04-01T15:35:00Z' }
-      ]
-    },
-    {
-      id: '3',
-      amount: 0.02,
-      timestamp: '2024-03-30T09:15:00Z',
-      type: 'outgoing' as const,
-      explanation: 'Payment for server hosting to keep our platform running smoothly.',
-      likes: 2,
-      dislikes: 0,
-      comments: []
-    }
-  ]
+  transparencyScore: 100
 }
 
 export default function DonatePage() {
+  const [walletAddress, setWalletAddress] = useState<string>('')
+  const [lightningAddress, setLightningAddress] = useState<string>('')
+  const [isValid, setIsValid] = useState<boolean>(false)
+
+  useEffect(() => {
+    const address = process.env.NEXT_PUBLIC_BITCOIN_ADDRESS
+    const lightning = process.env.NEXT_PUBLIC_LIGHTNING_ADDRESS
+    if (address) {
+      setWalletAddress(address)
+      setIsValid(isValidBitcoinAddress(address))
+    }
+    if (lightning) {
+      setLightningAddress(lightning)
+    }
+  }, [])
+
   return (
     <main className="min-h-screen pt-20 bg-gradient-to-b from-white to-slate-50">
-      <div className="bg-yellow-50 border-b border-yellow-200">
-        <div className="container py-4">
-          <div className="flex items-center justify-center gap-2 text-yellow-800">
-            <AlertTriangle className="w-5 h-5" />
-            <p className="text-sm font-medium">
-              <span className="font-bold">DEMONSTRATION ONLY:</span> This is a preview of our donation platform. The Bitcoin address shown is not real. Please do not send any funds. Coming soon!
-            </p>
+      {!isValid && (
+        <div className="bg-red-50 border-b border-red-200">
+          <div className="container py-4">
+            <div className="flex items-center justify-center gap-2 text-red-800">
+              <AlertTriangle className="w-5 h-5" />
+              <p className="text-sm font-medium">
+                <span className="font-bold">WARNING:</span> Invalid Bitcoin address configured. Please check your environment variables.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <section className="section">
         <div className="container">
@@ -81,17 +74,15 @@ export default function DonatePage() {
             />
             
             <ProfileStats 
-              trustScore={PROFILE_DATA.trustScore}
               transparencyScore={PROFILE_DATA.transparencyScore}
             />
 
-            <WalletSection 
-              walletAddress={PROFILE_DATA.walletAddress}
-            />
-
-            <TransactionLedger 
-              transactions={PROFILE_DATA.transactions}
-            />
+            {isValid && (
+              <WalletSection 
+                walletAddress={walletAddress}
+                lightningAddress={lightningAddress}
+              />
+            )}
           </motion.div>
         </div>
       </section>
