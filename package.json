@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "env:pull": "vercel env pull .env.local",
+    "env:push": "node scripts/sync-env.js",
+    "predeploy": "npm run env:push"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
