@@ -31,11 +31,30 @@ jobs:
           node-version: '20'
           cache: 'npm'
       - run: npm ci
+      
+      # Create .env.production file for deployment
+      - name: Create environment file
+        run: |
+          echo "NEXT_PUBLIC_BITCOIN_ADDRESS=${{ secrets.NEXT_PUBLIC_BITCOIN_ADDRESS }}" > .env.production
+          echo "NEXT_PUBLIC_LIGHTNING_ADDRESS=${{ secrets.NEXT_PUBLIC_LIGHTNING_ADDRESS }}" >> .env.production
+          echo "NEXT_PUBLIC_SITE_URL=${{ secrets.NEXT_PUBLIC_SITE_URL }}" >> .env.production
+          echo "NEXT_PUBLIC_SITE_NAME=${{ secrets.NEXT_PUBLIC_SITE_NAME }}" >> .env.production
+          echo "NODE_ENV=production" >> .env.production
+      
       - run: npm run build
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
+      
+      # Authenticate with Vercel
+      - name: Set up Vercel credentials
+        run: |
+          mkdir -p ~/.vercel
+          echo '{"token":"${{ secrets.VERCEL_TOKEN }}"}' > ~/.vercel/config.json
+      
       - name: Pull Vercel Environment Information
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+      
+      # Deploy with environment variables
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel

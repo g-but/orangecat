@@ -6,6 +6,30 @@
   "outputDirectory": ".next",
   "regions": ["fra1"],
   "env": {
-    "NEXT_PUBLIC_SITE_URL": "https://palfare.vercel.app"
-  }
+    "NEXT_PUBLIC_SITE_URL": "https://palfare.vercel.app",
+    "NEXT_PUBLIC_SITE_NAME": "Palfare"
+  },
+  "github": {
+    "silent": true,
+    "autoAlias": true
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
+    }
+  ]
 } 
