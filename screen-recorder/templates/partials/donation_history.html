@@ -1,0 +1,58 @@
+{% macro donation_history(transactions) %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0">Donation History</h4>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Donor</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>KPIs Tracked</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for donation in transactions %}
+                    <tr>
+                        <td>{{ donation.timestamp }}</td>
+                        <td>
+                            <a href="{{ url_for('user_profile', username=donation.donor) }}">
+                                {{ donation.donor }}
+                            </a>
+                        </td>
+                        <td class="bitcoin-balance">{{ donation.amount }} BTC</td>
+                        <td>
+                            <span class="badge bg-{{ 'success' if donation.status == 'completed' else 'warning' }}">
+                                {{ donation.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if donation.kpis %}
+                            <div class="kpi-progress-container">
+                                {% for kpi in donation.kpis %}
+                                <div class="mb-1">
+                                    <small>{{ kpi.name }}</small>
+                                    <div class="progress" style="height: 3px;">
+                                        <div class="progress-bar bg-info" role="progressbar" 
+                                             style="width: {{ kpi.progress }}%">
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <span class="text-muted">No KPIs tracked</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endmacro %} 

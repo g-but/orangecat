@@ -1,0 +1,44 @@
+{% macro profile_overview(user_data) %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0">Profile Overview</h4>
+    </div>
+    <div class="card-body">
+        <h5 class="card-title">{{ user_data.username }}</h5>
+        <p class="text-muted">Member since {{ user_data.registered_at }}</p>
+        
+        <div class="mb-3">
+            <h6>Trust Score</h6>
+            <div class="progress">
+                <div class="progress-bar bg-primary" role="progressbar" 
+                     style="width: {{ user_data.trust_score }}%">
+                    {{ user_data.trust_score }}%
+                </div>
+            </div>
+            <small class="text-muted">Based on community votes</small>
+        </div>
+
+        <div class="mb-3">
+            <h6>Transparency Score</h6>
+            <div class="progress">
+                <div class="progress-bar bg-success" role="progressbar" 
+                     style="width: {{ user_data.transparency_score }}%">
+                    {{ user_data.transparency_score }}%
+                </div>
+            </div>
+            <small class="text-muted">Based on KPI reporting and verification</small>
+        </div>
+
+        <div class="mb-3">
+            <h6>Bitcoin Balance</h6>
+            <p class="h4 bitcoin-balance">{{ user_data.wallet.balance }} BTC</p>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#setupDonationModal">
+                <i class="fas fa-hand-holding-usd"></i> Setup Monthly Donation
+            </button>
+        </div>
+    </div>
+</div>
+{% endmacro %} 

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Palfare - Home{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Welcome to Palfare</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">A platform for earning Bitcoin through open-source contributions and community engagement.</p>
+                <div class="row text-center">
+                    <div class="col-md-4">
+                        <h5>Total Users</h5>
+                        <p class="h3">{{ stats.total_users }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Total Projects</h5>
+                        <p class="h3">{{ stats.total_projects }}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h5>Total Blog Posts</h5>
+                        <p class="h3">{{ stats.total_blog_posts }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Top Contributors</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>User</th>
+                                <th>Activity Score</th>
+                                <th>Bitcoin Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in leaderboard %}
+                            <tr>
+                                <td>{{ loop.index }}</td>
+                                <td>
+                                    <a href="{{ url_for('user_profile', username=user.username) }}">
+                                        {{ user.username }}
+                                    </a>
+                                </td>
+                                <td class="activity-score">{{ user.activity_score }}</td>
+                                <td class="bitcoin-balance">{{ user.bitcoin_balance }} BTC</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h4 class="mb-0">Get Started</h4>
+            </div>
+            <div class="card-body">
+                <p>Join our community and start earning Bitcoin today!</p>
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary">
+                        <i class="fas fa-user-plus"></i> Register Now
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">Recent Activity</h4>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    {% for activity in recent_activity %}
+                    <li class="mb-2">
+                        <small class="text-muted">{{ activity.timestamp }}</small><br>
+                        {{ activity.description }}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
