@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -16,7 +16,7 @@ export default function FundingPageList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadPages = async () => {
+  const loadPages = useCallback(async () => {
     try {
       setLoading(true)
       const data = await getFundingPages(user!.id)
@@ -28,7 +28,7 @@ export default function FundingPageList() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [user])
 
   useEffect(() => {
     if (user) {

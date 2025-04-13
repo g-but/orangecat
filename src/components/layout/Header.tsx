@@ -22,6 +22,13 @@ export default function Header() {
     }
   }
 
+  const handleMobileLinkClick = (e: React.MouseEvent, item: any) => {
+    if (item.requiresAuth) {
+      handleCreateClick(e)
+    }
+    setIsOpen(false)
+  }
+
   return (
     <header className={styles.header}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -91,9 +98,8 @@ export default function Header() {
             <Link
               key={item.name}
               href={item.href}
-              onClick={item.requiresAuth ? handleCreateClick : undefined}
+              onClick={(e) => handleMobileLinkClick(e, item)}
               className={`${styles.mobileNavLink} ${pathname === item.href ? styles.mobileNavLinkActive : ''}`}
-              onClick={() => setIsOpen(false)}
             >
               {item.name}
             </Link>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
@@ -16,7 +16,7 @@ export default function TransactionTracker({ fundingPageId }: TransactionTracker
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
-  const loadTransactions = async () => {
+  const loadTransactions = useCallback(async () => {
     try {
       const { data, error } = await createClientComponentClient()
         .from('transactions')
@@ -32,7 +32,7 @@ export default function TransactionTracker({ fundingPageId }: TransactionTracker
     } finally {
       setLoading(false)
     }
-  }
+  }, [fundingPageId])
 
   useEffect(() => {
     if (user) {

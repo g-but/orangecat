@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useAuth } from '@/contexts/AuthContext'
@@ -21,7 +21,7 @@ export default function FundingPage({ params }: { params: { id: string } }) {
   const [pendingAmount, setPendingAmount] = useState(0)
   const [lastUpdated, setLastUpdated] = useState('')
 
-  const loadPage = async () => {
+  const loadPage = useCallback(async () => {
     try {
       const { data, error } = await createClientComponentClient()
         .from('funding_pages')
@@ -37,7 +37,7 @@ export default function FundingPage({ params }: { params: { id: string } }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [params.id])
 
   useEffect(() => {
     if (user) {
