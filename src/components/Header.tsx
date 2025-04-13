@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
-import { mainNav } from '@/config/navigation'
+import { navigation } from '@/config/navigation'
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -19,11 +19,11 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            {mainNav.map((item) => (
+            {navigation.main.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-slate-600 hover:text-tiffany transition-colors"
+                className="text-gray-600 hover:text-gray-900"
               >
                 {item.name}
               </Link>
@@ -46,11 +46,11 @@ export default function Header() {
           className="md:hidden"
         >
           <div className="py-4 space-y-2">
-            {mainNav.map((item) => (
+            {navigation.main.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="block py-2 text-slate-600 hover:text-tiffany transition-colors"
+                className="block py-2 text-gray-600 hover:text-gray-900"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {item.name}
