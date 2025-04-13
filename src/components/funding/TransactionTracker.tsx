@@ -9,9 +9,15 @@ import { Loader2 } from 'lucide-react'
 
 interface TransactionTrackerProps {
   fundingPageId: string
+  isOwner: boolean
+  onBalanceUpdate: (newBalance: number) => void
 }
 
-export default function TransactionTracker({ fundingPageId }: TransactionTrackerProps) {
+export default function TransactionTracker({ 
+  fundingPageId,
+  isOwner,
+  onBalanceUpdate 
+}: TransactionTrackerProps) {
   const { user } = useAuth()
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
