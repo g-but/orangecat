@@ -1,17 +1,11 @@
 'use client'
 
-import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
-
-export const metadata: Metadata = {
-  title: 'Support Our Mission | OrangeCat',
-  description: 'Support our mission with Bitcoin donations. Every contribution helps us build a better future.',
-};
 
 export default function DonatePage() {
   const [amount, setAmount] = useState('');
