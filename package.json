@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
     "env:pull": "vercel env pull .env.local",
     "env:push": "node scripts/sync-env.js",
     "predeploy": "npm run env:push"
