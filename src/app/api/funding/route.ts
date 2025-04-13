@@ -52,6 +52,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const status = searchParams.get('status');
+    const supabase = createServerSupabaseClient();
 
     let query = supabase
       .from('funding_pages')
