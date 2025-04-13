@@ -3,13 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Metadata } from 'next';
-import Link from 'next/link';
-
-export const metadata: Metadata = {
-  title: 'Coming Soon | OrangeCat',
-  description: 'OrangeCat is coming soon. A platform for transparent Bitcoin donations.',
-};
+import Link from 'next/link'
 
 export default function ComingSoon() {
   const router = useRouter()
