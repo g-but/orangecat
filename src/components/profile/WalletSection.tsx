@@ -1,12 +1,9 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { Bitcoin, Copy, Check, ExternalLink, Zap } from 'lucide-react'
 import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Copy, Check, Bitcoin, Zap } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { BalanceCard } from '@/components/bitcoin/BalanceCard'
-import { TransactionsList } from '@/components/bitcoin/TransactionsList'
-import { useBitcoinWallet } from '@/hooks/useBitcoinWallet'
 
 interface WalletSectionProps {
   walletAddress: string
@@ -14,168 +11,128 @@ interface WalletSectionProps {
 }
 
 export function WalletSection({ walletAddress, lightningAddress }: WalletSectionProps) {
-  const [copied, setCopied] = useState<'bitcoin' | 'lightning' | null>(null)
+  const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState<'bitcoin' | 'lightning'>('bitcoin')
-  const { walletData, isLoading, error } = useBitcoinWallet(walletAddress)
 
-  // Extract the clean address from URI if needed
-  const displayAddress = activeTab === 'bitcoin'
-    ? walletAddress.startsWith('bitcoin:') 
-      ? walletAddress.split('?')[0].replace('bitcoin:', '')
-      : walletAddress
-    : lightningAddress;
-
-  const copyToClipboard = async (type: 'bitcoin' | 'lightning') => {
-    try {
-      // Copy just the address for Bitcoin, full invoice for Lightning
-      const text = type === 'bitcoin' ? displayAddress : lightningAddress
-      await navigator.clipboard.writeText(text || '')
-      setCopied(type)
-      setTimeout(() => setCopied(null), 2000)
-    } catch (err) {
-      console.error('Failed to copy text: ', err)
-    }
-  }
-
-  const refreshWalletData = () => {
-    window.location.reload()
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(walletAddress)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
   }
 
   return (
-    <>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="card mb-6"
-      >
-        <div className="flex justify-center mb-6 space-x-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-lg shadow-lg p-6"
+    >
+      <h3 className="text-lg font-medium text-gray-900 mb-4">Funding Options</h3>
+      
+      {/* Tab Navigation */}
+      <div className="flex space-x-4 mb-6">
+        <button
+          onClick={() => setActiveTab('bitcoin')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+            activeTab === 'bitcoin'
+              ? 'bg-orange-100 text-orange-600'
+              : 'text-gray-600 hover:bg-gray-100'
+          }`}
+        >
+          <Bitcoin className="h-5 w-5" />
+          <span>Bitcoin</span>
+        </button>
+        {lightningAddress && (
           <button
-            onClick={() => setActiveTab('bitcoin')}
-            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-              activeTab === 'bitcoin' ? 'bg-tiffany/10 text-tiffany' : 'text-slate-500'
+            onClick={() => setActiveTab('lightning')}
+            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+              activeTab === 'lightning'
+                ? 'bg-orange-100 text-orange-600'
+                : 'text-gray-600 hover:bg-gray-100'
             }`}
           >
-            <Bitcoin className="w-5 h-5 mr-2" />
-            Bitcoin
+            <Zap className="h-5 w-5" />
+            <span>Lightning</span>
           </button>
-          {lightningAddress && (
-            <button
-              onClick={() => setActiveTab('lightning')}
-              className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-                activeTab === 'lightning' ? 'bg-yellow-100 text-yellow-600' : 'text-slate-500'
-              }`}
-            >
-              <Zap className="w-5 h-5 mr-2" />
-              Lightning
-            </button>
-          )}
-        </div>
+        )}
+      </div>
 
-        <div className="space-y-8">
+      {/* Bitcoin Tab Content */}
+      {activeTab === 'bitcoin' && (
+        <div className="space-y-6">
           <div className="text-center">
-            <h3 className="text-xl font-bold mb-4">
-              {activeTab === 'bitcoin' ? 'Bitcoin Address' : 'Lightning Invoice'}
-            </h3>
-            <div className="flex items-center justify-center space-x-2">
-              <code className="text-sm bg-slate-100 px-3 py-2 rounded-lg font-mono break-all">
-                {activeTab === 'bitcoin' ? displayAddress : lightningAddress}
-              </code>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => copyToClipboard(activeTab)}
-                  className="p-2 text-slate-400 hover:text-tiffany transition-colors"
-                  aria-label={`Copy ${activeTab} address`}
-                >
-                  {copied === activeTab ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                </button>
-                {activeTab === 'bitcoin' && (
-                  <a
-                    href={`https://mempool.space/address/${displayAddress}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 text-slate-400 hover:text-tiffany transition-colors"
-                    aria-label="View on block explorer"
-                  >
-                    <ExternalLink className="w-5 h-5" />
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="text-center">
-            <h3 className="text-xl font-bold mb-4">Scan QR Code</h3>
-            <div className="bg-white p-4 rounded-xl inline-block shadow-sm">
+            <p className="text-sm text-gray-600 mb-4">
+              Scan this QR code with your Bitcoin wallet to send funding
+            </p>
+            <div className="flex justify-center p-4 bg-white rounded-lg border border-gray-200">
               <QRCodeSVG
-                value={activeTab === 'bitcoin' ? walletAddress : lightningAddress || ''}
-                size={192}
-                level="H"
-                includeMargin={true}
+                value={`bitcoin:${walletAddress}`}
+                size={200}
                 className="rounded-lg"
               />
             </div>
           </div>
 
-          <div className="text-center text-slate-600">
-            <p>Thank you for supporting our mission!</p>
-            <p className="text-sm mt-2">
-              {activeTab === 'bitcoin' ? 
-                'Click the QR code to open in your Bitcoin wallet' :
-                'Scan with your Lightning wallet'
-              }
-            </p>
+          <div>
+            <p className="text-sm text-gray-600 mb-2">Or copy the address below</p>
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={walletAddress}
+                readOnly
+                className="flex-1 p-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              <button
+                onClick={handleCopy}
+                className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+                aria-label="Copy address"
+              >
+                {copied ? (
+                  <Check className="h-5 w-5 text-green-500" />
+                ) : (
+                  <Copy className="h-5 w-5" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
-      </motion.div>
-
-      {activeTab === 'bitcoin' && (
-        <>
-          {error && (
-            <div className="bg-red-50 p-4 rounded-lg mb-6 text-red-700 text-center">
-              <p>{error}</p>
-            </div>
-          )}
-          
-          {walletData && (
-            <BalanceCard
-              balance={walletData.balance}
-              lastUpdated={walletData.lastUpdated}
-              isLoading={isLoading}
-              onRefresh={refreshWalletData}
-            />
-          )}
-          
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-          >
-            <h2 className="text-2xl font-bold mb-6 text-center">Recent Transactions</h2>
-            {walletData ? (
-              <TransactionsList
-                transactions={walletData.transactions}
-                isLoading={isLoading}
-              />
-            ) : !error && (
-              <div className="space-y-4 mt-6">
-                {[...Array(3)].map((_, index) => (
-                  <div key={index} className="card animate-pulse">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-slate-200 mr-3"></div>
-                      <div className="flex-1">
-                        <div className="h-4 w-24 bg-slate-200 rounded mb-2"></div>
-                        <div className="h-3 w-16 bg-slate-200 rounded"></div>
-                      </div>
-                      <div className="h-4 w-20 bg-slate-200 rounded"></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </motion.div>
-        </>
       )}
-    </>
+
+      {/* Lightning Tab Content */}
+      {activeTab === 'lightning' && lightningAddress && (
+        <div className="space-y-6">
+          <div className="text-center">
+            <p className="text-sm text-gray-600 mb-4">
+              Scan this QR code with your Lightning wallet to send funding
+            </p>
+            <div className="flex justify-center p-4 bg-white rounded-lg border border-gray-200">
+              <QRCodeSVG
+                value={`lightning:${lightningAddress}`}
+                size={200}
+                className="rounded-lg"
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className="text-sm text-gray-600 mb-2">Or copy the address below</p>
+            <div className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={lightningAddress}
+                readOnly
+                className="flex-1 p-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+              />
+              <button
+                onClick={() => navigator.clipboard.writeText(lightningAddress)}
+                className="p-2 text-gray-600 hover:text-gray-900 transition-colors"
+                aria-label="Copy address"
+              >
+                <Copy className="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </motion.div>
   )
 } 

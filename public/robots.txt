@@ -2,5 +2,5 @@
 User-agent: *
 Allow: /
 
-# Sitemap location
-Sitemap: https://palfare.com/sitemap.xml 
+# Sitemap
+Sitemap: https://orangecat.com/sitemap.xml 

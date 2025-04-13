@@ -13,7 +13,7 @@ export default function CTA() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="relative overflow-hidden rounded-3xl bg-tiffany-gradient p-8 md:p-12"
+          className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-tiffany-500 to-tiffany-600 p-8 md:p-12"
         >
           <div className="relative z-10">
             <div className="max-w-3xl mx-auto text-center">
@@ -21,9 +21,9 @@ export default function CTA() {
                 Ready to Start Accepting Bitcoin Donations?
               </h2>
               <p className="text-xl text-white/90 mb-8">
-                Join thousands of creators and organizations using Palfare to accept Bitcoin donations.
+                Join thousands of creators and organizations using OrangeCat to accept Bitcoin donations.
               </p>
-              <Link href="/create" className="btn bg-white text-tiffany hover:bg-white/90">
+              <Link href="/create" className="btn bg-white text-tiffany-500 hover:bg-white/90">
                 Get Started Now
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>

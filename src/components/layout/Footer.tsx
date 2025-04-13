@@ -1,29 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Bitcoin, Github, Twitter } from 'lucide-react'
-
-const navigation = {
-  main: [
-    { name: 'Home', href: '/' },
-    { name: 'Create', href: '/create' },
-    { name: 'Donate', href: '/donate' },
-    { name: 'About', href: '/about' },
-    { name: 'Blog', href: '/blog' },
-  ],
-  social: [
-    {
-      name: 'Twitter',
-      href: 'https://twitter.com/palfare',
-      icon: Twitter,
-    },
-    {
-      name: 'GitHub',
-      href: 'https://github.com/g-but/palfare',
-      icon: Github,
-    },
-  ],
-}
+import { Bitcoin } from 'lucide-react'
+import { navigation } from '@/config/navigation'
 
 export default function Footer() {
   return (
@@ -32,8 +11,8 @@ export default function Footer() {
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-8 xl:col-span-1">
             <Link href="/" className="flex items-center space-x-2">
-              <Bitcoin className="h-8 w-8 text-tiffany" />
-              <span className="text-xl font-display font-bold text-slate-800">Palfare</span>
+              <Bitcoin className="h-8 w-8 text-tiffany-500" />
+              <span className="text-xl font-display font-bold text-slate-800">OrangeCat</span>
             </Link>
             <p className="text-slate-600 text-base">
               Making Bitcoin donations simple and accessible for everyone.
@@ -43,7 +22,7 @@ export default function Footer() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="text-slate-400 hover:text-tiffany transition-colors"
+                  className="text-slate-400 hover:text-tiffany-500 transition-colors"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
@@ -63,7 +42,7 @@ export default function Footer() {
                   <li key={item.name}>
                     <Link
                       href={item.href}
-                      className="text-base text-slate-600 hover:text-tiffany transition-colors"
+                      className="text-base text-slate-600 hover:text-tiffany-500 transition-colors"
                     >
                       {item.name}
                     </Link>
@@ -79,7 +58,7 @@ export default function Footer() {
                 <li>
                   <Link
                     href="/privacy"
-                    className="text-base text-slate-600 hover:text-tiffany transition-colors"
+                    className="text-base text-slate-600 hover:text-tiffany-500 transition-colors"
                   >
                     Privacy Policy
                   </Link>
@@ -87,7 +66,7 @@ export default function Footer() {
                 <li>
                   <Link
                     href="/terms"
-                    className="text-base text-slate-600 hover:text-tiffany transition-colors"
+                    className="text-base text-slate-600 hover:text-tiffany-500 transition-colors"
                   >
                     Terms of Service
                   </Link>
@@ -98,7 +77,7 @@ export default function Footer() {
         </div>
         <div className="mt-12 border-t border-slate-200 pt-8">
           <p className="text-base text-slate-400 xl:text-center">
-            &copy; {new Date().getFullYear()} Palfare. All rights reserved.
+            &copy; {new Date().getFullYear()} OrangeCat. All rights reserved.
           </p>
         </div>
       </div>
