@@ -7,7 +7,7 @@ describe('Environment Configuration', () => {
 
   it('should have correct test environment values', () => {
     expect(process.env.NEXT_PUBLIC_SITE_URL).toBe('http://localhost:3000')
-    expect(process.env.NEXT_PUBLIC_SITE_NAME).toBe('OrangeCat (Test)')
+    expect(process.env.NEXT_PUBLIC_SITE_NAME).toBe('OrangeCat')
     expect(process.env.NODE_ENV).toBe('test')
   })
 }) 

@@ -1,64 +1,47 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 export async function POST(request: Request) {
   try {
-    // Get authenticated user
-    const supabaseAuth = createRouteHandlerClient({ cookies });
-    const { data: { session }, error: authError } = await supabaseAuth.auth.getSession();
-
-    if (authError || !session) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
-    const { title, description, goal_amount_btc, bitcoin_address, lightning_address } = await request.json();
+    const { fundingPageId, amount, currency, paymentMethod } = await request.json();
+    const supabase = createServerSupabaseClient();
 
     // Input validation
-    if (!title || !description || !goal_amount_btc || !bitcoin_address) {
+    if (!fundingPageId || !amount || !currency || !paymentMethod) {
       return NextResponse.json(
-        { error: 'Title, description, goal amount (BTC), and Bitcoin address are required' },
+        { error: 'All fields are required' },
         { status: 400 }
       );
     }
 
-    // Create funding page
-    const { data: fundingPage, error: fundingError } = await supabase
-      .from('funding_pages')
-      .insert([
-        {
-          user_id: session.user.id,
-          title,
-          description,
-          goal_amount_btc,
-          current_amount_btc: 0,
-          status: 'active',
-          bitcoin_address,
-          lightning_address,
-        },
-      ])
+    // Create transaction record
+    const { data, error } = await supabase
+      .from('transactions')
+      .insert({
+        funding_page_id: fundingPageId,
+        amount,
+        currency,
+        payment_method: paymentMethod,
+        status: 'pending',
+      })
       .select()
       .single();
 
-    if (fundingError) {
+    if (error) {
       return NextResponse.json(
-        { error: fundingError.message },
+        { error: error.message },
         { status: 400 }
       );
     }
 
     return NextResponse.json({
-      message: 'Funding page created successfully',
-      fundingPage,
+      message: 'Transaction created successfully',
+      transaction: data,
     });
   } catch (error) {
-    console.error('Error creating funding page:', error);
+    console.error('Transaction creation error:', error);
     return NextResponse.json(
-      { error: 'An error occurred while creating the funding page' },
+      { error: 'An error occurred while creating the transaction' },
       { status: 500 }
     );
   }

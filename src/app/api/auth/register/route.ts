@@ -1,48 +1,45 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
 
 export async function POST(request: Request) {
   try {
-    const { email, password, full_name } = await request.json();
+    const { email, password, username } = await request.json();
+    const supabase = createServerSupabaseClient();
 
     // Input validation
-    if (!email || !password || !full_name) {
+    if (!email || !password || !username) {
       return NextResponse.json(
-        { error: 'Email, password, and full name are required' },
+        { error: 'Email, password, and username are required' },
         { status: 400 }
       );
     }
 
-    // Register user with Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Sign up with Supabase Auth
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name,
+          username,
         },
       },
     });
 
-    if (authError) {
+    if (error) {
       return NextResponse.json(
-        { error: authError.message },
+        { error: error.message },
         { status: 400 }
       );
     }
 
-    // Create profile record
-    const { data: profileData, error: profileError } = await supabase
+    // Create user profile
+    const { error: profileError } = await supabase
       .from('profiles')
-      .insert([
-        {
-          user_id: authData.user?.id,
-          full_name,
-          email,
-        },
-      ])
-      .select()
-      .single();
+      .insert({
+        id: data.user?.id,
+        username,
+        email,
+      });
 
     if (profileError) {
       return NextResponse.json(
@@ -53,8 +50,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       message: 'Registration successful',
-      user: authData.user,
-      profile: profileData,
+      user: data.user,
     });
   } catch (error) {
     console.error('Registration error:', error);
