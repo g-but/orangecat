@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchBitcoinWalletData } from '@/services/bitcoin';
 import { BitcoinWalletData } from '@/types/bitcoin';
 
@@ -7,33 +7,33 @@ export function useBitcoinWallet(walletAddress: string) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const fetchData = useCallback(async () => {
     if (!walletAddress) {
       setIsLoading(false);
       return;
     }
 
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        const data = await fetchBitcoinWalletData(walletAddress);
-        setWalletData(data);
-      } catch (err) {
-        console.error('Error fetching wallet data:', err);
-        setError('Failed to fetch wallet data. Please try again later.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await fetchBitcoinWalletData(walletAddress);
+      setWalletData(data);
+    } catch (err) {
+      console.error('Error fetching wallet data:', err);
+      setError('Failed to fetch wallet data. Please try again later.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [walletAddress]);
 
+  useEffect(() => {
     fetchData();
 
     // Refresh wallet data every 5 minutes
     const intervalId = setInterval(fetchData, 5 * 60 * 1000);
 
     return () => clearInterval(intervalId);
-  }, [walletAddress]);
+  }, [fetchData]);
 
-  return { walletData, isLoading, error };
+  return { walletData, isLoading, error, refresh: fetchData };
 } 

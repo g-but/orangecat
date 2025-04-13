@@ -8,17 +8,17 @@ export const mainNav: NavItem[] = [
   {
     name: 'Create',
     href: '/create',
-    description: 'Create your donation page',
+    description: 'Create your funding page',
   },
   {
-    name: 'Donate',
-    href: '/donate',
-    description: 'Support Palfare',
+    name: 'Fund',
+    href: '/fund',
+    description: 'Support Orange Cat',
   },
   {
     name: 'About',
     href: '/about',
-    description: 'Learn about Palfare',
+    description: 'Learn about Orange Cat',
   },
   {
     name: 'Blog',
@@ -34,8 +34,8 @@ export const footerNav = {
       href: '/create',
     },
     {
-      name: 'Donate',
-      href: '/donate',
+      name: 'Fund',
+      href: '/fund',
     },
     {
       name: 'About',

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Orange Cat Funding - Bitcoin Patronage Platform{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-5">
+        <div class="col-md-8 mx-auto text-center">
+            <h1 class="display-4 mb-4">
+                <span class="cat-paw"></span>
+                Welcome to Orange Cat Funding
+                <span class="cat-paw"></span>
+            </h1>
+            <p class="lead" style="color: var(--veuve-orange);">
+                The purr-fect platform for Bitcoin-powered patronage
+            </p>
+            <div class="d-flex justify-content-center gap-3 mt-4">
+                <a href="{{ url_for('create_profile') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle"></i> Start Your Funding Page
+                </a>
+                <a href="{{ url_for('show_leaderboard') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-trophy"></i> View Top Creators
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-4" style="color: var(--veuve-orange);">
+                        <i class="fas fa-rocket fa-3x"></i>
+                    </div>
+                    <h3 class="card-title" style="color: var(--veuve-orange);">Launch Your Page</h3>
+                    <p class="card-text">Create your funding page in minutes. Set up your Bitcoin address, define your goals, and start receiving support.</p>
+                    <a href="{{ url_for('create_profile') }}" class="btn btn-outline-primary mt-3">
+                        <i class="fas fa-paw"></i> Get Started
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-4" style="color: var(--tiffany-blue);">
+                        <i class="fas fa-robot fa-3x"></i>
+                    </div>
+                    <h3 class="card-title" style="color: var(--tiffany-blue);">AI-Powered Experience</h3>
+                    <p class="card-text">Smart interactions, automated updates, and personalized engagement powered by AI.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-body text-center">
+                    <div class="mb-4" style="color: var(--veuve-orange);">
+                        <i class="fab fa-bitcoin fa-3x"></i>
+                    </div>
+                    <h3 class="card-title" style="color: var(--veuve-orange);">Bitcoin First</h3>
+                    <p class="card-text">Built for Bitcoin with instant settlement and transparent tracking.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-6 mx-auto text-center">
+            <div class="card">
+                <div class="card-body">
+                    <h4 class="mb-4" style="color: var(--veuve-orange);">
+                        <i class="fas fa-paw"></i> Why Orange Cat?
+                    </h4>
+                    <p class="lead">
+                        Just like an orange cat brings warmth and joy to a home, 
+                        we bring transparency and trust to Bitcoin funding.
+                    </p>
+                    <div class="mt-4">
+                        <span class="cat-paw"></span>
+                        <span class="cat-paw"></span>
+                        <span class="cat-paw"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h4 class="mb-4" style="color: var(--veuve-orange);">
+                        <i class="fas fa-lightbulb"></i> What Can You Fund?
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-paint-brush fa-2x mb-3" style="color: var(--veuve-orange);"></i>
+                                <h5>Creative Projects</h5>
+                                <p>Art, music, writing, and more</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-laptop-code fa-2x mb-3" style="color: var(--veuve-orange);"></i>
+                                <h5>Tech Development</h5>
+                                <p>Open source, apps, and tools</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="p-3">
+                                <i class="fas fa-heart fa-2x mb-3" style="color: var(--veuve-orange);"></i>
+                                <h5>Lifestyle Support</h5>
+                                <p>Personal goals and passions</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

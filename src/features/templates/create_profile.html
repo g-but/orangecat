@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Create Profile - OrangeCat{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-4xl font-bold mb-8">Create Your Profile</h1>
+  <div class="bg-white rounded-lg shadow-lg p-6">
+    <form method="POST" action="{{ url_for('create_profile') }}">
+      <div class="mb-4">
+        <label for="username" class="form-label">Username</label>
+        <input type="text" class="form-control" id="username" name="username" required>
+      </div>
+      <div class="mb-4">
+        <label for="bitcoin_address" class="form-label">Bitcoin Address</label>
+        <input type="text" class="form-control" id="bitcoin_address" name="bitcoin_address" required>
+      </div>
+      <button type="submit" class="bg-orange-500 text-white px-4 py-2 rounded-lg">
+        Create Profile
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %} 

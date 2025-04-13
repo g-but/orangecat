@@ -3,7 +3,7 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['localhost', 'www.palfare.com', 'palfare.com'],
+    domains: ['localhost', 'www.orangecat.com', 'orangecat.com'],
   },
   async headers() {
     return [
@@ -43,8 +43,8 @@ const nextConfig = {
     ]
   },
   env: {
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.palfare.com',
-    NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME || 'Palfare',
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.orangecat.com',
+    NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME || 'Orange Cat',
   },
 }
 

@@ -55,7 +55,7 @@ export default function AboutPage() {
             transition={{ duration: 0.5 }}
             className="max-w-3xl mx-auto text-center mb-16"
           >
-            <h1 className="mb-4">About Palfare</h1>
+            <h1 className="mb-4">About OrangeCat</h1>
             <p className="text-xl text-slate-600">
               Making Bitcoin donations simple and accessible for everyone
             </p>
@@ -69,7 +69,7 @@ export default function AboutPage() {
           >
             <h2 className="text-2xl font-bold mb-6">Our Mission</h2>
             <p className="text-slate-600 mb-4">
-              Palfare was created with a simple mission: to make accepting Bitcoin donations as easy as possible. 
+              OrangeCat was created with a simple mission: to make accepting Bitcoin donations as easy as possible. 
               We believe that Bitcoin is the future of money, and we want to help creators, organizations, and 
               individuals around the world accept Bitcoin donations without any hassle.
             </p>
@@ -83,55 +83,34 @@ export default function AboutPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="max-w-3xl mx-auto mb-16"
-          >
-            <h2 className="text-2xl font-bold mb-6">How It Works</h2>
-            <div className="space-y-8">
-              {steps.map((step, index) => (
-                <motion.div
-                  key={step.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-                  className="card"
-                >
-                  <div className="flex items-start space-x-4">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-full bg-tiffany/10 flex items-center justify-center">
-                      <step.icon className="w-6 h-6 text-tiffany" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-2">{step.title}</h3>
-                      <p className="text-slate-600">{step.description}</p>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
             className="max-w-3xl mx-auto"
           >
-            <h2 className="text-2xl font-bold mb-6 text-center">Our Values</h2>
+            <h2 className="text-2xl font-bold mb-6">Why Choose OrangeCat?</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {values.map((value, index) => (
-                <motion.div
-                  key={value.title}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.6 + index * 0.1 }}
-                  className="card"
-                >
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-tiffany/10 text-tiffany mb-4">
-                    <value.icon className="w-6 h-6" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{value.title}</h3>
-                  <p className="text-slate-600">{value.description}</p>
-                </motion.div>
-              ))}
+              <div className="card">
+                <h3 className="text-xl font-bold mb-4 text-tiffany-500">Simple Setup</h3>
+                <p className="text-slate-600">
+                  Create your donation page in minutes with our intuitive interface.
+                </p>
+              </div>
+              <div className="card">
+                <h3 className="text-xl font-bold mb-4 text-tiffany-500">Transparent</h3>
+                <p className="text-slate-600">
+                  All transactions are recorded on the Bitcoin blockchain for complete transparency.
+                </p>
+              </div>
+              <div className="card">
+                <h3 className="text-xl font-bold mb-4 text-tiffany-500">Secure</h3>
+                <p className="text-slate-600">
+                  Your funds are secured by the Bitcoin network, the most secure financial network in the world.
+                </p>
+              </div>
+              <div className="card">
+                <h3 className="text-xl font-bold mb-4 text-tiffany-500">Global</h3>
+                <p className="text-slate-600">
+                  Accept donations from anywhere in the world, 24/7, with instant settlement.
+                </p>
+              </div>
             </div>
           </motion.div>
         </div>

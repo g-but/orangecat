@@ -1,19 +1,27 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import ClientErrorBoundary from '@/components/ClientErrorBoundary'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+})
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://palfare.com'
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Palfare'
+const playfairDisplay = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair-display',
+})
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orangecat.com'
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeCat'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: `${siteName} - Bitcoin Donation Platform`,
-  description: 'A platform for accepting Bitcoin donations with ease.',
+  title: 'OrangeCat',
+  description: 'A transparent and trustworthy platform for funding innovative projects',
   keywords: ['bitcoin', 'donation', 'crypto', 'blockchain'],
   authors: [{ name: `${siteName} Team` }],
   openGraph: {
@@ -41,12 +49,14 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
+      <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white">
         <ClientErrorBoundary>
           <div className="min-h-screen flex flex-col">
             <Header />
-            <main className="flex-grow pt-16">{children}</main>
+            <main className="flex-grow">
+              {children}
+            </main>
             <Footer />
           </div>
         </ClientErrorBoundary>

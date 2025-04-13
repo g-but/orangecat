@@ -16,7 +16,7 @@ export default function Hero() {
             className="mb-6"
           >
             Accept Bitcoin Donations{' '}
-            <span className="text-tiffany">with Ease</span>
+            <span className="text-tiffany-500">with Ease</span>
           </motion.h1>
           
           <motion.p
@@ -49,8 +49,8 @@ export default function Hero() {
       {/* Decorative background elements */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-4xl">
-          <div className="absolute top-0 left-0 w-64 h-64 bg-tiffany/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-64 h-64 bg-tiffany/5 rounded-full blur-3xl" />
+          <div className="absolute top-0 left-0 w-64 h-64 bg-tiffany-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-tiffany-500/5 rounded-full blur-3xl" />
         </div>
       </div>
     </section>

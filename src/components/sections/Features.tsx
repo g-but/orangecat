@@ -38,7 +38,7 @@ export default function Features() {
             transition={{ duration: 0.5 }}
             className="mb-4"
           >
-            Why Choose Palfare?
+            Why Choose Orange Cat?
           </motion.h2>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -47,7 +47,7 @@ export default function Features() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="text-xl text-slate-600"
           >
-            Simple, secure, and efficient Bitcoin donation platform
+            Simple, secure, and efficient <span className="text-orange-500">Bitcoin</span> funding platform
           </motion.p>
         </div>
 
@@ -61,7 +61,7 @@ export default function Features() {
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="card"
             >
-              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-tiffany/10 text-tiffany mb-4">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-tiffany-500/10 text-tiffany-500 mb-4">
                 <feature.icon className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold mb-2">{feature.title}</h3>

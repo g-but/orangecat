@@ -7,7 +7,7 @@ const API_PROVIDERS = [
     baseUrl: 'https://mempool.space/api',
     addressEndpoint: (address: string) => `/address/${address}`,
     txsEndpoint: (address: string) => `/address/${address}/txs`,
-    processBalance: (data: any) => data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum,
+    processBalance: (data: any) => (data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000,
     processTransactions: (data: any, address: string) => 
       data.slice(0, 5).map((tx: any) => {
         let type: 'incoming' | 'outgoing' = 'incoming';
@@ -40,7 +40,7 @@ const API_PROVIDERS = [
     baseUrl: 'https://blockstream.info/api',
     addressEndpoint: (address: string) => `/address/${address}`,
     txsEndpoint: (address: string) => `/address/${address}/txs`,
-    processBalance: (data: any) => data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum,
+    processBalance: (data: any) => (data.chain_stats.funded_txo_sum - data.chain_stats.spent_txo_sum) / 100000000,
     processTransactions: (data: any, address: string) => 
       data.slice(0, 5).map((tx: any) => {
         // Similar processing as above, adapted for blockstream API
