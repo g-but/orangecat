@@ -4,6 +4,8 @@ import './globals.css'
 import Header from '@/components/layout/Header'
 import Footer from '@/components/layout/Footer'
 import ClientErrorBoundary from '@/components/ClientErrorBoundary'
+import { ProfileProvider } from '@/contexts/ProfileContext'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -20,8 +22,8 @@ const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeCat'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: 'OrangeCat',
-  description: 'A transparent and trustworthy platform for funding innovative projects',
+  title: 'OrangeCat - Bitcoin Donations Made Simple',
+  description: 'Create your profile and start accepting Bitcoin donations today.',
   keywords: ['bitcoin', 'donation', 'crypto', 'blockchain'],
   authors: [{ name: `${siteName} Team` }],
   openGraph: {
@@ -51,15 +53,19 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
       <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white">
-        <ClientErrorBoundary>
-          <div className="min-h-screen flex flex-col">
-            <Header />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Footer />
-          </div>
-        </ClientErrorBoundary>
+        <AuthProvider>
+          <ProfileProvider>
+            <ClientErrorBoundary>
+              <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="flex-grow">
+                  {children}
+                </main>
+                <Footer />
+              </div>
+            </ClientErrorBoundary>
+          </ProfileProvider>
+        </AuthProvider>
       </body>
     </html>
   )

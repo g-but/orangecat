@@ -3,7 +3,10 @@ export interface TransparencyMetric {
   name: string
   description: string
   weight: number
-  enabled: boolean
+  status: 'good' | 'needs-improvement' | 'critical'
+  currentState: string
+  improvements?: string[]
+  verificationSteps?: string[]
 }
 
 export interface TransparencyScore {
@@ -13,74 +16,162 @@ export interface TransparencyScore {
   metrics: TransparencyMetric[]
 }
 
+export interface TransparencyData {
+  transactionCount: number
+  hasPublicBalance: boolean
+  verificationLevel: number
+  activityLogCount: number
+  isCodePublic: boolean
+}
+
 export const TRANSPARENCY_METRICS: TransparencyMetric[] = [
   {
-    id: 'openSource',
-    name: 'Open Source Code',
-    description: 'Project code is publicly available and verifiable',
-    weight: 0.5,
-    enabled: true
+    id: 'transactionHistory',
+    name: 'Transaction History',
+    description: 'All Bitcoin transactions are publicly visible and verifiable on the blockchain.',
+    weight: 0.25,
+    status: 'good',
+    currentState: 'All transactions are publicly visible and can be verified on the blockchain.',
+    verificationSteps: [
+      'Check our Bitcoin address on any blockchain explorer',
+      'Monitor transaction history for consistency',
+      'Verify transaction timestamps and amounts'
+    ]
   },
   {
-    id: 'profileInfo',
-    name: 'Complete Profile Information',
-    description: 'Project maintains up-to-date and comprehensive profile information',
-    weight: 0.1,
-    enabled: true
+    id: 'balanceVisibility',
+    name: 'Balance Visibility',
+    description: 'Current and historical balances are publicly visible.',
+    weight: 0.2,
+    status: 'good',
+    currentState: 'Current balance is always displayed and can be verified on the blockchain.',
+    verificationSteps: [
+      'Verify current balance matches blockchain data',
+      'Check balance history consistency',
+      'Monitor balance changes'
+    ]
   },
   {
-    id: 'publicBalance',
-    name: 'Public Balance',
-    description: 'Current balance is publicly visible',
-    weight: 0.1,
-    enabled: true
+    id: 'verificationStatus',
+    name: 'Verification Status',
+    description: 'Level of identity verification and project legitimacy.',
+    weight: 0.2,
+    status: 'critical',
+    currentState: 'Basic verification completed, but additional steps needed.',
+    improvements: [
+      'Complete full identity verification',
+      'Implement regular verification updates',
+      'Add team member verification'
+    ],
+    verificationSteps: [
+      'Review current verification documents',
+      'Check verification timestamps',
+      'Verify verification provider'
+    ]
   },
   {
-    id: 'publicTransactions',
-    name: 'Public Transactions',
-    description: 'Transaction history is publicly visible',
-    weight: 0.1,
-    enabled: true
-  },
-  {
-    id: 'activityLog',
+    id: 'activityLogging',
     name: 'Activity Logging',
-    description: 'Project activities are logged and visible',
-    weight: 0.1,
-    enabled: false
+    description: 'Public logging of project activities and development progress.',
+    weight: 0.15,
+    status: 'needs-improvement',
+    currentState: 'Limited activity logging implemented.',
+    improvements: [
+      'Implement regular development updates',
+      'Add detailed progress tracking',
+      'Create public roadmap'
+    ],
+    verificationSteps: [
+      'Review current activity logs',
+      'Check progress against milestones',
+      'Verify team contributions'
+    ]
   },
   {
-    id: 'screenRecording',
-    name: 'Screen Recording',
-    description: 'Project activities are screen recorded',
-    weight: 0.1,
-    enabled: false
+    id: 'codeTransparency',
+    name: 'Code Transparency',
+    description: 'Project code and documentation are publicly available.',
+    weight: 0.2,
+    status: 'good',
+    currentState: 'All code is open source and available on GitHub.',
+    verificationSteps: [
+      'Review GitHub repository',
+      'Check code commits',
+      'Verify documentation completeness'
+    ]
   }
 ]
 
-export const calculateTransparencyScore = (metrics: TransparencyMetric[]): TransparencyScore => {
-  const totalWeight = metrics.reduce((sum, metric) => sum + metric.weight, 0)
-  const score = metrics.reduce((sum, metric) => 
-    sum + (metric.enabled ? metric.weight : 0), 0) / totalWeight * 100
+export const DEFAULT_TRANSPARENCY_DATA: TransparencyData = {
+  transactionCount: 0,
+  hasPublicBalance: false,
+  verificationLevel: 0,
+  activityLogCount: 0,
+  isCodePublic: false
+}
 
-  let color = 'text-red-500'
-  let description = 'Limited Transparency'
+export const calculateTransparencyScore = (
+  metrics: TransparencyMetric[],
+  data: Partial<TransparencyData> = {}
+): TransparencyScore => {
+  // Merge provided data with defaults
+  const transparencyData = { ...DEFAULT_TRANSPARENCY_DATA, ...data }
 
-  if (score >= 90) {
+  // Calculate individual metric scores
+  const calculatedMetrics = metrics.map(metric => {
+    let value = 0
+
+    switch (metric.id) {
+      case 'transactionHistory':
+        value = Math.min(transparencyData.transactionCount * 10, 100)
+        break
+      case 'balanceVisibility':
+        value = transparencyData.hasPublicBalance ? 100 : 0
+        break
+      case 'verificationStatus':
+        value = transparencyData.verificationLevel
+        break
+      case 'activityLogging':
+        value = Math.min(transparencyData.activityLogCount * 10, 100)
+        break
+      case 'codeTransparency':
+        value = transparencyData.isCodePublic ? 100 : 0
+        break
+    }
+
+    return {
+      ...metric,
+      value
+    }
+  })
+
+  // Calculate total score
+  const totalScore = calculatedMetrics.reduce((sum, metric) => {
+    return sum + (metric.value * metric.weight)
+  }, 0)
+
+  // Determine color and description based on score
+  let color = ''
+  let description = ''
+
+  if (totalScore >= 90) {
     color = 'text-green-500'
-    description = 'Excellent Transparency'
-  } else if (score >= 70) {
+    description = 'Excellent transparency'
+  } else if (totalScore >= 70) {
     color = 'text-yellow-500'
-    description = 'Good Transparency'
-  } else if (score >= 50) {
+    description = 'Good transparency'
+  } else if (totalScore >= 50) {
     color = 'text-orange-500'
-    description = 'Moderate Transparency'
+    description = 'Moderate transparency'
+  } else {
+    color = 'text-red-500'
+    description = 'Limited transparency'
   }
 
   return {
-    score: Math.round(score),
+    score: Math.round(totalScore),
     color,
     description,
-    metrics
+    metrics: calculatedMetrics
   }
 } 

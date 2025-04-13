@@ -1,59 +1,27 @@
-export type NavItem = {
-  name: string
-  href: string
-  description?: string
-}
+import { Github, Twitter } from 'lucide-react'
 
-export const mainNav: NavItem[] = [
-  {
-    name: 'Create',
-    href: '/create',
-    description: 'Create your funding page',
-  },
-  {
-    name: 'Fund',
-    href: '/fund',
-    description: 'Support Orange Cat',
-  },
-  {
-    name: 'About',
-    href: '/about',
-    description: 'Learn about Orange Cat',
-  },
-  {
-    name: 'Blog',
-    href: '/blog',
-    description: 'Latest updates and news',
-  },
-]
-
-export const footerNav = {
-  product: [
+export const navigation = {
+  main: [
+    { name: 'Home', href: '/' },
+    { name: 'Create', href: '/create' },
+    { name: 'Fund', href: '/fund' },
+    { name: 'About', href: '/about' },
+    { name: 'Blog', href: '/blog' },
+  ],
+  social: [
     {
-      name: 'Create',
-      href: '/create',
+      name: 'Twitter',
+      href: 'https://twitter.com/orangecat',
+      icon: Twitter,
     },
     {
-      name: 'Fund',
-      href: '/fund',
-    },
-    {
-      name: 'About',
-      href: '/about',
-    },
-    {
-      name: 'Blog',
-      href: '/blog',
+      name: 'GitHub',
+      href: 'https://github.com/g-but/orangecat',
+      icon: Github,
     },
   ],
-  legal: [
-    {
-      name: 'Privacy Policy',
-      href: '/privacy',
-    },
-    {
-      name: 'Terms of Service',
-      href: '/terms',
-    },
+  auth: [
+    { name: 'Login', href: '/login' },
+    { name: 'Register', href: '/register' },
   ],
 } 

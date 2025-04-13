@@ -2,38 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
-}
-
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-  font-family: var(--font-inter);
-}
-
 @layer base {
   html {
     @apply scroll-smooth;
   }
   
   body {
-    @apply bg-white text-slate-800 antialiased;
+    @apply bg-gradient-to-b from-tiffany-50 to-white text-slate-800 antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -81,7 +56,7 @@ body {
 
   /* Primary Actions */
   .btn-primary {
-    @apply bg-teal-500 text-white hover:bg-teal-600;
+    @apply bg-tiffany-500 text-white hover:bg-tiffany-600;
   }
 
   /* Secondary Actions */
@@ -100,21 +75,21 @@ body {
 
   /* Navigation */
   .nav-link {
-    @apply px-4 py-2 rounded-full text-slate-800 hover:text-orange-500 transition-colors duration-200;
+    @apply px-4 py-2 rounded-full text-slate-800 hover:text-tiffany-500 transition-colors duration-200;
   }
 
   .nav-link-active {
-    @apply bg-orange-50 text-orange-500;
+    @apply bg-tiffany-50 text-tiffany-500;
   }
 
   /* Form Elements */
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent;
   }
 
   /* Progress Indicators */
   .progress-bar {
-    @apply h-2 rounded-full bg-cream-100 overflow-hidden;
+    @apply h-2 rounded-full bg-gray-100 overflow-hidden;
   }
 
   .progress-bar-fill {
@@ -123,20 +98,20 @@ body {
 
   /* Score Indicators */
   .trust-score {
-    @apply h-2 rounded-full bg-cream-100 overflow-hidden;
+    @apply h-2 rounded-full bg-gray-100 overflow-hidden;
   }
 
   .trust-score-fill {
-    @apply h-full bg-orange-500 transition-all duration-300;
+    @apply h-full bg-tiffany-500 transition-all duration-300;
   }
 
   /* Bitcoin-specific elements */
   .bitcoin-text {
-    @apply text-orange-500 font-medium;
+    @apply text-tiffany-500 font-medium;
   }
 
   .bitcoin-card {
-    @apply bg-orange-50 border border-orange-100 rounded-xl p-6;
+    @apply bg-tiffany-50 border border-tiffany-100 rounded-xl p-6;
   }
 
   .kpi-card {

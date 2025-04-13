@@ -1,29 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Bitcoin, Github, Twitter } from 'lucide-react'
-
-const navigation = {
-  main: [
-    { name: 'Home', href: '/' },
-    { name: 'Create', href: '/create' },
-    { name: 'Fund', href: '/fund' },
-    { name: 'About', href: '/about' },
-    { name: 'Blog', href: '/blog' },
-  ],
-  social: [
-    {
-      name: 'Twitter',
-      href: 'https://twitter.com/orangecat',
-      icon: Twitter,
-    },
-    {
-      name: 'GitHub',
-      href: 'https://github.com/g-but/orangecat',
-      icon: Github,
-    },
-  ],
-}
+import { Bitcoin } from 'lucide-react'
+import { navigation } from '@/config/navigation'
 
 export default function Footer() {
   return (
@@ -98,7 +77,7 @@ export default function Footer() {
         </div>
         <div className="mt-12 border-t border-slate-200 pt-8">
           <p className="text-base text-slate-400 xl:text-center">
-            © {new Date().getFullYear()} OrangeCat. All rights reserved.
+            &copy; {new Date().getFullYear()} OrangeCat. All rights reserved.
           </p>
         </div>
       </div>

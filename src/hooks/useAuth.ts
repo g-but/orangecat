@@ -1,50 +1,31 @@
-import { useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+'use client'
 
-export const useAuth = () => {
+import { useEffect, useState } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { User } from '@supabase/supabase-js'
+
+export function useAuth() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const supabase = createClientComponentClient()
 
   useEffect(() => {
-    let mounted = true
-
-    const checkUser = async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser()
-        
-        if (error) throw error
-        
-        if (mounted) {
-          setUser(user)
-          setError(null)
-        }
-      } catch (error) {
-        console.error('Error checking auth state:', error)
-        if (mounted) {
-          setError('Failed to load user data. Please try again.')
-        }
-      } finally {
-        if (mounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    checkUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (mounted) {
-        setUser(session?.user ?? null)
-      }
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
     })
 
-    return () => {
-      mounted = false
-      subscription.unsubscribe()
-    }
-  }, [])
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+      setLoading(false)
+    })
 
-  return { user, loading, error }
+    return () => subscription.unsubscribe()
+  }, [supabase])
+
+  return { user, loading }
 } 

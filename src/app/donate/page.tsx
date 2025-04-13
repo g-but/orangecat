@@ -1,8 +1,12 @@
+'use client'
+
 import { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 
 export const metadata: Metadata = {
   title: 'Support Our Mission | OrangeCat',
