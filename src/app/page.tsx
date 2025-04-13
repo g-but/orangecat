@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
-import { FundingPageList } from '@/components/funding/FundingPageList'
+import FundingPageList from '@/components/funding/FundingPageList'
 import { User } from '@supabase/supabase-js'
 import Hero from '@/components/sections/Hero'
 

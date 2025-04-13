@@ -1,9 +1,18 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { Profile } from '@/types/profile'
-import { getProfile } from '@/lib/supabase/profile'
-import { useAuth } from '@/hooks/useAuth'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useAuth } from './AuthContext'
+
+interface Profile {
+  id: string
+  user_id: string
+  full_name: string
+  avatar_url: string
+  bio: string
+  created_at: string
+  updated_at: string
+}
 
 interface ProfileContextType {
   profile: Profile | null
@@ -12,9 +21,14 @@ interface ProfileContextType {
   refreshProfile: () => Promise<void>
 }
 
-const ProfileContext = createContext<ProfileContextType | undefined>(undefined)
+const ProfileContext = createContext<ProfileContextType>({
+  profile: null,
+  loading: true,
+  error: null,
+  refreshProfile: async () => {},
+})
 
-export function ProfileProvider({ children }: { children: React.ReactNode }) {
+export function ProfileProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)
@@ -29,11 +43,17 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setLoading(true)
-      const data = await getProfile(user.id)
+      const { data, error } = await createClientComponentClient()
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (error) throw error
       setProfile(data)
       setError(null)
     } catch (err) {
-      console.error('Error fetching profile:', err)
+      console.error('Error loading profile:', err)
       setError('Failed to load profile')
     } finally {
       setLoading(false)
@@ -41,8 +61,10 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
   }
 
   useEffect(() => {
-    refreshProfile()
-  }, [user])
+    if (user) {
+      refreshProfile()
+    }
+  }, [user, refreshProfile])
 
   return (
     <ProfileContext.Provider value={{ profile, loading, error, refreshProfile }}>

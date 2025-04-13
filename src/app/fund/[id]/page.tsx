@@ -1,8 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useAuth } from '@/contexts/AuthContext'
-import { getPublicFundingPage } from '@/lib/supabase'
 import { toast } from 'sonner'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -11,8 +12,8 @@ import TransactionTracker from '@/components/funding/TransactionTracker'
 import BalanceSummary from '@/components/funding/BalanceSummary'
 import { formatDistanceToNow } from 'date-fns'
 
-export default function FundPage({ params }: { params: { id: string } }) {
-  // id parameter represents the funding page identifier, which can be a wallet address or other unique identifier
+export default function FundingPage({ params }: { params: { id: string } }) {
+  const router = useRouter()
   const { user } = useAuth()
   const [page, setPage] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -20,14 +21,15 @@ export default function FundPage({ params }: { params: { id: string } }) {
   const [pendingAmount, setPendingAmount] = useState(0)
   const [lastUpdated, setLastUpdated] = useState('')
 
-  useEffect(() => {
-    loadPage()
-  }, [])
-
   const loadPage = async () => {
     try {
-      setLoading(true)
-      const data = await getPublicFundingPage(params.id)
+      const { data, error } = await createClientComponentClient()
+        .from('funding_pages')
+        .select('*')
+        .eq('id', params.id)
+        .single()
+
+      if (error) throw error
       setPage(data)
     } catch (err) {
       console.error('Error loading page:', err)
@@ -36,6 +38,12 @@ export default function FundPage({ params }: { params: { id: string } }) {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (user) {
+      loadPage()
+    }
+  }, [user, loadPage])
 
   const handleBalanceUpdate = (newBalance: number) => {
     setBalance(newBalance)
@@ -51,8 +59,8 @@ export default function FundPage({ params }: { params: { id: string } }) {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex justify-center items-center min-h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />
       </div>
     )
   }
@@ -88,7 +96,7 @@ export default function FundPage({ params }: { params: { id: string } }) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.location.href = `/fund/${params.id}/edit`}
+                onClick={() => router.push(`/fund/${params.id}/edit`)}
               >
                 Edit Page
               </Button>

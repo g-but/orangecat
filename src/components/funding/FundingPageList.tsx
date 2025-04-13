@@ -16,12 +16,6 @@ export default function FundingPageList() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (user) {
-      loadPages()
-    }
-  }, [user])
-
   const loadPages = async () => {
     try {
       setLoading(true)
@@ -35,6 +29,12 @@ export default function FundingPageList() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (user) {
+      loadPages()
+    }
+  }, [user, loadPages])
 
   const handleCreatePage = async () => {
     try {
@@ -85,7 +85,7 @@ export default function FundingPageList() {
 
       {pages.length === 0 ? (
         <Card className="p-6 text-center">
-          <p className="text-gray-500">You haven't created any funding pages yet.</p>
+          <p className="text-gray-500">You haven&apos;t created any funding pages yet.</p>
           <Button className="mt-4" onClick={handleCreatePage}>
             Create Your First Page
           </Button>

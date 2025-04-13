@@ -3,7 +3,7 @@ import { Github, Twitter } from 'lucide-react'
 export const navigation = {
   main: [
     { name: 'Home', href: '/' },
-    { name: 'Create', href: '/create' },
+    { name: 'Create', href: '/create', requiresAuth: true },
     { name: 'Fund', href: '/fund' },
     { name: 'About', href: '/about' },
     { name: 'Blog', href: '/blog' },
@@ -21,7 +21,7 @@ export const navigation = {
     },
   ],
   auth: [
-    { name: 'Login', href: '/login' },
-    { name: 'Register', href: '/register' },
+    { name: 'Sign In', href: '/auth' },
+    { name: 'Get Started', href: '/auth?mode=register' },
   ],
 } 

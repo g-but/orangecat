@@ -2,17 +2,25 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { Menu, X, Bitcoin } from 'lucide-react'
 import { navigation } from '@/config/navigation'
+import { useAuth } from '@/contexts/AuthContext'
 import styles from './Header.module.css'
 
 export default function Header() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  const supabase = createClientComponentClient()
-  const [session, setSession] = useState(null)
+  const router = useRouter()
+  const { user, isLoading } = useAuth()
+
+  const handleCreateClick = (e: React.MouseEvent) => {
+    if (!user && !isLoading) {
+      e.preventDefault()
+      router.push('/auth')
+    }
+  }
 
   return (
     <header className={styles.header}>
@@ -28,6 +36,7 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={item.requiresAuth ? handleCreateClick : undefined}
                   className={`px-4 py-2 rounded-full text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 transition-colors duration-200 ${
                     pathname === item.href ? 'bg-tiffany-50 text-tiffany-500 font-semibold' : ''
                   }`}
@@ -39,17 +48,28 @@ export default function Header() {
           </div>
           <div className="flex items-center space-x-4">
             <nav className="hidden sm:flex sm:space-x-4">
-              {navigation.auth.map((item) => (
+              {user ? (
                 <Link
-                  key={item.name}
-                  href={item.href}
+                  href="/dashboard"
                   className={`px-4 py-2 rounded-full text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 transition-colors duration-200 ${
-                    pathname === item.href ? 'bg-tiffany-50 text-tiffany-500 font-semibold' : ''
+                    pathname === '/dashboard' ? 'bg-tiffany-50 text-tiffany-500 font-semibold' : ''
                   }`}
                 >
-                  {item.name}
+                  Dashboard
                 </Link>
-              ))}
+              ) : (
+                navigation.auth.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={`px-4 py-2 rounded-full text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 transition-colors duration-200 ${
+                      pathname === item.href ? 'bg-tiffany-50 text-tiffany-500 font-semibold' : ''
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                ))
+              )}
             </nav>
             <div className="flex items-center sm:hidden">
               <button
@@ -71,6 +91,7 @@ export default function Header() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={item.requiresAuth ? handleCreateClick : undefined}
               className={`${styles.mobileNavLink} ${pathname === item.href ? styles.mobileNavLinkActive : ''}`}
               onClick={() => setIsOpen(false)}
             >
@@ -78,16 +99,26 @@ export default function Header() {
             </Link>
           ))}
           <div className="border-t border-slate-200 pt-4">
-            {navigation.auth.map((item) => (
+            {user ? (
               <Link
-                key={item.name}
-                href={item.href}
-                className={`${styles.mobileNavLink} ${pathname === item.href ? styles.mobileNavLinkActive : ''}`}
+                href="/dashboard"
+                className={`${styles.mobileNavLink} ${pathname === '/dashboard' ? styles.mobileNavLinkActive : ''}`}
                 onClick={() => setIsOpen(false)}
               >
-                {item.name}
+                Dashboard
               </Link>
-            ))}
+            ) : (
+              navigation.auth.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`${styles.mobileNavLink} ${pathname === item.href ? styles.mobileNavLinkActive : ''}`}
+                  onClick={() => setIsOpen(false)}
+                >
+                  {item.name}
+                </Link>
+              ))
+            )}
           </div>
         </div>
       </div>
