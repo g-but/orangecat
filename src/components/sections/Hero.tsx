@@ -51,10 +51,10 @@ export default function Hero() {
               <ArrowRight className="ml-2 h-4 w-4" />
             </Link>
             <Link 
-              href="/about" 
+              href="/fund" 
               className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-tiffany-600 bg-transparent border border-tiffany-500 rounded-lg hover:bg-tiffany-50 transition-colors"
             >
-              Learn More
+              Fund Us
               <Heart className="ml-2 h-4 w-4" />
             </Link>
           </motion.div>

@@ -7,6 +7,7 @@ export interface TransparencyMetric {
   currentState: string
   improvements?: string[]
   verificationSteps?: string[]
+  criteria?: string[]
 }
 
 export interface TransparencyScore {
@@ -17,97 +18,108 @@ export interface TransparencyScore {
 }
 
 export interface TransparencyData {
-  transactionCount: number
-  hasPublicBalance: boolean
-  verificationLevel: number
-  activityLogCount: number
-  isCodePublic: boolean
+  isOpenSource: boolean
+  hasContributionGuidelines: boolean
+  hasIssueTracking: boolean
+  hasMissionStatement: boolean
+  hasKPIs: boolean
+  hasProgressUpdates: boolean
+  hasTransactionHistory: boolean
+  hasTransactionComments: boolean
+  hasFinancialReports: boolean
+  hasPublicChannels: boolean
+  hasCommunityUpdates: boolean
+  isResponsiveToFeedback: boolean
 }
 
 export const TRANSPARENCY_METRICS: TransparencyMetric[] = [
   {
-    id: 'transactionHistory',
-    name: 'Transaction History',
-    description: 'All Bitcoin transactions are publicly visible and verifiable on the blockchain.',
+    id: 'openSource',
+    name: 'Open Source',
+    description: 'Project code is publicly available and contributions are welcome.',
     weight: 0.25,
     status: 'good',
-    currentState: 'All transactions are publicly visible and can be verified on the blockchain.',
-    verificationSteps: [
-      'Check our Bitcoin address on any blockchain explorer',
-      'Monitor transaction history for consistency',
-      'Verify transaction timestamps and amounts'
-    ]
-  },
-  {
-    id: 'balanceVisibility',
-    name: 'Balance Visibility',
-    description: 'Current and historical balances are publicly visible.',
-    weight: 0.2,
-    status: 'good',
-    currentState: 'Current balance is always displayed and can be verified on the blockchain.',
-    verificationSteps: [
-      'Verify current balance matches blockchain data',
-      'Check balance history consistency',
-      'Monitor balance changes'
-    ]
-  },
-  {
-    id: 'verificationStatus',
-    name: 'Verification Status',
-    description: 'Level of identity verification and project legitimacy.',
-    weight: 0.2,
-    status: 'critical',
-    currentState: 'Basic verification completed, but additional steps needed.',
-    improvements: [
-      'Complete full identity verification',
-      'Implement regular verification updates',
-      'Add team member verification'
+    currentState: 'Full source code access with active contribution guidelines and public issue tracking.',
+    criteria: [
+      'Full source code access',
+      'Active contribution guidelines',
+      'Public issue tracking'
     ],
-    verificationSteps: [
-      'Review current verification documents',
-      'Check verification timestamps',
-      'Verify verification provider'
-    ]
-  },
-  {
-    id: 'activityLogging',
-    name: 'Activity Logging',
-    description: 'Public logging of project activities and development progress.',
-    weight: 0.15,
-    status: 'needs-improvement',
-    currentState: 'Limited activity logging implemented.',
-    improvements: [
-      'Implement regular development updates',
-      'Add detailed progress tracking',
-      'Create public roadmap'
-    ],
-    verificationSteps: [
-      'Review current activity logs',
-      'Check progress against milestones',
-      'Verify team contributions'
-    ]
-  },
-  {
-    id: 'codeTransparency',
-    name: 'Code Transparency',
-    description: 'Project code and documentation are publicly available.',
-    weight: 0.2,
-    status: 'good',
-    currentState: 'All code is open source and available on GitHub.',
     verificationSteps: [
       'Review GitHub repository',
-      'Check code commits',
-      'Verify documentation completeness'
+      'Check contribution guidelines',
+      'Verify issue tracking system'
+    ]
+  },
+  {
+    id: 'missionAccountability',
+    name: 'Mission Accountability',
+    description: 'Clear KPIs and regular progress reports are provided.',
+    weight: 0.25,
+    status: 'good',
+    currentState: 'Well-defined mission statement with measurable KPIs and regular progress updates.',
+    criteria: [
+      'Defined mission statement',
+      'Measurable KPIs',
+      'Regular progress updates'
+    ],
+    verificationSteps: [
+      'Review mission statement',
+      'Check KPI dashboard',
+      'Verify progress reports'
+    ]
+  },
+  {
+    id: 'financialAccountability',
+    name: 'Financial Accountability',
+    description: 'All transactions are visible and explained.',
+    weight: 0.25,
+    status: 'good',
+    currentState: 'Complete transaction history with detailed comments and regular financial reports.',
+    criteria: [
+      'Public transaction history',
+      'Detailed transaction comments',
+      'Regular financial reports'
+    ],
+    verificationSteps: [
+      'Review transaction history',
+      'Check transaction comments',
+      'Verify financial reports'
+    ]
+  },
+  {
+    id: 'communityEngagement',
+    name: 'Community Engagement',
+    description: 'Active response to comments and community feedback.',
+    weight: 0.25,
+    status: 'good',
+    currentState: 'Active public communication channels with regular updates and responsive feedback system.',
+    criteria: [
+      'Public communication channels',
+      'Regular community updates',
+      'Responsive to feedback'
+    ],
+    verificationSteps: [
+      'Review communication channels',
+      'Check update frequency',
+      'Verify response times'
     ]
   }
 ]
 
 export const DEFAULT_TRANSPARENCY_DATA: TransparencyData = {
-  transactionCount: 0,
-  hasPublicBalance: false,
-  verificationLevel: 0,
-  activityLogCount: 0,
-  isCodePublic: false
+  isOpenSource: false,
+  hasContributionGuidelines: false,
+  hasIssueTracking: false,
+  hasMissionStatement: false,
+  hasKPIs: false,
+  hasProgressUpdates: false,
+  hasTransactionHistory: false,
+  hasTransactionComments: false,
+  hasFinancialReports: false,
+  hasPublicChannels: false,
+  hasCommunityUpdates: false,
+  isResponsiveToFeedback: false
 }
 
 export const calculateTransparencyScore = (
@@ -120,24 +132,45 @@ export const calculateTransparencyScore = (
   // Calculate individual metric scores
   const calculatedMetrics = metrics.map(metric => {
     let value = 0
+    let criteriaMet = 0
+    let totalCriteria = 0
 
     switch (metric.id) {
-      case 'transactionHistory':
-        value = Math.min(transparencyData.transactionCount * 10, 100)
+      case 'openSource':
+        criteriaMet = [
+          transparencyData.isOpenSource,
+          transparencyData.hasContributionGuidelines,
+          transparencyData.hasIssueTracking
+        ].filter(Boolean).length
+        totalCriteria = 3
         break
-      case 'balanceVisibility':
-        value = transparencyData.hasPublicBalance ? 100 : 0
+      case 'missionAccountability':
+        criteriaMet = [
+          transparencyData.hasMissionStatement,
+          transparencyData.hasKPIs,
+          transparencyData.hasProgressUpdates
+        ].filter(Boolean).length
+        totalCriteria = 3
         break
-      case 'verificationStatus':
-        value = transparencyData.verificationLevel
+      case 'financialAccountability':
+        criteriaMet = [
+          transparencyData.hasTransactionHistory,
+          transparencyData.hasTransactionComments,
+          transparencyData.hasFinancialReports
+        ].filter(Boolean).length
+        totalCriteria = 3
         break
-      case 'activityLogging':
-        value = Math.min(transparencyData.activityLogCount * 10, 100)
-        break
-      case 'codeTransparency':
-        value = transparencyData.isCodePublic ? 100 : 0
+      case 'communityEngagement':
+        criteriaMet = [
+          transparencyData.hasPublicChannels,
+          transparencyData.hasCommunityUpdates,
+          transparencyData.isResponsiveToFeedback
+        ].filter(Boolean).length
+        totalCriteria = 3
         break
     }
+
+    value = (criteriaMet / totalCriteria) * 100
 
     return {
       ...metric,

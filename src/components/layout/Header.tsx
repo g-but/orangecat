@@ -22,6 +22,14 @@ export default function Header() {
     }
   }
 
+  const handleAuthLinkClick = (e: React.MouseEvent, href: string) => {
+    if (pathname === '/auth') {
+      e.preventDefault()
+      const mode = href.includes('mode=register') ? 'register' : 'login'
+      router.push(`/auth?mode=${mode}`)
+    }
+  }
+
   const handleMobileLinkClick = (e: React.MouseEvent, item: any) => {
     if (item.requiresAuth) {
       handleCreateClick(e)
@@ -69,6 +77,7 @@ export default function Header() {
                   <Link
                     key={item.name}
                     href={item.href}
+                    onClick={(e) => handleAuthLinkClick(e, item.href)}
                     className={`px-4 py-2 rounded-full text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 transition-colors duration-200 ${
                       pathname === item.href ? 'bg-tiffany-50 text-tiffany-500 font-semibold' : ''
                     }`}
@@ -118,8 +127,11 @@ export default function Header() {
                 <Link
                   key={item.name}
                   href={item.href}
+                  onClick={(e) => {
+                    handleAuthLinkClick(e, item.href)
+                    setIsOpen(false)
+                  }}
                   className={`${styles.mobileNavLink} ${pathname === item.href ? styles.mobileNavLinkActive : ''}`}
-                  onClick={() => setIsOpen(false)}
                 >
                   {item.name}
                 </Link>

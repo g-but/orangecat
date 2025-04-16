@@ -21,7 +21,7 @@ export const navigation = {
     },
   ],
   auth: [
-    { name: 'Sign In', href: '/auth' },
+    { name: 'Sign In', href: '/auth?mode=login' },
     { name: 'Get Started', href: '/auth?mode=register' },
   ],
 } 
