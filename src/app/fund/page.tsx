@@ -265,7 +265,7 @@ export default function FundPage() {
                       <div>
                         <h3 className="text-sm font-medium text-gray-900">About Bitcoin</h3>
                         <p className="mt-1 text-sm text-gray-600">
-                          Bitcoin is a digital currency that can be sent anywhere in the world. It's secure, decentralized, and perfect for larger donations.
+                          Bitcoin is a digital currency that can be sent anywhere in the world. It&apos;s secure, decentralized, and perfect for larger donations.
                         </p>
                       </div>
                     </div>
@@ -389,7 +389,7 @@ export default function FundPage() {
                 <li>A new project or cause seeking funding</li>
                 <li>Expanded reach and potential donor base</li>
                 <li>Growth of the Orange Cat ecosystem</li>
-                <li>Validation of our platform's value</li>
+                <li>Validation of our platform&apos;s value</li>
               </ul>
             </div>
           </div>
@@ -410,8 +410,8 @@ export default function FundPage() {
                     This initial page serves as a proof of concept and demonstrates our commitment to transparent fundraising.
                   </p>
                   <p className="mt-2">
-                    While we're at 1% of our target, this first page is crucial as it validates our platform's core functionality
-                    and sets the foundation for future growth. We're actively working on attracting more projects to our platform
+                    While we&apos;re at 1% of our target, this first page is crucial as it validates our platform&apos;s core functionality
+                    and sets the foundation for future growth. We&apos;re actively working on attracting more projects to our platform
                     while maintaining our high standards of transparency and accountability.
                   </p>
                 </div>
