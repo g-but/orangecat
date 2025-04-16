@@ -543,7 +543,7 @@ export default function FundPage() {
                           </p>
                           {tx.txid === walletData?.transactions?.[0]?.txid && (
                             <div className="mt-2 text-sm text-gray-600 italic">
-                              "Initial test transaction from founder to verify system functionality"
+                              &ldquo;Initial test transaction from founder to verify system functionality&rdquo;
                             </div>
                           )}
                         </div>
