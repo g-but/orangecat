@@ -1,4 +1,4 @@
-import { RouterContext } from 'next/dist/shared/lib/router-context'
+import { RouterContext } from 'next/dist/shared/lib/router-context.shared-runtime'
 import { NextRouter } from 'next/router'
 import { ReactNode } from 'react'
 
@@ -12,7 +12,10 @@ const createRouter = (router?: Partial<NextRouter>): NextRouter => ({
   replace: jest.fn(),
   prefetch: jest.fn(),
   back: jest.fn(),
+  reload: jest.fn(),
+  forward: jest.fn(),
   pathname: '/',
+  route: '/',
   query: {},
   asPath: '/',
   basePath: '',
