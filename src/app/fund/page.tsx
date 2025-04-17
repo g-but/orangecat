@@ -65,7 +65,7 @@ export default function FundPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Floating Navigation */}
-      <div className="hidden lg:block fixed left-0 top-0 h-screen w-16 bg-white shadow-lg">
+      <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-10 hidden lg:block">
         <div className="flex flex-col h-full">
           <div className="flex-1 flex flex-col items-center justify-center space-y-8">
             <a 
@@ -157,7 +157,7 @@ export default function FundPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:ml-16">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Main Profile Info */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -223,20 +223,20 @@ export default function FundPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
           id="fund"
-          className="bg-white rounded-lg shadow-lg p-6 mb-8 scroll-mt-16"
+          className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-8 scroll-mt-16"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Fund Us</h2>
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* Tab Navigation */}
             <div className="border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
+              <nav className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-8">
                 <button
                   onClick={() => setActiveTab('bitcoin')}
                   className={`${
                     activeTab === 'bitcoin'
                       ? 'border-orange-500 text-orange-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center justify-center sm:justify-start space-x-2`}
                 >
                   <Bitcoin className="h-5 w-5" />
                   <span>Bitcoin (Recommended)</span>
@@ -247,7 +247,7 @@ export default function FundPage() {
                     activeTab === 'lightning'
                       ? 'border-orange-500 text-orange-600'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center space-x-2`}
+                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center justify-center sm:justify-start space-x-2`}
                 >
                   <Zap className="h-5 w-5" />
                   <span>Lightning (Fast & Cheap)</span>
@@ -256,7 +256,7 @@ export default function FundPage() {
             </div>
 
             {/* Tab Content */}
-            <div className="pt-4">
+            <div className="mt-6">
               {activeTab === 'bitcoin' ? (
                 <div className="space-y-6">
                   <div className="bg-orange-50 p-4 rounded-lg">
@@ -338,7 +338,7 @@ export default function FundPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
           id="why-support"
-          className="bg-white rounded-lg shadow-lg p-6 mb-8 scroll-mt-16"
+          className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-8 scroll-mt-16"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Why Support Us?</h2>
           <div className="prose max-w-none">
@@ -360,7 +360,7 @@ export default function FundPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           id="mission"
-          className="bg-white rounded-lg shadow-lg p-6 mb-8 scroll-mt-16"
+          className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-8 scroll-mt-16"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Mission Accountability</h2>
           
@@ -426,7 +426,7 @@ export default function FundPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           id="financial"
-          className="bg-white rounded-lg shadow-lg p-6 mb-8 scroll-mt-16"
+          className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-8 scroll-mt-16"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Financial Accountability</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -594,7 +594,7 @@ export default function FundPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           id="transparency"
-          className="bg-white rounded-lg shadow-lg p-6 mb-8 scroll-mt-16"
+          className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-8 scroll-mt-16"
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Transparency Report</h2>
           <div className="space-y-6">
@@ -747,7 +747,7 @@ export default function FundPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
           id="projects"
-          className="bg-gray-50 rounded-lg shadow-lg p-6 scroll-mt-16"
+          className="bg-gray-50 rounded-lg shadow-lg p-4 sm:p-6 scroll-mt-16"
         >
           <h2 className="text-lg font-medium text-gray-900 mb-4">Associated Projects</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
