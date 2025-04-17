@@ -10,6 +10,13 @@ OrangeCat is a modern platform that enables users to create profiles and funding
 - Authentication: Supabase Auth
 - Styling: Tailwind CSS
 - Payment Processing: Bitcoin Lightning Network
+- Bitcoin Integration: Mainnet
+
+## Current Configuration
+- Supabase Project: ohkueislstxomdjavyhs
+- Bitcoin Address: bc1qtkxw47wqlld9t0w7sujycl4mrmc90phypjygf6
+- Lightning Address: orangecat@getalby.com
+- Network: Bitcoin Mainnet
 
 ## Project Structure
 ```
@@ -30,31 +37,60 @@ orangecat/
 ### Prerequisites
 - Node.js 18+
 - npm or yarn
-- Supabase account
-- Bitcoin Lightning Network account
+- Git
 
-### Environment Variables
-Create a `.env.local` file with the following variables:
-```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-```
+### Quick Start
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/g-but/orangecat.git
+   cd orangecat
+   ```
 
-### Installation
-1. Clone the repository
 2. Install dependencies:
    ```bash
    npm install
    # or
    yarn install
    ```
-3. Set up Supabase:
-   - Create a new project
-   - Set up authentication
-   - Create necessary tables
-4. Set up Bitcoin Lightning Network:
-   - Create a Bitcoin Lightning Network account
-   - Configure necessary parameters
+
+3. Copy environment variables:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+4. Start the development server:
+   ```bash
+   npm run dev
+   # or
+   yarn dev
+   ```
+
+### Environment Variables
+All required environment variables are pre-configured in `.env.example`. For local development, copy them to `.env.local`:
+
+```env
+# Application Configuration
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_NAME=OrangeCat (Dev)
+NODE_ENV=development
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://ohkueislstxomdjavyhs.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# Bitcoin Configuration
+NEXT_PUBLIC_BITCOIN_ADDRESS=bitcoin:bc1qtkxw47wqlld9t0w7sujycl4mrmc90phypjygf6?message=OrangeCat%20Donation
+NEXT_PUBLIC_LIGHTNING_ADDRESS=orangecat@getalby.com
+BITCOIN_NETWORK=mainnet
+```
+
+### Supabase Setup
+The project uses a pre-configured Supabase instance. No additional setup is required for development.
+
+### Bitcoin Integration
+- Mainnet Bitcoin address is configured
+- Lightning address is set up with GetAlby
+- To test transactions, use the configured addresses
 
 ## Database Schema
 
@@ -98,49 +134,43 @@ create table funding_pages (
 );
 ```
 
-## API Endpoints
-
-### Authentication
-- POST /api/auth/register - Register new user
-- POST /api/auth/login - User login
-- POST /api/auth/logout - User logout
-
-### Profiles
-- GET /api/profiles/:id - Get profile
-- POST /api/profiles - Create profile
-- PUT /api/profiles/:id - Update profile
-
-### Funding Pages
-- GET /api/funding/:id - Get funding page
-- POST /api/funding - Create funding page
-- PUT /api/funding/:id - Update funding page
-- POST /api/funding/:id/donate - Process donation
-
 ## Development Workflow
-1. Create feature branch
+1. Create feature branch from main
 2. Implement changes
-3. Run tests
+3. Run tests: `npm test`
 4. Create pull request
 5. Code review
-6. Merge to main
+6. Merge to main (triggers Vercel deployment)
 
 ## Testing
-Run tests with:
 ```bash
+# Run all tests
 npm test
-# or
-yarn test
+
+# Run tests in watch mode
+npm test -- --watch
+
+# Run specific test file
+npm test -- path/to/test/file
 ```
 
 ## Deployment
-The application is deployed on Vercel. Push to main branch to trigger deployment.
+- The application is deployed on Vercel
+- Main branch deployments are automatic
+- Environment variables are managed in Vercel project settings
+- Current production URL: https://orangecat.ch
 
 ## Contributing
 1. Fork the repository
-2. Create feature branch
-3. Commit changes
-4. Push to branch
+2. Create feature branch: `git checkout -b feature/your-feature`
+3. Commit changes: `git commit -m 'Add some feature'`
+4. Push to branch: `git push origin feature/your-feature`
 5. Create pull request
+
+## Troubleshooting
+- If Supabase connection fails, verify environment variables
+- For Bitcoin transaction issues, check network configuration
+- For development issues, ensure Node.js version is 18+
 
 ## License
 MIT
