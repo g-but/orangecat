@@ -44,10 +44,8 @@ export default function FundingPage({ params }: { params: { id: string } }) {
   }, [params.id])
 
   useEffect(() => {
-    if (user) {
-      loadPage()
-    }
-  }, [user, loadPage])
+    loadPage()
+  }, [loadPage])
 
   const handleBalanceUpdate = (newBalance: number) => {
     setBalance(newBalance)
