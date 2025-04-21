@@ -185,6 +185,11 @@ export interface FundingPage {
   user_id: string
   title: string
   description: string
+  bitcoin_address?: string
+  lightning_address?: string
+  is_active: boolean
+  total_funding: number
+  contributor_count: number
   goal_amount: number
   current_amount: number
   status: 'active' | 'draft' | 'completed'

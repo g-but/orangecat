@@ -47,7 +47,7 @@ export class ProfileService {
             user_id: userId,
             display_name: formData.display_name || null,
             website: formData.website || null,
-            bio: formData.description || null,
+            bio: formData.bio || null,
             bitcoin_address: formData.bitcoin_address || null,
             lightning_address: formData.lightning_address || null,
             created_at: new Date().toISOString(),
@@ -67,7 +67,7 @@ export class ProfileService {
         .update({
           display_name: formData.display_name || null,
           website: formData.website || null,
-          bio: formData.description || null,
+          bio: formData.bio || null,
           bitcoin_address: formData.bitcoin_address || null,
           lightning_address: formData.lightning_address || null,
           updated_at: new Date().toISOString()
