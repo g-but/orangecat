@@ -160,6 +160,7 @@ export interface Profile {
   website: string | null
   bio: string | null
   bitcoin_address: string | null
+  lightning_address: string | null
   created_at: string
   updated_at: string
 }
