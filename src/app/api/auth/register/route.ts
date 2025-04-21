@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createClient } from '@/lib/supabase-server';
 
 export async function POST(request: Request) {
   try {
     const { email, password, username } = await request.json();
-    const supabase = createServerSupabaseClient();
+    const supabase = createClient();
 
     // Input validation
     if (!email || !password || !username) {
