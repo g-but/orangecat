@@ -29,4 +29,5 @@ export interface AuthContextType extends AuthState {
   signUp: (email: string, password: string, username: string) => Promise<void>
   signOut: () => Promise<void>
   updateProfile: (data: Partial<Profile>) => Promise<void>
+  isAdmin: boolean
 } 
