@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { Database, ProjectFundingPage, ProjectTransaction } from '@/types/database'
+import { Database } from '@/types/database'
 
 export const createClient = () => {
   return createBrowserClient<Database>(
@@ -152,63 +152,4 @@ export const updateProfile = async (
     throw new Error('Failed to update profile')
   }
   return data
-}
-
-export const getProjectFundingPage = async (projectId: string) => {
-  const { data, error } = await createClient()
-    .from('project_funding_pages')
-    .select('*')
-    .eq('id', projectId)
-    .single();
-
-  if (error) throw error;
-  return data;
-};
-
-export const getProjectTransactions = async (projectId: string) => {
-  const { data, error } = await createClient()
-    .from('project_transactions')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('timestamp', { ascending: false });
-
-  if (error) throw error;
-  return data;
-};
-
-export const createProjectFundingPage = async (projectData: Omit<ProjectFundingPage, 'id' | 'created_at' | 'updated_at'>) => {
-  const { data, error } = await createClient()
-    .from('project_funding_pages')
-    .insert(projectData)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-};
-
-export const updateProjectFundingPage = async (
-  projectId: string,
-  updates: Partial<Omit<ProjectFundingPage, 'id' | 'created_at' | 'updated_at'>>
-) => {
-  const { data, error } = await createClient()
-    .from('project_funding_pages')
-    .update(updates)
-    .eq('id', projectId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-};
-
-export const addProjectTransaction = async (transactionData: Omit<ProjectTransaction, 'id' | 'created_at'>) => {
-  const { data, error } = await createClient()
-    .from('project_transactions')
-    .insert(transactionData)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}; 
+} 
