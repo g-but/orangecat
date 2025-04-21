@@ -18,7 +18,7 @@ export default function EditProfileForm() {
   const [formData, setFormData] = useState<ProfileFormData>({
     display_name: profile?.display_name || '',
     website: profile?.website || '',
-    description: profile?.description || '',
+    bio: profile?.bio || '',
     bitcoin_address: profile?.bitcoin_address || '',
     lightning_address: profile?.lightning_address || ''
   })
@@ -36,7 +36,7 @@ export default function EditProfileForm() {
       setFormData({
         display_name: profile.display_name || '',
         website: profile.website || '',
-        description: profile.description || '',
+        bio: profile.bio || '',
         bitcoin_address: profile.bitcoin_address || '',
         lightning_address: profile.lightning_address || ''
       })
@@ -242,13 +242,13 @@ export default function EditProfileForm() {
                         placeholder="Enter your display name"
                       />
                       <div>
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
-                          Description
+                        <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
+                          Bio
                         </label>
                         <textarea
-                          id="description"
-                          name="description"
-                          value={formData.description}
+                          id="bio"
+                          name="bio"
+                          value={formData.bio}
                           onChange={handleTextareaChange}
                           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent"
                           rows={4}
@@ -282,7 +282,7 @@ export default function EditProfileForm() {
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => setFormData({ display_name: '', description: '', website: '', bitcoin_address: '', lightning_address: '' })}
+                        onClick={() => setFormData({ display_name: '', bio: '', website: '', bitcoin_address: '', lightning_address: '' })}
                         className="px-6 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 hover:text-gray-900 transition-all duration-200 font-medium"
                       >
                         Cancel

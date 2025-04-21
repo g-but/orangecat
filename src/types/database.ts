@@ -168,7 +168,7 @@ export interface ProfileFormData {
   username?: string
   display_name?: string
   website?: string
-  description?: string
+  bio?: string
   bitcoin_address?: string
   lightning_address?: string
 }
