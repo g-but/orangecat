@@ -4,14 +4,13 @@ import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
   try {
-    // Create a Supabase client configured to use cookies
-    const supabase = createMiddlewareClient({ req: request, res: NextResponse.next() });
-
-    // Refresh session if expired - required for Server Components
+    const res = NextResponse.next();
+    const supabase = createMiddlewareClient({ req: request, res });
+    
+    // Refresh session if expired
     await supabase.auth.getSession();
-
-    // Forward the response
-    return NextResponse.next();
+    
+    return res;
   } catch (e) {
     console.error('Middleware error:', e);
     return NextResponse.next();
@@ -22,7 +21,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
+     * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)

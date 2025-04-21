@@ -24,4 +24,7 @@ export const navigation = {
     { name: 'Sign In', href: '/auth?mode=login' },
     { name: 'Get Started', href: '/auth?mode=register' },
   ],
+  dashboard: [
+    { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
+  ]
 } 

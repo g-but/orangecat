@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 
 interface ProtectedRouteProps {
@@ -10,16 +10,16 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { user, isLoading } = useAuth()
+  const { user, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push('/auth')
+    if (!loading && !user) {
+      router.push('/auth?mode=login')
     }
-  }, [user, isLoading, router])
+  }, [user, loading, router])
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />

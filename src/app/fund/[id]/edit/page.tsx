@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
 import Card from '@/components/ui/Card'
@@ -19,7 +19,11 @@ export default function EditFundingPage({ params }: { params: { id: string } }) 
 
   const loadPage = useCallback(async () => {
     try {
-      const { data, error } = await createClientComponentClient()
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+      const { data, error } = await supabase
         .from('funding_pages')
         .select('*')
         .eq('id', params.id)
@@ -46,7 +50,10 @@ export default function EditFundingPage({ params }: { params: { id: string } }) 
     setSaving(true)
 
     try {
-      const { error } = await createClientComponentClient()
+      const { error } = await createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
         .from('funding_pages')
         .update({
           title: page.title,

@@ -1,4 +1,5 @@
 import React from 'react'
+import { Loader2 } from 'lucide-react'
 
 interface Props {
   fullScreen?: boolean
@@ -12,7 +13,7 @@ export default function Loading({ fullScreen = false }: Props) {
   return (
     <div className={containerClasses}>
       <div className="flex flex-col items-center space-y-4">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />
         <p className="text-sm text-gray-600">Loading...</p>
       </div>
     </div>

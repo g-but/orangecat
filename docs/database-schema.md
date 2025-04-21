@@ -1,103 +1,87 @@
 # Database Schema Documentation
 
 ## Overview
-The Orange Cat platform uses a hierarchical structure to support user profiles and their associated project funding pages. This document outlines the database schema and relationships.
+This document describes the database schema for the OrangeCat crowdfunding platform. The database uses Supabase as the backend and includes tables for user profiles, funding pages, and transactions.
 
 ## Tables
 
-### 1. User Profiles (`user_profiles`)
-Stores basic user information and profile settings.
+### Profiles
+Stores user profile information.
 
-```sql
-create table user_profiles (
-  id uuid references auth.users on delete cascade primary key,
-  username text unique not null,
-  display_name text not null,
-  bio text,
-  avatar_url text,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key, references auth.users |
+| username | text | Unique username |
+| full_name | text | User's display name |
+| avatar_url | text | URL to profile picture |
+| created_at | timestamp | Record creation timestamp |
+| updated_at | timestamp | Last update timestamp |
 
--- Enable Row Level Security
-alter table user_profiles enable row level security;
+### Funding Pages
+Stores crowdfunding campaign information.
 
--- Create policies
-create policy "Public profiles are viewable by everyone"
-  on user_profiles for select
-  using (true);
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| user_id | uuid | References auth.users |
+| title | text | Campaign title |
+| description | text | Campaign description |
+| goal_amount | decimal | Target funding amount |
+| current_amount | decimal | Current amount raised |
+| status | text | Campaign status (active/inactive) |
+| created_at | timestamp | Record creation timestamp |
+| updated_at | timestamp | Last update timestamp |
 
-create policy "Users can update their own profile"
-  on user_profiles for update
-  using (auth.uid() = id);
-```
+### Transactions
+Records donations and transactions.
 
-### 2. Project Funding Pages (`project_funding_pages`)
-Stores individual project funding pages associated with user profiles.
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| funding_page_id | uuid | References funding_pages |
+| user_id | uuid | References auth.users |
+| amount | decimal | Transaction amount |
+| status | text | Transaction status (pending/completed) |
+| created_at | timestamp | Record creation timestamp |
+| updated_at | timestamp | Last update timestamp |
 
-```sql
-create table project_funding_pages (
-  id uuid default uuid_generate_v4() primary key,
-  user_id uuid references user_profiles(id) on delete cascade not null,
-  project_name text not null,
-  description text not null,
-  bitcoin_address text not null,
-  lightning_address text,
-  transparency_score integer default 0,
-  is_public boolean default true,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
+## Row Level Security (RLS) Policies
 
--- Enable Row Level Security
-alter table project_funding_pages enable row level security;
+### Profiles
+- Public profiles are viewable by everyone
+- Users can update their own profile
+- Users can insert their own profile
 
--- Create policies
-create policy "Public projects are viewable by everyone"
-  on project_funding_pages for select
-  using (is_public = true);
+### Funding Pages
+- Funding pages are viewable by everyone
+- Users can create their own funding pages
+- Users can update their own funding pages
 
-create policy "Users can view their own projects"
-  on project_funding_pages for select
-  using (auth.uid() = user_id);
+### Transactions
+- Transactions are viewable by everyone
+- Users can create transactions
+- Users can update their own transactions
 
-create policy "Users can create their own projects"
-  on project_funding_pages for insert
-  with check (auth.uid() = user_id);
+## Triggers
 
-create policy "Users can update their own projects"
-  on project_funding_pages for update
-  using (auth.uid() = user_id);
-```
+### User Creation Trigger
+When a new user signs up, a profile is automatically created with:
+- `id` set to the user's UUID
+- `username` set to the user's email
+- `created_at` and `updated_at` set to the current timestamp
 
-### 3. Project Transactions (`project_transactions`)
-Stores transaction history for each project.
+## Database Setup
+The database is initialized with the following steps:
+1. Enable UUID extension
+2. Create tables (profiles, funding_pages, transactions)
+3. Enable Row Level Security
+4. Create security policies
+5. Set up user creation trigger
 
-```sql
-create table project_transactions (
-  id uuid default uuid_generate_v4() primary key,
-  project_id uuid references project_funding_pages(id) on delete cascade not null,
-  amount numeric not null,
-  type text check (type in ('incoming', 'outgoing')) not null,
-  status text check (status in ('confirmed', 'pending')) not null,
-  timestamp timestamp with time zone not null,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- Enable Row Level Security
-alter table project_transactions enable row level security;
-
--- Create policies
-create policy "Transactions are viewable by project owners"
-  on project_transactions for select
-  using (
-    exists (
-      select 1 from project_funding_pages
-      where project_funding_pages.id = project_transactions.project_id
-      and project_funding_pages.user_id = auth.uid()
-    )
-  );
-```
+## API Access
+The database is accessed through Supabase's client library. Environment variables required:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 ## TypeScript Types
 
@@ -106,8 +90,7 @@ create policy "Transactions are viewable by project owners"
 interface UserProfile {
   id: string;
   username: string;
-  display_name: string;
-  bio: string | null;
+  full_name: string;
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
@@ -117,12 +100,11 @@ interface UserProfile {
 interface ProjectFundingPage {
   id: string;
   user_id: string;
-  project_name: string;
+  title: string;
   description: string;
-  bitcoin_address: string;
-  lightning_address: string | null;
-  transparency_score: number;
-  is_public: boolean;
+  goal_amount: number;
+  current_amount: number;
+  status: string;
   created_at: string;
   updated_at: string;
 }
@@ -130,12 +112,12 @@ interface ProjectFundingPage {
 // Project Transaction
 interface ProjectTransaction {
   id: string;
-  project_id: string;
+  funding_page_id: string;
+  user_id: string;
   amount: number;
-  type: 'incoming' | 'outgoing';
-  status: 'confirmed' | 'pending';
-  timestamp: string;
+  status: string;
   created_at: string;
+  updated_at: string;
 }
 ```
 
@@ -149,7 +131,7 @@ interface ProjectTransaction {
 2. **Project to Transactions**:
    - One-to-many relationship
    - A project can have multiple transactions
-   - Transactions are linked to projects via `project_id`
+   - Transactions are linked to projects via `funding_page_id`
 
 ## Security Considerations
 
