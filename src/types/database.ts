@@ -165,10 +165,12 @@ export interface Profile {
 }
 
 export interface ProfileFormData {
+  username?: string
   display_name?: string
   website?: string
-  bio?: string
+  description?: string
   bitcoin_address?: string
+  lightning_address?: string
 }
 
 export interface PasswordFormData {
