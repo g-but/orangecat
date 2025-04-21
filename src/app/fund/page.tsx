@@ -7,13 +7,19 @@ import { Copy, Check, Bitcoin, Zap, Info } from 'lucide-react'
 import { TransparencyScore } from '@/components/transparency/TransparencyScore'
 import { calculateTransparencyScore, TRANSPARENCY_METRICS } from '@/lib/transparency'
 import { useBitcoinWallet } from '@/hooks/useBitcoinWallet'
+import { useAuth } from '@/contexts/AuthContext'
+import { createBrowserClient } from '@supabase/ssr'
 
 export default function FundPage() {
   const [copied, setCopied] = useState(false)
   const [activeTab, setActiveTab] = useState<'bitcoin' | 'lightning'>('bitcoin')
   const [activeSection, setActiveSection] = useState<string>('')
-  const walletAddress = process.env.NEXT_PUBLIC_BITCOIN_ADDRESS || ''
-  const { walletData, isLoading, error, refresh } = useBitcoinWallet(walletAddress)
+  const [walletData, setWalletData] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const { user } = useAuth()
+
+  const walletAddress = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
+  const { walletData: useBitcoinWalletData, isLoading: useBitcoinWalletIsLoading, error, refresh } = useBitcoinWallet(walletAddress)
 
   const bitcoinAddress = walletAddress
   const lightningAddress = 'palfare@getalby.com'
@@ -40,6 +46,31 @@ export default function FundPage() {
   }
 
   const transparencyScore = calculateTransparencyScore(TRANSPARENCY_METRICS, transparencyData)
+
+  useEffect(() => {
+    const loadWalletData = async () => {
+      try {
+        const supabase = createBrowserClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        )
+        const { data, error } = await supabase
+          .from('wallet_data')
+          .select('*')
+          .eq('address', walletAddress)
+          .single()
+
+        if (error) throw error
+        setWalletData(data)
+      } catch (err) {
+        console.error('Error loading wallet data:', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadWalletData()
+  }, [])
 
   useEffect(() => {
     const handleScroll = () => {
@@ -256,76 +287,46 @@ export default function FundPage() {
             </div>
 
             {/* Tab Content */}
-            <div className="mt-6">
+            <div className="pt-4">
               {activeTab === 'bitcoin' ? (
-                <div className="space-y-6">
-                  <div className="bg-orange-50 p-4 rounded-lg">
-                    <div className="flex items-start space-x-3">
-                      <Info className="h-5 w-5 text-orange-500 mt-0.5" />
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">About Bitcoin</h3>
-                        <p className="mt-1 text-sm text-gray-600">
-                          Bitcoin is a digital currency that can be sent anywhere in the world. It&apos;s secure, decentralized, and perfect for larger donations.
-                        </p>
-                      </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-900 mb-2">Bitcoin Address</h3>
+                    <div className="flex items-center justify-between">
+                      <code className="text-sm font-mono break-all">{walletAddress}</code>
+                      <button
+                        onClick={() => navigator.clipboard.writeText(walletAddress)}
+                        className="ml-2 p-2 text-gray-400 hover:text-gray-600"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  <div className="flex justify-center">
-                    <QRCodeSVG value={`bitcoin:${bitcoinAddress}`} size={200} />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <code className="flex-1 p-2 bg-gray-100 rounded text-sm overflow-x-auto">
-                      {bitcoinAddress}
-                    </code>
-                    <button
-                      onClick={() => handleCopy(bitcoinAddress)}
-                      className="p-2 text-gray-500 hover:text-gray-700"
-                    >
-                      {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                    </button>
-                  </div>
-                  <div className="text-sm text-gray-500 text-center">
-                    Scan the QR code or copy the address to send Bitcoin
-                  </div>
+                  <p className="text-sm text-gray-600">
+                    Send Bitcoin to this address to support Orange Cat. All transactions are visible on the blockchain.
+                  </p>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  <div className="bg-orange-50 p-4 rounded-lg">
-                    <div className="flex items-start space-x-3">
-                      <Info className="h-5 w-5 text-orange-500 mt-0.5" />
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">About Lightning Network</h3>
-                        <p className="mt-1 text-sm text-gray-600">
-                          Lightning Network enables instant Bitcoin payments with minimal fees. Perfect for small, regular donations.
-                        </p>
-                      </div>
+                <div className="space-y-4">
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="text-sm font-medium text-gray-900 mb-2">Lightning Address</h3>
+                    <div className="flex items-center justify-between">
+                      <code className="text-sm font-mono">orangecat@getalby.com</code>
+                      <button
+                        onClick={() => navigator.clipboard.writeText('orangecat@getalby.com')}
+                        className="ml-2 p-2 text-gray-400 hover:text-gray-600"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                        </svg>
+                      </button>
                     </div>
                   </div>
-                  {lightningAddress ? (
-                    <>
-                      <div className="flex justify-center">
-                        <QRCodeSVG value={`lightning:${lightningAddress}`} size={200} />
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <code className="flex-1 p-2 bg-gray-100 rounded text-sm overflow-x-auto">
-                          {lightningAddress}
-                        </code>
-                        <button
-                          onClick={() => handleCopy(lightningAddress)}
-                          className="p-2 text-gray-500 hover:text-gray-700"
-                        >
-                          {copied ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                        </button>
-                      </div>
-                      <div className="text-sm text-gray-500 text-center">
-                        Scan the QR code or copy the address to send via Lightning
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-8">
-                      <p className="text-gray-500">Lightning address coming soon</p>
-                    </div>
-                  )}
+                  <p className="text-sm text-gray-600">
+                    Send Bitcoin via Lightning Network for instant, low-cost transactions.
+                  </p>
                 </div>
               )}
             </div>
@@ -389,13 +390,13 @@ export default function FundPage() {
                 <li>A new project or cause seeking funding</li>
                 <li>Expanded reach and potential donor base</li>
                 <li>Growth of the Orange Cat ecosystem</li>
-                <li>Validation of our platform&apos;s value</li>
+                <li>Validation of our platform's value</li>
               </ul>
             </div>
           </div>
 
           {/* Mission Report */}
-          <div className="bg-orange-50 rounded-lg p-6 border border-orange-200">
+          <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
             <div className="flex items-start space-x-3">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
@@ -410,8 +411,8 @@ export default function FundPage() {
                     This initial page serves as a proof of concept and demonstrates our commitment to transparent fundraising.
                   </p>
                   <p className="mt-2">
-                    While we&apos;re at 1% of our target, this first page is crucial as it validates our platform&apos;s core functionality
-                    and sets the foundation for future growth. We&apos;re actively working on attracting more projects to our platform
+                    While we're at 1% of our target, this first page is crucial as it validates our platform's core functionality
+                    and sets the foundation for future growth. We're actively working on attracting more projects to our platform
                     while maintaining our high standards of transparency and accountability.
                   </p>
                 </div>
@@ -456,139 +457,61 @@ export default function FundPage() {
                   <span className="text-lg font-medium text-orange-500">BTC</span>
                 </div>
               )}
-              <div className="mt-4 flex items-center justify-between">
-                <p className="text-sm text-gray-600">Last updated</p>
-                <p className="text-sm font-medium text-gray-700">
-                  {new Date().toLocaleDateString()}
-                </p>
-              </div>
             </div>
 
-            {/* Recent Transactions Card */}
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <div className="flex items-center justify-between mb-4">
+            {/* Transaction History Card */}
+            <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-lg border border-orange-200">
+              <div className="flex items-center justify-between mb-2">
                 <h3 className="text-lg font-medium text-gray-900">Recent Transactions</h3>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={refresh}
-                    className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors rounded-full hover:bg-orange-50"
-                    title="Refresh transactions"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </button>
-                  <a 
-                    href={`https://mempool.space/address/${walletAddress}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors rounded-full hover:bg-orange-50"
-                    title="View on mempool.space"
-                  >
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                </div>
+                <a 
+                  href={`https://mempool.space/address/${walletAddress}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="p-1.5 text-gray-400 hover:text-orange-600 transition-colors rounded-full hover:bg-orange-50"
+                  title="View on mempool.space"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
               </div>
               {isLoading ? (
-                <div className="space-y-3">
-                  {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center justify-between">
-                      <div className="space-y-2">
-                        <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-                        <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
-                      </div>
-                      <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
-                    </div>
+                <div className="space-y-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-12 bg-orange-200 rounded animate-pulse" />
                   ))}
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {walletData?.transactions?.slice(0, 5).map((tx) => (
-                    <div key={tx.txid} className="group bg-gray-50 rounded-lg p-3 hover:bg-orange-50 transition-colors">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              tx.type === 'incoming' 
-                                ? 'bg-green-50 text-green-700' 
-                                : 'bg-orange-50 text-orange-700'
-                            }`}>
-                              {tx.type === 'incoming' ? 'Received' : 'Sent'}
-                            </span>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                              tx.status === 'confirmed' 
-                                ? 'bg-blue-50 text-blue-700' 
-                                : 'bg-yellow-50 text-yellow-700'
-                            }`}>
-                              {tx.status}
-                            </span>
-                          </div>
-                          <div className="flex items-center space-x-1.5">
-                            <a 
-                              href={`https://mempool.space/tx/${tx.txid}`} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              className="text-sm font-medium text-gray-900 hover:text-orange-600 group-hover:text-orange-600 transition-colors"
-                            >
-                              {tx.txid.slice(0, 8)}...{tx.txid.slice(-8)}
-                            </a>
-                            <svg className="w-3 h-3 text-gray-400 group-hover:text-orange-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                            </svg>
-                          </div>
-                          <p className="text-xs text-gray-500">
-                            {new Date(tx.timestamp).toLocaleString()}
-                          </p>
-                          {tx.txid === walletData?.transactions?.[0]?.txid && (
-                            <div className="mt-2 text-sm text-gray-600 italic">
-                              &ldquo;Initial test transaction from founder to verify system functionality&rdquo;
-                            </div>
-                          )}
-                        </div>
-                        <div className="text-right">
-                          <p className={`text-base font-bold tabular-nums ${
-                            tx.type === 'incoming' ? 'text-green-600' : 'text-orange-600'
-                          }`}>
-                            {tx.type === 'incoming' ? '+' : '-'}{Number(tx.value).toFixed(8).replace(/\.?0+$/, '')} BTC
-                          </p>
-                        </div>
+                <div className="space-y-4">
+                  {walletData?.transactions?.slice(0, 3).map((tx: any) => (
+                    <div key={tx.txid} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5">
+                        <a 
+                          href={`https://mempool.space/tx/${tx.txid}`} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm font-medium text-gray-900 hover:text-orange-600 group-hover:text-orange-600 transition-colors"
+                        >
+                          {tx.txid.slice(0, 8)}...{tx.txid.slice(-8)}
+                        </a>
+                        <svg className="w-3 h-3 text-gray-400 group-hover:text-orange-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
                       </div>
+                      <p className={`text-base font-bold tabular-nums ${
+                        tx.type === 'incoming' ? 'text-green-600' : 'text-orange-600'
+                      }`}>
+                        {tx.type === 'incoming' ? '+' : '-'}{Number(tx.value).toFixed(8).replace(/\.?0+$/, '')} BTC
+                      </p>
                     </div>
                   ))}
                 </div>
               )}
             </div>
           </div>
-
-          {/* Financial Report */}
-          <div className="bg-orange-50 rounded-lg p-6 border border-orange-200">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-orange-800">Financial Report</h3>
-                <div className="mt-2 text-sm text-orange-700">
-                  <p>
-                    Our financial journey has begun with an initial test transaction from the founder to verify system functionality.
-                    This transaction demonstrates our commitment to transparency and proper system testing.
-                  </p>
-                  <p className="mt-2">
-                    As we grow, we will provide regular financial reports explaining all significant transactions
-                    and their purposes. Our goal is to maintain complete transparency in how funds are received
-                    and utilized to support the Orange Cat platform.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </motion.div>
 
-        {/* Transparency Report */}
+        {/* Transparency Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -596,152 +519,55 @@ export default function FundPage() {
           id="transparency"
           className="bg-white rounded-lg shadow-lg p-4 sm:p-6 mb-8 scroll-mt-16"
         >
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Transparency Report</h2>
-          <div className="space-y-6">
-            {/* Transparency Score */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">Transparency Score</h3>
-                <div className="flex items-center space-x-2">
-                  <span className="text-2xl font-bold text-green-600">{transparencyScore.score}</span>
-                  <span className="text-sm text-gray-500">/ 100</span>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Transparency Score</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white p-4 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-3">
+                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h4 className="text-sm font-medium text-gray-900">Financial Accountability</h4>
                 </div>
+                <span className="text-sm font-medium text-green-600">25/25</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div 
-                  className="bg-green-600 h-2.5 rounded-full" 
-                  style={{ width: `${transparencyScore.score}%` }}
-                />
-              </div>
-              <p className="mt-2 text-sm text-green-700">
-                {transparencyScore.description}
+              <p className="text-sm text-gray-600">
+                All transactions are visible and explained.
               </p>
-            </div>
-
-            {/* Transparency Criteria */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-white p-4 rounded-lg border border-green-200">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <h4 className="text-sm font-medium text-gray-900">Open Source</h4>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">25/25</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Project code is publicly available and contributions are welcome.
-                </p>
-                <div className="mt-2 text-xs text-gray-500">
-                  <p>✓ Full source code access</p>
-                  <p>✓ Active contribution guidelines</p>
-                  <p>✓ Public issue tracking</p>
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-lg border border-green-200">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <h4 className="text-sm font-medium text-gray-900">Mission Accountability</h4>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">25/25</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Clear KPIs and regular progress reports are provided.
-                </p>
-                <div className="mt-2 text-xs text-gray-500">
-                  <p>✓ Defined mission statement</p>
-                  <p>✓ Measurable KPIs</p>
-                  <p>✓ Regular progress updates</p>
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-lg border border-green-200">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <h4 className="text-sm font-medium text-gray-900">Financial Accountability</h4>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">25/25</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  All transactions are visible and explained.
-                </p>
-                <div className="mt-2 text-xs text-gray-500">
-                  <p>✓ Public transaction history</p>
-                  <p>✓ Detailed transaction comments</p>
-                  <p>✓ Regular financial reports</p>
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-lg border border-green-200">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-3">
-                    <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
-                      <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <h4 className="text-sm font-medium text-gray-900">Community Engagement</h4>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">25/25</span>
-                </div>
-                <p className="text-sm text-gray-600">
-                  Active response to comments and community feedback.
-                </p>
-                <div className="mt-2 text-xs text-gray-500">
-                  <p>✓ Public communication channels</p>
-                  <p>✓ Regular community updates</p>
-                  <p>✓ Responsive to feedback</p>
-                </div>
+              <div className="mt-2 text-xs text-gray-500">
+                <p>✓ Public transaction history</p>
+                <p>✓ Detailed transaction comments</p>
+                <p>✓ Regular financial reports</p>
               </div>
             </div>
 
-            {/* Transparency Assessment */}
-            <div className="bg-green-50 rounded-lg p-6 border border-green-200">
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-green-600" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-sm font-medium text-green-800">Transparency Assessment</h3>
-                  <div className="mt-2 text-sm text-green-700">
-                    <p>
-                      Orange Cat has achieved a perfect transparency score by meeting all criteria at the highest level.
-                      Our commitment to openness is demonstrated through:
-                    </p>
-                    <ul className="list-disc pl-5 mt-2 space-y-1">
-                      <li>Complete open-source development with public repositories</li>
-                      <li>Clear mission KPIs with regular progress tracking</li>
-                      <li>Detailed financial reporting with transaction explanations</li>
-                      <li>Active community engagement and feedback response</li>
-                    </ul>
-                    <p className="mt-2">
-                      This perfect score reflects our dedication to maintaining the highest standards of transparency
-                      and accountability in all aspects of our project.
-                    </p>
+            <div className="bg-white p-4 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-3">
+                  <div className="h-8 w-8 rounded-full bg-green-100 flex items-center justify-center">
+                    <svg className="h-4 w-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
                   </div>
+                  <h4 className="text-sm font-medium text-gray-900">Community Engagement</h4>
                 </div>
+                <span className="text-sm font-medium text-green-600">25/25</span>
+              </div>
+              <p className="text-sm text-gray-600">
+                Active response to comments and community feedback.
+              </p>
+              <div className="mt-2 text-xs text-gray-500">
+                <p>✓ Public communication channels</p>
+                <p>✓ Regular community updates</p>
+                <p>✓ Responsive to feedback</p>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Associated Projects */}
+        {/* Projects Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
