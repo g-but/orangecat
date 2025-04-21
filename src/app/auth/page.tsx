@@ -11,7 +11,7 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function AuthPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { signIn, signUp, loading: authLoading } = useAuth()
+  const { signIn, signUp, isLoading: authLoading } = useAuth()
   
   // Default to login unless registration is specified in URL
   const [mode, setMode] = useState<'login' | 'register'>(
@@ -216,7 +216,7 @@ export default function AuthPage() {
                       onClick={() => setMode('register')}
                       className="text-sm text-tiffany-600 hover:text-tiffany-700 transition-colors duration-200"
                     >
-                      Don't have an account? Register here
+                      Don&apos;t have an account? Register here
                     </button>
                   </div>
                 )}

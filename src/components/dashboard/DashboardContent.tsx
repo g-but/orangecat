@@ -58,7 +58,7 @@ export default function DashboardContent() {
               <h1 className="text-2xl font-bold text-gray-900">
                 Welcome back, {profile?.display_name || user.email}!
               </h1>
-              <p className="mt-1 text-gray-600">Here's an overview of your funding activity</p>
+              <p className="mt-1 text-gray-600">Here&apos;s an overview of your funding activity</p>
             </div>
             <Button onClick={() => router.push('/create')} className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
