@@ -5,84 +5,154 @@
 ```
 src/
 ├── app/                    # Next.js app directory
-│   └── page.tsx           # Home page
+│   ├── api/               # API routes
+│   ├── (auth)/           # Authentication routes
+│   ├── profile/          # Profile pages
+│   └── funding/          # Funding pages
 ├── components/            # React components
-│   ├── dashboard/         # Dashboard-specific components
-│   │   └── DashboardCard.tsx
-│   ├── sections/          # Page sections
-│   │   ├── Hero.tsx
-│   │   ├── Features.tsx
-│   │   └── CTA.tsx
+│   ├── auth/             # Authentication components
+│   ├── dashboard/        # Dashboard components
+│   ├── funding/          # Funding page components
+│   ├── profile/          # Profile components
 │   └── ui/               # Reusable UI components
-│       ├── Button.tsx
-│       ├── Card.tsx
-│       └── Input.tsx
 ├── config/               # Configuration files
-│   └── dashboard.ts      # Dashboard data configuration
-├── hooks/               # Custom React hooks
-│   └── useAuth.ts       # Authentication hook
-├── lib/                # Utility libraries
-│   └── supabase/       # Supabase-related code
-│       ├── client.ts   # Supabase client configuration
-│       └── profile.ts  # Profile service
-└── types/              # TypeScript type definitions
-    ├── dashboard.ts    # Dashboard types
-    └── profile.ts      # Profile types
+│   ├── site.ts          # Site configuration
+│   └── bitcoin.ts       # Bitcoin configuration
+├── contexts/            # React contexts
+│   ├── AuthContext.tsx  # Authentication context
+│   └── ThemeContext.tsx # Theme context
+├── features/            # Feature-specific code
+│   ├── auth/           # Authentication feature
+│   ├── profile/        # Profile feature
+│   └── funding/        # Funding feature
+├── hooks/              # Custom React hooks
+│   ├── useAuth.ts      # Authentication hook
+│   └── useProfile.ts   # Profile hook
+├── lib/               # Utility libraries
+│   ├── supabase/      # Supabase-related code
+│   └── bitcoin/       # Bitcoin-related code
+├── services/          # Business logic services
+│   ├── auth.ts        # Authentication service
+│   ├── profile.ts     # Profile service
+│   └── funding.ts     # Funding service
+├── types/             # TypeScript type definitions
+│   ├── auth.ts        # Authentication types
+│   ├── profile.ts     # Profile types
+│   └── funding.ts     # Funding types
+├── utils/             # Utility functions
+│   ├── api.ts         # API utilities
+│   └── validation.ts  # Validation utilities
+└── __tests__/         # Test files
+    ├── components/    # Component tests
+    ├── hooks/         # Hook tests
+    └── utils/         # Utility tests
 ```
 
 ## Key Components
 
 ### Authentication
-- `useAuth` hook manages authentication state
-- Supabase handles user authentication
-- Session management is automatic
+- Implemented using Supabase Auth
+- `useAuth` hook for authentication state management
+- Protected routes using middleware
+- Session persistence and automatic refresh
 
 ### Profile Management
-- Profile type includes all necessary fields
-- CRUD operations through Supabase
+- Complete CRUD operations through Supabase
 - Type-safe operations with TypeScript
+- Profile validation and sanitization
+- Avatar upload and management
 
-### UI Components
-- Reusable components with consistent styling
-- Type-safe props
-- Accessibility support
-- Responsive design
+### Funding System
+- Bitcoin and Lightning Network integration
+- Transaction tracking and verification
+- Goal tracking and progress updates
+- Donation history and analytics
+
+### Testing Infrastructure
+- Jest for unit testing
+- React Testing Library for component testing
+- Test coverage reporting
+- CI/CD integration
 
 ## Environment Variables
 
 Required environment variables:
 ```env
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+# Application Configuration
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXT_PUBLIC_SITE_NAME=OrangeCat (Dev)
+NODE_ENV=development
+
+# Supabase Configuration
+NEXT_PUBLIC_SUPABASE_URL=https://ohkueislstxomdjavyhs.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# Bitcoin Configuration
+NEXT_PUBLIC_BITCOIN_ADDRESS=bitcoin:bc1qtkxw47wqlld9t0w7sujycl4mrmc90phypjygf6
+NEXT_PUBLIC_LIGHTNING_ADDRESS=orangecat@getalby.com
+BITCOIN_NETWORK=mainnet
 ```
 
 ## Database Schema
 
+### Users Table
+```sql
+create table users (
+  id uuid references auth.users on delete cascade,
+  email text,
+  full_name text,
+  avatar_url text,
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+```
+
 ### Profiles Table
 ```sql
 create table profiles (
-  id uuid default gen_random_uuid() primary key,
-  user_id uuid references auth.users on delete cascade,
-  full_name text not null,
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references users(id) on delete cascade,
   bio text,
-  avatar_url text,
   website text,
-  bitcoin_address text,
-  lightning_address text,
   social_links jsonb,
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
-  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_at timestamp with time zone default timezone('utc'::text, now())
+);
+```
+
+### Funding Pages Table
+```sql
+create table funding_pages (
+  id uuid default uuid_generate_v4() primary key,
+  user_id uuid references users(id) on delete cascade,
+  title text not null,
+  description text,
+  goal_amount decimal,
+  current_amount decimal default 0,
+  status text default 'active',
+  created_at timestamp with time zone default timezone('utc'::text, now()),
+  updated_at timestamp with time zone default timezone('utc'::text, now())
 );
 ```
 
 ## Development Setup
 
-1. Clone the repository
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/g-but/orangecat.git
+   cd orangecat
+   ```
+
 2. Install dependencies:
    ```bash
    npm install
    ```
-3. Set up environment variables
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env.local
+   ```
+
 4. Start development server:
    ```bash
    npm run dev
@@ -90,11 +160,27 @@ create table profiles (
 
 ## Testing
 
-Testing infrastructure needs to be set up. Planned tools:
-- Jest for unit testing
-- React Testing Library for component testing
-- Cypress for end-to-end testing
+The project uses Jest and React Testing Library for testing:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm test -- --watch
+
+# Run specific test file
+npm test -- path/to/test/file
+
+# Generate coverage report
+npm run test:coverage
+```
 
 ## Deployment
 
-The application is configured for Vercel deployment. Ensure all environment variables are set in the Vercel dashboard. 
+The application is deployed on Vercel with the following configuration:
+- Automatic deployments from main branch
+- Environment variables managed in Vercel dashboard
+- Production URL: https://orangecat.ch
+- Staging environment available
+- Automated testing before deployment 

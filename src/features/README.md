@@ -1,62 +1,104 @@
-# Transparent Screen Recorder
+# Features Directory
 
-> "Everything is computer" - A system where code, contributions, and value are transparently recorded and verifiable.
+This directory contains feature-specific code that implements the core functionality of the OrangeCat application. Each feature is self-contained and follows a consistent structure.
 
-## Philosophy
-- Every action is recorded
-- Every contribution is transparent
-- Every donation is verifiable
-- Everything is computer
+## Directory Structure
 
-## Features
-- Screen recording with Bitcoin donation overlay
-- Transparent metadata tracking
-- Verifiable timestamps
-- Open source and auditable
-- No internet connection required
-- All recordings stay on your device
-
-## How It Works
-1. Record your work/contributions
-2. Bitcoin address is overlaid on the recording
-3. Viewers can verify and donate
-4. All metadata is stored in JSON format
-5. Everything is timestamped and verifiable
-
-## Requirements
-- Python 3.8+
-- Dependencies listed in requirements.txt
-
-## Installation
-```bash
-pip install -r requirements.txt
+```
+features/
+├── auth/           # Authentication feature
+│   ├── hooks/     # Feature-specific hooks
+│   ├── types/     # Feature-specific types
+│   ├── utils/     # Feature-specific utilities
+│   └── constants/ # Feature-specific constants
+├── profile/        # Profile feature
+│   ├── hooks/
+│   ├── types/
+│   ├── utils/
+│   └── constants/
+└── funding/        # Funding feature
+    ├── hooks/
+    ├── types/
+    ├── utils/
+    └── constants/
 ```
 
-## Usage
-1. Edit `config.py` to set your Bitcoin address
-2. Run the recorder:
-```bash
-python recorder.py
-```
-3. Press F9 to start/stop recording
-4. Recordings are saved with metadata in the `recordings` folder
+## Feature Organization
 
-## Transparency Features
-- Each recording includes:
-  - Start and end timestamps
-  - Bitcoin donation address
-  - Recording filename
-  - All metadata stored in JSON format
+Each feature follows this structure:
 
-## Security
-- No internet connection required
-- All recordings stay on your device
-- No telemetry or data collection
-- Open source and auditable
-- Bitcoin donations are transparent and verifiable
+1. **hooks/**
+   - Custom React hooks specific to the feature
+   - State management logic
+   - Data fetching and caching
 
-## License
-MIT License - Feel free to modify and use as you wish!
+2. **types/**
+   - TypeScript interfaces and types
+   - API response types
+   - State management types
 
-## Motto
-"Everything is computer" - Because in our world, code, contributions, and value should be transparent and verifiable. 
+3. **utils/**
+   - Helper functions
+   - Data transformation
+   - Validation logic
+
+4. **constants/**
+   - Feature-specific constants
+   - Configuration values
+   - API endpoints
+
+## Best Practices
+
+1. **Feature Isolation**
+   - Keep features independent and self-contained
+   - Minimize dependencies between features
+   - Use clear interfaces for feature communication
+
+2. **State Management**
+   - Use React Context for feature-specific state
+   - Implement proper state initialization
+   - Handle loading and error states
+
+3. **Data Flow**
+   - Follow unidirectional data flow
+   - Use proper data fetching patterns
+   - Implement caching where appropriate
+
+4. **Error Handling**
+   - Implement comprehensive error handling
+   - Provide meaningful error messages
+   - Handle edge cases gracefully
+
+5. **Testing**
+   - Write unit tests for feature logic
+   - Test edge cases and error scenarios
+   - Mock external dependencies
+
+## Feature Guidelines
+
+1. **Authentication Feature**
+   - Handle user authentication
+   - Manage session state
+   - Implement security measures
+   - Handle token management
+
+2. **Profile Feature**
+   - Manage user profile data
+   - Handle profile updates
+   - Manage user preferences
+   - Handle avatar uploads
+
+3. **Funding Feature**
+   - Manage funding campaigns
+   - Handle donations
+   - Track progress
+   - Manage payment processing
+
+## Documentation
+
+Each feature should include:
+- Feature overview
+- API documentation
+- Usage examples
+- Error handling guidelines
+- Testing requirements 
