@@ -38,36 +38,88 @@ Welcome to the OrangeCat documentation. This guide will help you understand the 
 2. [Environment Setup](ENVIRONMENT.md)
 3. [Deployment Guide](DEPLOYMENT.md)
 4. [Contributing Guidelines](CONTRIBUTING.md)
+5. [Architecture Overview](ARCHITECTURE.md)
+6. [Security Guidelines](SECURITY.md)
 
 ## Features
 
+### Core Features
+- [Authentication System](features/auth.md)
+- [User Dashboard](features/dashboard.md)
 - [Bitcoin Integration](features/bitcoin.md)
 - [User Profiles](features/profiles.md)
 - [Transparency System](features/transparency.md)
 
+### Dashboard Features
+- Real-time funding statistics
+- Active pages overview
+- Funding trends and analytics
+- User profile management
+- Transaction history
+
 ## Components
 
-- [Layout Components](components/layout.md)
-- [Bitcoin Components](components/bitcoin.md)
-- [Profile Components](components/profile.md)
+### Layout Components
+- [Header](components/layout/Header.tsx)
+- [Dashboard Layout](components/dashboard/DashboardLayout.tsx)
+- [Dashboard Content](components/dashboard/DashboardContent.tsx)
+
+### Authentication Components
+- [Auth Form](components/auth/AuthForm.tsx)
+- [Auth Provider](contexts/AuthContext.tsx)
+
+### UI Components
+- [Loading Spinner](components/Loading.tsx)
+- [Card](components/ui/Card.tsx)
+- [Button](components/ui/Button.tsx)
 
 ## Design System
 
-- [Colors](design-system/colors.md)
-- [Typography](design-system/typography.md)
-- [Components](design-system/components.md)
+### Colors
+- Primary: Tiffany Blue (#0ABAB5)
+- Secondary: Complementary colors
+- Background: Light gray (#F9FAFB)
+- Text: Dark gray (#1F2937)
+
+### Typography
+- Headings: Inter
+- Body: System font stack
+- Code: Fira Code
+
+### Components
+- Consistent spacing (8px grid)
+- Responsive layouts
+- Accessible design patterns
 
 ## Development
 
-- [Local Setup](development/setup.md)
-- [Testing](development/testing.md)
-- [Deployment](development/deployment.md)
+### Local Setup
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Set up environment variables
+4. Start development server: `npm run dev`
+
+### Testing
+- Jest for unit tests
+- React Testing Library for component tests
+- Cypress for end-to-end tests
+
+### Deployment
+- Vercel for hosting
+- Automatic deployments from main branch
+- Preview deployments for pull requests
 
 ## Security
 
-- [Security Policy](security/policy.md)
-- [Best Practices](security/best-practices.md)
-- [Environment Variables](security/env-vars.md)
+### Authentication
+- Supabase Auth for user management
+- JWT-based session handling
+- Secure password policies
+
+### Data Protection
+- Row-level security in Supabase
+- Encrypted sensitive data
+- Regular security audits
 
 ## Documentation Navigation
 

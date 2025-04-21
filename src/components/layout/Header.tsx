@@ -2,143 +2,134 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { Menu, X, Bitcoin } from 'lucide-react'
-import { navigation } from '@/config/navigation'
+import { Menu } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
-import styles from './Header.module.css'
+import UserProfileDropdown from '@/components/user/UserProfileDropdown'
+import { navigation } from '@/config/navigation'
+import { useRouter } from 'next/navigation'
+import Loading from '@/components/Loading'
 
 export default function Header() {
-  const pathname = usePathname()
-  const [isOpen, setIsOpen] = useState(false)
-  const router = useRouter()
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { user, isLoading } = useAuth()
+  const router = useRouter()
 
-  const handleCreateClick = (e: React.MouseEvent) => {
-    if (!user && !isLoading) {
-      e.preventDefault()
-      router.push('/auth')
+  const handleNavigation = (href: string, requiresAuth?: boolean) => {
+    if (requiresAuth && !user) {
+      router.push('/auth?mode=login')
+      return
     }
+    router.push(href)
   }
 
-  const handleAuthLinkClick = (e: React.MouseEvent, href: string) => {
-    if (pathname === '/auth') {
-      e.preventDefault()
-      const mode = href.includes('mode=register') ? 'register' : 'login'
-      router.push(`/auth?mode=${mode}`)
-    }
-  }
+  console.log('Header: Render state:', { isLoading, hasUser: !!user })
 
-  const handleMobileLinkClick = (e: React.MouseEvent, item: any) => {
-    if (item.requiresAuth) {
-      handleCreateClick(e)
-    }
-    setIsOpen(false)
+  if (isLoading) {
+    console.log('Header: Showing loading state')
+    return (
+      <header className="bg-white shadow fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/" className="flex items-center">
+                <span className="text-xl font-semibold text-tiffany-500">OrangeCat</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+    )
   }
 
   return (
-    <header className={styles.header}>
+    <header className="bg-white shadow fixed top-0 left-0 right-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link href="/" className="flex items-center">
-              <Bitcoin className="h-8 w-8 text-tiffany-500 hover:text-tiffany-600 transition-colors duration-200" />
-              <span className="ml-2 text-xl font-semibold text-tiffany-500">OrangeCat</span>
+              <span className="text-xl font-semibold text-tiffany-500">OrangeCat</span>
             </Link>
             <nav className="hidden sm:ml-8 sm:flex sm:space-x-4">
               {navigation.main.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
-                  onClick={item.requiresAuth ? handleCreateClick : undefined}
-                  className={`px-4 py-2 rounded-full text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 transition-colors duration-200 ${
-                    pathname === item.href ? 'bg-tiffany-50 text-tiffany-500 font-semibold' : ''
-                  }`}
+                  onClick={(e) => {
+                    if (item.requiresAuth && !user) {
+                      e.preventDefault()
+                      router.push('/auth?mode=login')
+                    }
+                  }}
+                  className="px-4 py-2 rounded-full text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 transition-colors duration-200"
                 >
                   {item.name}
                 </Link>
               ))}
             </nav>
           </div>
-          <div className="flex items-center space-x-4">
-            <nav className="hidden sm:flex sm:space-x-4">
-              {user ? (
-                <Link
-                  href="/dashboard"
-                  className={`px-4 py-2 rounded-full text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 transition-colors duration-200 ${
-                    pathname === '/dashboard' ? 'bg-tiffany-50 text-tiffany-500 font-semibold' : ''
-                  }`}
-                >
-                  Dashboard
-                </Link>
-              ) : (
-                navigation.auth.map((item) => (
+          <div className="flex items-center">
+            {user ? (
+              <UserProfileDropdown />
+            ) : (
+              <div className="hidden sm:flex sm:space-x-4">
+                {navigation.auth.map((item) => (
                   <Link
                     key={item.name}
                     href={item.href}
-                    onClick={(e) => handleAuthLinkClick(e, item.href)}
-                    className={`px-4 py-2 rounded-full text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 transition-colors duration-200 ${
-                      pathname === item.href ? 'bg-tiffany-50 text-tiffany-500 font-semibold' : ''
-                    }`}
+                    className="px-4 py-2 rounded-full text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 transition-colors duration-200"
                   >
                     {item.name}
                   </Link>
-                ))
-              )}
-            </nav>
-            <div className="flex items-center sm:hidden">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="inline-flex items-center justify-center p-2 rounded-md text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50 focus:outline-none"
-                aria-label="Toggle menu"
-              >
-                {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            </div>
+                ))}
+              </div>
+            )}
           </div>
+          <button
+            className="sm:hidden p-2 text-slate-600 hover:text-tiffany-500"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <Menu className="w-6 h-6" />
+          </button>
         </div>
-      </div>
 
-      {/* Mobile menu */}
-      <div className={`${isOpen ? 'block' : 'hidden'} sm:hidden ${styles.mobileMenu}`}>
-        <div className="pt-2 pb-3 space-y-1">
-          {navigation.main.map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              onClick={(e) => handleMobileLinkClick(e, item)}
-              className={`${styles.mobileNavLink} ${pathname === item.href ? styles.mobileNavLinkActive : ''}`}
-            >
-              {item.name}
-            </Link>
-          ))}
-          <div className="border-t border-slate-200 pt-4">
-            {user ? (
-              <Link
-                href="/dashboard"
-                className={`${styles.mobileNavLink} ${pathname === '/dashboard' ? styles.mobileNavLinkActive : ''}`}
-                onClick={() => setIsOpen(false)}
-              >
-                Dashboard
-              </Link>
-            ) : (
-              navigation.auth.map((item) => (
+        {isMobileMenuOpen && (
+          <div className="sm:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {navigation.main.map((item) => (
                 <Link
                   key={item.name}
                   href={item.href}
                   onClick={(e) => {
-                    handleAuthLinkClick(e, item.href)
-                    setIsOpen(false)
+                    if (item.requiresAuth && !user) {
+                      e.preventDefault()
+                      router.push('/auth?mode=login')
+                    }
+                    setIsMobileMenuOpen(false)
                   }}
-                  className={`${styles.mobileNavLink} ${pathname === item.href ? styles.mobileNavLinkActive : ''}`}
+                  className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50"
                 >
                   {item.name}
                 </Link>
-              ))
-            )}
+              ))}
+              {!user && (
+                <>
+                  <Link
+                    href="/auth?mode=login"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/auth?mode=register"
+                    className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-tiffany-500 hover:bg-tiffany-50"
+                  >
+                    Get Started
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </header>
   )

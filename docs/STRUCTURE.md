@@ -44,6 +44,9 @@ The app directory follows Next.js 13+ App Router conventions.
 - `app/error.tsx` - Global error page component.
 - `app/loading.tsx` - Global loading page component.
 - `app/not-found.tsx` - 404 page component.
+- `app/dashboard/` - Directory for the dashboard feature.
+  - `page.tsx` - Main dashboard page component.
+  - `layout.tsx` - Dashboard layout component.
 - `app/create/` - Directory for the donation page creation feature.
 - `app/donate/` - Directory for the donation feature.
 
@@ -51,24 +54,52 @@ The app directory follows Next.js 13+ App Router conventions.
 
 Reusable React components used throughout the application.
 
-- `components/CreatePageForm.tsx` - Form component for creating donation pages.
-- `components/ErrorBoundary.tsx` - React error boundary component for catching and handling errors.
-- `components/Loading.tsx` - Reusable loading spinner component.
+#### Layout Components
+- `components/layout/Header.tsx` - Main navigation header component.
+- `components/layout/Footer.tsx` - Footer component.
+
+#### Dashboard Components
+- `components/dashboard/DashboardLayout.tsx` - Layout wrapper for dashboard pages.
+- `components/dashboard/DashboardContent.tsx` - Main content component for dashboard.
+- `components/dashboard/StatsCard.tsx` - Component for displaying statistics.
+
+#### Authentication Components
+- `components/auth/AuthForm.tsx` - Form component for authentication.
+- `components/auth/AuthButton.tsx` - Button component for auth actions.
+
+#### UI Components
+- `components/ui/Card.tsx` - Reusable card component.
+- `components/ui/Button.tsx` - Button component with variants.
+- `components/ui/Loading.tsx` - Loading spinner component.
+
+### Contexts Directory (`src/contexts/`)
+
+React context providers for global state management.
+
+- `contexts/AuthContext.tsx` - Authentication state management.
+- `contexts/ThemeContext.tsx` - Theme management.
 
 ### Types Directory (`src/types/`)
 
 TypeScript type definitions.
 
+- `types/dashboard.ts` - Dashboard-related type definitions.
+- `types/auth.ts` - Authentication-related type definitions.
 - `types/env.d.ts` - TypeScript declarations for environment variables.
+
+### Lib Directory (`src/lib/`)
+
+Utility functions and shared logic.
+
+- `lib/supabase/` - Supabase client configuration and utilities.
+  - `client.ts` - Supabase client initialization.
+  - `auth.ts` - Authentication utilities.
+- `lib/utils.ts` - General utility functions.
 
 ## Development Tools and Dependencies
 
 - `node_modules/` - Directory containing installed NPM packages (not tracked in Git).
 - `.git/` - Git version control directory (not tracked in Git).
-
-## Note About `tatus` File
-
-The `tatus` file appears to be an artifact or temporary file that should not be in the repository. It should be added to `.gitignore` and removed from the repository.
 
 ## Directory Structure Summary
 
@@ -100,14 +131,24 @@ orangecat/
 │   │   ├── error.tsx
 │   │   ├── loading.tsx
 │   │   ├── not-found.tsx
+│   │   ├── dashboard/
 │   │   ├── create/
 │   │   └── donate/
 │   ├── components/
-│   │   ├── CreatePageForm.tsx
-│   │   ├── ErrorBoundary.tsx
-│   │   └── Loading.tsx
-│   └── types/
-│       └── env.d.ts
+│   │   ├── layout/
+│   │   ├── dashboard/
+│   │   ├── auth/
+│   │   └── ui/
+│   ├── contexts/
+│   │   ├── AuthContext.tsx
+│   │   └── ThemeContext.tsx
+│   ├── types/
+│   │   ├── dashboard.ts
+│   │   ├── auth.ts
+│   │   └── env.d.ts
+│   └── lib/
+│       ├── supabase/
+│       └── utils.ts
 ├── node_modules/
 └── .git/
 ```

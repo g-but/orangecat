@@ -2,22 +2,24 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 
 export default function ComingSoon() {
   const router = useRouter()
-  const supabase = createClientComponentClient()
 
   useEffect(() => {
     const checkAuth = async () => {
+      const supabase = createClient()
+      if (!supabase) return
+
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         router.push('/')
       }
     }
     checkAuth()
-  }, [router, supabase])
+  }, [router])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-50">

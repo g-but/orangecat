@@ -1,8 +1,18 @@
+export interface Profile {
+  id: string
+  username: string
+  full_name?: string
+  avatar_url?: string
+  created_at: string
+  updated_at: string
+}
+
 export interface AuthUser {
   id: string
   email: string
   username?: string
-  metadata?: Record<string, any>
+  role?: string
+  profile?: Profile
 }
 
 export interface AuthState {
@@ -16,7 +26,5 @@ export interface AuthContextType extends AuthState {
   signIn: (email: string, password: string) => Promise<void>
   signUp: (email: string, password: string, username: string) => Promise<void>
   signOut: () => Promise<void>
-  resetPassword: (email: string) => Promise<void>
-  updatePassword: (newPassword: string) => Promise<void>
-  updateProfile: (data: Partial<AuthUser>) => Promise<void>
+  updateProfile: (data: Partial<Profile>) => Promise<void>
 } 
