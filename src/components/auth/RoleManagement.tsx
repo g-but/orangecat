@@ -16,39 +16,32 @@ export default function RoleManagement() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  if (!isAdmin()) {
+  if (!isAdmin) {
     return null
   }
 
-  const updateRole = async (userId: string, newRole: UserRole) => {
-    try {
-      setLoading(true)
-      setError(null)
+  const updateUserRole = async (userId: string, role: UserRole) => {
+    setLoading(true)
+    setError(null)
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', userId)
+    try {
+      const { error } = await supabase.auth.admin.updateUserById(userId, {
+        app_metadata: { role }
+      })
 
       if (error) throw error
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update role')
+      setError(err instanceof Error ? err.message : 'Failed to update user role')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-bold mb-4">Role Management</h2>
-      {error && (
-        <div className="bg-red-50 text-red-500 p-3 rounded mb-4">
-          {error}
-        </div>
-      )}
-      <div className="space-y-4">
-        {/* Add role management UI here */}
-      </div>
+    <Card>
+      <h2>Role Management</h2>
+      {error && <p className="text-red-500">{error}</p>}
+      {/* Add your role management UI here */}
     </Card>
   )
 } 
