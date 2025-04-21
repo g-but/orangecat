@@ -1,20 +1,57 @@
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
+import { createServerClient } from '@supabase/ssr';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  try {
-    const res = NextResponse.next();
-    const supabase = createMiddlewareClient({ req: request, res });
-    
-    // Refresh session if expired
-    await supabase.auth.getSession();
-    
-    return res;
-  } catch (e) {
-    console.error('Middleware error:', e);
-    return NextResponse.next();
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          const cookie = request.cookies.get(name);
+          if (!cookie) return undefined;
+          return decodeURIComponent(cookie.value);
+        },
+        set(name: string, value: string, options: any) {
+          response.cookies.set({
+            name,
+            value: encodeURIComponent(value),
+            ...options,
+          });
+        },
+        remove(name: string, options: any) {
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          });
+        },
+      },
+    }
+  );
+
+  const { data: { session } } = await supabase.auth.getSession();
+
+  // If user is not signed in and the current path is not /auth,
+  // redirect the user to /auth
+  if (!session && !request.nextUrl.pathname.startsWith('/auth')) {
+    return NextResponse.redirect(new URL('/auth', request.url));
   }
+
+  // If user is signed in and the current path is /auth,
+  // redirect the user to /dashboard
+  if (session && request.nextUrl.pathname.startsWith('/auth')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  return response;
 }
 
 // Specify which routes should be protected
@@ -27,6 +64,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public).*)',
   ],
 }; 
