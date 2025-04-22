@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { Database, ProjectFundingPage, ProjectTransaction } from '@/types/database'
+import { Database } from '@/types/database'
 
 export const createClient = () => {
   return createBrowserClient<Database>(
@@ -54,12 +54,29 @@ export const getPublicFundingPage = async (id: string) => {
   return data
 }
 
-export const getTransactions = async (fundingPageId: string) => {
+export const getTransactions = async (userId: string) => {
   const supabase = createClient()
+  
+  // First get all funding pages for the user
+  const { data: fundingPages, error: pagesError } = await supabase
+    .from('funding_pages')
+    .select('id')
+    .eq('user_id', userId)
+  
+  if (pagesError) {
+    console.error('Error fetching funding pages:', pagesError)
+    throw new Error('Failed to fetch funding pages')
+  }
+
+  if (!fundingPages || fundingPages.length === 0) {
+    return []
+  }
+
+  // Then get transactions for all funding pages
   const { data, error } = await supabase
     .from('transactions')
     .select('*')
-    .eq('funding_page_id', fundingPageId)
+    .in('funding_page_id', fundingPages.map((page: { id: string }) => page.id))
     .order('created_at', { ascending: false })
   
   if (error) {
@@ -126,7 +143,7 @@ export const updateProfile = async (
   const { data, error } = await supabase
     .from('profiles')
     .update(updates)
-    .eq('id', userId)
+    .eq('user_id', userId)
     .select()
     .single()
   
@@ -135,63 +152,4 @@ export const updateProfile = async (
     throw new Error('Failed to update profile')
   }
   return data
-}
-
-export const getProjectFundingPage = async (projectId: string) => {
-  const { data, error } = await createClient()
-    .from('project_funding_pages')
-    .select('*')
-    .eq('id', projectId)
-    .single();
-
-  if (error) throw error;
-  return data;
-};
-
-export const getProjectTransactions = async (projectId: string) => {
-  const { data, error } = await createClient()
-    .from('project_transactions')
-    .select('*')
-    .eq('project_id', projectId)
-    .order('timestamp', { ascending: false });
-
-  if (error) throw error;
-  return data;
-};
-
-export const createProjectFundingPage = async (projectData: Omit<ProjectFundingPage, 'id' | 'created_at' | 'updated_at'>) => {
-  const { data, error } = await createClient()
-    .from('project_funding_pages')
-    .insert(projectData)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-};
-
-export const updateProjectFundingPage = async (
-  projectId: string,
-  updates: Partial<Omit<ProjectFundingPage, 'id' | 'created_at' | 'updated_at'>>
-) => {
-  const { data, error } = await createClient()
-    .from('project_funding_pages')
-    .update(updates)
-    .eq('id', projectId)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-};
-
-export const addProjectTransaction = async (transactionData: Omit<ProjectTransaction, 'id' | 'created_at'>) => {
-  const { data, error } = await createClient()
-    .from('project_transactions')
-    .insert(transactionData)
-    .select()
-    .single();
-
-  if (error) throw error;
-  return data;
-}; 
+} 

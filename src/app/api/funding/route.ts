@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { createClient } from '@/lib/supabase-server';
 
 export async function POST(request: Request) {
   try {
     const { fundingPageId, amount, currency, paymentMethod } = await request.json();
-    const supabase = createServerSupabaseClient();
+    const supabase = createClient();
 
     // Input validation
     if (!fundingPageId || !amount || !currency || !paymentMethod) {
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const status = searchParams.get('status');
-    const supabase = createServerSupabaseClient();
+    const supabase = createClient();
 
     let query = supabase
       .from('funding_pages')

@@ -43,9 +43,12 @@ export default function FundingPageList() {
         title: 'New Funding Page',
         description: 'Describe your project here',
         bitcoin_address: '',
-        is_verified: false,
-        verification_level: 0,
-        is_public: true
+        lightning_address: '',
+        is_active: true,
+        total_funding: 0,
+        contributor_count: 0,
+        goal_amount: 0,
+        status: 'active'
       })
       
       setPages([...pages, newPage])

@@ -3,8 +3,24 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { ArrowRight, Heart, CheckCircle2 } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 
 export default function Hero() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  const handleStartFundraising = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (isLoading) return
+    
+    if (!user) {
+      router.push('/auth?mode=login&redirect=/create')
+    } else {
+      router.push('/create')
+    }
+  }
+
   return (
     <section className="section relative overflow-hidden min-h-[80vh] flex items-center bg-gradient-to-b from-white to-slate-50">
       <div className="container">
@@ -43,13 +59,13 @@ export default function Hero() {
             transition={{ duration: 0.5, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 justify-center mb-12"
           >
-            <Link 
-              href="/create" 
+            <button 
+              onClick={handleStartFundraising}
               className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-tiffany-500 rounded-lg hover:bg-tiffany-600 transition-colors"
             >
               Start Fundraising
               <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
+            </button>
             <Link 
               href="/fund" 
               className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-tiffany-600 bg-transparent border border-tiffany-500 rounded-lg hover:bg-tiffany-50 transition-colors"
