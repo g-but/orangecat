@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { createBrowserClient } from '@supabase/ssr'
 import { useAuth } from '@/contexts/AuthContext'
 import { toast } from 'sonner'
 import Card from '@/components/ui/Card'
@@ -22,9 +22,14 @@ export default function TransactionTracker({
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
   const loadTransactions = useCallback(async () => {
     try {
-      const { data, error } = await createClientComponentClient()
+      const { data, error } = await supabase
         .from('transactions')
         .select('*')
         .eq('funding_page_id', fundingPageId)
@@ -38,7 +43,7 @@ export default function TransactionTracker({
     } finally {
       setLoading(false)
     }
-  }, [fundingPageId])
+  }, [fundingPageId, supabase])
 
   useEffect(() => {
     if (user) {

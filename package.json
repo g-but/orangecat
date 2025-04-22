@@ -15,12 +15,12 @@
     "predeploy": "npm run env:push"
   },
   "dependencies": {
-    "@supabase/auth-helpers-nextjs": "^0.9.0",
     "@supabase/ssr": "^0.6.1",
-    "@supabase/supabase-js": "^2.39.3",
+    "@supabase/supabase-js": "^2.49.4",
     "bitcoinjs-lib": "^6.1.0",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "dotenv": "^16.5.0",
     "framer-motion": "^12.6.5",
     "lnurl": "^0.5.0",
     "lucide-react": "^0.488.0",

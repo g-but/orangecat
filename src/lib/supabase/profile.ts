@@ -1,7 +1,10 @@
-import { supabase } from './client'
+import { createClient } from './client'
 import { Profile } from '@/types/profile'
 
 export const createProfile = async (profile: Omit<Profile, 'id' | 'created_at' | 'updated_at'>) => {
+  const supabase = createClient()
+  if (!supabase) throw new Error('Could not create Supabase client')
+
   const { data, error } = await supabase
     .from('profiles')
     .insert([profile])
@@ -13,6 +16,9 @@ export const createProfile = async (profile: Omit<Profile, 'id' | 'created_at' |
 }
 
 export const getProfile = async (userId: string) => {
+  const supabase = createClient()
+  if (!supabase) throw new Error('Could not create Supabase client')
+
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
@@ -24,6 +30,9 @@ export const getProfile = async (userId: string) => {
 }
 
 export const updateProfile = async (userId: string, updates: Partial<Profile>) => {
+  const supabase = createClient()
+  if (!supabase) throw new Error('Could not create Supabase client')
+
   const { data, error } = await supabase
     .from('profiles')
     .update(updates)
