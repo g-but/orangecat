@@ -52,7 +52,7 @@ export default function FundingPageList() {
       })
       
       setPages([...pages, newPage])
-      router.push(`/fund/${newPage.id}/edit`)
+      router.push(`/fund-us/${newPage.id}/edit`)
       toast.success('Funding page created successfully')
     } catch (err) {
       console.error('Error creating page:', err)
@@ -106,21 +106,21 @@ export default function FundingPageList() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => router.push(`/fund/${page.id}`)}
+                    onClick={() => router.push(`/fund-us/${page.id}`)}
                   >
                     <BarChart2 className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => router.push(`/fund/${page.id}/share`)}
+                    onClick={() => router.push(`/fund-us/${page.id}/share`)}
                   >
                     <Share2 className="w-4 h-4" />
                   </Button>
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => router.push(`/fund/${page.id}/edit`)}
+                    onClick={() => router.push(`/fund-us/${page.id}/edit`)}
                   >
                     <Settings className="w-4 h-4" />
                   </Button>

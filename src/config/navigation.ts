@@ -4,7 +4,7 @@ export const navigation = {
   main: [
     { name: 'Home', href: '/' },
     { name: 'Create', href: '/create', requiresAuth: true },
-    { name: 'Fund', href: '/fund' },
+    { name: 'Fund Us', href: '/fund-us' },
     { name: 'About', href: '/about' },
     { name: 'Blog', href: '/blog' },
   ],

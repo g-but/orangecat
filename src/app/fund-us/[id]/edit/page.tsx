@@ -65,7 +65,7 @@ export default function EditFundingPage({ params }: { params: { id: string } }) 
 
       if (error) throw error
       toast.success('Funding page updated successfully')
-      router.push(`/fund/${params.id}`)
+      router.push(`/fund-us/${params.id}`)
     } catch (err) {
       console.error('Error updating page:', err)
       toast.error('Failed to update funding page')
@@ -132,7 +132,7 @@ export default function EditFundingPage({ params }: { params: { id: string } }) 
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push(`/fund/${params.id}`)}
+              onClick={() => router.push(`/fund-us/${params.id}`)}
             >
               Cancel
             </Button>
