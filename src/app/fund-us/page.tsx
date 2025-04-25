@@ -10,19 +10,15 @@ import { useBitcoinWallet } from '@/hooks/useBitcoinWallet'
 import { useAuth } from '@/contexts/AuthContext'
 import { createBrowserClient } from '@supabase/ssr'
 
-export default function FundPage() {
+export default function FundUsPage() {
   const [copied, setCopied] = useState(false)
-  const [activeTab, setActiveTab] = useState<'bitcoin' | 'lightning'>('bitcoin')
   const [activeSection, setActiveSection] = useState<string>('')
-  const [walletData, setWalletData] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const { user } = useAuth()
 
-  const walletAddress = 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'
-  const { walletData: useBitcoinWalletData, isLoading: useBitcoinWalletIsLoading, error, refresh } = useBitcoinWallet(walletAddress)
+  const walletAddress = 'bc1qgsup75ajy4rln08j0te9wpdgrf46ctx6w94xzq'
+  const { walletData, isLoading, error, refresh } = useBitcoinWallet(walletAddress)
 
   const bitcoinAddress = walletAddress
-  const lightningAddress = 'palfare@getalby.com'
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text)
@@ -50,22 +46,30 @@ export default function FundPage() {
   useEffect(() => {
     const loadWalletData = async () => {
       try {
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+          throw new Error('Supabase environment variables are not set')
+        }
+
         const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+          process.env.NEXT_PUBLIC_SUPABASE_URL,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
         )
+
+        console.log('Loading wallet data for address:', walletAddress)
         const { data, error } = await supabase
           .from('wallet_data')
           .select('*')
           .eq('address', walletAddress)
           .single()
 
-        if (error) throw error
-        setWalletData(data)
+        if (error) {
+          console.error('Supabase error:', error)
+          throw error
+        }
+
+        console.log('Loaded wallet data:', data)
       } catch (err) {
         console.error('Error loading wallet data:', err)
-      } finally {
-        setIsLoading(false)
       }
     }
 
@@ -258,78 +262,27 @@ export default function FundPage() {
         >
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Fund Us</h2>
           <div className="space-y-4 sm:space-y-6">
-            {/* Tab Navigation */}
-            <div className="border-b border-gray-200">
-              <nav className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-8">
-                <button
-                  onClick={() => setActiveTab('bitcoin')}
-                  className={`${
-                    activeTab === 'bitcoin'
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center justify-center sm:justify-start space-x-2`}
-                >
-                  <Bitcoin className="h-5 w-5" />
-                  <span>Bitcoin (Recommended)</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('lightning')}
-                  className={`${
-                    activeTab === 'lightning'
-                      ? 'border-orange-500 text-orange-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm flex items-center justify-center sm:justify-start space-x-2`}
-                >
-                  <Zap className="h-5 w-5" />
-                  <span>Lightning (Fast & Cheap)</span>
-                </button>
-              </nav>
-            </div>
-
-            {/* Tab Content */}
-            <div className="pt-4">
-              {activeTab === 'bitcoin' ? (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Bitcoin Address</h3>
-                    <div className="flex items-center justify-between">
-                      <code className="text-sm font-mono break-all">{walletAddress}</code>
-                      <button
-                        onClick={() => navigator.clipboard.writeText(walletAddress)}
-                        className="ml-2 p-2 text-gray-400 hover:text-gray-600"
-                      >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Send Bitcoin to this address to support Orange Cat. All transactions are visible on the blockchain.
-                  </p>
+            {/* Bitcoin Address Section */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Bitcoin Address</h3>
+              <div className="flex flex-col items-center space-y-4">
+                <div className="p-4 bg-white rounded-lg">
+                  <QRCodeSVG value={walletAddress} size={200} />
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h3 className="text-sm font-medium text-gray-900 mb-2">Lightning Address</h3>
-                    <div className="flex items-center justify-between">
-                      <code className="text-sm font-mono">orangecat@getalby.com</code>
-                      <button
-                        onClick={() => navigator.clipboard.writeText('orangecat@getalby.com')}
-                        className="ml-2 p-2 text-gray-400 hover:text-gray-600"
-                      >
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    Send Bitcoin via Lightning Network for instant, low-cost transactions.
-                  </p>
+                <div className="flex items-center justify-between w-full">
+                  <code className="text-sm font-mono break-all">{walletAddress}</code>
+                  <button
+                    onClick={() => handleCopy(walletAddress)}
+                    className="ml-2 p-2 text-gray-400 hover:text-gray-600"
+                  >
+                    {copied ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                  </button>
                 </div>
-              )}
+              </div>
             </div>
+            <p className="text-sm text-gray-600">
+              Send Bitcoin to this address to support Orange Cat. All transactions are visible on the blockchain.
+            </p>
           </div>
         </motion.div>
 
@@ -579,7 +532,7 @@ export default function FundPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Heidi */}
             <a 
-              href="/fund" 
+              href="/fund-us" 
               className="bg-white p-4 rounded-lg border border-gray-200 hover:border-orange-200 hover:shadow-md transition-all"
             >
               <div className="flex items-center space-x-3 mb-2">
@@ -598,7 +551,7 @@ export default function FundPage() {
 
             {/* Nerd */}
             <a 
-              href="/fund" 
+              href="/fund-us" 
               className="bg-white p-4 rounded-lg border border-gray-200 hover:border-orange-200 hover:shadow-md transition-all"
             >
               <div className="flex items-center space-x-3 mb-2">
@@ -617,7 +570,7 @@ export default function FundPage() {
 
             {/* Katzerei */}
             <a 
-              href="/fund" 
+              href="/fund-us" 
               className="bg-white p-4 rounded-lg border border-gray-200 hover:border-orange-200 hover:shadow-md transition-all"
             >
               <div className="flex items-center space-x-3 mb-2">
@@ -633,6 +586,74 @@ export default function FundPage() {
                 A creative space for coding projects and electronic music experimentation.
               </p>
             </a>
+          </div>
+        </motion.div>
+
+        {/* Create Your Own Page CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow-lg p-8 mb-8"
+        >
+          <div className="max-w-3xl mx-auto text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Create Your Own Fundraising Page</h2>
+            <p className="text-xl text-gray-600 mb-6">
+              Inspired by what you see? Create your own transparent fundraising page in minutes.
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                  <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Easy Setup</h3>
+                <p className="text-gray-600">Get started in minutes with our intuitive page builder</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                  <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Built-in Transparency</h3>
+                <p className="text-gray-600">Automatic tracking and reporting of all donations</p>
+              </div>
+              
+              <div className="bg-white p-6 rounded-lg shadow-sm">
+                <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+                  <svg className="h-6 w-6 text-orange-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Community Support</h3>
+                <p className="text-gray-600">Join a growing community of transparent fundraisers</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <a
+                href="/create"
+                className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-colors"
+              >
+                Create Your Page Now
+                <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </a>
+              <a
+                href="/learn-more"
+                className="inline-flex items-center justify-center px-6 py-3 border border-orange-600 text-base font-medium rounded-md text-orange-600 bg-white hover:bg-orange-50 transition-colors"
+              >
+                Learn More
+                <svg className="ml-2 h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </a>
+            </div>
           </div>
         </motion.div>
       </div>
