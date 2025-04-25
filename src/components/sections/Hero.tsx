@@ -66,13 +66,12 @@ export default function Hero() {
               Start Fundraising
               <ArrowRight className="ml-2 h-4 w-4" />
             </button>
-            <Link 
-              href="/fund" 
-              className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-tiffany-600 bg-transparent border border-tiffany-500 rounded-lg hover:bg-tiffany-50 transition-colors"
+            <a
+              href="/fund-us"
+              className="inline-flex items-center justify-center rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 sm:w-auto"
             >
               Fund Us
-              <Heart className="ml-2 h-4 w-4" />
-            </Link>
+            </a>
           </motion.div>
 
           <motion.div

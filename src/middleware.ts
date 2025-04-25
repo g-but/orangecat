@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // List of public paths that don't require authentication
-const publicPaths = ['/', '/auth', '/about', '/blog', '/fund']
+const publicPaths = ['/', '/auth', '/about', '/blog', '/fund-us']
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -44,7 +44,7 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
   // Allow access to public fund pages
-  if (pathname.startsWith('/fund/')) {
+  if (pathname.startsWith('/fund-us/')) {
     const fundId = pathname.split('/')[2]
     if (fundId) {
       const { data: fundPage } = await supabase
@@ -60,7 +60,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Handle protected routes
-  if (!session && !publicPaths.includes(pathname) && !pathname.startsWith('/fund/')) {
+  if (!session && !publicPaths.includes(pathname) && !pathname.startsWith('/fund-us/')) {
     const redirectUrl = new URL('/auth', request.url)
     redirectUrl.searchParams.set('mode', 'login')
     return NextResponse.redirect(redirectUrl)
