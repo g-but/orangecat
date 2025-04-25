@@ -98,7 +98,7 @@ export default function FundingPage({ params }: { params: { id: string } }) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push(`/fund/${params.id}/edit`)}
+                onClick={() => router.push(`/fund-us/${params.id}/edit`)}
               >
                 Edit Page
               </Button>
