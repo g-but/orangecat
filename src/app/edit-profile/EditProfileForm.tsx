@@ -1,14 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/features/auth/AuthContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { useProfile } from '@/hooks/useProfile'
 import { ProfileFormData, PasswordFormData } from '@/types/database'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { Settings, User, Loader2, Save } from 'lucide-react'
 import clsx from 'clsx'
-import { AuthContext } from '@/features/auth/AuthContext'
 
 type Tab = 'account' | 'profile'
 
