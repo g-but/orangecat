@@ -15,6 +15,7 @@
     "predeploy": "npm run env:push"
   },
   "dependencies": {
+    "@radix-ui/react-dropdown-menu": "^2.1.14",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.4",
     "bitcoinjs-lib": "^6.1.0",
