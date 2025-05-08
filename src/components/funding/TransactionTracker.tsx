@@ -2,10 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { createBrowserClient } from '@supabase/ssr'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import Card from '@/components/ui/Card'
-import { Loader2 } from 'lucide-react'
 
 interface TransactionTrackerProps {
   fundingPageId: string
@@ -13,22 +12,22 @@ interface TransactionTrackerProps {
   onBalanceUpdate: (newBalance: number) => void
 }
 
-export default function TransactionTracker({ 
-  fundingPageId,
-  isOwner,
-  onBalanceUpdate 
-}: TransactionTrackerProps) {
+export default function TransactionTracker({ fundingPageId, isOwner, onBalanceUpdate }: TransactionTrackerProps) {
   const { user } = useAuth()
   const [transactions, setTransactions] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  const loadTransactions = useCallback(async () => {
+  const fetchTransactions = useCallback(async () => {
     try {
+      setLoading(true)
+      setError(null)
+
       const { data, error } = await supabase
         .from('transactions')
         .select('*')
@@ -36,51 +35,89 @@ export default function TransactionTracker({
         .order('created_at', { ascending: false })
 
       if (error) throw error
-      setTransactions(data)
+
+      setTransactions(data || [])
+      
+      // Calculate total balance
+      const totalBalance = data?.reduce((sum, tx) => sum + (tx.amount || 0), 0) || 0
+      onBalanceUpdate(totalBalance)
     } catch (err) {
-      console.error('Error loading transactions:', err)
-      toast.error('Failed to load transactions')
+      setError(err instanceof Error ? err.message : 'Failed to fetch transactions')
+      toast.error('Failed to fetch transactions')
     } finally {
       setLoading(false)
     }
-  }, [fundingPageId, supabase])
+  }, [fundingPageId, onBalanceUpdate, supabase])
 
   useEffect(() => {
-    if (user) {
-      loadTransactions()
+    fetchTransactions()
+
+    // Subscribe to new transactions
+    const channel = supabase
+      .channel('transactions')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'transactions',
+          filter: `funding_page_id=eq.${fundingPageId}`
+        },
+        () => {
+          fetchTransactions()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
     }
-  }, [user, loadTransactions])
+  }, [fetchTransactions, fundingPageId, supabase])
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[200px]">
-        <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />
-      </div>
+      <Card>
+        <div className="p-4">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-tiffany-600 border-t-transparent" />
+        </div>
+      </Card>
+    )
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <div className="p-4 text-red-500">{error}</div>
+      </Card>
     )
   }
 
   return (
-    <Card className="p-6">
-      <h2 className="text-xl font-bold mb-4">Recent Transactions</h2>
-      {transactions.length === 0 ? (
-        <p className="text-gray-500">No transactions yet</p>
-      ) : (
-        <div className="space-y-4">
-          {transactions.map((transaction) => (
-            <div key={transaction.id} className="flex justify-between items-center">
-              <div>
-                <p className="font-medium">{transaction.amount} sats</p>
-                <p className="text-sm text-gray-500">
-                  {new Date(transaction.created_at).toLocaleString()}
+    <Card>
+      <div className="p-4">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Recent Transactions</h3>
+        {transactions.length === 0 ? (
+          <p className="text-gray-500">No transactions yet</p>
+        ) : (
+          <div className="space-y-4">
+            {transactions.map((tx) => (
+              <div key={tx.id} className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-900">
+                    {isOwner ? 'Anonymous Donor' : 'You'}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    {new Date(tx.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+                <p className="text-sm font-medium text-tiffany-600">
+                  {tx.amount} sats
                 </p>
               </div>
-              <div className="text-sm text-gray-500">
-                {transaction.status}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </div>
     </Card>
   )
 } 

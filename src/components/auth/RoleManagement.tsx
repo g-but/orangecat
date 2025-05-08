@@ -1,47 +1,34 @@
 'use client'
 
-import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
-import { createBrowserClient } from '@supabase/ssr'
-import { UserRole } from '@/types/auth'
-import Button from '@/components/ui/Button'
-import Card from '@/components/ui/Card'
+import { useAuth } from '@/hooks/useAuth'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import Loading from '@/components/Loading'
 
-export default function RoleManagement() {
-  const { user, isAdmin } = useAuth()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+interface RoleManagementProps {
+  children: React.ReactNode
+  requiredRole?: 'admin' | 'user'
+}
 
-  if (!isAdmin) {
+export default function RoleManagement({ children, requiredRole = 'user' }: RoleManagementProps) {
+  const { user, isAdmin, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/auth?from=protected')
+    } else if (!isLoading && requiredRole === 'admin' && !isAdmin) {
+      router.push('/')
+    }
+  }, [user, isAdmin, isLoading, router, requiredRole])
+
+  if (isLoading) {
+    return <Loading />
+  }
+
+  if (!user || (requiredRole === 'admin' && !isAdmin)) {
     return null
   }
 
-  const updateUserRole = async (userId: string, role: UserRole) => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        app_metadata: { role }
-      })
-
-      if (error) throw error
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update user role')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <Card>
-      <h2>Role Management</h2>
-      {error && <p className="text-red-500">{error}</p>}
-      {/* Add your role management UI here */}
-    </Card>
-  )
+  return <>{children}</>
 } 

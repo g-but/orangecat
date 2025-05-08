@@ -2,38 +2,31 @@ import { ButtonHTMLAttributes, forwardRef } from 'react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
-export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost'
+interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'
   size?: 'sm' | 'md' | 'lg'
   isLoading?: boolean
   href?: string
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ 
-    className, 
-    variant = 'primary', 
-    size = 'md', 
-    isLoading = false,
-    href,
-    children,
-    ...props 
-  }, ref) => {
+  ({ className, variant = 'primary', size = 'md', isLoading, children, ...props }, ref) => {
     const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50'
     
-    const variantStyles = {
-      primary: 'bg-primary text-primary-foreground hover:bg-primary/90',
-      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
-      outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
-      ghost: 'hover:bg-accent hover:text-accent-foreground'
+    const variants = {
+      primary: 'bg-tiffany-600 text-white hover:bg-tiffany-700 focus-visible:ring-tiffany-500',
+      secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-500',
+      ghost: 'hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-500',
+      danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500',
+      outline: 'border border-gray-300 bg-transparent hover:bg-gray-50 focus-visible:ring-gray-500'
     }
-    
-    const sizeStyles = {
-      sm: 'h-9 px-3 text-sm',
-      md: 'h-10 px-4 py-2',
-      lg: 'h-11 px-8 text-lg'
+
+    const sizes = {
+      sm: 'h-8 px-3 text-sm',
+      md: 'h-10 px-4',
+      lg: 'h-12 px-6 text-lg',
     }
-    
+
     const buttonContent = isLoading ? (
       <div className="flex items-center">
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
@@ -41,14 +34,14 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       </div>
     ) : children
 
-    if (href) {
+    if (props.href) {
       return (
         <Link
-          href={href}
+          href={props.href}
           className={cn(
             baseStyles,
-            variantStyles[variant],
-            sizeStyles[size],
+            variants[variant],
+            sizes[size],
             className
           )}
         >
@@ -62,13 +55,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         className={cn(
           baseStyles,
-          variantStyles[variant],
-          sizeStyles[size],
+          variants[variant],
+          sizes[size],
           className
         )}
         disabled={isLoading}
         {...props}
       >
+        {isLoading ? (
+          <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+        ) : null}
         {buttonContent}
       </button>
     )

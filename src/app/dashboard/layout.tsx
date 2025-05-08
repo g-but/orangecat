@@ -1,61 +1,22 @@
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import ClientDashboardLayout from '@/components/dashboard/DashboardLayout'
+'use client'
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          const cookie = cookieStore.get(name)
-          if (!cookie) return undefined
-          return decodeURIComponent(cookie.value)
-        },
-        set(name: string, value: string, options: any) {
-          cookieStore.set({
-            name,
-            value: encodeURIComponent(value),
-            ...options,
-          })
-        },
-        remove(name: string, options: any) {
-          cookieStore.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
+import { useRequireAuth } from '@/hooks/useAuth'
+import DashboardLayout from '@/components/dashboard/DashboardLayout'
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session?.user) {
-    redirect('/auth?mode=login')
+export default function Layout({ children }: { children: React.ReactNode }) {
+  const { user, profile, isLoading } = useRequireAuth()
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-tiffany-600 border-t-transparent" />
+      </div>
+    )
   }
 
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user?.id) {
-    redirect('/auth?mode=login')
+  if (!user || !profile) {
+    return null
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('user_id', user.id)
-    .single()
-
-  return (
-    <ClientDashboardLayout user={user} profile={profile}>
-      {children}
-    </ClientDashboardLayout>
-  )
+  return <DashboardLayout user={user} profile={profile}>{children}</DashboardLayout>
 } 

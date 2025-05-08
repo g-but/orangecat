@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/services/supabase/client'
 import { Profile, ProfileFormData } from '@/types/database'
 
 export class ProfileService {
@@ -8,7 +8,7 @@ export class ProfileService {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .single()
 
       if (error) throw error
@@ -31,7 +31,7 @@ export class ProfileService {
       const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
-        .eq('user_id', userId)
+        .eq('id', userId)
         .single()
 
       if (fetchError) {
@@ -44,12 +44,10 @@ export class ProfileService {
         const { error: insertError } = await supabase
           .from('profiles')
           .insert({
-            user_id: userId,
+            id: userId,
             display_name: formData.display_name || null,
-            website: formData.website || null,
             bio: formData.bio || null,
             bitcoin_address: formData.bitcoin_address || null,
-            lightning_address: formData.lightning_address || null,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           })
@@ -66,19 +64,14 @@ export class ProfileService {
         .from('profiles')
         .update({
           display_name: formData.display_name || null,
-          website: formData.website || null,
           bio: formData.bio || null,
           bitcoin_address: formData.bitcoin_address || null,
-          lightning_address: formData.lightning_address || null,
           updated_at: new Date().toISOString()
         })
-        .eq('user_id', userId)
+        .eq('id', userId)
 
       if (updateError) {
         console.error('Supabase update error:', updateError)
-        if (updateError.code === '23505') {
-          return { success: false, error: 'This display name is already taken. Please choose another one.' }
-        }
         return { success: false, error: `Failed to update profile: ${updateError.message}` }
       }
 

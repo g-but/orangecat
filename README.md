@@ -1,22 +1,55 @@
-# OrangeCat - Crowdfunding Platform
+# OrangeCat - Bitcoin Funding Platform
 
-A modern crowdfunding platform built with Next.js and Supabase.
+A modern platform for creating and managing Bitcoin funding pages with transparency features.
 
-## Features
+## Project Structure
 
-- User authentication and profiles
-- Create and manage funding campaigns
-- Track donations and transactions
-- Real-time updates
-- Secure payment processing
+```
+src/
+├── app/                    # Next.js app router pages
+│   ├── profile/           # Profile management pages
+│   ├── funding/           # Funding page routes
+│   └── dashboard/         # Dashboard pages
+├── components/            # React components
+│   ├── auth/             # Authentication components
+│   ├── funding/          # Funding page components
+│   ├── layout/           # Layout components
+│   ├── profile/          # Profile components
+│   └── ui/               # Reusable UI components
+├── contexts/             # React contexts
+│   └── AuthContext.tsx   # Authentication context
+├── hooks/               # Custom React hooks
+│   ├── useProfile.ts    # Profile management hook
+│   └── useBitcoinWallet.ts # Bitcoin wallet hook
+├── services/            # External services integration
+│   ├── supabase.ts      # Supabase client and helpers
+│   └── transparency.ts  # Transparency scoring service
+├── types/               # TypeScript type definitions
+└── utils/              # Utility functions
+
+config/                  # Configuration files
+├── dashboard.ts        # Dashboard configuration
+└── navigation.ts       # Navigation configuration
+
+public/                 # Static assets
+supabase/              # Database migrations and types
+```
 
 ## Tech Stack
 
 - **Frontend**: Next.js 14, React, TypeScript
-- **Backend**: Supabase (PostgreSQL)
-- **Authentication**: Supabase Auth
 - **Styling**: Tailwind CSS
-- **Database**: PostgreSQL with Row Level Security
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Bitcoin Integration**: Mempool API
+
+## Features
+
+- User authentication and profile management
+- Bitcoin funding page creation
+- Real-time transaction tracking
+- Transparency scoring system
+- Responsive design
 
 ## Getting Started
 
@@ -29,48 +62,27 @@ A modern crowdfunding platform built with Next.js and Supabase.
    ```bash
    cp .env.example .env.local
    ```
-4. Update `.env.local` with your Supabase credentials
-5. Run the development server:
+4. Start the development server:
    ```bash
    npm run dev
    ```
 
-## Database Schema
-
-The application uses three main tables:
-
-1. **profiles**: User profile information
-2. **funding_pages**: Crowdfunding campaign pages
-3. **transactions**: Donation records
-
-See [Database Schema Documentation](docs/database-schema.md) for detailed information.
-
 ## Development
 
-### Database Migrations
-
-Database changes are managed through Supabase migrations. To apply migrations:
-
-```bash
-npx supabase db push
-```
-
-### Type Generation
-
-TypeScript types are generated from the database schema:
-
-```bash
-npx supabase gen types typescript --project-id your-project-id --schema public > src/types/database.ts
-```
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run test` - Run tests
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create your feature branch
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

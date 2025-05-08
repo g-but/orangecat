@@ -1,23 +1,31 @@
 'use client'
 
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
-import FundingPageList from '@/components/funding/FundingPageList'
 import Hero from '@/components/sections/Hero'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 export default function Home() {
-  const { user, isLoading } = useAuth()
+  const { user, isLoading, hydrated } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
-    if (!isLoading && user) {
+    if (!isLoading && hydrated && user) {
       router.replace('/dashboard')
     }
-  }, [user, isLoading, router])
+  }, [user, isLoading, hydrated, router])
+
+  // Wait for hydration before rendering
+  if (!hydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />
+      </div>
+    )
+  }
 
   // Show loading state only briefly while checking auth
   if (isLoading) {
@@ -35,7 +43,7 @@ export default function Home() {
 
   // Show home page for non-authenticated users
   return (
-    <main>
+    <main className="animate-fade-in">
       <Hero />
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

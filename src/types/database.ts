@@ -16,7 +16,7 @@ export type Database = {
       }
       funding_pages: {
         Row: FundingPage
-        Insert: Omit<FundingPage, 'id' | 'created_at' | 'updated_at' | 'current_amount'>
+        Insert: Omit<FundingPage, 'id' | 'created_at' | 'updated_at'>
         Update: Partial<Omit<FundingPage, 'id'>>
       }
       transactions: {
@@ -153,25 +153,17 @@ export const Constants = {
 
 export interface Profile {
   id: string
-  user_id: string
   display_name: string | null
-  full_name: string | null
-  avatar_url: string | null
-  website: string | null
   bio: string | null
   bitcoin_address: string | null
-  lightning_address: string | null
   created_at: string
   updated_at: string
 }
 
 export interface ProfileFormData {
-  username?: string
   display_name?: string
-  website?: string
   bio?: string
   bitcoin_address?: string
-  lightning_address?: string
 }
 
 export interface PasswordFormData {
@@ -184,26 +176,24 @@ export interface FundingPage {
   id: string
   user_id: string
   title: string
-  description: string
-  bitcoin_address?: string
-  lightning_address?: string
-  is_active: boolean
-  total_funding: number
-  contributor_count: number
-  goal_amount: number
-  current_amount: number
-  status: 'active' | 'draft' | 'completed'
+  description: string | null
+  bitcoin_address: string
   created_at: string
   updated_at: string
 }
 
+export interface FundingPageFormData {
+  title: string
+  description?: string
+  bitcoin_address: string
+}
+
 export interface Transaction {
   id: string
-  sender_id: string
-  recipient_id: string
   funding_page_id: string
   amount: number
-  status: 'completed' | 'pending' | 'failed'
+  transaction_hash: string
+  status: 'pending' | 'confirmed' | 'failed'
   created_at: string
   updated_at: string
 }

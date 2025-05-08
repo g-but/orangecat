@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // List of public paths that don't require authentication
-const publicPaths = ['/', '/auth', '/about', '/blog', '/fund-us']
+const publicPaths = ['/', '/auth', '/about', '/blog', '/fund-us', '/fund-others']
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
@@ -43,6 +43,11 @@ export async function middleware(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
   const pathname = request.nextUrl.pathname
 
+  // Redirect authenticated users from root to dashboard
+  if (session && pathname === '/') {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
   // Allow access to public fund pages
   if (pathname.startsWith('/fund-us/')) {
     const fundId = pathname.split('/')[2]
@@ -62,14 +67,16 @@ export async function middleware(request: NextRequest) {
   // Handle protected routes
   if (!session && !publicPaths.includes(pathname) && !pathname.startsWith('/fund-us/')) {
     const redirectUrl = new URL('/auth', request.url)
-    redirectUrl.searchParams.set('mode', 'login')
+    // Add context about where the user came from
+    redirectUrl.searchParams.set('from', 'protected')
     return NextResponse.redirect(redirectUrl)
   }
 
-  // Handle authenticated users trying to access auth pages
-  if (session && pathname.startsWith('/auth')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
-  }
+  // Allow authenticated users to visit /auth page.
+  // The /auth page itself will handle redirecting them to /dashboard if they are already logged in and hydrated.
+  // if (session && pathname.startsWith('/auth')) {
+  //   return NextResponse.redirect(new URL('/dashboard', request.url))
+  // }
 
   // Handle sign out
   if (pathname === '/auth/signout') {

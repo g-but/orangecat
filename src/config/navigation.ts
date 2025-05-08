@@ -1,28 +1,73 @@
+import { ComponentType, SVGProps } from 'react'
 import { Github, Twitter } from 'lucide-react'
 
-export const navigation = {
+interface NavigationItem {
+  name: string
+  href: string
+  requiresAuth?: boolean
+  icon?: ComponentType<SVGProps<SVGSVGElement>>
+}
+
+interface NavigationConfig {
+  main: NavigationItem[]
+  footer: {
+    product: NavigationItem[]
+    company: NavigationItem[]
+    legal: NavigationItem[]
+    social: NavigationItem[]
+  }
+  user: NavigationItem[]
+  auth: NavigationItem[]
+  dashboard: NavigationItem[]
+}
+
+export const navigation: NavigationConfig = {
   main: [
-    { name: 'Home', href: '/' },
-    { name: 'Create', href: '/create', requiresAuth: true },
+    { name: 'Fund Yourself', href: '/fund-yourself', requiresAuth: true },
+    { name: 'Fund Others', href: '/fund-others' },
     { name: 'Fund Us', href: '/fund-us' },
     { name: 'About', href: '/about' },
     { name: 'Blog', href: '/blog' },
   ],
-  social: [
-    {
-      name: 'Twitter',
-      href: 'https://twitter.com/orangecat',
-      icon: Twitter,
-    },
-    {
-      name: 'GitHub',
-      href: 'https://github.com/g-but/orangecat',
-      icon: Github,
-    },
+  footer: {
+    product: [
+      { name: 'Features', href: '/docs#features' },
+      { name: 'Documentation', href: '/docs' },
+      { name: 'API Reference', href: '/docs/api' },
+      { name: 'Status', href: '/status' },
+    ],
+    company: [
+      { name: 'About', href: '/about' },
+      { name: 'Blog', href: '/blog' },
+      { name: 'Careers', href: '/careers' },
+      { name: 'Contact', href: '/contact' },
+    ],
+    legal: [
+      { name: 'Privacy', href: '/privacy' },
+      { name: 'Terms', href: '/terms' },
+      { name: 'Security', href: '/security' },
+    ],
+    social: [
+      {
+        name: 'Twitter',
+        href: 'https://twitter.com/orangecat',
+        icon: Twitter,
+      },
+      {
+        name: 'GitHub',
+        href: 'https://github.com/g-but/orangecat',
+        icon: Github,
+      },
+    ],
+  },
+  user: [
+    { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
+    { name: 'Profile', href: '/profile', requiresAuth: true },
+    { name: 'Settings', href: '/settings', requiresAuth: true },
   ],
   auth: [
-    { name: 'Sign In', href: '/auth?mode=login' },
-    { name: 'Get Started', href: '/auth?mode=register' },
+    { name: 'Sign In', href: '/auth?from=protected' },
+    { name: 'Get Started', href: '/auth?from=public' },
   ],
   dashboard: [
     { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
