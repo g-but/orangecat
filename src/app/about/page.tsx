@@ -1,120 +1,95 @@
 'use client';
 
-import { motion } from 'framer-motion';
-import { Bitcoin, Zap, Shield, Globe, Eye, Settings, ArrowRight } from 'lucide-react';
-
-const values = [
-  {
-    icon: Bitcoin,
-    title: 'Bitcoin First',
-    description: 'We believe in Bitcoin as the future of money and are committed to building tools that make it accessible to everyone.',
-  },
-  {
-    icon: Zap,
-    title: 'Simplicity',
-    description: 'We keep things simple. No unnecessary complexity, no hidden fees, just straightforward Bitcoin donations.',
-  },
-  {
-    icon: Shield,
-    title: 'Privacy',
-    description: 'Your privacy matters. We don\'t require accounts or personal information to use our service.',
-  },
-  {
-    icon: Globe,
-    title: 'Global',
-    description: 'Bitcoin knows no borders. We\'re building tools that work for everyone, everywhere.',
-  },
-];
-
-const steps = [
-  {
-    icon: Settings,
-    title: 'Create Your Page',
-    description: 'Set up your donation page in minutes. Customize your message, add your Bitcoin address, and choose how you want to engage with your community.',
-  },
-  {
-    icon: Eye,
-    title: 'Transparent Transactions',
-    description: 'All Bitcoin transactions are public by nature. We make it easy to view and engage with your transaction history, building trust through transparency.',
-  },
-  {
-    icon: Bitcoin,
-    title: 'Engage & Build Trust',
-    description: 'Comment on incoming and outgoing transactions, explain where funds are going, and interact with your donors. This open dialogue creates a transparent and trustworthy donation ecosystem.',
-  },
-];
+import Card from '@/components/ui/Card';
+import { Bitcoin, Zap, Shield, Globe } from 'lucide-react';
 
 export default function AboutPage() {
   return (
-    <main className="min-h-screen pt-20">
-      <section className="section">
-        <div className="container">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="max-w-3xl mx-auto text-center mb-16"
-          >
-            <h1 className="mb-4">About OrangeCat</h1>
-            <p className="text-xl text-slate-600">
-              Making Bitcoin donations simple and accessible for everyone
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="max-w-3xl mx-auto mb-16"
-          >
-            <h2 className="text-2xl font-bold mb-6">Our Mission</h2>
-            <p className="text-slate-600 mb-4">
-              OrangeCat was created with a simple mission: to make accepting Bitcoin donations as easy as possible. 
-              We believe that Bitcoin is the future of money, and we want to help creators, organizations, and 
-              individuals around the world accept Bitcoin donations without any hassle.
-            </p>
-            <p className="text-slate-600">
-              Our platform is designed to be simple, secure, and accessible to everyone. No accounts required, 
-              no hidden fees, just straightforward Bitcoin donations.
-            </p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="max-w-3xl mx-auto"
-          >
-            <h2 className="text-2xl font-bold mb-6">Why Choose OrangeCat?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="card">
-                <h3 className="text-xl font-bold mb-4 text-tiffany-500">Simple Setup</h3>
-                <p className="text-slate-600">
-                  Create your donation page in minutes with our intuitive interface.
-                </p>
-              </div>
-              <div className="card">
-                <h3 className="text-xl font-bold mb-4 text-tiffany-500">Transparent</h3>
-                <p className="text-slate-600">
-                  All transactions are recorded on the Bitcoin blockchain for complete transparency.
-                </p>
-              </div>
-              <div className="card">
-                <h3 className="text-xl font-bold mb-4 text-tiffany-500">Secure</h3>
-                <p className="text-slate-600">
-                  Your funds are secured by the Bitcoin network, the most secure financial network in the world.
-                </p>
-              </div>
-              <div className="card">
-                <h3 className="text-xl font-bold mb-4 text-tiffany-500">Global</h3>
-                <p className="text-slate-600">
-                  Accept donations from anywhere in the world, 24/7, with instant settlement.
-                </p>
-              </div>
-            </div>
-          </motion.div>
+    <div className="min-h-screen pt-20">
+      <div className="container mx-auto px-4">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">About OrangeCat</h1>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Empowering creators and innovators with Bitcoin funding
+          </p>
         </div>
-      </section>
-    </main>
+
+        <div className="max-w-6xl mx-auto">
+          {/* Mission Section */}
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold mb-6">Our Mission</h2>
+            <Card className="p-8">
+              <p className="text-lg text-gray-600 mb-4">
+                OrangeCat is dedicated to making Bitcoin funding accessible to everyone. We believe that anyone with a great idea or project should be able to receive funding directly in Bitcoin, without intermediaries or restrictions.
+              </p>
+              <p className="text-lg text-gray-600">
+                Our platform connects creators, innovators, and dreamers with the global Bitcoin community, enabling direct support for projects that matter.
+              </p>
+            </Card>
+          </div>
+
+          {/* Values Section */}
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold mb-6">Our Values</h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="p-6">
+                <Bitcoin className="w-8 h-8 text-tiffany-500 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Bitcoin First</h3>
+                <p className="text-gray-600">
+                  We're committed to Bitcoin as the primary means of funding, supporting both on-chain and Lightning payments
+                </p>
+              </Card>
+              <Card className="p-6">
+                <Zap className="w-8 h-8 text-tiffany-500 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Innovation</h3>
+                <p className="text-gray-600">
+                  We continuously improve our platform to make Bitcoin funding more accessible and user-friendly
+                </p>
+              </Card>
+              <Card className="p-6">
+                <Shield className="w-8 h-8 text-tiffany-500 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Trust</h3>
+                <p className="text-gray-600">
+                  We prioritize security and transparency in all our operations
+                </p>
+              </Card>
+              <Card className="p-6">
+                <Globe className="w-8 h-8 text-tiffany-500 mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Global Community</h3>
+                <p className="text-gray-600">
+                  We foster a worldwide community of Bitcoin supporters and creators
+                </p>
+              </Card>
+            </div>
+          </div>
+
+          {/* Team Section */}
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold mb-6">Our Team</h2>
+            <Card className="p-8">
+              <p className="text-lg text-gray-600 mb-4">
+                OrangeCat is built by a team of Bitcoin enthusiasts, developers, and entrepreneurs who are passionate about making Bitcoin funding accessible to everyone.
+              </p>
+              <p className="text-lg text-gray-600">
+                We're committed to building the best platform for Bitcoin funding and supporting the growth of the Bitcoin ecosystem.
+              </p>
+            </Card>
+          </div>
+
+          {/* Contact Section */}
+          <div>
+            <h2 className="text-2xl font-bold mb-6">Get in Touch</h2>
+            <Card className="p-8">
+              <p className="text-lg text-gray-600 mb-4">
+                Have questions or want to learn more about OrangeCat? We'd love to hear from you.
+              </p>
+              <p className="text-lg text-gray-600">
+                Email us at <a href="mailto:contact@orangecat.com" className="text-tiffany-500 hover:text-tiffany-600">contact@orangecat.com</a>
+              </p>
+            </Card>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 } 

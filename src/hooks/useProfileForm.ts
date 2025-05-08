@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { Profile } from '@/types/profile'
-import { isValidBitcoinAddress, isValidLightningAddress, isValidWebsite } from '@/lib/validation/address'
+import { isValidBitcoinAddress, isValidLightningAddress, isValidWebsite } from '@/utils/validation'
 
 interface FormData {
   full_name: string
