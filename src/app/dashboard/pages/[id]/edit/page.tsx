@@ -1,19 +1,17 @@
 'use client'
 
-import { NextPage } from 'next'
-
-interface PageProps {
+type PageProps = {
   params: {
     id: string
   }
 }
 
-const EditFundingPage: NextPage<PageProps> = ({ params }) => {
+export default function EditFundingPage({
+  params,
+}: PageProps) {
   return (
     <div>
       <h1>Edit Page for ID: {params.id}</h1>
     </div>
   )
-}
-
-export default EditFundingPage 
+} 
