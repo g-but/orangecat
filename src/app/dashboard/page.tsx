@@ -175,7 +175,7 @@ export default function DashboardPage() {
       <div className="bg-white rounded-lg shadow p-6">
         <h2 className="text-lg font-medium text-gray-900">Quick Actions</h2>
         <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Link href="/dashboard/pages/new">
+          <Link href="/dashboard/funding/new">
             <Button className="w-full">
               <Share2 className="w-5 h-5 mr-2" />
               Create New Funding Page
