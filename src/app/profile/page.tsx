@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { useAuthStore } from '@/store/auth'
 import supabase from '@/services/supabase/client'
 import { User, Bitcoin, Zap, FileText, Camera } from 'lucide-react'
@@ -134,10 +135,12 @@ export default function ProfilePage() {
               <div className="flex items-center space-x-6">
                 <div className="relative">
                   {formData.avatar_url ? (
-                    <img
+                    <Image
                       src={formData.avatar_url}
                       alt={formData.display_name || formData.username}
-                      className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-md"
+                      width={96}
+                      height={96}
+                      className="rounded-full object-cover border-4 border-white shadow-md"
                     />
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center border-4 border-white shadow-md">

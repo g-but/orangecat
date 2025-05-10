@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { ChevronDown, User, Settings, LogOut, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 // import { createBrowserClient } from '@supabase/ssr' // Remove this
@@ -78,10 +79,12 @@ export default function UserProfileDropdown() {
       >
         <span className="relative">
           {avatarUrl ? (
-            <img
+            <Image
               src={avatarUrl}
               alt={displayName}
-              className="w-8 h-8 rounded-full object-cover border border-orange-200"
+              width={32}
+              height={32}
+              className="rounded-full object-cover border border-orange-200"
             />
           ) : (
             <span className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-base">
