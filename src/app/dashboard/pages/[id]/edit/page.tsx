@@ -29,6 +29,7 @@ export default function EditFundingPage({ params }: Props) {
   const router = useRouter()
   const { user } = useAuthStore()
   const [isLoading, setIsLoading] = useState(true)
+  const [pageExists, setPageExists] = useState(true)
   const [formData, setFormData] = useState<FundingPageFormData>({
     title: '',
     description: '',
@@ -50,6 +51,10 @@ export default function EditFundingPage({ params }: Props) {
   }
 
   const loadFundingPage = useCallback(async () => {
+    if (!user) {
+      setIsLoading(false)
+      return
+    }
     try {
       const { data, error } = await supabase
         .from('funding_pages')
@@ -63,6 +68,7 @@ export default function EditFundingPage({ params }: Props) {
       if (!data) {
         toast.error('Funding page not found')
         router.push('/dashboard/pages')
+        setPageExists(false)
         return
       }
 
@@ -79,14 +85,19 @@ export default function EditFundingPage({ params }: Props) {
       console.error('Error loading funding page:', error)
       toast.error('Failed to load funding page')
       router.push('/dashboard/pages')
+      setPageExists(false)
     } finally {
       setIsLoading(false)
     }
   }, [params.id, user, router, setIsLoading, setFormData])
 
   useEffect(() => {
-    loadFundingPage()
-  }, [loadFundingPage])
+    if (user) {
+      loadFundingPage()
+    } else {
+      setIsLoading(false)
+    }
+  }, [loadFundingPage, user])
 
   const handleInputChange = (field: keyof FundingPageFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = field === 'goal_amount' ? parseFloat(e.target.value) : e.target.value
@@ -94,6 +105,11 @@ export default function EditFundingPage({ params }: Props) {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    if (!user) {
+      toast.error('User not authenticated.')
+      setIsLoading(false)
+      return
+    }
     e.preventDefault()
     setIsLoading(true)
 
@@ -133,6 +149,14 @@ export default function EditFundingPage({ params }: Props) {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (!user) {
+    return (
+      <div className="flex justify-center py-12">
+        <p>Loading user information...</p>
+      </div>
+    )
   }
 
   if (isLoading) {
