@@ -3,7 +3,7 @@
 import { categories } from '@/config/categories'
 import Link from 'next/link'
 import { Palette, Code, GraduationCap, Building2, Heart, ArrowRight } from 'lucide-react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 
 const iconMap = {

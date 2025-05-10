@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
+// import { createClient } from '@/lib/supabase/client' // Old import
+import supabase from '@/services/supabase/client' // New default import
 import Link from 'next/link'
 
 export default function ComingSoon() {
@@ -10,7 +11,7 @@ export default function ComingSoon() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createClient()
+      // const supabase = createClient() // No longer needed, supabase is imported directly
       if (!supabase) return
 
       const { data: { session } } = await supabase.auth.getSession()
