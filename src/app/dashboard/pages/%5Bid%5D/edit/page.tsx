@@ -1,3 +1,0 @@
-import createClient from '@/services/supabase/client'
-
-// ... existing code ... 
