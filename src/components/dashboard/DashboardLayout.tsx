@@ -14,13 +14,7 @@ import {
 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Link from 'next/link'
-
-interface Profile {
-  id: string
-  username: string | null
-  display_name: string | null
-  avatar_url: string | null
-}
+import { Profile } from '@/types/database'
 
 interface DashboardLayoutProps {
   children: React.ReactNode
