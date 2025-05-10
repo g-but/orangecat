@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase-server';
+// import { createClient } from '@/lib/supabase-server'; // Old import
+import { createServerClient } from '@/services/supabase/server'; // New import
 
 export async function POST(request: Request) {
   try {
     const { fundingPageId, amount, currency, paymentMethod } = await request.json();
-    const supabase = createClient();
+    // const supabase = createClient(); // Old call
+    const supabase = createServerClient(); // New call
 
     // Input validation
     if (!fundingPageId || !amount || !currency || !paymentMethod) {
@@ -52,7 +54,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     const status = searchParams.get('status');
-    const supabase = createClient();
+    // const supabase = createClient(); // Old call
+    const supabase = createServerClient(); // New call
 
     let query = supabase
       .from('funding_pages')

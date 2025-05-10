@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
-import { supabase } from '@/lib/supabase'
+import supabase from '@/services/supabase/client'
 import { Bitcoin, Zap, FileText, Target } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
