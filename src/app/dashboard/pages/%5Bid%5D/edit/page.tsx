@@ -1,3 +1,3 @@
-import { createClient } from '@/services/supabase/client'
+import createClient from '@/services/supabase/client'
 
 // ... existing code ... 
