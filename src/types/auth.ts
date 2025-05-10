@@ -1,13 +1,6 @@
-export type UserRole = 'user' | 'admin' | 'moderator'
+import type { Profile } from '@/types/database';
 
-export interface Profile {
-  id: string
-  username: string
-  full_name?: string
-  avatar_url?: string
-  created_at: string
-  updated_at: string
-}
+export type UserRole = 'user' | 'admin' | 'moderator'
 
 export interface AuthUser {
   id: string

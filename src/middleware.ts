@@ -43,9 +43,9 @@ export async function middleware(request: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession()
   const pathname = request.nextUrl.pathname
 
-  // Redirect authenticated users from root to dashboard
-  if (session && pathname === '/') {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+  // Log session state for debugging redirects
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Middleware Check - Pathname:', pathname, 'Session:', session ? { userId: session.user.id, expiresAt: session.expires_at } : null);
   }
 
   // Allow access to public fund pages
@@ -67,7 +67,6 @@ export async function middleware(request: NextRequest) {
   // Handle protected routes
   if (!session && !publicPaths.includes(pathname) && !pathname.startsWith('/fund-us/')) {
     const redirectUrl = new URL('/auth', request.url)
-    // Add context about where the user came from
     redirectUrl.searchParams.set('from', 'protected')
     return NextResponse.redirect(redirectUrl)
   }

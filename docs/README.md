@@ -44,7 +44,7 @@ Welcome to the OrangeCat documentation. This guide will help you understand the 
 ## Features
 
 ### Core Features
-- [Authentication System](features/auth.md)
+- [Authentication System](auth_system.md)
 - [User Dashboard](features/dashboard.md)
 - [Bitcoin Integration](features/bitcoin.md)
 - [User Profiles](features/profiles.md)

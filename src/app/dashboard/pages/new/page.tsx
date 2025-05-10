@@ -1,9 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
-import { createClient } from '@/services/supabase/client'
+import supabase from '@/services/supabase/client'
 import { Bitcoin, Zap, FileText, Target } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -21,7 +21,7 @@ interface FundingPageFormData {
 
 export default function NewFundingPage() {
   const router = useRouter()
-  const { user } = useAuthStore()
+  const { user, profile } = useAuthStore()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<FundingPageFormData>({
     title: '',
@@ -33,14 +33,25 @@ export default function NewFundingPage() {
     is_active: true
   })
 
+  useEffect(() => {
+    if (profile) {
+      setFormData(prev => ({
+        ...prev,
+        bitcoin_address: profile.bitcoin_address || '',
+        lightning_address: profile.lightning_address || ''
+      }))
+    }
+  }, [profile])
+
   const validateBitcoinAddress = (address: string) => {
     // Basic validation - can be enhanced with more specific checks
-    return /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address)
+    return /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address) || /^bc1[a-zA-HJ-NP-Z0-9]{25,90}$/i.test(address)
   }
 
   const validateLightningAddress = (address: string) => {
     // Basic validation - can be enhanced with more specific checks
-    return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(address)
+    // Allows for LUD-06 format (user@domain.com) and LUD-16 (lnurl1...)
+    return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$/.test(address) || /^lnurl1[a-zA-HJ-NP-Z0-9]+$/i.test(address)
   }
 
   const handleInputChange = (field: keyof FundingPageFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,24 +64,35 @@ export default function NewFundingPage() {
     setIsLoading(true)
 
     try {
-      // Validate Bitcoin address
+      if (!formData.title.trim()) {
+        throw new Error('Title is required.')
+      }
+      if (!formData.description.trim()) {
+        throw new Error('Description is required.')
+      }
+      if (!formData.bitcoin_address.trim()) {
+        throw new Error('Bitcoin address is required.')
+      }
       if (!validateBitcoinAddress(formData.bitcoin_address)) {
-        throw new Error('Invalid Bitcoin address')
+        throw new Error('Invalid Bitcoin address format.')
       }
 
-      // Validate Lightning address if provided
       if (formData.lightning_address && !validateLightningAddress(formData.lightning_address)) {
-        throw new Error('Invalid Lightning address')
+        throw new Error('Invalid Lightning address format.')
+      }
+      
+      if (formData.goal_amount <= 0) {
+        throw new Error('Funding goal must be greater than 0.')
       }
 
-      const { error } = await createClient()
+      const { error } = await supabase
         .from('funding_pages')
         .insert({
           user_id: user!.id,
           title: formData.title,
           description: formData.description,
           bitcoin_address: formData.bitcoin_address,
-          lightning_address: formData.lightning_address,
+          lightning_address: formData.lightning_address || null,
           goal_amount: formData.goal_amount,
           is_public: formData.is_public,
           is_active: formData.is_active,
@@ -80,7 +102,7 @@ export default function NewFundingPage() {
 
       if (error) throw error
 
-      toast.success('Funding page created successfully')
+      toast.success('Funding page created successfully!')
       router.push('/dashboard/pages')
     } catch (error) {
       console.error('Error creating funding page:', error)
@@ -111,15 +133,17 @@ export default function NewFundingPage() {
                   icon={FileText}
                 />
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
                     Description
                   </label>
                   <textarea
+                    id="description"
+                    name="description"
                     value={formData.description}
                     onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                     placeholder="Describe your funding goal"
                     required
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-tiffany-500 focus:ring-tiffany-500 sm:text-sm"
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-tiffany-500 focus:ring-tiffany-500 sm:text-sm p-2"
                     rows={4}
                   />
                 </div>
@@ -131,7 +155,7 @@ export default function NewFundingPage() {
                   label="Bitcoin Address"
                   value={formData.bitcoin_address}
                   onChange={handleInputChange('bitcoin_address')}
-                  placeholder="Your Bitcoin address"
+                  placeholder="Your Bitcoin address (e.g., bc1...)"
                   required
                   icon={Bitcoin}
                   error={formData.bitcoin_address && !validateBitcoinAddress(formData.bitcoin_address) ? 'Invalid Bitcoin address' : undefined}
@@ -140,7 +164,7 @@ export default function NewFundingPage() {
                   label="Lightning Address (Optional)"
                   value={formData.lightning_address}
                   onChange={handleInputChange('lightning_address')}
-                  placeholder="Your Lightning address"
+                  placeholder="Your Lightning address (e.g., user@domain.com or lnurl1...)"
                   icon={Zap}
                   error={formData.lightning_address && !validateLightningAddress(formData.lightning_address) ? 'Invalid Lightning address' : undefined}
                 />
@@ -151,7 +175,7 @@ export default function NewFundingPage() {
                 label="Funding Goal (BTC)"
                 type="number"
                 step="0.00000001"
-                min="0"
+                min="0.00000001"
                 value={formData.goal_amount}
                 onChange={handleInputChange('goal_amount')}
                 placeholder="Enter your funding goal in BTC"
@@ -164,32 +188,34 @@ export default function NewFundingPage() {
                 <div className="flex items-center">
                   <input
                     id="is_public"
+                    name="is_public"
                     type="checkbox"
                     checked={formData.is_public}
                     onChange={(e) => setFormData(prev => ({ ...prev, is_public: e.target.checked }))}
                     className="h-4 w-4 text-tiffany-600 focus:ring-tiffany-500 border-gray-300 rounded"
                   />
                   <label htmlFor="is_public" className="ml-2 block text-sm text-gray-900">
-                    Make this funding page public
+                    Make this funding page public (visible on 'Fund Others')
                   </label>
                 </div>
 
                 <div className="flex items-center">
                   <input
                     id="is_active"
+                    name="is_active"
                     type="checkbox"
                     checked={formData.is_active}
                     onChange={(e) => setFormData(prev => ({ ...prev, is_active: e.target.checked }))}
                     className="h-4 w-4 text-tiffany-600 focus:ring-tiffany-500 border-gray-300 rounded"
                   />
                   <label htmlFor="is_active" className="ml-2 block text-sm text-gray-900">
-                    Keep this funding page active
+                    Set this funding page as active (accepting donations)
                   </label>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="flex justify-end space-x-4">
+              <div className="flex justify-end space-x-4 pt-2">
                 <Button
                   type="button"
                   variant="secondary"
@@ -200,7 +226,8 @@ export default function NewFundingPage() {
                 </Button>
                 <Button
                   type="submit"
-                  disabled={isLoading}
+                  disabled={isLoading || !formData.title || !formData.description || !formData.bitcoin_address || !validateBitcoinAddress(formData.bitcoin_address) || (formData.lightning_address && !validateLightningAddress(formData.lightning_address)) || formData.goal_amount <= 0}
+                  isLoading={isLoading}
                 >
                   {isLoading ? 'Creating...' : 'Create Page'}
                 </Button>

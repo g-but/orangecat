@@ -1,11 +1,10 @@
-import { createClient } from '@/services/supabase/client'
+import supabaseBrowserClient from '@/services/supabase/client'
 import { Profile, ProfileFormData } from '@/types/database'
 
 export class ProfileService {
   static async getProfile(userId: string): Promise<Profile | null> {
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase
+      const { data, error } = await supabaseBrowserClient
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -25,10 +24,8 @@ export class ProfileService {
         return { success: false, error: 'User ID is missing. Please try logging in again.' }
       }
 
-      const supabase = createClient()
-      
       // First, check if the profile exists
-      const { data: existingProfile, error: fetchError } = await supabase
+      const { data: existingProfile, error: fetchError } = await supabaseBrowserClient
         .from('profiles')
         .select('*')
         .eq('id', userId)
@@ -41,7 +38,7 @@ export class ProfileService {
 
       if (!existingProfile) {
         // If profile doesn't exist, create it
-        const { error: insertError } = await supabase
+        const { error: insertError } = await supabaseBrowserClient
           .from('profiles')
           .insert({
             id: userId,
@@ -60,7 +57,7 @@ export class ProfileService {
       }
 
       // Update the profile
-      const { error: updateError } = await supabase
+      const { error: updateError } = await supabaseBrowserClient
         .from('profiles')
         .update({
           display_name: formData.display_name || null,
@@ -87,8 +84,7 @@ export class ProfileService {
 
   static async updatePassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const supabase = createClient()
-      const { error } = await supabase.auth.updateUser({
+      const { error } = await supabaseBrowserClient.auth.updateUser({
         password: newPassword
       })
 

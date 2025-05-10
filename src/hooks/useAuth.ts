@@ -1,5 +1,5 @@
 import { useAuthStore } from '@/store/auth'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { useEffect } from 'react'
 
 export function useRequireAuth() {
@@ -8,10 +8,14 @@ export function useRequireAuth() {
 
   useEffect(() => {
     // Debug logs for auth state
-    console.log('useRequireAuth - Auth state:', { user, isLoading, hydrated })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('useRequireAuth - Auth state:', { user, isLoading, hydrated })
+    }
 
-    if (!isLoading && hydrated && !user) {
-      console.log('useRequireAuth - Redirecting to auth page')
+    if (hydrated && !isLoading && !user) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('useRequireAuth - Redirecting to auth page')
+      }
       router.push('/auth?from=protected')
     }
   }, [user, isLoading, hydrated, router])
@@ -22,16 +26,22 @@ export function useRequireAuth() {
 export function useRedirectIfAuthenticated() {
   const { session, isLoading, hydrated } = useAuthStore()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     // Debug logs for auth state
-    console.log('useRedirectIfAuthenticated - Auth state:', { session, isLoading, hydrated })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('useRedirectIfAuthenticated - Auth state:', { session, isLoading, hydrated })
+    }
 
-    if (!isLoading && hydrated && session) {
-      console.log('useRedirectIfAuthenticated - Redirecting to dashboard')
+    // Only redirect if we're ready and on a page that should redirect authenticated users
+    if (hydrated && !isLoading && session && pathname !== '/dashboard' && pathname !== '/') {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('useRedirectIfAuthenticated - Redirecting to dashboard')
+      }
       router.push('/dashboard')
     }
-  }, [session, isLoading, hydrated, router])
+  }, [session, isLoading, hydrated, router, pathname])
 
   return { isLoading, hydrated }
 }
@@ -42,13 +52,15 @@ export function useAuth() {
   
   // Debug logs for auth state
   useEffect(() => {
-    console.log('useAuth - Current auth state:', {
-      user: authState.user,
-      session: authState.session,
-      profile: authState.profile,
-      isLoading: authState.isLoading,
-      hydrated: authState.hydrated
-    })
+    if (process.env.NODE_ENV === 'development') {
+      console.log('useAuth - Current auth state:', {
+        user: authState.user,
+        session: authState.session,
+        profile: authState.profile,
+        isLoading: authState.isLoading,
+        hydrated: authState.hydrated
+      })
+    }
   }, [authState])
 
   return authState

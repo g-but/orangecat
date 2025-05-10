@@ -23,7 +23,7 @@ interface NavigationConfig {
 
 export const navigation: NavigationConfig = {
   main: [
-    { name: 'Fund Yourself', href: '/fund-yourself', requiresAuth: true },
+    { name: 'Fund Yourself', href: '/create' },
     { name: 'Fund Others', href: '/fund-others' },
     { name: 'Fund Us', href: '/fund-us' },
     { name: 'About', href: '/about' },
@@ -66,8 +66,8 @@ export const navigation: NavigationConfig = {
     { name: 'Settings', href: '/settings', requiresAuth: true },
   ],
   auth: [
-    { name: 'Sign In', href: '/auth?from=protected' },
-    { name: 'Get Started', href: '/auth?from=public' },
+    { name: 'Sign In', href: '/auth?mode=login' },
+    { name: 'Get Started', href: '/auth?mode=register' },
   ],
   dashboard: [
     { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
