@@ -32,7 +32,7 @@ export default function CategoriesPage() {
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold mb-4">Find Your Community</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Whether you're a creator, builder, educator, or organization, 
+            Whether you&apos;re a creator, builder, educator, or organization, 
             OrangeCat helps you receive Bitcoin donations transparently.
           </p>
         </div>

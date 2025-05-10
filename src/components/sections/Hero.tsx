@@ -107,7 +107,7 @@ export default function Hero() {
               <div className="text-gray-400">Open Source</div>
             </div>
             <p className="mt-4 text-sm text-gray-500">
-              We're just connecting minds and wallets. You keep your keys, we keep it simple.
+              We&apos;re just connecting minds and wallets. You keep your keys, we keep it simple.
             </p>
           </div>
         </div>

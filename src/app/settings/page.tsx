@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
-import { createClient } from '@/services/supabase/client'
+import supabase from '@/services/supabase/client'
 import { Shield, Bell, Eye, EyeOff, Trash2 } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -34,7 +34,7 @@ export default function SettingsPage() {
 
     setIsLoading(true)
     try {
-      const { error } = await createClient().auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         email: formData.email
       })
 
@@ -63,7 +63,7 @@ export default function SettingsPage() {
 
     setIsLoading(true)
     try {
-      const { error } = await createClient().auth.updateUser({
+      const { error } = await supabase.auth.updateUser({
         password: formData.newPassword
       })
 
@@ -94,7 +94,7 @@ export default function SettingsPage() {
     setIsLoading(true)
     try {
       // First delete the profile
-      const { error: profileError } = await createClient()
+      const { error: profileError } = await supabase
         .from('profiles')
         .delete()
         .eq('id', user!.id)
@@ -102,7 +102,7 @@ export default function SettingsPage() {
       if (profileError) throw profileError
 
       // Then delete the user
-      const { error: authError } = await createClient().auth.admin.deleteUser(
+      const { error: authError } = await supabase.auth.admin.deleteUser(
         user!.id
       )
 

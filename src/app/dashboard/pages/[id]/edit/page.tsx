@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import supabase from '@/services/supabase/client'
@@ -49,11 +49,7 @@ export default function EditFundingPage({ params }: Props) {
     return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(address)
   }
 
-  useEffect(() => {
-    loadFundingPage()
-  }, [])
-
-  const loadFundingPage = async () => {
+  const loadFundingPage = useCallback(async () => {
     try {
       const { data, error } = await supabase
         .from('funding_pages')
@@ -86,7 +82,11 @@ export default function EditFundingPage({ params }: Props) {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [params.id, user, router, setIsLoading, setFormData])
+
+  useEffect(() => {
+    loadFundingPage()
+  }, [loadFundingPage])
 
   const handleInputChange = (field: keyof FundingPageFormData) => (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = field === 'goal_amount' ? parseFloat(e.target.value) : e.target.value
