@@ -60,7 +60,7 @@ export default function EditFundingPage({ params }: Props) {
         .from('funding_pages')
         .select('*')
         .eq('id', params.id)
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .single()
 
       if (error) throw error
@@ -137,7 +137,7 @@ export default function EditFundingPage({ params }: Props) {
           updated_at: new Date().toISOString()
         })
         .eq('id', params.id)
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
 
       if (error) throw error
 
