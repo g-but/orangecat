@@ -142,7 +142,7 @@ export default function DashboardPage() {
           Welcome back, {profile?.display_name || profile?.username || 'Anonymous'}!
         </h1>
         <p className="mt-2 text-gray-600">
-          Here's an overview of your funding activity and statistics.
+          Here&apos;s an overview of your funding activity and statistics.
         </p>
       </div>
 

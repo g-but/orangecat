@@ -195,7 +195,7 @@ export default function NewFundingPage() {
                     className="h-4 w-4 text-tiffany-600 focus:ring-tiffany-500 border-gray-300 rounded"
                   />
                   <label htmlFor="is_public" className="ml-2 block text-sm text-gray-900">
-                    Make this funding page public (visible on 'Fund Others')
+                    Make this funding page public (visible on &apos;Fund Others&apos;)
                   </label>
                 </div>
 

@@ -64,7 +64,7 @@ export default function FundOthersPage() {
         <div className="text-tiffany-600 text-2xl font-bold mb-2">Whoops! Something glitched.</div>
         <div className="text-gray-700 mb-4 text-lg">
           Our cat got a little too curious and tangled up the wires.<br />
-          We're working on it! In the meantime, you can try again or learn more about us.
+          We&apos;re working on it! In the meantime, you can try again or learn more about us.
         </div>
         <div className="flex gap-4 mb-6 justify-center">
           <Button variant="primary" onClick={() => window.location.reload()}>

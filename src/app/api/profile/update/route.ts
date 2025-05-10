@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/services/supabase/server'
+import { createServerClient } from '@/services/supabase/server'
 
 // Bitcoin address validation regex
 const BITCOIN_ADDRESS_REGEX = /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$/
@@ -10,7 +10,7 @@ const LIGHTNING_ADDRESS_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}
 export async function POST(request: Request) {
   try {
     const { username, bio, bitcoin_address, lightning_address } = await request.json()
-    const supabase = createServerSupabaseClient()
+    const supabase = createServerClient()
 
     // Get the current user
     const { data: { session } } = await supabase.auth.getSession()

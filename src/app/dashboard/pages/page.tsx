@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
-import { createClient } from '@/services/supabase/client'
+import globalSupabaseClient from '@/services/supabase/client'
 import { Plus, Bitcoin, Users, Share2, Edit2, Trash2, Eye, EyeOff } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface FundingPage {
   id: string
@@ -26,33 +27,41 @@ export default function FundingPagesPage() {
   const { user } = useAuthStore()
   const [pages, setPages] = useState<FundingPage[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>()
 
-  useEffect(() => {
-    loadPages()
-  }, [])
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-  const loadPages = async () => {
+  const loadPages = useCallback(async () => {
     try {
-      const { data, error } = await createClient()
+      const { data, error: fetchError } = await supabase
         .from('funding_pages')
         .select('*')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (fetchError) throw fetchError
 
       setPages(data || [])
-    } catch (error) {
-      console.error('Error loading funding pages:', error)
+    } catch (err) {
+      console.error('Error loading funding pages:', err)
       toast.error('Failed to load funding pages')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, supabase, setPages, setIsLoading])
+
+  useEffect(() => {
+    if (user) {
+      loadPages()
+    }
+  }, [user, loadPages])
 
   const handleToggleStatus = async (page: FundingPage) => {
     try {
-      const { error } = await createClient()
+      const { error } = await globalSupabaseClient
         .from('funding_pages')
         .update({ is_active: !page.is_active })
         .eq('id', page.id)
@@ -72,7 +81,7 @@ export default function FundingPagesPage() {
 
   const handleToggleVisibility = async (page: FundingPage) => {
     try {
-      const { error } = await createClient()
+      const { error } = await globalSupabaseClient
         .from('funding_pages')
         .update({ is_public: !page.is_public })
         .eq('id', page.id)
@@ -98,7 +107,7 @@ export default function FundingPagesPage() {
     if (!confirmed) return
 
     try {
-      const { error } = await createClient()
+      const { error } = await globalSupabaseClient
         .from('funding_pages')
         .delete()
         .eq('id', page.id)

@@ -45,7 +45,7 @@ export default function AboutPage() {
                 <Bitcoin className="w-8 h-8 text-tiffany-500 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">Bitcoin-First</h3>
                 <p className="text-gray-600">
-                  We're committed to Bitcoin for funding, emphasizing self-custody and no platform fees.
+                  We&apos;re committed to Bitcoin for funding, emphasizing self-custody and no platform fees.
                 </p>
               </Card>
               <Card className="p-6">
@@ -108,7 +108,7 @@ export default function AboutPage() {
                 OrangeCat is built by a team of Bitcoin enthusiasts, developers, and entrepreneurs who are passionate about making Bitcoin funding accessible to everyone.
               </p>
               <p className="text-lg text-gray-600">
-                We're committed to building the best platform for Bitcoin funding and supporting the growth of the Bitcoin ecosystem. We are a team of passionate developers, designers and Bitcoiners.
+                We&apos;re committed to building the best platform for Bitcoin funding and supporting the growth of the Bitcoin ecosystem. We are a team of passionate developers, designers and Bitcoiners.
               </p>
             </Card>
           </div>
@@ -118,7 +118,7 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold mb-6 text-center">Ready to Dive In?</h2>
             <Card className="p-8">
               <p className="text-lg text-gray-600 mb-8 text-center">
-                Whether you're looking to fund your next big idea or support innovative projects, OrangeCat is your gateway.
+                Whether you&apos;re looking to fund your next big idea or support innovative projects, OrangeCat is your gateway.
               </p>
               <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
                 <Button href="/profile" variant="primary" size="lg" className="w-full sm:w-auto">
