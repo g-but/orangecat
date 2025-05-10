@@ -6,12 +6,12 @@ type PageProps = {
   }
 }
 
-export default function EditFundingPage({
+export default function EditFundraisingCampaignPage({
   params,
 }: PageProps) {
   return (
     <div>
-      <h1>Edit Page for ID: {params.id}</h1>
+      <h1>Edit Campaign: {params.id}</h1>
     </div>
   )
 } 

@@ -22,7 +22,7 @@ interface FundingPage {
   created_at: string
 }
 
-export default function FundingPagesPage() {
+export default function FundraisingCampaignsPage() {
   const router = useRouter()
   const { user } = useAuthStore()
   const [pages, setPages] = useState<FundingPage[]>([])
@@ -72,10 +72,10 @@ export default function FundingPagesPage() {
         p.id === page.id ? { ...p, is_active: !p.is_active } : p
       ))
 
-      toast.success(`Page ${page.is_active ? 'deactivated' : 'activated'} successfully`)
+      toast.success(`Campaign ${page.is_active ? 'deactivated' : 'activated'} successfully`)
     } catch (error) {
-      console.error('Error toggling page status:', error)
-      toast.error('Failed to update page status')
+      console.error('Error toggling campaign status:', error)
+      toast.error('Failed to update campaign status')
     }
   }
 
@@ -92,16 +92,16 @@ export default function FundingPagesPage() {
         p.id === page.id ? { ...p, is_public: !p.is_public } : p
       ))
 
-      toast.success(`Page visibility ${page.is_public ? 'hidden' : 'made public'} successfully`)
+      toast.success(`Campaign visibility ${page.is_public ? 'hidden' : 'made public'} successfully`)
     } catch (error) {
-      console.error('Error toggling page visibility:', error)
-      toast.error('Failed to update page visibility')
+      console.error('Error toggling campaign visibility:', error)
+      toast.error('Failed to update campaign visibility')
     }
   }
 
   const handleDelete = async (page: FundingPage) => {
     const confirmed = window.confirm(
-      'Are you sure you want to delete this funding page? This action cannot be undone.'
+      'Are you sure you want to delete this fundraising campaign? This action cannot be undone.'
     )
 
     if (!confirmed) return
@@ -115,10 +115,10 @@ export default function FundingPagesPage() {
       if (error) throw error
 
       setPages(pages.filter(p => p.id !== page.id))
-      toast.success('Funding page deleted successfully')
+      toast.success('Fundraising campaign deleted successfully')
     } catch (error) {
-      console.error('Error deleting funding page:', error)
-      toast.error('Failed to delete funding page')
+      console.error('Error deleting fundraising campaign:', error)
+      toast.error('Failed to delete fundraising campaign')
     }
   }
 
@@ -127,12 +127,12 @@ export default function FundingPagesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">
-            Your Funding Pages
+            Your Fundraising Campaigns
           </h1>
-          <Link href="/dashboard/funding/new">
+          <Link href="/dashboard/fundraising-campaigns/new">
             <Button>
               <Plus className="w-5 h-5 mr-2" />
-              Create New Page
+              Create New Campaign
             </Button>
           </Link>
         </div>
@@ -144,15 +144,15 @@ export default function FundingPagesPage() {
         ) : pages.length === 0 ? (
           <div className="text-center py-12">
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No funding pages yet
+              No fundraising campaigns yet
             </h3>
             <p className="text-gray-500 mb-6">
-              Create your first funding page to start accepting Bitcoin donations.
+              Create your first fundraising campaign to start accepting Bitcoin donations.
             </p>
-            <Link href="/dashboard/funding/new">
+            <Link href="/dashboard/fundraising-campaigns/new">
               <Button>
                 <Plus className="w-5 h-5 mr-2" />
-                Create Your First Page
+                Create Your First Campaign
               </Button>
             </Link>
           </div>
@@ -202,7 +202,7 @@ export default function FundingPagesPage() {
                           </Button>
                           <Button
                             variant="ghost"
-                            onClick={() => router.push(`/dashboard/funding/${page.id}/edit`)}
+                            onClick={() => router.push(`/dashboard/fundraising-campaigns/${page.id}/edit`)}
                           >
                             <Edit2 className="w-5 h-5 text-gray-500" />
                           </Button>
