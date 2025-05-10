@@ -55,8 +55,10 @@ export default async function RootLayout({
             <Suspense fallback={<Loading fullScreen />}>
               <div className="min-h-screen flex flex-col">
                 <Header />
-                <main className="flex-grow">
-                  {children}
+                <main className="flex-grow pt-20 pb-12">
+                  <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                    {children}
+                  </div>
                 </main>
                 <Footer />
               </div>

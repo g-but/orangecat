@@ -8,14 +8,16 @@ This document describes the database schema for the OrangeCat crowdfunding platf
 ### Profiles
 Stores user profile information.
 
-| Column | Type | Description |
-|--------|------|-------------|
-| id | uuid | Primary key, references auth.users |
-| username | text | Unique username |
-| full_name | text | User's display name |
-| avatar_url | text | URL to profile picture |
-| created_at | timestamp | Record creation timestamp |
-| updated_at | timestamp | Last update timestamp |
+| Column          | Type      | Nullable | Description                               |
+|-----------------|-----------|----------|-------------------------------------------|
+| id              | uuid      | No       | Primary key, references `auth.users.id`   |
+| username        | text      | Yes      | User-chosen unique username               |
+| display_name    | text      | Yes      | User's display name                       |
+| avatar_url      | text      | Yes      | URL to profile picture                    |
+| bio             | text      | Yes      | Short user biography                      |
+| bitcoin_address | text      | Yes      | User's Bitcoin address for donations    |
+| created_at      | timestamp | No       | Record creation timestamp (UTC)           |
+| updated_at      | timestamp | No       | Last update timestamp (UTC)               |
 
 ### Funding Pages
 Stores crowdfunding campaign information.
@@ -86,14 +88,16 @@ The database is accessed through Supabase's client library. Environment variable
 ## TypeScript Types
 
 ```typescript
-// User Profile
-interface UserProfile {
-  id: string;
-  username: string;
-  full_name: string;
-  avatar_url: string | null;
-  created_at: string;
-  updated_at: string;
+// Profile (matches src/types/database.ts)
+export interface Profile {
+  id: string;                  
+  username?: string | null;
+  display_name: string | null; 
+  avatar_url?: string | null;    
+  bio: string | null;            
+  bitcoin_address: string | null; 
+  created_at: string;          
+  updated_at: string;          
 }
 
 // Project Funding Page

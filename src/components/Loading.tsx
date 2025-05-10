@@ -11,7 +11,7 @@ export default function Loading({ fullScreen = false }: Props) {
     : 'flex items-center justify-center'
 
   return (
-    <div className={containerClasses}>
+    <div className={containerClasses} suppressHydrationWarning>
       <div className="flex flex-col items-center space-y-4">
         <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />
         <p className="text-sm text-gray-600">Loading...</p>

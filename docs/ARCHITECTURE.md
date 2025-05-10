@@ -64,6 +64,8 @@
    - Secure session management
    - JWT support
 
+   Our application utilizes Supabase Auth for user sign-up, login, and session management. Custom user profile data, extending beyond the basic `auth.users` table, is stored in a dedicated `public.profiles` table. Client-side state is managed by Zustand, and route protection is handled by Next.js middleware and client-side hooks. For a comprehensive guide on the authentication flow, profile management, database interactions (including `profiles` table schema and RLS), and the cascading delete setup for user profiles, please refer to the [Authentication System Detailed Guide](./auth_system.md).
+
 3. **Storage**:
    - File storage with CDN
    - Image optimization

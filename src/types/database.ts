@@ -153,7 +153,9 @@ export const Constants = {
 
 export interface Profile {
   id: string
+  username?: string | null
   display_name: string | null
+  avatar_url?: string | null
   bio: string | null
   bitcoin_address: string | null
   created_at: string
@@ -161,7 +163,9 @@ export interface Profile {
 }
 
 export interface ProfileFormData {
+  username?: string
   display_name?: string
+  avatar_url?: string
   bio?: string
   bitcoin_address?: string
 }

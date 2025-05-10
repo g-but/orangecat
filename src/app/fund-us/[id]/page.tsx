@@ -14,7 +14,7 @@ import { formatDistanceToNow } from 'date-fns'
 
 export default function FundingPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const { user } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
   const [page, setPage] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [balance, setBalance] = useState(0)
@@ -22,6 +22,8 @@ export default function FundingPage({ params }: { params: { id: string } }) {
   const [lastUpdated, setLastUpdated] = useState('')
 
   const loadPage = useCallback(async () => {
+    if (authLoading) return; // Don't load page data until auth is ready
+    
     try {
       const supabase = createBrowserClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,7 +43,7 @@ export default function FundingPage({ params }: { params: { id: string } }) {
     } finally {
       setLoading(false)
     }
-  }, [params.id])
+  }, [params.id, authLoading])
 
   useEffect(() => {
     loadPage()
@@ -59,6 +61,16 @@ export default function FundingPage({ params }: { params: { id: string } }) {
     setPendingAmount(pending)
   }
 
+  // Show loading state while auth is initializing
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[200px]">
+        <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />
+      </div>
+    )
+  }
+
+  // Show loading state while page data is being fetched
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[200px]">

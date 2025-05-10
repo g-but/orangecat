@@ -37,7 +37,7 @@ export default function AuthButtons({ className = '' }: AuthButtonsProps) {
       <Link href="/auth?mode=login">
         <Button variant="ghost">Log in</Button>
       </Link>
-      <Link href="/auth?mode=signup">
+      <Link href="/auth?mode=register">
         <Button>Get Started</Button>
       </Link>
     </div>

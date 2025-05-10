@@ -72,7 +72,7 @@ export default function FundYourselfPage() {
               <Bitcoin className="w-8 h-8 text-tiffany-500 mb-4" />
               <h3 className="text-lg font-semibold mb-2">Bitcoin Payments</h3>
               <p className="text-gray-600">
-                Accept Bitcoin donations directly to your wallet, with both on-chain and Lightning support
+                Accept Bitcoin donations directly to your wallet with no platform fees
               </p>
             </Card>
             <Card className="p-6">

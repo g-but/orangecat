@@ -6,17 +6,10 @@ import Card from '@/components/ui/Card'
 import Hero from '@/components/sections/Hero'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 
 export default function Home() {
   const { user, isLoading, hydrated } = useAuth()
   const router = useRouter()
-
-  useEffect(() => {
-    if (!isLoading && hydrated && user) {
-      router.replace('/dashboard')
-    }
-  }, [user, isLoading, hydrated, router])
 
   // Wait for hydration before rendering
   if (!hydrated) {
@@ -36,14 +29,9 @@ export default function Home() {
     )
   }
 
-  // If user is logged in, they'll be redirected by useEffect
-  if (user) {
-    return null
-  }
-
-  // Show home page for non-authenticated users
+  // Render the home page content regardless of auth state
   return (
-    <main className="animate-fade-in">
+    <>
       <Hero />
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -83,6 +71,6 @@ export default function Home() {
           </Card>
         </div>
       </div>
-    </main>
+    </>
   )
 } 

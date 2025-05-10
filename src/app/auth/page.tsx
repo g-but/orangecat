@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Bitcoin, ArrowRight, CheckCircle2, Shield, Zap, Loader2, AlertCircle, Globe, ShieldCheck } from 'lucide-react'
+import { Bitcoin, ArrowRight, CheckCircle2, Shield, Zap, Loader2, AlertCircle, Globe, ShieldCheck, Users } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
@@ -16,16 +16,16 @@ export default function AuthPage() {
   const { signIn, signUp, isLoading: authLoading, hydrated } = useAuthStore()
   const { isLoading: redirectLoading } = useRedirectIfAuthenticated()
   
-  // Determine initial mode based on context
+  // Determine initial mode based on URL parameter
   const [mode, setMode] = useState<'login' | 'register'>('login')
   
   useEffect(() => {
-    // If coming from a protected route, default to login
-    const fromProtected = searchParams.get('from') === 'protected'
-    // If coming from a public route like Fund Yourself, default to register
-    const fromPublic = searchParams.get('from') === 'public'
-    
-    setMode(fromPublic ? 'register' : 'login')
+    const urlMode = searchParams.get('mode')
+    if (urlMode === 'register' || urlMode === 'signup') {
+      setMode('register')
+    } else {
+      setMode('login')
+    }
   }, [searchParams])
   
   const [formData, setFormData] = useState({
@@ -203,7 +203,18 @@ export default function AuthPage() {
               <div className="ml-3">
                 <h3 className="text-lg font-medium text-gray-900">Bitcoin-First</h3>
                 <p className="mt-1 text-gray-500">
-                  Built for the Bitcoin ecosystem, supporting both on-chain and Lightning payments.
+                  Built on Bitcoin principles with no platform fees, self-custody only, and open source.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <Users className="h-6 w-6 text-tiffany-600" />
+              </div>
+              <div className="ml-3">
+                <h3 className="text-lg font-medium text-gray-900">For Everyone</h3>
+                <p className="mt-1 text-gray-500">
+                  Fund yourself, your loved ones, or any organization with Bitcoin.
                 </p>
               </div>
             </div>
@@ -212,20 +223,9 @@ export default function AuthPage() {
                 <Shield className="h-6 w-6 text-tiffany-600" />
               </div>
               <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900">Secure & Private</h3>
+                <h3 className="text-lg font-medium text-gray-900">Transparent</h3>
                 <p className="mt-1 text-gray-500">
-                  Your data is encrypted and protected. We never share your information.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start">
-              <div className="flex-shrink-0">
-                <Zap className="h-6 w-6 text-tiffany-600" />
-              </div>
-              <div className="ml-3">
-                <h3 className="text-lg font-medium text-gray-900">Lightning Fast</h3>
-                <p className="mt-1 text-gray-500">
-                  Instant payments and real-time updates with Lightning Network integration.
+                  Real-time tracking and public funding history for complete transparency.
                 </p>
               </div>
             </div>
