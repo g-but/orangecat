@@ -3,6 +3,7 @@
 import { User } from '@supabase/supabase-js'
 import { useAuthStore } from '@/store/auth'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { 
   Home, 
   User as UserIcon, 
@@ -61,10 +62,12 @@ export default function DashboardLayout({ children, user, profile }: DashboardLa
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center space-x-3">
               {profile.avatar_url ? (
-                <img
+                <Image
                   src={profile.avatar_url}
                   alt={profile.display_name || profile.username || 'User'}
-                  className="w-10 h-10 rounded-full"
+                  width={40}
+                  height={40}
+                  className="rounded-full"
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">

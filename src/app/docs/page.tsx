@@ -12,7 +12,7 @@ export default function DocsPage() {
             Documentation
           </h1>
           <p className="mt-4 text-xl text-gray-600">
-            Learn about OrangeCat's architecture, features, and how to use it
+            Learn about OrangeCat&apos;s architecture, features, and how to use it
           </p>
         </div>
 
