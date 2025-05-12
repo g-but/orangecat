@@ -32,20 +32,38 @@ export default async function RootLayout({
   const { data: { session } } = await supabase.auth.getSession()
   const user = session?.user ?? null
   let profile = null
+
+  // Debug logs for SSR state (before profile fetch)
+  // console.log('SSR session before profile fetch:', session)
+  // console.log('SSR user before profile fetch:', user)
+
   if (user) {
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-    profile = profileData ?? null
+    try {
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*') // Select only necessary fields if possible
+        .eq('id', user.id)
+        .single()
+
+      if (profileError) {
+        console.error('SSR Profile Fetch Error:', profileError.message)
+        // Decide how to handle: profile remains null, or throw error?
+        // For now, let profile remain null and log the error.
+        profile = null 
+      } else {
+        profile = profileData ?? null
+      }
+    } catch (error: any) {
+      console.error('SSR Profile Fetch Exception:', error.message)
+      profile = null // Ensure profile is null on exception
+    }
   }
 
-  // Debug logs for SSR state
-  console.log('SSR session:', session)
-  console.log('SSR user:', user)
-  console.log('SSR profile:', profile)
-  console.log('SSR headers:', Object.fromEntries(headersList.entries()))
+  // Debug logs for SSR state (after profile fetch attempt)
+  // console.log('SSR session after profile fetch:', session)
+  // console.log('SSR user after profile fetch:', user)
+  // console.log('SSR profile after profile fetch:', profile)
+  // console.log('SSR headers:', Object.fromEntries(headersList.entries()))
 
   return (
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
