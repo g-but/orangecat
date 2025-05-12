@@ -286,35 +286,34 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         setLoading(true);
         try {
           if (process.env.NODE_ENV === 'development') {
-            console.log(`AuthStore onAuthStateChange (SIGNED_IN) - Attempting to fetch profile for user: ${session.user.id}`);
+            console.log(`AuthStore onAuthStateChange (SIGNED_IN) - Attempting to fetch profile ID for user: ${session.user.id}`);
           }
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
-            .select('*')
+            .select('id')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
           
           if (process.env.NODE_ENV === 'development') {
-            console.log('AuthStore onAuthStateChange (SIGNED_IN) - Supabase query finished. Error:', profileError, 'Data:', profileData);
+            console.log('AuthStore onAuthStateChange (SIGNED_IN) - Simplified Supabase query finished. Error:', profileError, 'Data:', profileData);
           }
 
           if (profileError) {
-            if (profileError.code !== 'PGRST116') { // Ignore "No rows found" error
-              if (process.env.NODE_ENV === 'development') {
-                console.error('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetch failed:', profileError.message);
-              }
-              setError(profileError.message);
-            } else {
-              if (process.env.NODE_ENV === 'development') {
-                console.log('AuthStore onAuthStateChange (SIGNED_IN) - Profile not found (PGRST116), setting to null.');
-              }
+            if (process.env.NODE_ENV === 'development') {
+              console.error('AuthStore onAuthStateChange (SIGNED_IN) - Simplified profile fetch failed:', profileError.message);
+            }
+            setError(profileError.message);
+            setProfile(null);
+          } else if (profileData) {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('AuthStore onAuthStateChange (SIGNED_IN) - Simplified profile fetch successful (found ID). Profile needs full fetch.');
             }
             setProfile(null);
           } else {
-             if (process.env.NODE_ENV === 'development') {
-              console.log('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetch successful:', profileData);
+            if (process.env.NODE_ENV === 'development') {
+              console.log('AuthStore onAuthStateChange (SIGNED_IN) - Simplified profile query returned null (profile not found).');
             }
-            setProfile(profileData);
+            setProfile(null);
           }
         } catch (fetchError: any) {
           if (process.env.NODE_ENV === 'development') {
