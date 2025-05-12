@@ -285,12 +285,19 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         }
         setLoading(true);
         try {
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`AuthStore onAuthStateChange (SIGNED_IN) - Attempting to fetch profile for user: ${session.user.id}`);
+          }
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
           
+          if (process.env.NODE_ENV === 'development') {
+            console.log('AuthStore onAuthStateChange (SIGNED_IN) - Supabase query finished. Error:', profileError, 'Data:', profileData);
+          }
+
           if (profileError) {
             if (profileError.code !== 'PGRST116') { // Ignore "No rows found" error
               if (process.env.NODE_ENV === 'development') {
