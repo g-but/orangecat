@@ -280,6 +280,9 @@ supabase.auth.onAuthStateChange(async (event, session) => {
         setUser(session.user);
         setSession(session);
         // Fetch profile after sign-in
+        if (process.env.NODE_ENV === 'development') {
+          console.log('AuthStore onAuthStateChange (SIGNED_IN) - Starting profile fetch...');
+        }
         setLoading(true);
         try {
           const { data: profileData, error: profileError } = await supabase
@@ -291,14 +294,18 @@ supabase.auth.onAuthStateChange(async (event, session) => {
           if (profileError) {
             if (profileError.code !== 'PGRST116') { // Ignore "No rows found" error
               if (process.env.NODE_ENV === 'development') {
-                console.error('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetch error:', profileError.message);
+                console.error('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetch failed:', profileError.message);
               }
               setError(profileError.message);
+            } else {
+              if (process.env.NODE_ENV === 'development') {
+                console.log('AuthStore onAuthStateChange (SIGNED_IN) - Profile not found (PGRST116), setting to null.');
+              }
             }
             setProfile(null);
           } else {
              if (process.env.NODE_ENV === 'development') {
-              console.log('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetched:', profileData);
+              console.log('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetch successful:', profileData);
             }
             setProfile(profileData);
           }
@@ -309,10 +316,16 @@ supabase.auth.onAuthStateChange(async (event, session) => {
           setError(fetchError.message);
           setProfile(null);
         } finally {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('AuthStore onAuthStateChange (SIGNED_IN) - Finished profile fetch attempt, setting loading to false.');
+          }
           setLoading(false);
         }
       } else {
         // Should not happen for SIGNED_IN, but handle defensively
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('AuthStore onAuthStateChange (SIGNED_IN) - Received SIGNED_IN event without session/user, resetting state.');
+        }
         setInitialAuthState(null, null, null);
       }
     } else if (event === 'SIGNED_OUT') {
