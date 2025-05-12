@@ -221,21 +221,67 @@ supabase.auth.onAuthStateChange(async (event, session) => {
     console.log(`AuthStore onAuthStateChange - Event: ${event}`, session ? { userId: session.user?.id } : { session: null });
   }
 
-  // setLoading(true); // Commenting this out to prevent overriding AuthProvider's initial isLoading: false
+  // setLoading(true); // Keep this commented or manage carefully
 
   try {
     if (event === 'INITIAL_SESSION') {
-      if (session && session.user) {
-        const existingState = useAuthStore.getState();
-        let profileToSetInitially: Profile | null = null;
-        if (existingState.profile && existingState.user?.id === session.user.id) {
-          profileToSetInitially = existingState.profile;
-        }
-        setInitialAuthState(session.user, session, profileToSetInitially);
+      const user = session?.user || null;
+      const currentState = useAuthStore.getState();
 
-        // Asynchronously fetch profile
+      // Only set initial state if store is not yet hydrated OR if user ID differs
+      if (!currentState.hydrated || currentState.user?.id !== user?.id) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('AuthStore onAuthStateChange (INITIAL_SESSION) - Hydrating/Updating initial state.');
+        }
+        setInitialAuthState(user, session, null); // Initialize profile as null, fetch below
+      } else {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('AuthStore onAuthStateChange (INITIAL_SESSION) - Store already hydrated with this user, skipping initial set.');
+        }
+      }
+
+      if (user) {
+        // Asynchronously fetch profile, ensuring loading state is managed
+        setLoading(true);
         try {
-          setLoading(true);
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          
+          if (profileError) {
+            if (profileError.code !== 'PGRST116') { // Ignore "No rows found" error
+              if (process.env.NODE_ENV === 'development') {
+                console.error('AuthStore onAuthStateChange (INITIAL_SESSION) - Profile fetch error:', profileError.message);
+              }
+              setError(profileError.message);
+            }
+            setProfile(null);
+          } else {
+            if (process.env.NODE_ENV === 'development') {
+              console.log('AuthStore onAuthStateChange (INITIAL_SESSION) - Profile fetched:', profileData);
+            }
+            setProfile(profileData);
+          }
+        } catch (fetchError: any) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('AuthStore onAuthStateChange (INITIAL_SESSION) - Profile fetch exception:', fetchError);
+          }
+          setError(fetchError.message);
+          setProfile(null);
+        } finally {
+          setLoading(false);
+        }
+      }
+      
+    } else if (event === 'SIGNED_IN') {
+      if (session && session.user) {
+        setUser(session.user);
+        setSession(session);
+        // Fetch profile after sign-in
+        setLoading(true);
+        try {
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
@@ -243,136 +289,83 @@ supabase.auth.onAuthStateChange(async (event, session) => {
             .single();
           
           if (profileError) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('AuthStore onAuthStateChange (INITIAL_SESSION) - Profile fetch error:', profileError.message);
+            if (profileError.code !== 'PGRST116') { // Ignore "No rows found" error
+              if (process.env.NODE_ENV === 'development') {
+                console.error('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetch error:', profileError.message);
+              }
+              setError(profileError.message);
             }
-            setError(profileError.message);
             setProfile(null);
           } else {
-            setProfile(profileData as Profile); // Cast to Profile
+             if (process.env.NODE_ENV === 'development') {
+              console.log('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetched:', profileData);
+            }
+            setProfile(profileData);
           }
-        } catch (err: any) {
+        } catch (fetchError: any) {
           if (process.env.NODE_ENV === 'development') {
-            console.error('AuthStore onAuthStateChange (INITIAL_SESSION) - Generic profile fetch error:', err.message);
+            console.error('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetch exception:', fetchError);
           }
-          setError(err.message);
+          setError(fetchError.message);
           setProfile(null);
         } finally {
           setLoading(false);
         }
       } else {
-        setInitialAuthState(null, null, null);
-      }
-    } else if (event === 'SIGNED_IN') {
-      if (session && session.user) {
-        const existingState = useAuthStore.getState();
-        let profileToSetInitially: Profile | null = null;
-        if (existingState.profile && existingState.user?.id === session.user.id) {
-          profileToSetInitially = existingState.profile;
-        }
-        setInitialAuthState(session.user, session, profileToSetInitially);
-
-        // Asynchronously fetch and update the profile.
-        try {
-          setLoading(true);
-          if (process.env.NODE_ENV === 'development') {
-            console.log('AuthStore onAuthStateChange (SIGNED_IN) - Fetching profile for user:', session.user.id);
-          }
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-
-          if (profileError) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetch error:', profileError.message);
-            }
-            setError(profileError.message);
-            setProfile(null); // Explicitly set profile to null on error
-          } else {
-            setProfile(profileData as Profile); // Update the profile in the store, Cast to Profile
-          }
-        } catch (err: any) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('AuthStore onAuthStateChange (SIGNED_IN) - Generic profile fetch error:', err.message);
-          }
-          setError(err.message);
-          setProfile(null); // Explicitly set profile to null on error
-        } finally {
-          setLoading(false);
-        }
-      } else {
-        // No session or user, treat as signed out
+        // Should not happen for SIGNED_IN, but handle defensively
         setInitialAuthState(null, null, null);
       }
     } else if (event === 'SIGNED_OUT') {
       setInitialAuthState(null, null, null);
+    } else if (event === 'PASSWORD_RECOVERY') {
+      // Handle password recovery event if needed
+      setError(null); // Clear previous errors
+      setLoading(false);
+    } else if (event === 'TOKEN_REFRESHED') {
+      // Update session if needed, user/profile usually don't change
+      setSession(session);
+      setError(null);
+      setLoading(false);
     } else if (event === 'USER_UPDATED') {
-      if (session && session.user) {
-        // User data might have updated. Refresh user, session. isLoading: false.
-        // Profile will be refetched.
-        const existingState = useAuthStore.getState();
-        let profileToSetInitially: Profile | null = null;
-        if (existingState.profile && existingState.user?.id === session.user.id) {
-          profileToSetInitially = existingState.profile;
-        }
-        setInitialAuthState(session.user, session, profileToSetInitially); // Profile initially as existing or null, will be updated
-
+      // Update user object, refetch profile if necessary
+      setUser(session?.user || null);
+      if (session?.user) {
+        setLoading(true);
         try {
-          setLoading(true);
           const { data: profileData, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
-
           if (profileError) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('AuthStore onAuthStateChange (USER_UPDATED) - Profile fetch error:', profileError.message);
+            if (profileError.code !== 'PGRST116') {
+              setError(profileError.message);
             }
-            setError(profileError.message);
-            setProfile(null); // Clear profile if fetch fails
+            setProfile(null);
           } else {
-            setProfile(profileData as Profile); // Cast to Profile
+            setProfile(profileData);
           }
-        } catch (err: any) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('AuthStore onAuthStateChange (USER_UPDATED) - Generic profile fetch error:', err.message);
-          }
-          setError(err.message);
-          setProfile(null); // Clear profile on generic error
+        } catch (fetchError: any) {
+          setError(fetchError.message);
+          setProfile(null);
         } finally {
           setLoading(false);
         }
-      } else {
-        // User logged out or session became invalid
-        setInitialAuthState(null, null, null);
       }
-    } else if (event === 'TOKEN_REFRESHED') {
-      if (session && session.user) {
-        const existingProfile = useAuthStore.getState().profile;
-        // Ensure existingProfile matches Profile | null type for setInitialAuthState
-        setInitialAuthState(session.user, session, existingProfile as Profile | null);
-      } else {
-        setInitialAuthState(null, null, null);
-      }
-    } else if (event === 'PASSWORD_RECOVERY') {
-      setLoading(false);
-    } else {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`AuthStore onAuthStateChange - Unhandled Event: ${event}. Resetting loading state.`);
-      }
-      setLoading(false);
     }
-  } catch (e: any) {
+  } catch (error: any) {
     if (process.env.NODE_ENV === 'development') {
-      console.error("Critical error in onAuthStateChange handler's main try/catch:", e.message);
+      console.error('AuthStore onAuthStateChange - General error:', error);
     }
-    setError(e.message);
-    setInitialAuthState(null, null, null);
+    setError(error.message);
+    setLoading(false);
   }
 });
+
+// Ensure initial state is potentially set on load
+// if (typeof window !== 'undefined') {
+//   useAuthStore.getState().setLoading(true); // Set initial loading
+// }
 
 // Initialization effect: check for existing session/user on app start
 // (Removed: now handled by AuthProvider hydration) 
