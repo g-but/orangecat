@@ -1,7 +1,7 @@
-import { createClient } from './supabase'
+import supabase from '@/services/supabase/client'
 import { Profile } from '@/types/database'
 
-interface TransparencyData {
+export interface TransparencyData {
   isOpenSource: boolean
   hasContributionGuidelines: boolean
   hasIssueTracking: boolean
@@ -16,7 +16,7 @@ interface TransparencyData {
   isResponsiveToFeedback: boolean
 }
 
-interface TransparencyScore {
+export interface TransparencyScore {
   score: number
 }
 
