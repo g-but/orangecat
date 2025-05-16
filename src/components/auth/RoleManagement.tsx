@@ -11,8 +11,14 @@ interface RoleManagementProps {
 }
 
 export default function RoleManagement({ children, requiredRole = 'user' }: RoleManagementProps) {
-  const { user, isAdmin, isLoading } = useAuth()
+  const { user, profile, isLoading } = useAuth()
   const router = useRouter()
+  
+  // Check if user is admin based on email domain - you can adjust this logic
+  // to match your specific admin identification method
+  const isAdmin = user?.email?.endsWith('@orangecat.ch') || 
+                 user?.email === 'admin@example.com' ||
+                 user?.app_metadata?.role === 'admin'
 
   useEffect(() => {
     if (!isLoading && !user) {
