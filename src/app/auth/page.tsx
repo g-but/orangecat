@@ -1,19 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Bitcoin, ArrowRight, CheckCircle2, Shield, Zap, Loader2, AlertCircle, Globe, ShieldCheck, Users } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
-import { useAuthStore } from '@/store/auth'
+import Loading from '@/components/Loading'
+import { useAuth } from '@/hooks/useAuth'
 import { useRedirectIfAuthenticated } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 
 export default function AuthPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { signIn, signUp, isLoading: authLoading, hydrated } = useAuthStore()
+  const { signIn, signUp, isLoading: authLoading, hydrated, session, profile } = useAuth()
   const { isLoading: redirectLoading } = useRedirectIfAuthenticated()
   
   // Determine initial mode based on URL parameter
@@ -45,31 +46,57 @@ export default function AuthPage() {
     setSuccess(null)
 
     try {
+      // Create AbortController for timeout
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 second timeout
+      
       if (mode === 'login') {
-        const { error } = await signIn(formData.email, formData.password)
+        const { error } = await Promise.race([
+          signIn(formData.email, formData.password),
+          new Promise<{error: string}>((_, reject) => 
+            setTimeout(() => reject(new Error('Login taking longer than expected. Please try again.')), 8000)
+          )
+        ])
+        
+        clearTimeout(timeoutId)
         if (error) throw new Error(error)
         router.push('/dashboard')
       } else {
         if (formData.password !== formData.confirmPassword) {
           throw new Error('Passwords do not match')
         }
-        const { error } = await signUp(formData.email, formData.password)
+        
+        const { error } = await Promise.race([
+          signUp(formData.email, formData.password),
+          new Promise<{error: string}>((_, reject) => 
+            setTimeout(() => reject(new Error('Registration taking longer than expected. Please try again.')), 8000)
+          )
+        ])
+        
+        clearTimeout(timeoutId)
         if (error) throw new Error(error)
-        setSuccess('Registration successful! Please check your email to verify your account.')
+        setSuccess('Registration successful! Redirecting to dashboard...')
+        router.push('/dashboard')
       }
     } catch (err: any) {
+      console.error('Auth error:', err)
       setError(err.message)
     } finally {
       setLoading(false)
     }
   }
 
-  if (!hydrated || redirectLoading || authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />
-      </div>
-    )
+  // Show initial loading only when absolutely necessary
+  const isInitialLoading = !hydrated || (redirectLoading && authLoading)
+  
+  // If we have a session and profile, redirect to dashboard 
+  if (session && profile && hydrated) {
+    router.push('/dashboard')
+    return null
+  }
+
+  if (isInitialLoading) {
+    return <Loading fullScreen message="Loading your account..." />
   }
 
   return (
@@ -122,6 +149,7 @@ export default function AuthPage() {
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 placeholder="Email address"
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-tiffany-500 focus:border-tiffany-500 focus:z-10 sm:text-sm"
+                disabled={loading}
               />
             </div>
             <div>
@@ -132,6 +160,7 @@ export default function AuthPage() {
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="Password"
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-tiffany-500 focus:border-tiffany-500 focus:z-10 sm:text-sm"
+                disabled={loading}
               />
             </div>
             {mode === 'register' && (
@@ -143,6 +172,7 @@ export default function AuthPage() {
                   onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                   placeholder="Confirm password"
                   className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-tiffany-500 focus:border-tiffany-500 focus:z-10 sm:text-sm"
+                  disabled={loading}
                 />
               </div>
             )}
@@ -155,6 +185,7 @@ export default function AuthPage() {
               checked={showPassword}
               onChange={(e) => setShowPassword(e.target.checked)}
               className="h-4 w-4 text-tiffany-600 focus:ring-tiffany-500 border-gray-300 rounded"
+              disabled={loading}
             />
             <label htmlFor="show-password" className="ml-2 block text-sm text-gray-900">
               Show password
@@ -168,7 +199,10 @@ export default function AuthPage() {
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400"
             >
               {loading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <div className="flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  <span>{mode === 'login' ? 'Signing in...' : 'Creating account...'}</span>
+                </div>
               ) : mode === 'login' ? (
                 'Sign in'
               ) : (
@@ -182,6 +216,7 @@ export default function AuthPage() {
               type="button"
               onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
               className="text-sm text-tiffany-600 hover:text-tiffany-500"
+              disabled={loading}
             >
               {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
             </button>

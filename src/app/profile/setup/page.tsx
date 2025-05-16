@@ -41,7 +41,7 @@ const steps = [
 
 export default function ProfileSetupPage() {
   const router = useRouter()
-  const { user, isLoading: authLoading, setProfile } = useAuthStore()
+  const { user, isLoading: authLoading } = useAuthStore()
   const [currentStep, setCurrentStep] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [profileData, setProfileData] = useState<ProfileData>({
@@ -103,25 +103,50 @@ export default function ProfileSetupPage() {
         updated_at: new Date().toISOString()
       }
 
+      console.log('Profile setup: submitting data', updatedProfileData)
+      
+      // Set a timeout to avoid UI getting stuck
+      const timeoutId = setTimeout(() => {
+        console.log('Profile setup update timeout reached, resetting loading state')
+        setIsLoading(false)
+        toast.error('Update is taking longer than expected. Please try again.')
+      }, 8000) // 8 second timeout
+
       const { data: returnedProfile, error: supabaseError } = await supabase
         .from('profiles')
         .update(updatedProfileData)
         .eq('id', user!.id)
-        .select()
+        .select('*')
         .single()
+      
+      // Clear the timeout since we got a response
+      clearTimeout(timeoutId)
 
-      if (supabaseError) throw supabaseError
-
-      if (returnedProfile) {
-        useAuthStore.getState().setProfile(returnedProfile)
+      if (supabaseError) {
+        console.error('Profile setup: Supabase error', supabaseError)
+        throw supabaseError
       }
+
+      if (!returnedProfile) {
+        console.error('Profile setup: No profile returned')
+        throw new Error('Failed to update profile: No data returned')
+      }
+
+      console.log('Profile setup: success', returnedProfile)
+      
+      // Fetch the profile again to update the store
+      await useAuthStore.getState().fetchProfile()
       
       toast.success('Profile updated successfully')
-      router.push('/dashboard')
+      // Add delay before redirect to ensure user sees success message
+      setTimeout(() => {
+        router.push('/dashboard')
+      }, 1500)
     } catch (err: any) {
       console.error('Error updating profile:', err)
       toast.error(err.message || 'Failed to update profile')
     } finally {
+      // Always reset loading state
       setIsLoading(false)
     }
   }

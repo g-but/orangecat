@@ -3,11 +3,18 @@
 import Link from 'next/link'
 import { navigation } from '@/config/navigation'
 import Logo from './Logo'
+import { usePathname } from 'next/navigation'
 
 export default function Footer() {
+  const pathname = usePathname()
+  // Check if current page is an authenticated page
+  const isAuthPage = pathname.startsWith('/dashboard') || 
+                    pathname.startsWith('/profile') || 
+                    pathname.startsWith('/settings')
+
   return (
-    <footer className="bg-white border-t border-orange-200">
-      <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <footer className={`bg-white border-t border-orange-200 ${isAuthPage ? 'relative z-10' : ''}`}>
+      <div className={`mx-auto py-12 px-4 sm:px-6 lg:px-8 ${isAuthPage ? 'ml-[5rem] md:ml-64' : 'max-w-7xl'}`}>
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-8 xl:col-span-1">
             <Logo className="mb-2" />

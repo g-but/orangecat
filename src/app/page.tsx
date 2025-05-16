@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Hero from '@/components/sections/Hero'
-import { Loader2 } from 'lucide-react'
+import Loading from '@/components/Loading'
 import { useRouter } from 'next/navigation'
 
 export default function Home() {
@@ -13,20 +13,12 @@ export default function Home() {
 
   // Wait for hydration before rendering
   if (!hydrated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />
-      </div>
-    )
+    return <Loading fullScreen message="Loading..." />
   }
 
   // Show loading state only briefly while checking auth
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-tiffany-500" />
-      </div>
-    )
+    return <Loading fullScreen message="Checking authentication..." />
   }
 
   // Render the home page content regardless of auth state

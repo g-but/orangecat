@@ -33,8 +33,20 @@ export default function UserProfileDropdown() {
   const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0]
 
   const handleSignOut = async () => {
-    await signOut()
-    setIsOpen(false)
+    try {
+      // Show loading indicator
+      console.log('Signing out using server-side route...')
+      
+      // Try client-side cleanup first
+      await signOut()
+      
+      // Use the server-side route for complete signout
+      window.location.href = '/auth/signout'
+    } catch (error) {
+      console.error('Error during sign out:', error)
+      // Still close the dropdown
+      setIsOpen(false)
+    }
   }
 
   const handleNavigation = (path: string) => {
@@ -51,7 +63,7 @@ export default function UserProfileDropdown() {
     {
       label: 'Edit Profile',
       icon: Settings,
-      onClick: () => handleNavigation('/profile/setup')
+      onClick: () => handleNavigation('/profile')
     },
     {
       label: 'Sign Out',

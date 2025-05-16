@@ -1,52 +1,50 @@
+'use client'
+
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { createBrowserClient } from '@supabase/ssr'
 import type { User, Session } from '@supabase/supabase-js'
-import type { Profile } from '@/types/database'
-
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import type { Profile, ProfileFormData } from '@/types/database'
+import supabase from '@/services/supabase/client'
+import { updateProfile as supabaseUpdateProfile } from '@/services/supabase/profiles'
 
 interface AuthState {
+  // data
   user: User | null
   session: Session | null
   profile: Profile | null
+  // ui state
   isLoading: boolean
-  isAdmin: boolean
   error: string | null
   hydrated: boolean
-
+  // actions
+  /** Called exactly once in AuthProvider with the *server* values.  */
   setInitialAuthState: (user: User | null, session: Session | null, profile: Profile | null) => void
-  setUser: (user: User | null) => void
-  setSession: (session: Session | null) => void
-  setProfile: (profile: Profile | null) => void
-  setLoading: (isLoading: boolean) => void
-  setError: (error: string | null) => void
-
-  signIn: (email: string, password: string) => Promise<{ error?: string }>
-  signUp: (email: string, password: string) => Promise<{ error?: string }>
-  signOut: () => Promise<{ error?: string }>
-  checkProfileCompletion: () => boolean
+  /** Wipe local state + storage (used by signOut and invalid sessions). */
+  clear: () => void
+  /** Explicit sign-out button. */
+  signOut: () => Promise<{ error: string | null }>
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>
+  signUp: (email: string, password: string) => Promise<{ error: string | null }>
+  /** Update user profile */
   updateProfile: (profileData: Partial<Profile>) => Promise<{ error: string | null }>
+  /** Set error state */
+  setError: (error: string | null) => void
+  fetchProfile: () => Promise<{ error: string | null }>
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
+      // ---------------- default state ----------------
       user: null,
       session: null,
       profile: null,
-      isLoading: true,
-      isAdmin: false,
+      isLoading: true,     // true until we *know* something
       error: null,
       hydrated: false,
-
+      // ---------------- actions ----------------
       setInitialAuthState: (user, session, profile) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore - setInitialAuthState: Setting resolved auth state:', { user, session, profile });
-        }
+        // ALWAYS trust the server snapshot – even if it's null
         set({
           user,
           session,
@@ -54,337 +52,260 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
           hydrated: true,
           error: null,
-          isAdmin: user?.app_metadata?.role === 'admin',
-        });
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore - setInitialAuthState: State updated, hydrated set to true, isLoading false');
+        })
+      },
+      clear: () => {
+        set({
+          user: null,
+          session: null,
+          profile: null,
+          isLoading: false,
+          error: null,
+        })
+        // purge persisted copy so the zombie can't rise again
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('orangecat-auth')
         }
       },
-
-      setUser: (user) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore - Setting user:', user);
+      fetchProfile: async () => {
+        const { user, session } = get() // also get session to ensure we are acting on an authenticated user
+        if (!user || !session) { // if no user or session, no point fetching profile
+          set({ profile: null, isLoading: false, error: 'User not authenticated' }) // Clear profile, stop loading
+          return { error: 'User not authenticated' }
         }
-        set({ user, isAdmin: user?.app_metadata?.role === 'admin' });
-      },
 
-      setSession: (session) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore - Setting session:', session);
-        }
-        set({ session });
-      },
-
-      setProfile: (profile) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore - Setting profile:', profile);
-        }
-        set({ profile });
-      },
-
-      setLoading: (isLoading) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore - Setting loading:', isLoading);
-        }
-        set({ isLoading });
-      },
-
-      setError: (error) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore - Setting error:', error);
-        }
-        set({ error });
-      },
-
-      signIn: async (email, password) => {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null }) // Indicate loading before fetch, clear previous error
         try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-
-          if (error) throw error;
-          if (process.env.NODE_ENV === 'development') {
-            console.log('AuthStore - signIn: Successful, onAuthStateChange will take over.');
-          }
-          return {};
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-          return { error: error.message };
-        }
-      },
-
-      signUp: async (email, password) => {
-        set({ isLoading: true, error: null });
-        try {
-          const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-            },
-          });
-
-          if (error) throw error;
-          if (!data.user) throw new Error('No user returned from sign up');
-          
-          const userId = data.user.id;
-          const userEmail = data.user.email;
-          const now = new Date().toISOString();
-          const { data: newProfile, error: profileError } = await supabase
+          // @ts-ignore - Ignore type error for helper function
+          const { data: profileData, error: fetchError } = await supabase
             .from('profiles')
-            .insert({
-              id: userId,
-              username: userEmail?.split('@')[0] || null,
-              display_name: userEmail?.split('@')[0] || null,
-              avatar_url: null,
-              bio: null,
-              bitcoin_address: null,
-              created_at: now,
-              updated_at: now,
-            })
-            .select()
-            .single();
-
-          if (profileError) throw profileError;
-
-          if (process.env.NODE_ENV === 'development') {
-            console.log('AuthStore - signUp: Successful, profile created. onAuthStateChange will update store.');
-          }
-          return {};
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-          return { error: error.message };
-        }
-      },
-
-      signOut: async () => {
-        set({ isLoading: true, error: null });
-        try {
-          const { error } = await supabase.auth.signOut();
-          if (error) throw error;
-          if (process.env.NODE_ENV === 'development') {
-            console.log('AuthStore - signOut: Successful, onAuthStateChange will clear state.');
-          }
-          return { error: undefined };
-        } catch (error: any) {
-          set({ error: error.message, isLoading: false });
-          return { error: error.message };
-        }
-      },
-
-      checkProfileCompletion: () => {
-        const { profile } = get()
-        return !!(profile?.username && profile?.bitcoin_address)
-      },
-
-      updateProfile: async (profileData) => {
-        try {
-          const { user } = get()
-          if (!user) {
-            throw new Error('User not found')
-          }
-
-          const { data, error } = await supabase
-            .from('profiles')
-            .update(profileData)
+            .select('*')
             .eq('id', user.id)
-            .select()
             .single()
 
-          if (error) throw error
-
-          set({ profile: data })
+          if (fetchError) {
+            if (fetchError.code === 'PGRST116') { // Profile does not exist
+              set({ profile: null, isLoading: false }) // Set profile to null, stop loading
+              return { error: null } // Not an application error, profile just doesn't exist
+            }
+            throw fetchError // Re-throw other errors to be caught below
+          }
+          // Profile successfully fetched
+          set({ profile: profileData, isLoading: false })
           return { error: null }
         } catch (error: any) {
+          console.error('Error fetching profile:', error)
+          set({ profile: null, isLoading: false, error: error.message }) // Clear profile on error, stop loading
           return { error: error.message }
         }
-      }
-    }),
-    {
-      name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore - onRehydrateStorage: Store has been rehydrated from localStorage.');
+      },
+      signOut: async () => {
+        set({ isLoading: true, error: null })
+        try {
+          // First clear all local state
+          get().clear()
+          
+          // Clear all cookies manually - for browser-side cookie cleanup
+          if (typeof window !== 'undefined') {
+            document.cookie.split(';').forEach(cookie => {
+              const trimmedCookie = cookie.trim()
+              if (trimmedCookie.startsWith('sb-')) {
+                const name = trimmedCookie.split('=')[0]
+                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+              }
+            })
+            
+            // Clear localStorage items related to Supabase auth
+            Object.keys(localStorage).forEach(key => {
+              if (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth')) {
+                localStorage.removeItem(key)
+              }
+            })
+            
+            // Clear sessionStorage
+            sessionStorage.removeItem('orangecat-auth')
+          }
+          
+          // Then call Supabase signOut
+          const { error: supabaseError } = await supabase.auth.signOut()
+          
+          if (supabaseError) throw supabaseError
+          
+          // Finally, redirect to server-side signout for complete cleanup
+          window.location.href = '/auth/signout'
+          
+          return { error: null }
+        } catch (e: any) {
+          console.error('Error during sign out:', e)
+          return { error: e?.message ?? 'Unknown error during sign out' }
+        } finally {
+          set({ isLoading: false })
         }
       },
+      signIn: async (email, password) => {
+        set({ isLoading: true, error: null })
+        try {
+          const { data, error } = await supabase.auth.signInWithPassword({ 
+            email, 
+            password
+          })
+          
+          if (error) throw error
+
+          // After successful sign in, user and session are set by onAuthStateChange.
+          // onAuthStateChange will also trigger fetchProfile.
+          if (data.user && data.session) {
+            // Wait for onAuthStateChange to set user/session, then ensure profile is fetched
+            await new Promise(resolve => setTimeout(resolve, 0)); // allow state update cycle
+            
+            // Make sure the profile exists by checking it, and creating if needed
+            const { data: profileData, error: profileCheckError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', data.user.id)
+              .maybeSingle();
+              
+            console.log('Profile check after login:', { profileData, profileCheckError });
+              
+            // If profile doesn't exist, create it
+            if (!profileData && !profileCheckError) {
+              console.log('No profile found, creating one for user:', data.user.id);
+              
+              const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .upsert({ 
+                  id: data.user.id, 
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString()
+                })
+                .select('*')
+                .single();
+                
+              console.log('Profile creation result:', { newProfile, createError });
+              
+              if (createError) {
+                console.error('Error creating profile after login:', createError);
+              } else if (newProfile) {
+                // Update the store with the new profile
+                set({ profile: newProfile });
+              }
+            }
+            
+            // Continue with regular profile fetch
+            const { error: profileError } = await get().fetchProfile()
+            if (profileError) {
+              console.error('Error fetching profile after sign in:', profileError)
+            }
+          }
+          
+          return { error: null }
+        } catch (error: any) {
+          console.error('Sign in error:', error)
+          set({ error: error.message })
+          return { error: error.message }
+        } finally {
+          // Always ensure we exit the loading state
+          set({ isLoading: false })
+        }
+      },
+      signUp: async (email, password) => {
+        set({ isLoading: true, error: null })
+        try {
+          // Set up a timeout for the request
+          const { data, error } = await Promise.race([
+            supabase.auth.signUp({ 
+              email, 
+              password
+            }),
+            new Promise<{data: null, error: Error}>((_, reject) => 
+              setTimeout(() => reject(new Error('Sign up request timed out. Please try again.')), 8000)
+            )
+          ])
+          
+          if (error) throw error
+          
+          // On successful sign up, the session should be updated by onAuthStateChange
+          if (data.user) {
+            // Fetch profile immediately after sign up
+            await get().fetchProfile()
+          }
+          
+          return { error: null }
+        } catch (error: any) {
+          console.error('Sign up error:', error)
+          set({ error: error.message })
+          return { error: error.message }
+        } finally {
+          // Always ensure we exit the loading state 
+          set({ isLoading: false })
+        }
+      },
+      updateProfile: async (profileData: Partial<Profile>) => {
+        const { user } = get();
+        if (!user) {
+          console.error('AuthStore: updateProfile failed - User not found.');
+          return { error: 'User not found. Please log in again.' };
+        }
+
+        // Set loading state
+        set({ isLoading: true, error: null });
+        console.log('AuthStore: updateProfile started. isLoading: true', { user_id: user.id });
+
+        try {
+          // Directly use the profileData and cast as ProfileFormData to avoid type conversion issues
+          const data = await supabaseUpdateProfile(user.id, profileData as unknown as ProfileFormData);
+          
+          // Update the store with the result
+          set({ 
+            profile: data, 
+            isLoading: false, 
+            error: null 
+          });
+          
+          console.log('AuthStore: Profile updated successfully:', data);
+          return { error: null };
+        } catch (error: any) {
+          console.error('AuthStore: Error during profile update:', error);
+          const errorMessage = error.message || 'An unexpected error occurred during profile update.';
+          set({ isLoading: false, error: errorMessage });
+          return { error: errorMessage };
+        }
+      },
+      setError: (error) => {
+        set({ error })
+      },
+    }),
+    {
+      name: 'orangecat-auth',
+      storage: typeof window !== 'undefined'
+        ? createJSONStorage(() => localStorage)
+        : undefined,
+      // Don't persist loading state
+      partialize: (state) => ({
+        user: state.user,
+        session: state.session,
+        profile: state.profile,
+        error: state.error,
+      }),
     }
   )
 )
 
-supabase.auth.onAuthStateChange(async (event, session) => {
-  const { setUser, setSession, setProfile, setLoading, setError, setInitialAuthState } = useAuthStore.getState();
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`AuthStore onAuthStateChange - Event: ${event}`, session ? { userId: session.user?.id } : { session: null });
-  }
-
-  // setLoading(true); // Keep this commented or manage carefully
-
-  try {
-    if (event === 'INITIAL_SESSION') {
-      const user = session?.user || null;
-      const currentState = useAuthStore.getState();
-
-      // Only set initial state if store is not yet hydrated OR if user ID differs
-      if (!currentState.hydrated || currentState.user?.id !== user?.id) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore onAuthStateChange (INITIAL_SESSION) - Hydrating/Updating initial state.');
-        }
-        setInitialAuthState(user, session, null); // Initialize profile as null, fetch below
-      } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore onAuthStateChange (INITIAL_SESSION) - Store already hydrated with this user, skipping initial set.');
-        }
+// ---------- live session watcher (client only) ----------
+if (supabase) {
+  supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { setInitialAuthState, clear, fetchProfile } = useAuthStore.getState()
+    if (session?.user) {
+      // First set the user and session, profile to null initially
+      setInitialAuthState(session.user, session, null) 
+      // Then fetch the profile. The fetchProfile will update the store's profile state.
+      const { error } = await fetchProfile() 
+      if (error) {
+        // fetchProfile already logs and sets error state in store
+        console.error('Error reported by fetchProfile on auth state change:', error)
       }
-
-      if (user) {
-        // Asynchronously fetch profile, ensuring loading state is managed
-        setLoading(true);
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          
-          if (profileError) {
-            if (profileError.code !== 'PGRST116') { // Ignore "No rows found" error
-              if (process.env.NODE_ENV === 'development') {
-                console.error('AuthStore onAuthStateChange (INITIAL_SESSION) - Profile fetch error:', profileError.message);
-              }
-              setError(profileError.message);
-            }
-            setProfile(null);
-          } else {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('AuthStore onAuthStateChange (INITIAL_SESSION) - Profile fetched:', profileData);
-            }
-            setProfile(profileData);
-          }
-        } catch (fetchError: any) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('AuthStore onAuthStateChange (INITIAL_SESSION) - Profile fetch exception:', fetchError);
-          }
-          setError(fetchError.message);
-          setProfile(null);
-        } finally {
-          setLoading(false);
-        }
-      }
-      
-    } else if (event === 'SIGNED_IN') {
-      if (session && session.user) {
-        setUser(session.user);
-        setSession(session);
-        // Fetch profile after sign-in
-        if (process.env.NODE_ENV === 'development') {
-          console.log('AuthStore onAuthStateChange (SIGNED_IN) - Starting profile fetch...');
-        }
-        setLoading(true);
-        try {
-          if (process.env.NODE_ENV === 'development') {
-            console.log(`AuthStore onAuthStateChange (SIGNED_IN) - Attempting to fetch profile ID for user: ${session.user.id}`);
-          }
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('id')
-            .eq('id', session.user.id)
-            .maybeSingle();
-          
-          if (process.env.NODE_ENV === 'development') {
-            console.log('AuthStore onAuthStateChange (SIGNED_IN) - Simplified Supabase query finished. Error:', profileError, 'Data:', profileData);
-          }
-
-          if (profileError) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('AuthStore onAuthStateChange (SIGNED_IN) - Simplified profile fetch failed:', profileError.message);
-            }
-            setError(profileError.message);
-            setProfile(null);
-          } else if (profileData) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('AuthStore onAuthStateChange (SIGNED_IN) - Simplified profile fetch successful (found ID). Profile needs full fetch.');
-            }
-            setProfile(null);
-          } else {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('AuthStore onAuthStateChange (SIGNED_IN) - Simplified profile query returned null (profile not found).');
-            }
-            setProfile(null);
-          }
-        } catch (fetchError: any) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('AuthStore onAuthStateChange (SIGNED_IN) - Profile fetch exception:', fetchError);
-          }
-          setError(fetchError.message);
-          setProfile(null);
-        } finally {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('AuthStore onAuthStateChange (SIGNED_IN) - Finished profile fetch attempt, setting loading to false.');
-          }
-          setLoading(false);
-        }
-      } else {
-        // Should not happen for SIGNED_IN, but handle defensively
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('AuthStore onAuthStateChange (SIGNED_IN) - Received SIGNED_IN event without session/user, resetting state.');
-        }
-        setInitialAuthState(null, null, null);
-      }
-    } else if (event === 'SIGNED_OUT') {
-      setInitialAuthState(null, null, null);
-    } else if (event === 'PASSWORD_RECOVERY') {
-      // Handle password recovery event if needed
-      setError(null); // Clear previous errors
-      setLoading(false);
-    } else if (event === 'TOKEN_REFRESHED') {
-      // Update session if needed, user/profile usually don't change
-      setSession(session);
-      setError(null);
-      setLoading(false);
-    } else if (event === 'USER_UPDATED') {
-      // Update user object, refetch profile if necessary
-      setUser(session?.user || null);
-      if (session?.user) {
-        setLoading(true);
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-          if (profileError) {
-            if (profileError.code !== 'PGRST116') {
-              setError(profileError.message);
-            }
-            setProfile(null);
-          } else {
-            setProfile(profileData);
-          }
-        } catch (fetchError: any) {
-          setError(fetchError.message);
-          setProfile(null);
-        } finally {
-          setLoading(false);
-        }
-      }
+    } else {
+      clear()
     }
-  } catch (error: any) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('AuthStore onAuthStateChange - General error:', error);
-    }
-    setError(error.message);
-    setLoading(false);
-  }
-});
-
-// Ensure initial state is potentially set on load
-// if (typeof window !== 'undefined') {
-//   useAuthStore.getState().setLoading(true); // Set initial loading
-// }
-
-// Initialization effect: check for existing session/user on app start
-// (Removed: now handled by AuthProvider hydration) 
+  })
+}

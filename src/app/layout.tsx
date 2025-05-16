@@ -11,6 +11,7 @@ import { SpeedInsights } from '@vercel/speed-insights/next'
 import { createServerClient } from '@/services/supabase/server'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { headers } from 'next/headers'
+import Script from 'next/script'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -66,8 +67,11 @@ export default async function RootLayout({
   // console.log('SSR headers:', Object.fromEntries(headersList.entries()))
 
   return (
-    <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
-      <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white">
+    <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Auth cleanup script removed to fix MIME errors */}
+      </head>
+      <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white" suppressHydrationWarning>
         <AuthProvider user={user} session={session} profile={profile}>
           <ClientErrorBoundary>
             <Suspense fallback={<Loading fullScreen />}>
