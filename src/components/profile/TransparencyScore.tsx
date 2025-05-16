@@ -4,10 +4,30 @@ import { Profile } from '@/types/database'
 import Card from '@/components/ui/Card'
 import { Progress } from '@/components/ui/progress'
 import { Info } from 'lucide-react'
+import type { TransparencyData } from '@/services/transparency'
 
 interface TransparencyScoreProps {
   profile: Profile
 }
+
+// Helper function to convert Profile to TransparencyData
+const profileToTransparencyData = (profile: Profile): TransparencyData => {
+  // Use some heuristics to determine transparency metrics based on profile data
+  return {
+    isOpenSource: true, // Default for the platform
+    hasContributionGuidelines: Boolean(profile.bio?.includes('contribute')),
+    hasIssueTracking: true, // Default for the platform
+    hasMissionStatement: Boolean(profile.bio && profile.bio.length > 50),
+    hasKPIs: false, // Not available from profile data
+    hasProgressUpdates: false, // Not available from profile data
+    hasTransactionHistory: true, // Default for the platform
+    hasTransactionComments: false, // Not available from profile data
+    hasFinancialReports: false, // Not available from profile data
+    hasPublicChannels: Boolean(profile.username), 
+    hasCommunityUpdates: Boolean(profile.display_name),
+    isResponsiveToFeedback: true, // Default for the platform
+  };
+};
 
 export function TransparencyScore({ profile }: TransparencyScoreProps) {
   const [score, setScore] = useState<number>(0)
@@ -16,7 +36,9 @@ export function TransparencyScore({ profile }: TransparencyScoreProps) {
   useEffect(() => {
     const loadScore = async () => {
       try {
-        const result = await calculateTransparencyScore(profile)
+        // Convert Profile to TransparencyData before passing to calculateTransparencyScore
+        const transparencyData = profileToTransparencyData(profile);
+        const result = await calculateTransparencyScore(transparencyData)
         setScore(result.score)
       } catch (error) {
         console.error('Error calculating transparency score:', error)
