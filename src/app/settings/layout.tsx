@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
+import Loading from '@/components/Loading'
 
 export default function SettingsLayout({
   children,
@@ -19,11 +20,7 @@ export default function SettingsLayout({
   }, [isLoading, user, router])
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-tiffany-600 border-t-transparent" />
-      </div>
-    )
+    return <Loading fullScreen message="Loading your settings..." />
   }
 
   if (!user) {

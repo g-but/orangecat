@@ -24,7 +24,7 @@ create trigger on_auth_user_created
   after insert on auth.users
   for each row execute procedure public.handle_new_user();
 
--- Update RLS policies
+-- Drop existing policies
 drop policy if exists "Public profiles are viewable by everyone" on public.profiles;
 drop policy if exists "Users can insert their own profile" on public.profiles;
 drop policy if exists "Users can update their own profile" on public.profiles;

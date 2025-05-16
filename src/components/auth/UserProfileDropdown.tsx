@@ -3,22 +3,17 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ChevronDown, User, Settings, LogOut, CheckCircle2 } from 'lucide-react'
+import { ChevronDown, User, Settings, LogOut, CheckCircle2, FileText } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
-// import { createBrowserClient } from '@supabase/ssr' // Remove this
-import supabase from '@/services/supabase/client' // Import the shared instance
+import { useAuthStore } from '@/store/auth'
 import { toast } from 'sonner'
-
-// const supabase = createBrowserClient( // Remove this instantiation
-//   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-//   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-// )
 
 export default function UserProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   const { user, profile } = useAuth()
+  const { signOut: storeSignOut } = useAuthStore()
   const router = useRouter()
 
   // Close on outside click
@@ -34,7 +29,7 @@ export default function UserProfileDropdown() {
 
   // Close on Esc
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
+    function handleKeyDown(event: globalThis.KeyboardEvent) {
       if (event.key === 'Escape') setIsOpen(false)
     }
     if (isOpen) {
@@ -44,16 +39,29 @@ export default function UserProfileDropdown() {
   }, [isOpen])
 
   const handleSignOut = async () => {
+    setIsOpen(false)
+    
     try {
-      // The 'supabase' variable here will now refer to the imported shared instance
-      const { error } = await supabase.auth.signOut()
-      if (error) throw error
-      toast.success('Signed out successfully')
-      router.push('/')
+      // First try to use our server route for reliable signout
+      console.log('Signing out using server-side route...')
+      
+      // Show loading toast
+      toast.loading('Signing out...')
+      
+      // Try client-side cleanup first
+      await storeSignOut()
+      
+      // Use the server-side route for complete signout
+      window.location.href = '/auth/signout'
     } catch (error) {
-      console.error('Error signing out:', error)
-      toast.error('Failed to sign out')
+      console.error('Error during sign out:', error)
+      toast.error('Failed to sign out. Please try again.')
     }
+  }
+
+  const handleNavigation = (path: string) => {
+    setIsOpen(false)
+    router.push(path)
   }
 
   // Avatar logic
@@ -66,6 +74,8 @@ export default function UserProfileDropdown() {
     .join('')
     .toUpperCase()
     .slice(0, 2)
+
+  if (!user) return null
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -110,39 +120,26 @@ export default function UserProfileDropdown() {
           </div>
           <div className="py-1" role="menu" aria-orientation="vertical">
             <button
-              onClick={async () => {
-                try {
-                  setIsOpen(false)
-                  await router.push('/dashboard')
-                } catch (err) {
-                  console.error('Router push failed, falling back to window.location', err)
-                  window.location.href = '/dashboard'
-                }
-              }}
+              onClick={() => handleNavigation('/dashboard')}
               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 focus:bg-orange-100 focus:outline-none"
               role="menuitem"
-              tabIndex={0}
             >
               <User className="h-4 w-4 mr-2" />
               Dashboard
             </button>
             <button
-              onClick={() => {
-                router.push('/edit-profile')
-                setIsOpen(false)
-              }}
+              onClick={() => handleNavigation('/profile')}
               className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 focus:bg-orange-100 focus:outline-none"
               role="menuitem"
-              tabIndex={0}
             >
               <Settings className="h-4 w-4 mr-2" />
               Edit Profile
             </button>
+            <div className="border-t border-orange-100 my-1" />
             <button
               onClick={handleSignOut}
               className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-orange-50 focus:bg-orange-100 focus:outline-none"
               role="menuitem"
-              tabIndex={0}
             >
               <LogOut className="h-4 w-4 mr-2" />
               Sign Out

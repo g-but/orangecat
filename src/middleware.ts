@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr'
+import { createServerClient } from '@/services/supabase/server'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
@@ -6,82 +6,58 @@ import type { NextRequest } from 'next/server'
 const publicPaths = ['/', '/auth', '/about', '/blog', '/fund-us', '/fund-others']
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+  const response = NextResponse.next({
+    request: { headers: request.headers },
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          const cookie = request.cookies.get(name)
-          if (!cookie) return undefined
-          return decodeURIComponent(cookie.value)
-        },
-        set(name: string, value: string, options: any) {
-          response.cookies.set({
-            name,
-            value: encodeURIComponent(value),
-            ...options,
-          })
-        },
-        remove(name: string, options: any) {
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
+  const supabase = createServerClient()
+  
+  // Revert to getSession() which works with the current cookie setup
+  const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+
+  // Check if the path is public
+  const isPublicPath = publicPaths.some(path => 
+    request.nextUrl.pathname === path || 
+    request.nextUrl.pathname.startsWith(`${path}/`)
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
-  const pathname = request.nextUrl.pathname
-
-  // Log session state for debugging redirects
-  if (process.env.NODE_ENV === 'development') {
-    console.log('Middleware Check - Pathname:', pathname, 'Session:', session ? { userId: session.user.id, expiresAt: session.expires_at } : null);
-  }
-
-  // Allow access to public fund pages
-  if (pathname.startsWith('/fund-us/')) {
-    const fundId = pathname.split('/')[2]
-    if (fundId) {
-      const { data: fundPage } = await supabase
-        .from('funding_pages')
-        .select('is_public')
-        .eq('id', fundId)
-        .single()
-      
-      if (fundPage?.is_public) {
-        return response
-      }
+  // Special handling for auth paths
+  if (request.nextUrl.pathname.startsWith('/auth')) {
+    if (session?.user) {
+      // If user is authenticated, redirect to dashboard
+      return NextResponse.redirect(new URL('/dashboard', request.url))
     }
+    return response
   }
 
-  // Handle protected routes
-  if (!session && !publicPaths.includes(pathname) && !pathname.startsWith('/fund-us/')) {
-    const redirectUrl = new URL('/auth', request.url)
-    redirectUrl.searchParams.set('from', 'protected')
-    return NextResponse.redirect(redirectUrl)
+  // If no session or error getting session
+  if (!session?.user || sessionError) {
+    // Clear any existing auth cookies
+    request.cookies.getAll().forEach(cookie => {
+      if (cookie.name.startsWith('sb-')) {
+        response.cookies.delete(cookie.name)
+      }
+    })
+
+    // If trying to access a protected route, redirect to auth
+    if (!isPublicPath) {
+      return NextResponse.redirect(new URL('/auth', request.url))
+    }
+    
+    return response
   }
 
-  // Allow authenticated users to visit /auth page.
-  // The /auth page itself will handle redirecting them to /dashboard if they are already logged in and hydrated.
-  // if (session && pathname.startsWith('/auth')) {
-  //   return NextResponse.redirect(new URL('/dashboard', request.url))
-  // }
+  // User exists, check for profile if accessing protected routes
+  if (!isPublicPath) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', session.user.id)
+      .maybeSingle()
 
-  // Handle sign out
-  if (pathname === '/auth/signout') {
-    const { error } = await supabase.auth.signOut()
-    if (!error) {
-      return NextResponse.redirect(new URL('/', request.url))
+    // If no profile exists and not already on profile page
+    if (!profile && !request.nextUrl.pathname.startsWith('/profile')) {
+      return NextResponse.redirect(new URL('/profile', request.url))
     }
   }
 
@@ -92,11 +68,12 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
+     * - api (API routes)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - api (API routes)
+     * - public assets (images, etc.)
      */
-    '/((?!_next/static|_next/image|favicon.ico|api).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|images).*)',
   ],
 } 

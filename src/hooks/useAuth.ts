@@ -24,24 +24,27 @@ export function useRequireAuth() {
 }
 
 export function useRedirectIfAuthenticated() {
-  const { session, isLoading, hydrated } = useAuthStore()
+  const { session, isLoading, hydrated, profile } = useAuthStore()
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
     // Debug logs for auth state
     if (process.env.NODE_ENV === 'development') {
-      console.log('useRedirectIfAuthenticated - Auth state:', { session, isLoading, hydrated })
+      console.log('useRedirectIfAuthenticated - Auth state:', { session, isLoading, hydrated, profile })
     }
 
     // Only redirect if we're ready and on a page that should redirect authenticated users
     if (hydrated && !isLoading && session && pathname !== '/dashboard' && pathname !== '/') {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('useRedirectIfAuthenticated - Redirecting to dashboard')
+      // Ensure we have a profile before redirecting
+      if (profile) {
+        if (process.env.NODE_ENV === 'development') {
+          console.log('useRedirectIfAuthenticated - Redirecting to dashboard')
+        }
+        router.push('/dashboard')
       }
-      router.push('/dashboard')
     }
-  }, [session, isLoading, hydrated, router, pathname])
+  }, [session, isLoading, hydrated, router, pathname, profile])
 
   return { isLoading, hydrated }
 }
