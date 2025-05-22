@@ -118,7 +118,7 @@ export default function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Coming Soon</CardTitle>
-            <CardDescription>Exciting features we're working on</CardDescription>
+            <CardDescription>Exciting features we&apos;re working on</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4 md:grid-cols-2">
