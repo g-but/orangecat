@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ChevronDown, User, Settings, LogOut, CheckCircle2, FileText } from 'lucide-react'
+import { ChevronDown, User, Settings, LogOut, CheckCircle2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useAuthStore } from '@/store/auth'
 import { toast } from 'sonner'
@@ -12,7 +12,7 @@ export default function UserProfileDropdown() {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
-  const { user, profile } = useAuth()
+  const { user, profile, session } = useAuth()
   const { signOut: storeSignOut } = useAuthStore()
   const router = useRouter()
 
@@ -42,14 +42,22 @@ export default function UserProfileDropdown() {
     setIsOpen(false)
     
     try {
-      // First try to use our server route for reliable signout
-      console.log('Signing out using server-side route...')
-      
       // Show loading toast
-      toast.loading('Signing out...')
+      const loadingToast = toast.loading('Signing out...')
       
-      // Try client-side cleanup first
-      await storeSignOut()
+      // Client-side auth store cleanup
+      const { error } = await storeSignOut()
+      
+      if (error) {
+        toast.dismiss(loadingToast)
+        toast.error(`Sign out error: ${error}`)
+        console.error('Error during sign out:', error)
+        return
+      }
+      
+      // Server-side complete signout for cookie cleanup
+      toast.dismiss(loadingToast)
+      toast.success('Successfully signed out')
       
       // Use the server-side route for complete signout
       window.location.href = '/auth/signout'
@@ -64,9 +72,16 @@ export default function UserProfileDropdown() {
     router.push(path)
   }
 
-  // Avatar logic
+  // Guard against missing user data
+  if (!user && !session) {
+    console.error('UserProfileDropdown rendered without user or session')
+    return null
+  }
+
+  // Avatar logic - with fallbacks for missing data
   const avatarUrl = profile?.avatar_url
-  const displayName = profile?.display_name || user?.email || 'User'
+  const email = user?.email || session?.user?.email || ''
+  const displayName = profile?.display_name || profile?.username || email.split('@')[0] || 'User'
   const firstName = displayName.split(' ')[0]
   const initials = displayName
     .split(' ')
@@ -74,8 +89,6 @@ export default function UserProfileDropdown() {
     .join('')
     .toUpperCase()
     .slice(0, 2)
-
-  if (!user) return null
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -114,8 +127,8 @@ export default function UserProfileDropdown() {
         <div className="absolute right-0 mt-2 w-60 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
           <div className="py-3 px-4 border-b border-orange-100">
             <div className="text-sm text-gray-500 mb-1">Hi, <span className="font-semibold text-tiffany-600">{firstName}</span>!</div>
-            {!avatarUrl && (
-              <div className="text-xs text-gray-400 truncate">Logged in as <span className="text-gray-700">{user?.email}</span></div>
+            {email && (
+              <div className="text-xs text-gray-400 truncate">Logged in as <span className="text-gray-700">{email}</span></div>
             )}
           </div>
           <div className="py-1" role="menu" aria-orientation="vertical">

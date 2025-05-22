@@ -3,7 +3,17 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   images: {
-    domains: ['localhost', 'www.orangecat.com', 'orangecat.com'],
+    domains: (() => {
+      const base = ['localhost', 'www.orangecat.com', 'orangecat.com'];
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      try {
+        const { hostname } = new URL(supabaseUrl);
+        if (hostname && !base.includes(hostname)) base.push(hostname);
+      } catch (_) {
+        // invalid URL – ignore
+      }
+      return base;
+    })(),
   },
   async headers() {
     return [

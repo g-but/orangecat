@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Reusable UI components (Button, Input, Card)
 - Dashboard card component
 - Configuration management for dashboard data
+- Profile editing functionality with real-time updates
+- Improved state management using Zustand
 
 ### Changed
 - Refactored home page to use modular components
@@ -83,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced security headers
 - Removed exposed Bitcoin address from version control
 - Secured API keys and configuration
+- Resolved issues with asynchronous operations and localStorage
 
 ### Security
 - Added security headers

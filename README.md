@@ -51,6 +51,12 @@ supabase/              # Database migrations and types
 - Transparency scoring system
 - Responsive design
 
+## Recent Updates
+
+- **Profile Editing**: Users can now edit their profiles seamlessly with real-time updates.
+- **Improved State Management**: Enhanced state management using Zustand to minimize errors and inconsistencies.
+- **Bug Fixes**: Resolved issues related to asynchronous operations and localStorage.
+
 ## Getting Started
 
 1. Clone the repository

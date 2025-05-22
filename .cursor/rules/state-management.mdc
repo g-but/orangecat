@@ -1,0 +1,22 @@
+---
+description: When we are working with auth and state management, zustand, etc, we want minimize possibility of errors, inconsistencies, race conditions, etc
+globs: 
+alwaysApply: false
+---
+Always use useAuth in your UI/components,
+Always wait for hydrated before showing anything that depends on auth,
+Hydration: Make sure your auth state is hydrated before rendering protected routes.
+Zustand Store: Your Zustand store should always reflect the Supabase session state.
+Profile Editing: Only allow profile edits if the user is authenticated and the session is valid.
+
+On App Load:
+After hydration, always check with Supabase if there is a valid session.
+If not, clear all state and storage.
+On Network/CORS Error:
+If Supabase is unreachable, show a clear error and clear state.
+On Any Auth State Change:
+If the session is lost, clear state everywhere.
+
+
+
+

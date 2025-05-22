@@ -1,5 +1,8 @@
+'use client'
 import React from 'react'
 import { Loader2 } from 'lucide-react'
+import { useAuth } from '@/hooks/useAuth'
+import { useEffect } from 'react'
 
 interface Props {
   fullScreen?: boolean
@@ -53,4 +56,46 @@ export default function Loading({
       {content}
     </div>
   )
+}
+
+export function GlobalAuthErrorBanner() {
+  const { authError, setAuthError } = useAuth();
+
+  useEffect(() => {
+    if (authError) {
+      console.warn('GlobalAuthErrorBanner: Showing auth error:', authError);
+    }
+  }, [authError]);
+
+  if (!authError) return null;
+
+  return (
+    <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-center py-3 shadow-lg animate-fade-in">
+      <span>{authError}</span>
+      <button
+        className="ml-4 px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100 transition"
+        onClick={() => {
+          setAuthError(null);
+          console.log('GlobalAuthErrorBanner: Error dismissed by user.');
+        }}
+      >
+        Dismiss
+      </button>
+    </div>
+  );
+}
+
+// Global loading overlay tied to auth store – shows a semi-transparent overlay
+// with spinner whenever the auth store is in a loading state *after* hydration.
+// This keeps the header / layout visible while conveying progress.
+export function GlobalAuthLoader() {
+  const { isLoading, hydrated } = useAuth();
+
+  if (!hydrated || !isLoading) return null;
+
+  return (
+    <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-[60] flex items-center justify-center pointer-events-none">
+      <Loader2 className="h-10 w-10 animate-spin text-tiffany-500" />
+    </div>
+  );
 } 

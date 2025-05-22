@@ -50,56 +50,144 @@ export class ProfileService {
     }
 
     try {
-      console.log('ProfileService: Delegating to profile helper with data:', formData)
+      console.log('ProfileService: Validating session and preparing update data');
       
-      // Check if user has auth session before attempting update
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+      // Get fresh session data using getUser instead of getSession
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
       
-      if (sessionError || !session) {
-        console.error('ProfileService: No active session, cannot update profile:', sessionError)
+      if (userError || !user) {
+        console.error('ProfileService: No authenticated user:', userError)
         return {
           success: false,
-          error: 'No active session. Please log in again.',
+          error: 'No authenticated user. Please log in again.',
         }
       }
       
-      // Make sure user session belongs to same user we're updating
-      if (session.user.id !== userId) {
-        console.error(`ProfileService: Session user ID (${session.user.id}) does not match target user ID (${userId})`)
+      // Make sure user ID matches
+      if (user.id !== userId) {
+        console.error(`ProfileService: User ID (${user.id}) does not match target ID (${userId})`)
         return {
           success: false,
           error: 'Permission denied: You can only update your own profile',
         }
       }
-      
-      // Direct call to supabaseUpdateProfile without retries or timeouts
-      console.log('ProfileService: DIRECT CALL to supabaseUpdateProfile')
-      const updatedProfile = await supabaseUpdateProfile(userId, formData)
+
+      // Build the update object **dynamically** so that we only send columns that
+      // (a) are provided by the user and
+      // (b) are known to exist in the database schema.  
+      // This prevents 400 PGRST204 errors such as
+      // "Could not find the 'avatar_url' column of 'profiles' in the schema cache".
+
+      const updateData: Record<string, any> = {
+        updated_at: new Date().toISOString(), // always update timestamp
+      };
+
+      if (typeof formData.username !== 'undefined') {
+        updateData.username = formData.username?.trim() || null;
+      }
+
+      if (typeof formData.display_name !== 'undefined') {
+        updateData.display_name = formData.display_name?.trim() || null;
+      }
+
+      if (typeof formData.bio !== 'undefined') {
+        updateData.bio = formData.bio?.trim() || null;
+      }
+
+      if (typeof formData.bitcoin_address !== 'undefined') {
+        updateData.bitcoin_address = formData.bitcoin_address?.trim() || null;
+      }
+
+      // Only include avatar_url if the client actually provided a value.
+      // If the column is missing in the DB this key will be absent and the
+      // request will succeed instead of throwing a 400 error.
+      if (typeof formData.avatar_url !== 'undefined') {
+        updateData.avatar_url = formData.avatar_url || null;
+      }
+       
+      console.log('ProfileService: Attempting direct update with data:', updateData);
+
+      // Try direct update first
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', userId)
+        .select('*')
+        .single();
+
+      if (error) {
+        console.error('ProfileService: Direct update failed:', error);
+        
+        if (error.code === 'PGRST204' && error.message?.includes('avatar_url')) {
+          console.warn('avatar_url column missing, retrying update without avatar_url');
+          const retryData = { ...updateData };
+          delete retryData.avatar_url;
+          const { data: retryDataRes, error: retryErr } = await supabase
+            .from('profiles')
+            .update(retryData)
+            .eq('id', userId)
+            .select('*')
+            .single();
+
+          if (!retryErr) {
+            return { success: true, data: retryDataRes };
+          }
+        } else if (error.code === '23505') {
+          return {
+            success: false,
+            error: 'Username is already taken. Please choose another username.'
+          };
+        }
+        
+        // If direct update fails, try the fallback method
+        console.log('ProfileService: Trying fallback update method');
+        const fallbackResult = await ProfileService.fallbackProfileUpdate(userId, updateData);
+        
+        if (!fallbackResult.success) {
+          return {
+            success: false,
+            error: fallbackResult.error || 'Failed to update profile'
+          };
+        }
+        
+        // If fallback succeeded, fetch the updated profile
+        const { data: updatedProfile, error: fetchError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+          
+        if (fetchError) {
+          return {
+            success: false,
+            error: 'Profile updated but failed to fetch updated data'
+          };
+        }
+        
+        return {
+          success: true,
+          data: updatedProfile
+        };
+      }
+
+      if (!data) {
+        return {
+          success: false,
+          error: 'Profile update failed: No data returned'
+        };
+      }
+
+      console.log('ProfileService: Update successful:', data);
       return {
         success: true,
-        data: updatedProfile,
-      }
+        data
+      };
+      
     } catch (error: any) {
-      console.error('ProfileService: ERROR during direct profile update:', error)
-      
-      // Check for specific error types
-      let errorMessage = error.message || 'Unknown error updating profile'
-      
-      if (error.code === '42501') {
-        errorMessage = 'Permission denied: Row level security prevented this update'
-      } else if (error.code === '23505') {
-        errorMessage = 'Username is already taken'
-      } else if (error.status === 401 || error.code === 'PGRST301') {
-        errorMessage = 'Authentication error: Please sign in again'
-      } else if (error.message?.includes('timeout')) {
-        errorMessage = 'Request timed out. Please check your network connection and try again.'
-      } else if (error.message?.includes('message channel closed')) {
-        errorMessage = 'Connection interrupted. Please try again.'
-      }
-      
+      console.error('ProfileService: Error during profile update:', error);
       return {
         success: false,
-        error: errorMessage,
+        error: error.message || 'Failed to update profile'
       }
     }
   }
@@ -194,16 +282,27 @@ export class ProfileService {
       // lightning_address text,
       // created_at timestamp with time zone default timezone('utc'::text, now()) not null,
       // updated_at timestamp with time zone default timezone('utc'::text, now()) not null
-      const newProfile = {
+      const newProfile: Record<string, any> = {
         id: userId, // Primary key that must match auth.users.id
-        username: formData.username || null,
-        display_name: formData.display_name || null,
-        bio: formData.bio || null,
-        avatar_url: formData.avatar_url || null,
-        bitcoin_address: formData.bitcoin_address || null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+      
+      if (typeof formData.username !== 'undefined') {
+        newProfile.username = formData.username ?? null;
+      }
+      if (typeof formData.display_name !== 'undefined') {
+        newProfile.display_name = formData.display_name ?? null;
+      }
+      if (typeof formData.bio !== 'undefined') {
+        newProfile.bio = formData.bio ?? null;
+      }
+      if (typeof formData.avatar_url !== 'undefined') {
+        newProfile.avatar_url = formData.avatar_url ?? null;
+      }
+      if (typeof formData.bitcoin_address !== 'undefined') {
+        newProfile.bitcoin_address = formData.bitcoin_address ?? null;
+      }
       
       console.log('ProfileService: Sending create request with data:', newProfile);
       
