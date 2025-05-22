@@ -96,7 +96,7 @@ export default function PublicProfilePage() {
     if (username) {
       fetchProfileData()
     }
-  }, [username, currentUser, currentUserProfile, router, supabase])
+  }, [username, currentUser, currentUserProfile, router])
 
   if (isLoading) {
     return <Loading fullScreen />
