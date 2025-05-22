@@ -11,27 +11,33 @@ interface AuthButtonsProps {
 }
 
 export default function AuthButtons({ className = '' }: AuthButtonsProps) {
-  const { user, isLoading, hydrated } = useAuth()
+  const { user, session, isLoading, hydrated } = useAuth()
 
+  // First check hydration
   if (!hydrated) {
-    // Optionally, show a loading spinner or nothing while hydrating
+    // Minimal loading indicator while hydrating
     return (
-      <div className={`flex items-center ${className}`} />
+      <div className={`flex items-center justify-center ${className}`}>
+        <div className="w-4 h-4 bg-gray-200 rounded-full animate-pulse"></div>
+      </div>
     )
   }
 
+  // Then check loading state
   if (isLoading) {
     return (
-      <div className={`flex items-center ${className}`}>
+      <div className={`flex items-center justify-center ${className}`}>
         <Loader2 className="h-5 w-5 animate-spin text-tiffany-500" />
       </div>
     )
   }
 
-  if (user) {
+  // User is authenticated if we have a user OR a session
+  if (user || session) {
     return <UserProfileDropdown />
   }
 
+  // User is not authenticated
   return (
     <div className={`flex items-center space-x-4 ${className}`}>
       <Link href="/auth?mode=login">

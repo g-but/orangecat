@@ -17,7 +17,7 @@ import {
   ChevronUp,
   Bitcoin, // For QR code / public profile
 } from 'lucide-react'
-import { useAuthStore } from '@/store/auth'
+import { useAuth } from '@/hooks/useAuth'
 import Image from 'next/image'
 import Button from '@/components/ui/Button' // Assuming you have a Button component
 
@@ -40,11 +40,16 @@ interface AuthenticatedLayoutProps {
 }
 
 export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
-  const { user, profile } = useAuthStore()
-  const pathname = usePathname()
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true) // Default to open on desktop
+  const { user, profile, hydrated, isLoading } = useAuth();
+  const pathname = usePathname();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Default to open on desktop
 
-  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen)
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+
+  // Wait for hydration before rendering sidebar content
+  if (!hydrated) {
+    return <div className="flex h-screen bg-gray-100 items-center justify-center"><div className="w-6 h-6 rounded-full bg-gray-200 animate-pulse" /></div>;
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -72,9 +77,8 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
               )}
             </Link>
           </div>
-          
           {/* User Avatar and Name - condensed when sidebar is closed */}
-           {user && profile && (
+          {user && profile && (
             <div className={`px-4 py-3 border-t border-b border-gray-200 ${isSidebarOpen ? '' : 'flex flex-col items-center'}`}>
               <Link href="/profile/me" className={`flex items-center ${isSidebarOpen ? 'space-x-3' : 'flex-col space-y-1'}`}>
                 {profile.avatar_url ? (
@@ -103,8 +107,6 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
               </Link>
             </div>
           )}
-
-
           {/* Navigation Links */}
           <nav className="mt-6 flex-grow px-2">
             {navItems.map((item) => (
@@ -206,7 +208,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       </aside>
 
       {/* Main Content */}
-      <main className={`flex-1 overflow-x-hidden overflow-y-auto transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
+      <main className={`flex-1 transition-all duration-300 ease-in-out ${isSidebarOpen ? 'ml-64' : 'ml-20'}`}>
         {/* Header for mobile toggle, could be more sophisticated */}
         <header className="bg-white shadow-sm md:hidden sticky top-0 z-20">
             <div className="px-4 py-3 flex items-center justify-between">
@@ -218,7 +220,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                 </button>
             </div>
         </header>
-        <div className="p-6 md:p-8 pb-24">
+        <div className="p-6 md:p-8">
           {children}
         </div>
       </main>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Bitcoin, ArrowRight, CheckCircle2, Shield, Zap, Loader2, AlertCircle, Globe, ShieldCheck, Users } from 'lucide-react'
 import Button from '@/components/ui/Button'
@@ -21,11 +21,9 @@ export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   
   useEffect(() => {
-    const urlMode = searchParams.get('mode')
-    if (urlMode === 'register' || urlMode === 'signup') {
-      setMode('register')
-    } else {
-      setMode('login')
+    const modeParam = searchParams.get('mode')
+    if (modeParam === 'login' || modeParam === 'register') {
+      setMode(modeParam)
     }
   }, [searchParams])
   
@@ -35,64 +33,106 @@ export default function AuthPage() {
     confirmPassword: ''
   })
   const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [localLoading, setLocalLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
+  // Combined loading state - either our local form submission or auth store loading
+  // This prevents double spinners from showing at the same time
+  const loading = localLoading || authLoading;
+
+  // Safety timeout to prevent stuck loading state
+  useEffect(() => {
+    if (localLoading) {
+      const timer = setTimeout(() => {
+        setLocalLoading(false);
+        setError("Request timed out. Please try again later.");
+      }, 30000); // Increased timeout for overall form submission
+      
+      return () => clearTimeout(timer);
+    }
+  }, [localLoading]);
+
+  // Check if we already have a session on first render
+  useEffect(() => {
+    if (session && profile && hydrated) {
+      console.log("Already authenticated, redirecting to dashboard");
+      window.location.href = '/dashboard';
+    }
+  }, [session, profile, hydrated]);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setLocalLoading(true)
     setError(null)
     setSuccess(null)
 
     try {
-      // Create AbortController for timeout
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 8000) // 8 second timeout
-      
       if (mode === 'login') {
-        const { error } = await Promise.race([
-          signIn(formData.email, formData.password),
-          new Promise<{error: string}>((_, reject) => 
-            setTimeout(() => reject(new Error('Login taking longer than expected. Please try again.')), 8000)
-          )
-        ])
+        console.log('Submitting login form...');
+        const result = await signIn(formData.email, formData.password);
+
+        if (result.error) {
+          // Check if error is an Error instance, otherwise stringify
+          const errorMessage = result.error instanceof Error ? result.error.message : String(result.error);
+          throw new Error(errorMessage);
+        }
         
-        clearTimeout(timeoutId)
-        if (error) throw new Error(error)
-        router.push('/dashboard')
+        // If we reach here, result.error is falsy (null or undefined)
+        // Now, explicitly check if result.data and its properties exist
+        if (result.data && result.data.session && result.data.user) {
+          setSuccess('Login successful! Redirecting to dashboard...');
+          
+          // Add a small delay before redirect to ensure state is updated
+          setTimeout(() => {
+            console.log('Login successful, redirecting to dashboard...');
+            window.location.href = '/dashboard';
+          }, 500);
+        } else {
+          // This case implies signIn succeeded (no error) but didn't return the expected data structure
+          throw new Error('Login succeeded but user/session data is missing. Please try again.');
+        }
       } else {
         if (formData.password !== formData.confirmPassword) {
           throw new Error('Passwords do not match')
         }
         
-        const { error } = await Promise.race([
-          signUp(formData.email, formData.password),
-          new Promise<{error: string}>((_, reject) => 
-            setTimeout(() => reject(new Error('Registration taking longer than expected. Please try again.')), 8000)
-          )
-        ])
-        
-        clearTimeout(timeoutId)
-        if (error) throw new Error(error)
-        setSuccess('Registration successful! Redirecting to dashboard...')
-        router.push('/dashboard')
+        const result = await signUp(formData.email, formData.password);
+
+        if (result.error) {
+          const errorMessage = result.error instanceof Error ? result.error.message : String(result.error);
+          throw new Error(errorMessage);
+        }
+
+        if (result.data && result.data.session && result.data.user) {
+          setSuccess('Registration successful! Redirecting to dashboard...');
+          // Use window.location for more reliable navigation
+          setTimeout(() => {
+            window.location.href = '/dashboard';
+          }, 500);
+        } else if (result.data && result.data.user && !result.data.session) {
+          setSuccess('Registration successful! Please check your email to confirm your account.');
+          // Do not redirect
+        } else {
+          throw new Error('Registration completed but no user data received. Please try again.');
+        }
       }
     } catch (err: any) {
       console.error('Auth error:', err)
       setError(err.message)
+      setSuccess(null)
     } finally {
-      setLoading(false)
+      setLocalLoading(false)
     }
   }
 
   // Show initial loading only when absolutely necessary
-  const isInitialLoading = !hydrated || (redirectLoading && authLoading)
+  // Use a more restrictive condition to avoid showing full-screen loading too often
+  const isInitialLoading = !hydrated && redirectLoading;
   
   // If we have a session and profile, redirect to dashboard 
   if (session && profile && hydrated) {
-    router.push('/dashboard')
-    return null
+    return <Loading fullScreen message="Redirecting to dashboard..." />
   }
 
   if (isInitialLoading) {
@@ -128,7 +168,7 @@ export default function AuthPage() {
             </div>
           </div>
         )}
-        {success && (
+        {success && !loading && (
           <div className="rounded-md bg-green-50 p-4 mb-2 w-full max-w-md">
             <div className="flex">
               <CheckCircle2 className="h-5 w-5 text-green-400" />

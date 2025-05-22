@@ -1,5 +1,13 @@
 # Technical Documentation
 
+## Technology Stack
+
+- **Frontend**: Next.js 14, React, TypeScript
+- **Styling**: Tailwind CSS
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **Bitcoin Integration**: Mempool API
+
 ## Project Structure
 
 ```
@@ -184,3 +192,46 @@ The application is deployed on Vercel with the following configuration:
 - Production URL: https://orangecat.ch
 - Staging environment available
 - Automated testing before deployment 
+
+## Best Practices
+
+- **Coding Standards**: Follow the project's coding standards as outlined in the `BEST_PRACTICES.md` file.
+- **Testing**: Use Jest and React Testing Library for unit and component testing. Ensure high test coverage.
+- **Deployment**: Deploy using Vercel with automatic deployments from the main branch.
+
+## Environment Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/g-but/orangecat.git
+   cd orangecat
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env.local
+   ```
+
+4. Start development server:
+   ```bash
+   npm run dev
+   ```
+
+## Testing and Deployment
+
+- **Testing**: Run tests using Jest and React Testing Library.
+  ```bash
+  npm test
+  ```
+
+- **Deployment**: Deploy the application on Vercel with the following configuration:
+  - Automatic deployments from the main branch.
+  - Environment variables managed in the Vercel dashboard.
+  - Production URL: https://orangecat.ch
+  - Staging environment available.
+  - Automated testing before deployment. 

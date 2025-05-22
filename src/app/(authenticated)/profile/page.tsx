@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { useAuthStore } from '@/store/auth'
+import { useAuth } from '@/hooks/useAuth'
 import { ProfileFormData } from '@/types/database'
 import supabaseBrowserClient from '@/services/supabase/client'
 import { User, Bitcoin, Zap, FileText, Camera } from 'lucide-react'
@@ -14,7 +14,7 @@ import { ProfileService } from '@/services/profileService'
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { user, profile, isLoading: authStoreLoading } = useAuthStore()
+  const { user, profile, isLoading: authStoreLoading, hydrated, authError, fetchProfile } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [formData, setFormData] = useState<ProfileFormData>({
     username: '',
@@ -37,7 +37,7 @@ export default function ProfilePage() {
   }, [profile])
 
   // Skip rendering the form until profile is available
-  if (authStoreLoading || !profile) {
+  if (authStoreLoading || !profile || !hydrated) {
     return (
       <div className="w-full py-6">
         <div className="bg-white rounded-lg shadow-lg p-8">
@@ -71,26 +71,26 @@ export default function ProfilePage() {
       if (!e.target.files || e.target.files.length === 0) {
         return
       }
-      
       const file = e.target.files[0]
-      const fileExt = file.name.split('.').pop()
-      const filePath = `${user!.id}-${Math.random()}.${fileExt}`
 
-      const { error: uploadError } = await supabaseBrowserClient.storage
-        .from('avatars')
-        .upload(filePath, file)
+      // Use our secure API route that ensures bucket existence & returns the public URL
+      const body = new FormData()
+      body.append('file', file)
+      body.append('userId', user!.id)
 
-      if (uploadError) {
-        throw uploadError
+      const res = await fetch('/api/avatar', {
+        method: 'POST',
+        body,
+      })
+
+      const json = await res.json()
+      if (!res.ok) {
+        throw new Error(json.error || 'Upload failed')
       }
 
-      const { data: { publicUrl } } = supabaseBrowserClient.storage
-        .from('avatars')
-        .getPublicUrl(filePath)
-
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        avatar_url: publicUrl
+        avatar_url: json.publicUrl,
       }))
 
       toast.success('Avatar uploaded successfully!')
@@ -104,59 +104,33 @@ export default function ProfilePage() {
     e.preventDefault()
     if (!user) {
       toast.error('User not found. Please log in again.')
+      console.error('ProfilePage: Submit attempted with no user.')
       return
     }
-    
-    // Log detailed user information for debugging
-    console.log('%cPROFILE PAGE - User info before update:', 'background: #222; color: #bada55', {
-      userId: user.id,
-      userObject: user,
-      profileFromStore: profile
-    });
-    
+    if (authError) {
+      toast.error('Cannot update profile: ' + authError)
+      console.error('ProfilePage: Submit attempted with global auth error:', authError)
+      return
+    }
     setIsLoading(true)
-
+    console.log('ProfilePage: Attempting profile update for user', user.id, formData)
     try {
-      console.log('%cPROFILE PAGE - Submitting profile update with data:', 'background: #222; color: #bada55', {
-        userId: user.id,
-        formData
-      });
-      
-      // Direct call to ProfileService without timeout wrapping
       const result = await ProfileService.updateProfile(user.id, formData);
-      
-      console.log('%cPROFILE PAGE - Update result received:', 'background: #222; color: #bada55', result);
-
       if (!result.success) {
-        throw new Error(result.error)
+        throw new Error(result.error || 'Failed to update profile');
       }
-      
       toast.success('Profile updated successfully!')
-      
-      // Make sure to wait for toast to appear and state updates to complete
-      // before navigating away from the page
+      console.log('ProfilePage: Profile updated successfully for user', user.id)
+      // Refresh the profile in the store
+      await fetchProfile();
+      // Navigate back to dashboard after a short delay
       setTimeout(() => {
         router.push('/dashboard')
       }, 1500)
     } catch (error: any) {
-      console.error('%cPROFILE PAGE - Error updating profile:', 'background: #222; color: #ff6666', error)
-      
-      // Provide more detailed error message with troubleshooting help
-      let errorMessage = error.message || 'Failed to update profile';
-      
-      // Add network troubleshooting tip if it seems to be a network error
-      if (errorMessage.includes('timeout') || errorMessage.includes('network') || errorMessage.includes('fetch')) {
-        errorMessage += '. Please check your internet connection and try again.';
-        console.log('%cPROFILE PAGE - NETWORK ISSUE DETECTED!', 'background: red; color: white; font-size: 14px');
-        console.log(
-          '%cTROUBLESHOOTING: Please check DevTools -> Network tab and filter for "profiles" to see if the request is failing',
-          'color: orange; font-size: 12px'
-        );
-      }
-      
-      toast.error(errorMessage);
+      console.error('ProfilePage: Error updating profile:', error)
+      toast.error(error.message || 'Failed to update profile')
     } finally {
-      // Always ensure loading state is cleared
       setIsLoading(false)
     }
   }
@@ -165,10 +139,14 @@ export default function ProfilePage() {
     <div className="w-full py-6">
       <div className="bg-white rounded-lg shadow-lg">
         <div className="px-6 py-8 sm:p-10">
+          {authError && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded text-center">
+              {authError}
+            </div>
+          )}
           <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             Edit Profile
           </h1>
-
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Avatar Upload */}
             <div className="flex items-center space-x-6">
@@ -197,7 +175,7 @@ export default function ProfilePage() {
                     accept="image/*"
                     className="hidden"
                     onChange={handleAvatarUpload}
-                    disabled={isLoading}
+                    disabled={isLoading || !user || !!authError}
                   />
                 </label>
               </div>
@@ -218,7 +196,7 @@ export default function ProfilePage() {
                 value={formData.username}
                 onChange={handleInputChange('username')}
                 placeholder="Enter your username"
-                disabled={isLoading}
+                disabled={isLoading || !user || !!authError}
                 autoComplete="username"
               />
               <p className="text-sm text-gray-500">
@@ -235,7 +213,7 @@ export default function ProfilePage() {
                 value={formData.display_name}
                 onChange={handleInputChange('display_name')}
                 placeholder="Enter your display name"
-                disabled={isLoading}
+                disabled={isLoading || !user || !!authError}
                 autoComplete="name"
               />
               <p className="text-sm text-gray-500">
@@ -256,7 +234,7 @@ export default function ProfilePage() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent transition duration-150 ease-in-out bg-white"
                 rows={4}
                 placeholder="Tell us a bit about yourself or your project..."
-                disabled={isLoading}
+                disabled={isLoading || !user || !!authError}
                 autoComplete="off"
               />
               <p className="text-sm text-gray-500">
@@ -273,7 +251,7 @@ export default function ProfilePage() {
                 value={formData.bitcoin_address}
                 onChange={handleInputChange('bitcoin_address')}
                 placeholder="Enter your Bitcoin address"
-                disabled={isLoading}
+                disabled={isLoading || !user || !!authError}
                 autoComplete="off"
               />
               <p className="text-sm text-gray-500">
@@ -288,7 +266,7 @@ export default function ProfilePage() {
                 className="w-full py-3" 
                 variant="primary" 
                 isLoading={isLoading} 
-                disabled={isLoading}
+                disabled={isLoading || !user || !!authError}
               >
                 {isLoading ? 'Saving...' : 'Save Profile'}
               </Button>

@@ -1,70 +1,161 @@
 import { useAuthStore } from '@/store/auth'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
+// Hook for protected routes - redirects to login if not authenticated
 export function useRequireAuth() {
-  const { user, profile, isLoading, hydrated } = useAuthStore()
-  const router = useRouter()
+  // IMPORTANT: Keep all hooks in the exact same order
+  const { user, session, profile, isLoading, hydrated } = useAuthStore();
+  const [isConsistent, setIsConsistent] = useState(true);
+  const router = useRouter();
+  const [checkedAuth, setCheckedAuth] = useState(false);
 
+  // First check for inconsistent state
   useEffect(() => {
-    // Debug logs for auth state
-    if (process.env.NODE_ENV === 'development') {
-      console.log('useRequireAuth - Auth state:', { user, isLoading, hydrated })
+    if (hydrated && !isLoading) {
+      const hasInconsistentState = 
+        (user && !session) || 
+        (!user && session);
+        
+      setIsConsistent(!hasInconsistentState);
     }
+  }, [user, session, isLoading, hydrated]);
 
-    if (hydrated && !isLoading && !user) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('useRequireAuth - Redirecting to auth page')
-      }
-      router.push('/auth?from=protected')
+  // Then handle redirection based on auth state
+  useEffect(() => {
+    // Wait until hydration and initial loading completes
+    if (!hydrated || isLoading) return;
+    
+    // If no auth or inconsistent state, redirect to login
+    const isAuthenticated = isConsistent && !!user && !!session;
+    
+    if (!isAuthenticated) {
+      router.push('/auth?from=protected');
     }
-  }, [user, isLoading, hydrated, router])
+    
+    // Mark that we've checked authentication
+    setCheckedAuth(true);
+  }, [user, session, isLoading, hydrated, router, isConsistent]);
 
-  return { user, profile, isLoading, hydrated }
+  return { 
+    user, 
+    profile, 
+    session, 
+    isLoading: isLoading || !hydrated || !checkedAuth, 
+    hydrated, 
+    isAuthenticated: isConsistent && !!user && !!session
+  };
 }
 
+// Hook for login/register pages - redirects to dashboard if already authenticated
 export function useRedirectIfAuthenticated() {
-  const { session, isLoading, hydrated, profile } = useAuthStore()
-  const router = useRouter()
-  const pathname = usePathname()
+  // IMPORTANT: Keep all hooks in the exact same order
+  const { user, session, isLoading, hydrated, profile } = useAuthStore();
+  const [isConsistent, setIsConsistent] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // First check for inconsistent state
+  useEffect(() => {
+    if (hydrated && !isLoading) {
+      const hasInconsistentState = 
+        (user && !session) || 
+        (!user && session);
+        
+      setIsConsistent(!hasInconsistentState);
+    }
+  }, [user, session, isLoading, hydrated]);
 
   useEffect(() => {
-    // Debug logs for auth state
-    if (process.env.NODE_ENV === 'development') {
-      console.log('useRedirectIfAuthenticated - Auth state:', { session, isLoading, hydrated, profile })
+    // Wait for hydration and initial load
+    if (!hydrated || isLoading) return;
+    
+    // Only redirect if user is fully authenticated and not on dashboard/home
+    const isAuthenticated = isConsistent && !!user && !!session;
+    
+    if (isAuthenticated && pathname !== '/dashboard' && pathname !== '/') {
+      router.push('/dashboard');
     }
+  }, [user, session, isLoading, hydrated, router, pathname, profile, isConsistent]);
 
-    // Only redirect if we're ready and on a page that should redirect authenticated users
-    if (hydrated && !isLoading && session && pathname !== '/dashboard' && pathname !== '/') {
-      // Ensure we have a profile before redirecting
-      if (profile) {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('useRedirectIfAuthenticated - Redirecting to dashboard')
-        }
-        router.push('/dashboard')
-      }
-    }
-  }, [session, isLoading, hydrated, router, pathname, profile])
-
-  return { isLoading, hydrated }
+  return { 
+    isLoading: isLoading || !hydrated, 
+    hydrated,
+    isAuthenticated: isConsistent && !!user && !!session
+  };
 }
 
-// Re-export useAuthStore for convenience
+// General auth hook with consistency checks
 export function useAuth() {
-  const authState = useAuthStore()
+  // IMPORTANT: Keep all hooks in the exact same order
+  const authState = useAuthStore();
+  const [isConsistent, setIsConsistent] = useState(true);
+  const router = useRouter(); // Always declare this hook third
+  
+  // Detect inconsistent state (one of user/session exists but not the other)
+  useEffect(() => {
+    if (authState.hydrated && !authState.isLoading) {
+      const hasInconsistentState = 
+        (authState.user && !authState.session) || 
+        (!authState.user && authState.session);
+        
+      if (hasInconsistentState) {
+        console.warn('useAuth - Inconsistent state detected:', {
+          hasUser: !!authState.user,
+          hasSession: !!authState.session
+        });
+        setIsConsistent(false);
+      } else {
+        setIsConsistent(true);
+      }
+    }
+  }, [authState.user, authState.session, authState.hydrated, authState.isLoading]);
   
   // Debug logs for auth state
   useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
       console.log('useAuth - Current auth state:', {
-        user: authState.user,
-        session: authState.session,
-        profile: authState.profile,
+        hasUser: !!authState.user,
+        hasSession: !!authState.session,
+        hasProfile: !!authState.profile,
         isLoading: authState.isLoading,
-        hydrated: authState.hydrated
-      })
+        hydrated: authState.hydrated,
+        isConsistent
+      });
     }
-  }, [authState])
+  }, [authState, isConsistent]);
 
-  return authState
+  // Simple function to fix inconsistent state - no auto-fix to avoid race conditions
+  const fixInconsistentState = async () => {
+    if (!authState.hydrated || authState.isLoading) {
+      return;
+    }
+
+    console.warn('Manually fixing inconsistent auth state');
+    
+    try {
+      // Force sign out to clean everything up
+      await authState.signOut();
+      
+      // Redirect to auth page if on a protected route
+      const currentPath = window.location.pathname;
+      if (currentPath.startsWith('/dashboard') || 
+          currentPath.startsWith('/profile') || 
+          currentPath.startsWith('/settings')) {
+        router.push('/auth');
+      }
+    } catch (error) {
+      console.error('Error during auth state fix:', error);
+    }
+  };
+
+  // Calculate isAuthenticated once based on all the state
+  const isAuthenticated = isConsistent && !!authState.user && !!authState.session;
+
+  return {
+    ...authState,
+    isAuthenticated,
+    isConsistent,
+    fixInconsistentState
+  };
 } 

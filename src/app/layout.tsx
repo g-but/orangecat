@@ -12,6 +12,8 @@ import { createServerClient } from '@/services/supabase/server'
 import { AuthProvider } from '@/components/auth/AuthProvider'
 import { headers } from 'next/headers'
 import Script from 'next/script'
+import { GlobalAuthErrorBanner } from '@/components/Loading'
+import { GlobalAuthLoader } from '@/components/Loading'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -73,8 +75,11 @@ export default async function RootLayout({
       </head>
       <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white" suppressHydrationWarning>
         <AuthProvider user={user} session={session} profile={profile}>
+          <GlobalAuthErrorBanner />
           <ClientErrorBoundary>
             <Suspense fallback={<Loading fullScreen />}>
+              {/* Global loading overlay based on auth store */}
+              <GlobalAuthLoader />
               <div className="min-h-screen flex flex-col">
                 <Header />
                 <main className="flex-grow pt-20 pb-12">
