@@ -6,6 +6,7 @@ interface NavigationItem {
   href: string
   requiresAuth?: boolean
   icon?: ComponentType<SVGProps<SVGSVGElement>>
+  description?: string
 }
 
 interface NavigationConfig {
@@ -19,6 +20,7 @@ interface NavigationConfig {
   user: NavigationItem[]
   auth: NavigationItem[]
   dashboard: NavigationItem[]
+  about: NavigationItem[]
 }
 
 export const navigation: NavigationConfig = {
@@ -71,5 +73,22 @@ export const navigation: NavigationConfig = {
   ],
   dashboard: [
     { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
+  ],
+  about: [
+    { 
+      name: 'About Us', 
+      href: '/about',
+      description: 'Learn about our mission and vision'
+    },
+    { 
+      name: 'Documentation', 
+      href: '/docs',
+      description: 'Technical documentation and guides'
+    },
+    { 
+      name: 'Blog', 
+      href: '/blog',
+      description: 'Latest updates and insights'
+    },
   ]
 } 

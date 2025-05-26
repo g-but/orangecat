@@ -9,7 +9,7 @@ export default function Hero() {
       <div className="absolute inset-0 bg-gradient-to-b from-tiffany-50 to-white" />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="min-h-[calc(100vh-5rem)] flex flex-col justify-center py-16 sm:py-24">
+        <div className="min-h-[calc(100vh-10rem)] flex flex-col justify-center py-20 sm:py-32">
           <div className="text-center">
             <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-5xl md:text-6xl">
               <span className="block">Fund Anything</span>
@@ -46,9 +46,9 @@ export default function Hero() {
                     <Bitcoin className="h-8 w-8 text-tiffany-500" />
                   </div>
                   <div className="ml-4">
-                    <h3 className="text-lg font-medium text-gray-900">Bitcoin-First</h3>
+                    <h3 className="text-lg font-medium text-gray-900">Bitcoin-Powered</h3>
                     <p className="mt-2 text-base text-gray-500">
-                      Built on Bitcoin principles with no platform fees and self-custody
+                      Built on Bitcoin for secure, global transactions with no platform fees
                     </p>
                   </div>
                 </div>
@@ -100,14 +100,14 @@ export default function Hero() {
 
           {/* Trust indicators */}
           <div className="mt-16 text-center">
-            <p className="text-sm font-medium text-gray-500">Built on Bitcoin principles</p>
+            <p className="text-sm font-medium text-gray-500">Powered by Bitcoin technology</p>
             <div className="mt-6 flex justify-center space-x-8">
               <div className="text-gray-400">No Platform Fees</div>
-              <div className="text-gray-400">Self-Custody Only</div>
-              <div className="text-gray-400">Open Source</div>
+              <div className="text-gray-400">Global Access</div>
+              <div className="text-gray-400">Self-Custody</div>
             </div>
             <p className="mt-4 text-sm text-gray-500">
-              We&apos;re just connecting minds and wallets. You keep your keys, we keep it simple.
+              We connect people and enable Bitcoin payments. You keep your keys, we keep it simple.
             </p>
           </div>
         </div>

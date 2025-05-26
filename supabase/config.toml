@@ -136,8 +136,6 @@ minimum_password_length = 6
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""
-# If disabled, the server will return SameSite=lax cookies.
-enable_same_site_none = false
 
 [auth.rate_limit]
 # Number of emails that can be sent per hour. Requires auth.email.smtp to be enabled.
@@ -320,16 +318,5 @@ s3_access_key = "env(S3_ACCESS_KEY)"
 # Configures AWS_SECRET_ACCESS_KEY for S3 bucket
 s3_secret_key = "env(S3_SECRET_KEY)"
 
-[functions]
-# Postgres connection string for storing Supabase Functions logs.
-database_url = "postgres://postgres:postgres@localhost:54322/postgres"
-# List of allowed domains for CORS requests.
-cors = [
-  "http://localhost:3000",
-  "http://localhost:3001",
-  "http://localhost:3002",
-  "http://localhost:3003",
-  "http://localhost:3004",
-  "http://localhost:3005",
-  "https://orangecat-georgs-projects-babaf057.vercel.app"
-]
+# [functions]
+# enabled = true

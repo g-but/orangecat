@@ -174,12 +174,22 @@ export const useAuthStore = create<AuthState>()(
         }
       },
       signIn: async (email, password) => {
-        set({ isLoading: true, authError: null });
+        // Prevent multiple concurrent sign-in attempts
+        const currentState = get();
+        if (currentState.isLoading) {
+          console.warn("Sign in already in progress, ignoring duplicate request");
+          return { data: null, error: new Error("Sign in already in progress") };
+        }
+
+        set({ isLoading: true, authError: null, error: null });
+        
         try {
           console.log("Attempting sign in with:", email);
           
-          // Reset state first to avoid any lingering state issues
+          // Clear any existing state to prevent conflicts
           set({ 
+            user: null,
+            session: null,
             profile: null,
             error: null,
             authError: null,
@@ -204,37 +214,64 @@ export const useAuthStore = create<AuthState>()(
               authError: null
             });
             
-            // Then try to fetch profile
-            try {
-              console.log("Fetching profile after successful login");
-              const profileResult = await get().fetchProfile();
-              
-              if (profileResult.error) {
-                console.warn("Profile fetch error:", profileResult.error);
-                // Still consider login successful even if profile fetch fails
+            // Fetch profile with retry logic
+            let profileFetchAttempts = 0;
+            const maxProfileAttempts = 3;
+            
+            while (profileFetchAttempts < maxProfileAttempts) {
+              try {
+                console.log(`Fetching profile after successful login (attempt ${profileFetchAttempts + 1}/${maxProfileAttempts})`);
+                const profileResult = await get().fetchProfile();
+                
+                if (profileResult.error) {
+                  console.warn(`Profile fetch error (attempt ${profileFetchAttempts + 1}):`, profileResult.error);
+                  
+                  // For the last attempt, don't retry but still succeed login
+                  if (profileFetchAttempts === maxProfileAttempts - 1) {
+                    console.warn("Profile fetch failed after all attempts, but login succeeded");
+                    break;
+                  }
+                  
+                  // Wait before retry
+                  await new Promise(resolve => setTimeout(resolve, 1000 * (profileFetchAttempts + 1)));
+                  profileFetchAttempts++;
+                  continue;
+                } else {
+                  console.log("Profile fetched successfully");
+                  break;
+                }
+              } catch (profileError) {
+                console.error(`Profile fetch exception (attempt ${profileFetchAttempts + 1}):`, profileError);
+                profileFetchAttempts++;
+                
+                if (profileFetchAttempts < maxProfileAttempts) {
+                  await new Promise(resolve => setTimeout(resolve, 1000 * profileFetchAttempts));
+                }
               }
-            } catch (profileError) {
-              console.error("Profile fetch exception:", profileError);
-            } finally {
-              console.log("Setting isLoading to false after sign in and profile fetch");
-              set({ isLoading: false });
             }
             
-            // Login was successful
+            set({ isLoading: false });
+            
+            // Login was successful regardless of profile fetch status
             return { data: result.data, error: null };
           } else {
             // Handle unexpected case where we have no error but also no user/session
             console.error("Sign in returned no error but also missing user/session data");
-            set({ authError: "Authentication succeeded but user data is missing", isLoading: false });
-            return { data: null, error: new Error("Authentication succeeded but user data is missing") };
+            const errorMessage = "Authentication succeeded but user data is missing. Please try again.";
+            set({ authError: errorMessage, isLoading: false });
+            return { data: null, error: new Error(errorMessage) };
           }
         } catch (e) {
           console.error("Sign in exception:", e);
+          const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred during sign in. Please try again.";
           set({ 
-            authError: e instanceof Error ? e.message : "Unknown error during sign in", 
-            isLoading: false 
+            authError: errorMessage, 
+            isLoading: false,
+            user: null,
+            session: null,
+            profile: null
           });
-          return { data: null, error: e instanceof Error ? e : new Error("Unknown error during sign in") };
+          return { data: null, error: new Error(errorMessage) };
         }
       },
       signUp: async (email, password) => {
@@ -415,23 +452,24 @@ if (typeof window !== 'undefined' && supabase) {
   let authCheckCount = 0; // Count consecutive auth checks
 
   supabase.auth.onAuthStateChange(async (event, session) => {
-    // Throttle updates - don't process more than one update every 800ms
+    // Throttle updates - don't process more than one update every 2000ms for better performance
     const now = Date.now();
-    if (now - lastUpdateTime < 800) {
-      console.log('Auth update throttled, skipping...');
-      return;
+    if (now - lastUpdateTime < 2000) {
+      return; // Skip logging for throttled updates
     }
     
     if (isUpdating) {
-      console.log('Auth state change already in progress, skipping...');
-      return;
+      return; // Skip logging for concurrent updates
     }
 
     isUpdating = true;
     lastUpdateTime = now;
     authCheckCount++;
     
-    console.log(`Auth state change event ${authCheckCount}: ${event}`, { hasSession: !!session });
+    // Only log important events, not every single auth state change
+    if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || authCheckCount % 5 === 1) {
+      console.log(`Auth state change event ${authCheckCount}: ${event}`, { hasSession: !!session });
+    }
     
     const { setInitialAuthState, clear, fetchProfile } = useAuthStore.getState();
 
@@ -447,7 +485,9 @@ if (typeof window !== 'undefined' && supabase) {
         });
       } else {
         // No session - clear the store
-        console.log('No session in auth state change, clearing auth store');
+        if (event === 'SIGNED_OUT' || authCheckCount % 10 === 1) {
+          console.log('No session in auth state change, clearing auth store');
+        }
         
         // First clean up any leftover storage
         try {

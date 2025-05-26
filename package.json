@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:clean": "npm run kill-ports && next dev",
+    "dev:port": "next dev --port 3020",
+    "kill-ports": "powershell \"Get-Process node -ErrorAction SilentlyContinue | Stop-Process -Force\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -33,6 +36,7 @@
     "qrcode.react": "^4.2.0",
     "react": "^18",
     "react-dom": "^18",
+    "sharp": "^0.34.2",
     "sonner": "^2.0.3",
     "tailwind-merge": "^3.2.0",
     "zod": "^3.24.2",

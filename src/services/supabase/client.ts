@@ -307,6 +307,19 @@ if (typeof window !== 'undefined') {
       console.log('No initial session found');
     }
   });
+
+  // Simple connection verification on load (no heavy auto-testing)
+  setTimeout(() => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        console.warn('⚠️ Supabase connection issue:', error.message);
+      } else if (session) {
+        console.log('✅ Supabase auth session active');
+      } else {
+        console.log('📝 Supabase connected (no active session)');
+      }
+    });
+  }, 1000); // Wait 1 second after page load
 }
 
 // Expose the client to window for debugging purposes
@@ -462,121 +475,6 @@ if (typeof window !== 'undefined') {
     console.log('Session refresh result:', { data, error });
     return { data, error };
   };
-
-  // Add auto-test function
-  // @ts-ignore
-  window.autoTestAuth = async (): Promise<{ success: boolean; error?: string; session?: boolean; user?: boolean; profile?: boolean; update?: boolean; refresh?: boolean; }> => {
-    console.log('%cStarting Auth Auto-Test...', 'background: #333; color: #fff');
-    
-    try {
-      // 1. Test session
-      const { data: { session }, error: sessionError }: { data: { session: Session | null }, error: Error | null } = await supabase.auth.getSession();
-      console.log('1. Session Test:', { hasSession: !!session, error: sessionError });
-      
-      if (sessionError) {
-        throw new Error(`Session error: ${sessionError.message}`);
-      }
-      
-      if (!session) {
-        throw new Error('No active session found');
-      }
-      
-      // 2. Test user
-      const { data: { user }, error: userError }: { data: { user: User | null }, error: Error | null } = await supabase.auth.getUser();
-      console.log('2. User Test:', { hasUser: !!user, error: userError });
-      
-      if (userError) {
-        throw new Error(`User error: ${userError.message}`);
-      }
-      
-      if (!user) {
-        throw new Error('No authenticated user found');
-      }
-      
-      // 3. Test profile access
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-        
-      console.log('3. Profile Access Test:', { hasProfile: !!profile, error: profileError });
-      
-      if (profileError) {
-        console.warn(`Profile access warning (may not be an error): ${profileError.message}`);
-      }
-      
-      // 4. Test profile update (only if profile exists or no error accessing)
-      let updateResult = null;
-      if (!profileError) {
-        const testUpdate = {
-          bio: `Test update ${new Date().toISOString()}`,
-          updated_at: new Date().toISOString()
-        };
-        
-        const { data: updateData, error: updateError } = await supabase
-          .from('profiles')
-          .update(testUpdate)
-          .eq('id', user.id)
-          .select('*')
-          .single();
-        updateResult = updateData;
-        
-        console.log('4. Profile Update Test:', { success: !!updateResult, error: updateError });
-        
-        if (updateError) {
-          throw new Error(`Profile update error: ${updateError.message}`);
-        }
-      }
-      
-      // 5. Test session refresh
-      const { data: refreshData, error: refreshError }: { data: { session: Session | null, user: User | null }, error: Error | null } = await supabase.auth.refreshSession();
-      console.log('5. Session Refresh Test:', { 
-        success: !!refreshData.session, 
-        error: refreshError 
-      });
-      
-      if (refreshError) {
-        throw new Error(`Session refresh error: ${refreshError.message}`);
-      }
-      
-      console.log('%c✅ Auth Auto-Test Completed Successfully', 'background: green; color: white');
-      return {
-        success: true,
-        session: !!session,
-        user: !!user,
-        profile: !!profile,
-        update: !!updateResult,
-        refresh: !!refreshData.session
-      };
-    } catch (error: any) {
-      console.error('%c❌ Auth Auto-Test Failed:', 'background: red; color: white', error);
-      return {
-        success: false,
-        error: error.message
-      };
-    }
-  };
-  
-  // Run auto-test on load
-  setTimeout(() => {
-    // @ts-ignore
-    window.autoTestAuth().then(result => {
-      if (!result.success) {
-        console.warn('Auth auto-test failed, attempting to fix...');
-        // Try to refresh session
-        supabase.auth.refreshSession().then(({ data, error }: { data: { session: Session | null, user: User | null }, error: Error | null }) => {
-          if (error) {
-            console.error('Failed to fix auth:', error);
-          } else {
-            console.log('Auth fixed, running test again...');
-            // @ts-ignore
-            window.autoTestAuth();
-          }
-        });
-      }
-    });
-  }, 2000); // Wait 2 seconds after page load
 }
 
 // Export the single instance
@@ -605,61 +503,153 @@ export const signIn = async (email: string, password: string): Promise<{ data: {
       }
     }
 
-    console.log(`Calling supabase.auth.signInWithPassword for ${email}...`);
-    // Direct call to Supabase client - let it handle its own timeouts / errors primarily
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
+    // Validate input before making the request
+    if (!email || !password) {
+      const error = new Error('Email and password are required');
+      console.error('Validation error:', error.message);
+      return { data: { user: null, session: null }, error };
+    }
+
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+
+    console.log(`Calling supabase.auth.signInWithPassword for ${normalizedEmail}...`);
+    
+    // Add timeout wrapper around the auth call
+    const authPromise = supabase.auth.signInWithPassword({
+      email: normalizedEmail,
       password,
     });
+
+    // Set a reasonable timeout for the auth request
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Authentication request timed out. Please check your connection and try again.')), 15000);
+    });
+
+    const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
     console.timeEnd('SupabaseSignIn'); // End timer
 
     if (error) {
       console.error('Supabase client signInWithPassword returned error:', error);
-      // If this fails, we can consider a direct fetch as a secondary fallback if absolutely necessary
-      // For now, let's see if this simpler approach works.
-      return { data: { user: null, session: null }, error };
+      
+      // Provide more user-friendly error messages
+      let userFriendlyMessage = error.message;
+      if (error.message?.includes('Invalid login credentials')) {
+        userFriendlyMessage = 'Invalid email or password. Please check your credentials and try again.';
+      } else if (error.message?.includes('Email not confirmed')) {
+        userFriendlyMessage = 'Please check your email and click the confirmation link before signing in.';
+      } else if (error.message?.includes('Too many requests')) {
+        userFriendlyMessage = 'Too many login attempts. Please wait a few minutes before trying again.';
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        userFriendlyMessage = 'Network connection issue. Please check your internet connection and try again.';
+      }
+      
+      return { data: { user: null, session: null }, error: new Error(userFriendlyMessage) };
     }
 
     if (data?.session && data?.user) {
       console.log('Supabase client signInWithPassword successful. User:', data.user.id, 'Session exists:', !!data.session);
+      
       // Explicitly set session to ensure cookies are written for middleware
       try {
         await supabase.auth.setSession({
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
         });
+        console.log('Session set successfully');
       } catch (setErr) {
         console.warn('Error calling setSession', setErr);
+        // Don't fail the whole login for this
       }
+      
+      // Update last sign in time for analytics/debugging
+      try {
+        await supabase.auth.updateUser({
+          data: { last_client_login: new Date().toISOString() }
+        });
+      } catch (updateErr) {
+        console.warn('Could not update last login time:', updateErr);
+        // This is not critical, don't fail the login
+      }
+      
       return { data, error: null };
     } else {
       console.error('Supabase client signInWithPassword returned no error but missing session, user, or both.', { data });
       return { 
         data: { user: null, session: null }, 
-        error: new Error('Authentication response incomplete. Missing session or user data.') 
+        error: new Error('Authentication response incomplete. Please try again or contact support if the issue persists.') 
       };
     }
 
   } catch (e: any) {
     console.timeEnd('SupabaseSignIn'); // End timer in case of exception
     console.error('Exception during supabase.auth.signInWithPassword call or processing:', e);
-    return { data: { user: null, session: null }, error: e };
+    
+    // Handle timeout specifically
+    if (e.message?.includes('timed out')) {
+      return { data: { user: null, session: null }, error: e };
+    }
+    
+    return { data: { user: null, session: null }, error: new Error('An unexpected error occurred during login. Please try again.') };
   }
 }
 
 export const signUp = async (email: string, password: string): Promise<{ data: { user: User | null, session: Session | null }, error: Error | null }> => {
-  // Keeping signUp simple as it wasn't the primary issue
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
-      // data: { email_confirmed: true } // This might be better handled by Supabase default settings or post-signup flow
-    },
-  })
-  if (error) console.error("Supabase signUp error:", error.message);
-  else console.log("Supabase signUp successful. User:", data.user?.id, "Session:", !!data.session);
-  return { data, error }
+  try {
+    // Validate input
+    if (!email || !password) {
+      return { data: { user: null, session: null }, error: new Error('Email and password are required') };
+    }
+
+    // Validate password strength
+    if (password.length < 6) {
+      return { data: { user: null, session: null }, error: new Error('Password must be at least 6 characters long') };
+    }
+
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+
+    console.log(`Attempting to sign up user: ${normalizedEmail}`);
+
+    const { data, error } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password,
+      options: {
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback`,
+        data: {
+          email_confirmed: false // Let Supabase handle email confirmation flow
+        }
+      },
+    });
+
+    if (error) {
+      console.error("Supabase signUp error:", error.message);
+      
+      // Provide user-friendly error messages
+      let userFriendlyMessage = error.message;
+      if (error.message?.includes('User already registered')) {
+        userFriendlyMessage = 'An account with this email already exists. Please try signing in instead.';
+      } else if (error.message?.includes('Password should be at least')) {
+        userFriendlyMessage = 'Password must be at least 6 characters long.';
+      } else if (error.message?.includes('Unable to validate email address')) {
+        userFriendlyMessage = 'Please enter a valid email address.';
+      }
+      
+      return { data: { user: null, session: null }, error: new Error(userFriendlyMessage) };
+    } else {
+      console.log("Supabase signUp successful. User:", data.user?.id, "Session:", !!data.session);
+      
+      // If user is created but needs email confirmation
+      if (data.user && !data.session) {
+        console.log("User created, email confirmation required");
+      }
+      
+      return { data, error: null };
+    }
+  } catch (e: any) {
+    console.error('Exception during signUp:', e);
+    return { data: { user: null, session: null }, error: new Error('An unexpected error occurred during registration. Please try again.') };
+  }
 }
 
 export const signOut = async (): Promise<{ error: Error | null }> => {
@@ -792,4 +782,69 @@ export const updateFundingPage = async (pageId: string, updates: any): Promise<{
     .update(updates)
     .eq('id', pageId)
   return { data, error }
+}
+
+// Draft management helpers
+export const saveFundingPageDraft = async (userId: string, draftData: any): Promise<{ data: any, error: Error | null }> => {
+  const pageData = {
+    user_id: userId,
+    title: draftData.title || 'Untitled Draft',
+    description: draftData.description || null,
+    bitcoin_address: draftData.bitcoin_address || null,
+    lightning_address: draftData.lightning_address || null,
+    website_url: draftData.website_url || null,
+    goal_amount: draftData.goal_amount ? parseFloat(draftData.goal_amount) : null,
+    category: draftData.categories && draftData.categories.length > 0 ? draftData.categories[0] : null,
+    tags: draftData.categories && draftData.categories.length > 1 ? draftData.categories.slice(1) : [],
+    currency: draftData.currency || 'SATS',
+    is_active: false, // Mark as draft
+    is_public: false, // Drafts are private
+    total_funding: 0,
+    contributor_count: 0
+  }
+
+  const { data, error } = await supabase
+    .from('funding_pages')
+    .insert(pageData)
+    .select()
+    .single()
+  
+  return { data, error }
+}
+
+export const updateFundingPageDraft = async (draftId: string, draftData: any): Promise<{ data: any, error: Error | null }> => {
+  const pageData = {
+    title: draftData.title || 'Untitled Draft',
+    description: draftData.description || null,
+    bitcoin_address: draftData.bitcoin_address || null,
+    lightning_address: draftData.lightning_address || null,
+    website_url: draftData.website_url || null,
+    goal_amount: draftData.goal_amount ? parseFloat(draftData.goal_amount) : null,
+    category: draftData.categories && draftData.categories.length > 0 ? draftData.categories[0] : null,
+    tags: draftData.categories && draftData.categories.length > 1 ? draftData.categories.slice(1) : [],
+    currency: draftData.currency || 'SATS',
+    is_active: false, // Keep as draft
+    is_public: false, // Drafts are private
+  }
+
+  const { data, error } = await supabase
+    .from('funding_pages')
+    .update(pageData)
+    .eq('id', draftId)
+    .select()
+    .single()
+  
+  return { data, error }
+}
+
+export const getUserDrafts = async (userId: string): Promise<{ data: any[], error: Error | null }> => {
+  const { data, error } = await supabase
+    .from('funding_pages')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('is_active', false)
+    .eq('is_public', false)
+    .order('updated_at', { ascending: false })
+  
+  return { data: data || [], error }
 } 
