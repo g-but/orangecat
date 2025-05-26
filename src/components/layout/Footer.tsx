@@ -10,11 +10,17 @@ export default function Footer() {
   // Check if current page is an authenticated page
   const isAuthPage = pathname.startsWith('/dashboard') || 
                     pathname.startsWith('/profile') || 
-                    pathname.startsWith('/settings')
+                    pathname.startsWith('/settings') ||
+                    pathname.startsWith('/assets') ||
+                    pathname.startsWith('/people') ||
+                    pathname.startsWith('/events') ||
+                    pathname.startsWith('/organizations') ||
+                    pathname.startsWith('/projects') ||
+                    pathname.startsWith('/fundraising')
 
   return (
-    <footer className={`bg-white border-t border-orange-200 ${isAuthPage ? 'relative z-10' : ''}`}>
-      <div className={`mx-auto py-12 px-4 sm:px-6 lg:px-8 ${isAuthPage ? 'ml-[5rem] md:ml-64' : 'max-w-7xl'}`}>
+    <footer className="bg-white border-t border-gray-200 mt-auto">
+      <div className={`mx-auto py-12 px-4 sm:px-6 lg:px-8 ${isAuthPage ? 'ml-0' : 'max-w-7xl'}`}>
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-8 xl:col-span-1">
             <Logo className="mb-2" />

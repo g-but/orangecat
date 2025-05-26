@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import Loading from '@/components/Loading'
+import AuthRecovery from '@/components/AuthRecovery'
 import { useAuth } from '@/hooks/useAuth'
 import { useRedirectIfAuthenticated } from '@/hooks/useAuth'
 import { toast } from 'sonner'
@@ -126,6 +127,17 @@ export default function AuthPage() {
     }
   }
 
+  const handleRetry = () => {
+    setError(null)
+    setSuccess(null)
+    handleSubmit(new Event('submit') as any)
+  }
+
+  const handleClearError = () => {
+    setError(null)
+    setSuccess(null)
+  }
+
   // Show initial loading only when absolutely necessary
   // Use a more restrictive condition to avoid showing full-screen loading too often
   const isInitialLoading = !hydrated && redirectLoading;
@@ -157,111 +169,117 @@ export default function AuthPage() {
             Fund your dreams with Bitcoin
           </p>
         </div>
-        {/* Error/Success messages */}
-        {error && (
-          <div className="rounded-md bg-red-50 p-4 mb-2 w-full max-w-md">
-            <div className="flex">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">{error}</h3>
-              </div>
-            </div>
+
+        {/* Show AuthRecovery component for errors, or regular error/success messages */}
+        {error && !success ? (
+          <div className="w-full max-w-md">
+            <AuthRecovery
+              error={error}
+              email={formData.email}
+              onRetry={handleRetry}
+              onClearError={handleClearError}
+            />
           </div>
-        )}
-        {success && !loading && (
-          <div className="rounded-md bg-green-50 p-4 mb-2 w-full max-w-md">
-            <div className="flex">
-              <CheckCircle2 className="h-5 w-5 text-green-400" />
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-green-800">{success}</h3>
-              </div>
-            </div>
-          </div>
-        )}
-        {/* Auth Form */}
-        <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <Input
-                type="email"
-                required
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="Email address"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-tiffany-500 focus:border-tiffany-500 focus:z-10 sm:text-sm"
-                disabled={loading}
-              />
-            </div>
-            <div>
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                placeholder="Password"
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-tiffany-500 focus:border-tiffany-500 focus:z-10 sm:text-sm"
-                disabled={loading}
-              />
-            </div>
-            {mode === 'register' && (
-              <div>
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  value={formData.confirmPassword}
-                  onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  placeholder="Confirm password"
-                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-tiffany-500 focus:border-tiffany-500 focus:z-10 sm:text-sm"
-                  disabled={loading}
-                />
+        ) : (
+          <>
+            {/* Simple success message */}
+            {success && !loading && (
+              <div className="rounded-md bg-green-50 p-4 mb-6 w-full max-w-md">
+                <div className="flex">
+                  <CheckCircle2 className="h-5 w-5 text-green-400" />
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-green-800">{success}</h3>
+                  </div>
+                </div>
               </div>
             )}
-          </div>
-          
-          <div className="flex items-center">
-            <input
-              id="show-password"
-              type="checkbox"
-              checked={showPassword}
-              onChange={(e) => setShowPassword(e.target.checked)}
-              className="h-4 w-4 text-tiffany-600 focus:ring-tiffany-500 border-gray-300 rounded"
-              disabled={loading}
-            />
-            <label htmlFor="show-password" className="ml-2 block text-sm text-gray-900">
-              Show password
-            </label>
-          </div>
-          
-          <div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400"
-            >
-              {loading ? (
-                <div className="flex items-center justify-center">
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                  <span>{mode === 'login' ? 'Signing in...' : 'Creating account...'}</span>
+
+            {/* Auth Form */}
+            <form onSubmit={handleSubmit} className="w-full max-w-md space-y-6">
+              <div className="rounded-md shadow-sm -space-y-px">
+                <div>
+                  <Input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Email address"
+                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-tiffany-500 focus:border-tiffany-500 focus:z-10 sm:text-sm"
+                    disabled={loading}
+                  />
                 </div>
-              ) : mode === 'login' ? (
-                'Sign in'
-              ) : (
-                'Create account'
-              )}
-            </Button>
-          </div>
-          
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
-              className="text-sm text-tiffany-600 hover:text-tiffany-500"
-              disabled={loading}
-            >
-              {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
-            </button>
-          </div>
-        </form>
+                <div>
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Password"
+                    className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-tiffany-500 focus:border-tiffany-500 focus:z-10 sm:text-sm"
+                    disabled={loading}
+                  />
+                </div>
+                {mode === 'register' && (
+                  <div>
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      placeholder="Confirm password"
+                      className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-tiffany-500 focus:border-tiffany-500 focus:z-10 sm:text-sm"
+                      disabled={loading}
+                    />
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex items-center">
+                <input
+                  id="show-password"
+                  type="checkbox"
+                  checked={showPassword}
+                  onChange={(e) => setShowPassword(e.target.checked)}
+                  className="h-4 w-4 text-tiffany-600 focus:ring-tiffany-500 border-gray-300 rounded"
+                  disabled={loading}
+                />
+                <label htmlFor="show-password" className="ml-2 block text-sm text-gray-900">
+                  Show password
+                </label>
+              </div>
+              
+              <div>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400"
+                >
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      <span>{mode === 'login' ? 'Signing in...' : 'Creating account...'}</span>
+                    </div>
+                  ) : mode === 'login' ? (
+                    'Sign in'
+                  ) : (
+                    'Create account'
+                  )}
+                </Button>
+              </div>
+              
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
+                  className="text-sm text-tiffany-600 hover:text-tiffany-500"
+                  disabled={loading}
+                >
+                  {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+                </button>
+              </div>
+            </form>
+          </>
+        )}
       </div>
       
       {/* Right: Benefits Section */}

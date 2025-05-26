@@ -156,6 +156,7 @@ export interface Profile {
   username?: string | null
   display_name: string | null
   avatar_url?: string | null
+  banner_url?: string | null
   bio: string | null
   bitcoin_address: string | null
   lightning_address?: string | null
@@ -167,6 +168,7 @@ export interface ProfileFormData {
   username?: string
   display_name?: string
   avatar_url?: string
+  banner_url?: string
   bio?: string
   bitcoin_address?: string
 }
@@ -181,8 +183,22 @@ export interface FundingPage {
   id: string
   user_id: string
   title: string
-  description: string | null
-  bitcoin_address: string
+  description?: string | null
+  bitcoin_address?: string | null
+  lightning_address?: string | null
+  website_url?: string | null
+  goal_amount?: number | null
+  total_funding: number
+  contributor_count: number
+  is_active: boolean
+  is_public: boolean
+  is_featured?: boolean
+  slug?: string | null
+  category?: string | null
+  tags?: string[] | null
+  featured_image_url?: string | null
+  end_date?: string | null
+  currency?: string | null
   created_at: string
   updated_at: string
 }
@@ -190,7 +206,14 @@ export interface FundingPage {
 export interface FundingPageFormData {
   title: string
   description?: string
-  bitcoin_address: string
+  bitcoin_address?: string
+  lightning_address?: string
+  website_url?: string
+  goal_amount?: number
+  categories?: string[] // Changed from single category to array
+  tags?: string[]
+  currency?: 'BTC' | 'SATS'
+  end_date?: string
 }
 
 export interface Transaction {
@@ -201,4 +224,11 @@ export interface Transaction {
   status: 'pending' | 'confirmed' | 'failed'
   created_at: string
   updated_at: string
+}
+
+export interface ProfileUpdateResult {
+  success: boolean
+  data?: any
+  error?: string
+  warning?: string
 }

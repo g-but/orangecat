@@ -1,13 +1,25 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Bitcoin, Users, TrendingUp, AlertCircle } from 'lucide-react'
+import { 
+  AlertCircle, 
+  ArrowRight,
+  Plus,
+  Star,
+  Eye,
+  Handshake
+} from 'lucide-react'
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import Loading from '@/components/Loading'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
+import { WalletOverview } from '@/components/dashboard/WalletOverview'
+import { FeaturePreview } from '@/components/sections/FeaturePreview'
+import { comingSoonFeatures, availableFeatures } from '@/data/features'
+
+
 
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated, session } = useAuth()
@@ -45,7 +57,7 @@ export default function DashboardPage() {
   // Show error state if there's an authentication error but we have a user
   if (authError && user) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
         <Card className="border-red-200">
           <CardHeader className="bg-red-50">
@@ -70,69 +82,97 @@ export default function DashboardPage() {
   const showProfileCompletionCTA = profile && (!profile.username || !profile.display_name || !profile.bio || !profile.bitcoin_address);
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Profile Completion CTA */}
       {showProfileCompletionCTA && (
-        <div className="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded-md">
-          <div className="flex">
-            <div className="py-1"><AlertCircle className="h-5 w-5 text-yellow-500 mr-3" /></div>
-            <div>
-              <p className="font-bold">Complete Your Profile</p>
-              <p className="text-sm">Please update your profile details to enable all features and ensure your public funding page is complete.</p>
-              <Link href="/profile" className="mt-2 inline-block text-sm font-medium text-yellow-800 hover:text-yellow-900 underline">
-                Go to Edit Profile
+        <div className="p-4 bg-gradient-to-r from-orange-100 to-yellow-100 border border-orange-200 rounded-xl">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="h-6 w-6 text-orange-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <h3 className="font-semibold text-orange-900 mb-1">Complete Your Profile</h3>
+              <p className="text-orange-800 text-sm mb-3">Add your Bitcoin address to see your balance and transaction history, plus unlock all funding features.</p>
+              <Link href="/profile">
+                <Button size="sm" className="bg-orange-600 hover:bg-orange-700 text-white">
+                  Complete Profile <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
               </Link>
             </div>
           </div>
         </div>
       )}
 
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Welcome, {profile?.display_name || profile?.username || user?.email || 'there'}</h1>
+      {/* Welcome Header */}
+      <div className="text-center py-6">
+        <h1 className="text-4xl font-bold text-gray-900 mb-3">
+          Welcome back, {profile?.display_name || profile?.username || 'there'}! 👋
+        </h1>
+        <p className="text-lg text-gray-600 mb-6">
+          Your Bitcoin-powered dashboard
+        </p>
+      </div>
+
+      {/* Primary Dashboard - Balance & Transactions (Functional) */}
+      <WalletOverview 
+        walletAddress={profile?.bitcoin_address} 
+        className="mb-8"
+      />
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <Link href="/create">
-          <Button>Create New Funding Page</Button>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer border-orange-200 bg-orange-50">
+            <CardContent className="p-6 text-center">
+              <Plus className="w-8 h-8 text-orange-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-orange-900 mb-2">Create Funding Page</h3>
+              <p className="text-orange-700 text-sm">Start accepting Bitcoin donations</p>
+            </CardContent>
+          </Card>
+        </Link>
+        
+        <Link href="/profile/me">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer border-blue-200 bg-blue-50">
+            <CardContent className="p-6 text-center">
+              <Eye className="w-8 h-8 text-blue-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-blue-900 mb-2">View Public Profile</h3>
+              <p className="text-blue-700 text-sm">See how others see your profile</p>
+            </CardContent>
+          </Card>
+        </Link>
+        
+        <Link href="/profile">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer border-purple-200 bg-purple-50">
+            <CardContent className="p-6 text-center">
+              <Star className="w-8 h-8 text-purple-600 mx-auto mb-3" />
+              <h3 className="font-semibold text-purple-900 mb-2">Edit Profile</h3>
+              <p className="text-purple-700 text-sm">Update your information</p>
+            </CardContent>
+          </Card>
         </Link>
       </div>
 
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Funding Pages</CardTitle>
-            <CardDescription>Create and manage your funding pages to start receiving contributions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-                <Bitcoin className="w-8 h-8 text-blue-500" />
-                <div>
-                  <h3 className="font-medium">Create Your First Funding Page</h3>
-                  <p className="text-sm text-muted-foreground">Set up a funding page to start receiving Bitcoin contributions</p>
-                </div>
-                <Link href="/create" className="ml-auto">
-                  <Button variant="outline">Get Started</Button>
-                </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Coming Soon</CardTitle>
-            <CardDescription>Exciting features we&apos;re working on</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-green-500 mb-2" />
-                <h3 className="font-medium mb-1">Analytics Dashboard</h3>
-                <p className="text-sm text-muted-foreground">Track your funding page performance and contributor insights</p>
-              </div>
-              <div className="p-4 bg-gray-50 rounded-lg">
-                <Users className="w-6 h-6 text-purple-500 mb-2" />
-                <h3 className="font-medium mb-1">Community Features</h3>
-                <p className="text-sm text-muted-foreground">Engage with your contributors and build your community</p>
-              </div>
-            </div>
+      {/* User's Fundraising Pages */}
+      <div className="mb-8">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Your Fundraising Pages</h2>
+          <p className="text-gray-600">
+            Manage your active fundraising campaigns
+          </p>
+        </div>
+        
+        {/* This would be replaced with actual user fundraising pages */}
+        <Card className="border-gray-200 bg-gradient-to-br from-teal-50 to-cyan-50">
+          <CardContent className="p-8 text-center">
+            <Handshake className="w-12 h-12 text-teal-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Fundraising Pages Yet</h3>
+            <p className="text-gray-600 mb-6">
+              Create your first fundraising page to start accepting Bitcoin donations for your cause.
+            </p>
+            <Link href="/create">
+              <Button className="bg-teal-600 hover:bg-teal-700 text-white">
+                <Plus className="w-4 h-4 mr-2" />
+                Create Your First Page
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       </div>

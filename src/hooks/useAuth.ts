@@ -1,6 +1,19 @@
 import { useAuthStore } from '@/store/auth'
 import { useRouter, usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
+
+// Throttle function to prevent excessive logging
+function useThrottledLog(logFn: () => void, delay: number = 1000) {
+  const lastLogTime = useRef(0);
+  
+  return () => {
+    const now = Date.now();
+    if (now - lastLogTime.current >= delay) {
+      logFn();
+      lastLogTime.current = now;
+    }
+  };
+}
 
 // Hook for protected routes - redirects to login if not authenticated
 export function useRequireAuth() {
@@ -92,6 +105,21 @@ export function useAuth() {
   const [isConsistent, setIsConsistent] = useState(true);
   const router = useRouter(); // Always declare this hook third
   
+  // Throttled logging to prevent console spam
+  const throttledLog = useThrottledLog(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('useAuth - Auth state update:', {
+        hasUser: !!authState.user,
+        hasSession: !!authState.session,
+        hasProfile: !!authState.profile,
+        isLoading: authState.isLoading,
+        hydrated: authState.hydrated,
+        isConsistent,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }, 2000); // Only log every 2 seconds maximum
+  
   // Detect inconsistent state (one of user/session exists but not the other)
   useEffect(() => {
     if (authState.hydrated && !authState.isLoading) {
@@ -111,19 +139,10 @@ export function useAuth() {
     }
   }, [authState.user, authState.session, authState.hydrated, authState.isLoading]);
   
-  // Debug logs for auth state
+  // Throttled debug logs for auth state (only in development and throttled)
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('useAuth - Current auth state:', {
-        hasUser: !!authState.user,
-        hasSession: !!authState.session,
-        hasProfile: !!authState.profile,
-        isLoading: authState.isLoading,
-        hydrated: authState.hydrated,
-        isConsistent
-      });
-    }
-  }, [authState, isConsistent]);
+    throttledLog();
+  }, [authState.user, authState.session, authState.profile, authState.isLoading, authState.hydrated, isConsistent, throttledLog]);
 
   // Simple function to fix inconsistent state - no auto-fix to avoid race conditions
   const fixInconsistentState = async () => {

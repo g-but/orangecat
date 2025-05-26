@@ -6,9 +6,10 @@ import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
 import { ProfileFormData } from '@/types/database'
 import supabaseBrowserClient from '@/services/supabase/client'
-import { User, Bitcoin, Zap, FileText, Camera } from 'lucide-react'
+import { User, Bitcoin, Zap, FileText, Camera, Upload } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
+import DefaultAvatar from '@/components/ui/DefaultAvatar'
 import { toast } from 'sonner'
 import { ProfileService } from '@/services/profileService'
 
@@ -16,7 +17,18 @@ export default function ProfilePage() {
   const router = useRouter()
   const { user, profile, isLoading: authStoreLoading, hydrated, authError, fetchProfile } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [formData, setFormData] = useState<ProfileFormData>({
+    username: '',
+    display_name: '',
+    bio: '',
+    bitcoin_address: '',
+    avatar_url: undefined,
+  })
+
+  // Track initial profile data to detect changes
+  const [initialFormData, setInitialFormData] = useState<ProfileFormData>({
     username: '',
     display_name: '',
     bio: '',
@@ -26,44 +38,47 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (profile) {
-      setFormData({
+      const profileData = {
         username: profile.username || '',
         display_name: profile.display_name || '',
         bio: profile.bio || '',
         bitcoin_address: profile.bitcoin_address || '',
         avatar_url: profile.avatar_url || undefined,
-      })
+      }
+      
+      // Only update form data if we don't have unsaved changes
+      // This prevents overwriting user input when profile refreshes after avatar upload
+      if (!hasUnsavedChanges) {
+        setFormData(profileData)
+        setInitialFormData(profileData)
+      } else {
+        // If we have unsaved changes, only update the avatar_url if it changed
+        // This happens after avatar upload
+        if (profileData.avatar_url !== initialFormData.avatar_url) {
+          setFormData(prev => ({
+            ...prev,
+            avatar_url: profileData.avatar_url
+          }))
+          setInitialFormData(prev => ({
+            ...prev,
+            avatar_url: profileData.avatar_url
+          }))
+        }
+      }
     }
-  }, [profile])
+  }, [profile, hasUnsavedChanges, initialFormData.avatar_url])
 
-  // Skip rendering the form until profile is available
-  if (authStoreLoading || !profile || !hydrated) {
-    return (
-      <div className="w-full py-6">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto"></div>
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-            </div>
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-10 bg-gray-200 rounded"></div>
-            </div>
-            <div className="space-y-3">
-              <div className="h-4 bg-gray-200 rounded"></div>
-              <div className="h-20 bg-gray-200 rounded"></div>
-            </div>
-            <div className="h-12 bg-gray-200 rounded"></div>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  // Check if form has unsaved changes
+  useEffect(() => {
+    const hasChanges = JSON.stringify(formData) !== JSON.stringify(initialFormData)
+    setHasUnsavedChanges(hasChanges)
+  }, [formData, initialFormData])
 
   const handleInputChange = (field: keyof ProfileFormData) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [field]: e.target.value }))
+    setFormData(prev => ({
+      ...prev,
+      [field]: e.target.value
+    }))
   }
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,6 +87,21 @@ export default function ProfilePage() {
         return
       }
       const file = e.target.files[0]
+
+      // Validate file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        toast.error('File size too large. Maximum size is 10MB.')
+        return
+      }
+
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
+      if (!allowedTypes.includes(file.type)) {
+        toast.error('Invalid file type. Only JPEG, PNG, WebP, and GIF files are allowed.')
+        return
+      }
+
+      setIsUploadingAvatar(true)
 
       // Use our secure API route that ensures bucket existence & returns the public URL
       const body = new FormData()
@@ -88,15 +118,34 @@ export default function ProfilePage() {
         throw new Error(json.error || 'Upload failed')
       }
 
+      // Update the form state immediately with the new avatar URL
       setFormData((prev) => ({
         ...prev,
         avatar_url: json.publicUrl,
       }))
 
+      // Save the avatar URL to the database immediately
+      const updateResult = await ProfileService.updateProfile(user!.id, {
+        avatar_url: json.publicUrl
+      })
+
+      if (!updateResult.success) {
+        throw new Error(updateResult.error || 'Failed to save avatar to profile')
+      }
+
+      // Refresh the profile in the store to sync the UI
+      // The useEffect above will handle preserving unsaved form changes
+      const refreshResult = await fetchProfile()
+      if (refreshResult.error) {
+        console.warn('Avatar saved but profile refresh failed:', refreshResult.error)
+      }
+
       toast.success('Avatar uploaded successfully!')
     } catch (error: any) {
       console.error('Error uploading avatar:', error)
       toast.error(error.message || 'Error uploading avatar')
+    } finally {
+      setIsUploadingAvatar(false)
     }
   }
 
@@ -112,17 +161,50 @@ export default function ProfilePage() {
       console.error('ProfilePage: Submit attempted with global auth error:', authError)
       return
     }
+    
     setIsLoading(true)
-    console.log('ProfilePage: Attempting profile update for user', user.id, formData)
+    console.log('ProfilePage: Attempting profile update for user', user.id, 'with data:', formData)
+    
     try {
-      const result = await ProfileService.updateProfile(user.id, formData);
+      // Add timestamp for debugging
+      const debugTimestamp = new Date().toISOString()
+      console.log(`Test update ${debugTimestamp}`)
+      
+      const result = await ProfileService.updateProfile(user.id, formData)
+      
+      console.log('ProfilePage: ProfileService.updateProfile result:', result)
+      
       if (!result.success) {
-        throw new Error(result.error || 'Failed to update profile');
+        throw new Error(result.error || 'Failed to update profile')
       }
-      toast.success('Profile updated successfully!')
+      
+      console.log('ProfilePage: Profile update successful, data returned:', result.data)
+      
+      // Show warning if there were schema issues
+      if (result.warning) {
+        toast.warning(result.warning)
+      }
+      
+      // Update initial form data to reflect saved state
+      setInitialFormData(formData)
+      setHasUnsavedChanges(false)
+      
+      // Refresh the profile in the store to sync the UI and verify the save
+      console.log('ProfilePage: Refreshing profile to verify save...')
+      const refreshResult = await fetchProfile()
+      
+      if (refreshResult.error) {
+        console.warn('Profile update succeeded but refresh failed:', refreshResult.error)
+        toast.warning('Profile updated but there was an issue refreshing the data. Please refresh the page.')
+      } else {
+        console.log('ProfilePage: Profile refresh successful after update')
+        if (!result.warning) {
+          toast.success('Profile updated successfully!')
+        }
+      }
+      
       console.log('ProfilePage: Profile updated successfully for user', user.id)
-      // Refresh the profile in the store
-      await fetchProfile();
+      
       // Navigate back to dashboard after a short delay
       setTimeout(() => {
         router.push('/dashboard')
@@ -133,6 +215,15 @@ export default function ProfilePage() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show loading state while hydrating
+  if (!hydrated || authStoreLoading) {
+    return (
+      <div className="w-full py-6 flex justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+      </div>
+    )
   }
 
   return (
@@ -147,6 +238,17 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-8 text-center">
             Edit Profile
           </h1>
+          
+          {/* Unsaved changes indicator */}
+          {hasUnsavedChanges && (
+            <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full mr-2"></div>
+                <p className="text-sm text-yellow-800">You have unsaved changes</p>
+              </div>
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-8">
             {/* Avatar Upload */}
             <div className="flex items-center space-x-6">
@@ -158,31 +260,38 @@ export default function ProfilePage() {
                     width={96}
                     height={96}
                     className="rounded-full object-cover border-4 border-white shadow-md"
+                    priority
                   />
                 ) : (
-                  <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center border-4 border-white shadow-md">
-                    <User className="w-12 h-12 text-gray-400" />
-                  </div>
+                  <DefaultAvatar size={96} className="border-4 border-white shadow-md" />
                 )}
+                
                 <label
                   htmlFor="avatar-upload"
                   className="absolute bottom-0 right-0 bg-white rounded-full p-2 shadow-md cursor-pointer hover:bg-gray-50 transition-colors duration-200"
                 >
-                  <Camera className="w-5 h-5 text-gray-600" />
+                  {isUploadingAvatar ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
+                  ) : (
+                    <Camera className="w-5 h-5 text-gray-600" />
+                  )}
                   <input
                     id="avatar-upload"
                     type="file"
                     accept="image/*"
                     className="hidden"
                     onChange={handleAvatarUpload}
-                    disabled={isLoading || !user || !!authError}
+                    disabled={isLoading || isUploadingAvatar || !user || !!authError}
                   />
                 </label>
               </div>
               <div>
                 <h3 className="text-lg font-medium text-gray-900">Profile Photo</h3>
                 <p className="text-sm text-gray-500">
-                  Upload a new profile photo.
+                  Upload a new profile photo. Images will be automatically resized and optimized.
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Supports JPEG, PNG, WebP, and GIF. Maximum size: 10MB.
                 </p>
               </div>
             </div>
@@ -223,22 +332,24 @@ export default function ProfilePage() {
 
             {/* Bio Textarea */}
             <div className="space-y-2">
-              <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-                Bio <FileText className="inline w-4 h-4 ml-1" />
+              <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
+                Bio
               </label>
-              <textarea
-                id="bio"
-                name="bio"
-                value={formData.bio}
-                onChange={handleInputChange('bio')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent transition duration-150 ease-in-out bg-white"
-                rows={4}
-                placeholder="Tell us a bit about yourself or your project..."
-                disabled={isLoading || !user || !!authError}
-                autoComplete="off"
-              />
+              <div className="relative">
+                <FileText className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                <textarea
+                  id="bio"
+                  name="bio"
+                  rows={4}
+                  value={formData.bio}
+                  onChange={handleInputChange('bio')}
+                  placeholder="Tell us about yourself..."
+                  disabled={isLoading || !user || !!authError}
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-orange-500 focus:border-orange-500 disabled:bg-gray-50 disabled:text-gray-500"
+                />
+              </div>
               <p className="text-sm text-gray-500">
-                Share a brief description about yourself or your project. This helps other users understand who you are.
+                Write a short bio to tell others about yourself. This will be displayed on your public profile.
               </p>
             </div>
 
@@ -250,12 +361,12 @@ export default function ProfilePage() {
                 name="bitcoin_address"
                 value={formData.bitcoin_address}
                 onChange={handleInputChange('bitcoin_address')}
-                placeholder="Enter your Bitcoin address"
+                placeholder="Enter your Bitcoin address (optional)"
                 disabled={isLoading || !user || !!authError}
                 autoComplete="off"
               />
               <p className="text-sm text-gray-500">
-                Your Bitcoin address for receiving payments. This will be visible to other users.
+                Your Bitcoin address for receiving tips and payments. This is optional and will be displayed on your public profile.
               </p>
             </div>
 
@@ -266,7 +377,7 @@ export default function ProfilePage() {
                 className="w-full py-3" 
                 variant="primary" 
                 isLoading={isLoading} 
-                disabled={isLoading || !user || !!authError}
+                disabled={isLoading || isUploadingAvatar || !user || !!authError}
               >
                 {isLoading ? 'Saving...' : 'Save Profile'}
               </Button>

@@ -10,6 +10,7 @@ export interface ProfileUpdateResult {
   success: boolean
   data?: any
   error?: string
+  warning?: string
 }
 
 export class ProfileService {
@@ -104,6 +105,11 @@ export class ProfileService {
       if (typeof formData.avatar_url !== 'undefined') {
         updateData.avatar_url = formData.avatar_url || null;
       }
+
+      // Only include banner_url if the client actually provided a value.
+      if (typeof formData.banner_url !== 'undefined') {
+        updateData.banner_url = formData.banner_url || null;
+      }
        
       console.log('ProfileService: Attempting direct update with data:', updateData);
 
@@ -118,6 +124,7 @@ export class ProfileService {
       if (error) {
         console.error('ProfileService: Direct update failed:', error);
         
+        // Handle missing avatar_url column
         if (error.code === 'PGRST204' && error.message?.includes('avatar_url')) {
           console.warn('avatar_url column missing, retrying update without avatar_url');
           const retryData = { ...updateData };
@@ -130,9 +137,38 @@ export class ProfileService {
             .single();
 
           if (!retryErr) {
-            return { success: true, data: retryDataRes };
+            console.warn('Profile updated successfully without avatar_url. Please add avatar_url column to profiles table.');
+            return { 
+              success: true, 
+              data: retryDataRes,
+              warning: 'Avatar upload requires adding avatar_url column to profiles table.'
+            };
           }
-        } else if (error.code === '23505') {
+        }
+        
+        // Handle missing banner_url column
+        if (error.code === 'PGRST204' && error.message?.includes('banner_url')) {
+          console.warn('banner_url column missing, retrying update without banner_url');
+          const retryData = { ...updateData };
+          delete retryData.banner_url;
+          const { data: retryDataRes, error: retryErr } = await supabase
+            .from('profiles')
+            .update(retryData)
+            .eq('id', userId)
+            .select('*')
+            .single();
+
+          if (!retryErr) {
+            console.warn('Profile updated successfully without banner_url.');
+            return { 
+              success: true, 
+              data: retryDataRes,
+              warning: 'Banner upload requires adding banner_url column to profiles table.'
+            };
+          }
+        }
+        
+        if (error.code === '23505') {
           return {
             success: false,
             error: 'Username is already taken. Please choose another username.'
@@ -299,6 +335,9 @@ export class ProfileService {
       }
       if (typeof formData.avatar_url !== 'undefined') {
         newProfile.avatar_url = formData.avatar_url ?? null;
+      }
+      if (typeof formData.banner_url !== 'undefined') {
+        newProfile.banner_url = formData.banner_url ?? null;
       }
       if (typeof formData.bitcoin_address !== 'undefined') {
         newProfile.bitcoin_address = formData.bitcoin_address ?? null;

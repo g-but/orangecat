@@ -68,6 +68,9 @@ export async function updateProfile(
     if (typeof formData.avatar_url !== 'undefined') {
       profileData.avatar_url = formData.avatar_url ?? null;
     }
+    if (typeof formData.banner_url !== 'undefined') {
+      profileData.banner_url = formData.banner_url ?? null;
+    }
     
     console.log('ProfileHelper: Prepared update data:', profileData);
     

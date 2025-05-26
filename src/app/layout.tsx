@@ -82,10 +82,8 @@ export default async function RootLayout({
               <GlobalAuthLoader />
               <div className="min-h-screen flex flex-col">
                 <Header />
-                <main className="flex-grow pt-20 pb-12">
-                  <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                    {children}
-                  </div>
+                <main className="flex-grow pt-20">
+                  {children}
                 </main>
                 <Footer />
               </div>
