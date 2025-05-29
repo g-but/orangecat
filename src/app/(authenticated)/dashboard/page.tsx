@@ -39,7 +39,6 @@ import { analyticsService } from '@/services/analytics'
 import { toast } from 'sonner'
 import DraftPrompt from '@/components/dashboard/DraftPrompt'
 import { useDrafts } from '@/hooks/useDrafts'
-import DraftDebugInfo from '@/components/debug/DraftDebugInfo'
 
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated, session } = useAuth()
@@ -247,9 +246,6 @@ export default function DashboardPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-      {/* Debug Info - Development Only */}
-      <DraftDebugInfo />
-      
       {/* Welcome Header */}
       <div className="text-center space-y-3">
         <h1 className="text-3xl font-bold text-gray-900">
