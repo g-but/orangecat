@@ -141,7 +141,20 @@ export function useAuth() {
   
   // Throttled debug logs for auth state (only in development and throttled)
   useEffect(() => {
-    throttledLog();
+    // Only log in development and only for significant state changes
+    if (process.env.NODE_ENV === 'development') {
+      // Only log when there are meaningful changes, not every render
+      const hasSignificantChange = 
+        authState.hydrated && 
+        (!authState.isLoading || 
+         !isConsistent || 
+         (!authState.user && !authState.session) || 
+         (authState.user && authState.session && authState.profile));
+      
+      if (hasSignificantChange) {
+        throttledLog();
+      }
+    }
   }, [authState.user, authState.session, authState.profile, authState.isLoading, authState.hydrated, isConsistent, throttledLog]);
 
   // Simple function to fix inconsistent state - no auto-fix to avoid race conditions

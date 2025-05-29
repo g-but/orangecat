@@ -35,7 +35,7 @@ export default function DashboardTemplate({
       />
 
       {/* Coming Soon Banner */}
-      <FeatureBanner banner={config.featureBanner} />
+      {config.featureBanner && <FeatureBanner banner={config.featureBanner} />}
 
       {/* Stats Grid */}
       <DashboardStatsGrid stats={stats} />

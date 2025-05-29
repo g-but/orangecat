@@ -65,7 +65,9 @@ async function testDnsResolution() {
   const url = new URL(supabaseUrl!);
   const hostname = url.hostname;
   
-  console.log(`Testing basic connectivity to: ${hostname}`);
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Testing basic connectivity to: ${hostname}`);
+  }
   
   try {
     // Simplest possible health check - just check if the domain resolves
@@ -79,11 +81,15 @@ async function testDnsResolution() {
     });
     const endTime = performance.now();
     
-    console.log(`Connection test result: ${response.status}, took ${(endTime - startTime).toFixed(2)}ms`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Connection test result: ${response.status}, took ${(endTime - startTime).toFixed(2)}ms`);
+    }
     // For Supabase, any response is good - it means the server is reachable
     return true;
   } catch (error: any) {
-    console.error(`Connection test failed:`, error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`Connection test failed:`, error);
+    }
     return false;
   }
 }
@@ -94,12 +100,16 @@ if (typeof window !== 'undefined') {
   setTimeout(() => {
     testDnsResolution().then(success => {
       if (!success) {
-        console.warn(`⚠️ Potential connectivity issue with Supabase. Network requests may fail.`);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn(`⚠️ Potential connectivity issue with Supabase. Network requests may fail.`);
+        }
       } else {
-        console.log('✅ Supabase connection test successful');
+        if (process.env.NODE_ENV === 'development') {
+          console.log('✅ Supabase connection test successful');
+        }
       }
     });
-  }, 1000);
+  }, 2000); // Increased delay to reduce startup noise
 }
 
 // Helper to create AbortSignal with timeout
@@ -116,8 +126,8 @@ const supabase = createBrowserClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      // use default storageKey to avoid collision with our auth store
-      debug: process.env.NODE_ENV === 'development', // Enable auth debugging in development
+      // Disable debug mode to reduce console noise
+      debug: false, // Disabled to prevent excessive GoTrueClient logging
       storage: {
         getItem: (key) => {
           try {

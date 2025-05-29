@@ -37,7 +37,7 @@ const featureDetails: Record<string, FeatureInfo> = {
       'Collective decision making',
       'Organization-wide messaging'
     ],
-    timeline: 'Q1 2025',
+    timeline: 'Q1 2026',
     useCases: [
       'DAOs and Bitcoin collectives',
       'Community organizations',
@@ -61,7 +61,7 @@ const featureDetails: Record<string, FeatureInfo> = {
       'Progress tracking and reporting',
       'Community voting on proposals'
     ],
-    timeline: 'Q1 2025',
+    timeline: 'Q1 2026',
     useCases: [
       'Open source development',
       'Community improvement projects',
@@ -85,7 +85,7 @@ const featureDetails: Record<string, FeatureInfo> = {
       'Real-time communication',
       'Post-event analytics'
     ],
-    timeline: 'Q2 2025',
+    timeline: 'Q2 2026',
     useCases: [
       'Bitcoin conferences and meetups',
       'Community gatherings',
@@ -109,7 +109,7 @@ const featureDetails: Record<string, FeatureInfo> = {
       'Insurance and security deposits',
       'Community asset sharing'
     ],
-    timeline: 'Q2 2025',
+    timeline: 'Q2 2026',
     useCases: [
       'Tool and equipment sharing',
       'Vehicle rentals',
@@ -133,7 +133,7 @@ const featureDetails: Record<string, FeatureInfo> = {
       'Event coordination',
       'Reputation and trust systems'
     ],
-    timeline: 'Q2 2025',
+    timeline: 'Q2 2026',
     useCases: [
       'Bitcoin community networking',
       'Skill and knowledge sharing',

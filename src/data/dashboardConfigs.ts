@@ -40,7 +40,7 @@ export const assetsConfig: DashboardConfig = {
     iconColor: "bg-red-100",
     title: "Assets Coming",
     description: "This is a preview of what your assets dashboard will look like. Real functionality coming soon!",
-    timeline: "Q2 2025",
+    timeline: "Q2 2026",
     ctaLabel: "Learn More",
     ctaHref: "/coming-soon?feature=assets",
     ctaVariant: "outline",
@@ -52,7 +52,7 @@ export const assetsConfig: DashboardConfig = {
   createButtonHref: "/coming-soon?feature=assets",
   backButtonHref: "/dashboard",
   featureName: "Asset Management",
-  timeline: "Q2 2025",
+  timeline: "Q2 2026",
   learnMoreUrl: "/assets"
 }
 
@@ -65,7 +65,7 @@ export const peopleConfig: DashboardConfig = {
     iconColor: "bg-purple-100",
     title: "People Coming",
     description: "This is a preview of what your people dashboard will look like. Real functionality coming soon!",
-    timeline: "Q2 2025",
+    timeline: "Q2 2026",
     ctaLabel: "Learn More",
     ctaHref: "/coming-soon?feature=people",
     ctaVariant: "outline",
@@ -77,7 +77,7 @@ export const peopleConfig: DashboardConfig = {
   createButtonHref: "/coming-soon?feature=people",
   backButtonHref: "/dashboard",
   featureName: "People & Networking",
-  timeline: "Q2 2025",
+  timeline: "Q2 2026",
   learnMoreUrl: "/people"
 }
 
@@ -85,24 +85,12 @@ export const peopleConfig: DashboardConfig = {
 export const fundraisingConfig: DashboardConfig = {
   title: "Your Fundraising",
   subtitle: "Manage your fundraising campaigns and donations",
-  featureBanner: {
-    icon: Handshake,
-    iconColor: "bg-teal-100",
-    title: "Advanced Fundraising",
-    description: "Enhanced fundraising features with advanced analytics and supporter management coming soon!",
-    timeline: "Q1 2025",
-    ctaLabel: "Learn More",
-    ctaHref: "/coming-soon?feature=fundraising",
-    ctaVariant: "outline",
-    gradientColors: "bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-200"
-  },
   itemsTitle: "Your Campaigns",
   activityTitle: "Recent Activity",
   createButtonLabel: "Create Campaign",
   createButtonHref: "/create",
   backButtonHref: "/dashboard",
-  featureName: "Advanced Fundraising",
-  timeline: "Q1 2025",
+  featureName: "Fundraising",
   learnMoreUrl: "/fundraising"
 }
 
@@ -115,7 +103,7 @@ export const organizationsConfig: DashboardConfig = {
     iconColor: "bg-orange-100",
     title: "Organizations Coming",
     description: "This is a preview of what your organizations dashboard will look like. Real functionality coming soon!",
-    timeline: "Q1 2025",
+    timeline: "Q1 2026",
     ctaLabel: "Learn More",
     ctaHref: "/coming-soon?feature=organizations",
     ctaVariant: "outline",
@@ -127,7 +115,7 @@ export const organizationsConfig: DashboardConfig = {
   createButtonHref: "/coming-soon?feature=organizations",
   backButtonHref: "/dashboard",
   featureName: "Organizations",
-  timeline: "Q1 2025",
+  timeline: "Q1 2026",
   learnMoreUrl: "/organizations"
 }
 
@@ -140,7 +128,7 @@ export const eventsConfig: DashboardConfig = {
     iconColor: "bg-blue-100",
     title: "Events Coming",
     description: "This is a preview of what your events dashboard will look like. Real functionality coming soon!",
-    timeline: "Q2 2025",
+    timeline: "Q2 2026",
     ctaLabel: "Learn More",
     ctaHref: "/coming-soon?feature=events",
     ctaVariant: "outline",
@@ -152,7 +140,7 @@ export const eventsConfig: DashboardConfig = {
   createButtonHref: "/coming-soon?feature=events",
   backButtonHref: "/dashboard",
   featureName: "Events",
-  timeline: "Q2 2025",
+  timeline: "Q2 2026",
   learnMoreUrl: "/events"
 }
 
@@ -165,7 +153,7 @@ export const projectsConfig: DashboardConfig = {
     iconColor: "bg-purple-100",
     title: "Projects Coming",
     description: "This is a preview of what your projects dashboard will look like. Real functionality coming soon!",
-    timeline: "Q1 2025",
+    timeline: "Q1 2026",
     ctaLabel: "Learn More",
     ctaHref: "/coming-soon?feature=projects",
     ctaVariant: "outline",
@@ -177,7 +165,7 @@ export const projectsConfig: DashboardConfig = {
   createButtonHref: "/coming-soon?feature=projects",
   backButtonHref: "/dashboard",
   featureName: "Projects",
-  timeline: "Q1 2025",
+  timeline: "Q1 2026",
   learnMoreUrl: "/projects"
 }
 
@@ -785,8 +773,10 @@ export const fundraisingActivity: DashboardActivity[] = [
   }
 ]
 
-// Feature Preview Data for Main Dashboard
-export const featurePreviewsData = [
+// Feature Preview Data for Main Dashboard - DEPRECATED
+// User requested removal of feature previews from dashboard
+// Keeping for reference but not exported
+const deprecatedFeaturePreviewsData = [
   {
     title: "Organizations",
     description: "View your organizations dashboard with demo data",
@@ -794,7 +784,7 @@ export const featurePreviewsData = [
     iconColor: "text-green-600",
     borderColor: "border-green-200",
     backgroundColor: "bg-green-50",
-    timeline: "Q1 2025",
+    timeline: "Q1 2026",
     demoCount: "3 Demo Organizations",
     href: "/organizations"
   },
@@ -805,7 +795,7 @@ export const featurePreviewsData = [
     iconColor: "text-blue-600",
     borderColor: "border-blue-200",
     backgroundColor: "bg-blue-50",
-    timeline: "Q2 2025",
+    timeline: "Q2 2026",
     demoCount: "3 Demo Events",
     href: "/events"
   },
@@ -816,7 +806,7 @@ export const featurePreviewsData = [
     iconColor: "text-purple-600",
     borderColor: "border-purple-200", 
     backgroundColor: "bg-purple-50",
-    timeline: "Q1 2025",
+    timeline: "Q1 2026",
     demoCount: "3 Demo Projects",
     href: "/projects"
   }
