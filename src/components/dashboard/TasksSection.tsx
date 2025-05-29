@@ -190,7 +190,7 @@ export default function TasksSection({ className }: TasksSectionProps) {
           </div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">All Set! 🎉</h3>
           <p className="text-gray-600 mb-4">
-            You've completed all the recommended setup tasks. Your profile is ready for Bitcoin fundraising!
+            You&apos;ve completed all the recommended setup tasks. Your profile is ready for Bitcoin fundraising!
           </p>
           <Link href="/create">
             <Button className="bg-green-600 hover:bg-green-700">

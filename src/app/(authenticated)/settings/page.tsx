@@ -190,7 +190,7 @@ export default function SettingsPage() {
             <div>
               <h3 className="text-xl font-semibold text-gray-900 mb-4">Email Address</h3>
               <p className="text-gray-600 mb-6">
-                This is the email address associated with your account. You'll receive important notifications here.
+                This is the email address associated with your account. You&apos;ll receive important notifications here.
               </p>
               <form onSubmit={handleEmailUpdate} className="space-y-4">
                 <Input
@@ -204,7 +204,7 @@ export default function SettingsPage() {
                 />
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md">
                   <p className="text-sm text-blue-800">
-                    <strong>Note:</strong> When you update your email, we'll send a confirmation link to your new address.
+                    <strong>Note:</strong> When you update your email, we&apos;ll send a confirmation link to your new address.
                   </p>
                 </div>
                 <div className="flex justify-start">
