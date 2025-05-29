@@ -61,7 +61,7 @@ export default function DraftDebugInfo() {
               <ul className="list-disc list-inside">
                 {drafts.map((draft, index) => (
                   <li key={draft.id}>
-                    {index + 1}. "{draft.title}" (ID: {draft.id})
+                    {index + 1}. &ldquo;{draft.title}&rdquo; (ID: {draft.id})
                   </li>
                 ))}
               </ul>
@@ -71,7 +71,7 @@ export default function DraftDebugInfo() {
           {localDraft && (
             <div className="mt-3 p-2 bg-white rounded border">
               <p className="font-medium">Local Draft:</p>
-              <p>Title: "{localDraft.formData?.title || 'Untitled'}"</p>
+              <p>Title: &ldquo;{localDraft.formData?.title || 'Untitled'}&rdquo;</p>
               <p>Step: {localDraft.currentStep}</p>
               <p>Draft ID: {localDraft.draftId || 'None'}</p>
               <p>Last Saved: {localDraft.lastSaved?.toLocaleString() || 'Never'}</p>

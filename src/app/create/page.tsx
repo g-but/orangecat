@@ -45,7 +45,7 @@ const categories = [
 
 const steps = [
   { id: 1, name: 'Project Details', description: 'Tell us about your idea' },
-  { id: 2, name: 'Payment Setup', description: 'How you\'ll receive funds' },
+  { id: 2, name: 'Payment Setup', description: 'How you&apos;ll receive funds' },
   { id: 3, name: 'Review & Launch', description: 'Final touches' }
 ]
 
@@ -254,7 +254,7 @@ export default function CreatePage() {
     if (profileStrength >= 90) return 'Outstanding! Your campaign will inspire maximum trust and donations 🌟'
     if (profileStrength >= 75) return 'Excellent! Your campaign looks very professional and trustworthy 🚀'
     if (profileStrength >= 60) return 'Good progress! Add more details to boost supporter confidence 💪'
-    if (profileStrength >= 40) return 'You\'re on the right track! More details will help attract supporters 📈'
+    if (profileStrength >= 40) return 'You&apos;re on the right track! More details will help attract supporters 📈'
     return 'Great start! Keep adding details to build trust with potential supporters ✨'
   }
 
@@ -589,7 +589,7 @@ export default function CreatePage() {
                           <Bitcoin className="w-8 h-8 text-white" />
                         </div>
                         <h2 className="text-3xl font-bold text-gray-900 mb-2">Payment Setup</h2>
-                        <p className="text-gray-600 text-lg">Configure how you'll receive Bitcoin donations</p>
+                        <p className="text-gray-600 text-lg">Configure how you&apos;ll receive Bitcoin donations</p>
                       </div>
 
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">

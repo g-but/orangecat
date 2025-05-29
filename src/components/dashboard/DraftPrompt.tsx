@@ -90,9 +90,9 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
               <div className="space-y-2">
                 <p className="text-gray-700">
                   {isDraftLocal ? (
-                    <>You have unsaved progress: <span className="font-medium">"{primaryDraft.title}"</span></>
+                    <>You have unsaved progress: <span className="font-medium">&ldquo;{primaryDraft.title}&rdquo;</span></>
                   ) : (
-                    <>You have an incomplete campaign: <span className="font-medium">"{primaryDraft.title}"</span></>
+                    <>You have an incomplete campaign: <span className="font-medium">&ldquo;{primaryDraft.title}&rdquo;</span></>
                   )}
                 </p>
                 <div className="flex items-center gap-4 text-sm text-gray-600">

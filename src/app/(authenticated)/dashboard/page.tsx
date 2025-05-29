@@ -124,7 +124,7 @@ export default function DashboardPage() {
                 : `Draft: "${primaryDraft.title}"`,
             description: isDraftLocal 
               ? 'You have unsaved changes! Continue where you left off and publish your campaign to start receiving Bitcoin donations.'
-              : 'You\'re so close! Finish your campaign and start receiving Bitcoin donations.',
+              : 'You&apos;re so close! Finish your campaign and start receiving Bitcoin donations.',
             action: isDraftLocal ? 'Continue Editing' : 'Complete Campaign',
             href: '/create',
             icon: Target,
