@@ -60,7 +60,7 @@ export interface FeatureBanner {
 export interface DashboardConfig {
   title: string
   subtitle: string
-  featureBanner: FeatureBanner
+  featureBanner?: FeatureBanner // Optional for functional dashboards
   stats?: DashboardStats[] // Optional since we generate them dynamically
   itemsTitle: string
   activityTitle: string

@@ -136,7 +136,7 @@ export const INITIATIVES: Record<string, Initiative> = {
     description: 'Create and manage modern organizations with governance tools, asset management, and member coordination features powered by Bitcoin.',
     longDescription: 'Build structured organizations with clear governance, manage collective assets, coordinate member activities, and make decisions together using Bitcoin-powered voting mechanisms.',
     status: 'coming-soon',
-    timeline: 'Q1 2025',
+    timeline: 'Q1 2026',
     routes: {
       landing: '/organizations',
       demo: '/demo/organizations',
@@ -281,7 +281,7 @@ export const INITIATIVES: Record<string, Initiative> = {
     description: 'Organize and fundraise for conferences, parties, and community gatherings with Bitcoin-powered ticketing and coordination tools.',
     longDescription: 'Plan events, sell tickets with Bitcoin, manage attendee communications, coordinate logistics, and create memorable experiences for your Bitcoin community.',
     status: 'coming-soon',
-    timeline: 'Q2 2025',
+    timeline: 'Q2 2026',
     routes: {
       landing: '/events',
       demo: '/demo/events',
@@ -426,7 +426,7 @@ export const INITIATIVES: Record<string, Initiative> = {
     description: 'Launch and manage projects with transparent funding, milestone tracking, and collaborative tools powered by Bitcoin escrow.',
     longDescription: 'Create project proposals, track progress with milestones, manage collaborative work, and ensure transparent funding with Bitcoin escrow and automatic milestone releases.',
     status: 'coming-soon',
-    timeline: 'Q1 2025',
+    timeline: 'Q1 2026',
     routes: {
       landing: '/projects',
       demo: '/demo/projects',
@@ -571,7 +571,7 @@ export const INITIATIVES: Record<string, Initiative> = {
     description: 'Connect with friends, create circles, and build your Bitcoin community through networking and collaboration tools.',
     longDescription: 'Build meaningful connections within the Bitcoin community through friend networks, interest-based circles, skill sharing, and collaborative opportunities.',
     status: 'coming-soon',
-    timeline: 'Q2 2025',
+    timeline: 'Q2 2026',
     routes: {
       landing: '/people',
       demo: '/demo/people',
@@ -716,7 +716,7 @@ export const INITIATIVES: Record<string, Initiative> = {
     description: 'List, rent, and discover physical assets in your community with Bitcoin-powered marketplace and sharing economy features.',
     longDescription: 'Create an asset marketplace where community members can list, rent, and share physical items, creating a sustainable sharing economy powered by Bitcoin payments.',
     status: 'coming-soon',
-    timeline: 'Q2 2025',
+    timeline: 'Q2 2026',
     routes: {
       landing: '/assets',
       demo: '/demo/assets',

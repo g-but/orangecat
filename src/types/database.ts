@@ -158,6 +158,7 @@ export interface Profile {
   avatar_url?: string | null
   banner_url?: string | null
   bio: string | null
+  website?: string | null
   bitcoin_address: string | null
   lightning_address?: string | null
   created_at: string
@@ -170,7 +171,9 @@ export interface ProfileFormData {
   avatar_url?: string
   banner_url?: string
   bio?: string
+  website?: string
   bitcoin_address?: string
+  lightning_address?: string
 }
 
 export interface PasswordFormData {

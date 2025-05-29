@@ -3,7 +3,7 @@ import { DashboardCard } from '@/types/dashboard'
 export const dashboardCards: DashboardCard[] = [
   {
     title: 'Create New Page',
-    subtitle: 'Set up a new funding page',
+    subtitle: 'Set up a new fundraising page',
     description: 'Create a new page to start accepting Bitcoin donations',
     action: {
       label: 'Create Page',
@@ -14,7 +14,7 @@ export const dashboardCards: DashboardCard[] = [
   {
     title: 'Your Pages',
     subtitle: 'Manage existing pages',
-    description: 'View and manage your funding pages',
+    description: 'View and manage your fundraising pages',
     action: {
       label: 'View Pages',
       href: '/pages',
