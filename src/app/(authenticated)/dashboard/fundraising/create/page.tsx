@@ -59,7 +59,7 @@ export default function CreateCampaignPage() {
           <CardContent className="p-4 text-center">
             <Target className="h-6 w-6 text-orange-600 mx-auto mb-2" />
             <p className="text-sm font-medium text-gray-700">Set a clear goal</p>
-            <p className="text-xs text-gray-500">Be specific about what you're raising for</p>
+            <p className="text-xs text-gray-500">Be specific about what you are raising for</p>
           </CardContent>
         </Card>
         <Card className="border-green-200 bg-green-50">
