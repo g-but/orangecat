@@ -10,7 +10,7 @@ export function Card({ children, className, ...props }: CardProps) {
   return (
     <div
       className={cn(
-        'bg-white rounded-xl border border-orange-100 shadow-sm hover:border-orange-200 transition-all duration-200',
+        'bg-white rounded-xl border border-orange-100 shadow-sm hover:border-orange-200 hover:shadow-md transition-all duration-200 active:scale-[0.98] transform',
         className
       )}
       {...props}
@@ -21,19 +21,19 @@ export function Card({ children, className, ...props }: CardProps) {
 }
 
 export const CardHeader = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div {...p} className={cn('p-6', className)} />
+  <div {...p} className={cn('p-4 sm:p-6', className)} />
 )
 
 export const CardTitle = ({ className, ...p }: React.HTMLAttributes<HTMLHeadingElement>) => (
-  <h3 {...p} className={cn('text-lg font-semibold', className)} />
+  <h3 {...p} className={cn('text-base sm:text-lg font-semibold leading-tight', className)} />
 )
 
 export const CardDescription = ({ className, ...p }: React.HTMLAttributes<HTMLParagraphElement>) => (
-  <p {...p} className={cn('text-sm text-gray-500', className)} />
+  <p {...p} className={cn('text-sm text-gray-500 leading-relaxed', className)} />
 )
 
 export const CardContent = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div {...p} className={cn('p-6 pt-0', className)} />
+  <div {...p} className={cn('p-4 sm:p-6 pt-0', className)} />
 )
 
 // keep default export so existing imports still work

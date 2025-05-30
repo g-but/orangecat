@@ -38,13 +38,25 @@ export default function AuthButtons({ className = '' }: AuthButtonsProps) {
   }
 
   // User is not authenticated
+  // Check if this is a mobile nav (column layout)
+  const isMobileNav = className.includes('flex-col')
+
   return (
-    <div className={`flex items-center space-x-4 ${className}`}>
-      <Link href="/auth?mode=login">
-        <Button variant="ghost">Log in</Button>
+    <div className={`flex items-center ${isMobileNav ? 'flex-col space-y-3 w-full' : 'space-x-4'} ${className}`}>
+      <Link href="/auth?mode=login" className={isMobileNav ? 'w-full' : ''}>
+        <Button 
+          variant="ghost" 
+          className={`${isMobileNav ? 'w-full justify-center' : ''} min-h-[44px]`}
+        >
+          Log in
+        </Button>
       </Link>
-      <Link href="/auth?mode=register">
-        <Button>Get Started</Button>
+      <Link href="/auth?mode=register" className={isMobileNav ? 'w-full' : ''}>
+        <Button 
+          className={`${isMobileNav ? 'w-full justify-center' : ''} min-h-[44px]`}
+        >
+          Get Started
+        </Button>
       </Link>
     </div>
   )

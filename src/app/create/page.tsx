@@ -27,7 +27,8 @@ import {
   Star,
   Lightbulb,
   Users,
-  Heart
+  Heart,
+  AlertCircle
 } from 'lucide-react'
 import { createFundingPage, updateFundingPage, saveFundingPageDraft, updateFundingPageDraft } from '@/services/supabase/client'
 import { toast } from 'sonner'
@@ -277,96 +278,82 @@ export default function CreatePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-10">
-        <div className="max-w-5xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Create Campaign</h1>
-              <p className="text-gray-600 mt-1">Share your project with the world</p>
+      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center gap-4">
+              <h1 className="text-xl font-semibold text-gray-900">Create Campaign</h1>
+              <div className="hidden sm:flex items-center text-sm text-gray-500">
+                <span>Step {currentStep} of {steps.length}</span>
+                <span className="mx-2">•</span>
+                <span>{Math.round((currentStep / steps.length) * 100)}% complete</span>
+              </div>
             </div>
             
-            {/* Auto-save indicator */}
-            <div className="flex items-center space-x-4">
-              {lastSaved && (
-                <div className="flex items-center text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                  <Clock className="w-4 h-4 mr-1" />
-                  Saved {lastSaved.toLocaleTimeString()}
+            {/* Compact Progress Bar */}
+            <div className="flex items-center gap-4">
+              <div className="hidden md:flex items-center gap-2">
+                <div className="w-32 bg-gray-200 rounded-full h-1.5">
+                  <div 
+                    className="bg-teal-600 h-1.5 rounded-full transition-all duration-300"
+                    style={{ width: `${(currentStep / steps.length) * 100}%` }}
+                  />
                 </div>
-              )}
+                <span className="text-xs text-gray-500 w-8">{Math.round((currentStep / steps.length) * 100)}%</span>
+              </div>
               
-              {savingDraft && (
-                <div className="flex items-center text-sm text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                  <Loader2 className="w-4 h-4 mr-1 animate-spin" />
-                  Saving...
+              {/* Auto-save indicator */}
+              {lastSaved && (
+                <div className="flex items-center text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
+                  <div className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></div>
+                  Saved
                 </div>
               )}
             </div>
           </div>
-
-          {/* Step indicators */}
-          <div className="flex items-center justify-center mt-8 space-x-8">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div className="flex items-center">
-                  <div className={`
-                    w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300
-                    ${currentStep >= step.id 
-                      ? 'bg-tiffany-600 text-white shadow-lg shadow-tiffany-600/25' 
-                      : 'bg-gray-200 text-gray-500'
-                    }
-                  `}>
-                    {currentStep > step.id ? (
-                      <CheckCircle className="w-5 h-5" />
-                    ) : (
-                      step.id
-                    )}
-                  </div>
-                  <div className="ml-3 text-left">
-                    <p className={`text-sm font-medium ${
-                      currentStep >= step.id ? 'text-gray-900' : 'text-gray-500'
-                    }`}>
-                      {step.name}
-                    </p>
-                    <p className="text-xs text-gray-500">{step.description}</p>
-                  </div>
-                </div>
-                {index < steps.length - 1 && (
-                  <div className={`w-16 h-0.5 mx-6 transition-all duration-300 ${
-                    currentStep > step.id ? 'bg-tiffany-600' : 'bg-gray-200'
-                  }`} />
-                )}
-              </div>
-            ))}
+          
+          {/* Mobile Progress */}
+          <div className="sm:hidden pb-3">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-600">Step {currentStep} of {steps.length}</span>
+              <span className="text-xs text-gray-500">{Math.round((currentStep / steps.length) * 100)}% complete</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-1.5">
+              <div 
+                className="bg-teal-600 h-1.5 rounded-full transition-all duration-300"
+                style={{ width: `${(currentStep / steps.length) * 100}%` }}
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="max-w-5xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-8">
           
           {/* Sidebar - Profile Strength */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-32 space-y-6">
+          <div className="lg:col-span-1 order-2 lg:order-1">
+            <div className="lg:sticky lg:top-20 space-y-4 sm:space-y-6">
               
               {/* Profile Strength Card */}
               <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-lg">
-                <CardContent className="p-6">
+                <CardContent className="p-4 sm:p-6">
                   <div className="text-center">
-                    <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br ${
+                    <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-full bg-gradient-to-br ${
                       strengthInfo.color === 'emerald' ? 'from-emerald-400 to-emerald-600' :
                       strengthInfo.color === 'green' ? 'from-green-400 to-green-600' :
                       strengthInfo.color === 'blue' ? 'from-blue-400 to-blue-600' :
                       strengthInfo.color === 'yellow' ? 'from-yellow-400 to-yellow-600' :
                       'from-gray-400 to-gray-600'
                     } flex items-center justify-center`}>
-                      <strengthInfo.icon className="w-8 h-8 text-white" />
+                      <strengthInfo.icon className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                     </div>
                     
-                    <h3 className="font-semibold text-gray-900 mb-2">Campaign Strength</h3>
+                    <h3 className="font-semibold text-gray-900 mb-2 text-sm sm:text-base">Campaign Strength</h3>
                     
-                    <div className="mb-4">
-                      <div className={`text-3xl font-bold mb-1 ${
+                    <div className="mb-3 sm:mb-4">
+                      <div className={`text-2xl sm:text-3xl font-bold mb-1 ${
                         strengthInfo.color === 'emerald' ? 'text-emerald-600' :
                         strengthInfo.color === 'green' ? 'text-green-600' :
                         strengthInfo.color === 'blue' ? 'text-blue-600' :
@@ -386,9 +373,9 @@ export default function CreatePage() {
                       </div>
                     </div>
                     
-                    {/* Circular progress */}
-                    <div className="relative w-20 h-20 mx-auto mb-4">
-                      <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
+                    {/* Circular progress - show simplified version on mobile */}
+                    <div className="relative w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4">
+                      <svg className="w-16 h-16 sm:w-20 sm:h-20 transform -rotate-90" viewBox="0 0 36 36">
                         <path
                           d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
                           fill="none"
@@ -412,7 +399,7 @@ export default function CreatePage() {
                       </svg>
                     </div>
                     
-                    <p className="text-xs text-gray-600 mb-4">
+                    <p className="text-xs text-gray-600 mb-4 hidden sm:block">
                       {getStrengthMessage()}
                     </p>
                     
@@ -426,8 +413,8 @@ export default function CreatePage() {
                 </CardContent>
               </Card>
 
-              {/* Quick Tips */}
-              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-lg">
+              {/* Quick Tips - Hide on mobile to save space */}
+              <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-lg hidden sm:block">
                 <CardContent className="p-6">
                   <div className="flex items-center mb-3">
                     <Lightbulb className="w-5 h-5 text-blue-600 mr-2" />
@@ -450,8 +437,8 @@ export default function CreatePage() {
                 </CardContent>
               </Card>
 
-              {/* Success Stats */}
-              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-lg">
+              {/* Success Stats - Hide on mobile to save space */}
+              <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-0 shadow-lg hidden lg:block">
                 <CardContent className="p-6">
                   <div className="flex items-center mb-3">
                     <Users className="w-5 h-5 text-green-600 mr-2" />
@@ -477,23 +464,36 @@ export default function CreatePage() {
           </div>
 
           {/* Main Form */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 order-1 lg:order-2">
             <Card className="bg-white/80 backdrop-blur-sm border-0 shadow-xl">
-              <CardContent className="p-8">
-                <form onSubmit={handleSubmit} className="space-y-8">
-                  
+              <CardContent className="p-4 sm:p-6 lg:p-8">
+                <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+                  {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                          <AlertCircle className="w-5 h-5 text-red-400" />
+                        </div>
+                        <div className="ml-3">
+                          <h3 className="text-sm font-medium text-red-800">Error</h3>
+                          <div className="mt-1 text-sm text-red-700">{error}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Step 1: Project Details */}
                   {currentStep === 1 && (
-                    <div className="space-y-8">
+                    <div className="space-y-6 sm:space-y-8">
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-tiffany-400 to-tiffany-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-tiffany-600/25">
-                          <Sparkles className="w-8 h-8 text-white" />
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-tiffany-400 to-tiffany-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg shadow-tiffany-600/25">
+                          <Sparkles className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                         </div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Tell us about your project</h2>
-                        <p className="text-gray-600 text-lg">Share your vision and inspire supporters</p>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Project Details</h2>
+                        <p className="text-gray-600 text-base sm:text-lg">Share your vision and inspire supporters</p>
                       </div>
 
-                      <div className="space-y-8">
+                      <div className="space-y-6 sm:space-y-8">
                         <div>
                           <Input
                             id="title"
@@ -504,18 +504,18 @@ export default function CreatePage() {
                             onChange={handleChange}
                             placeholder="Enter your project title..."
                             required
-                            className="text-lg py-4 px-5 transition-all duration-200 focus:scale-[1.01]"
+                            className="text-base sm:text-lg py-3 sm:py-4 px-4 sm:px-5 transition-all duration-200 focus:scale-[1.01] min-h-[48px]"
                           />
-                          <div className="flex justify-between mt-2">
+                          <div className="flex flex-col sm:flex-row sm:justify-between mt-2 gap-1 sm:gap-0">
                             <p className="text-sm text-gray-500">Make it clear and compelling</p>
-                            <span className={`text-xs ${formData.title.length > 80 ? 'text-orange-500' : 'text-gray-400'}`}>
+                            <span className={`text-xs self-start sm:self-auto ${formData.title.length > 80 ? 'text-orange-500' : 'text-gray-400'}`}>
                               {formData.title.length}/100
                             </span>
                           </div>
                         </div>
 
                         <div>
-                          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-3">
+                          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                             Project Description
                           </label>
                           <textarea
@@ -525,53 +525,53 @@ export default function CreatePage() {
                             onChange={handleChange}
                             rows={6}
                             placeholder="Describe your project, its goals, and why it matters. Tell your story with passion and authenticity..."
-                            className="w-full px-5 py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-tiffany-500 focus:border-tiffany-500 resize-none transition-all duration-200 focus:scale-[1.01]"
+                            className="w-full px-4 sm:px-5 py-3 sm:py-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-tiffany-500 focus:border-tiffany-500 resize-none transition-all duration-200 focus:scale-[1.01] text-base min-h-[120px] touch-manipulation"
                           />
-                          <div className="flex justify-between mt-2">
+                          <div className="flex flex-col sm:flex-row sm:justify-between mt-2 gap-1 sm:gap-0">
                             <p className="text-sm text-gray-500">
                               {formData.description.length < 50 ? 'Tell your story and connect with supporters' : 
                                formData.description.length < 100 ? 'Great start! Add more details for better impact' :
                                'Excellent! Detailed descriptions build trust'}
                             </p>
-                            <span className={`text-xs ${formData.description.length > 900 ? 'text-orange-500' : 'text-gray-400'}`}>
+                            <span className={`text-xs self-start sm:self-auto ${formData.description.length > 900 ? 'text-orange-500' : 'text-gray-400'}`}>
                               {formData.description.length}/1000
                             </span>
                           </div>
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-4">
+                          <label className="block text-sm font-medium text-gray-700 mb-3 sm:mb-4">
                             Categories
                           </label>
-                          <p className="text-sm text-gray-500 mb-6">
+                          <p className="text-sm text-gray-500 mb-4 sm:mb-6">
                             Choose categories that best describe your project
                             {formData.categories.length > 0 && (
-                              <span className="ml-2 px-3 py-1 bg-tiffany-100 text-tiffany-700 rounded-full text-xs font-medium">
+                              <span className="ml-2 px-2 sm:px-3 py-1 bg-tiffany-100 text-tiffany-700 rounded-full text-xs font-medium">
                                 {formData.categories.length} selected
                               </span>
                             )}
                           </p>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                             {categories.map((category) => (
                               <button
                                 key={category.value}
                                 type="button"
                                 onClick={() => handleCategoryToggle(category.value)}
-                                className={`relative p-5 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg ${
+                                className={`relative p-3 sm:p-5 rounded-xl border-2 transition-all duration-200 hover:scale-105 hover:shadow-lg min-h-[80px] sm:min-h-[100px] touch-manipulation ${
                                   formData.categories.includes(category.value)
                                     ? 'border-tiffany-500 bg-tiffany-50 shadow-lg shadow-tiffany-500/20'
                                     : 'border-gray-200 hover:border-gray-300 bg-white'
                                 }`}
                               >
                                 {formData.categories.includes(category.value) && (
-                                  <div className="absolute -top-2 -right-2 w-6 h-6 bg-tiffany-500 text-white rounded-full flex items-center justify-center shadow-lg">
-                                    <Check className="w-3 h-3" />
+                                  <div className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-tiffany-500 text-white rounded-full flex items-center justify-center shadow-lg">
+                                    <Check className="w-2 h-2 sm:w-3 sm:h-3" />
                                   </div>
                                 )}
                                 <div className="text-center">
-                                  <div className="text-3xl mb-3">{category.icon}</div>
-                                  <h3 className="font-medium text-sm text-gray-900 mb-1">{category.label}</h3>
-                                  <p className="text-xs text-gray-500">{category.description}</p>
+                                  <div className="text-2xl sm:text-3xl mb-2 sm:mb-3">{category.icon}</div>
+                                  <h3 className="font-medium text-xs sm:text-sm text-gray-900 mb-1">{category.label}</h3>
+                                  <p className="text-xs text-gray-500 leading-tight">{category.description}</p>
                                 </div>
                               </button>
                             ))}
@@ -583,21 +583,21 @@ export default function CreatePage() {
 
                   {/* Step 2: Payment Setup */}
                   {currentStep === 2 && (
-                    <div className="space-y-8">
+                    <div className="space-y-6 sm:space-y-8">
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-orange-600/25">
-                          <Bitcoin className="w-8 h-8 text-white" />
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-400 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg shadow-orange-600/25">
+                          <Bitcoin className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                         </div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Payment Setup</h2>
-                        <p className="text-gray-600 text-lg">Configure how you&apos;ll receive Bitcoin donations</p>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Payment Setup</h2>
+                        <p className="text-gray-600 text-base sm:text-lg">Configure how you&apos;ll receive Bitcoin donations</p>
                       </div>
 
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-6">
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl p-4 sm:p-6">
                         <div className="flex">
-                          <Info className="w-6 h-6 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
+                          <Info className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
                           <div>
-                            <h3 className="font-medium text-blue-900 mb-2">Payment Methods</h3>
-                            <p className="text-sm text-blue-700">
+                            <h3 className="font-medium text-blue-900 mb-2 text-sm sm:text-base">Payment Methods</h3>
+                            <p className="text-sm text-blue-700 leading-relaxed">
                               Both payment methods are optional and can be added later. Bitcoin addresses work globally, 
                               while Lightning addresses enable instant micro-payments and tips.
                             </p>
@@ -605,13 +605,13 @@ export default function CreatePage() {
                         </div>
                       </div>
 
-                      <div className="grid md:grid-cols-2 gap-8">
-                        <div className="space-y-4">
-                          <div className="flex items-center mb-4">
-                            <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-                              <Bitcoin className="w-5 h-5 text-orange-600" />
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                        <div className="space-y-3 sm:space-y-4">
+                          <div className="flex items-center mb-3 sm:mb-4">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                              <Bitcoin className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1">
                               <label className="text-sm font-medium text-gray-700">Bitcoin Address</label>
                               <p className="text-xs text-gray-500">For larger donations and long-term storage</p>
                             </div>
@@ -623,16 +623,16 @@ export default function CreatePage() {
                             value={formData.bitcoin_address}
                             onChange={handleChange}
                             placeholder="bc1q... or 1... or 3..."
-                            className="font-mono text-sm py-3 px-4"
+                            className="font-mono text-sm py-3 px-4 min-h-[48px] break-all"
                           />
                         </div>
 
-                        <div className="space-y-4">
-                          <div className="flex items-center mb-4">
-                            <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3">
-                              <Zap className="w-5 h-5 text-yellow-600" />
+                        <div className="space-y-3 sm:space-y-4">
+                          <div className="flex items-center mb-3 sm:mb-4">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-yellow-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1">
                               <label className="text-sm font-medium text-gray-700">Lightning Address</label>
                               <p className="text-xs text-gray-500">For instant payments and tips</p>
                             </div>
@@ -644,7 +644,7 @@ export default function CreatePage() {
                             value={formData.lightning_address}
                             onChange={handleChange}
                             placeholder="you@wallet.com"
-                            className="font-mono text-sm py-3 px-4"
+                            className="font-mono text-sm py-3 px-4 min-h-[48px]"
                           />
                         </div>
                       </div>
@@ -653,22 +653,22 @@ export default function CreatePage() {
 
                   {/* Step 3: Review & Launch */}
                   {currentStep === 3 && (
-                    <div className="space-y-8">
+                    <div className="space-y-6 sm:space-y-8">
                       <div className="text-center">
-                        <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-600/25">
-                          <Target className="w-8 h-8 text-white" />
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4 shadow-lg shadow-green-600/25">
+                          <Target className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
                         </div>
-                        <h2 className="text-3xl font-bold text-gray-900 mb-2">Final Details</h2>
-                        <p className="text-gray-600 text-lg">Add finishing touches to your campaign</p>
+                        <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Final Details</h2>
+                        <p className="text-gray-600 text-base sm:text-lg">Add finishing touches to your campaign</p>
                       </div>
 
-                      <div className="space-y-8">
+                      <div className="space-y-6 sm:space-y-8">
                         <div>
-                          <div className="flex items-center mb-4">
-                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                              <Globe className="w-5 h-5 text-blue-600" />
+                          <div className="flex items-center mb-3 sm:mb-4">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3 flex-shrink-0">
+                              <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                             </div>
-                            <div>
+                            <div className="min-w-0 flex-1">
                               <label className="text-sm font-medium text-gray-700">Website or Social Media</label>
                               <p className="text-xs text-gray-500">Help supporters learn more about you</p>
                             </div>
@@ -680,13 +680,13 @@ export default function CreatePage() {
                             value={formData.website_url}
                             onChange={handleChange}
                             placeholder="https://your-website.com"
-                            className="py-3 px-4"
+                            className="py-3 px-4 min-h-[48px]"
                           />
                         </div>
 
-                        <div className="grid grid-cols-3 gap-6">
-                          <div className="col-span-2">
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                          <div className="lg:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                               Funding Goal (Optional)
                             </label>
                             <Input
@@ -696,81 +696,40 @@ export default function CreatePage() {
                               value={formData.goal_amount}
                               onChange={handleChange}
                               placeholder="100000"
-                              className="py-3 px-4"
+                              className="py-3 px-4 min-h-[48px]"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-3">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                               Currency
                             </label>
                             <select
-                              id="currency"
                               name="currency"
                               value={formData.currency}
                               onChange={handleChange}
-                              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-tiffany-500 focus:border-tiffany-500 transition-all duration-200"
+                              className="w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-tiffany-500 focus:border-tiffany-500 min-h-[48px] touch-manipulation"
                             >
-                              <option value="SATS">SATS</option>
-                              <option value="BTC">BTC</option>
+                              <option value="SATS">Satoshis</option>
+                              <option value="BTC">Bitcoin</option>
                             </select>
-                          </div>
-                        </div>
-
-                        {/* Campaign Preview */}
-                        <div className="bg-gradient-to-br from-gray-50 to-blue-50/50 rounded-xl p-8 border border-gray-200">
-                          <div className="flex items-center mb-6">
-                            <Eye className="w-6 h-6 text-gray-500 mr-3" />
-                            <h3 className="text-lg font-semibold text-gray-900">Campaign Preview</h3>
-                          </div>
-                          <div className="bg-white rounded-xl p-6 border shadow-sm">
-                            <h4 className="font-bold text-xl text-gray-900 mb-3">
-                              {formData.title || 'Your Project Title'}
-                            </h4>
-                            <p className="text-gray-600 mb-4 leading-relaxed">
-                              {formData.description || 'Your project description will appear here...'}
-                            </p>
-                            <div className="flex items-center space-x-3">
-                              {formData.categories.map((cat) => {
-                                const category = categories.find(c => c.value === cat)
-                                return category ? (
-                                  <span key={cat} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium">
-                                    {category.icon} {category.label}
-                                  </span>
-                                ) : null
-                              })}
-                            </div>
-                            {formData.goal_amount && (
-                              <div className="mt-4 pt-4 border-t border-gray-100">
-                                <p className="text-sm text-gray-500">Funding Goal</p>
-                                <p className="text-lg font-semibold text-gray-900">
-                                  {Number(formData.goal_amount).toLocaleString()} {formData.currency}
-                                </p>
-                              </div>
-                            )}
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {error && (
-                    <div className="rounded-xl bg-red-50 border border-red-200 p-4">
-                      <p className="text-sm text-red-700">{error}</p>
-                    </div>
-                  )}
-
                   {/* Navigation */}
-                  <div className="flex justify-between items-center pt-8 border-t border-gray-200">
-                    <div className="flex space-x-3">
+                  <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center pt-6 sm:pt-8 border-t border-gray-200 gap-4 sm:gap-0">
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                       {currentStep > 1 && (
                         <Button
                           type="button"
                           variant="outline"
                           onClick={prevStep}
-                          className="px-6 py-3"
+                          className="px-4 sm:px-6 py-3 min-h-[48px] touch-manipulation"
                         >
-                          <ArrowLeft className="w-4 h-4 mr-2" />
-                          Back
+                          <ArrowLeft className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <span>Back</span>
                         </Button>
                       )}
                       
@@ -778,29 +737,29 @@ export default function CreatePage() {
                         type="button"
                         variant="outline"
                         onClick={() => router.push('/dashboard')}
-                        className="px-6 py-3"
+                        className="px-4 sm:px-6 py-3 min-h-[48px] touch-manipulation"
                       >
                         Cancel
                       </Button>
                     </div>
 
-                    <div className="flex space-x-3">
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={() => saveDraft(true)}
                         disabled={savingDraft || !formData.title.trim()}
-                        className="px-6 py-3"
+                        className="px-4 sm:px-6 py-3 min-h-[48px] touch-manipulation"
                       >
                         {savingDraft ? (
                           <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Saving...
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin flex-shrink-0" />
+                            <span>Saving...</span>
                           </>
                         ) : (
                           <>
-                            <Save className="w-4 h-4 mr-2" />
-                            Save Draft
+                            <Save className="w-4 h-4 mr-2 flex-shrink-0" />
+                            <span>Save Draft</span>
                           </>
                         )}
                       </Button>
@@ -813,26 +772,26 @@ export default function CreatePage() {
                             (currentStep === 1 && !canProceedToStep2) ||
                             (currentStep === 2 && !canProceedToStep3)
                           }
-                          className="bg-tiffany-600 hover:bg-tiffany-700 px-8 py-3 shadow-lg shadow-tiffany-600/25"
+                          className="bg-tiffany-600 hover:bg-tiffany-700 px-6 sm:px-8 py-3 shadow-lg shadow-tiffany-600/25 min-h-[48px] touch-manipulation"
                         >
-                          Continue
-                          <ArrowRight className="w-4 h-4 ml-2" />
+                          <span>Continue</span>
+                          <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
                         </Button>
                       ) : (
                         <Button
                           type="submit"
                           disabled={loading}
-                          className="bg-green-600 hover:bg-green-700 px-8 py-3 shadow-lg shadow-green-600/25"
+                          className="bg-green-600 hover:bg-green-700 px-6 sm:px-8 py-3 shadow-lg shadow-green-600/25 min-h-[48px] touch-manipulation"
                         >
                           {loading ? (
                             <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Creating...
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin flex-shrink-0" />
+                              <span>Creating...</span>
                             </>
                           ) : (
                             <>
-                              Launch Campaign
-                              <Sparkles className="w-4 h-4 ml-2" />
+                              <span>Launch Campaign</span>
+                              <Sparkles className="w-4 h-4 ml-2 flex-shrink-0" />
                             </>
                           )}
                         </Button>

@@ -213,17 +213,17 @@ export default function PublicProfilePage() {
           <div className="lg:col-span-2 space-y-6">
             {/* Name and Basic Info */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
-              <CardContent className="p-8">
+              <CardContent className="p-6">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                   <div>
-                    <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
                       {profile.display_name || 'User'}
                     </h1>
-                    <p className="text-xl text-orange-600 font-medium mb-4">
+                    <p className="text-lg text-orange-600 font-medium mb-4">
                       @{profile.username}
                     </p>
                     {profile.bio && (
-                      <p className="text-gray-600 text-lg leading-relaxed max-w-2xl">
+                      <p className="text-gray-600 text-base leading-relaxed max-w-2xl">
                         {profile.bio}
                       </p>
                     )}
@@ -242,20 +242,20 @@ export default function PublicProfilePage() {
             {profile.bitcoin_address && (
               <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-3 text-2xl">
-                    <Bitcoin className="w-8 h-8 text-orange-600" />
+                  <CardTitle className="flex items-center gap-3 text-xl">
+                    <Bitcoin className="w-6 h-6 text-orange-600" />
                     Bitcoin Wallet
                   </CardTitle>
-                  <CardDescription className="text-lg">
+                  <CardDescription className="text-base">
                     On-chain activity and balance information
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="p-8">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Balance */}
-                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-2xl">
+                    <div className="bg-gradient-to-br from-orange-50 to-orange-100 p-4 rounded-2xl">
                       <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold text-gray-900">Current Balance</h3>
+                        <h3 className="text-base font-semibold text-gray-900">Current Balance</h3>
                         <Button
                           variant="ghost"
                           size="sm"

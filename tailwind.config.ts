@@ -50,6 +50,29 @@ const config: Config = {
         sans: ['var(--font-inter)'],
         display: ['var(--font-playfair-display)'],
       },
+      scale: {
+        '98': '0.98',
+        '102': '1.02',
+      },
+      animation: {
+        'slide-in-right': 'slideInFromRight 0.4s ease-out',
+        'fade-in-up': 'fadeInUp 0.3s ease-out',
+        'scale-in': 'scaleIn 0.2s ease-out',
+      },
+      keyframes: {
+        slideInFromRight: {
+          '0%': { opacity: '0', transform: 'translateX(20px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+        fadeInUp: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        scaleIn: {
+          '0%': { opacity: '0', transform: 'scale(0.95)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+      },
     },
   },
   plugins: [],

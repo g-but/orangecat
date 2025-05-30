@@ -19,8 +19,6 @@ interface NavigationConfig {
   }
   user: NavigationItem[]
   auth: NavigationItem[]
-  dashboard: NavigationItem[]
-  about: NavigationItem[]
 }
 
 export const navigation: NavigationConfig = {
@@ -70,25 +68,5 @@ export const navigation: NavigationConfig = {
   auth: [
     { name: 'Sign In', href: '/auth?mode=login' },
     { name: 'Get Started', href: '/auth?mode=register' },
-  ],
-  dashboard: [
-    { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
-  ],
-  about: [
-    { 
-      name: 'About Us', 
-      href: '/about',
-      description: 'Learn about our mission and vision'
-    },
-    { 
-      name: 'Documentation', 
-      href: '/docs',
-      description: 'Technical documentation and guides'
-    },
-    { 
-      name: 'Blog', 
-      href: '/blog',
-      description: 'Latest updates and insights'
-    },
   ]
 } 

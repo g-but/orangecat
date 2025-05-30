@@ -152,39 +152,40 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-teal-50">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center">
             <Button
               variant="ghost"
               onClick={() => router.push('/dashboard')}
-              className="mr-4 p-2"
+              className="mr-3 p-2 min-h-[44px] min-w-[44px] touch-manipulation"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Edit Profile</h1>
-              <p className="text-gray-600 mt-1">Update your public profile information</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Edit Profile</h1>
+              <p className="text-gray-600 mt-1 text-sm">Update your public profile information</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500 to-teal-500 px-6 py-6">
+          <div className="bg-gradient-to-r from-orange-500 to-teal-500 px-4 sm:px-6 py-4">
             <div className="flex items-center text-white">
-              <User className="w-8 h-8 mr-4" />
+              <User className="w-6 h-6 mr-3 flex-shrink-0" />
               <div>
-                <h2 className="text-2xl font-bold">Your Profile</h2>
+                <h2 className="text-lg sm:text-xl font-bold">Your Profile</h2>
                 <p className="text-orange-100 text-sm mt-1">This information will be displayed publicly</p>
               </div>
             </div>
           </div>
 
-          <div className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-8">
+          <div className="p-4 sm:p-6">
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Avatar Upload */}
-              <div className="flex items-center space-x-6 pb-6 border-b border-gray-100">
+              <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 pb-6 border-b border-gray-100">
                 <div className="relative">
                   {profileData.avatar_url ? (
                     <Image
@@ -198,43 +199,68 @@ export default function ProfilePage() {
                     <DefaultAvatar size={120} className="border-4 border-white shadow-lg" />
                   )}
                   
-                  <label
-                    htmlFor="avatar-upload"
-                    className="absolute bottom-2 right-2 bg-white rounded-full p-3 shadow-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                  >
-                    {isUploadingAvatar ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-500"></div>
-                    ) : (
-                      <Camera className="w-5 h-5 text-gray-600" />
-                    )}
+                  {/* Upload overlay */}
+                  <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 hover:opacity-100 transition-opacity cursor-pointer touch-manipulation">
+                    <Camera className="w-8 h-8 text-white" />
                     <input
-                      id="avatar-upload"
                       type="file"
                       accept="image/*"
-                      className="hidden"
                       onChange={handleAvatarUpload}
-                      disabled={isSubmittingProfile || isUploadingAvatar}
+                      className="hidden"
+                      disabled={isUploadingAvatar}
                     />
                   </label>
+                  
+                  {isUploadingAvatar && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
+                      <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full"></div>
+                    </div>
+                  )}
                 </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-900">Profile Photo</h3>
-                  <p className="text-gray-600 mt-1">
-                    Upload a photo to help people recognize you
+                
+                <div className="text-center sm:text-left">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Profile Picture</h3>
+                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
+                    Click on your avatar to upload a new picture. JPG, PNG, or GIF up to 10MB.
                   </p>
-                  <p className="text-sm text-gray-500 mt-2">
-                    JPG, PNG, or GIF. Maximum size: 10MB.
-                  </p>
+                  <label className="inline-block">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isUploadingAvatar}
+                      className="min-h-[44px] px-4 sm:px-6 touch-manipulation"
+                    >
+                      {isUploadingAvatar ? (
+                        <>
+                          <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full mr-2"></div>
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Camera className="w-4 h-4 mr-2" />
+                          Choose File
+                        </>
+                      )}
+                    </Button>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                      disabled={isUploadingAvatar}
+                    />
+                  </label>
                 </div>
               </div>
 
               {/* Basic Info */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              <div className="space-y-4 sm:space-y-6">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Basic Information
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   <Input
                     label="Username"
                     name="username"
@@ -242,6 +268,7 @@ export default function ProfilePage() {
                     onChange={handleInputChange}
                     placeholder="your_username"
                     icon={User}
+                    className="min-h-[48px] text-base"
                   />
                   <Input
                     label="Display Name"
@@ -250,6 +277,7 @@ export default function ProfilePage() {
                     onChange={handleInputChange}
                     placeholder="Your Full Name"
                     icon={User}
+                    className="min-h-[48px] text-base"
                   />
                 </div>
 
@@ -260,6 +288,7 @@ export default function ProfilePage() {
                   onChange={handleInputChange}
                   placeholder="Tell people about yourself, your interests, or what you're working on..."
                   rows={4}
+                  className="min-h-[120px] text-base resize-none"
                 />
 
                 <Input
@@ -269,23 +298,24 @@ export default function ProfilePage() {
                   onChange={handleInputChange}
                   placeholder="https://yourwebsite.com"
                   icon={Globe}
+                  className="min-h-[48px] text-base"
                 />
               </div>
 
               {/* Bitcoin & Lightning */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
+              <div className="space-y-4 sm:space-y-6">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
                   Bitcoin & Lightning
                 </h3>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   <Input
                     label="Bitcoin Address"
                     name="bitcoin_address"
                     value={profileData.bitcoin_address}
                     onChange={handleInputChange}
                     placeholder="bc1q..."
-                    className="font-mono text-sm"
+                    className="font-mono text-sm sm:text-base min-h-[48px] break-all"
                     icon={Bitcoin}
                   />
                   <Input
@@ -295,32 +325,41 @@ export default function ProfilePage() {
                     onChange={handleInputChange}
                     placeholder="you@getalby.com"
                     icon={Zap}
+                    className="min-h-[48px] text-base"
                   />
                 </div>
                 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                  <p className="text-sm sm:text-base text-blue-800 leading-relaxed">
                     <strong>Tip:</strong> Adding your Bitcoin and Lightning addresses allows people to send you tips and donations directly.
                   </p>
                 </div>
               </div>
 
               {/* Submit Button */}
-              <div className="flex justify-end pt-6 border-t border-gray-100">
+              <div className="flex flex-col sm:flex-row justify-end pt-4 sm:pt-6 border-t border-gray-100 gap-3 sm:gap-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push('/dashboard')}
+                  className="w-full sm:w-auto min-h-[48px] px-6 sm:px-8 py-3 text-base font-medium touch-manipulation"
+                >
+                  Cancel
+                </Button>
                 <Button
                   type="submit"
                   disabled={isSubmittingProfile || isUploadingAvatar}
-                  className="bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white px-8 py-3 text-lg font-semibold"
+                  className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold min-h-[48px] touch-manipulation"
                 >
                   {isSubmittingProfile ? (
                     <>
-                      <div className="w-5 h-5 animate-spin rounded-full border-2 border-white border-t-transparent mr-2" />
-                      Saving...
+                      <div className="w-5 h-5 animate-spin rounded-full border-2 border-white border-t-transparent mr-2 flex-shrink-0" />
+                      <span>Saving...</span>
                     </>
                   ) : (
                     <>
-                      <Save className="w-5 h-5 mr-2" />
-                      Save Profile
+                      <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
+                      <span>Save Profile</span>
                     </>
                   )}
                 </Button>
