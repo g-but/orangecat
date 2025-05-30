@@ -15,6 +15,9 @@ export async function middleware(request: NextRequest) {
     },
   })
 
+  // Add pathname to headers so layout can access it
+  response.headers.set('x-pathname', request.nextUrl.pathname)
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,

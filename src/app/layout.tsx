@@ -31,34 +31,40 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   const headersList = headers()
+  
+  // Get current pathname to determine if we're on an authenticated route
+  const pathname = headersList.get('x-pathname') || ''
+  const isAuthenticatedRoute = pathname.startsWith('/dashboard') || 
+                              pathname.startsWith('/profile') || 
+                              pathname.startsWith('/settings') ||
+                              pathname.startsWith('/assets') ||
+                              pathname.startsWith('/people') ||
+                              pathname.startsWith('/events') ||
+                              pathname.startsWith('/organizations') ||
+                              pathname.startsWith('/projects') ||
+                              pathname.startsWith('/fundraising')
+
   const supabase = createServerClient()
+  
+  // Get session and user
   const { data: { session } } = await supabase.auth.getSession()
   const user = session?.user ?? null
+
+  // Try to get profile data if user exists
   let profile = null
-
-  // Debug logs for SSR state (before profile fetch)
-  // console.log('SSR session before profile fetch:', session)
-  // console.log('SSR user before profile fetch:', user)
-
   if (user) {
     try {
-      const { data: profileData, error: profileError } = await supabase
+      const { data: profileData, error } = await supabase
         .from('profiles')
-        .select('*') // Select only necessary fields if possible
+        .select('*')
         .eq('id', user.id)
         .single()
-
-      if (profileError) {
-        console.error('SSR Profile Fetch Error:', profileError.message)
-        // Decide how to handle: profile remains null, or throw error?
-        // For now, let profile remain null and log the error.
-        profile = null 
-      } else {
-        profile = profileData ?? null
+      
+      if (!error && profileData) {
+        profile = profileData
       }
-    } catch (error: any) {
-      console.error('SSR Profile Fetch Exception:', error.message)
-      profile = null // Ensure profile is null on exception
+    } catch (error) {
+      console.log('Profile fetch error in RootLayout:', error)
     }
   }
 
@@ -71,9 +77,10 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`} suppressHydrationWarning>
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
         {/* Auth cleanup script removed to fix MIME errors */}
       </head>
-      <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white" suppressHydrationWarning>
+      <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white safe-area-padding" suppressHydrationWarning>
         <AuthProvider user={user} session={session} profile={profile}>
           <GlobalAuthErrorBanner />
           <ClientErrorBoundary>
@@ -81,15 +88,23 @@ export default async function RootLayout({
               {/* Global loading overlay based on auth store */}
               <GlobalAuthLoader />
               <div className="min-h-screen flex flex-col">
-                <Header />
-                <main className="flex-grow pt-20">
+                {/* Only show main header on public routes */}
+                {!isAuthenticatedRoute && <Header />}
+                <main className={`flex-grow ${!isAuthenticatedRoute ? 'pt-16 sm:pt-20' : ''}`}>
                   {children}
                 </main>
                 <Footer />
               </div>
             </Suspense>
           </ClientErrorBoundary>
-          <Toaster position="top-right" />
+          <Toaster 
+            position="top-right" 
+            toastOptions={{
+              style: {
+                marginTop: '4rem',
+              },
+            }}
+          />
           <Analytics />
           <SpeedInsights />
         </AuthProvider>

@@ -2,45 +2,110 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile Menu Animations */
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @layer base {
   html {
     @apply scroll-smooth;
+    /* Prevent zoom on iOS when focusing inputs */
+    -webkit-text-size-adjust: 100%;
+    /* Prevent horizontal scrolling on mobile */
+    overflow-x: hidden;
   }
   
   body {
     @apply bg-gradient-to-b from-tiffany-50 to-white text-slate-800 antialiased;
+    /* Improve touch experience on mobile */
+    -webkit-tap-highlight-color: rgba(0, 175, 175, 0.1);
+    /* Prevent horizontal scrolling */
+    overflow-x: hidden;
   }
 
+  /* Prevent zoom on mobile inputs */
+  input[type="text"],
+  input[type="email"], 
+  input[type="password"],
+  input[type="number"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Improve focus visibility for better accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-tiffany-500 ring-offset-2;
+  }
+
+  /* Better typography scaling for mobile */
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
   }
 
   h1 {
-    @apply text-4xl font-bold mb-4;
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4 leading-tight;
   }
 
   h2 {
-    @apply text-3xl font-semibold mb-3;
+    @apply text-xl sm:text-2xl lg:text-3xl font-semibold mb-2 sm:mb-3 leading-tight;
   }
 
   h3 {
-    @apply text-2xl font-semibold mb-2;
+    @apply text-lg sm:text-xl lg:text-2xl font-semibold mb-2 leading-tight;
   }
 
   h4 {
-    @apply text-xl md:text-2xl lg:text-3xl font-bold;
+    @apply text-base sm:text-lg lg:text-xl font-bold leading-tight;
   }
 
   h5 {
-    @apply text-lg md:text-xl lg:text-2xl font-bold;
+    @apply text-sm sm:text-base lg:text-lg font-bold leading-tight;
   }
 
   h6 {
-    @apply text-base md:text-lg lg:text-xl font-bold;
+    @apply text-sm sm:text-base font-bold leading-tight;
   }
 
   p {
-    @apply mb-4;
+    @apply mb-3 sm:mb-4 leading-relaxed;
+  }
+
+  /* Touch-friendly link styling */
+  a {
+    @apply transition-colors duration-200;
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 
@@ -49,42 +114,79 @@
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* Button Base */
+  /* Enhanced Mobile Navigation */
+  .mobile-menu-slide-in {
+    animation: slideInFromRight 0.4s ease-out;
+  }
+
+  .mobile-menu-fade-in {
+    animation: fadeInUp 0.3s ease-out;
+  }
+
+  .mobile-menu-scale-in {
+    animation: scaleIn 0.2s ease-out;
+  }
+
+  /* Button Base with mobile-first approach */
   .btn {
-    @apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+    @apply px-4 py-3 rounded-md font-medium transition-all duration-200;
+    @apply min-h-[44px] flex items-center justify-center;
+    @apply active:scale-95 transform;
   }
 
   /* Primary Actions */
   .btn-primary {
     @apply bg-tiffany-500 text-white hover:bg-tiffany-600;
+    @apply shadow-sm hover:shadow-md active:shadow-sm;
   }
 
   /* Secondary Actions */
   .btn-secondary {
     @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+    @apply shadow-sm hover:shadow-md active:shadow-sm;
   }
 
   /* Cards and Containers */
   .card {
-    @apply bg-white rounded-lg shadow-md p-6 border border-gray-200;
+    @apply bg-white rounded-lg shadow-md p-4 sm:p-6 border border-gray-200;
+    @apply hover:shadow-lg transition-shadow duration-200;
   }
 
   .section {
-    @apply py-16 md:py-24;
+    @apply py-12 sm:py-16 lg:py-20;
   }
 
-  /* Navigation */
+  /* Navigation with touch-friendly targets */
   .nav-link {
-    @apply px-4 py-2 rounded-full text-slate-800 hover:text-tiffany-500 transition-colors duration-200;
+    @apply px-3 py-2 rounded-full text-slate-800 hover:text-tiffany-500 transition-colors duration-200;
+    @apply min-h-[44px] flex items-center justify-center;
+    @apply active:scale-95 transform;
   }
 
   .nav-link-active {
     @apply bg-tiffany-50 text-tiffany-500;
   }
 
-  /* Form Elements */
+  /* Form Elements with better mobile experience */
   .input {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent;
+    @apply w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent;
+    @apply text-base; /* Prevents zoom on iOS */
+    @apply min-h-[44px];
+  }
+
+  /* Textarea styling */
+  .textarea {
+    @apply w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent;
+    @apply text-base resize-y min-h-[100px];
+  }
+
+  /* Select styling */
+  .select {
+    @apply w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-md;
+    @apply focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent;
+    @apply text-base min-h-[44px] appearance-none;
   }
 
   /* Progress Indicators */
@@ -111,11 +213,12 @@
   }
 
   .bitcoin-card {
-    @apply bg-tiffany-50 border border-tiffany-100 rounded-xl p-6;
+    @apply bg-tiffany-50 border border-tiffany-100 rounded-xl p-4 sm:p-6;
   }
 
   .kpi-card {
-    @apply bg-white rounded-xl shadow-sm p-6;
+    @apply bg-white rounded-xl shadow-sm p-4 sm:p-6;
+    @apply hover:shadow-md transition-shadow duration-200;
   }
 
   .kpi-progress {
@@ -136,6 +239,32 @@
 
   .label {
     @apply block text-sm font-medium text-gray-700 mb-1;
+  }
+
+  /* Touch-friendly interactive elements */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px] flex items-center justify-center;
+    @apply active:scale-95 transform transition-transform duration-150;
+  }
+
+  /* Mobile-optimized grid layouts */
+  .grid-responsive {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8;
+  }
+
+  .grid-responsive-wide {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8;
+  }
+
+  /* Safe area handling for mobile devices */
+  .safe-area-padding {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  .safe-area-margin {
+    margin-left: env(safe-area-inset-left);
+    margin-right: env(safe-area-inset-right);
   }
 }
 
@@ -171,5 +300,22 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 4;
+  }
+
+  /* Mobile-specific utilities */
+  .scroll-smooth-mobile {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Better tap handling */
+  .tap-highlight-none {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent text selection on interactive elements */
+  .select-none-important {
+    -webkit-user-select: none !important;
+    user-select: none !important;
   }
 } 

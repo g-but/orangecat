@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { navigation } from '@/config/navigation'
 import Logo from './Logo'
 import { usePathname } from 'next/navigation'
+import { ArrowUp } from 'lucide-react'
 
 export default function Footer() {
   const pathname = usePathname()
@@ -18,71 +19,149 @@ export default function Footer() {
                     pathname.startsWith('/projects') ||
                     pathname.startsWith('/fundraising')
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
-    <footer className="bg-white border-t border-gray-200 mt-auto">
-      <div className={`mx-auto py-12 px-4 sm:px-6 lg:px-8 ${isAuthPage ? 'ml-0' : 'max-w-7xl'}`}>
-        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
-          <div className="space-y-8 xl:col-span-1">
-            <Logo className="mb-2" />
-            <p className="text-slate-600 text-base">
-              Making Bitcoin donations simple and accessible for everyone.
-            </p>
-            <div className="flex space-x-6">
+    <footer className="bg-white border-t border-gray-200/50 mt-auto relative">
+      {/* Back to top button */}
+      <button
+        onClick={scrollToTop}
+        className="absolute -top-6 right-4 sm:right-8 w-12 h-12 bg-gradient-to-r from-orange-500 to-tiffany-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 flex items-center justify-center group z-10"
+        aria-label="Back to top"
+      >
+        <ArrowUp className="w-5 h-5 group-hover:animate-bounce" />
+      </button>
+
+      <div className={`mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 ${isAuthPage ? 'ml-0' : 'max-w-7xl'}`}>
+        {/* Main Footer Content */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+          {/* Brand Section */}
+          <div className="sm:col-span-2 lg:col-span-1 space-y-6">
+            <div className="space-y-4">
+              <Logo className="mb-2" />
+              <p className="text-slate-600 text-base leading-relaxed max-w-xs">
+                Making Bitcoin donations simple and accessible for everyone.
+              </p>
+            </div>
+
+            {/* Social Links */}
+            <div className="flex space-x-4">
               {navigation.footer.social.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
-                  className="text-slate-400 hover:text-tiffany-500 transition-colors"
+                  className="group w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-tiffany-500 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-md"
                   target="_blank"
                   rel="noopener noreferrer"
+                  aria-label={`Follow us on ${item.name}`}
                 >
-                  <span className="sr-only">{item.name}</span>
-                  {item.icon && <item.icon className="h-6 w-6" />}
+                  {item.icon && <item.icon className="h-5 w-5 transition-transform group-hover:scale-110" />}
                 </a>
               ))}
             </div>
           </div>
-          <div className="mt-12 grid grid-cols-2 gap-8 xl:mt-0 xl:col-span-2">
-            <div>
-              <h3 className="text-sm font-semibold text-orange-400 tracking-wider uppercase">
+
+          {/* Navigation Links */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-bold text-gray-900 tracking-wider uppercase relative">
+              <span className="bg-gradient-to-r from-orange-500 to-tiffany-500 bg-clip-text text-transparent">
                 Navigation
-              </h3>
-              <ul className="mt-4 space-y-4">
-                {navigation.main.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className="text-base text-slate-600 hover:text-tiffany-600 hover:bg-orange-100 transition-colors px-2 py-1 rounded"
-                    >
+              </span>
+              <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-full"></div>
+            </h3>
+            <ul className="space-y-3">
+              {navigation.main.map((item) => (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className="group flex items-center text-base text-slate-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
+                  >
+                    <span className="group-hover:translate-x-1 transition-transform duration-300">
                       {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-orange-400 tracking-wider uppercase">
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Legal Links */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-bold text-gray-900 tracking-wider uppercase relative">
+              <span className="bg-gradient-to-r from-orange-500 to-tiffany-500 bg-clip-text text-transparent">
                 Legal
-              </h3>
-              <ul className="mt-4 space-y-4">
-                {navigation.footer.legal.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      href={item.href}
-                      className="text-base text-slate-600 hover:text-tiffany-600 hover:bg-orange-100 transition-colors px-2 py-1 rounded"
-                    >
+              </span>
+              <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-full"></div>
+            </h3>
+            <ul className="space-y-3">
+              {navigation.footer.legal.map((item) => (
+                <li key={item.name}>
+                  <Link
+                    href={item.href}
+                    className="group flex items-center text-base text-slate-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
+                  >
+                    <span className="group-hover:translate-x-1 transition-transform duration-300">
                       {item.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Newsletter/CTA Section */}
+          <div className="space-y-6 sm:col-span-2 lg:col-span-1">
+            <h3 className="text-sm font-bold text-gray-900 tracking-wider uppercase relative">
+              <span className="bg-gradient-to-r from-orange-500 to-tiffany-500 bg-clip-text text-transparent">
+                Stay Updated
+              </span>
+              <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-full"></div>
+            </h3>
+            <div className="space-y-4">
+              <p className="text-sm text-slate-600 leading-relaxed">
+                Get the latest updates on Bitcoin fundraising and community building.
+              </p>
+              <Link
+                href="/auth?mode=register"
+                className="inline-flex items-center justify-center w-full sm:w-auto px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-105 active:scale-95 min-h-[44px]"
+              >
+                Get Started Today
+              </Link>
             </div>
           </div>
         </div>
-        <div className="mt-12 border-t border-orange-200 pt-8">
-          <p className="text-base text-slate-400 xl:text-center">
-            &copy; {new Date().getFullYear()} OrangeCat. All rights reserved.
-          </p>
+
+        {/* Bottom Section */}
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gradient-to-r from-orange-200/50 to-tiffany-200/50">
+          <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+            <p className="text-sm text-slate-500 text-center sm:text-left">
+              &copy; {new Date().getFullYear()} OrangeCat. All rights reserved.
+            </p>
+            
+            {/* Additional Links */}
+            <div className="flex items-center space-x-6 text-sm">
+              <Link
+                href="/docs"
+                className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
+              >
+                Documentation
+              </Link>
+              <Link
+                href="/api"
+                className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
+              >
+                API
+              </Link>
+              <Link
+                href="/status"
+                className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
+              >
+                Status
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </footer>
