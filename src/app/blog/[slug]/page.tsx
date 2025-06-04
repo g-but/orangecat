@@ -5,72 +5,74 @@ import Link from 'next/link'
 import { MDXRemote } from 'next-mdx-remote/rsc'
 import { getBlogPost, getBlogPostSlugs } from '@/lib/blog'
 import Button from '@/components/ui/Button'
+import { ComponentProps } from 'react'
 
 // MDX Components
 const mdxComponents = {
   // Customize markdown elements
-  h1: ({ children }: { children: React.ReactNode }) => (
-    <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
+  h1: ({ children, ...props }: ComponentProps<'h1'>) => (
+    <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight" {...props}>
       {children}
     </h1>
   ),
-  h2: ({ children }: { children: React.ReactNode }) => (
-    <h2 className="text-3xl font-bold text-gray-900 mb-6 mt-12 flex items-center">
+  h2: ({ children, ...props }: ComponentProps<'h2'>) => (
+    <h2 className="text-3xl font-bold text-gray-900 mb-6 mt-12 flex items-center" {...props}>
       {children}
     </h2>
   ),
-  h3: ({ children }: { children: React.ReactNode }) => (
-    <h3 className="text-2xl font-semibold text-gray-900 mb-4 mt-8">
+  h3: ({ children, ...props }: ComponentProps<'h3'>) => (
+    <h3 className="text-2xl font-semibold text-gray-900 mb-4 mt-8" {...props}>
       {children}
     </h3>
   ),
-  h4: ({ children }: { children: React.ReactNode }) => (
-    <h4 className="text-xl font-semibold text-gray-900 mb-3 mt-6">
+  h4: ({ children, ...props }: ComponentProps<'h4'>) => (
+    <h4 className="text-xl font-semibold text-gray-900 mb-3 mt-6" {...props}>
       {children}
     </h4>
   ),
-  p: ({ children }: { children: React.ReactNode }) => (
-    <p className="text-lg text-gray-700 leading-relaxed mb-6">
+  p: ({ children, ...props }: ComponentProps<'p'>) => (
+    <p className="text-lg text-gray-700 leading-relaxed mb-6" {...props}>
       {children}
     </p>
   ),
-  ul: ({ children }: { children: React.ReactNode }) => (
-    <ul className="space-y-3 text-gray-700 mb-6 ml-6">
+  ul: ({ children, ...props }: ComponentProps<'ul'>) => (
+    <ul className="space-y-3 text-gray-700 mb-6 ml-6" {...props}>
       {children}
     </ul>
   ),
-  ol: ({ children }: { children: React.ReactNode }) => (
-    <ol className="space-y-3 text-gray-700 mb-6 ml-6 list-decimal">
+  ol: ({ children, ...props }: ComponentProps<'ol'>) => (
+    <ol className="space-y-3 text-gray-700 mb-6 ml-6 list-decimal" {...props}>
       {children}
     </ol>
   ),
-  li: ({ children }: { children: React.ReactNode }) => (
-    <li className="flex items-start">
+  li: ({ children, ...props }: ComponentProps<'li'>) => (
+    <li className="flex items-start" {...props}>
       <span className="w-2 h-2 bg-teal-500 rounded-full mt-2 mr-4 flex-shrink-0"></span>
       <span>{children}</span>
     </li>
   ),
-  blockquote: ({ children }: { children: React.ReactNode }) => (
-    <blockquote className="border-l-4 border-teal-500 pl-6 my-8 bg-teal-50 py-4 rounded-r-lg">
+  blockquote: ({ children, ...props }: ComponentProps<'blockquote'>) => (
+    <blockquote className="border-l-4 border-teal-500 pl-6 my-8 bg-teal-50 py-4 rounded-r-lg" {...props}>
       <div className="text-lg text-gray-700 italic">
         {children}
       </div>
     </blockquote>
   ),
-  code: ({ children }: { children: React.ReactNode }) => (
-    <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800">
+  code: ({ children, ...props }: ComponentProps<'code'>) => (
+    <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-gray-800" {...props}>
       {children}
     </code>
   ),
-  pre: ({ children }: { children: React.ReactNode }) => (
-    <pre className="bg-gray-900 text-gray-100 p-6 rounded-xl overflow-x-auto mb-6">
+  pre: ({ children, ...props }: ComponentProps<'pre'>) => (
+    <pre className="bg-gray-900 text-gray-100 p-6 rounded-xl overflow-x-auto mb-6" {...props}>
       {children}
     </pre>
   ),
-  a: ({ href, children }: { href?: string, children: React.ReactNode }) => (
+  a: ({ href, children, ...props }: ComponentProps<'a'>) => (
     <Link 
       href={href || '#'}
       className="text-teal-600 hover:text-teal-700 font-medium underline"
+      {...props}
     >
       {children}
     </Link>
