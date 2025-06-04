@@ -37,7 +37,7 @@ export default function DraftContinueDialog({
   const primaryDraft = getPrimaryDraft()
   if (!primaryDraft) return null
 
-  const isLocalDraft = primaryDraft.type === 'local'
+  const isLocalDraft = primaryDraft.source === 'local'
   const totalDrafts = drafts.length + (hasLocalDraft ? 1 : 0)
 
   const formatLastUpdated = (date: Date | null) => {
@@ -50,8 +50,8 @@ export default function DraftContinueDialog({
   }
 
   const getCompletionPercentage = () => {
-    if (isLocalDraft && primaryDraft.step) {
-      return Math.round((primaryDraft.step / 3) * 100)
+    if (isLocalDraft && primaryDraft.currentStep) {
+      return Math.round((primaryDraft.currentStep / 3) * 100)
     }
     return 30 // Estimate for database drafts
   }
@@ -113,12 +113,12 @@ export default function DraftContinueDialog({
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                <span>Last saved {formatLastUpdated(primaryDraft.lastUpdated)}</span>
+                <span>Last saved {formatLastUpdated(primaryDraft.lastSaved)}</span>
               </div>
-              {isLocalDraft && primaryDraft.step && (
+              {isLocalDraft && primaryDraft.currentStep && (
                 <div className="flex items-center gap-1">
                   <CheckCircle className="w-4 h-4" />
-                  <span>Step {primaryDraft.step} of 3</span>
+                  <span>Step {primaryDraft.currentStep} of 3</span>
                 </div>
               )}
             </div>
