@@ -1,5 +1,5 @@
 import { ReactNode } from 'react'
-import UserProfileDropdown from '@/components/user/UserProfileDropdown'
+import UserProfileDropdown from '@/components/ui/UserProfileDropdown'
 
 interface AppLayoutProps {
   children: ReactNode
@@ -18,7 +18,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </div>
             </div>
             <div className="flex items-center">
-              <UserProfileDropdown />
+              <UserProfileDropdown variant="simple" />
             </div>
           </div>
         </div>

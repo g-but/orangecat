@@ -1,5 +1,6 @@
+import * as React from "react"
 import { ReactNode } from 'react'
-import { cn } from '@/utils/functions'
+import { cn } from '@/lib/utils'
 
 interface AlertProps {
   children: ReactNode

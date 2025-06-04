@@ -45,22 +45,22 @@ export async function middleware(request: NextRequest) {
   )
 
   try {
-    // Get the current session from Supabase
-    const { data: { session } } = await supabase.auth.getSession()
+    // Use getUser() for security - validates authentication with server
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     // Extract the path from the URL
     const path = request.nextUrl.pathname
     
-    // If user is not logged in and trying to access a protected route, redirect to /auth
-    if (!session && protectedRoutes.some(route => path.startsWith(route))) {
+    // If user is not authenticated and trying to access a protected route, redirect to /auth
+    if ((!user || userError) && protectedRoutes.some(route => path.startsWith(route))) {
       const redirectUrl = new URL('/auth', request.url)
       redirectUrl.searchParams.set('mode', 'login')
       redirectUrl.searchParams.set('from', path)
       return NextResponse.redirect(redirectUrl)
     }
     
-    // If user is logged in and trying to access /auth, redirect to /dashboard
-    if (session && path === '/auth') {
+    // If user is authenticated and trying to access /auth, redirect to /dashboard
+    if (user && !userError && path === '/auth') {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   } catch (error) {

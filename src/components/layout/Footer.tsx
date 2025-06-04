@@ -23,6 +23,11 @@ export default function Footer() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
+  // Don't render footer on authenticated pages to avoid layout conflicts with sidebar
+  if (isAuthPage) {
+    return null
+  }
+
   return (
     <footer className="bg-white border-t border-gray-200/50 mt-auto relative">
       {/* Back to top button */}
@@ -34,7 +39,7 @@ export default function Footer() {
         <ArrowUp className="w-5 h-5 group-hover:animate-bounce" />
       </button>
 
-      <div className={`mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8 ${isAuthPage ? 'ml-0' : 'max-w-7xl'}`}>
+      <div className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand Section */}

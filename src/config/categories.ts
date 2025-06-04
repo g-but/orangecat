@@ -10,6 +10,13 @@ export interface Category {
   }[]
 }
 
+export interface SimpleCategory {
+  value: string
+  label: string
+  icon: string
+  description: string
+}
+
 export const categories: Category[] = [
   {
     id: 'health-life',
@@ -97,9 +104,78 @@ export const categories: Category[] = [
         description: 'Educational programs and course creators'
       },
       {
-        id: 'research',
-        name: 'Research',
+        id: 'educational-research',
+        name: 'Educational Research',
         description: 'Academic research and educational initiatives'
+      }
+    ]
+  },
+  {
+    id: 'research',
+    name: 'Research',
+    description: 'For decentralized science and independent researchers',
+    icon: 'Microscope',
+    groups: [
+      {
+        id: 'desci',
+        name: 'Decentralized Science',
+        description: 'DeSci projects and blockchain-based research initiatives'
+      },
+      {
+        id: 'independent-research',
+        name: 'Independent Researchers',
+        description: 'Individual researchers and scientific investigations'
+      },
+      {
+        id: 'scientific-studies',
+        name: 'Scientific Studies',
+        description: 'Research projects, experiments, and academic studies'
+      }
+    ]
+  },
+  {
+    id: 'infrastructure',
+    name: 'Infrastructure',
+    description: 'For public works and community infrastructure projects',
+    icon: 'Construction',
+    groups: [
+      {
+        id: 'public-works',
+        name: 'Public Works',
+        description: 'Parks, bike lanes, roads, and public facilities'
+      },
+      {
+        id: 'community-facilities',
+        name: 'Community Facilities',
+        description: 'Playgrounds, community centers, and shared spaces'
+      },
+      {
+        id: 'urban-improvement',
+        name: 'Urban Improvement',
+        description: 'Pothole repairs, lighting, and city infrastructure upgrades'
+      }
+    ]
+  },
+  {
+    id: 'environment',
+    name: 'Environment',
+    description: 'For environmental protection and sustainability projects',
+    icon: 'TreePine',
+    groups: [
+      {
+        id: 'cleanup-efforts',
+        name: 'Cleanup Efforts',
+        description: 'Beach cleanups, waste removal, and environmental restoration'
+      },
+      {
+        id: 'conservation',
+        name: 'Conservation',
+        description: 'Wildlife protection, habitat preservation, and biodiversity projects'
+      },
+      {
+        id: 'sustainability',
+        name: 'Sustainability',
+        description: 'Renewable energy, green technologies, and sustainable practices'
       }
     ]
   },
@@ -126,4 +202,44 @@ export const categories: Category[] = [
       }
     ]
   }
-] 
+]
+
+// Helper exports for different use cases - SINGLE SOURCE OF TRUTH
+
+// Simple categories for form dropdowns and UI components
+export const simpleCategories: SimpleCategory[] = [
+  { value: 'health', label: 'Health', icon: '🏥', description: 'Medical expenses, treatments, procedures' },
+  { value: 'creative', label: 'Creative', icon: '🎨', description: 'Art, music, writing' },
+  { value: 'technology', label: 'Technology', icon: '💻', description: 'Apps, websites, tech' },
+  { value: 'community', label: 'Community', icon: '🏘️', description: 'Local initiatives' },
+  { value: 'education', label: 'Education', icon: '📚', description: 'Learning, courses' },
+  { value: 'research', label: 'Research', icon: '🔬', description: 'DeSci, independent research' },
+  { value: 'infrastructure', label: 'Infrastructure', icon: '🏗️', description: 'Parks, bike lanes, public works' },
+  { value: 'environment', label: 'Environment', icon: '🌱', description: 'Cleanup, conservation, sustainability' },
+  { value: 'charity', label: 'Charity', icon: '❤️', description: 'Helping others' },
+  { value: 'business', label: 'Business', icon: '🚀', description: 'Startups, ventures' },
+  { value: 'personal', label: 'Personal', icon: '🌟', description: 'Personal goals' },
+  { value: 'other', label: 'Other', icon: '✨', description: 'Everything else' }
+]
+
+// Category values only (for filters, validation, etc.)
+export const categoryValues = simpleCategories.map(cat => cat.value)
+
+// TypeScript union type for categories
+export type CategoryValue = typeof categoryValues[number]
+
+// Legacy mapping for backwards compatibility
+export const CATEGORY_LABELS: Record<string, string> = {
+  health: 'Health',
+  creative: 'Creative',
+  technology: 'Technology',
+  community: 'Community',
+  education: 'Education',
+  research: 'Research',
+  infrastructure: 'Infrastructure',
+  environment: 'Environment',
+  charity: 'Charity',
+  business: 'Business',
+  personal: 'Personal',
+  other: 'Other'
+} 

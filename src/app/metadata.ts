@@ -9,6 +9,23 @@ export const metadata: Metadata = {
   description: 'Create your profile and start accepting Bitcoin donations today.',
   keywords: ['bitcoin', 'donation', 'crypto', 'blockchain'],
   authors: [{ name: `${siteName} Team` }],
+  icons: {
+    icon: [
+      {
+        url: '/images/orange-cat-logo.svg',
+        type: 'image/svg+xml',
+      },
+      {
+        url: '/favicon.ico',
+        sizes: '32x32',
+        type: 'image/x-icon',
+      }
+    ],
+    apple: {
+      url: '/images/orange-cat-logo.svg',
+      type: 'image/svg+xml',
+    },
+  },
   openGraph: {
     title: `${siteName} - Bitcoin Donation Platform`,
     description: 'A platform for accepting Bitcoin donations with ease.',

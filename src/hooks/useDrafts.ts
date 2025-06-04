@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { getUserDrafts } from '@/services/supabase/client'
 
@@ -13,51 +13,57 @@ export interface DraftCampaign {
   goal_amount?: number
   category?: string
   progress?: number
+  source: 'database' | 'local'
 }
 
-export interface LocalDraft {
-  formData: any
-  currentStep: number
-  draftId: string | null
+export interface UnifiedDraft {
+  id: string
+  title: string
+  description?: string
+  formData?: any
+  currentStep?: number
   lastSaved: Date | null
+  source: 'database' | 'local'
+  draftId?: string | null
 }
 
 export interface DraftState {
-  drafts: DraftCampaign[]
+  drafts: UnifiedDraft[]
   isLoading: boolean
   error: string | null
-  hasDrafts: boolean
-  hasLocalDraft: boolean
-  hasAnyDraft: boolean
-  latestDraft: DraftCampaign | null
-  localDraft: LocalDraft | null
+  totalCount: number
 }
 
 export function useDrafts() {
-  const { user, hydrated } = useAuth()
+  const { user, hydrated, isLoading: authLoading } = useAuth()
+  const loadingRef = useRef(false)
   const [state, setState] = useState<DraftState>({
     drafts: [],
     isLoading: true,
     error: null,
-    hasDrafts: false,
-    hasLocalDraft: false,
-    hasAnyDraft: false,
-    latestDraft: null,
-    localDraft: null
+    totalCount: 0
   })
 
-  const getLocalDraft = useCallback((): LocalDraft | null => {
+  const getLocalDraft = useCallback((): UnifiedDraft | null => {
     if (!user || !hydrated) return null
     
     try {
       const savedDraft = localStorage.getItem(`funding-draft-${user.id}`)
       if (savedDraft) {
         const draftData = JSON.parse(savedDraft)
-        return {
-          formData: draftData.formData || {},
-          currentStep: draftData.currentStep || 1,
-          draftId: draftData.draftId || null,
-          lastSaved: draftData.lastSaved ? new Date(draftData.lastSaved) : null
+        const title = draftData.formData?.title?.trim()
+        
+        if (title) {
+          return {
+            id: `local-${user.id}`,
+            title,
+            description: draftData.formData?.description,
+            formData: draftData.formData,
+            currentStep: draftData.currentStep || 1,
+            lastSaved: draftData.lastSaved ? new Date(draftData.lastSaved) : null,
+            source: 'local',
+            draftId: draftData.draftId
+          }
         }
       }
     } catch (error) {
@@ -65,21 +71,26 @@ export function useDrafts() {
     }
     
     return null
-  }, [user, hydrated])
+  }, [user?.id, hydrated])
 
-  const loadDrafts = useCallback(async () => {
-    if (!user || !hydrated) {
-      setState(prev => ({ ...prev, isLoading: false }))
+  const loadAllDrafts = useCallback(async () => {
+    if (!user || !hydrated || authLoading || loadingRef.current) {
+      if (!user || !hydrated) {
+        setState(prev => ({ ...prev, isLoading: false }))
+      }
       return
     }
 
+    loadingRef.current = true
+    
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }))
       
       // Load database drafts
-      const { data, error } = await getUserDrafts(user.id)
+      const { data: dbDrafts, error } = await getUserDrafts(user.id)
       
       if (error) {
+        console.error('Error loading database drafts:', error)
         setState(prev => ({ 
           ...prev, 
           isLoading: false, 
@@ -88,90 +99,142 @@ export function useDrafts() {
         return
       }
 
-      const drafts = data || []
-      const latestDraft = drafts.length > 0 ? drafts[0] : null
+      // Convert database drafts to unified format
+      const databaseDrafts: UnifiedDraft[] = (dbDrafts || []).map(draft => ({
+        id: draft.id,
+        title: draft.title,
+        description: draft.description,
+        lastSaved: new Date(draft.updated_at),
+        source: 'database' as const,
+        draftId: draft.id
+      }))
 
       // Load local draft
       const localDraft = getLocalDraft()
-      const hasLocalDraft = !!(localDraft && localDraft.formData?.title?.trim())
-      const hasDrafts = drafts.length > 0
-      const hasAnyDraft = hasDrafts || hasLocalDraft
+      
+      // Combine and deduplicate drafts
+      const allDrafts: UnifiedDraft[] = []
+      
+      // Add local draft first (highest priority)
+      if (localDraft) {
+        allDrafts.push(localDraft)
+      }
+      
+      // Add database drafts that don't conflict with local draft
+      databaseDrafts.forEach(dbDraft => {
+        // Only add if not already represented by local draft
+        const isLocalVersion = localDraft?.draftId === dbDraft.draftId
+        if (!isLocalVersion) {
+          allDrafts.push(dbDraft)
+        }
+      })
 
       setState({
-        drafts,
+        drafts: allDrafts,
         isLoading: false,
         error: null,
-        hasDrafts,
-        hasLocalDraft,
-        hasAnyDraft,
-        latestDraft,
-        localDraft
+        totalCount: allDrafts.length
       })
+      
     } catch (err) {
+      console.error('Error loading drafts:', err)
       setState(prev => ({ 
         ...prev, 
         isLoading: false, 
         error: err instanceof Error ? err.message : 'Failed to load drafts' 
       }))
+    } finally {
+      loadingRef.current = false
     }
-  }, [user, hydrated, getLocalDraft])
+  }, [user?.id, hydrated, authLoading, getLocalDraft])
 
+  // Load drafts when conditions are met
   useEffect(() => {
-    if (hydrated) {
-      loadDrafts()
+    if (hydrated && user && !authLoading) {
+      const timeoutId = setTimeout(loadAllDrafts, 100)
+      return () => clearTimeout(timeoutId)
     }
-  }, [loadDrafts, hydrated])
+  }, [user?.id, hydrated, authLoading, loadAllDrafts])
 
   const refresh = useCallback(() => {
-    if (hydrated) {
-      loadDrafts()
+    if (hydrated && user && !authLoading && !loadingRef.current) {
+      loadAllDrafts()
     }
-  }, [loadDrafts, hydrated])
+  }, [loadAllDrafts, hydrated, user, authLoading])
 
   const clearLocalDraft = useCallback(() => {
     if (!user || !hydrated) return
     
     try {
       localStorage.removeItem(`funding-draft-${user.id}`)
-      // Refresh state after clearing
       refresh()
     } catch (error) {
       console.error('Error clearing local draft:', error)
     }
-  }, [user, hydrated, refresh])
+  }, [user?.id, hydrated, refresh])
 
-  // Get the most relevant draft to show to the user
-  const getPrimaryDraft = useCallback(() => {
-    // Prioritize local draft if it's more recent or has more content
-    if (state.hasLocalDraft && state.localDraft) {
-      const localTitle = state.localDraft.formData?.title?.trim()
-      if (localTitle) {
-        // If we have a local draft with content, prioritize it
-        return {
-          type: 'local' as const,
-          title: localTitle,
-          lastUpdated: state.localDraft.lastSaved,
-          step: state.localDraft.currentStep,
-          draftId: state.localDraft.draftId
-        }
-      }
+  // Get the primary draft (most relevant to show user)
+  const getPrimaryDraft = useCallback((): UnifiedDraft | null => {
+    if (state.drafts.length === 0) return null
+    
+    // Prioritize local draft, then most recently updated database draft
+    const localDraft = state.drafts.find(d => d.source === 'local')
+    if (localDraft) return localDraft
+    
+    const dbDrafts = state.drafts.filter(d => d.source === 'database')
+    if (dbDrafts.length > 0) {
+      return dbDrafts.sort((a, b) => {
+        const aTime = a.lastSaved?.getTime() || 0
+        const bTime = b.lastSaved?.getTime() || 0
+        return bTime - aTime
+      })[0]
     }
-
-    // Fall back to database draft
-    if (state.hasDrafts && state.latestDraft) {
-      return {
-        type: 'database' as const,
-        title: state.latestDraft.title,
-        lastUpdated: new Date(state.latestDraft.updated_at),
-        draftId: state.latestDraft.id
-      }
-    }
-
+    
     return null
-  }, [state])
+  }, [state.drafts])
+
+  // Computed values for backwards compatibility
+  const hasAnyDraft = state.totalCount > 0
+  const hasLocalDraft = state.drafts.some(d => d.source === 'local')
+  const hasDrafts = state.drafts.some(d => d.source === 'database')
+  const latestDraft = getPrimaryDraft()
+  const localDraft = state.drafts.find(d => d.source === 'local')
+
+  // Legacy format for compatibility
+  const drafts = state.drafts
+    .filter(d => d.source === 'database')
+    .map(d => ({
+      id: d.id,
+      title: d.title,
+      description: d.description,
+      created_at: d.lastSaved?.toISOString() || '',
+      updated_at: d.lastSaved?.toISOString() || '',
+      goal_amount: 0,
+      category: '',
+      progress: 0
+    }))
 
   return {
-    ...state,
+    // New unified interface
+    allDrafts: state.drafts,
+    totalCount: state.totalCount,
+    
+    // Legacy interface for backwards compatibility
+    drafts,
+    isLoading: state.isLoading,
+    error: state.error,
+    hasDrafts,
+    hasLocalDraft,
+    hasAnyDraft,
+    latestDraft,
+    localDraft: localDraft ? {
+      formData: localDraft.formData || {},
+      currentStep: localDraft.currentStep || 1,
+      draftId: localDraft.draftId,
+      lastSaved: localDraft.lastSaved
+    } : null,
+    
+    // Methods
     refresh,
     getLocalDraft,
     clearLocalDraft,

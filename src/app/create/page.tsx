@@ -30,19 +30,11 @@ import {
   Heart,
   AlertCircle
 } from 'lucide-react'
-import { createFundingPage, updateFundingPage, saveFundingPageDraft, updateFundingPageDraft } from '@/services/supabase/client'
+import { createOrUpdateFundingPage, saveFundingPageDraft, updateFundingPageDraft } from '@/services/supabase/client'
 import { toast } from 'sonner'
-
-const categories = [
-  { value: 'creative', label: 'Creative', icon: '🎨', description: 'Art, music, writing' },
-  { value: 'technology', label: 'Technology', icon: '💻', description: 'Apps, websites, tech' },
-  { value: 'community', label: 'Community', icon: '🏘️', description: 'Local initiatives' },
-  { value: 'education', label: 'Education', icon: '📚', description: 'Learning, courses' },
-  { value: 'charity', label: 'Charity', icon: '❤️', description: 'Helping others' },
-  { value: 'business', label: 'Business', icon: '🚀', description: 'Startups, ventures' },
-  { value: 'personal', label: 'Personal', icon: '🌟', description: 'Personal goals' },
-  { value: 'other', label: 'Other', icon: '✨', description: 'Everything else' }
-]
+import { normalizeUrl, validateUrl } from '@/utils/validation'
+import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
+import { simpleCategories } from '@/config/categories'
 
 const steps = [
   { id: 1, name: 'Project Details', description: 'Tell us about your idea' },
@@ -53,12 +45,23 @@ const steps = [
 export default function CreatePage() {
   const router = useRouter()
   const { user } = useAuth()
+  
+  // Check if user wants to start fresh
+  const [searchParams] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search)
+    }
+    return new URLSearchParams()
+  })
+  const startingFresh = searchParams.get('new') === 'true'
+  
   const [loading, setLoading] = useState(false)
   const [savingDraft, setSavingDraft] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState(1)
   const [draftId, setDraftId] = useState<string | null>(null)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [urlError, setUrlError] = useState<string>('')
   
   const [formData, setFormData] = useState({
     title: '',
@@ -68,17 +71,20 @@ export default function CreatePage() {
     website_url: '',
     goal_amount: '',
     categories: [] as string[],
-    currency: 'SATS' as 'BTC' | 'SATS'
+    currency: 'BTC' as 'BTC'
   })
 
   // Load draft from localStorage on component mount
   useEffect(() => {
-    if (user) {
+    if (user && !startingFresh) {
       const savedDraft = localStorage.getItem(`funding-draft-${user.id}`)
       if (savedDraft) {
         try {
           const draftData = JSON.parse(savedDraft)
-          setFormData(draftData.formData)
+          setFormData({
+            ...draftData.formData,
+            currency: 'BTC' // Always ensure BTC is selected
+          })
           setCurrentStep(draftData.currentStep || 1)
           setDraftId(draftData.draftId || null)
           setLastSaved(draftData.lastSaved ? new Date(draftData.lastSaved) : null)
@@ -87,15 +93,51 @@ export default function CreatePage() {
           console.error('Error loading draft:', error)
         }
       }
+    } else if (startingFresh) {
+      // User explicitly wants to start fresh - reset everything
+      setFormData({
+        title: '',
+        description: '',
+        bitcoin_address: '',
+        lightning_address: '',
+        website_url: '',
+        goal_amount: '',
+        categories: [] as string[],
+        currency: 'BTC' as 'BTC'
+      })
+      setCurrentStep(1)
+      setDraftId(null)
+      setLastSaved(null)
+      
+      // Clear the URL parameter after processing
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        url.searchParams.delete('new')
+        window.history.replaceState({}, '', url.toString())
+      }
     }
-  }, [user])
+  }, [user, startingFresh])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
+    
+    // Handle URL field with automatic normalization
+    if (name === 'website_url') {
+      setUrlError('')
+      const validation = validateUrl(value)
+      if (value.trim() && !validation.isValid) {
+        setUrlError(validation.error || 'Please enter a valid URL')
+      }
+      setFormData(prev => ({
+        ...prev,
+        [name]: validation.normalized || value
+      }))
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }))
+    }
   }
 
   const handleCategoryToggle = (categoryValue: string) => {
@@ -105,6 +147,21 @@ export default function CreatePage() {
         ? prev.categories.filter(cat => cat !== categoryValue)
         : [...prev.categories, categoryValue]
     }))
+  }
+
+  const handleUrlBlur = () => {
+    if (formData.website_url.trim()) {
+      const validation = validateUrl(formData.website_url)
+      setFormData(prev => ({
+        ...prev,
+        website_url: validation.normalized
+      }))
+      if (!validation.isValid) {
+        setUrlError(validation.error || 'Please enter a valid URL')
+      } else {
+        setUrlError('')
+      }
+    }
   }
 
   const saveDraft = useCallback(async (showToast = true) => {
@@ -146,6 +203,45 @@ export default function CreatePage() {
     }
   }, [user, formData, currentStep, draftId])
 
+  // Save draft and redirect to fundraising dashboard
+  const saveDraftAndRedirect = useCallback(async () => {
+    if (!user || !formData.title.trim()) return
+
+    setSavingDraft(true)
+    try {
+      const now = new Date()
+      const draftData = {
+        formData,
+        currentStep,
+        draftId,
+        lastSaved: now.toISOString()
+      }
+      localStorage.setItem(`funding-draft-${user.id}`, JSON.stringify(draftData))
+
+      if (draftId) {
+        await updateFundingPageDraft(draftId, formData)
+      } else {
+        const result = await saveFundingPageDraft(user.id, formData)
+        if (result.data) {
+          setDraftId(result.data.id)
+          const updatedDraftData = { ...draftData, draftId: result.data.id }
+          localStorage.setItem(`funding-draft-${user.id}`, JSON.stringify(updatedDraftData))
+        }
+      }
+
+      setLastSaved(now)
+      toast.success('Draft saved! Taking you to your campaigns...')
+      
+      // Redirect to fundraising dashboard with drafts filter
+      router.push('/dashboard/fundraising?filter=drafts')
+    } catch (error) {
+      console.error('Error saving draft:', error)
+      toast.error('Failed to save draft')
+    } finally {
+      setSavingDraft(false)
+    }
+  }, [user, formData, currentStep, draftId, router])
+
   const nextStep = () => {
     if (currentStep < 3) {
       // Save draft when moving to next step
@@ -180,11 +276,11 @@ export default function CreatePage() {
         description: formData.description.trim() || null,
         bitcoin_address: formData.bitcoin_address.trim() || null,
         lightning_address: formData.lightning_address.trim() || null,
-        website_url: formData.website_url.trim() || null,
+        website_url: formData.website_url ? normalizeUrl(formData.website_url) : null,
         goal_amount: formData.goal_amount ? parseFloat(formData.goal_amount) : null,
         category: formData.categories.length > 0 ? formData.categories[0] : null,
         tags: formData.categories.length > 1 ? formData.categories.slice(1) : [],
-        currency: formData.currency,
+        currency: 'BTC', // Always BTC
         is_active: true,
         is_public: true,
         total_funding: 0,
@@ -193,10 +289,9 @@ export default function CreatePage() {
 
       let result
       if (draftId) {
-        result = await updateFundingPage(draftId, pageData)
-        result = { data: { id: draftId }, error: result.error }
+        result = await createOrUpdateFundingPage(pageData, { pageId: draftId, userId: user.id })
       } else {
-        result = await createFundingPage(pageData)
+        result = await createOrUpdateFundingPage(pageData, { userId: user.id })
       }
 
       if (!result.data) {
@@ -278,7 +373,7 @@ export default function CreatePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
       {/* Header */}
-      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+      <div className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-popover">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-4">
@@ -399,41 +494,67 @@ export default function CreatePage() {
                       </svg>
                     </div>
                     
-                    <p className="text-xs text-gray-600 mb-4 hidden sm:block">
-                      {getStrengthMessage()}
-                    </p>
+                    {/* Enhanced message with better formatting */}
+                    <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                      <p className="text-xs font-medium text-gray-700 mb-1">
+                        {profileStrength < 40 ? '📝 Great start!' : 
+                         profileStrength < 75 ? '🚀 You\'re on track!' : 
+                         profileStrength < 90 ? '⭐ Almost there!' : 
+                         '🎉 Excellent!'}
+                      </p>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        {getStrengthMessage()}
+                      </p>
+                    </div>
                     
                     {profileStrength < 100 && (
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <p className="text-xs font-medium text-gray-700 mb-1">Next suggestion:</p>
-                        <p className="text-xs text-gray-600">{getNextSuggestion()}</p>
+                      <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                        <p className="text-xs font-semibold text-blue-900 mb-1">Next suggestion:</p>
+                        <p className="text-xs text-blue-700 font-medium">{getNextSuggestion()}</p>
                       </div>
                     )}
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Quick Tips - Hide on mobile to save space */}
+              {/* Quick Tips - Updated to match design */}
               <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 border-0 shadow-lg hidden sm:block">
                 <CardContent className="p-6">
-                  <div className="flex items-center mb-3">
-                    <Lightbulb className="w-5 h-5 text-blue-600 mr-2" />
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-3">
+                      <Lightbulb className="w-4 h-4 text-white" />
+                    </div>
                     <h3 className="font-semibold text-blue-900">Quick Tips</h3>
                   </div>
-                  <div className="space-y-3 text-sm text-blue-800">
+                  
+                  <div className="space-y-4 text-sm">
                     <div className="flex items-start">
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></div>
-                      <p>Use clear, compelling language in your title</p>
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <p className="text-blue-800 leading-relaxed">
+                        <span className="font-medium">Use clear, compelling language in your title</span>
+                      </p>
                     </div>
                     <div className="flex items-start">
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></div>
-                      <p>Tell your story with passion and authenticity</p>
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <p className="text-blue-800 leading-relaxed">
+                        <span className="font-medium">Tell your story with passion and authenticity</span>
+                      </p>
                     </div>
                     <div className="flex items-start">
-                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-2 flex-shrink-0"></div>
-                      <p>Add payment methods to start receiving donations</p>
+                      <div className="w-1.5 h-1.5 bg-blue-400 rounded-full mt-2 mr-3 flex-shrink-0"></div>
+                      <p className="text-blue-800 leading-relaxed">
+                        <span className="font-medium">Add payment methods</span> to start receiving donations
+                      </p>
                     </div>
                   </div>
+                  
+                  {/* Enhanced suggestion box */}
+                  {profileStrength < 100 && (
+                    <div className="mt-4 bg-white/70 rounded-lg p-3 border border-blue-200">
+                      <p className="text-xs font-semibold text-blue-900 mb-1">Next suggestion:</p>
+                      <p className="text-xs text-blue-700 font-medium">{getNextSuggestion()}</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
 
@@ -552,7 +673,7 @@ export default function CreatePage() {
                             )}
                           </p>
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                            {categories.map((category) => (
+                            {simpleCategories.map((category) => (
                               <button
                                 key={category.value}
                                 type="button"
@@ -673,45 +794,66 @@ export default function CreatePage() {
                               <p className="text-xs text-gray-500">Help supporters learn more about you</p>
                             </div>
                           </div>
-                          <Input
-                            id="website_url"
-                            name="website_url"
-                            type="url"
-                            value={formData.website_url}
-                            onChange={handleChange}
-                            placeholder="https://your-website.com"
-                            className="py-3 px-4 min-h-[48px]"
-                          />
+                          <div className="space-y-2">
+                            <Input
+                              id="website_url"
+                              name="website_url"
+                              type="text"
+                              value={formData.website_url}
+                              onChange={handleChange}
+                              placeholder="orangecat.ch (we'll add https:// automatically)"
+                              className={`py-3 px-4 min-h-[48px] ${urlError ? 'border-red-300 focus:ring-red-500 focus:border-red-500' : ''}`}
+                              onBlur={handleUrlBlur}
+                            />
+                            {urlError && (
+                              <p className="text-sm text-red-600 flex items-center">
+                                <AlertCircle className="w-4 h-4 mr-1" />
+                                {urlError}
+                              </p>
+                            )}
+                            {formData.website_url && !urlError && (
+                              <p className="text-sm text-green-600 flex items-center">
+                                <CheckCircle className="w-4 h-4 mr-1" />
+                                Looks good! Preview: {formData.website_url}
+                              </p>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                          <div className="lg:col-span-2">
+                        <div className="space-y-4 sm:space-y-6">
+                          <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                               Funding Goal (Optional)
                             </label>
-                            <Input
-                              id="goal_amount"
-                              name="goal_amount"
-                              type="number"
-                              value={formData.goal_amount}
-                              onChange={handleChange}
-                              placeholder="100000"
-                              className="py-3 px-4 min-h-[48px]"
-                            />
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
-                              Currency
-                            </label>
-                            <select
-                              name="currency"
-                              value={formData.currency}
-                              onChange={handleChange}
-                              className="w-full py-3 px-4 border border-gray-300 rounded-xl focus:ring-2 focus:ring-tiffany-500 focus:border-tiffany-500 min-h-[48px] touch-manipulation"
-                            >
-                              <option value="SATS">Satoshis</option>
-                              <option value="BTC">Bitcoin</option>
-                            </select>
+                            <p className="text-xs text-gray-500 mb-3">
+                              Set a target amount in Bitcoin. Leave empty for open-ended fundraising.
+                            </p>
+                            
+                            <div className="space-y-3">
+                              <Input
+                                id="goal_amount"
+                                name="goal_amount"
+                                type="number"
+                                step="0.00000001"
+                                min="0"
+                                value={formData.goal_amount}
+                                onChange={handleChange}
+                                placeholder="0.1"
+                                className="py-3 px-4 min-h-[48px]"
+                              />
+                              
+                              {formData.goal_amount && parseFloat(formData.goal_amount) > 0 && (
+                                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                                  <p className="text-sm font-medium text-blue-900 mb-1">Goal Amount:</p>
+                                  <CurrencyDisplay 
+                                    bitcoin={parseFloat(formData.goal_amount)}
+                                    size="md"
+                                    layout="horizontal"
+                                    className="text-blue-800"
+                                  />
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -719,14 +861,15 @@ export default function CreatePage() {
                   )}
 
                   {/* Navigation */}
-                  <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center pt-6 sm:pt-8 border-t border-gray-200 gap-4 sm:gap-0">
+                  <div className="flex flex-col space-y-3 pt-6 sm:pt-8 border-t border-gray-200">
+                    {/* Left side buttons - Cancel and Back */}
                     <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                       {currentStep > 1 && (
                         <Button
                           type="button"
-                          variant="outline"
+                          variant="ghost"
                           onClick={prevStep}
-                          className="px-4 sm:px-6 py-3 min-h-[48px] touch-manipulation"
+                          className="px-4 py-3 min-h-[44px] touch-manipulation text-gray-600 hover:text-gray-800"
                         >
                           <ArrowLeft className="w-4 h-4 mr-2 flex-shrink-0" />
                           <span>Back</span>
@@ -735,21 +878,22 @@ export default function CreatePage() {
                       
                       <Button
                         type="button"
-                        variant="outline"
+                        variant="ghost"
                         onClick={() => router.push('/dashboard')}
-                        className="px-4 sm:px-6 py-3 min-h-[48px] touch-manipulation"
+                        className="px-4 py-3 min-h-[44px] touch-manipulation text-gray-600 hover:text-gray-800"
                       >
                         Cancel
                       </Button>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                    {/* Right side buttons - Save and Continue/Launch */}
+                    <div className="flex space-x-3">
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => saveDraft(true)}
+                        onClick={saveDraftAndRedirect}
                         disabled={savingDraft || !formData.title.trim()}
-                        className="px-4 sm:px-6 py-3 min-h-[48px] touch-manipulation"
+                        className="flex-1 sm:flex-none px-4 py-3 min-h-[48px] touch-manipulation"
                       >
                         {savingDraft ? (
                           <>
@@ -759,7 +903,8 @@ export default function CreatePage() {
                         ) : (
                           <>
                             <Save className="w-4 h-4 mr-2 flex-shrink-0" />
-                            <span>Save Draft</span>
+                            <span className="hidden sm:inline">Save & Continue Later</span>
+                            <span className="sm:hidden">Save Draft</span>
                           </>
                         )}
                       </Button>
@@ -772,7 +917,7 @@ export default function CreatePage() {
                             (currentStep === 1 && !canProceedToStep2) ||
                             (currentStep === 2 && !canProceedToStep3)
                           }
-                          className="bg-tiffany-600 hover:bg-tiffany-700 px-6 sm:px-8 py-3 shadow-lg shadow-tiffany-600/25 min-h-[48px] touch-manipulation"
+                          className="flex-1 sm:flex-none bg-teal-600 hover:bg-teal-700 px-6 py-3 shadow-lg shadow-teal-600/25 min-h-[48px] touch-manipulation font-semibold"
                         >
                           <span>Continue</span>
                           <ArrowRight className="w-4 h-4 ml-2 flex-shrink-0" />
@@ -781,7 +926,7 @@ export default function CreatePage() {
                         <Button
                           type="submit"
                           disabled={loading}
-                          className="bg-green-600 hover:bg-green-700 px-6 sm:px-8 py-3 shadow-lg shadow-green-600/25 min-h-[48px] touch-manipulation"
+                          className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 px-6 py-3 shadow-lg shadow-green-600/25 min-h-[48px] touch-manipulation font-semibold"
                         >
                           {loading ? (
                             <>
@@ -790,7 +935,8 @@ export default function CreatePage() {
                             </>
                           ) : (
                             <>
-                              <span>Launch Campaign</span>
+                              <span className="hidden sm:inline">Launch Campaign</span>
+                              <span className="sm:hidden">Launch</span>
                               <Sparkles className="w-4 h-4 ml-2 flex-shrink-0" />
                             </>
                           )}

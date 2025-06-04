@@ -33,19 +33,13 @@ import {
   SearchProfile,
   SearchFundingPage 
 } from "@/services/search";
+import Link from 'next/link'
+import { FundingPage } from '@/types/funding'
+import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
+import { categoryValues } from '@/config/categories'
+import { sanitizeBioForDisplay } from '@/utils/validation'
 
 type ViewMode = 'grid' | 'list';
-
-const CATEGORIES = [
-  'creative',
-  'technology', 
-  'community',
-  'education',
-  'charity',
-  'business',
-  'personal',
-  'other'
-];
 
 export default function DiscoverPage() {
   const router = useRouter();
@@ -135,7 +129,7 @@ export default function DiscoverPage() {
     if (searchType !== 'all') params.set('type', searchType);
     
     const newUrl = params.toString() ? `?${params.toString()}` : '';
-    window.history.replaceState({}, '', `/fund-others${newUrl}`);
+    window.history.replaceState({}, '', `/discover${newUrl}`);
   }, [debouncedQuery, searchType]);
 
   // Filter handlers
@@ -186,7 +180,7 @@ export default function DiscoverPage() {
           )}
           {profile.bio && (
             <p className={`text-gray-600 mt-1 sm:mt-2 ${viewMode === 'grid' ? 'line-clamp-3 text-sm sm:text-base' : 'line-clamp-2 text-xs sm:text-sm'} leading-relaxed`}>
-              {profile.bio}
+              {sanitizeBioForDisplay(profile.bio)}
             </p>
           )}
           <div className={`flex items-center ${viewMode === 'grid' ? 'justify-between' : 'justify-between'} mt-2 sm:mt-3`}>
@@ -252,7 +246,15 @@ export default function DiscoverPage() {
               {campaign.goal_amount && (
                 <div>
                   <div className="flex justify-between text-xs sm:text-sm text-gray-600 mb-1">
-                    <span className="truncate">{campaign.total_funding.toLocaleString()} sats raised</span>
+                    <div className="truncate">
+                      <CurrencyDisplay 
+                        bitcoin={campaign.total_funding || 0}
+                        size="sm"
+                        showChf={false}
+                        className="text-xs sm:text-sm"
+                      />
+                      <span className="ml-1">raised</span>
+                    </div>
                     <span className="flex-shrink-0 ml-2">{Math.round(progress)}%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
@@ -408,7 +410,7 @@ export default function DiscoverPage() {
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {CATEGORIES.map(category => (
+                {categoryValues.map(category => (
                   <button
                     key={category}
                     onClick={() => toggleCategory(category)}

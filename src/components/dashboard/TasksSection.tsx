@@ -128,7 +128,7 @@ export default function TasksSection({ className }: TasksSectionProps) {
       completed: completedTasks.has('explore-campaigns'),
       priority: 'low',
       category: 'growth',
-      action: { label: 'Explore', href: '/fund-others' },
+      action: { label: 'Explore', href: '/discover' },
       icon: Globe
     })
 

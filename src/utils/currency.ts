@@ -10,9 +10,9 @@ export interface CurrencyConversion {
 
 // Mock exchange rates - in production these would come from real APIs
 const EXCHANGE_RATES = {
-  BTC_USD: 45000,    // 1 BTC = $45,000 USD
+  BTC_USD: 105000,   // 1 BTC = $105,000 USD (updated to current market)
   USD_CHF: 0.91,     // 1 USD = 0.91 CHF
-  BTC_CHF: 40950,    // 1 BTC = 40,950 CHF (BTC_USD * USD_CHF)
+  BTC_CHF: 95550,    // 1 BTC = 95,550 CHF (BTC_USD * USD_CHF)
 }
 
 export function satoshisToBitcoin(satoshis: number): number {

@@ -3,34 +3,36 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline'
-  size?: 'sm' | 'md' | 'lg'
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'gradient'
+  size?: 'sm' | 'md' | 'lg' | 'xl'
   isLoading?: boolean
   href?: string
 }
 
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, children, ...props }, ref) => {
-    const baseStyles = 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95 transform'
+    const baseStyles = 'inline-flex items-center justify-center rounded-xl font-medium transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95 transform hover:scale-102 touch-manipulation select-none'
     
     const variants = {
-      primary: 'bg-tiffany-600 text-white hover:bg-tiffany-700 focus-visible:ring-tiffany-500 shadow-sm hover:shadow-md active:shadow-sm',
-      secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-500 shadow-sm hover:shadow-md active:shadow-sm',
-      ghost: 'hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-500',
-      danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-sm hover:shadow-md active:shadow-sm',
-      outline: 'border border-gray-300 bg-transparent hover:bg-gray-50 focus-visible:ring-gray-500 shadow-sm hover:shadow-md active:shadow-sm'
+      primary: 'bg-tiffany-600 text-white hover:bg-tiffany-700 focus-visible:ring-tiffany-500 shadow-lg hover:shadow-xl active:shadow-md border-0',
+      secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-500 shadow-md hover:shadow-lg active:shadow-sm border border-gray-200',
+      ghost: 'hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-500 shadow-none hover:shadow-sm text-gray-700',
+      danger: 'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-lg hover:shadow-xl active:shadow-md border-0',
+      outline: 'border-2 border-gray-300 bg-transparent hover:bg-gray-50 hover:border-gray-400 focus-visible:ring-gray-500 shadow-sm hover:shadow-md active:shadow-sm text-gray-700',
+      gradient: 'bg-gradient-to-r from-tiffany-600 to-orange-600 hover:from-tiffany-700 hover:to-orange-700 text-white shadow-lg hover:shadow-xl active:shadow-md border-0 focus-visible:ring-tiffany-500'
     }
 
     const sizes = {
-      sm: 'h-9 min-h-[36px] px-3 text-sm min-w-[80px]',
-      md: 'h-10 min-h-[40px] px-4 text-base min-w-[100px] sm:h-11 sm:min-h-[44px] sm:px-5',
-      lg: 'h-12 min-h-[48px] px-6 text-lg min-w-[120px] sm:h-14 sm:min-h-[56px] sm:px-8 sm:text-xl',
+      sm: 'h-9 min-h-[36px] px-4 text-sm min-w-[80px] font-medium',
+      md: 'h-11 min-h-[44px] px-6 text-base min-w-[100px] font-semibold',
+      lg: 'h-12 min-h-[48px] px-8 text-lg min-w-[120px] font-semibold',
+      xl: 'h-14 min-h-[56px] px-10 text-xl min-w-[140px] font-bold',
     }
 
     const buttonContent = isLoading ? (
       <div className="flex items-center">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2" />
-        Loading...
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-3" />
+        <span>Loading...</span>
       </div>
     ) : children
 

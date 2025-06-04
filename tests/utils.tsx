@@ -1,19 +1,17 @@
-import { render as rtlRender } from '@testing-library/react'
-import { NextRouter } from 'next/router'
+import { render as rtlRender, RenderOptions } from '@testing-library/react'
 import { ReactElement } from 'react'
-import { TestWrapper } from './TestWrapper'
+import { TestWrapper } from '../TestWrapper'
 
-export * from '@testing-library/react'
-
-interface RenderOptions {
-  router?: Partial<NextRouter>
-  wrapper?: React.ComponentType
+// Custom render function that includes providers
+function render(ui: ReactElement, options?: RenderOptions) {
+  return rtlRender(ui, {
+    wrapper: TestWrapper,
+    ...options,
+  })
 }
 
-export function render(
-  ui: ReactElement,
-  { router, wrapper: Wrapper, ...options }: RenderOptions = {}
-) {
-  const WrapperComponent = Wrapper || TestWrapper
-  return rtlRender(ui, { wrapper: WrapperComponent, ...options })
-} 
+// Re-export everything from react-testing-library
+export * from '@testing-library/react'
+
+// Override render method
+export { render } 

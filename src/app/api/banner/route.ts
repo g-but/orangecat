@@ -1,112 +1,279 @@
 import { NextRequest, NextResponse } from 'next/server'
 import supabaseAdmin from '@/services/supabase/admin'
+import { createServerClient } from '@/services/supabase/server'
 import sharp from 'sharp'
+import path from 'path'
 
 const BUCKET_NAME = 'banners'
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-const BANNER_WIDTH = 1200 // Standard banner width
-const BANNER_HEIGHT = 400 // Standard banner height
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // Reduced to 5MB for security
+const BANNER_WIDTH = 1200
+const BANNER_HEIGHT = 400
+
+// File type validation with magic bytes
+const MAGIC_BYTES = {
+  'image/jpeg': [0xFF, 0xD8, 0xFF],
+  'image/png': [0x89, 0x50, 0x4E, 0x47],
+  'image/gif': [0x47, 0x49, 0x46],
+  'image/webp': [0x52, 0x49, 0x46, 0x46]
+}
+
+// Suspicious content patterns to scan for
+const SUSPICIOUS_PATTERNS = [
+  /<\?php/gi,           // PHP code
+  /<script/gi,          // JavaScript
+  /<%/gi,               // JSP/ASP code
+  /\.exe\b/gi,          // Executable references
+  /\.dll\b/gi,          // DLL references
+  /javascript:/gi,      // JavaScript protocol
+  /vbscript:/gi         // VBScript protocol
+]
+
+/**
+ * Enhanced file validation with multiple security layers
+ */
+async function validateUploadedFile(file: File, buffer: Buffer) {
+  // 1. File extension validation
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
+  const fileExtension = path.extname(file.name).toLowerCase()
+  
+  if (!allowedExtensions.includes(fileExtension)) {
+    return { valid: false, error: 'Invalid file extension' }
+  }
+  
+  // 2. MIME type validation with strict checking
+  const trustedMimeTypes: { [key: string]: string[] } = {
+    '.jpg': ['image/jpeg'],
+    '.jpeg': ['image/jpeg'],
+    '.png': ['image/png'],
+    '.webp': ['image/webp'],
+    '.gif': ['image/gif']
+  }
+  
+  if (!trustedMimeTypes[fileExtension]?.includes(file.type)) {
+    return { valid: false, error: 'MIME type does not match file extension' }
+  }
+  
+  // 3. Magic byte validation (file signature)
+  const signature = MAGIC_BYTES[file.type as keyof typeof MAGIC_BYTES]
+  if (signature) {
+    const fileHeader = Array.from(buffer.slice(0, signature.length))
+    const signatureMatch = signature.every((byte, index) => fileHeader[index] === byte)
+    if (!signatureMatch) {
+      return { valid: false, error: 'File signature does not match declared type' }
+    }
+  }
+  
+  // 4. Content scanning for embedded threats
+  const fileContent = buffer.toString('utf8', 0, Math.min(buffer.length, 10000)) // Scan first 10KB
+  for (const pattern of SUSPICIOUS_PATTERNS) {
+    if (pattern.test(fileContent)) {
+      return { valid: false, error: 'Suspicious content detected in file' }
+    }
+  }
+  
+  // 5. File size validation (with type-specific limits)
+  const maxSizes: { [key: string]: number } = {
+    'image/jpeg': 5 * 1024 * 1024,  // 5MB for JPEG
+    'image/png': 3 * 1024 * 1024,   // 3MB for PNG
+    'image/webp': 2 * 1024 * 1024,  // 2MB for WebP
+    'image/gif': 1 * 1024 * 1024    // 1MB for GIF
+  }
+  
+  const maxSize = maxSizes[file.type] || 1024 * 1024
+  if (file.size > maxSize) {
+    return { valid: false, error: `File too large for type ${file.type}. Maximum: ${Math.round(maxSize / 1024 / 1024)}MB` }
+  }
+  
+  // 6. Filename sanitization
+  const sanitizedName = file.name
+    .replace(/[^a-zA-Z0-9.-]/g, '_')  // Replace special chars
+    .replace(/\.{2,}/g, '.')         // Prevent path traversal
+    .substring(0, 100)               // Limit length
+  
+  return { 
+    valid: true, 
+    sanitizedName,
+    detectedType: file.type 
+  }
+}
+
+/**
+ * Secure image processing with comprehensive sanitization
+ */
+async function secureImageProcessing(buffer: Buffer) {
+  try {
+    // Process with Sharp - automatically strips metadata and sanitizes
+    const processedImage = await sharp(buffer)
+      .resize(BANNER_WIDTH, BANNER_HEIGHT, {
+        fit: 'cover',
+        position: 'center',
+        withoutEnlargement: true,  // Prevent enlargement attacks
+        fastShrinkOnLoad: false    // More secure processing
+      })
+      .webp({ 
+        quality: 85,
+        effort: 6,
+        nearLossless: false  // Prevent lossless metadata preservation
+      })
+      .toBuffer()
+    
+    // Verify the processed image is clean
+    const verification = await sharp(processedImage).metadata()
+    
+    // Ensure no metadata survived the processing
+    if (verification.exif || verification.icc || verification.iptc || verification.xmp) {
+      throw new Error('Metadata stripping failed - image rejected')
+    }
+    
+    // Final dimension validation
+    if (verification.width !== BANNER_WIDTH || verification.height !== BANNER_HEIGHT) {
+      throw new Error('Image dimensions validation failed')
+    }
+    
+    return {
+      buffer: processedImage,
+      metadata: {
+        format: verification.format,
+        width: verification.width,
+        height: verification.height,
+        size: processedImage.length
+      }
+    }
+    
+  } catch (error) {
+    console.error('[banner] Security processing failed:', error)
+    throw new Error('Image processing failed security validation')
+  }
+}
 
 /**
  * POST /api/banner
  * Body: multipart/form-data with fields { file: File, userId: string }
  * Returns JSON { publicUrl: string }
+ * 
+ * 🔒 SECURITY ENHANCED: Authentication required, comprehensive validation
  */
 export async function POST(req: NextRequest) {
+  try {
+    // 🔒 CRITICAL: Verify user authentication FIRST
+    const supabase = createServerClient()
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    
+    if (!user || userError) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+    
   const formData = await req.formData()
   const file = formData.get('file') as File | null
-  const userId = formData.get('userId') as string | null
+    const requestedUserId = formData.get('userId') as string | null
+    
+    // 🔒 CRITICAL: Verify user can only upload for themselves
+    if (!requestedUserId || requestedUserId !== user.id) {
+      return NextResponse.json(
+        { error: 'Cannot upload files for other users' },
+        { status: 403 }
+      )
+    }
+    
+    // 🔒 Sanitize userId to prevent path traversal
+    const sanitizedUserId = user.id.replace(/[^a-zA-Z0-9-]/g, '')
+    if (sanitizedUserId !== user.id) {
+      return NextResponse.json(
+        { error: 'Invalid user ID format' },
+        { status: 400 }
+      )
+    }
+    
+    if (!file) {
+      return NextResponse.json(
+        { error: 'No file provided' },
+        { status: 400 }
+      )
+    }
+    
+    // 🔒 Enhanced file validation
+    const buffer = Buffer.from(await file.arrayBuffer())
+    const validation = await validateUploadedFile(file, buffer)
+    
+    if (!validation.valid) {
+      return NextResponse.json(
+        { error: validation.error },
+        { status: 400 }
+      )
+    }
+    
+    // 🔒 Check user permissions for file uploads
+    const userProfile = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+    
+    if (!userProfile.data) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      )
+    }
 
-  if (!file || !userId) {
-    return NextResponse.json({ error: 'Missing file or userId' }, { status: 400 })
-  }
-
-  // Check file size
-  if (file.size > MAX_FILE_SIZE) {
-    return NextResponse.json({ error: 'File size too large. Maximum size is 10MB.' }, { status: 400 })
-  }
-
-  // Check file type
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
-  if (!allowedTypes.includes(file.type)) {
-    return NextResponse.json({ 
-      error: 'Invalid file type. Only JPEG, PNG, WebP, and GIF files are allowed.' 
-    }, { status: 400 })
-  }
-
-  try {
     // ── Ensure bucket exists ────────────────────────────────────────────────────
     try {
       const { data: buckets, error: listErr } = await supabaseAdmin.storage.listBuckets()
       if (listErr) {
         console.error('[banner] listBuckets error', listErr)
-        // if we cannot list, assume bucket exists and continue
       } else if (!buckets?.some((b) => b.id === BUCKET_NAME)) {
         const { error: createErr } = await supabaseAdmin.storage.createBucket(BUCKET_NAME, {
           public: true,
         })
         if (createErr) {
           console.error('[banner] createBucket error', createErr)
-          return NextResponse.json({ error: createErr.message }, { status: 500 })
+          return NextResponse.json({ error: 'Storage configuration error' }, { status: 500 })
         }
       }
     } catch (e: any) {
       console.error('[banner] bucket ensure error', e)
-      // Continue – upload may still succeed if bucket exists
     }
 
-    // ── Process image with sharp ────────────────────────────────────────────────
-    const buffer = Buffer.from(await file.arrayBuffer())
-    
-    // Process the image: resize, optimize, and convert to WebP
-    let processedImage: Buffer
-    
-    try {
-      processedImage = await sharp(buffer)
-        .resize(BANNER_WIDTH, BANNER_HEIGHT, {
-          fit: 'cover', // Crop to fit banner dimensions
-          position: 'center', // Center the crop
-        })
-        .webp({ 
-          quality: 80, // Good quality for banners
-          effort: 6   // High compression effort
-        })
-        .toBuffer()
-    } catch (sharpError) {
-      console.error('[banner] sharp processing error', sharpError)
-      return NextResponse.json({ error: 'Failed to process image' }, { status: 500 })
-    }
+    // 🔒 Secure image processing with sanitization
+    const { buffer: processedImage, metadata } = await secureImageProcessing(buffer)
 
     // ── Upload processed file ──────────────────────────────────────────────────
     const timestamp = Date.now()
-    const filePath = `${userId}/${timestamp}.webp` // Always save as WebP
+    const filePath = `${sanitizedUserId}/${timestamp}.webp`
     
     const { error: uploadErr } = await supabaseAdmin.storage
       .from(BUCKET_NAME)
       .upload(filePath, processedImage, {
         contentType: 'image/webp',
         upsert: true,
-        cacheControl: '31536000', // 1 year cache
+        cacheControl: '31536000',
       })
       
     if (uploadErr) {
       console.error('[banner] upload error', uploadErr)
-      return NextResponse.json({ error: uploadErr.message }, { status: 500 })
+      return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
     }
 
     // ── Get public URL ──────────────────────────────────────────────────────────
     const { data } = supabaseAdmin.storage.from(BUCKET_NAME).getPublicUrl(filePath)
 
+    // 🔒 Log upload for audit trail
+    console.log(`[banner] Secure upload completed for user ${user.id}: ${filePath}`)
+
     return NextResponse.json({ 
       publicUrl: data.publicUrl,
       size: processedImage.length,
-      dimensions: { width: BANNER_WIDTH, height: BANNER_HEIGHT }
+      dimensions: { width: BANNER_WIDTH, height: BANNER_HEIGHT },
+      processed: true
     })
 
   } catch (error: any) {
-    console.error('[banner] unexpected error', error)
+    console.error('[banner] Security error:', error)
     return NextResponse.json({ 
-      error: 'An unexpected error occurred while processing the banner' 
+      error: 'Upload security validation failed' 
     }, { status: 500 })
   }
 } 

@@ -2,6 +2,7 @@
 
 import supabase from './client'
 import type { Profile, ProfileFormData } from '@/types/database'
+import { logProfile, logger } from '@/utils/logger'
 
 export async function getProfiles() {
   return supabase
@@ -18,150 +19,131 @@ export async function getProfile(id: string) {
     .single()
 }
 
-export async function updateProfile(
-  userId: string,
-  formData: ProfileFormData
-) {
-  console.log(`ProfileHelper: Starting profile update for user ${userId}`, formData);
-  
+/**
+ * Update a user's profile in the database
+ */
+export async function updateProfile(userId: string, formData: ProfileFormData): Promise<{ data: Profile | null; error: string | null }> {
   try {
-    // Get fresh user data using getUser instead of getSession
+    logProfile(`ProfileHelper: Starting profile update for user ${userId}`, formData);
+
+    // Validate input
+    if (!userId) {
+      return { data: null, error: 'User ID is required' };
+    }
+
+    // Get current user to ensure they can only update their own profile
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
-    if (userError) {
-      console.error('ProfileHelper: Authentication error:', userError);
-      throw new Error('Authentication error: Please log in again');
+    if (userError || !user) {
+      logger.error('ProfileHelper: No authenticated user:', userError, 'Profile');
+      return { data: null, error: 'Authentication required' };
     }
-    
-    if (!user) {
-      console.error('ProfileHelper: No authenticated user');
-      throw new Error('No authenticated user: Please log in again');
-    }
-    
+
     if (user.id !== userId) {
-      console.error('ProfileHelper: User ID mismatch', { 
-        authenticatedUserId: user.id, 
-        targetUserId: userId 
-      });
-      throw new Error('Permission denied: You can only update your own profile');
+      logger.error('ProfileHelper: User ID mismatch', { userId, authenticatedUserId: user.id }, 'Profile');
+      return { data: null, error: 'Permission denied' };
     }
-    
-    // Dynamically build payload to avoid sending columns that may not exist in
-    // the current DB schema (e.g. avatar_url) and therefore trigger PGRST204.
-    const profileData: Record<string, any> = {
-      id: userId,
+
+    // Prepare the profile data for update
+    const profileData: Partial<Profile> = {
       updated_at: new Date().toISOString(),
     };
 
-    if (typeof formData.username !== 'undefined') {
-      profileData.username = formData.username?.trim() ?? null;
+    // Only include fields that are provided and not empty
+    if (formData.username !== undefined) {
+      profileData.username = formData.username?.trim() || null;
     }
-    if (typeof formData.display_name !== 'undefined') {
-      profileData.display_name = formData.display_name?.trim() ?? null;
+
+    if (formData.display_name !== undefined) {
+      profileData.display_name = formData.display_name?.trim() || null;
     }
-    if (typeof formData.bio !== 'undefined') {
-      profileData.bio = formData.bio?.trim() ?? null;
+
+    if (formData.bio !== undefined) {
+      profileData.bio = formData.bio?.trim() || null;
     }
-    if (typeof formData.bitcoin_address !== 'undefined') {
-      profileData.bitcoin_address = formData.bitcoin_address?.trim() ?? null;
+
+    if (formData.avatar_url !== undefined) {
+      profileData.avatar_url = formData.avatar_url || null;
     }
-    if (typeof formData.avatar_url !== 'undefined') {
-      profileData.avatar_url = formData.avatar_url ?? null;
+
+    if (formData.banner_url !== undefined) {
+      profileData.banner_url = formData.banner_url || null;
     }
-    if (typeof formData.banner_url !== 'undefined') {
-      profileData.banner_url = formData.banner_url ?? null;
+
+    if (formData.bitcoin_address !== undefined) {
+      profileData.bitcoin_address = formData.bitcoin_address?.trim() || null;
     }
-    
-    console.log('ProfileHelper: Prepared update data:', profileData);
-    
-    // First check if the profile exists
-    const { data: existingProfile, error: checkError } = await supabase
+
+    logProfile('ProfileHelper: Prepared update data:', profileData);
+
+    // Check if profile exists first
+    const { data: existingProfile, error: fetchError } = await supabase
       .from('profiles')
-      .select('id')
+      .select('*')
       .eq('id', userId)
       .single();
-      
-    if (checkError && checkError.code !== 'PGRST116') {
-      console.error('ProfileHelper: Error checking profile existence:', checkError);
-      throw new Error('Failed to verify profile existence');
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      logger.error('ProfileHelper: Error checking existing profile:', fetchError, 'Profile');
+      return { data: null, error: 'Failed to check existing profile' };
     }
-    
+
     let result;
-    
+
     if (!existingProfile) {
       // Profile doesn't exist, create it
-      console.log('ProfileHelper: Profile does not exist, creating new profile');
-      const { data, error } = await supabase
+      logProfile('ProfileHelper: Profile does not exist, creating new profile');
+      
+      const newProfileData = {
+        id: userId,
+        username: profileData.username,
+        display_name: profileData.display_name,
+        bio: profileData.bio,
+        avatar_url: profileData.avatar_url,
+        banner_url: profileData.banner_url,
+        bitcoin_address: profileData.bitcoin_address,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      result = await supabase
         .from('profiles')
-        .insert(profileData)
+        .insert(newProfileData)
         .select('*')
         .single();
-        
-      if (error) {
-        console.error('ProfileHelper: Error creating profile:', error);
-        throw error;
-      }
-      
-      result = data;
     } else {
       // Profile exists, update it
-      console.log('ProfileHelper: Updating existing profile');
-      let { data, error } = await supabase
+      logProfile('ProfileHelper: Updating existing profile');
+      
+      result = await supabase
         .from('profiles')
         .update(profileData)
         .eq('id', userId)
         .select('*')
         .single();
-        
-      // retry without avatar_url if column missing
-      if (error && error.code === 'PGRST204' && error.message?.includes('avatar_url')) {
-        const retry = { ...profileData } as any;
-        delete retry.avatar_url;
-        const retryRes = await supabase
-          .from('profiles')
-          .update(retry)
-          .eq('id', userId)
-          .select('*')
-          .single();
-        data = retryRes.data;
-        error = retryRes.error;
+    }
+
+    if (result.error) {
+      logger.error('ProfileHelper: Database operation failed:', result.error, 'Profile');
+      
+      // Handle specific error cases
+      if (result.error.code === '23505') {
+        return { data: null, error: 'Username is already taken. Please choose another username.' };
       }
       
-      if (error) {
-        console.error('ProfileHelper: Error updating profile:', error);
-        
-        if (error.code === '23505') {
-          throw new Error('Username is already taken. Please choose another username.');
-        }
-        
-        throw error;
-      }
-      
-      result = data;
+      return { data: null, error: result.error.message || 'Failed to update profile' };
     }
-    
-    if (!result) {
-      throw new Error('Profile operation failed: No data returned from database');
+
+    if (!result.data) {
+      logger.error('ProfileHelper: No data returned from database operation', undefined, 'Profile');
+      return { data: null, error: 'No data returned from update operation' };
     }
-    
-    console.log('ProfileHelper: Operation successful!', result);
-    return result;
+
+    logProfile('ProfileHelper: Operation successful!', result);
+    return { data: result.data, error: null };
+
   } catch (error: any) {
-    console.error('ProfileHelper: Exception during profile operation:', error);
-    
-    // Enhance error message for common cases
-    if (error.message.includes('duplicate key')) {
-      throw new Error('Username is already taken. Please choose another username.');
-    }
-    
-    if (error.message.includes('permission denied')) {
-      throw new Error('Permission denied: You do not have access to update this profile.');
-    }
-    
-    if (error.message.includes('network')) {
-      throw new Error('Network error: Please check your internet connection and try again.');
-    }
-    
-    throw error;
+    logger.error('ProfileHelper: Unexpected error during profile update:', error, 'Profile');
+    return { data: null, error: error.message || 'An unexpected error occurred' };
   }
 } 

@@ -35,6 +35,7 @@ import type { Profile } from '@/types/database'
 import { useBitcoinWallet } from '@/hooks/useBitcoinWallet'
 import { getTransactionUrl } from '@/services/bitcoin'
 import DefaultAvatar from '@/components/ui/DefaultAvatar'
+import { sanitizeBioForDisplay } from '@/utils/validation'
 
 // Get Mempool.space address URL
 const getAddressUrl = (address: string): string => {
@@ -224,7 +225,7 @@ export default function PublicProfilePage() {
                     </p>
                     {profile.bio && (
                       <p className="text-gray-600 text-base leading-relaxed max-w-2xl">
-                        {profile.bio}
+                        {sanitizeBioForDisplay(profile.bio)}
                       </p>
                     )}
                   </div>

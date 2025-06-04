@@ -1,0 +1,79 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+code-quality
+
+We make apps and sites that are easily maintainable, modular, with clear separation of concerns, with as few points of failure as possible.
+
+For that reason, before you create a new file and directory, ensure that there is none already for this purpose and/or function. If there is, work with that one. If there isn't you can create one.
+
+Do not clog code base with files and directories that will never be used and that are duplicates of the existing ones and can potentially conflict with the existing ones.
+
+Always use most modern technologies and best practices.
+
+## DRY Principle (Don't Repeat Yourself)
+
+Before creating any new utility function, component, or pattern:
+1. Search the codebase for existing implementations
+2. If similar functionality exists, refactor to reuse instead of duplicating
+3. Extract common patterns into reusable hooks, components, or utilities
+
+## Component Guidelines
+
+**Size Limits:**
+- Components should be under 200 lines
+- If larger, break into smaller components or extract logic to custom hooks
+- Single responsibility principle: each component should have one clear purpose
+
+**Reusability:**
+- Before creating a new component, check if similar functionality exists
+- Look for patterns like: outside click handling, loading states, dropdown logic
+- Extract these into custom hooks or shared components
+
+**Naming:**
+- Use descriptive names that clearly indicate purpose
+- Avoid generic names like "Component1", "Handler", etc.
+
+## Utility Functions
+
+**No Duplication:**
+- Each utility function should exist in only one place
+- Example: The cn() function should not be duplicated across files
+- Create index files for organized utility exports
+
+**Organization:**
+- Group related utilities together (e.g., currency.ts, validation.ts)
+- Use consistent file naming conventions
+- Export utilities through index files for clean imports
+
+## Service Layer
+
+**File Size:**
+- Service files should focus on one domain
+- Files over 400 lines should be split into multiple focused services
+- Separate concerns: data fetching, transformation, caching, business logic
+
+**Error Handling:**
+- Use consistent error handling patterns across all services
+- Create centralized error handling utilities
+- Always provide meaningful error messages
+
+## Production Hygiene
+
+**No Debug Code:**
+- Remove console.log statements before production
+- Use proper logging utilities instead
+- Implement environment-based logging levels
+
+**TypeScript:**
+- Always use proper TypeScript types
+- Avoid 'any' unless absolutely necessary
+- Prefer interfaces for object shapes, types for unions/primitives
+
+**Performance:**
+- Extract expensive operations to separate functions
+- Use memoization where appropriate
+- Avoid nested conditionals and complex logic in render functions
+

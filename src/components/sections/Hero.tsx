@@ -11,6 +11,13 @@ export default function Hero() {
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="min-h-[calc(100vh-5rem)] sm:min-h-[calc(100vh-8rem)] lg:min-h-[calc(100vh-10rem)] flex flex-col justify-center py-12 sm:py-16 lg:py-20">
           <div className="text-center">
+            {/* Hero Tagline */}
+            <div className="mb-6 sm:mb-8">
+              <p className="text-lg sm:text-xl lg:text-2xl font-medium text-gray-700 leading-relaxed max-w-4xl mx-auto">
+                Be free. Be open. Do things you love.
+              </p>
+            </div>
+
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight">
               <span className="block">Fund Anything</span>
               <span className="block mt-2">

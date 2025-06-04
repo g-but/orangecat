@@ -159,8 +159,9 @@ export default function ComingSoon() {
         return
       }
 
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsAuthenticated(!!session)
+      // Use getUser() for security - validates authentication with server
+      const { data: { user }, error } = await supabase.auth.getUser()
+      setIsAuthenticated(!!user && !error)
       setLoading(false)
     }
     checkAuth()

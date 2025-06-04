@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Z-Index System */
+@import '../styles/z-index.css';
+
 /* Mobile Menu Animations */
 @keyframes slideInFromRight {
   from {

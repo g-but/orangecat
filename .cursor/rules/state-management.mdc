@@ -19,4 +19,29 @@ If the session is lost, clear state everywhere.
 
 
 
-
+{
+  "rules": {
+    "authentication": {
+      "centralized_auth_logic": "Keep auth state management centralized in the auth store. Avoid duplicating auth checks across components.",
+      "consistent_auth_hooks": "Use the existing useAuth, useRequireAuth, useRedirectIfAuthenticated hooks consistently. Don't create new auth patterns.",
+      "auth_error_handling": "Use consistent error handling patterns for auth failures. Always clear state on auth errors."
+    },
+    "components": {
+      "component_size_limit": "Components should be under 200 lines. If larger, break into smaller components or extract logic to hooks.",
+      "no_duplicate_components": "Before creating a new component, check if similar functionality exists. Reuse or refactor instead of duplicating.",
+      "extract_common_patterns": "Extract repeated patterns (like outside click handling, loading states) into custom hooks."
+    },
+    "utilities": {
+      "single_utility_location": "Each utility function should exist in only one place. The cn() function duplication should be avoided.",
+      "utility_organization": "Group related utilities together. Create index files for easy imports."
+    },
+    "services": {
+      "service_file_size": "Service files should focus on one domain. Files over 400 lines should be split into multiple focused services.",
+      "separation_of_concerns": "Keep data fetching, transformation, and caching logic separate from UI components."
+    },
+    "supabase_integration": {
+      "consistent_error_handling": "Use consistent patterns for Supabase errors across all services.",
+      "centralized_client": "Always use the centralized Supabase client. Don't create new instances."
+    }
+  }
+}

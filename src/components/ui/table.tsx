@@ -1,5 +1,5 @@
+import { cn } from '@/lib/utils'
 import * as React from 'react'
-import { cn } from '@/utils/cn'
 
 export const Table = ({ className, ...props }: React.HTMLAttributes<HTMLTableElement>) => (
   <div className="w-full overflow-auto">
