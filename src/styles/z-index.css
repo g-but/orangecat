@@ -1,0 +1,16 @@
+/* Z-Index Scale - Centralized z-index management
+   Use these utility classes for consistent layering */
+
+/* Utility classes for common z-index values with proper Tailwind-compatible values */
+.z-base { z-index: 0; }
+.z-below { z-index: -1; }
+.z-tooltip { z-index: 10; }
+.z-popover { z-index: 15; }
+.z-dropdown { z-index: 30; }
+.z-header { z-index: 40; }
+.z-sidebar { z-index: 45; }
+.z-modal-backdrop { z-index: 50; }
+.z-modal { z-index: 55; }
+.z-toast { z-index: 60; }
+.z-loading { z-index: 65; }
+.z-emergency { z-index: 9999; } 

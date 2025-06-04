@@ -2,7 +2,13 @@
 
 import { useState, useCallback } from 'react'
 import { Profile } from '@/types/profile'
-import { isValidBitcoinAddress, isValidLightningAddress, isValidWebsite } from '@/utils/validation'
+import { 
+  isValidBitcoinAddress, 
+  isValidLightningAddress, 
+  isValidUsername, 
+  isValidBio, 
+  isValidUrl 
+} from '@/utils/validation'
 
 interface FormData {
   full_name: string
@@ -14,6 +20,7 @@ interface FormData {
 
 interface FormErrors {
   full_name?: string
+  bio?: string
   website?: string
   bitcoin_address?: string
   lightning_address?: string
@@ -64,18 +71,32 @@ export function useProfileForm(initialData: Partial<FormData> = {}): UseProfileF
     }
 
     // Validate website if provided
-    if (formData.website && !isValidWebsite(formData.website)) {
+    if (formData.website && !isValidUrl(formData.website)) {
       newErrors.website = 'Please enter a valid website URL'
     }
 
-    // Validate Bitcoin address if provided
-    if (formData.bitcoin_address && !isValidBitcoinAddress(formData.bitcoin_address)) {
-      newErrors.bitcoin_address = 'Invalid Bitcoin address'
+    // Enhanced Bitcoin address validation
+    if (formData.bitcoin_address) {
+      const btcValidation = isValidBitcoinAddress(formData.bitcoin_address)
+      if (!btcValidation.valid) {
+        newErrors.bitcoin_address = btcValidation.error || 'Invalid Bitcoin address'
+      }
     }
 
-    // Validate Lightning address if provided
-    if (formData.lightning_address && !isValidLightningAddress(formData.lightning_address)) {
-      newErrors.lightning_address = 'Invalid Lightning address'
+    // Enhanced Lightning address validation
+    if (formData.lightning_address) {
+      const lightningValidation = isValidLightningAddress(formData.lightning_address)
+      if (!lightningValidation.valid) {
+        newErrors.lightning_address = lightningValidation.error || 'Invalid Lightning address'
+      }
+    }
+
+    // Enhanced bio validation
+    if (formData.bio) {
+      const bioValidation = isValidBio(formData.bio)
+      if (!bioValidation.valid) {
+        newErrors.bio = bioValidation.error || 'Invalid bio content'
+      }
     }
 
     setErrors(newErrors)

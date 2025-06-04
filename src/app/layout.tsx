@@ -41,18 +41,23 @@ export default async function RootLayout({
                               pathname.startsWith('/people') ||
                               pathname.startsWith('/events') ||
                               pathname.startsWith('/organizations') ||
-                              pathname.startsWith('/projects') ||
-                              pathname.startsWith('/fundraising')
+                              pathname.startsWith('/projects')
 
   const supabase = createServerClient()
   
-  // Get session and user
-  const { data: { session } } = await supabase.auth.getSession()
-  const user = session?.user ?? null
+  // Use getUser() for security - validates authentication with server
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  // Get session only if we have a valid authenticated user
+  let session = null
+  if (user && !userError) {
+    const { data: { session: userSession } } = await supabase.auth.getSession()
+    session = userSession
+  }
 
-  // Try to get profile data if user exists
+  // Try to get profile data if user exists and is authenticated
   let profile = null
-  if (user) {
+  if (user && !userError) {
     try {
       const { data: profileData, error } = await supabase
         .from('profiles')

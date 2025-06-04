@@ -3,6 +3,7 @@
 import { createBrowserClient } from '@supabase/ssr' // Use createBrowserClient for client-side
 import { Session, User, SupabaseClient } from '@supabase/supabase-js' // Corrected import
 import { Database } from '@/types/database'
+import { logSupabase, logger } from '@/utils/logger'
 
 // Environment variables
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -12,44 +13,42 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 const AUTH_STORE_KEY = 'orangecat-auth-store';
 
 // Add debug logging for environment variables in development
-if (process.env.NODE_ENV === 'development') {
-  console.log('Supabase URL:', supabaseUrl ? `${supabaseUrl.slice(0, 15)}...` : 'undefined')
-  console.log('Supabase Anon Key:', supabaseAnonKey ? `${supabaseAnonKey.slice(0, 6)}...` : 'undefined')
-  
-  // Add more detailed URL debugging
-  if (supabaseUrl) {
-    try {
-      const url = new URL(supabaseUrl);
-      console.log('URL Debug:', {
-        fullUrl: supabaseUrl,
-        protocol: url.protocol,
-        hostname: url.hostname,
-        pathname: url.pathname,
-        isValid: true
-      });
-      
-      // Check that it's a valid Supabase URL
-      if (!url.hostname.includes('supabase') && !url.hostname.includes('supabase.co')) {
-        console.error('⚠️ CRITICAL: Supabase URL does not appear to be a valid Supabase domain. Check your .env.local file!');
-        console.error('The URL should be in the format: https://[project-id].supabase.co');
-      }
-      
-      // Check that URL has right protocol
-      if (url.protocol !== 'https:') {
-        console.error('⚠️ CRITICAL: Supabase URL should use https protocol! Current protocol:', url.protocol);
-      }
-    } catch (error: any) {
-      console.error('Invalid Supabase URL:', {
-        url: supabaseUrl,
-        error: error?.message || 'Unknown error'
-      });
-      
-      // Try to help with common issues
-      if (supabaseUrl.includes('http://') || supabaseUrl.includes('https://')) {
-        console.error('The URL appears to be using an URL format but is invalid. Check for malformed characters.');
-      } else {
-        console.error('The URL should start with https:// - make sure your .env.local file has the complete URL.');
-      }
+logSupabase('Supabase URL:', supabaseUrl ? `${supabaseUrl.slice(0, 15)}...` : 'undefined')
+logSupabase('Supabase Anon Key:', supabaseAnonKey ? `${supabaseAnonKey.slice(0, 6)}...` : 'undefined')
+
+// Add more detailed URL debugging
+if (supabaseUrl) {
+  try {
+    const url = new URL(supabaseUrl);
+    logSupabase('URL Debug:', {
+      fullUrl: supabaseUrl,
+      protocol: url.protocol,
+      hostname: url.hostname,
+      pathname: url.pathname,
+      isValid: true
+    });
+    
+    // Check that it's a valid Supabase URL
+    if (!url.hostname.includes('supabase') && !url.hostname.includes('supabase.co')) {
+      logger.error('⚠️ CRITICAL: Supabase URL does not appear to be a valid Supabase domain. Check your .env.local file!', undefined, 'Supabase');
+      logger.error('The URL should be in the format: https://[project-id].supabase.co', undefined, 'Supabase');
+    }
+    
+    // Check that URL has right protocol
+    if (url.protocol !== 'https:') {
+      logger.error('⚠️ CRITICAL: Supabase URL should use https protocol! Current protocol:', url.protocol, 'Supabase');
+    }
+  } catch (error: any) {
+    logger.error('Invalid Supabase URL:', {
+      url: supabaseUrl,
+      error: error?.message || 'Unknown error'
+    }, 'Supabase');
+    
+    // Try to help with common issues
+    if (supabaseUrl.includes('http://') || supabaseUrl.includes('https://')) {
+      logger.error('The URL appears to be using an URL format but is invalid. Check for malformed characters.', undefined, 'Supabase');
+    } else {
+      logger.error('The URL should start with https:// - make sure your .env.local file has the complete URL.', undefined, 'Supabase');
     }
   }
 }
@@ -65,9 +64,7 @@ async function testDnsResolution() {
   const url = new URL(supabaseUrl!);
   const hostname = url.hostname;
   
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`Testing basic connectivity to: ${hostname}`);
-  }
+  logSupabase(`Testing basic connectivity to: ${hostname}`);
   
   try {
     // Simplest possible health check - just check if the domain resolves
@@ -81,15 +78,11 @@ async function testDnsResolution() {
     });
     const endTime = performance.now();
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Connection test result: ${response.status}, took ${(endTime - startTime).toFixed(2)}ms`);
-    }
+    logSupabase(`Connection test result: ${response.status}, took ${(endTime - startTime).toFixed(2)}ms`);
     // For Supabase, any response is good - it means the server is reachable
     return true;
   } catch (error: any) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error(`Connection test failed:`, error);
-    }
+    logger.error(`Connection test failed:`, error, 'Supabase');
     return false;
   }
 }
@@ -100,13 +93,9 @@ if (typeof window !== 'undefined') {
   setTimeout(() => {
     testDnsResolution().then(success => {
       if (!success) {
-        if (process.env.NODE_ENV === 'development') {
-          console.warn(`⚠️ Potential connectivity issue with Supabase. Network requests may fail.`);
-        }
+        logger.warn(`⚠️ Potential connectivity issue with Supabase. Network requests may fail.`, undefined, 'Supabase');
       } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.log('✅ Supabase connection test successful');
-        }
+        logSupabase('✅ Supabase connection test successful');
       }
     });
   }, 2000); // Increased delay to reduce startup noise
@@ -137,14 +126,14 @@ const supabase = createBrowserClient<Database>(
             try {
               value = localStorage.getItem(key);
             } catch (e) {
-              console.warn('Error reading from localStorage:', e);
+              logger.warn('Error reading from localStorage:', e, 'Supabase');
             }
             
             if (!value) {
               try {
                 value = sessionStorage.getItem(key);
               } catch (e) {
-                console.warn('Error reading from sessionStorage:', e);
+                logger.warn('Error reading from sessionStorage:', e, 'Supabase');
               }
             }
             
@@ -153,11 +142,11 @@ const supabase = createBrowserClient<Database>(
             try {
               return JSON.parse(value);
             } catch (e) {
-              console.warn('Error parsing storage value:', e);
+              logger.warn('Error parsing storage value:', e, 'Supabase');
               return null;
             }
           } catch (error) {
-            console.warn('Error reading from storage:', error);
+            logger.warn('Error reading from storage:', error, 'Supabase');
             return null;
           }
         },
@@ -173,21 +162,21 @@ const supabase = createBrowserClient<Database>(
               localStorage.setItem(key, jsonValue);
               localStorageSuccess = true;
             } catch (e) {
-              console.warn('Unable to save to localStorage:', e);
+              logger.warn('Unable to save to localStorage:', e, 'Supabase');
             }
             
             try {
               sessionStorage.setItem(key, jsonValue);
               sessionStorageSuccess = true;
             } catch (e) {
-              console.warn('Unable to save to sessionStorage:', e);
+              logger.warn('Unable to save to sessionStorage:', e, 'Supabase');
             }
             
             if (!localStorageSuccess && !sessionStorageSuccess) {
-              console.error('Failed to store auth data in any storage mechanism');
+              logger.error('Failed to store auth data in any storage mechanism', undefined, 'Supabase');
             }
           } catch (error) {
-            console.warn('Error writing to storage:', error);
+            logger.warn('Error writing to storage:', error, 'Supabase');
           }
         },
         removeItem: (key) => {
@@ -196,16 +185,16 @@ const supabase = createBrowserClient<Database>(
             try {
               localStorage.removeItem(key);
             } catch (e) {
-              console.warn('Unable to remove from localStorage:', e);
+              logger.warn('Unable to remove from localStorage:', e, 'Supabase');
             }
             
             try {
               sessionStorage.removeItem(key);
             } catch (e) {
-              console.warn('Unable to remove from sessionStorage:', e);
+              logger.warn('Unable to remove from sessionStorage:', e, 'Supabase');
             }
           } catch (error) {
-            console.warn('Error removing from storage:', error);
+            logger.warn('Error removing from storage:', error, 'Supabase');
           }
         }
       }
@@ -235,9 +224,9 @@ if (typeof window !== 'undefined') {
       return;
     }
     
-    // Don't check too frequently
+    // Don't check too frequently - increased to 5 seconds
     const now = Date.now();
-    if (now - (window as any).__lastAuthCheck < 2000) { // Don't check more than once every 2 seconds
+    if (now - (window as any).__lastAuthCheck < 5000) {
       return;
     }
     
@@ -245,46 +234,47 @@ if (typeof window !== 'undefined') {
     (window as any).__lastAuthCheck = now;
     
     try {
-      // Get current session state
-      const { data: { session } }: { data: { session: Session | null } } = await supabase.auth.getSession();
+      // Use getUser() for security - it authenticates with the server
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
       
-      // Get user from a separate call to ensure consistency
-      const { data: { user } }: { data: { user: User | null } } = await supabase.auth.getUser();
-      
-      // Check for mismatched state
-      if ((session && !user) || (!session && user)) {
-        console.warn('Detected inconsistent auth state, forcing synchronization');
-        
-        // If we have session but no user, try refreshing session
-        if (session && !user) {
-          await supabase.auth.refreshSession();
-        }
-        
-        // If we have user but no session, clear the state
-        if (!session && user) {
-          await supabase.auth.signOut();
-        }
+      if (userError) {
+        logger.warn('Error fetching authenticated user, clearing auth state:', userError.message, 'Supabase');
+        await supabase.auth.signOut();
+        return;
       }
       
-      // If session is about to expire (less than 5 mins), refresh it
-      if (session && ((session.expires_at || 0) - Date.now()/1000 < 300)) {
-        console.log('Session expiring soon, refreshing...');
-        await supabase.auth.refreshSession();
+      // Only get session if we have a valid authenticated user
+      if (user) {
+        // Use getUser() result instead of potentially stale getSession()
+        // The session data comes from the same authenticated context
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        // Validate that session matches the authenticated user
+        if (sessionError || !session || session.user.id !== user.id) {
+          logger.warn('Session validation failed, clearing auth state:', sessionError?.message || 'Session/user mismatch', 'Supabase');
+          await supabase.auth.signOut();
+          return;
+        }
+        
+        // If we get here, both user and session are valid and consistent
+        logSupabase('Auth state synchronized successfully', {
+          userId: user.id.slice(-8),
+          hasSession: !!session
+        });
+      } else {
+        // No authenticated user, ensure clean state
+        await supabase.auth.signOut();
       }
     } catch (error) {
-      console.error('Error during auth state synchronization:', error);
+      logger.error('Error during auth state synchronization:', error, 'Supabase');
+      await supabase.auth.signOut();
     } finally {
       (window as any).__checkingAuthState = false;
     }
   };
   
-  // Set up session refresh interval
-  const refreshIntervalId = setInterval(async () => {
-    await synchronizeAuthState();
-  }, 1000 * 60 * 2); // Check every 2 minutes
-  
-  // Run initial synchronization after a short delay
-  setTimeout(synchronizeAuthState, 2000);
+  // Initial sync after a delay to prevent race conditions on app load
+  setTimeout(synchronizeAuthState, 3000);
   
   // Listen for storage events to detect changes in other tabs
   window.addEventListener('storage', (event) => {
@@ -301,32 +291,38 @@ if (typeof window !== 'undefined') {
     }
   });
   
-  // Check initial session
-  supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-    if (session) {
-      console.log('Initial session found:', session.user.id);
+  // Check initial session with authenticated user
+  supabase.auth.getUser().then(async ({ data: { user }, error }) => {
+    if (error) {
+      logger.warn('Error checking initial auth state:', error.message, 'Supabase');
+      return;
+    }
+    
+    if (user) {
+      logSupabase('Initial authenticated user found:', user.id);
       
-      // Attempt an immediate refresh if session exists but might be stale
-      if (Math.floor((session.expires_at || 0) - Date.now() / 1000) < 600) { // Less than 10 minutes left
-        console.log('Session expiring soon, refreshing...');
+      // Get session for token info if user is authenticated
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session && Math.floor((session.expires_at || 0) - Date.now() / 1000) < 600) { // Less than 10 minutes left
+        logSupabase('Session expiring soon, refreshing...');
         supabase.auth.refreshSession().catch(err => {
-          console.warn('Error refreshing initial session:', err);
+          logger.warn('Error refreshing initial session:', err, 'Supabase');
         });
       }
     } else {
-      console.log('No initial session found');
+      logSupabase('No initial authenticated user found');
     }
   });
 
   // Simple connection verification on load (no heavy auto-testing)
   setTimeout(() => {
-    supabase.auth.getSession().then(({ data: { session }, error }) => {
+    supabase.auth.getUser().then(({ data: { user }, error }) => {
       if (error) {
-        console.warn('⚠️ Supabase connection issue:', error.message);
-      } else if (session) {
-        console.log('✅ Supabase auth session active');
+        logger.warn('⚠️ Supabase connection issue:', error.message, 'Supabase');
+      } else if (user) {
+        logSupabase('✅ Supabase auth user authenticated');
       } else {
-        console.log('📝 Supabase connected (no active session)');
+        logSupabase('📝 Supabase connected (no authenticated user)');
       }
     });
   }, 1000); // Wait 1 second after page load
@@ -485,6 +481,63 @@ if (typeof window !== 'undefined') {
     console.log('Session refresh result:', { data, error });
     return { data, error };
   };
+
+  // Add a function to debug funding pages
+  // @ts-ignore
+  window.debugFundingPages = async (userId) => {
+    if (!userId) {
+      // Get current user ID from auth
+      const { data: { user } } = await supabase.auth.getUser();
+      userId = user?.id;
+    }
+    
+    if (!userId) {
+      console.error('No user ID provided and no authenticated user found');
+      return;
+    }
+    
+    console.log('🔍 Debugging funding pages for user:', userId);
+    
+    // Test 1: Check if table exists and what columns are accessible
+    try {
+      console.log('Test 1: Basic table access...');
+      const { data: basic, error: basicError } = await supabase
+        .from('funding_pages')
+        .select('id')
+        .limit(1);
+      console.log('Basic access result:', { basic, basicError });
+    } catch (e) {
+      console.error('Basic access failed:', e);
+    }
+    
+    // Test 2: Check user's campaigns
+    try {
+      console.log('Test 2: User campaigns...');
+      const { data: userPages, error: userError } = await supabase
+        .from('funding_pages')
+        .select('*')
+        .eq('user_id', userId);
+      console.log('User pages result:', { count: userPages?.length || 0, userPages, userError });
+    } catch (e) {
+      console.error('User pages query failed:', e);
+    }
+    
+    // Test 3: Check draft query specifically
+    try {
+      console.log('Test 3: Draft query...');
+      const { data: drafts, error: draftError } = await supabase
+        .from('funding_pages')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_active', false)
+        .eq('is_public', false);
+      console.log('Draft query result:', { count: drafts?.length || 0, drafts, draftError });
+    } catch (e) {
+      console.error('Draft query failed:', e);
+    }
+    
+    return { userId };
+  };
 }
 
 // Export the single instance
@@ -492,13 +545,12 @@ export default supabase
 
 // Auth helpers with proper type handling (using the exported supabase instance)
 export const signIn = async (email: string, password: string): Promise<{ data: { user: User | null, session: Session | null }, error: Error | null }> => {
-  console.log('Attempting sign in with Supabase client...');
-  console.time('SupabaseSignIn'); // Start timer
+  logSupabase('Attempting sign in with Supabase client...');
   try {
     // Clean up any existing storage to avoid conflicts - this is okay before sign-in
     if (typeof window !== 'undefined') {
       try {
-        console.log('Clearing potential stale auth storage...');
+        logSupabase('Clearing potential stale auth storage...');
         localStorage.removeItem(AUTH_STORE_KEY);
         sessionStorage.removeItem(AUTH_STORE_KEY);
         // Also clear Supabase specific keys if they exist, more aggressively
@@ -507,23 +559,23 @@ export const signIn = async (email: string, password: string): Promise<{ data: {
             localStorage.removeItem(key);
           }
         });
-        console.log('Stale auth storage cleared.');
+        logSupabase('Stale auth storage cleared.');
       } catch (e) {
-        console.warn('Error clearing storage before sign in:', e);
+        logger.warn('Error clearing storage before sign in:', e, 'Supabase');
       }
     }
 
     // Validate input before making the request
     if (!email || !password) {
       const error = new Error('Email and password are required');
-      console.error('Validation error:', error.message);
+      logger.error('Validation error:', error.message, 'Supabase');
       return { data: { user: null, session: null }, error };
     }
 
     // Normalize email
     const normalizedEmail = email.toLowerCase().trim();
 
-    console.log(`Calling supabase.auth.signInWithPassword for ${normalizedEmail}...`);
+    logSupabase(`Calling supabase.auth.signInWithPassword for ${normalizedEmail}...`);
     
     // Add timeout wrapper around the auth call
     const authPromise = supabase.auth.signInWithPassword({
@@ -537,10 +589,9 @@ export const signIn = async (email: string, password: string): Promise<{ data: {
     });
 
     const { data, error } = await Promise.race([authPromise, timeoutPromise]) as any;
-    console.timeEnd('SupabaseSignIn'); // End timer
 
     if (error) {
-      console.error('Supabase client signInWithPassword returned error:', error);
+      logger.error('Supabase client signInWithPassword returned error:', error, 'Supabase');
       
       // Provide more user-friendly error messages
       let userFriendlyMessage = error.message;
@@ -558,7 +609,7 @@ export const signIn = async (email: string, password: string): Promise<{ data: {
     }
 
     if (data?.session && data?.user) {
-      console.log('Supabase client signInWithPassword successful. User:', data.user.id, 'Session exists:', !!data.session);
+      logSupabase('Supabase client signInWithPassword successful. User: ' + data.user.id + ', Session exists: ' + !!data.session);
       
       // Explicitly set session to ensure cookies are written for middleware
       try {
@@ -566,9 +617,9 @@ export const signIn = async (email: string, password: string): Promise<{ data: {
           access_token: data.session.access_token,
           refresh_token: data.session.refresh_token
         });
-        console.log('Session set successfully');
+        logSupabase('Session set successfully');
       } catch (setErr) {
-        console.warn('Error calling setSession', setErr);
+        logger.warn('Error calling setSession', setErr, 'Supabase');
         // Don't fail the whole login for this
       }
       
@@ -578,13 +629,13 @@ export const signIn = async (email: string, password: string): Promise<{ data: {
           data: { last_client_login: new Date().toISOString() }
         });
       } catch (updateErr) {
-        console.warn('Could not update last login time:', updateErr);
+        logger.warn('Could not update last login time:', updateErr, 'Supabase');
         // This is not critical, don't fail the login
       }
       
       return { data, error: null };
     } else {
-      console.error('Supabase client signInWithPassword returned no error but missing session, user, or both.', { data });
+      logger.error('Supabase client signInWithPassword returned no error but missing session, user, or both.', { data }, 'Supabase');
       return { 
         data: { user: null, session: null }, 
         error: new Error('Authentication response incomplete. Please try again or contact support if the issue persists.') 
@@ -592,8 +643,7 @@ export const signIn = async (email: string, password: string): Promise<{ data: {
     }
 
   } catch (e: any) {
-    console.timeEnd('SupabaseSignIn'); // End timer in case of exception
-    console.error('Exception during supabase.auth.signInWithPassword call or processing:', e);
+    logger.error('Exception during supabase.auth.signInWithPassword call or processing:', e, 'Supabase');
     
     // Handle timeout specifically
     if (e.message?.includes('timed out')) {
@@ -619,7 +669,7 @@ export const signUp = async (email: string, password: string): Promise<{ data: {
     // Normalize email
     const normalizedEmail = email.toLowerCase().trim();
 
-    console.log(`Attempting to sign up user: ${normalizedEmail}`);
+    logSupabase(`Attempting to sign up user: ${normalizedEmail}`);
 
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
@@ -633,7 +683,7 @@ export const signUp = async (email: string, password: string): Promise<{ data: {
     });
 
     if (error) {
-      console.error("Supabase signUp error:", error.message);
+      logger.error("Supabase signUp error:", error.message, 'Supabase');
       
       // Provide user-friendly error messages
       let userFriendlyMessage = error.message;
@@ -647,23 +697,23 @@ export const signUp = async (email: string, password: string): Promise<{ data: {
       
       return { data: { user: null, session: null }, error: new Error(userFriendlyMessage) };
     } else {
-      console.log("Supabase signUp successful. User:", data.user?.id, "Session:", !!data.session);
+      logSupabase("Supabase signUp successful. User: " + data.user?.id + ", Session: " + !!data.session);
       
       // If user is created but needs email confirmation
       if (data.user && !data.session) {
-        console.log("User created, email confirmation required");
+        logSupabase("User created, email confirmation required");
       }
       
       return { data, error: null };
     }
   } catch (e: any) {
-    console.error('Exception during signUp:', e);
+    logger.error('Exception during signUp:', e, 'Supabase');
     return { data: { user: null, session: null }, error: new Error('An unexpected error occurred during registration. Please try again.') };
   }
 }
 
 export const signOut = async (): Promise<{ error: Error | null }> => {
-  console.log('Starting sign out process...');
+  logSupabase('Starting sign out process...');
   let apiError: Error | null = null;
 
   try {
@@ -671,19 +721,19 @@ export const signOut = async (): Promise<{ error: Error | null }> => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       apiError = error;
-      console.warn('Supabase API signOut error:', error.message);
+      logger.warn('Supabase API signOut error:', error.message, 'Supabase');
     } else {
-      console.log('Supabase API signOut successful.');
+      logSupabase('Supabase API signOut successful.');
     }
   } catch (e: any) {
     apiError = e;
-    console.error('Exception during Supabase API signOut:', e.message);
+    logger.error('Exception during Supabase API signOut:', e.message, 'Supabase');
   }
 
   // Always clear local storage and cookies, regardless of API call outcome
   if (typeof window !== 'undefined') {
     try {
-      console.log('Clearing local auth state and cookies post-API call...');
+      logSupabase('Clearing local auth state and cookies post-API call...');
       localStorage.removeItem(AUTH_STORE_KEY);
       sessionStorage.removeItem(AUTH_STORE_KEY);
       Object.keys(localStorage).forEach(key => {
@@ -698,15 +748,15 @@ export const signOut = async (): Promise<{ error: Error | null }> => {
           document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
         }
       });
-      console.log('Local auth state and cookies cleared.');
+      logSupabase('Local auth state and cookies cleared.');
     } catch (e) {
-      console.warn('Error clearing storage/cookies during sign out:', e);
+      logger.warn('Error clearing storage/cookies during sign out:', e, 'Supabase');
     }
   }
   
   // Redirect to home page
   if (typeof window !== 'undefined') {
-    console.log('Redirecting to home page after signOut...');
+    logSupabase('Redirecting to home page after signOut...');
     window.location.href = '/';
   }
 
@@ -738,7 +788,7 @@ export const getProfile = async (userId: string): Promise<{ data: any, error: Er
 }
 
 export const updateProfile = async (userId: string, updates: any): Promise<{ data: any, error: any, status: string | number }> => {
-  console.log(`Supabase client: Updating profile for userId ${userId} with data:`, updates);
+  logSupabase(`Supabase client: Updating profile for userId ${userId}`, updates);
   
   try {
     // Enable debug mode for this request
@@ -750,17 +800,17 @@ export const updateProfile = async (userId: string, updates: any): Promise<{ dat
       .select('*')
       .single();
     
-    console.log('Supabase updateProfile complete. Status:', status, statusText);
+    logSupabase('Supabase updateProfile complete. Status: ' + status + ' ' + statusText);
     
     if (error) {
-      console.error('Supabase client updateProfile error:', error);
+      logger.error('Supabase client updateProfile error:', error, 'Supabase');
     } else {
-      console.log('Supabase client updateProfile success:', data);
+      logSupabase('Supabase client updateProfile success:', data);
     }
     
     return { data, error, status };
   } catch (err) {
-    console.error('Supabase client updateProfile exception:', err);
+    logger.error('Supabase client updateProfile exception:', err, 'Supabase');
     return { data: null, error: err, status: 'error' };
   }
 }
@@ -791,70 +841,237 @@ export const updateFundingPage = async (pageId: string, updates: any): Promise<{
     .from('funding_pages')
     .update(updates)
     .eq('id', pageId)
+    .select()
+    .single()
   return { data, error }
 }
 
-// Draft management helpers
-export const saveFundingPageDraft = async (userId: string, draftData: any): Promise<{ data: any, error: Error | null }> => {
-  const pageData = {
-    user_id: userId,
-    title: draftData.title || 'Untitled Draft',
-    description: draftData.description || null,
-    bitcoin_address: draftData.bitcoin_address || null,
-    lightning_address: draftData.lightning_address || null,
-    website_url: draftData.website_url || null,
-    goal_amount: draftData.goal_amount ? parseFloat(draftData.goal_amount) : null,
-    category: draftData.categories && draftData.categories.length > 0 ? draftData.categories[0] : null,
-    tags: draftData.categories && draftData.categories.length > 1 ? draftData.categories.slice(1) : [],
-    currency: draftData.currency || 'SATS',
-    is_active: false, // Mark as draft
-    is_public: false, // Drafts are private
-    total_funding: 0,
-    contributor_count: 0
+// Unified campaign creation/update function that handles both drafts and published pages
+export const createOrUpdateFundingPage = async (
+  pageData: any, 
+  options: { 
+    isDraft?: boolean, 
+    pageId?: string,
+    userId: string 
   }
+): Promise<{ data: any, error: Error | null }> => {
+  try {
+    logSupabase('Creating/updating funding page with data:', {
+      title: pageData.title,
+      pageId: options.pageId,
+      isDraft: options.isDraft,
+      userId: options.userId
+    });
 
-  const { data, error } = await supabase
-    .from('funding_pages')
-    .insert(pageData)
-    .select()
-    .single()
-  
-  return { data, error }
+    // First, let's check what columns exist in the table
+    const { data: tableInfo, error: tableError } = await supabase
+      .from('funding_pages')
+      .select('*')
+      .limit(1);
+    
+    if (tableError) {
+      logger.error('Failed to access funding_pages table:', tableError, 'Supabase');
+      return { data: null, error: tableError };
+    }
+
+    // Create normalized data that matches the current table structure
+    const normalizedData: any = {
+      user_id: options.userId,
+      title: pageData.title || 'Untitled Campaign',
+      description: pageData.description || null,
+      goal_amount: pageData.goal_amount ? parseFloat(pageData.goal_amount) : null,
+      current_amount: 0,
+      status: options.isDraft ? 'draft' : 'active',
+    };
+
+    // Only add fields that exist in the table structure
+    if (pageData.bitcoin_address) {
+      normalizedData.bitcoin_address = pageData.bitcoin_address;
+    }
+    
+    // Check if table has newer fields and add them conditionally
+    const sampleRow = tableInfo?.[0];
+    if (sampleRow) {
+      if ('lightning_address' in sampleRow && pageData.lightning_address) {
+        normalizedData.lightning_address = pageData.lightning_address;
+      }
+      if ('website_url' in sampleRow && pageData.website_url) {
+        normalizedData.website_url = pageData.website_url;
+      }
+      if ('category' in sampleRow && pageData.categories && pageData.categories.length > 0) {
+        normalizedData.category = pageData.categories[0];
+      }
+      if ('tags' in sampleRow && pageData.categories && pageData.categories.length > 1) {
+        normalizedData.tags = pageData.categories.slice(1);
+      }
+      if ('currency' in sampleRow) {
+        normalizedData.currency = pageData.currency || 'BTC';
+      }
+      if ('is_active' in sampleRow) {
+        normalizedData.is_active = !options.isDraft;
+      }
+      if ('is_public' in sampleRow) {
+        normalizedData.is_public = !options.isDraft;
+      }
+      if ('total_funding' in sampleRow) {
+        normalizedData.total_funding = 0;
+      }
+      if ('contributor_count' in sampleRow) {
+        normalizedData.contributor_count = 0;
+      }
+    }
+
+    logSupabase('Normalized data for database:', normalizedData);
+
+    if (options.pageId) {
+      // Update existing page
+      const { user_id, ...updateData } = normalizedData;
+      
+      logSupabase('Updating existing funding page:', options.pageId);
+      
+      const { data, error } = await supabase
+        .from('funding_pages')
+        .update(updateData)
+        .eq('id', options.pageId)
+        .eq('user_id', options.userId) // Ensure user can only update their own pages
+        .select()
+        .single();
+        
+      if (error) {
+        logger.error('Failed to update funding page:', error, 'Supabase');
+        return { data: null, error };
+      }
+      
+      logSupabase('Successfully updated funding page');
+      return { data, error: null };
+    } else {
+      // Create new page
+      logSupabase('Creating new funding page');
+      
+      const { data, error } = await supabase
+        .from('funding_pages')
+        .insert(normalizedData)
+        .select()
+        .single();
+        
+      if (error) {
+        logger.error('Failed to create funding page:', error, 'Supabase');
+        return { data: null, error };
+      }
+      
+      logSupabase('Successfully created funding page:', data?.id);
+      return { data, error: null };
+    }
+  } catch (error: any) {
+    logger.error('Exception in createOrUpdateFundingPage:', error, 'Supabase');
+    return { data: null, error: error };
+  }
+}
+
+// Legacy functions for backward compatibility - these now use the unified function
+export const saveFundingPageDraft = async (userId: string, draftData: any): Promise<{ data: any, error: Error | null }> => {
+  return createOrUpdateFundingPage(draftData, { isDraft: true, userId })
 }
 
 export const updateFundingPageDraft = async (draftId: string, draftData: any): Promise<{ data: any, error: Error | null }> => {
-  const pageData = {
-    title: draftData.title || 'Untitled Draft',
-    description: draftData.description || null,
-    bitcoin_address: draftData.bitcoin_address || null,
-    lightning_address: draftData.lightning_address || null,
-    website_url: draftData.website_url || null,
-    goal_amount: draftData.goal_amount ? parseFloat(draftData.goal_amount) : null,
-    category: draftData.categories && draftData.categories.length > 0 ? draftData.categories[0] : null,
-    tags: draftData.categories && draftData.categories.length > 1 ? draftData.categories.slice(1) : [],
-    currency: draftData.currency || 'SATS',
-    is_active: false, // Keep as draft
-    is_public: false, // Drafts are private
-  }
-
-  const { data, error } = await supabase
+  // Get userId from the existing draft
+  const { data: existingDraft, error: fetchError } = await supabase
     .from('funding_pages')
-    .update(pageData)
+    .select('user_id')
     .eq('id', draftId)
-    .select()
     .single()
   
-  return { data, error }
+  if (fetchError || !existingDraft) {
+    return { data: null, error: fetchError || new Error('Draft not found') }
+  }
+  
+  return createOrUpdateFundingPage(draftData, { 
+    isDraft: true, 
+    pageId: draftId, 
+    userId: existingDraft.user_id 
+  })
 }
 
 export const getUserDrafts = async (userId: string): Promise<{ data: any[], error: Error | null }> => {
-  const { data, error } = await supabase
-    .from('funding_pages')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('is_active', false)
-    .eq('is_public', false)
-    .order('updated_at', { ascending: false })
+  console.log('🔍 getUserDrafts: Querying drafts for user:', userId)
   
-  return { data: data || [], error }
+  try {
+    // DIAGNOSTIC: First test basic table access
+    try {
+      console.log('🔍 getUserDrafts: Testing basic table access...')
+      const { data: testData, error: testError } = await supabase
+        .from('funding_pages')
+        .select('id, title, created_at')
+        .limit(1)
+      
+      console.log('🔍 getUserDrafts: Basic test result:', { testData, testError })
+      
+      if (testError) {
+        console.error('🔍 getUserDrafts: Basic table access failed:', testError)
+        return { data: [], error: testError }
+      }
+    } catch (basicError) {
+      console.error('🔍 getUserDrafts: Basic test exception:', basicError)
+      return { data: [], error: basicError as Error }
+    }
+
+    // DIAGNOSTIC: Test user-specific query without boolean filters
+    try {
+      console.log('🔍 getUserDrafts: Testing user query without boolean filters...')
+      const { data: userTestData, error: userTestError } = await supabase
+        .from('funding_pages')
+        .select('*')
+        .eq('user_id', userId)
+        .limit(5)
+      
+      console.log('🔍 getUserDrafts: User test result:', { 
+        count: userTestData?.length || 0, 
+        error: userTestError,
+        sampleData: userTestData?.[0] ? {
+          id: userTestData[0].id,
+          title: userTestData[0].title,
+          is_active: userTestData[0].is_active,
+          is_public: userTestData[0].is_public,
+          created_at: userTestData[0].created_at
+        } : null
+      })
+      
+      if (userTestError) {
+        console.error('🔍 getUserDrafts: User query failed:', userTestError)
+        return { data: [], error: userTestError }
+      }
+
+      // If user has no pages, return empty array
+      if (!userTestData || userTestData.length === 0) {
+        console.log('🔍 getUserDrafts: No pages found for user')
+        return { data: [], error: null }
+      }
+
+      // Filter for drafts on client side to avoid server-side query issues
+      const drafts = userTestData.filter(page => {
+        const isInactive = page.is_active === false || page.is_active === 'false' || !page.is_active
+        const isPrivate = page.is_public === false || page.is_public === 'false' || !page.is_public
+        return isInactive && isPrivate
+      }) || []
+      
+      console.log('🔍 getUserDrafts: Client-filtered drafts:', drafts.length)
+      console.log('🔍 getUserDrafts: Draft details:', drafts.map(d => ({
+        id: d.id,
+        title: d.title,
+        is_active: d.is_active,
+        is_public: d.is_public,
+        created_at: d.created_at
+      })))
+      
+      return { data: drafts, error: null }
+
+    } catch (userError) {
+      console.error('🔍 getUserDrafts: User query exception:', userError)
+      return { data: [], error: userError as Error }
+    }
+    
+  } catch (err) {
+    console.error('🔍 getUserDrafts: Complete failure:', err)
+    return { data: [], error: err as Error }
+  }
 } 

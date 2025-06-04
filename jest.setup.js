@@ -6,17 +6,33 @@ process.env.NEXT_PUBLIC_SITE_URL = 'http://localhost:3000'
 process.env.NEXT_PUBLIC_SITE_NAME = 'OrangeCat'
 process.env.NODE_ENV = 'test'
 
+// Define mockRouter object first
+const mockRouter = {
+  push: jest.fn(),
+  replace: jest.fn(),
+  prefetch: jest.fn(),
+  back: jest.fn(),
+  forward: jest.fn(),
+  refresh: jest.fn(),
+  pathname: '/',
+  route: '/',
+  query: {},
+  asPath: '/',
+  isReady: true,
+  events: {
+    on: jest.fn(),
+    off: jest.fn(),
+    emit: jest.fn(),
+  },
+}
+
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter() {
-    return {
-      push: jest.fn(),
-      replace: jest.fn(),
-      prefetch: jest.fn(),
-    };
+    return mockRouter;
   },
   usePathname() {
-    return '';
+    return '/';
   },
 }))
 

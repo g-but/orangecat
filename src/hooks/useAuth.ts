@@ -2,8 +2,8 @@ import { useAuthStore } from '@/store/auth'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 
-// Throttle function to prevent excessive logging
-function useThrottledLog(logFn: () => void, delay: number = 1000) {
+// Throttle function to prevent excessive logging - increased delays
+function useThrottledLog(logFn: () => void, delay: number = 10000) {
   const lastLogTime = useRef(0);
   
   return () => {
@@ -98,27 +98,45 @@ export function useRedirectIfAuthenticated() {
   };
 }
 
-// General auth hook with consistency checks
+// General auth hook with consistency checks - optimized to reduce excessive updates
 export function useAuth() {
   // IMPORTANT: Keep all hooks in the exact same order
   const authState = useAuthStore();
   const [isConsistent, setIsConsistent] = useState(true);
   const router = useRouter(); // Always declare this hook third
+  const lastLoggedState = useRef<string>('');
   
-  // Throttled logging to prevent console spam
+  // Throttled logging to prevent console spam - only log every 10 seconds for truly significant changes
   const throttledLog = useThrottledLog(() => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('useAuth - Auth state update:', {
-        hasUser: !!authState.user,
-        hasSession: !!authState.session,
-        hasProfile: !!authState.profile,
-        isLoading: authState.isLoading,
-        hydrated: authState.hydrated,
-        isConsistent,
-        timestamp: new Date().toISOString()
-      });
+      // Create a signature of the current state to avoid duplicate logs
+      const stateSignature = `${!!authState.user}-${!!authState.session}-${!!authState.profile}-${authState.isLoading}-${authState.hydrated}-${isConsistent}`;
+      
+      // Only log if state signature has changed significantly
+      if (stateSignature !== lastLoggedState.current) {
+        // Only log when there's a meaningful state change
+        const isSignificantChange = 
+          authState.hydrated && 
+          (!authState.isLoading || 
+           !isConsistent || 
+           (authState.user && authState.session));
+        
+        if (isSignificantChange) {
+          console.log('useAuth - Significant auth state change:', {
+            hasUser: !!authState.user,
+            hasSession: !!authState.session,
+            hasProfile: !!authState.profile,
+            isLoading: authState.isLoading,
+            hydrated: authState.hydrated,
+            isConsistent,
+            stateChange: lastLoggedState.current ? `${lastLoggedState.current} → ${stateSignature}` : 'initial',
+            timestamp: new Date().toISOString()
+          });
+          lastLoggedState.current = stateSignature;
+        }
+      }
     }
-  }, 2000); // Only log every 2 seconds maximum
+  }, 10000); // Increased to 10 seconds to greatly reduce spam
   
   // Detect inconsistent state (one of user/session exists but not the other)
   useEffect(() => {
@@ -127,31 +145,29 @@ export function useAuth() {
         (authState.user && !authState.session) || 
         (!authState.user && authState.session);
         
-      if (hasInconsistentState) {
-        console.warn('useAuth - Inconsistent state detected:', {
-          hasUser: !!authState.user,
-          hasSession: !!authState.session
-        });
-        setIsConsistent(false);
-      } else {
-        setIsConsistent(true);
+      if (hasInconsistentState !== !isConsistent) {
+        if (hasInconsistentState) {
+          console.warn('useAuth - Inconsistent state detected:', {
+            hasUser: !!authState.user,
+            hasSession: !!authState.session
+          });
+        }
+        setIsConsistent(!hasInconsistentState);
       }
     }
-  }, [authState.user, authState.session, authState.hydrated, authState.isLoading]);
+  }, [authState.user, authState.session, authState.hydrated, authState.isLoading, isConsistent]);
   
-  // Throttled debug logs for auth state (only in development and throttled)
+  // Only log very significant auth state changes with much less frequency
   useEffect(() => {
-    // Only log in development and only for significant state changes
-    if (process.env.NODE_ENV === 'development') {
-      // Only log when there are meaningful changes, not every render
-      const hasSignificantChange = 
-        authState.hydrated && 
-        (!authState.isLoading || 
-         !isConsistent || 
-         (!authState.user && !authState.session) || 
-         (authState.user && authState.session && authState.profile));
+    if (process.env.NODE_ENV === 'development' && authState.hydrated) {
+      // Only call throttled log for critical state changes
+      const shouldLog = 
+        !authState.isLoading && (
+          !isConsistent || 
+          (authState.user && authState.session && authState.profile)
+        );
       
-      if (hasSignificantChange) {
+      if (shouldLog) {
         throttledLog();
       }
     }

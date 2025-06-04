@@ -124,8 +124,8 @@ export default function AboutPage() {
                 <Button href="/profile" variant="primary" size="lg" className="w-full sm:w-auto">
                   Create Your Profile
                 </Button>
-                <Button href="/fund-others" variant="outline" size="lg" className="w-full sm:w-auto">
-                  Discover Fundraisers
+                <Button href="/discover" variant="outline" size="lg" className="w-full sm:w-auto">
+                  Discover Projects
                 </Button>
               </div>
             </Card>

@@ -5,6 +5,7 @@ import { Profile, ProfileFormData } from '@/types/database'
 import { useAuthStore } from '@/store/auth'
 import { updateProfile as supabaseUpdateProfile } from '@/services/supabase/profiles'
 import { toast } from 'sonner'
+import { logProfile, logger } from '@/utils/logger'
 
 export interface ProfileUpdateResult {
   success: boolean
@@ -16,7 +17,7 @@ export interface ProfileUpdateResult {
 export class ProfileService {
   static async getProfile(userId: string): Promise<Profile | null> {
     try {
-      console.log('ProfileService: Getting profile for user:', userId);
+      logProfile('ProfileService: Getting profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -24,14 +25,14 @@ export class ProfileService {
         .single()
 
       if (error) {
-        console.error('ProfileService: Error fetching profile:', error);
+        logger.error('ProfileService: Error fetching profile:', error, 'Profile');
         throw error;
       }
       
-      console.log('ProfileService: Profile fetched successfully:', data);
+      logProfile('ProfileService: Profile fetched successfully:', data);
       return data
     } catch (error) {
-      console.error('ProfileService: Exception in getProfile:', error)
+      logger.error('ProfileService: Exception in getProfile:', error, 'Profile')
       return null
     }
   }
@@ -40,7 +41,7 @@ export class ProfileService {
    * Update a user's profile
    */
   static async updateProfile(userId: string, formData: ProfileFormData): Promise<ProfileUpdateResult> {
-    console.log('ProfileService: UPDATE STARTED for user ID:', userId)
+    logProfile('ProfileService: UPDATE STARTED for user ID:', userId)
 
     // Validate input
     if (!userId) {
@@ -51,13 +52,13 @@ export class ProfileService {
     }
 
     try {
-      console.log('ProfileService: Validating session and preparing update data');
+      logProfile('ProfileService: Validating session and preparing update data');
       
       // Get fresh session data using getUser instead of getSession
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       
       if (userError || !user) {
-        console.error('ProfileService: No authenticated user:', userError)
+        logger.error('ProfileService: No authenticated user:', userError, 'Profile')
         return {
           success: false,
           error: 'No authenticated user. Please log in again.',
@@ -66,7 +67,7 @@ export class ProfileService {
       
       // Make sure user ID matches
       if (user.id !== userId) {
-        console.error(`ProfileService: User ID (${user.id}) does not match target ID (${userId})`)
+        logger.error(`ProfileService: User ID (${user.id}) does not match target ID (${userId})`, undefined, 'Profile')
         return {
           success: false,
           error: 'Permission denied: You can only update your own profile',
@@ -111,7 +112,7 @@ export class ProfileService {
         updateData.banner_url = formData.banner_url || null;
       }
        
-      console.log('ProfileService: Attempting direct update with data:', updateData);
+      logProfile('ProfileService: Attempting direct update with data:', updateData);
 
       // Try direct update first
       const { data, error } = await supabase
@@ -122,11 +123,11 @@ export class ProfileService {
         .single();
 
       if (error) {
-        console.error('ProfileService: Direct update failed:', error);
+        logger.error('ProfileService: Direct update failed:', error, 'Profile');
         
         // Handle missing avatar_url column
         if (error.code === 'PGRST204' && error.message?.includes('avatar_url')) {
-          console.warn('avatar_url column missing, retrying update without avatar_url');
+          logger.warn('avatar_url column missing, retrying update without avatar_url', undefined, 'Profile');
           const retryData = { ...updateData };
           delete retryData.avatar_url;
           const { data: retryDataRes, error: retryErr } = await supabase
@@ -137,7 +138,7 @@ export class ProfileService {
             .single();
 
           if (!retryErr) {
-            console.warn('Profile updated successfully without avatar_url. Please add avatar_url column to profiles table.');
+            logger.warn('Profile updated successfully without avatar_url. Please add avatar_url column to profiles table.', undefined, 'Profile');
             return { 
               success: true, 
               data: retryDataRes,
@@ -148,7 +149,7 @@ export class ProfileService {
         
         // Handle missing banner_url column
         if (error.code === 'PGRST204' && error.message?.includes('banner_url')) {
-          console.warn('banner_url column missing, retrying update without banner_url');
+          logger.warn('banner_url column missing, retrying update without banner_url', undefined, 'Profile');
           const retryData = { ...updateData };
           delete retryData.banner_url;
           const { data: retryDataRes, error: retryErr } = await supabase
@@ -159,7 +160,7 @@ export class ProfileService {
             .single();
 
           if (!retryErr) {
-            console.warn('Profile updated successfully without banner_url.');
+            logger.warn('Profile updated successfully without banner_url.', undefined, 'Profile');
             return { 
               success: true, 
               data: retryDataRes,
@@ -176,7 +177,7 @@ export class ProfileService {
         }
         
         // If direct update fails, try the fallback method
-        console.log('ProfileService: Trying fallback update method');
+        logProfile('ProfileService: Trying fallback update method');
         const fallbackResult = await ProfileService.fallbackProfileUpdate(userId, updateData);
         
         if (!fallbackResult.success) {
@@ -213,14 +214,14 @@ export class ProfileService {
         };
       }
 
-      console.log('ProfileService: Update successful:', data);
+      logProfile('ProfileService: Update successful:', data);
       return {
         success: true,
         data
       };
       
     } catch (error: any) {
-      console.error('ProfileService: Error during profile update:', error);
+      logger.error('ProfileService: Error during profile update:', error, 'Profile');
       return {
         success: false,
         error: error.message || 'Failed to update profile'
@@ -230,7 +231,7 @@ export class ProfileService {
   
   // Fallback method for profile updates that might be failing due to RLS policies
   static async fallbackProfileUpdate(userId: string, updates: any): Promise<{ success: boolean; error?: string }> {
-    console.log('ProfileService: Attempting fallback profile update method');
+    logProfile('ProfileService: Attempting fallback profile update method');
     try {
       // First, try to get the current profile for comparison
       const { data: currentProfile, error: fetchError } = await supabase
@@ -240,7 +241,7 @@ export class ProfileService {
         .single();
         
       if (fetchError) {
-        console.error('ProfileService: Fallback - Error fetching current profile:', fetchError);
+        logger.error('ProfileService: Fallback - Error fetching current profile:', fetchError, 'Profile');
         return { 
           success: false, 
           error: `Could not fetch current profile: ${fetchError.message}`
@@ -258,12 +259,12 @@ export class ProfileService {
         );
         
         if (!rpcError) {
-          console.log('ProfileService: Fallback - RPC update succeeded:', rpcData);
+          logProfile('ProfileService: Fallback - RPC update succeeded:', rpcData);
           return { success: true };
         }
-        console.log('ProfileService: Fallback - RPC method failed, trying alternative');
+        logProfile('ProfileService: Fallback - RPC method failed, trying alternative');
       } catch (rpcFallbackError) {
-        console.log('ProfileService: Fallback - RPC not available, trying alternative method');
+        logProfile('ProfileService: Fallback - RPC not available, trying alternative method');
       }
       
       // Method 2: Try REST API directly with retries
@@ -278,15 +279,15 @@ export class ProfileService {
             .single();
             
           if (!error) {
-            console.log(`ProfileService: Fallback - Update succeeded on attempt ${attempt + 1}:`, data);
+            logProfile(`ProfileService: Fallback - Update succeeded on attempt ${attempt + 1}:`, data);
             return { success: true };
           }
           
-          console.log(`ProfileService: Fallback - Update attempt ${attempt + 1} failed:`, error);
+          logProfile(`ProfileService: Fallback - Update attempt ${attempt + 1} failed:`, error);
           // Wait briefly before retry
           await new Promise(resolve => setTimeout(resolve, 500));
         } catch (retryError) {
-          console.error(`ProfileService: Fallback - Exception in retry attempt ${attempt + 1}:`, retryError);
+          logger.error(`ProfileService: Fallback - Exception in retry attempt ${attempt + 1}:`, retryError, 'Profile');
         }
       }
       
@@ -296,7 +297,7 @@ export class ProfileService {
         error: 'All profile update methods failed. This may be a permissions issue or a database constraint violation.'
       };
     } catch (fallbackError: any) {
-      console.error('ProfileService: Exception in fallback update method:', fallbackError);
+      logger.error('ProfileService: Exception in fallback update method:', fallbackError, 'Profile');
       return {
         success: false,
         error: `Fallback update failed: ${fallbackError.message || 'Unknown error'}`
@@ -306,7 +307,7 @@ export class ProfileService {
 
   static async createProfile(userId: string, formData: ProfileFormData): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('ProfileService: Creating new profile for user:', userId);
+      logProfile('ProfileService: Creating new profile for user:', userId);
       
       // Based on the latest migration schema (20240325000000_clean_profile_schema.sql)
       // id uuid references auth.users on delete cascade primary key,
@@ -343,7 +344,7 @@ export class ProfileService {
         newProfile.bitcoin_address = formData.bitcoin_address ?? null;
       }
       
-      console.log('ProfileService: Sending create request with data:', newProfile);
+      logProfile('ProfileService: Sending create request with data:', newProfile);
       
       // First check if a profile already exists (might have been created by trigger)
       const { data: existingProfile, error: checkError } = await supabase
@@ -353,7 +354,7 @@ export class ProfileService {
         .maybeSingle();
         
       if (existingProfile) {
-        console.log('ProfileService: Profile already exists, updating instead');
+        logProfile('ProfileService: Profile already exists, updating instead');
         // Use upsert to update the existing profile 
         const { data, error } = await supabase
           .from('profiles')
@@ -362,14 +363,14 @@ export class ProfileService {
           .single();
           
         if (error) {
-          console.error('ProfileService: Error updating existing profile:', error);
+          logger.error('ProfileService: Error updating existing profile:', error, 'Profile');
           return {
             success: false,
             error: `Failed to update profile: ${error.message || 'Unknown error'}`
           };
         }
         
-        console.log('ProfileService: Profile updated successfully:', data);
+        logProfile('ProfileService: Profile updated successfully:', data);
         return { success: true };
       }
         
@@ -381,7 +382,7 @@ export class ProfileService {
         .single();
         
       if (error) {
-        console.error('ProfileService: Error creating profile:', error);
+        logger.error('ProfileService: Error creating profile:', error, 'Profile');
         return {
           success: false,
           error: `Failed to create profile: ${error.message || 'Unknown error'}`
@@ -389,17 +390,17 @@ export class ProfileService {
       }
       
       if (!data) {
-        console.error('ProfileService: No data returned from profile creation');
+        logger.error('ProfileService: No data returned from profile creation', undefined, 'Profile');
         return {
           success: false,
           error: 'No data returned from profile creation'
         };
       }
       
-      console.log('ProfileService: Profile created successfully:', data);
+      logProfile('ProfileService: Profile created successfully:', data);
       return { success: true };
     } catch (err: any) {
-      console.error('ProfileService: Exception during profile creation:', err);
+      logger.error('ProfileService: Exception during profile creation:', err, 'Profile');
       return {
         success: false,
         error: `Unexpected error creating profile: ${err.message || 'Unknown error'}`
@@ -416,7 +417,7 @@ export class ProfileService {
       if (error) throw error
       return { success: true }
     } catch (error) {
-      console.error('Error updating password:', error)
+      logger.error('Error updating password:', error, 'Profile');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to update password'

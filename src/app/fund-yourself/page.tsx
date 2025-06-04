@@ -173,7 +173,7 @@ export default function FundYourselfPage() {
                         <BarChart2 className="w-4 h-4 mr-2" />
                         <span className="mr-1">Total:</span>
                         <CurrencyDisplay 
-                          satoshis={page.total_funding || 0}
+                          bitcoin={page.total_funding || 0}
                           size="sm"
                         />
                       </div>

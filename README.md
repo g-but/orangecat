@@ -1,8 +1,75 @@
-# OrangeCat - Bitcoin Funding Platform
+# OrangeCat - Bitcoin Fundraising Platform
 
 A modern platform for creating and managing Bitcoin funding pages with transparency features.
 
-## Project Structure
+## 🚀 Quick Start (No More Port Issues!)
+
+**IMPORTANT**: Always use these commands instead of `npm run dev` to avoid port conflicts:
+
+### For Git Bash (Recommended):
+```bash
+npm run fresh:start
+```
+
+### For Windows Command Prompt:
+```bash
+scripts\dev.bat
+```
+
+### For VS Code Users:
+1. Press `Ctrl+Shift+P`
+2. Type "Tasks: Run Task"
+3. Select "🚀 Start Dev (Clean)"
+
+## 📦 Available Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run fresh:start` | **USE THIS** - Kills existing Node processes, clears cache, starts dev cleanly |
+| `npm run dev:clean` | Alternative clean start using bash script |
+| `npm run kill:node` | Kill all Node.js processes (frees up ports) |
+| `npm run clear:cache` | Clear Next.js and npm cache |
+| `npm run dev` | Standard dev (may cause port conflicts) |
+
+## 🛠️ Troubleshooting Port Issues
+
+If you ever get "Port XXXX is in use" errors:
+
+### Quick Fix:
+```bash
+npm run kill:node
+npm run fresh:start
+```
+
+### Manual Fix:
+```bash
+# Kill all Node processes
+powershell "Stop-Process -Name node -Force -ErrorAction SilentlyContinue"
+
+# Clear cache
+rm -rf .next
+npm cache clean --force
+
+# Start fresh
+npm run dev
+```
+
+## 🎯 Development Best Practices
+
+1. **Always use `npm run fresh:start`** instead of `npm run dev`
+2. **Close terminals properly** - don't just close the window while dev server is running
+3. **Use VS Code tasks** for one-click development
+4. **Clear cache regularly** if you experience build issues
+
+## 🔧 VS Code Setup
+
+The project includes VS Code tasks for easy development:
+
+- **🚀 Start Dev (Clean)** - Default build task (Ctrl+Shift+P → "Tasks: Run Build Task")
+- **🧹 Kill All Node Processes** - Emergency port cleanup
+- **🗑️ Clear Cache** - Clear build cache
+
+## 📁 Project Structure
 
 ```
 src/
@@ -33,7 +100,36 @@ config/                  # Configuration files
 
 public/                 # Static assets
 supabase/              # Database migrations and types
+
+scripts/                # Development scripts
+├── dev.sh             # Unix/Git Bash clean start
+└── dev.bat            # Windows batch clean start
+
+.vscode/
+└── tasks.json         # VS Code development tasks
 ```
+
+## 🚀 Tesla-Grade Draft System
+
+This project includes a sophisticated draft management system with:
+
+- **Real-time synchronization** with conflict resolution
+- **Event-sourced architecture** for complete audit trail
+- **Offline-first design** with automatic sync
+- **Beautiful real-time UI** with status indicators
+
+See `/docs/TeslaDraftArchitecture.md` for complete documentation.
+
+---
+
+## 💡 Pro Tips
+
+- **Never run multiple `npm run dev` instances** - use `npm run fresh:start` instead
+- **Use VS Code tasks** for the best development experience
+- **Check the terminal** for any error messages before starting development
+- **Clear cache** if you experience weird build behaviors
+
+**Happy coding! 🎉**
 
 ## Tech Stack
 

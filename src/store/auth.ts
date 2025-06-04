@@ -8,6 +8,7 @@ import { signIn as supabaseClientSignIn, signUp as supabaseClientSignUp, signOut
 import supabase from '@/services/supabase/client'
 import { updateProfile as supabaseUpdateProfile } from '@/services/supabase/profiles'
 import { ProfileService } from '@/services/profileService'
+import { logAuth, logger } from '@/utils/logger'
 
 interface AuthState {
   // data
@@ -86,15 +87,11 @@ export const useAuthStore = create<AuthState>()(
 
         set({ isLoading: true, error: null }) 
         try {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Fetching profile for user:', user.id);
-          }
+          logAuth('Fetching profile for user:', user.id);
           const { data: { user: freshUser }, error: userError } = await supabase.auth.getUser();
           
           if (userError || !freshUser) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('Failed to get fresh user data:', userError);
-            }
+            logger.error('Failed to get fresh user data:', userError, 'Auth');
             set({ profile: null, isLoading: false, error: 'Authentication expired' }); 
             get().clear(); // Clear auth state if user is no longer valid
             return { error: 'Authentication expired' };
@@ -107,27 +104,21 @@ export const useAuthStore = create<AuthState>()(
             .single()
 
           if (fetchError) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('Profile fetch error:', fetchError);
-            }
+            logger.error('Profile fetch error:', fetchError, 'Auth');
             set({ profile: null, isLoading: false, error: fetchError.message });
             return { error: fetchError.message };
           }
 
           if (profileData) {
             set({ profile: profileData, isLoading: false, error: null });
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Profile fetched successfully');
-            }
+            logAuth('Profile fetched successfully');
             return { error: null };
           } else {
             set({ profile: null, isLoading: false, error: 'Profile not found' });
             return { error: 'Profile not found' };
           }
         } catch (error: any) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Profile fetch exception:', error);
-          }
+          logger.error('Profile fetch exception:', error, 'Auth');
           set({ profile: null, isLoading: false, error: error.message || 'Failed to fetch profile' });
           return { error: error.message || 'Failed to fetch profile' };
         }
@@ -171,16 +162,14 @@ export const useAuthStore = create<AuthState>()(
         // Prevent multiple concurrent sign-in attempts
         const currentState = get();
         if (currentState.isLoading) {
-          console.warn("Sign in already in progress, ignoring duplicate request");
+          logger.warn("Sign in already in progress, ignoring duplicate request", undefined, 'Auth');
           return { data: null, error: new Error("Sign in already in progress") };
         }
 
         set({ isLoading: true, authError: null, error: null });
         
         try {
-          if (process.env.NODE_ENV === 'development') {
-            console.log("Attempting sign in with:", email);
-          }
+          logAuth("Attempting sign in with:", email);
           
           // Clear any existing state to prevent conflicts
           set({ 
@@ -195,17 +184,13 @@ export const useAuthStore = create<AuthState>()(
           const result = await supabaseClientSignIn(email, password); 
           
           if (result.error) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error("Sign in error:", result.error.message);
-            }
+            logger.error("Sign in error:", result.error.message, 'Auth');
             set({ authError: result.error.message, isLoading: false });
             return { data: null, error: result.error };
           }
 
           if (result.data && result.data.user && result.data.session) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log("Sign in successful, setting user and session");
-            }
+            logAuth("Sign in successful, setting user and session");
             
             // Set user and session immediately
             set({ 
@@ -220,21 +205,15 @@ export const useAuthStore = create<AuthState>()(
             
             while (profileFetchAttempts < maxProfileAttempts) {
               try {
-                if (process.env.NODE_ENV === 'development') {
-                  console.log(`Fetching profile after successful login (attempt ${profileFetchAttempts + 1}/${maxProfileAttempts})`);
-                }
+                logAuth(`Fetching profile after successful login (attempt ${profileFetchAttempts + 1}/${maxProfileAttempts})`);
                 const profileResult = await get().fetchProfile();
                 
                 if (profileResult.error) {
-                  if (process.env.NODE_ENV === 'development') {
-                    console.warn(`Profile fetch error (attempt ${profileFetchAttempts + 1}):`, profileResult.error);
-                  }
+                  logger.warn(`Profile fetch error (attempt ${profileFetchAttempts + 1}):`, profileResult.error, 'Auth');
                   
                   // For the last attempt, don't retry but still succeed login
                   if (profileFetchAttempts === maxProfileAttempts - 1) {
-                    if (process.env.NODE_ENV === 'development') {
-                      console.warn("Profile fetch failed after all attempts, but login succeeded");
-                    }
+                    logger.warn("Profile fetch failed after all attempts, but login succeeded", undefined, 'Auth');
                     break;
                   }
                   
@@ -243,15 +222,11 @@ export const useAuthStore = create<AuthState>()(
                   profileFetchAttempts++;
                   continue;
                 } else {
-                  if (process.env.NODE_ENV === 'development') {
-                    console.log("Profile fetched successfully");
-                  }
+                  logAuth("Profile fetched successfully");
                   break;
                 }
               } catch (profileError) {
-                if (process.env.NODE_ENV === 'development') {
-                  console.error(`Profile fetch exception (attempt ${profileFetchAttempts + 1}):`, profileError);
-                }
+                logger.error(`Profile fetch exception (attempt ${profileFetchAttempts + 1}):`, profileError, 'Auth');
                 profileFetchAttempts++;
                 
                 if (profileFetchAttempts < maxProfileAttempts) {
@@ -266,17 +241,13 @@ export const useAuthStore = create<AuthState>()(
             return { data: result.data, error: null };
           } else {
             // Handle unexpected case where we have no error but also no user/session
-            if (process.env.NODE_ENV === 'development') {
-              console.error("Sign in returned no error but also missing user/session data");
-            }
+            logger.error("Sign in returned no error but also missing user/session data", undefined, 'Auth');
             const errorMessage = "Authentication succeeded but user data is missing. Please try again.";
             set({ authError: errorMessage, isLoading: false });
             return { data: null, error: new Error(errorMessage) };
           }
         } catch (e) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error("Sign in exception:", e);
-          }
+          logger.error("Sign in exception:", e, 'Auth');
           const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred during sign in. Please try again.";
           set({ 
             authError: errorMessage, 
@@ -291,15 +262,11 @@ export const useAuthStore = create<AuthState>()(
       signUp: async (email, password) => {
         set({ isLoading: true, authError: null });
         try {
-          if (process.env.NODE_ENV === 'development') {
-            console.log("Attempting sign up with:", email);
-          }
+          logAuth("Attempting sign up with:", email);
           const result = await supabaseClientSignUp(email, password);
           
           if (result.error) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error("Sign up error:", result.error.message);
-            }
+            logger.error("Sign up error:", result.error.message, 'Auth');
             set({ authError: result.error.message, isLoading: false });
             return { data: null, error: result.error };
           }
@@ -313,16 +280,12 @@ export const useAuthStore = create<AuthState>()(
             });
             return { data: result.data, error: null };
           } else {
-            if (process.env.NODE_ENV === 'development') {
-              console.error("Sign up succeeded but no user data returned");
-            }
+            logger.error("Sign up succeeded but no user data returned", undefined, 'Auth');
             set({ authError: "Registration succeeded but user data is missing", isLoading: false });
             return { data: null, error: new Error("Registration succeeded but user data is missing") };
           }
         } catch (e) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error("Sign up exception:", e);
-          }
+          logger.error("Sign up exception:", e, 'Auth');
           set({ 
             authError: e instanceof Error ? e.message : "Unknown error during sign up", 
             isLoading: false 
@@ -333,17 +296,15 @@ export const useAuthStore = create<AuthState>()(
       updateProfile: async (profileData: Partial<Profile>) => {
         const { user } = get();
         if (!user) {
-          console.error('AuthStore: updateProfile failed - User not found.');
+          logger.error('AuthStore: updateProfile failed - User not found.', undefined, 'Auth');
           return { error: 'User not found. Please log in again.' };
         }
 
         set({ isLoading: true, error: null });
-        console.log('AuthStore: updateProfile started', { user_id: user.id });
+        logAuth('AuthStore: updateProfile started', { user_id: user.id });
 
         try {
-          if (process.env.NODE_ENV === 'development') {
-            console.log('AuthStore: Starting profile update for user:', user.id);
-          }
+          logAuth('AuthStore: Starting profile update for user:', user.id);
           
           // Validate required fields
           if (!profileData.username && !profileData.display_name && !profileData.bio) {
@@ -362,38 +323,28 @@ export const useAuthStore = create<AuthState>()(
             bitcoin_address: profileData.bitcoin_address || undefined,
           };
 
-          if (process.env.NODE_ENV === 'development') {
-            console.log('AuthStore: Updating profile with data:', updateData);
-          }
+          logAuth('AuthStore: Updating profile with data:', updateData);
 
           const result = await supabaseUpdateProfile(user.id, updateData);
           
           if (result.error) {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('AuthStore: Profile update failed:', result.error);
-            }
+            logger.error('AuthStore: Profile update failed:', result.error, 'Auth');
             set({ isLoading: false, error: result.error });
             return { error: result.error };
           }
 
           if (result.data) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('AuthStore: Profile updated successfully:', result.data);
-            }
+            logAuth('AuthStore: Profile updated successfully:', result.data);
             set({ profile: result.data, isLoading: false, error: null });
             return { error: null };
           } else {
             const errorMessage = 'Profile update succeeded but no data was returned.';
-            if (process.env.NODE_ENV === 'development') {
-              console.warn('AuthStore:', errorMessage);
-            }
+            logger.warn('AuthStore:', errorMessage, 'Auth');
             set({ isLoading: false, error: errorMessage });
             return { error: errorMessage };
           }
         } catch (error: any) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('AuthStore: Error during profile update:', error);
-          }
+          logger.error('AuthStore: Error during profile update:', error, 'Auth');
           const errorMessage = error.message || 'An unexpected error occurred during profile update.';
           set({ isLoading: false, error: errorMessage });
           return { error: errorMessage };
@@ -425,7 +376,7 @@ export const useAuthStore = create<AuthState>()(
             return localStorage;
           }
         } catch (e) {
-          console.warn('localStorage not available:', e);
+          logger.warn('localStorage not available:', e, 'Auth');
         }
         
         try {
@@ -438,11 +389,11 @@ export const useAuthStore = create<AuthState>()(
             return sessionStorage;
           }
         } catch (e) {
-          console.warn('sessionStorage not available:', e);
+          logger.warn('sessionStorage not available:', e, 'Auth');
         }
         
         // If both fail, use memory storage
-        console.warn('No persistent storage available, using memory storage');
+        logger.warn('No persistent storage available, using memory storage', undefined, 'Auth');
         return {
           getItem: () => null,
           setItem: () => {},
@@ -460,15 +411,11 @@ export const useAuthStore = create<AuthState>()(
           
           // Add a safety timeout to prevent stuck loading state
           if (typeof window !== 'undefined' && state.isLoading) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Auth store: Setting safety timeout for loading state');
-            }
+            logAuth('Auth store: Setting safety timeout for loading state');
             setTimeout(() => {
               const currentState = useAuthStore.getState();
               if (currentState.isLoading) {
-                if (process.env.NODE_ENV === 'development') {
-                  console.warn('Auth store: Loading state stuck for 10 seconds, resetting');
-                }
+                logger.warn('Auth store: Loading state stuck for 10 seconds, resetting', undefined, 'Auth');
                 useAuthStore.setState({ isLoading: false });
               }
             }, 10000);
@@ -484,12 +431,26 @@ if (typeof window !== 'undefined' && supabase) {
   let isUpdating = false; // Prevent concurrent updates
   let lastUpdateTime = 0; // Throttle updates
   let authCheckCount = 0; // Count consecutive auth checks
+  let lastEvent = ''; // Track last event to prevent duplicates
+  let lastSessionId = ''; // Track session changes
+  let lastUserId = ''; // Track user changes
 
   supabase.auth.onAuthStateChange(async (event, session) => {
-    // Throttle updates - don't process more than one update every 3000ms for better performance
+    // Much more aggressive throttling - don't process more than one update every 10 seconds
     const now = Date.now();
-    if (now - lastUpdateTime < 3000) {
+    if (now - lastUpdateTime < 10000) {
       return; // Skip processing for throttled updates
+    }
+    
+    // Skip if same event and same session happened recently
+    const currentSessionId = session?.access_token?.slice(-8) || 'none';
+    const currentUserId = session?.user?.id || 'none';
+    
+    if (event === lastEvent && 
+        currentSessionId === lastSessionId && 
+        currentUserId === lastUserId &&
+        now - lastUpdateTime < 30000) {
+      return; // Skip duplicate events within 30 seconds
     }
     
     if (isUpdating) {
@@ -498,61 +459,72 @@ if (typeof window !== 'undefined' && supabase) {
 
     isUpdating = true;
     lastUpdateTime = now;
+    lastEvent = event;
+    lastSessionId = currentSessionId;
+    lastUserId = currentUserId;
     authCheckCount++;
     
-    // Only log important events in development, and much less frequently
-    if (process.env.NODE_ENV === 'development' && 
-        (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || authCheckCount % 10 === 1)) {
-      console.log(`Auth state change event ${authCheckCount}: ${event}`, { hasSession: !!session });
+    // Only log critical events and much less frequently
+    const shouldLogEvent = (
+      event === 'SIGNED_IN' || 
+      event === 'SIGNED_OUT' || 
+      event === 'TOKEN_REFRESHED' && authCheckCount % 50 === 1 || // Only every 50th token refresh
+      authCheckCount === 1 // First event only
+    );
+    
+    if (shouldLogEvent) {
+      logAuth(`Auth state change event ${authCheckCount}: ${event}`, { 
+        hasSession: !!session,
+        userId: session?.user?.id?.slice(-8) || 'none'
+      });
     }
     
     const { setInitialAuthState, clear, fetchProfile } = useAuthStore.getState();
 
     try {
-      // Simplify logic - just use the provided session directly
-      if (session) {
-        // Set the session directly first to avoid UI flicker
-        setInitialAuthState(session.user, session, null);
-        
-        // Then try to fetch profile in the background
-        fetchProfile().catch(error => {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('Error fetching profile on auth state change:', error);
-          }
-        });
-      } else {
-        // No session - clear the store
-        if (process.env.NODE_ENV === 'development' && 
-            (event === 'SIGNED_OUT' || authCheckCount % 20 === 1)) {
-          console.log('No session in auth state change, clearing auth store');
+      if (event === 'SIGNED_OUT') {
+        if (shouldLogEvent) {
+          logAuth('User signed out, clearing auth state');
         }
+        clear();
+      } else if (session?.user) {
+        // Only update if there's a meaningful change in user or session
+        const currentState = useAuthStore.getState();
+        const userChanged = currentState.user?.id !== session.user.id;
+        const sessionChanged = currentState.session?.access_token !== session.access_token;
+        const missingProfile = !currentState.profile && session.user;
         
-        // First clean up any leftover storage
-        try {
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem(STORAGE_KEY)
-            sessionStorage.removeItem(STORAGE_KEY)
-            
-            Object.keys(localStorage).forEach(key => {
-              if (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth')) {
-                localStorage.removeItem(key)
-              }
+        if (userChanged || sessionChanged || (event === 'SIGNED_IN' && !currentState.user)) {
+          if (shouldLogEvent) {
+            logAuth('Auth state changed, updating with session:', {
+              userId: session.user.id.slice(-8),
+              eventType: event,
+              userChanged,
+              sessionChanged
             });
           }
-        } catch (e) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('Error clearing storage during auth state sync:', e);
+          
+          setInitialAuthState(session.user, session, userChanged ? null : currentState.profile);
+          
+          // Fetch profile asynchronously only when needed and throttled
+          if (userChanged || missingProfile) {
+            setTimeout(() => {
+              fetchProfile().catch(error => {
+                logger.error('Failed to fetch profile after auth change:', error, 'Auth');
+              });
+            }, 500); // Increased delay to reduce rapid-fire calls
           }
         }
-        
-        // Then clear the state store
-        clear();
+      } else if (event === 'TOKEN_REFRESHED' && session) {
+        // For token refresh, only update session if user exists and session actually changed
+        const currentState = useAuthStore.getState();
+        if (currentState.user && 
+            currentState.session?.access_token !== session.access_token) {
+          setInitialAuthState(currentState.user, session, currentState.profile);
+        }
       }
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Error in auth state change handler:', error);
-      }
-      clear();
+      logger.error('Error handling auth state change:', error, 'Auth');
     } finally {
       isUpdating = false;
     }

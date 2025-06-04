@@ -1,31 +1,84 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/services/supabase/server'
+import { 
+  isValidBitcoinAddress, 
+  isValidLightningAddress, 
+  isValidUsername, 
+  isValidBio 
+} from '@/utils/validation'
 
-// Bitcoin address validation regex
-const BITCOIN_ADDRESS_REGEX = /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,39}$/
+// Simple in-memory rate limiting (in production, use Redis or database)
+const rateLimit = new Map<string, { count: number; resetTime: number }>()
+const RATE_LIMIT_WINDOW_MS = 60 * 1000 // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 5 // 5 updates per minute
 
-// Lightning address validation regex
-const LIGHTNING_ADDRESS_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+function checkRateLimit(identifier: string): boolean {
+  const now = Date.now()
+  const windowStart = now - RATE_LIMIT_WINDOW_MS
+  
+  // Clean up old entries
+  const entries = Array.from(rateLimit.entries())
+  for (const [key, data] of entries) {
+    if (data.resetTime < now) {
+      rateLimit.delete(key)
+    }
+  }
+  
+  const current = rateLimit.get(identifier)
+  
+  if (!current) {
+    rateLimit.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS })
+    return true
+  }
+  
+  if (current.resetTime < now) {
+    // Window expired, reset
+    rateLimit.set(identifier, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS })
+    return true
+  }
+  
+  if (current.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return false // Rate limit exceeded
+  }
+  
+  current.count++
+  return true
+}
 
 export async function POST(request: Request) {
   try {
-    const { username, bio, bitcoin_address, lightning_address } = await request.json()
     const supabase = createServerClient()
 
-    // Get the current user
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session?.user) {
+    // Get the current authenticated user for security
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (!user || userError) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
       )
     }
 
-    // Validate username if provided
+    // Rate limiting check
+    const clientIP = request.headers.get('x-forwarded-for') || 
+                    request.headers.get('x-real-ip') || 
+                    'unknown'
+    const rateLimitId = `profile_update:${user.id}:${clientIP}`
+    
+    if (!checkRateLimit(rateLimitId)) {
+      return NextResponse.json(
+        { error: 'Too many profile updates. Please wait a minute before trying again.' },
+        { status: 429 }
+      )
+    }
+
+    const { username, bio, bitcoin_address, lightning_address } = await request.json()
+
+    // Enhanced username validation
     if (username) {
-      if (username.length < 3) {
+      const usernameValidation = isValidUsername(username)
+      if (!usernameValidation.valid) {
         return NextResponse.json(
-          { error: 'Username must be at least 3 characters long' },
+          { error: usernameValidation.error },
           { status: 400 }
         )
       }
@@ -35,7 +88,7 @@ export async function POST(request: Request) {
         .from('profiles')
         .select('username')
         .eq('username', username)
-        .neq('id', session.user.id)
+        .neq('id', user.id)
         .single()
 
       if (existingUser) {
@@ -46,48 +99,80 @@ export async function POST(request: Request) {
       }
     }
 
-    // Validate Bitcoin address if provided
-    if (bitcoin_address && !BITCOIN_ADDRESS_REGEX.test(bitcoin_address)) {
-      return NextResponse.json(
-        { error: 'Invalid Bitcoin address format' },
-        { status: 400 }
-      )
+    // Enhanced bio validation
+    if (bio !== undefined) {
+      const bioValidation = isValidBio(bio)
+      if (!bioValidation.valid) {
+        return NextResponse.json(
+          { error: bioValidation.error },
+          { status: 400 }
+        )
+      }
     }
 
-    // Validate Lightning address if provided
-    if (lightning_address && !LIGHTNING_ADDRESS_REGEX.test(lightning_address)) {
-      return NextResponse.json(
-        { error: 'Invalid Lightning address format' },
-        { status: 400 }
-      )
+    // Enhanced Bitcoin address validation
+    if (bitcoin_address) {
+      const btcValidation = isValidBitcoinAddress(bitcoin_address)
+      if (!btcValidation.valid) {
+        return NextResponse.json(
+          { error: btcValidation.error },
+          { status: 400 }
+        )
+      }
     }
 
-    // Update profile
-    const { error: updateError } = await supabase
+    // Enhanced Lightning address validation
+    if (lightning_address) {
+      const lightningValidation = isValidLightningAddress(lightning_address)
+      if (!lightningValidation.valid) {
+        return NextResponse.json(
+          { error: lightningValidation.error },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Update the profile with validated data
+    const { data, error } = await supabase
       .from('profiles')
       .update({
         username,
         bio,
         bitcoin_address,
         lightning_address,
-        updated_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       })
-      .eq('id', session.user.id)
+      .eq('id', user.id)
+      .select()
+      .single()
 
-    if (updateError) {
+    if (error) {
+      console.error('Profile update error:', error)
       return NextResponse.json(
-        { error: updateError.message },
-        { status: 400 }
+        { error: 'Failed to update profile' },
+        { status: 500 }
       )
     }
 
-    return NextResponse.json({
-      message: 'Profile updated successfully',
+    // Log successful update for security monitoring
+    console.log(`Profile updated successfully for user ${user.id}`, {
+      username: !!username,
+      bio: !!bio,
+      bitcoin_address: !!bitcoin_address,
+      lightning_address: !!lightning_address,
+      timestamp: new Date().toISOString()
     })
+
+    return NextResponse.json({ 
+      success: true, 
+      profile: data,
+      message: 'Profile updated successfully' 
+    })
+
   } catch (error) {
     console.error('Profile update error:', error)
     return NextResponse.json(
-      { error: 'An error occurred while updating profile' },
+      { error: 'Internal server error' },
       { status: 500 }
     )
   }

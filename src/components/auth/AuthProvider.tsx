@@ -31,10 +31,11 @@ export function AuthProvider({ user, session, profile, children }: AuthProviderP
     let cancelled = false;
     async function checkSession() {
       try {
-        const { data, error } = await supabase.auth.getSession();
-        if (error || !data.session) {
+        // Use getUser() for security - it validates with the server
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (error || !user) {
           if (process.env.NODE_ENV === 'development') {
-            console.warn('AuthProvider: No valid session found after hydration, clearing store.', { error });
+            console.warn('AuthProvider: No valid authenticated user found after hydration, clearing store.', { error });
           }
           setAuthError('Could not connect to authentication service. Please check your internet connection or try again later.');
           clear();
@@ -43,7 +44,7 @@ export function AuthProvider({ user, session, profile, children }: AuthProviderP
         }
       } catch (err) {
         if (process.env.NODE_ENV === 'development') {
-          console.error('AuthProvider: Error checking session after hydration:', err);
+          console.error('AuthProvider: Error checking user authentication after hydration:', err);
         }
         setAuthError('Could not connect to authentication service. Please check your internet connection or try again later.');
         clear();

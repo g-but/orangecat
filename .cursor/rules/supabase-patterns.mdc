@@ -1,0 +1,76 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+supabase-patterns
+
+Supabase integration patterns to ensure consistency, reliability, and maintainability.
+
+## Client Usage
+
+**Centralized Client:**
+- Always use the centralized Supabase client from `@/services/supabase/client`
+- Never create new Supabase instances in components or other services
+- Import the configured client, don't instantiate new ones
+
+## Error Handling
+
+**Consistent Patterns:**
+- Always check for both `error` and `data` in Supabase responses
+- Use consistent error message formatting across all services
+- Provide meaningful user-facing error messages
+- Log technical details for debugging but show user-friendly messages
+
+**Error Structure:**
+```typescript
+const { data, error } = await supabase.from('table').select()
+if (error) {
+  console.error('Technical error:', error)
+  return { error: 'User-friendly message' }
+}
+```
+
+## Authentication Integration
+
+**Session Validation:**
+- Always validate session before making authenticated requests
+- Clear auth state if session is invalid or expired
+- Use the auth store's session state, don't fetch independently
+
+**Profile Operations:**
+- Only allow profile operations when user is authenticated
+- Always validate user ownership before profile updates
+- Use consistent profile update patterns from profileService
+
+## Data Fetching
+
+**Loading States:**
+- Always provide loading states for async operations
+- Use consistent loading patterns across components
+- Handle loading, success, and error states properly
+
+**Caching:**
+- Use Supabase's built-in real-time features where appropriate
+- Implement proper cache invalidation strategies
+- Avoid over-fetching data
+
+## Real-time Features
+
+**Subscriptions:**
+- Clean up subscriptions in useEffect cleanup
+- Handle connection errors gracefully
+- Use appropriate subscription scopes (table, row, etc.)
+
+## Type Safety
+
+**Database Types:**
+- Use proper TypeScript types for database schemas
+- Define interfaces for all database tables and relationships
+- Validate data shapes before using in components
+
+**Query Building:**
+- Use TypeScript for query building to catch errors early
+- Prefer explicit column selection over select('*')
+- Use proper joins and relationships
+

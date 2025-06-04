@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
-import UserProfileDropdown from '@/components/auth/UserProfileDropdown'
+import UserProfileDropdown from '@/components/ui/UserProfileDropdown'
 import { useAuth } from '@/hooks/useAuth'
 import { Loader2 } from 'lucide-react'
 
@@ -34,7 +34,7 @@ export default function AuthButtons({ className = '' }: AuthButtonsProps) {
 
   // User is authenticated if we have a user OR a session
   if (user || session) {
-    return <UserProfileDropdown />
+    return <UserProfileDropdown variant="advanced" />
   }
 
   // User is not authenticated

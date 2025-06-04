@@ -33,7 +33,7 @@ export default function Loading({
   
   // Overlay classes
   const overlayClasses = overlay 
-    ? 'fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center'
+    ? 'fixed inset-0 bg-black/30 backdrop-blur-sm z-loading flex items-center justify-center'
     : ''
 
   const content = (
@@ -70,7 +70,7 @@ export function GlobalAuthErrorBanner() {
   if (!authError) return null;
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-red-600 text-white text-center py-3 shadow-lg animate-fade-in">
+    <div className="fixed top-0 left-0 right-0 z-toast bg-red-600 text-white text-center py-3 shadow-lg animate-fade-in">
       <span>{authError}</span>
       <button
         className="ml-4 px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100 transition"
@@ -94,7 +94,7 @@ export function GlobalAuthLoader() {
   if (!hydrated || !isLoading) return null;
 
   return (
-    <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-[60] flex items-center justify-center pointer-events-none">
+    <div className="fixed inset-0 bg-white/60 backdrop-blur-sm z-loading flex items-center justify-center pointer-events-none">
       <Loader2 className="h-10 w-10 animate-spin text-tiffany-500" />
     </div>
   );

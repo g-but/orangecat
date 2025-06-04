@@ -1,3 +1,5 @@
+import { CategoryValue } from '@/config/categories'
+
 export interface FundingPage {
   id: string
   user_id: string
@@ -14,7 +16,7 @@ export interface FundingPage {
   is_public: boolean
   is_featured?: boolean
   slug?: string
-  category?: 'creative' | 'technology' | 'community' | 'education' | 'charity' | 'business' | 'personal' | 'other'
+  category?: CategoryValue
   tags?: string[]
   featured_image_url?: string
   end_date?: string
