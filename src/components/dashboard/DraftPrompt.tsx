@@ -59,7 +59,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
     return Math.round((completed / total) * 100)
   }
 
-  const isDraftLocal = primaryDraft.type === 'local'
+  const isDraftLocal = primaryDraft.source === 'local'
   const draftCount = hasDrafts ? drafts.length : 0
   const totalDrafts = draftCount + (hasLocalDraft ? 1 : 0)
 
@@ -99,13 +99,13 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>
-                      Last {isDraftLocal ? 'saved' : 'updated'}: {formatLastUpdated(primaryDraft.lastUpdated)}
+                      Last {isDraftLocal ? 'saved' : 'updated'}: {formatLastUpdated(primaryDraft.lastSaved)}
                     </span>
                   </div>
-                  {isDraftLocal && primaryDraft.step && (
+                  {isDraftLocal && primaryDraft.currentStep && (
                     <div className="flex items-center gap-1">
                       <FileText className="w-4 h-4" />
-                      <span>Step {primaryDraft.step} of 3</span>
+                      <span>Step {primaryDraft.currentStep} of 3</span>
                     </div>
                   )}
                 </div>
