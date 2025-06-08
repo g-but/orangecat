@@ -30,7 +30,14 @@ const nextConfig = {
         hostname: '*.supabase.co',
         port: '',
         pathname: '/storage/v1/object/public/**',
-      }
+      },
+    ],
+    // Fallback for older configuration compatibility
+    domains: [
+      'images.unsplash.com',
+      'github.com',
+      'ohkueislstxomdjavyhs.supabase.co',
+      'supabase.co',
     ],
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
@@ -40,10 +47,12 @@ const nextConfig = {
   // Experimental features (only supported ones)
   experimental: {
     esmExternals: true,
+    optimizeCss: true,
+    optimizePackageImports: ['@supabase/supabase-js'],
   },
 
   // Webpack optimizations
-  webpack: (config, { dev }) => {
+  webpack: (config, { dev, isServer }) => {
     if (!dev) {
       // Enable tree shaking
       config.optimization.usedExports = true
@@ -55,6 +64,14 @@ const nextConfig = {
         maxEntrypointSize: 400000,
         hints: 'warning',
       }
+    }
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
     }
     return config
   },
