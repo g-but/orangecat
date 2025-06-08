@@ -76,7 +76,7 @@ export function GlobalAuthErrorBanner() {
         className="ml-4 px-3 py-1 bg-white text-red-600 rounded hover:bg-gray-100 transition"
         onClick={() => {
           setAuthError(null);
-          console.log('GlobalAuthErrorBanner: Error dismissed by user.');
+          // Error dismissed by user
         }}
       >
         Dismiss

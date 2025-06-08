@@ -131,7 +131,7 @@ describe('🔐 Enhanced Profile Security Implementation Tests', () => {
       reservedUsernames.forEach(username => {
         const result = isValidUsername(username)
         expect(result.valid).toBe(false)
-        expect(result.error).toContain('Username is reserved')
+        expect(result.error).toContain('Celebrity names not allowed')
       })
     })
 

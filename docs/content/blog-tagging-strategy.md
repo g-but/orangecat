@@ -1,5 +1,9 @@
 # Blog Tagging Strategy
 
+**Created**: June 5, 2025
+**Last Modified**: June 5, 2025
+**Last Modified Summary**: Added documentation standards and reviewed for current relevance
+
 ## Overview
 Consistent tagging is crucial for our blog's discoverability and user experience. This document defines our standardized tag categories and naming conventions.
 

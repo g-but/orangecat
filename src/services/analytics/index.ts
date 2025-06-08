@@ -409,7 +409,7 @@ class AnalyticsService {
     if (currency === 'BTC') {
       return `₿${(amount / 100000000).toFixed(6)}`
     }
-    return `${amount.toLocaleString()} sats`
+    return `${amount.toLocaleString('en-US')} sats`
   }
 
   clearCache(): void {

@@ -1,20 +1,23 @@
 'use client'
 
 import { useAuth } from '@/hooks/useAuth'
-import { useCampaigns } from '@/hooks/useCampaigns'
+import { useCampaignStore, Campaign } from '@/stores/campaignStore'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
+import ShareButton from '@/components/sharing/ShareButton'
+import CampaignDetailsModal from './CampaignDetailsModal'
 import { 
   Plus, 
   Edit, 
-  Share, 
   DollarSign,
   TrendingUp,
   FileText,
   Pause
 } from 'lucide-react'
 import { toast } from 'sonner'
+import { useState } from 'react'
 
 interface CampaignDashboardProps {
   className?: string
@@ -22,14 +25,24 @@ interface CampaignDashboardProps {
 
 export default function CampaignDashboard({ className = '' }: CampaignDashboardProps) {
   const { user } = useAuth()
+  const router = useRouter()
   const { 
     isLoading, 
-    stats, 
     drafts, 
-    activeCampaigns, 
+    activeCampaigns,
     pausedCampaigns,
-    getPrimaryDraft 
-  } = useCampaigns()
+    pauseCampaign,
+    resumeCampaign,
+    loadCampaignForEdit,
+    updateCampaign,
+    getStats
+  } = useCampaignStore()
+  
+  const stats = getStats()
+  
+  // Modal state
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   if (isLoading) {
     return (
@@ -69,12 +82,42 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
     })
   }
 
-  const primaryDraft = getPrimaryDraft()
+  const primaryDraft = drafts.length > 0 ? drafts[0] : null
+
+  const handlePauseCampaign = async (campaignId: string) => {
+    if (!user?.id) return
+    try {
+      await pauseCampaign(user.id, campaignId)
+      toast.success('Campaign paused successfully')
+    } catch (error) {
+      toast.error('Failed to pause campaign')
+    }
+  }
+
+  const handleResumeCampaign = async (campaignId: string) => {
+    if (!user?.id) return
+    try {
+      await resumeCampaign(user.id, campaignId)
+      toast.success('Campaign resumed successfully')
+    } catch (error) {
+      toast.error('Failed to resume campaign')
+    }
+  }
+
+  const openCampaignModal = (campaign: Campaign) => {
+    setSelectedCampaign(campaign)
+    setIsModalOpen(true)
+  }
+
+  const closeCampaignModal = () => {
+    setSelectedCampaign(null)
+    setIsModalOpen(false)
+  }
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Stats Overview */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -124,6 +167,18 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Paused</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.totalPaused}</p>
+              </div>
+              <Pause className="w-5 h-5 text-orange-400" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Drafts Section */}
@@ -144,7 +199,7 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
                 <div 
                   key={draft.id} 
                   className={`p-4 rounded-lg border ${
-                    draft.source === 'local' 
+                    draft.syncStatus === 'pending' 
                       ? 'bg-orange-50 border-orange-200' 
                       : 'bg-gray-50 border-gray-200'
                   }`}
@@ -153,11 +208,11 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
                     <div>
                       <h3 className="font-medium text-gray-900">{draft.title}</h3>
                       <p className={`text-sm ${
-                        draft.source === 'local' 
+                        draft.syncStatus === 'pending' 
                           ? 'text-orange-600' 
                           : 'text-gray-500'
                       }`}>
-                        {draft.source === 'local' 
+                        {draft.syncStatus === 'pending' 
                           ? 'Unsaved changes' 
                           : `Updated ${formatDate(draft.updated_at)}`
                         }
@@ -166,9 +221,9 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      href={draft.source === 'local' ? '/create' : `/create?draft=${draft.id}`}
+                      href={draft.syncStatus === 'pending' ? '/create' : `/create?draft=${draft.id}`}
                     >
-                      {draft.source === 'local' ? 'Continue' : 'Edit'}
+                      {draft.syncStatus === 'pending' ? 'Continue' : 'Edit'}
                     </Button>
                   </div>
                 </div>
@@ -197,12 +252,28 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
                       </p>
                     </div>
                     <div className="flex gap-2">
+                      <ShareButton
+                        campaignId={campaign.id}
+                        campaignTitle={campaign.title || 'Untitled Campaign'}
+                        campaignDescription={campaign.description || undefined}
+                        variant="icon"
+                        size="sm"
+                      />
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyPageLink(campaign.id)}
+                        onClick={() => openCampaignModal(campaign)}
+                        className="text-gray-500 hover:text-blue-600"
                       >
-                        <Share className="w-4 h-4" />
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handlePauseCampaign(campaign.id)}
+                        className="text-gray-500 hover:text-orange-600"
+                      >
+                        <Pause className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -225,11 +296,11 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
       )}
 
       {/* Paused Campaigns */}
-      {stats.totalPaused > 0 && (
+      {pausedCampaigns.length > 0 && (
         <Card>
           <CardContent className="p-6">
             <h2 className="font-semibold text-gray-900 mb-4">
-              Paused Campaigns ({stats.totalPaused})
+              Paused Campaigns ({pausedCampaigns.length})
             </h2>
             
             <div className="space-y-3">
@@ -245,9 +316,19 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
                         </p>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Reactivate
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openCampaignModal(campaign)}
+                        className="text-gray-500 hover:text-blue-600"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => handleResumeCampaign(campaign.id)}>
+                        Resume
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -273,6 +354,14 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
             </Button>
           </CardContent>
         </Card>
+      )}
+
+      {selectedCampaign && (
+        <CampaignDetailsModal
+          campaign={selectedCampaign}
+          isOpen={isModalOpen}
+          onClose={closeCampaignModal}
+        />
       )}
     </div>
   )

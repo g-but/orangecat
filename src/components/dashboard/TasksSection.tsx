@@ -22,7 +22,7 @@ import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { useAuth } from '@/hooks/useAuth'
-import { useDrafts } from '@/hooks/useDrafts'
+import { useCampaignStore } from '@/stores/campaignStore'
 
 interface Task {
   id: string
@@ -45,9 +45,11 @@ interface TasksSectionProps {
 
 export default function TasksSection({ className }: TasksSectionProps) {
   const { user, profile } = useAuth()
-  const { hasDrafts, drafts } = useDrafts()
+  const { drafts } = useCampaignStore()
   const [isExpanded, setIsExpanded] = useState(true)
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set())
+  
+  const hasDrafts = drafts.length > 0
 
   if (!user || !profile) return null
 

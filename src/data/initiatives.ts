@@ -37,6 +37,9 @@ import {
   Leaf
 } from 'lucide-react'
 
+// Import the centralized theme system
+import { componentColors } from '@/lib/theme';
+
 // Icon mapping for serialization-safe storage
 export const ICON_MAP: Record<string, LucideIcon> = {
   Building,
@@ -186,7 +189,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         icon: 'Briefcase',
         description: 'Technology businesses and startups',
         example: 'Software development company',
-        color: 'bg-orange-100 text-orange-700 border-orange-200'
+        color: 'bg-bitcoinOrange text-bitcoinOrange border-bitcoinOrange'
       },
       { 
         name: 'DAO', 
@@ -298,7 +301,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         icon: 'Ticket',
         title: 'Bitcoin Ticketing',
         description: 'Sell tickets with Bitcoin payments, eliminating payment processor fees and chargebacks.',
-        color: 'text-orange-600 bg-orange-100'
+        color: 'text-bitcoinOrange bg-bitcoinOrange'
       },
       {
         icon: 'Users',
@@ -359,7 +362,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         icon: 'Music',
         description: 'Musical performances and festivals',
         example: 'Bitcoin music festival',
-        color: 'bg-orange-100 text-orange-700 border-orange-200'
+        color: 'bg-bitcoinOrange text-bitcoinOrange border-bitcoinOrange'
       },
       { 
         name: 'Gaming Events', 
@@ -393,7 +396,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         description: 'Event management and ticketing',
         url: 'https://eventbrite.com',
         icon: 'Calendar',
-        color: 'bg-orange-100 text-orange-600'
+        color: 'bg-bitcoinOrange text-bitcoinOrange'
       },
       {
         name: 'Meetup',
@@ -449,7 +452,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         icon: 'Coins',
         title: 'Bitcoin Funding',
         description: 'Raise funds, pay contributors, and manage project finances with Bitcoin micropayments.',
-        color: 'text-orange-600 bg-orange-100'
+        color: 'text-bitcoinOrange bg-bitcoinOrange'
       },
       {
         icon: 'Target',
@@ -511,7 +514,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         icon: 'Handshake',
         description: 'Individual consulting and services',
         example: 'Smart contract development',
-        color: 'bg-orange-100 text-orange-700 border-orange-200'
+        color: 'bg-bitcoinOrange text-bitcoinOrange border-bitcoinOrange'
       }
     ],
     capabilities: [
@@ -649,7 +652,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         icon: 'Award',
         description: 'Experienced professionals and advisors',
         example: 'Industry veterans, coaches, teachers',
-        color: 'bg-orange-100 text-orange-700 border-orange-200'
+        color: 'bg-bitcoinOrange text-bitcoinOrange border-bitcoinOrange'
       },
       { 
         name: 'Global Network', 
@@ -757,7 +760,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         icon: 'Handshake',
         title: 'Trust System',
         description: 'Build reputation through successful transactions and community feedback.',
-        color: 'text-orange-600 bg-orange-100'
+        color: 'text-bitcoinOrange bg-bitcoinOrange'
       }
     ],
     types: [
@@ -773,7 +776,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         icon: 'ArrowRightLeft',
         description: 'Power tools, garden equipment, and specialized gear',
         example: 'Drill, lawnmower, camera equipment',
-        color: 'bg-orange-100 text-orange-700 border-orange-200'
+        color: 'bg-bitcoinOrange text-bitcoinOrange border-bitcoinOrange'
       },
       { 
         name: 'Furniture', 
@@ -946,7 +949,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         icon: 'Award',
         description: 'Non-profit and charitable fundraising campaigns',
         example: 'Bitcoin education initiatives',
-        color: 'bg-orange-100 text-orange-700 border-orange-200'
+        color: 'bg-bitcoinOrange text-bitcoinOrange border-bitcoinOrange'
       }
     ],
     capabilities: [
@@ -980,7 +983,7 @@ export const INITIATIVES: Record<string, Initiative> = {
         description: 'Creative project funding',
         url: 'https://kickstarter.com',
         icon: 'Lightbulb',
-        color: 'bg-orange-100 text-orange-600'
+        color: 'bg-bitcoinOrange text-bitcoinOrange'
       },
       {
         name: 'Patreon',

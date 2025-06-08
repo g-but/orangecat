@@ -45,7 +45,7 @@ export default function EventCard({ event }: EventCardProps) {
           {event.revenue > 0 && (
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Ticket className="w-4 h-4" />
-              <span>{event.revenue.toLocaleString()} sats revenue</span>
+              <span>{event.revenue.toLocaleString('en-US')} sats revenue</span>
             </div>
           )}
         </div>

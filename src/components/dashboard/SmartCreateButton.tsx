@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Edit3, FileText } from 'lucide-react'
 import Button from '@/components/ui/Button'
-import { useDrafts } from '@/hooks/useDrafts'
+import { useCampaignStore } from '@/stores/campaignStore'
 import DraftContinueDialog from './DraftContinueDialog'
 
 interface SmartCreateButtonProps {
@@ -28,10 +28,11 @@ export default function SmartCreateButton({
   forceNewCampaign = false
 }: SmartCreateButtonProps) {
   const router = useRouter()
-  const { hasAnyDraft, getPrimaryDraft } = useDrafts()
+  const { drafts } = useCampaignStore()
   const [showDraftDialog, setShowDraftDialog] = useState(false)
 
-  const primaryDraft = getPrimaryDraft()
+  const hasAnyDraft = drafts.length > 0
+  const primaryDraft = hasAnyDraft ? drafts[0] : null
   const shouldShowDraftPrompt = hasAnyDraft && !forceNewCampaign
 
   const handleClick = () => {
@@ -57,12 +58,12 @@ export default function SmartCreateButton({
   // Determine button content based on draft status
   const getButtonContent = () => {
     if (shouldShowDraftPrompt && primaryDraft) {
-      const isLocalDraft = primaryDraft.source === 'local'
+      const isPendingDraft = primaryDraft.syncStatus === 'pending'
       
       return (
         <>
           {showIcon && <Edit3 className="w-4 h-4 mr-2" />}
-          {children || (isLocalDraft ? 'Continue Campaign' : 'Complete Campaign')}
+          {children || (isPendingDraft ? 'Continue Campaign' : 'Complete Campaign')}
         </>
       )
     }
@@ -123,7 +124,8 @@ export function HeaderCreateButton() {
 
 // Export a specialized version for dashboard cards
 export function DashboardCreateButton({ className = '' }: { className?: string }) {
-  const { hasAnyDraft } = useDrafts()
+  const { drafts } = useCampaignStore()
+  const hasAnyDraft = drafts.length > 0
   
   return (
     <SmartCreateButton 

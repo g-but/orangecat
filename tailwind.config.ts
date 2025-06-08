@@ -21,6 +21,8 @@ const config: Config = {
           800: '#CC5200',
           900: '#B34700',
         },
+        // Official Bitcoin Orange for Bitcoin-related UI elements
+        bitcoinOrange: '#F7931A',
         tiffany: {
           50: '#E6F7F7',
           100: '#CCEFEF',

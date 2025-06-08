@@ -19,7 +19,9 @@ export function restoreConsole() {
 }
 
 // Function to safely log without browser extension interference
-export function safeLog(...args: any[]) {
+import type { EventHandlerArgs } from '@/types/common'
+
+export function safeLog(...args: EventHandlerArgs) {
   if (typeof window !== 'undefined') {
     // Try to use the original console method
     try {

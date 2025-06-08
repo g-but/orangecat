@@ -57,7 +57,7 @@ export default function AuthPage() {
   // Check if we already have a session on first render
   useEffect(() => {
     if (session && profile && hydrated) {
-      console.log("Already authenticated, redirecting to dashboard");
+      // User already authenticated, redirect to dashboard
       window.location.href = '/dashboard';
     }
   }, [session, profile, hydrated]);
@@ -70,7 +70,7 @@ export default function AuthPage() {
 
     try {
       if (mode === 'login') {
-        console.log('Submitting login form...');
+        // Submit login form
         const result = await signIn(formData.email, formData.password);
 
         if (result.error) {
@@ -86,7 +86,7 @@ export default function AuthPage() {
           
           // Add a small delay before redirect to ensure state is updated
           setTimeout(() => {
-            console.log('Login successful, redirecting to dashboard...');
+            // Login successful, redirect to dashboard
             window.location.href = '/dashboard';
           }, 500);
         } else {

@@ -9,6 +9,7 @@ import supabase from '@/services/supabase/client'
 import { updateProfile as supabaseUpdateProfile } from '@/services/supabase/profiles'
 import { ProfileService } from '@/services/profileService'
 import { logAuth, logger } from '@/utils/logger'
+import { getErrorMessage, type CatchError } from '@/types/common'
 
 interface AuthState {
   // data
@@ -91,7 +92,7 @@ export const useAuthStore = create<AuthState>()(
           const { data: { user: freshUser }, error: userError } = await supabase.auth.getUser();
           
           if (userError || !freshUser) {
-            logger.error('Failed to get fresh user data:', userError, 'Auth');
+            logger.error('Failed to get fresh user data:', { error: userError }, 'Auth');
             set({ profile: null, isLoading: false, error: 'Authentication expired' }); 
             get().clear(); // Clear auth state if user is no longer valid
             return { error: 'Authentication expired' };
@@ -104,7 +105,7 @@ export const useAuthStore = create<AuthState>()(
             .single()
 
           if (fetchError) {
-            logger.error('Profile fetch error:', fetchError, 'Auth');
+            logger.error('Profile fetch error:', { error: fetchError }, 'Auth');
             set({ profile: null, isLoading: false, error: fetchError.message });
             return { error: fetchError.message };
           }
@@ -117,10 +118,11 @@ export const useAuthStore = create<AuthState>()(
             set({ profile: null, isLoading: false, error: 'Profile not found' });
             return { error: 'Profile not found' };
           }
-        } catch (error: any) {
-          logger.error('Profile fetch exception:', error, 'Auth');
-          set({ profile: null, isLoading: false, error: error.message || 'Failed to fetch profile' });
-          return { error: error.message || 'Failed to fetch profile' };
+        } catch (error: CatchError) {
+          const errorMessage = getErrorMessage(error);
+          logger.error('Profile fetch exception:', { error }, 'Auth');
+          set({ profile: null, isLoading: false, error: errorMessage });
+          return { error: errorMessage };
         }
       },
       signOut: async () => {
@@ -152,8 +154,8 @@ export const useAuthStore = create<AuthState>()(
           }
           set({ isLoading: false, authError: null });
           return { error: null };
-        } catch (e: any) {
-          const errMsg = e?.message ?? 'Unknown error during sign out';
+        } catch (e: CatchError) {
+          const errMsg = getErrorMessage(e);
           set({ authError: errMsg, isLoading: false });
           return { error: new Error(errMsg) };
         }
@@ -181,7 +183,7 @@ export const useAuthStore = create<AuthState>()(
             isLoading: true
           });
           
-          const result = await supabaseClientSignIn(email, password); 
+          const result = await supabaseClientSignIn({ email, password }); 
           
           if (result.error) {
             logger.error("Sign in error:", result.error.message, 'Auth');
@@ -226,7 +228,7 @@ export const useAuthStore = create<AuthState>()(
                   break;
                 }
               } catch (profileError) {
-                logger.error(`Profile fetch exception (attempt ${profileFetchAttempts + 1}):`, profileError, 'Auth');
+                logger.error(`Profile fetch exception (attempt ${profileFetchAttempts + 1}):`, { error: profileError }, 'Auth');
                 profileFetchAttempts++;
                 
                 if (profileFetchAttempts < maxProfileAttempts) {
@@ -247,7 +249,7 @@ export const useAuthStore = create<AuthState>()(
             return { data: null, error: new Error(errorMessage) };
           }
         } catch (e) {
-          logger.error("Sign in exception:", e, 'Auth');
+          logger.error("Sign in exception:", { error: e }, 'Auth');
           const errorMessage = e instanceof Error ? e.message : "An unexpected error occurred during sign in. Please try again.";
           set({ 
             authError: errorMessage, 
@@ -263,7 +265,7 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, authError: null });
         try {
           logAuth("Attempting sign up with:", email);
-          const result = await supabaseClientSignUp(email, password);
+          const result = await supabaseClientSignUp({ email, password });
           
           if (result.error) {
             logger.error("Sign up error:", result.error.message, 'Auth');
@@ -285,7 +287,7 @@ export const useAuthStore = create<AuthState>()(
             return { data: null, error: new Error("Registration succeeded but user data is missing") };
           }
         } catch (e) {
-          logger.error("Sign up exception:", e, 'Auth');
+          logger.error("Sign up exception:", { error: e }, 'Auth');
           set({ 
             authError: e instanceof Error ? e.message : "Unknown error during sign up", 
             isLoading: false 
@@ -323,7 +325,7 @@ export const useAuthStore = create<AuthState>()(
             bitcoin_address: profileData.bitcoin_address || undefined,
           };
 
-          logAuth('AuthStore: Updating profile with data:', updateData);
+          logAuth('AuthStore: Updating profile with data:', { data: updateData });
 
           const result = await supabaseUpdateProfile(user.id, updateData);
           
@@ -334,7 +336,7 @@ export const useAuthStore = create<AuthState>()(
           }
 
           if (result.data) {
-            logAuth('AuthStore: Profile updated successfully:', result.data);
+            logAuth('AuthStore: Profile updated successfully:', { data: result.data });
             set({ profile: result.data, isLoading: false, error: null });
             return { error: null };
           } else {
@@ -343,9 +345,9 @@ export const useAuthStore = create<AuthState>()(
             set({ isLoading: false, error: errorMessage });
             return { error: errorMessage };
           }
-        } catch (error: any) {
-          logger.error('AuthStore: Error during profile update:', error, 'Auth');
-          const errorMessage = error.message || 'An unexpected error occurred during profile update.';
+        } catch (error: CatchError) {
+          const errorMessage = getErrorMessage(error);
+          logger.error('AuthStore: Error during profile update:', { error }, 'Auth');
           set({ isLoading: false, error: errorMessage });
           return { error: errorMessage };
         }
@@ -376,7 +378,7 @@ export const useAuthStore = create<AuthState>()(
             return localStorage;
           }
         } catch (e) {
-          logger.warn('localStorage not available:', e, 'Auth');
+          logger.warn('localStorage not available:', { error: e }, 'Auth');
         }
         
         try {
@@ -389,7 +391,7 @@ export const useAuthStore = create<AuthState>()(
             return sessionStorage;
           }
         } catch (e) {
-          logger.warn('sessionStorage not available:', e, 'Auth');
+          logger.warn('sessionStorage not available:', { error: e }, 'Auth');
         }
         
         // If both fail, use memory storage
@@ -524,7 +526,7 @@ if (typeof window !== 'undefined' && supabase) {
         }
       }
     } catch (error) {
-      logger.error('Error handling auth state change:', error, 'Auth');
+      logger.error('Error handling auth state change:', { error }, 'Auth');
     } finally {
       isUpdating = false;
     }

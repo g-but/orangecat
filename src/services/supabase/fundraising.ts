@@ -166,6 +166,31 @@ export async function getUserFundingPages(userId: string): Promise<FundingPage[]
 }
 
 /**
+ * Get a single funding page by ID
+ */
+export async function getFundingPage(pageId: string): Promise<FundingPage | null> {
+  try {
+    const { data, error } = await supabase
+      .from('funding_pages')
+      .select('*')
+      .eq('id', pageId)
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        // No rows returned
+        return null
+      }
+      throw error
+    }
+    return data
+  } catch (error) {
+    console.error('Error fetching funding page:', error)
+    return null
+  }
+}
+
+/**
  * Get global fundraising statistics (for admin/overview purposes)
  */
 export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {

@@ -6,6 +6,7 @@ import {
   isValidUsername, 
   isValidBio 
 } from '@/utils/validation'
+import { logger } from '@/utils/logger'
 
 // Simple in-memory rate limiting (in production, use Redis or database)
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
@@ -155,7 +156,7 @@ export async function POST(request: Request) {
     }
 
     // Log successful update for security monitoring
-    console.log(`Profile updated successfully for user ${user.id}`, {
+    logger.info(`Profile updated successfully for user ${user.id}`, {
       username: !!username,
       bio: !!bio,
       bitcoin_address: !!bitcoin_address,

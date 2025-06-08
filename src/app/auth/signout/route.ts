@@ -38,7 +38,7 @@ export async function GET(request: Request) {
   // Set additional headers to prevent caching
   response.headers.set('Cache-Control', 'no-store, max-age=0')
   
-  console.log('[SignOut Route] Completed server-side sign out')
+  // Server-side sign out completed
   
   return response
 } 

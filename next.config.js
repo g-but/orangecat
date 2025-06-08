@@ -1,61 +1,103 @@
 /** @type {import('next').NextConfig} */
+
 const nextConfig = {
-  reactStrictMode: true,
+  // Enable SWC minification for better performance
   swcMinify: true,
+  
+  // Image optimization
   images: {
-    domains: (() => {
-      const base = ['localhost', 'www.orangecat.com', 'orangecat.com'];
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-      try {
-        const { hostname } = new URL(supabaseUrl);
-        if (hostname && !base.includes(hostname)) base.push(hostname);
-      } catch (_) {
-        // invalid URL – ignore
-      }
-      return base;
-    })(),
+    domains: [
+      'images.unsplash.com',
+      'supabase.io',
+      'github.com',
+      'ohkueislstxomdjavyhs.supabase.co'
+    ],
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
+
+  // Experimental features (only supported ones)
+  experimental: {
+    esmExternals: true,
+  },
+
+  // Webpack optimizations
+  webpack: (config, { dev }) => {
+    if (!dev) {
+      // Enable tree shaking
+      config.optimization.usedExports = true
+      config.optimization.sideEffects = false
+      
+      // Performance budgets
+      config.performance = {
+        maxAssetSize: 250000,
+        maxEntrypointSize: 400000,
+        hints: 'warning',
+      }
+    }
+    return config
+  },
+
+  // Enable compression
+  compress: true,
+  
+  // Generate ETags for better caching
+  generateEtags: true,
+  
+  // Headers for performance
   async headers() {
     return [
       {
-        source: '/:path*',
+        source: '/:all*(svg|jpg|png|gif|webp|avif)',
         headers: [
           {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [
           {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
-          {
-            key: 'X-XSS-Protection',
-            value: '1; mode=block',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'SAMEORIGIN',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Referrer-Policy',
-            value: 'origin-when-cross-origin',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
     ]
   },
-  env: {
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL || 'https://www.orangecat.com',
-    NEXT_PUBLIC_SITE_NAME: process.env.NEXT_PUBLIC_SITE_NAME || 'Orange Cat',
+
+  // Production optimizations
+  ...(process.env.NODE_ENV === 'production' && {
+    compiler: {
+      removeConsole: {
+        exclude: ['error'],
+      },
+    },
+  }),
+
+  // Output configuration
+  output: 'standalone',
+  
+  // TypeScript optimization
+  typescript: {
+    ignoreBuildErrors: false,
   },
+
+  // Remove X-Powered-By header
+  poweredByHeader: false,
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig
+
+// Performance monitoring
+if (process.env.NODE_ENV === 'production') {
+  console.log('🚀 Performance optimizations enabled:')
+  console.log('  ✅ SWC Minification')
+  console.log('  ✅ Image Optimization') 
+  console.log('  ✅ Tree Shaking')
+  console.log('  ✅ Compression')
+  console.log('  ✅ Caching Headers')
+} 

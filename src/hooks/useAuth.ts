@@ -1,6 +1,7 @@
 import { useAuthStore } from '@/store/auth'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
+import { logger } from '@/utils/logger'
 
 // Throttle function to prevent excessive logging - increased delays
 function useThrottledLog(logFn: () => void, delay: number = 10000) {
@@ -122,7 +123,7 @@ export function useAuth() {
            (authState.user && authState.session));
         
         if (isSignificantChange) {
-          console.log('useAuth - Significant auth state change:', {
+          logger.debug('Significant auth state change', {
             hasUser: !!authState.user,
             hasSession: !!authState.session,
             hasProfile: !!authState.profile,
@@ -147,10 +148,10 @@ export function useAuth() {
         
       if (hasInconsistentState !== !isConsistent) {
         if (hasInconsistentState) {
-          console.warn('useAuth - Inconsistent state detected:', {
+          logger.warn('Inconsistent auth state detected', {
             hasUser: !!authState.user,
             hasSession: !!authState.session
-          });
+          }, 'Auth');
         }
         setIsConsistent(!hasInconsistentState);
       }
@@ -179,7 +180,7 @@ export function useAuth() {
       return;
     }
 
-    console.warn('Manually fixing inconsistent auth state');
+    logger.warn('Manually fixing inconsistent auth state', {}, 'Auth');
     
     try {
       // Force sign out to clean everything up
@@ -193,7 +194,7 @@ export function useAuth() {
         router.push('/auth');
       }
     } catch (error) {
-      console.error('Error during auth state fix:', error);
+      logger.error('Error during auth state fix', { error: error instanceof Error ? error.message : String(error) }, 'Auth');
     }
   };
 

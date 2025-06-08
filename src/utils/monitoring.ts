@@ -1,8 +1,10 @@
+import { logger } from './logger'
+
 // Performance monitoring
 export const trackPerformance = (metricName: string, value: number) => {
   if (process.env.NODE_ENV === 'production') {
-    // Log to Vercel Analytics
-    console.log(`[Performance] ${metricName}: ${value}ms`);
+    // Log to Vercel Analytics - use proper logger instead of console.log
+    logger.performance(metricName, value);
   }
 };
 
@@ -21,15 +23,15 @@ export const trackError = (error: Error, context?: Record<string, any>) => {
 // Page view tracking
 export const trackPageView = (path: string) => {
   if (process.env.NODE_ENV === 'production') {
-    // Log to Vercel Analytics
-    console.log(`[Page View] ${path}`);
+    // Log to Vercel Analytics - use proper logger instead of console.log
+    logger.info(`Page View: ${path}`, undefined, 'Analytics');
   }
 };
 
 // Custom event tracking
 export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
   if (process.env.NODE_ENV === 'production') {
-    // Log to Vercel Analytics
-    console.log(`[Event] ${eventName}`, properties);
+    // Log to Vercel Analytics - use proper logger instead of console.log
+    logger.info(`Event: ${eventName}`, properties, 'Analytics');
   }
 }; 

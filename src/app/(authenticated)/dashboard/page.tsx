@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { useDrafts } from '@/hooks/useDrafts'
+import { useCampaignStore } from '@/stores/campaignStore'
 import { useAnalytics } from '@/hooks/useAnalytics'
 import Loading from '@/components/Loading'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -27,7 +27,7 @@ import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
 
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated, session } = useAuth()
-  const { hasAnyDraft, drafts, hasLocalDraft, getPrimaryDraft } = useDrafts()
+  const { drafts, loadCampaigns, isLoading: campaignLoading } = useCampaignStore()
   const { metrics, isLoading: analyticsLoading } = useAnalytics()
   const router = useRouter()
   const [localLoading, setLocalLoading] = useState(true)
@@ -37,6 +37,13 @@ export default function DashboardPage() {
       setLocalLoading(false)
     }
   }, [hydrated])
+
+  // Load campaigns when user is available
+  useEffect(() => {
+    if (user?.id && hydrated) {
+      loadCampaigns(user.id)
+    }
+  }, [user?.id, hydrated, loadCampaigns])
 
   // Handle loading states
   if (!hydrated || localLoading) {
@@ -89,8 +96,9 @@ export default function DashboardPage() {
   const profileCompletion = Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100)
   
   // Get primary draft for urgent actions
-  const primaryDraft = hasAnyDraft ? getPrimaryDraft() : null
-  const totalDrafts = (drafts?.length || 0) + (hasLocalDraft ? 1 : 0)
+  const hasAnyDraft = drafts.length > 0
+  const primaryDraft = hasAnyDraft ? drafts[0] : null
+  const totalDrafts = drafts.length
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
@@ -153,7 +161,7 @@ export default function DashboardPage() {
                         {primaryDraft && (
                           <span className="text-sm text-orange-600">
                             &ldquo;{primaryDraft.title}&rdquo;
-                            {primaryDraft.source === 'local' && ' (unsaved)'}
+                            {primaryDraft.syncStatus === 'pending' && ' (unsaved)'}
                           </span>
                         )}
                       </div>
@@ -193,7 +201,7 @@ export default function DashboardPage() {
                 <div>{activeCampaigns} active</div>
                 {totalRaised > 0 && (
                   <div className="font-medium text-gray-900">
-                    <CurrencyDisplay bitcoin={totalRaised} size="sm" showChf={false} /> raised
+                    <CurrencyDisplay amount={totalRaised} currency="BTC" size="sm" /> raised
                 </div>
                 )}
               </div>

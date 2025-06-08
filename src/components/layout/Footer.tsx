@@ -9,18 +9,22 @@ import { ArrowUp } from 'lucide-react'
 export default function Footer() {
   const pathname = usePathname()
   // Check if current page is an authenticated page
-  const isAuthPage = pathname.startsWith('/dashboard') || 
-                    pathname.startsWith('/profile') || 
-                    pathname.startsWith('/settings') ||
-                    pathname.startsWith('/assets') ||
-                    pathname.startsWith('/people') ||
-                    pathname.startsWith('/events') ||
-                    pathname.startsWith('/organizations') ||
-                    pathname.startsWith('/projects') ||
-                    pathname.startsWith('/fundraising')
+  const isAuthPage = pathname && (
+    pathname.startsWith('/dashboard') || 
+    pathname.startsWith('/profile') || 
+    pathname.startsWith('/settings') ||
+    pathname.startsWith('/assets') ||
+    pathname.startsWith('/people') ||
+    pathname.startsWith('/events') ||
+    pathname.startsWith('/organizations') ||
+    pathname.startsWith('/projects') ||
+    pathname.startsWith('/fundraising')
+  )
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (typeof window !== 'undefined' && window.scrollTo) {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   // Don't render footer on authenticated pages to avoid layout conflicts with sidebar

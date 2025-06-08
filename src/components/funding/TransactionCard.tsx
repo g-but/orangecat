@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { ArrowDownCircle, ArrowUpCircle, ExternalLink, ThumbsUp, ThumbsDown, MessageCircle } from 'lucide-react'
-import { BitcoinTransaction } from '@/types/bitcoin'
+import { BitcoinTransaction } from '@/types/bitcoin/index'
 import { getTransactionUrl, formatBtcValue } from '@/services/bitcoin'
 import { formatDistanceToNow } from 'date-fns'
 

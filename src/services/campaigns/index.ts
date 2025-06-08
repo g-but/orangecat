@@ -13,8 +13,11 @@
 
 import { createBrowserClient } from '@supabase/ssr'
 import { FundingPage } from '@/types/database'
+import type { CampaignFormData, CampaignDraftData, safeParseCampaignGoal } from '@/types/campaign'
+import { getErrorMessage, type CatchError } from '@/types/common'
 
-const supabase = createBrowserClient(
+// Default client for production
+const defaultSupabase = createBrowserClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 )
@@ -29,7 +32,7 @@ export interface CampaignFilters {
 export interface LocalDraft {
   id: string
   title: string
-  formData: any
+  formData: CampaignDraftData
   currentStep: number
   lastSaved: Date
   draftId?: string // Linked database draft ID
@@ -48,6 +51,7 @@ export interface UnifiedCampaign extends FundingPage {
 export class CampaignService {
   private static instance: CampaignService
   private localStorageKey = (userId: string) => `funding-draft-${userId}`
+  private supabase: any
 
   static getInstance(): CampaignService {
     if (!CampaignService.instance) {
@@ -56,14 +60,24 @@ export class CampaignService {
     return CampaignService.instance
   }
 
+  // Allow regular instantiation for testing with optional client injection
+  constructor(supabaseClient?: any) {
+    this.supabase = supabaseClient || defaultSupabase
+  }
+
   /**
    * GET ALL CAMPAIGNS FOR A USER (database + local drafts)
    * This is the ONLY method to get campaign data
    */
   async getAllCampaigns(userId: string): Promise<UnifiedCampaign[]> {
     try {
+      // Validate input
+      if (!userId || userId.trim() === '') {
+        throw new Error('User ID is required')
+      }
+
       // 1. Get all database campaigns
-      const { data: dbCampaigns, error } = await supabase
+      const { data: dbCampaigns, error } = await this.supabase
         .from('funding_pages')
         .select('*')
         .eq('user_id', userId)
@@ -72,7 +86,7 @@ export class CampaignService {
       if (error) throw error
 
       // 2. Convert database campaigns to unified format
-      const unifiedDbCampaigns: UnifiedCampaign[] = (dbCampaigns || []).map(campaign => ({
+      const unifiedDbCampaigns: UnifiedCampaign[] = (dbCampaigns || []).map((campaign: any) => ({
         ...campaign,
         source: 'database' as const,
         isDraft: !campaign.is_active && !campaign.is_public,
@@ -111,28 +125,54 @@ export class CampaignService {
   }
 
   /**
+   * FILTER CAMPAIGNS BY CRITERIA
+   */
+  async filterCampaigns(campaigns: UnifiedCampaign[], filters: CampaignFilters): Promise<UnifiedCampaign[]> {
+    let filtered = [...campaigns]
+
+    if (filters.status && filters.status !== 'all') {
+      switch (filters.status) {
+        case 'draft':
+          filtered = filtered.filter(c => c.isDraft)
+          break
+        case 'active':
+          filtered = filtered.filter(c => c.isActive)
+          break
+        case 'paused':
+          filtered = filtered.filter(c => c.isPaused)
+          break
+      }
+    }
+
+    if (filters.limit) {
+      filtered = filtered.slice(filters.offset || 0, (filters.offset || 0) + filters.limit)
+    }
+
+    return filtered
+  }
+
+  /**
    * GET CAMPAIGNS BY TYPE
    */
   async getCampaignsByType(userId: string, type: 'drafts' | 'active' | 'paused' | 'all'): Promise<UnifiedCampaign[]> {
     const allCampaigns = await this.getAllCampaigns(userId)
-    
-    switch (type) {
-      case 'drafts':
-        return allCampaigns.filter(c => c.isDraft)
-      case 'active':
-        return allCampaigns.filter(c => c.isActive)
-      case 'paused':
-        return allCampaigns.filter(c => c.isPaused)
-      default:
-        return allCampaigns
-    }
+    const filterStatus = type === 'drafts' ? 'draft' : type
+    return this.filterCampaigns(allCampaigns, { status: filterStatus })
   }
 
   /**
    * SAVE DRAFT (unified local + database storage)
    */
-  async saveDraft(userId: string, formData: any, currentStep: number = 1, draftId?: string): Promise<string> {
+  async saveDraft(userId: string, formData: CampaignDraftData, currentStep: number = 1, draftId?: string): Promise<string> {
     try {
+      // Validate inputs
+      if (!userId || userId.trim() === '') {
+        throw new Error('User ID is required')
+      }
+      if (!formData) {
+        throw new Error('Form data is required')
+      }
+
       // 1. Save to localStorage first (immediate feedback)
       const localDraft: LocalDraft = {
         id: `local-${userId}`,
@@ -150,6 +190,13 @@ export class CampaignService {
         lastSaved: localDraft.lastSaved.toISOString()
       }))
 
+      // Helper function to safely parse numbers
+      const safeParseFloat = (value: any): number | null => {
+        if (!value) return null
+        const parsed = parseFloat(value)
+        return isNaN(parsed) ? null : parsed
+      }
+
       // 2. Save to database (background sync)
       const draftData = {
         user_id: userId,
@@ -158,7 +205,7 @@ export class CampaignService {
         bitcoin_address: formData.bitcoin_address || null,
         lightning_address: formData.lightning_address || null,
         website_url: formData.website_url || null,
-        goal_amount: formData.goal_amount ? parseFloat(formData.goal_amount) : null,
+        goal_amount: safeParseFloat(formData.goal_amount),
         category: formData.categories?.[0] || null,
         tags: formData.categories?.slice(1) || [],
         currency: 'BTC',
@@ -172,7 +219,7 @@ export class CampaignService {
 
       if (draftId) {
         // Update existing draft
-        const { data, error } = await supabase
+        const { data, error } = await this.supabase
           .from('funding_pages')
           .update(draftData)
           .eq('id', draftId)
@@ -184,7 +231,7 @@ export class CampaignService {
         resultId = data.id
       } else {
         // Create new draft
-        const { data, error } = await supabase
+        const { data, error } = await this.supabase
           .from('funding_pages')
           .insert(draftData)
           .select()
@@ -215,20 +262,38 @@ export class CampaignService {
    */
   async publishCampaign(userId: string, campaignId: string, formData: any): Promise<UnifiedCampaign> {
     try {
+      // Validate inputs
+      if (!userId || userId.trim() === '') {
+        throw new Error('User ID is required')
+      }
+      if (!campaignId || campaignId.trim() === '') {
+        throw new Error('Campaign ID is required')
+      }
+      if (!formData) {
+        throw new Error('Form data is required')
+      }
+
+      // Helper function to safely parse numbers
+      const safeParseFloat = (value: any): number | null => {
+        if (!value) return null
+        const parsed = parseFloat(value)
+        return isNaN(parsed) ? null : parsed
+      }
+
       const publishData = {
         title: formData.title,
         description: formData.description || null,
         bitcoin_address: formData.bitcoin_address || null,
         lightning_address: formData.lightning_address || null,
         website_url: formData.website_url || null,
-        goal_amount: formData.goal_amount ? parseFloat(formData.goal_amount) : null,
+        goal_amount: safeParseFloat(formData.goal_amount),
         category: formData.categories?.[0] || null,
         tags: formData.categories?.slice(1) || [],
         is_active: true,
         is_public: true
       }
 
-      const { data, error } = await supabase
+      const { data, error } = await this.supabase
         .from('funding_pages')
         .update(publishData)
         .eq('id', campaignId)
@@ -308,7 +373,7 @@ export class CampaignService {
       bitcoin_address: localDraft.formData.bitcoin_address || '',
       lightning_address: localDraft.formData.lightning_address || '',
       website_url: localDraft.formData.website_url || '',
-      goal_amount: localDraft.formData.goal_amount ? parseFloat(localDraft.formData.goal_amount) : 0,
+      goal_amount: localDraft.formData.goal_amount ? parseFloat(String(localDraft.formData.goal_amount)) : 0,
       category: localDraft.formData.categories?.[0] || '',
       tags: localDraft.formData.categories?.slice(1) || [],
       updated_at: localDraft.lastSaved.toISOString(),

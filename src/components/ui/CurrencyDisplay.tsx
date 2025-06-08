@@ -1,124 +1,72 @@
-import { cn } from '@/lib/utils'
-import { convertSatoshisToAll, formatBitcoinWithChf, CurrencyConversion } from '@/utils/currency'
+/**
+ * CurrencyDisplay Component
+ * 
+ * Reusable component for displaying currency amounts with appropriate colors.
+ * Automatically uses Bitcoin Orange for BTC amounts and neutral colors for others.
+ * 
+ * Created: June 5, 2025
+ * Last Modified: June 5, 2025
+ * Last Modified Summary: Initial creation
+ */
+
+import React from 'react';
+import { componentColors } from '@/lib/theme';
+import { cn } from '@/lib/utils';
 
 interface CurrencyDisplayProps {
-  satoshis?: number
-  bitcoin?: number
-  conversion?: CurrencyConversion
-  showChf?: boolean
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  layout?: 'horizontal' | 'vertical'
-  className?: string
-  bitcoinClassName?: string
-  chfClassName?: string
+  amount: number | string;
+  currency: 'BTC' | 'USD' | 'CHF' | 'SATS';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+  className?: string;
+  showSymbol?: boolean;
 }
 
-export function CurrencyDisplay({
-  satoshis,
-  bitcoin,
-  conversion,
-  showChf = true,
+export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
+  amount,
+  currency,
   size = 'md',
-  layout = 'horizontal',
   className,
-  bitcoinClassName,
-  chfClassName
-}: CurrencyDisplayProps) {
-  // Determine the conversion to use
-  let finalConversion: CurrencyConversion
+  showSymbol = true,
+}) => {
+  const colorConfig = componentColors.currencyDisplay(currency);
   
-  if (conversion) {
-    finalConversion = conversion
-  } else if (satoshis !== undefined) {
-    finalConversion = convertSatoshisToAll(satoshis)
-  } else if (bitcoin !== undefined) {
-    finalConversion = convertSatoshisToAll(bitcoin * 100000000)
-  } else {
-    throw new Error('Must provide either satoshis, bitcoin, or conversion')
-  }
-
-  const formatted = formatBitcoinWithChf(finalConversion)
-
   const sizeClasses = {
-    sm: {
-      bitcoin: 'text-sm font-medium',
-      chf: 'text-xs text-gray-500'
-    },
-    md: {
-      bitcoin: 'text-lg font-semibold',
-      chf: 'text-sm text-gray-600'
-    },
-    lg: {
-      bitcoin: 'text-xl font-bold',
-      chf: 'text-base text-gray-600'
-    },
-    xl: {
-      bitcoin: 'text-3xl font-bold',
-      chf: 'text-lg text-gray-600'
+    sm: 'text-sm',
+    md: 'text-base',
+    lg: 'text-lg font-medium',
+    xl: 'text-xl font-semibold',
+  };
+  
+  const formatAmount = (amount: number | string, currency: string) => {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    
+    switch (currency) {
+      case 'BTC':
+        return showSymbol ? `${numAmount.toFixed(8)} BTC` : numAmount.toFixed(8);
+      case 'SATS':
+        return showSymbol ? `${numAmount.toLocaleString('en-US')} sats` : numAmount.toLocaleString('en-US');
+      case 'USD':
+        return showSymbol ? `$${numAmount.toLocaleString('en-US')}` : numAmount.toLocaleString('en-US');
+      case 'CHF':
+        return showSymbol ? `${numAmount.toLocaleString('en-US')} CHF` : numAmount.toLocaleString('en-US');
+      default:
+        return showSymbol ? `${numAmount} ${currency}` : numAmount.toString();
     }
-  }
-
-  const isVertical = layout === 'vertical'
-
-  if (!showChf) {
-    return (
-      <span className={cn(sizeClasses[size].bitcoin, bitcoinClassName, className)}>
-        {formatted.bitcoin}
-      </span>
-    )
-  }
-
-  if (isVertical) {
-    return (
-      <div className={cn("flex flex-col", className)}>
-        <span className={cn(sizeClasses[size].bitcoin, bitcoinClassName)}>
-          {formatted.bitcoin}
-        </span>
-        <span className={cn(sizeClasses[size].chf, chfClassName)}>
-          {formatted.chf}
-        </span>
-      </div>
-    )
-  }
+  };
 
   return (
-    <span className={cn("inline-flex items-center gap-2", className)}>
-      <span className={cn(sizeClasses[size].bitcoin, bitcoinClassName)}>
-        {formatted.bitcoin}
-      </span>
-      <span className={cn(sizeClasses[size].chf, chfClassName)}>
-        ({formatted.chf})
-      </span>
-    </span>
-  )
-}
-
-interface BitcoinAmountProps {
-  satoshis?: number
-  bitcoin?: number
-  showLabel?: boolean
-  label?: string
-  className?: string
-}
-
-export function BitcoinAmount({ 
-  satoshis, 
-  bitcoin, 
-  showLabel = true, 
-  label = "Amount",
-  className 
-}: BitcoinAmountProps) {
-  return (
-    <div className={cn("flex flex-col space-y-1", className)}>
-      {showLabel && (
-        <span className="text-sm font-medium text-gray-700">{label}</span>
+    <span
+      className={cn(
+        colorConfig.className,
+        sizeClasses[size],
+        'font-mono tabular-nums',
+        className
       )}
-      <CurrencyDisplay 
-        satoshis={satoshis}
-        bitcoin={bitcoin}
-        size="lg"
-        layout="vertical"
-      />
-    </div>
-  )
-} 
+      style={colorConfig.style}
+    >
+      {formatAmount(amount, currency)}
+    </span>
+  );
+};
+
+export default CurrencyDisplay; 
