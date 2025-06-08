@@ -14,7 +14,7 @@ import {
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
-import { useDrafts } from '@/hooks/useDrafts'
+import { useCampaignStore } from '@/stores/campaignStore'
 import { formatDistanceToNow } from 'date-fns'
 
 interface DraftContinueDialogProps {
@@ -30,15 +30,15 @@ export default function DraftContinueDialog({
   onContinueDraft, 
   onStartFresh 
 }: DraftContinueDialogProps) {
-  const { getPrimaryDraft, hasAnyDraft, drafts, hasLocalDraft } = useDrafts()
+  const { drafts } = useCampaignStore()
   
-  if (!isOpen || !hasAnyDraft) return null
+  const hasAnyDraft = drafts.length > 0
+  const primaryDraft = hasAnyDraft ? drafts[0] : null
+  
+  if (!isOpen || !hasAnyDraft || !primaryDraft) return null
 
-  const primaryDraft = getPrimaryDraft()
-  if (!primaryDraft) return null
-
-  const isLocalDraft = primaryDraft.source === 'local'
-  const totalDrafts = drafts.length + (hasLocalDraft ? 1 : 0)
+  const isLocalDraft = primaryDraft.syncStatus === 'pending'
+  const totalDrafts = drafts.length
 
   const formatLastUpdated = (date: Date | null) => {
     if (!date) return 'recently'
@@ -50,10 +50,18 @@ export default function DraftContinueDialog({
   }
 
   const getCompletionPercentage = () => {
-    if (isLocalDraft && primaryDraft.currentStep) {
-      return Math.round((primaryDraft.currentStep / 3) * 100)
-    }
-    return 30 // Estimate for database drafts
+    // Simple completion percentage based on filled fields
+    let completed = 0
+    const total = 6
+    
+    if (primaryDraft.title) completed++
+    if (primaryDraft.description) completed++
+    if (primaryDraft.goal_amount) completed++
+    if (primaryDraft.category) completed++
+    if (primaryDraft.bitcoin_address) completed++
+    if (primaryDraft.website_url) completed++
+    
+    return Math.round((completed / total) * 100)
   }
 
   const completionPercentage = getCompletionPercentage()
@@ -113,12 +121,12 @@ export default function DraftContinueDialog({
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                <span>Last saved {formatLastUpdated(primaryDraft.lastSaved)}</span>
+                <span>Last saved {formatLastUpdated(new Date(primaryDraft.updated_at))}</span>
               </div>
-              {isLocalDraft && primaryDraft.currentStep && (
+              {isLocalDraft && (
                 <div className="flex items-center gap-1">
                   <CheckCircle className="w-4 h-4" />
-                  <span>Step {primaryDraft.currentStep} of 3</span>
+                  <span>Draft in progress</span>
                 </div>
               )}
             </div>

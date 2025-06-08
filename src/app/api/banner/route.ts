@@ -3,6 +3,7 @@ import supabaseAdmin from '@/services/supabase/admin'
 import { createServerClient } from '@/services/supabase/server'
 import sharp from 'sharp'
 import path from 'path'
+import { logger } from '@/utils/logger'
 
 const BUCKET_NAME = 'banners'
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // Reduced to 5MB for security
@@ -261,7 +262,8 @@ export async function POST(req: NextRequest) {
     const { data } = supabaseAdmin.storage.from(BUCKET_NAME).getPublicUrl(filePath)
 
     // 🔒 Log upload for audit trail
-    console.log(`[banner] Secure upload completed for user ${user.id}: ${filePath}`)
+    // Log successful upload for audit trail
+    logger.info(`Banner upload completed for user ${user.id}`, { filePath }, 'Upload')
 
     return NextResponse.json({ 
       publicUrl: data.publicUrl,

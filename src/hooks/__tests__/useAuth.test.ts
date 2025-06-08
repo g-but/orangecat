@@ -300,7 +300,7 @@ describe('useAuth', () => {
       mockAuthStore.isLoading = false
       mockAuthStore.signOut.mockRejectedValue(new Error('Sign out failed'))
 
-      // Mock console.error to verify error logging
+      // Mock console.error to verify error logging (logger uses console.error internally)
       const consoleSpy = jest.spyOn(console, 'error').mockImplementation()
 
       Object.defineProperty(window, 'location', {
@@ -314,7 +314,11 @@ describe('useAuth', () => {
         await result.current.fixInconsistentState()
       })
 
-      expect(consoleSpy).toHaveBeenCalledWith('Error during auth state fix:', expect.any(Error))
+      // Expect the new logger format
+      expect(consoleSpy).toHaveBeenCalledWith(
+        expect.stringContaining('ERROR [Auth] Error during auth state fix'),
+        expect.objectContaining({ error: 'Sign out failed' })
+      )
       
       consoleSpy.mockRestore()
     })

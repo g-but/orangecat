@@ -45,7 +45,7 @@ const formatTransactionValue = (transaction: BitcoinTransaction) => {
   const sign = transaction.type === 'incoming' ? '+' : '-'
   const color = transaction.type === 'incoming' ? 'text-green-600' : 'text-red-600'
   return {
-    display: `${sign}₿${formatBitcoinAmount(transaction.value)}`,
+    display: `${sign}₿${formatBitcoinAmount(transaction.amount)}`,
     color
   }
 }
@@ -227,7 +227,7 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
-              {walletData.transactions.slice(0, 5).map((tx) => {
+              {walletData.transactions.slice(0, 5).map((tx: any) => {
                 const statusInfo = getTransactionStatus(tx.status, tx.timestamp)
                 const valueInfo = formatTransactionValue(tx)
                 

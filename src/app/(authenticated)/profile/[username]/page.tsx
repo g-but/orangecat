@@ -353,7 +353,7 @@ export default function PublicProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {walletData.transactions.slice(0, 3).map((tx) => (
+                    {walletData.transactions.slice(0, 3).map((tx: any) => (
                       <div
                         key={tx.txid}
                         className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"

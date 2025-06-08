@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuthStore } from '@/store/auth'
 import supabase from '@/services/supabase/client'
-import { User, Bitcoin, Zap, FileText, Globe, Lightbulb, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react'
+import { User, Bitcoin, Zap, FileText, Globe, Lightbulb, CheckCircle, ArrowRight, ArrowLeft, ExternalLink } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Textarea from '@/components/ui/Textarea'
@@ -150,10 +151,10 @@ export default function ProfileSetupPage() {
         updated_at: new Date().toISOString()
       }
 
-      console.log('Profile setup: submitting data', updatedProfileData)
+      // Submitting profile setup data
       
       const timeoutId = setTimeout(() => {
-        console.log('Profile setup update timeout reached, resetting loading state')
+        // Profile setup update timeout reached, reset loading state
         setIsLoading(false)
         toast.error('Update is taking longer than expected. Please try again.')
       }, 8000)
@@ -177,7 +178,7 @@ export default function ProfileSetupPage() {
         throw new Error('Failed to update profile: No data returned')
       }
 
-      console.log('Profile setup: success', returnedProfile)
+              // Profile setup successful
       
       await useAuthStore.getState().fetchProfile()
       
@@ -291,14 +292,37 @@ export default function ProfileSetupPage() {
 
                   {currentStepData.id === 'payment-info' && (
                     <div className="space-y-6">
-                      <Input
-                        label="Bitcoin Address"
-                        value={profileData.bitcoin_address}
-                        onChange={handleInputChange('bitcoin_address')}
-                        placeholder="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
-                        className="text-lg font-mono"
-                        icon={Bitcoin}
-                      />
+                      <div className="space-y-3">
+                        <Input
+                          label="Bitcoin Address"
+                          value={profileData.bitcoin_address}
+                          onChange={handleInputChange('bitcoin_address')}
+                          placeholder="bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+                          className="text-lg font-mono"
+                          icon={Bitcoin}
+                        />
+                        {!profileData.bitcoin_address && (
+                          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                              <Bitcoin className="w-5 h-5 text-orange-600 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <h4 className="font-semibold text-orange-900 mb-1">Don&apos;t have a Bitcoin wallet?</h4>
+                                <p className="text-orange-800 text-sm mb-3">
+                                  No worries! We&apos;ll help you get one set up in just a few minutes.
+                                </p>
+                                <Link 
+                                  href="/bitcoin-wallet-guide" 
+                                  target="_blank"
+                                  className="inline-flex items-center px-3 py-1.5 border border-orange-600 text-orange-600 rounded-md text-sm font-medium hover:bg-orange-50 transition-colors"
+                                >
+                                  <ExternalLink className="w-4 h-4 mr-2" />
+                                  Get Bitcoin Wallet Guide
+                                </Link>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                       <Input
                         label="Lightning Address"
                         value={profileData.lightning_address}

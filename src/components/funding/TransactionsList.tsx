@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { BitcoinTransaction } from '@/types/bitcoin'
+import { BitcoinTransaction } from '@/types/bitcoin/index'
 import { TransactionCard } from './TransactionCard'
 
 interface TransactionsListProps {

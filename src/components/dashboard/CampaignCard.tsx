@@ -48,15 +48,15 @@ export default function CampaignCard({ campaign }: CampaignCardProps) {
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Raised</span>
-              <span className="font-medium">{campaign.raised.toLocaleString()} sats</span>
+              <span className="font-medium">{campaign.raised.toLocaleString('en-US')} sats</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Goal</span>
-              <span className="font-medium">{campaign.goal.toLocaleString()} sats</span>
+              <span className="font-medium">{campaign.goal.toLocaleString('en-US')} sats</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Supporters</span>
-              <span className="font-medium">{campaign.supporters}</span>
+              <span className="font-medium">{campaign.supporters.toLocaleString('en-US')}</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Days Left</span>

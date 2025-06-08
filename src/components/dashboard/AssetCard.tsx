@@ -46,11 +46,11 @@ export default function AssetCard({ asset }: AssetCardProps) {
           <div className="space-y-3">
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Daily Rate</span>
-              <span className="font-medium">{asset.dailyRate.toLocaleString()} sats</span>
+              <span className="font-medium">{asset.dailyRate.toLocaleString('en-US')} sats</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Total Earnings</span>
-              <span className="font-medium">{asset.totalEarnings.toLocaleString()} sats</span>
+              <span className="font-medium">{asset.totalEarnings.toLocaleString('en-US')} sats</span>
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Total Rentals</span>

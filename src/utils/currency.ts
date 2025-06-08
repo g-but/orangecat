@@ -51,7 +51,7 @@ export function convertBitcoinToAll(bitcoin: number): CurrencyConversion {
 
 export function formatBitcoinDisplay(amount: number, unit: 'BTC' | 'sats' = 'BTC'): string {
   if (unit === 'sats') {
-    return `${amount.toLocaleString('de-CH')} sats`
+    return `${amount.toLocaleString('en-US')} sats`
   }
   
   if (amount >= 1) {
@@ -61,7 +61,7 @@ export function formatBitcoinDisplay(amount: number, unit: 'BTC' | 'sats' = 'BTC
   } else {
     // For very small amounts, show in satoshis
     const sats = bitcoinToSatoshis(amount)
-    return `${sats.toLocaleString('de-CH')} sats`
+    return `${sats.toLocaleString('en-US')} sats`
   }
 }
 

@@ -60,6 +60,7 @@ export interface CampaignState {
   // COMPUTED
   drafts: Campaign[]
   activeCampaigns: Campaign[]
+  pausedCampaigns: Campaign[]
   
   // ACTIONS
   loadCampaigns: (userId: string) => Promise<void>
@@ -68,6 +69,10 @@ export interface CampaignState {
   clearCurrentDraft: () => void
   publishCampaign: (userId: string, campaignId: string) => Promise<void>
   deleteCampaign: (campaignId: string) => Promise<void>
+  pauseCampaign: (userId: string, campaignId: string) => Promise<void>
+  resumeCampaign: (userId: string, campaignId: string) => Promise<void>
+  loadCampaignForEdit: (campaignId: string) => void
+  updateCampaign: (userId: string, campaignId: string, data: CampaignFormData) => Promise<void>
   syncAll: (userId: string) => Promise<void>
   
   // UTILITIES
@@ -77,6 +82,7 @@ export interface CampaignState {
     totalCampaigns: number
     totalDrafts: number
     totalActive: number
+    totalPaused: number
     totalRaised: number
   }
 }
@@ -100,6 +106,10 @@ export const useCampaignStore = create<CampaignState>()(
       
       get activeCampaigns() {
         return get().campaigns.filter(c => c.isActive)
+      },
+
+      get pausedCampaigns() {
+        return get().campaigns.filter(c => c.isPaused)
       },
 
       // LOAD ALL CAMPAIGNS
@@ -326,6 +336,183 @@ export const useCampaignStore = create<CampaignState>()(
         }
       },
 
+      // PAUSE CAMPAIGN
+      pauseCampaign: async (userId: string, campaignId: string) => {
+        set({ isSyncing: true, error: null })
+        
+        try {
+          const { data, error } = await supabase
+            .from('funding_pages')
+            .update({ 
+              is_active: false, 
+              is_public: false,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', campaignId)
+            .eq('user_id', userId)
+            .select()
+            .single()
+          
+          if (error) throw error
+          
+          // Update local state
+          set(state => ({
+            campaigns: state.campaigns.map(c => 
+              c.id === campaignId 
+                ? { 
+                    ...c, 
+                    ...data,
+                    isDraft: true, 
+                    isActive: false, 
+                    isPaused: true,
+                    syncStatus: 'synced' as const
+                  }
+                : c
+            ),
+            currentDraft: null,
+            currentDraftId: null,
+            isSyncing: false,
+            lastSync: new Date().toISOString()
+          }))
+          
+        } catch (error) {
+          console.error('Failed to pause campaign:', error)
+          set({ 
+            error: error instanceof Error ? error.message : 'Failed to pause campaign',
+            isSyncing: false 
+          })
+          throw error
+        }
+      },
+
+      // RESUME CAMPAIGN
+      resumeCampaign: async (userId: string, campaignId: string) => {
+        set({ isSyncing: true, error: null })
+        
+        try {
+          const { data, error } = await supabase
+            .from('funding_pages')
+            .update({ 
+              is_active: true, 
+              is_public: true,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', campaignId)
+            .eq('user_id', userId)
+            .select()
+            .single()
+          
+          if (error) throw error
+          
+          // Update local state
+          set(state => ({
+            campaigns: state.campaigns.map(c => 
+              c.id === campaignId 
+                ? { 
+                    ...c, 
+                    ...data,
+                    isDraft: false, 
+                    isActive: true, 
+                    isPaused: false,
+                    syncStatus: 'synced' as const
+                  }
+                : c
+            ),
+            currentDraft: null,
+            currentDraftId: null,
+            isSyncing: false,
+            lastSync: new Date().toISOString()
+          }))
+          
+        } catch (error) {
+          console.error('Failed to resume campaign:', error)
+          set({ 
+            error: error instanceof Error ? error.message : 'Failed to resume campaign',
+            isSyncing: false 
+          })
+          throw error
+        }
+      },
+
+      // LOAD CAMPAIGN FOR EDIT
+      loadCampaignForEdit: (campaignId: string) => {
+        const state = get()
+        const campaign = state.campaigns.find(c => c.id === campaignId)
+        
+        if (campaign) {
+          const editData: CampaignFormData = {
+            title: campaign.title || '',
+            description: campaign.description || '',
+            bitcoin_address: campaign.bitcoin_address || '',
+            lightning_address: campaign.lightning_address || '',
+            website_url: campaign.website_url || '',
+            goal_amount: campaign.goal_amount || 0,
+                         categories: [campaign.category, ...(campaign.tags || [])].filter((item): item is string => Boolean(item)),
+            images: [] // TODO: Implement images
+          }
+          
+          set({
+            currentDraft: editData,
+            currentDraftId: campaignId
+          })
+        }
+      },
+
+      // UPDATE CAMPAIGN
+      updateCampaign: async (userId: string, campaignId: string, data: CampaignFormData) => {
+        set({ isSyncing: true, error: null })
+        
+        try {
+          const updateData = {
+            title: data.title || 'Untitled Campaign',
+            description: data.description || null,
+            bitcoin_address: data.bitcoin_address || null,
+            lightning_address: data.lightning_address || null,
+            website_url: data.website_url || null,
+            goal_amount: data.goal_amount || null,
+            category: data.categories?.[0] || null,
+            tags: data.categories?.slice(1) || [],
+            updated_at: new Date().toISOString()
+          }
+          
+          const { data: updated, error } = await supabase
+            .from('funding_pages')
+            .update(updateData)
+            .eq('id', campaignId)
+            .eq('user_id', userId)
+            .select()
+            .single()
+          
+          if (error) throw error
+          
+          // Update local state
+          set(state => ({
+            campaigns: state.campaigns.map(c => 
+              c.id === campaignId 
+                ? { 
+                    ...c, 
+                    ...updated,
+                    lastModified: updated.updated_at,
+                    syncStatus: 'synced' as const
+                  }
+                : c
+            ),
+            currentDraft: null,
+            currentDraftId: null,
+            isSyncing: false,
+            lastSync: new Date().toISOString()
+          }))
+          
+        } catch (error) {
+          console.error('Failed to update campaign:', error)
+          set({ 
+            error: error instanceof Error ? error.message : 'Failed to update campaign',
+            isSyncing: false 
+          })
+          throw error
+        }
+      },
+
       // SYNC ALL
       syncAll: async (userId: string) => {
         await get().loadCampaigns(userId)
@@ -346,6 +533,7 @@ export const useCampaignStore = create<CampaignState>()(
           totalCampaigns: campaigns.length,
           totalDrafts: campaigns.filter(c => c.isDraft).length,
           totalActive: campaigns.filter(c => c.isActive).length,
+          totalPaused: campaigns.filter(c => c.isPaused).length,
           totalRaised: campaigns.reduce((sum, c) => sum + (c.total_funding || 0), 0)
         }
       }

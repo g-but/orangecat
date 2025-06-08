@@ -247,10 +247,11 @@ export default function DiscoverPage() {
                 <div>
                   <div className="flex justify-between text-xs sm:text-sm text-gray-600 mb-1">
                     <div className="truncate">
-                      <CurrencyDisplay 
-                        bitcoin={campaign.total_funding || 0}
+                                            <CurrencyDisplay
+                        amount={campaign.total_funding || 0}
+                        currency="BTC"
                         size="sm"
-                        showChf={false}
+                        showSymbol={true}
                         className="text-xs sm:text-sm"
                       />
                       <span className="ml-1">raised</span>

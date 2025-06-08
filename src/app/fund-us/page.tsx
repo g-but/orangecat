@@ -11,7 +11,7 @@ import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLay
 import { QRCodeCanvas } from 'qrcode.react'
 import { BITCOIN_CONFIG } from '@/config/bitcoin'
 import { fetchBitcoinWalletData, formatBtcValue, getAddressUrl } from '@/services/bitcoin'
-import { BitcoinWalletData } from '@/types/bitcoin'
+import { BitcoinWalletData } from '@/types/bitcoin/index'
 import { TransactionsList } from '@/components/funding/TransactionsList'
 import { formatDistanceToNow } from 'date-fns'
 import { convertSatoshisToAll } from '@/utils/currency'
@@ -81,7 +81,7 @@ export default function OrangeCatDonationPage() {
   // Simplified Wallet Balance Display Component
   const WalletBalanceDisplay = ({ btcBalance, lastUpdatedTime, explorerUrl }: {
     btcBalance: number;
-    lastUpdatedTime: number | undefined;
+    lastUpdatedTime: string | undefined;
     explorerUrl: string;
   }) => {
     const balanceInSatoshis = Math.round(btcBalance * 100000000);
@@ -93,9 +93,9 @@ export default function OrangeCatDonationPage() {
           <p className="text-sm font-medium text-tiffany-700 mb-4">Current Confirmed Balance</p>
           <div className="flex items-center justify-center space-x-3 mb-2">
             <CurrencyDisplay 
-              conversion={conversion}
+              amount={btcBalance}
+              currency="BTC"
               size="xl"
-              layout="vertical"
               className="text-center"
             />
             <a 

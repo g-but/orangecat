@@ -34,7 +34,7 @@ export async function migrateLegacyDrafts(userId: string): Promise<{
       key.includes('funding-draft') || key.includes('draft-')
     )
 
-    console.log('🔍 Found legacy localStorage keys:', legacyKeys)
+    // Found legacy localStorage keys for migration
 
     for (const key of legacyKeys) {
       try {
@@ -45,7 +45,7 @@ export async function migrateLegacyDrafts(userId: string): Promise<{
         const title = legacyDraft.formData?.title?.trim()
 
         if (!title) {
-          console.log(`⚠️ Skipping empty draft: ${key}`)
+          // Skipping empty draft
           continue
         }
 
@@ -59,7 +59,7 @@ export async function migrateLegacyDrafts(userId: string): Promise<{
         // Remove legacy draft
         localStorage.removeItem(key)
         
-        console.log(`✅ Migrated draft "${title}" from ${key}`)
+                  // Migrated draft successfully
 
       } catch (error) {
         console.error(`❌ Failed to migrate ${key}:`, error)
@@ -78,12 +78,12 @@ export async function migrateLegacyDrafts(userId: string): Promise<{
       Object.keys(localStorage).forEach(key => {
         if (key.includes(pattern)) {
           localStorage.removeItem(key)
-          console.log(`🧹 Cleaned up legacy key: ${key}`)
+          // Cleaned up legacy key
         }
       })
     })
 
-    console.log('🎉 Migration complete:', results)
+          // Migration complete
     return results
 
   } catch (error) {

@@ -16,6 +16,11 @@ const aboutLinks = [
     description: 'Learn about our mission and vision'
   },
   {
+    name: 'Study Bitcoin',
+    href: '/study-bitcoin',
+    description: 'Educational resources to learn about Bitcoin'
+  },
+  {
     name: 'Documentation',
     href: '/docs', 
     description: 'Technical guides and API references'

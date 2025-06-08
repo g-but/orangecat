@@ -1,3 +1,5 @@
+import type { LoggerData } from '@/types/common'
+
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 interface LogEntry {
@@ -5,7 +7,7 @@ interface LogEntry {
   level: LogLevel
   context?: string
   message: string
-  data?: any
+  data?: LoggerData
 }
 
 class Logger {
@@ -27,7 +29,7 @@ class Logger {
     return true
   }
 
-  debug(message: string, data?: any, context?: string): void {
+  debug(message: string, data?: LoggerData, context?: string): void {
     if (!this.shouldLog('debug')) return
     
     if (this.isDevelopment) {
@@ -35,7 +37,7 @@ class Logger {
     }
   }
 
-  info(message: string, data?: any, context?: string): void {
+  info(message: string, data?: LoggerData, context?: string): void {
     if (!this.shouldLog('info')) return
     
     if (this.isDevelopment) {
@@ -43,13 +45,13 @@ class Logger {
     }
   }
 
-  warn(message: string, data?: any, context?: string): void {
+  warn(message: string, data?: LoggerData, context?: string): void {
     if (!this.shouldLog('warn')) return
     
     console.warn(this.formatMessage('warn', context, message), data ? data : '')
   }
 
-  error(message: string, error?: any, context?: string): void {
+  error(message: string, error?: LoggerData, context?: string): void {
     if (!this.shouldLog('error')) return
     
     console.error(this.formatMessage('error', context, message), error ? error : '')
@@ -63,17 +65,17 @@ class Logger {
   }
 
   // Auth-specific logging helper
-  auth(message: string, data?: any): void {
+  auth(message: string, data?: LoggerData): void {
     this.debug(message, data, 'Auth')
   }
 
   // Profile-specific logging helper  
-  profile(message: string, data?: any): void {
+  profile(message: string, data?: LoggerData): void {
     this.debug(message, data, 'Profile')
   }
 
   // Supabase-specific logging helper
-  supabase(message: string, data?: any): void {
+  supabase(message: string, data?: LoggerData): void {
     this.debug(message, data, 'Supabase')
   }
 }
@@ -82,7 +84,7 @@ class Logger {
 export const logger = new Logger()
 
 // Convenience exports for common patterns
-export const logAuth = (message: string, data?: any) => logger.auth(message, data)
-export const logProfile = (message: string, data?: any) => logger.profile(message, data)
-export const logSupabase = (message: string, data?: any) => logger.supabase(message, data)
+export const logAuth = (message: string, data?: LoggerData) => logger.auth(message, data)
+export const logProfile = (message: string, data?: LoggerData) => logger.profile(message, data)
+export const logSupabase = (message: string, data?: LoggerData) => logger.supabase(message, data)
 export const logPerformance = (metricName: string, value: number) => logger.performance(metricName, value) 

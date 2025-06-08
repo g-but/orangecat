@@ -48,7 +48,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Funding</span>
-            <span className="font-medium">{project.funding.toLocaleString()} sats</span>
+                          <span className="font-medium">{project.funding.toLocaleString('en-US')} sats</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Deadline</span>

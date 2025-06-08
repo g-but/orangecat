@@ -103,8 +103,8 @@ describe('🛡️ Celebrity Impersonation Prevention System', () => {
       expect(result.suggestedAlternatives!.length).toBeGreaterThan(0);
       
       const alternatives = result.suggestedAlternatives!;
-      expect(alternatives).toContain(expect.stringMatching(/elonmusk.*_(dev|builder|btc|fan)/));
-      expect(alternatives).toContain(expect.stringMatching(/bitcoin_elonmusk/));
+      expect(alternatives.some(alt => /elonmusk.*_(dev|builder|btc|fan)/.test(alt))).toBe(true);
+      expect(alternatives.some(alt => /bitcoin_elonmusk/.test(alt))).toBe(true);
     });
 
     test('allows legitimate usernames', () => {

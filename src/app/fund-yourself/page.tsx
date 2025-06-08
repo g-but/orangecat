@@ -8,7 +8,7 @@ import Button from '@/components/ui/Button'
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
 import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout'
 import { Plus, Edit2, Share2, BarChart2, Loader2, ArrowRight, Bitcoin, Zap, Users, Globe } from 'lucide-react'
-import { getFundingPage } from '@/services/supabase/client'
+import { getUserFundingPages } from '@/services/supabase/client'
 import { toast } from 'sonner'
 import { getRegionalToolsTitle, getRegionalToolsDescription, fundingTools } from '@/data/marketTools'
 
@@ -27,8 +27,7 @@ export default function FundYourselfPage() {
 
     const loadPages = async () => {
       try {
-        const { data, error } = await getFundingPage(user!.id)
-        if (error) throw error
+        const data = await getUserFundingPages(user!.id)
         setPages(data || [])
       } catch (err) {
         console.error('Error loading pages:', err)
@@ -173,7 +172,8 @@ export default function FundYourselfPage() {
                         <BarChart2 className="w-4 h-4 mr-2" />
                         <span className="mr-1">Total:</span>
                         <CurrencyDisplay 
-                          bitcoin={page.total_funding || 0}
+                          amount={page.total_funding || 0}
+                          currency="BTC"
                           size="sm"
                         />
                       </div>

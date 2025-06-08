@@ -46,6 +46,7 @@ export const PROTECTED_USERNAMES = new Set([
   // Bitcoin Core Developers
   'gmaxwell', 'sipa', 'petertodd', 'jonasschnelli', 'laanwj',
   'achow101', 'fanquake', 'meshcollider', 'promag', 'ryanofsky',
+  'adam3us',
   
   // Lightning Network Developers  
   'roasbeef', 'laolu', 'bitconner', 'cfromknecht', 'halseth',
@@ -65,6 +66,7 @@ export const PROTECTED_USERNAMES = new Set([
   'elonmusk', 'elon', 'jackdorsey', 'jack', 'saylor',
   'michaelsaylor', 'cathie', 'wood', 'naval', 'balaji',
   'tim', 'cook', 'jeff', 'bezos', 'bill', 'gates', 'warren', 'buffett',
+  'microsoft', 'apple', 'google', 'meta', 'facebook',
   
   // Government/Institutional
   'fed', 'treasury', 'sec', 'cftc', 'biden', 'trump', 'yellen', 'powell',
@@ -78,19 +80,77 @@ export const PROTECTED_USERNAMES = new Set([
  * Check if a username is protected and requires special verification
  */
 export function isProtectedUsername(username: string): CelebrityProtectionResult {
-  const normalizedUsername = username.toLowerCase().replace(/[-_0-9]/g, '');
+  const lowerUsername = username.toLowerCase();
   
-  if (PROTECTED_USERNAMES.has(normalizedUsername)) {
+  // First check exact match (case-insensitive)
+  if (PROTECTED_USERNAMES.has(lowerUsername)) {
     return {
       isProtected: true,
-      reason: 'This username is protected and requires admin verification',
+      reason: 'Celebrity names not allowed - username is protected',
       suggestedAlternatives: generateUsernameAlternatives(username)
     };
   }
   
+  // Then check normalized version (removing separators but keeping numbers for usernames like adam3us)
+  const normalizedUsername = lowerUsername.replace(/[-_]/g, '');
+  if (PROTECTED_USERNAMES.has(normalizedUsername)) {
+    return {
+      isProtected: true,
+      reason: 'Celebrity names not allowed - username is protected',
+      suggestedAlternatives: generateUsernameAlternatives(username)
+    };
+  }
+  
+  // Check for variations with numbers/separators added to protected names
+  for (const protectedName of Array.from(PROTECTED_USERNAMES)) {
+    // Check if username starts with protected name + separator/number
+    if (lowerUsername.startsWith(protectedName)) {
+      const suffix = lowerUsername.slice(protectedName.length);
+      // Allow if suffix is clearly not impersonation (like _builder, _fan, etc.)
+      if (suffix && /^[_-]?(builder|dev|developer|fan|follower|user|community|unofficial|btc|bitcoin)$/.test(suffix)) {
+        continue; // This is a legitimate variation
+      }
+      // Block if it's just numbers or single characters (like elonmusk1, satoshi_)
+      if (suffix && /^[_-]?[0-9]*[_-]?$/.test(suffix)) {
+        return {
+          isProtected: true,
+          reason: `Username too similar to protected name "${protectedName}"`,
+          suggestedAlternatives: generateUsernameAlternatives(username)
+        };
+      }
+    }
+    
+    // Check if protected name can be formed by adding separators (elon_musk -> elonmusk)
+    const usernameWithoutSeparators = lowerUsername.replace(/[-_]/g, '');
+    if (usernameWithoutSeparators === protectedName) {
+      return {
+        isProtected: true,
+        reason: `Username too similar to protected name "${protectedName}"`,
+        suggestedAlternatives: generateUsernameAlternatives(username)
+      };
+    }
+    
+    // Special handling for compound names like "elon_musk" -> "elonmusk"
+    // Check if username with separators matches any protected compound name
+    const compoundVariations = [
+      lowerUsername.replace(/[-_]/g, ''),  // elon_musk -> elonmusk
+      lowerUsername.replace(/[-_]/g, ' '), // elon_musk -> elon musk (then check if "elonmusk" exists)
+    ];
+    
+    for (const variation of compoundVariations) {
+      if (PROTECTED_USERNAMES.has(variation.replace(/\s/g, ''))) {
+        return {
+          isProtected: true,
+          reason: `Username too similar to protected name "${variation.replace(/\s/g, '')}"`,
+          suggestedAlternatives: generateUsernameAlternatives(username)
+        };
+      }
+    }
+  }
+  
   // Check for lookalike variations
   for (const protectedName of Array.from(PROTECTED_USERNAMES)) {
-    if (isLookalikeName(normalizedUsername, protectedName)) {
+    if (isLookalikeName(lowerUsername, protectedName)) {
       return {
         isProtected: true,
         reason: `Username too similar to protected name "${protectedName}"`,

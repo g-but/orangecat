@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
@@ -19,7 +20,8 @@ import {
   ArrowLeft,
   Camera,
   Zap,
-  Bitcoin
+  Bitcoin,
+  ExternalLink
 } from 'lucide-react'
 
 export default function ProfilePage() {
@@ -309,15 +311,38 @@ export default function ProfilePage() {
                 </h3>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                  <Input
-                    label="Bitcoin Address"
-                    name="bitcoin_address"
-                    value={profileData.bitcoin_address}
-                    onChange={handleInputChange}
-                    placeholder="bc1q..."
-                    className="font-mono text-sm sm:text-base min-h-[48px] break-all"
-                    icon={Bitcoin}
-                  />
+                  <div className="space-y-3">
+                    <Input
+                      label="Bitcoin Address"
+                      name="bitcoin_address"
+                      value={profileData.bitcoin_address}
+                      onChange={handleInputChange}
+                      placeholder="bc1q..."
+                      className="font-mono text-sm sm:text-base min-h-[48px] break-all"
+                      icon={Bitcoin}
+                    />
+                    {!profileData.bitcoin_address && (
+                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                        <div className="flex items-start gap-3">
+                          <Bitcoin className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <h4 className="font-semibold text-orange-900 text-sm mb-1">Need a Bitcoin wallet?</h4>
+                            <p className="text-orange-800 text-xs mb-2">
+                              Get help setting up your first Bitcoin wallet.
+                            </p>
+                            <Link 
+                              href="/bitcoin-wallet-guide" 
+                              target="_blank"
+                              className="inline-flex items-center px-2 py-1 border border-orange-600 text-orange-600 rounded text-xs font-medium hover:bg-orange-50 transition-colors"
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Setup Guide
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <Input
                     label="Lightning Address"
                     name="lightning_address"

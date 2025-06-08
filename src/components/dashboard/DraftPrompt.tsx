@@ -14,7 +14,7 @@ import {
 import Link from 'next/link'
 import Button from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
-import { useDrafts, DraftCampaign } from '@/hooks/useDrafts'
+import { useCampaignStore, Campaign } from '@/stores/campaignStore'
 import { formatDistanceToNow } from 'date-fns'
 
 interface DraftPromptProps {
@@ -22,16 +22,16 @@ interface DraftPromptProps {
 }
 
 export default function DraftPrompt({ className }: DraftPromptProps) {
-  const { hasAnyDraft, hasDrafts, hasLocalDraft, drafts, getPrimaryDraft, isLoading } = useDrafts()
+  const { drafts, isLoading } = useCampaignStore()
   const [dismissed, setDismissed] = useState(false)
   
+  const hasAnyDraft = drafts.length > 0
+  const primaryDraft = hasAnyDraft ? drafts[0] : null
+  
   // Don't show if no drafts or dismissed
-  if (isLoading || dismissed || !hasAnyDraft) {
+  if (isLoading || dismissed || !hasAnyDraft || !primaryDraft) {
     return null
   }
-
-  const primaryDraft = getPrimaryDraft()
-  if (!primaryDraft) return null
 
   const handleDismiss = () => {
     setDismissed(true)
@@ -46,7 +46,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
     }
   }
 
-  const getCompletionPercentage = (draft: DraftCampaign) => {
+  const getCompletionPercentage = (draft: Campaign) => {
     let completed = 0
     const total = 6 // title, description, goal, category, bitcoin_address, website
     
@@ -59,9 +59,8 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
     return Math.round((completed / total) * 100)
   }
 
-  const isDraftLocal = primaryDraft.source === 'local'
-  const draftCount = hasDrafts ? drafts.length : 0
-  const totalDrafts = draftCount + (hasLocalDraft ? 1 : 0)
+  const isDraftLocal = primaryDraft.syncStatus === 'pending'
+  const totalDrafts = drafts.length
 
   return (
     <Card className={`border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50 ${className}`}>
@@ -95,17 +94,17 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
                     <>You have an incomplete campaign: <span className="font-medium">&ldquo;{primaryDraft.title}&rdquo;</span></>
                   )}
                 </p>
-                <div className="flex items-center gap-4 text-sm text-gray-600">
+                                  <div className="flex items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
                     <span>
-                      Last {isDraftLocal ? 'saved' : 'updated'}: {formatLastUpdated(primaryDraft.lastSaved)}
+                      Last {isDraftLocal ? 'saved' : 'updated'}: {formatLastUpdated(new Date(primaryDraft.updated_at))}
                     </span>
                   </div>
-                  {isDraftLocal && primaryDraft.currentStep && (
+                  {isDraftLocal && (
                     <div className="flex items-center gap-1">
                       <FileText className="w-4 h-4" />
-                      <span>Step {primaryDraft.currentStep} of 3</span>
+                      <span>Draft in progress</span>
                     </div>
                   )}
                 </div>
@@ -146,7 +145,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
 
 // Additional component for showing multiple drafts in a compact format
 export function DraftsList({ className }: { className?: string }) {
-  const { drafts, isLoading } = useDrafts()
+  const { drafts, isLoading } = useCampaignStore()
   
   if (isLoading || drafts.length === 0) {
     return null
@@ -160,7 +159,7 @@ export function DraftsList({ className }: { className?: string }) {
       </h3>
       
       <div className="space-y-2">
-        {drafts.slice(0, 3).map((draft) => (
+        {drafts.slice(0, 3).map((draft: Campaign) => (
           <Card key={draft.id} className="border-gray-200 hover:border-blue-300 transition-colors">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
@@ -169,7 +168,7 @@ export function DraftsList({ className }: { className?: string }) {
                   <div className="flex items-center gap-3 text-sm text-gray-500 mt-1">
                     <span>Updated {formatDistanceToNow(new Date(draft.updated_at), { addSuffix: true })}</span>
                     {draft.goal_amount && (
-                      <span>Goal: {draft.goal_amount.toLocaleString()} sats</span>
+                      <span>Goal: {draft.goal_amount.toLocaleString('en-US')} sats</span>
                     )}
                   </div>
                 </div>

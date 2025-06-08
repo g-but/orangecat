@@ -25,14 +25,14 @@ export class ProfileService {
         .single()
 
       if (error) {
-        logger.error('ProfileService: Error fetching profile:', error, 'Profile');
+        logger.error('ProfileService: Error fetching profile:', { error }, 'Profile');
         throw error;
       }
       
       logProfile('ProfileService: Profile fetched successfully:', data);
       return data
     } catch (error) {
-      logger.error('ProfileService: Exception in getProfile:', error, 'Profile')
+      logger.error('ProfileService: Exception in getProfile:', { error }, 'Profile')
       return null
     }
   }
@@ -58,7 +58,7 @@ export class ProfileService {
       const { data: { user }, error: userError } = await supabase.auth.getUser()
       
       if (userError || !user) {
-        logger.error('ProfileService: No authenticated user:', userError, 'Profile')
+        logger.error('ProfileService: No authenticated user:', { error: userError }, 'Profile')
         return {
           success: false,
           error: 'No authenticated user. Please log in again.',
@@ -123,7 +123,7 @@ export class ProfileService {
         .single();
 
       if (error) {
-        logger.error('ProfileService: Direct update failed:', error, 'Profile');
+        logger.error('ProfileService: Direct update failed:', { error }, 'Profile');
         
         // Handle missing avatar_url column
         if (error.code === 'PGRST204' && error.message?.includes('avatar_url')) {
@@ -221,7 +221,7 @@ export class ProfileService {
       };
       
     } catch (error: any) {
-      logger.error('ProfileService: Error during profile update:', error, 'Profile');
+      logger.error('ProfileService: Error during profile update:', { error }, 'Profile');
       return {
         success: false,
         error: error.message || 'Failed to update profile'
@@ -241,7 +241,7 @@ export class ProfileService {
         .single();
         
       if (fetchError) {
-        logger.error('ProfileService: Fallback - Error fetching current profile:', fetchError, 'Profile');
+        logger.error('ProfileService: Fallback - Error fetching current profile:', { error: fetchError }, 'Profile');
         return { 
           success: false, 
           error: `Could not fetch current profile: ${fetchError.message}`
@@ -283,11 +283,11 @@ export class ProfileService {
             return { success: true };
           }
           
-          logProfile(`ProfileService: Fallback - Update attempt ${attempt + 1} failed:`, error);
+          logProfile(`ProfileService: Fallback - Update attempt ${attempt + 1} failed:`, { error });
           // Wait briefly before retry
           await new Promise(resolve => setTimeout(resolve, 500));
         } catch (retryError) {
-          logger.error(`ProfileService: Fallback - Exception in retry attempt ${attempt + 1}:`, retryError, 'Profile');
+          logger.error(`ProfileService: Fallback - Exception in retry attempt ${attempt + 1}:`, { error: retryError }, 'Profile');
         }
       }
       
@@ -297,7 +297,7 @@ export class ProfileService {
         error: 'All profile update methods failed. This may be a permissions issue or a database constraint violation.'
       };
     } catch (fallbackError: any) {
-      logger.error('ProfileService: Exception in fallback update method:', fallbackError, 'Profile');
+      logger.error('ProfileService: Exception in fallback update method:', { error: fallbackError }, 'Profile');
       return {
         success: false,
         error: `Fallback update failed: ${fallbackError.message || 'Unknown error'}`
@@ -363,7 +363,7 @@ export class ProfileService {
           .single();
           
         if (error) {
-          logger.error('ProfileService: Error updating existing profile:', error, 'Profile');
+          logger.error('ProfileService: Error updating existing profile:', { error }, 'Profile');
           return {
             success: false,
             error: `Failed to update profile: ${error.message || 'Unknown error'}`
@@ -382,7 +382,7 @@ export class ProfileService {
         .single();
         
       if (error) {
-        logger.error('ProfileService: Error creating profile:', error, 'Profile');
+        logger.error('ProfileService: Error creating profile:', { error }, 'Profile');
         return {
           success: false,
           error: `Failed to create profile: ${error.message || 'Unknown error'}`
@@ -417,7 +417,7 @@ export class ProfileService {
       if (error) throw error
       return { success: true }
     } catch (error) {
-      logger.error('Error updating password:', error, 'Profile');
+      logger.error('Error updating password:', { error }, 'Profile');
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Failed to update password'

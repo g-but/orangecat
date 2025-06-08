@@ -69,7 +69,7 @@ export default async function RootLayout({
         profile = profileData
       }
     } catch (error) {
-      console.log('Profile fetch error in RootLayout:', error)
+      // Profile fetch error in RootLayout - silently handle
     }
   }
 

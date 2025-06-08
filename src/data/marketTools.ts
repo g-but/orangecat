@@ -22,6 +22,7 @@ import {
   GitBranch
 } from 'lucide-react'
 import { getRegionEmoji } from '@/utils/currency'
+import { componentColors } from '@/lib/theme'
 
 // Tools organized by category - regional focus for Switzerland
 
@@ -52,7 +53,7 @@ export const organizationTools = [
     description: 'Regional business administration and accounting',
     url: 'https://atlanto.ch',
     icon: BarChart3,
-    color: 'bg-orange-100 text-orange-600'
+    color: componentColors.bitcoinElement.className
   },
   {
     name: 'Monday.com',
@@ -90,7 +91,7 @@ export const eventTools = [
     description: 'Event management and ticketing',
     url: 'https://eventbrite.ch',
     icon: Calendar,
-    color: 'bg-orange-100 text-orange-600'
+    color: componentColors.bitcoinElement.className
   },
   {
     name: 'Xing Events',
@@ -173,7 +174,7 @@ export const assetTools = [
     description: 'Local classified ads platform',
     url: 'https://tutti.ch',
     icon: Package,
-    color: 'bg-orange-100 text-orange-600'
+    color: componentColors.bitcoinElement.className
   },
   {
     name: 'Facebook Marketplace',
@@ -232,7 +233,7 @@ export const fundingTools = [
     description: 'Recurring creator support',
     url: 'https://patreon.com',
     icon: Users,
-    color: 'bg-orange-100 text-orange-600'
+    color: componentColors.bitcoinElement.className
   },
   {
     name: 'GitHub Sponsors',
@@ -263,7 +264,7 @@ export const projectTools = [
     description: 'DevOps and project management',
     url: 'https://gitlab.com',
     icon: Code,
-    color: 'bg-orange-100 text-orange-600'
+    color: 'bg-bitcoinOrange text-bitcoinOrange'
   },
   {
     name: 'Jira',

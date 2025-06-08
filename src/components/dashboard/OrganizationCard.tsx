@@ -37,7 +37,7 @@ export default function OrganizationCard({ organization }: OrganizationCardProps
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Treasury</span>
-            <span className="font-medium">{organization.treasury.toLocaleString()} sats</span>
+                          <span className="font-medium">{organization.treasury.toLocaleString('en-US')} sats</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Active Proposals</span>
