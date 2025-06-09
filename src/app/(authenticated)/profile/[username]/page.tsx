@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { useAuthStore } from '@/store/auth'
+import { useAuthStore } from '@/stores/auth'
 import supabase from '@/services/supabase/client'
 import { 
   User, 

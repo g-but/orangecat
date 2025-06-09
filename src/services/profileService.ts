@@ -2,7 +2,7 @@
 
 import supabase from '@/services/supabase/client'
 import { Profile, ProfileFormData } from '@/types/database'
-import { useAuthStore } from '@/store/auth'
+import { useAuthStore } from '@/stores/auth'
 import { updateProfile as supabaseUpdateProfile } from '@/services/supabase/profiles'
 import { toast } from 'sonner'
 import { logProfile, logger } from '@/utils/logger'

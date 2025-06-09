@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/auth'
+import { useAuthStore } from '@/stores/auth'
 import supabase from '@/services/supabase/client'
 import { User, Bitcoin, Zap, FileText, Globe, Lightbulb, CheckCircle, ArrowRight, ArrowLeft, ExternalLink } from 'lucide-react'
 import Button from '@/components/ui/Button'

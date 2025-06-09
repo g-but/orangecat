@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/auth'
+import { useAuthStore } from '@/stores/auth'
 import Loading from '@/components/Loading'
 
 export default function ProfileLayout({
