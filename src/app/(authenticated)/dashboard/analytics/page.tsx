@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/hooks/useAuth'
+import { useRequireAuth } from '@/hooks/useAuth'
 import { useCampaignStore } from '@/stores/campaignStore'
 import Loading from '@/components/Loading'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -49,7 +49,7 @@ interface CampaignPerformance {
 }
 
 export default function AnalyticsPage() {
-  const { user, isLoading: authLoading } = useAuth()
+  const { user, isLoading: authLoading } = useRequireAuth()
   const { campaigns, loadCampaigns, isLoading: campaignLoading } = useCampaignStore()
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
   const [selectedCampaign, setSelectedCampaign] = useState<string>('all')
