@@ -15,10 +15,9 @@ import type {
   Profile,
   ProfileUpdateData,
   ProfileResponse,
-  ProfileUpdateResponse,
-  isValidProfile
+  ProfileUpdateResponse
 } from '../types'
-import { isValidProfile as isValidProfileFromTypes } from '@/types/profile'
+import { isValidProfile } from '../types'
 
 // ==================== PROFILE OPERATIONS ====================
 
