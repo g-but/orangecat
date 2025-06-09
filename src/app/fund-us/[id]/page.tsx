@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
@@ -12,14 +12,17 @@ import TransactionTracker from '@/components/funding/TransactionTracker'
 import BalanceSummary from '@/components/funding/BalanceSummary'
 import { formatDistanceToNow } from 'date-fns'
 
-export default function FundingPage({ params }: { params: { id: string } }) {
+export default function FundingPage() {
   const router = useRouter()
+  const params = useParams()
   const { user, isLoading: authLoading } = useAuth()
   const [page, setPage] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [balance, setBalance] = useState(0)
   const [pendingAmount, setPendingAmount] = useState(0)
   const [lastUpdated, setLastUpdated] = useState('')
+
+  const fundingId = Array.isArray(params.id) ? params.id[0] : params.id || ''
 
   const loadPage = useCallback(async () => {
     if (authLoading) return; // Don't load page data until auth is ready
@@ -32,7 +35,7 @@ export default function FundingPage({ params }: { params: { id: string } }) {
       const { data, error } = await supabase
         .from('funding_pages')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', fundingId)
         .single()
 
       if (error) throw error
@@ -43,7 +46,7 @@ export default function FundingPage({ params }: { params: { id: string } }) {
     } finally {
       setLoading(false)
     }
-  }, [params.id, authLoading])
+  }, [fundingId, authLoading])
 
   useEffect(() => {
     loadPage()
@@ -110,7 +113,7 @@ export default function FundingPage({ params }: { params: { id: string } }) {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push(`/fund-us/${params.id}/edit`)}
+                onClick={() => router.push(`/fund-us/${fundingId}/edit`)}
               >
                 Edit Page
               </Button>
@@ -133,7 +136,7 @@ export default function FundingPage({ params }: { params: { id: string } }) {
       />
 
       <TransactionTracker
-        fundingPageId={params.id}
+        fundingPageId={fundingId}
         isOwner={isOwner}
         onBalanceUpdate={handleBalanceUpdate}
       />

@@ -2,10 +2,13 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 
 export async function GET(request: Request) {
-  const cookieStore = cookies()
+  const cookieStore = await cookies()
+  
+  // Get all cookies first
+  const allCookies = cookieStore.getAll()
   
   // Explicitly delete all auth-related cookies
-  cookieStore.getAll().forEach(cookie => {
+  allCookies.forEach(cookie => {
     if (cookie.name.startsWith('sb-') || 
         cookie.name.includes('supabase') || 
         cookie.name.includes('auth')) {
@@ -22,7 +25,7 @@ export async function GET(request: Request) {
   })
   
   // Set all cookies to be deleted in the response as well
-  cookieStore.getAll().forEach(cookie => {
+  allCookies.forEach(cookie => {
     if (cookie.name.startsWith('sb-') || 
         cookie.name.includes('supabase') || 
         cookie.name.includes('auth')) {
