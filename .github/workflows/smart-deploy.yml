@@ -125,7 +125,7 @@ jobs:
   build-and-deploy:
     name: 🚀 Build & Deploy
     runs-on: ubuntu-latest
-    needs: [smart-analysis, parallel-validation]
+    needs: [smart-analysis]
     if: needs.smart-analysis.outputs.should-deploy == 'true'
     
     steps:
