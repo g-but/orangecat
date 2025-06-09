@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { fetchBitcoinWalletData } from '@/services/bitcoin';
-import { BitcoinWalletData } from '@/types/bitcoin';
+import { BitcoinWalletData } from '@/types/bitcoin/index';
 
 export function useBitcoinWallet(walletAddress: string) {
   const [walletData, setWalletData] = useState<BitcoinWalletData | null>(null);

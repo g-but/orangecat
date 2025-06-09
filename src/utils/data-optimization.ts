@@ -29,7 +29,7 @@ export class LazyDataLoader<T = any> {
   /**
    * Load data chunk lazily with caching
    */
-  async loadData<T extends T>(loader: () => Promise<T[]>, cacheKey: string): Promise<T[]> {
+  async loadData<T>(loader: () => Promise<T[]>, cacheKey: string): Promise<T[]> {
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey) as T[]
     }
@@ -148,7 +148,7 @@ export class InitiativesDataLoader {
   private async loadAllInitiatives(): Promise<any[]> {
     // Dynamic import to split bundle
     const { INITIATIVES } = await import('@/data/initiatives')
-    return INITIATIVES
+    return Object.values(INITIATIVES)
   }
 
   private async buildSearchIndex(): Promise<void> {
@@ -166,7 +166,7 @@ export class InitiativesDataLoader {
       
       searchableFields.forEach(field => {
         const words = field.toLowerCase().split(/\s+/)
-        words.forEach(word => {
+        words.forEach((word: string) => {
           if (!this.searchIndex!.has(word)) {
             this.searchIndex!.set(word, [])
           }
@@ -237,7 +237,7 @@ export class DashboardConfigLoader {
   private async loadAllConfigs(): Promise<any[]> {
     // Dynamic import to split bundle
     const { assetsConfig, eventsConfig, organizationsConfig, projectsConfig, peopleConfig, fundraisingConfig } = await import('@/data/dashboardConfigs')
-    return [...assetsConfig, ...eventsConfig, ...organizationsConfig, ...projectsConfig, ...peopleConfig, ...fundraisingConfig]
+    return [assetsConfig, eventsConfig, organizationsConfig, projectsConfig, peopleConfig, fundraisingConfig]
   }
 
   clearCache(): void {
