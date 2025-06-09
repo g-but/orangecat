@@ -2,7 +2,7 @@
   "version": 2,
   "alias": ["orangecat.vercel.app"],
   "framework": "nextjs",
-  "buildCommand": "npm run build:production",
+  "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "installCommand": "npm ci --only=production --audit --fund=false",
   "devCommand": "npm run dev",
@@ -15,8 +15,7 @@
   "build": {
     "env": {
       "NODE_ENV": "production",
-      "NEXT_TELEMETRY_DISABLED": "1",
-      "ANALYZE": "true"
+      "NEXT_TELEMETRY_DISABLED": "1"
     }
   },
   
