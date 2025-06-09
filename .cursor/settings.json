@@ -5,5 +5,14 @@
             "path": "C:\\Program Files\\Git\\bin\\bash.exe",
             "icon": "terminal-bash"
         }
+    },
+    "mcp.servers": {
+        "github": {
+            "command": "node",
+            "args": ["mcp-github-server.js"],
+            "env": {
+                "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
+            }
+        }
     }
 } 

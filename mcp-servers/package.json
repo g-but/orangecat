@@ -1,0 +1,22 @@
+{
+  "name": "github-mcp-server",
+  "version": "1.0.0",
+  "description": "GitHub MCP Server for repository management",
+  "type": "module",
+  "main": "github-server.js",
+  "bin": {
+    "github-mcp-server": "github-server.js"
+  },
+  "scripts": {
+    "start": "node github-server.js",
+    "dev": "node --inspect github-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "@octokit/rest": "^20.0.0",
+    "libsodium-wrappers": "^0.7.11"
+  },
+  "keywords": ["mcp", "github", "api", "claude"],
+  "author": "Your Name",
+  "license": "MIT"
+} 
