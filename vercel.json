@@ -1,7 +1,6 @@
 {
   "version": 2,
   "alias": ["orangecat.vercel.app"],
-  "regions": ["iad1", "sfo1"],
   "framework": "nextjs",
   "buildCommand": "npm run build:production",
   "outputDirectory": ".next",
