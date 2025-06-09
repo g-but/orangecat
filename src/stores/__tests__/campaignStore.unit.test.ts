@@ -424,6 +424,7 @@ describe('Campaign Store - Unit Tests', () => {
       }
       
       act(() => {
+        // Direct assignment for unit testing
         result.current.campaigns = [draftCampaign, activeCampaign, pausedCampaign]
       })
       
