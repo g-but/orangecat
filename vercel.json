@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "name": "orangecat",
   "alias": ["orangecat.vercel.app"],
   "regions": ["iad1", "sfo1"],
   "framework": "nextjs",
@@ -124,14 +123,6 @@
     {
       "path": "/api/cron/cleanup",
       "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/health-check",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/performance-metrics",
-      "schedule": "*/15 * * * *"
     }
   ],
 
