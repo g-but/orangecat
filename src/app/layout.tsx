@@ -30,7 +30,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const headersList = headers()
+  const headersList = await headers()
   
   // Get current pathname to determine if we're on an authenticated route
   const pathname = headersList.get('x-pathname') || ''
@@ -43,7 +43,7 @@ export default async function RootLayout({
                               pathname.startsWith('/organizations') ||
                               pathname.startsWith('/projects')
 
-  const supabase = createServerClient()
+  const supabase = await createServerClient()
   
   // Use getUser() for security - validates authentication with server
   const { data: { user }, error: userError } = await supabase.auth.getUser()

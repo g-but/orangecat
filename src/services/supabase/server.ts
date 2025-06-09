@@ -12,13 +12,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create a server-side Supabase client
-export const createServerClient = () => {
-  const cookieStore = getNextCookies()
+export const createServerClient = async () => {
+  const cookieStore = await getNextCookies()
 
   return createSupabaseServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
-        return cookieStore.getAll().map(cookie => ({
+        return cookieStore.getAll().map((cookie: any) => ({
           name: cookie.name,
           value: cookie.value
         }))

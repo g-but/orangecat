@@ -48,7 +48,7 @@ function checkRateLimit(identifier: string): boolean {
 
 export async function POST(request: Request) {
   try {
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
 
     // Get the current authenticated user for security
     const { data: { user }, error: userError } = await supabase.auth.getUser()

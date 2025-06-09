@@ -3,19 +3,20 @@ import { getInitiative } from '@/data/initiatives'
 import DemoPage from '@/components/pages/DemoPage'
 
 interface DemoPageProps {
-  params: {
+  params: Promise<{
     initiative: string
-  }
+  }>
 }
 
-export default function Demo({ params }: DemoPageProps) {
-  const initiative = getInitiative(params.initiative)
+export default async function Demo({ params }: DemoPageProps) {
+  const { initiative } = await params
+  const initiativeData = getInitiative(initiative)
   
-  if (!initiative) {
+  if (!initiativeData) {
     notFound()
   }
 
-  return <DemoPage initiative={initiative} />
+  return <DemoPage initiative={initiativeData} />
 }
 
 export async function generateStaticParams() {

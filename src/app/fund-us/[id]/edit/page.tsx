@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 import { useAuth } from '@/hooks/useAuth'
 import { toast } from 'sonner'
@@ -10,12 +10,15 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import { Loader2 } from 'lucide-react'
 
-export default function EditFundingPage({ params }: { params: { id: string } }) {
+export default function EditFundingPage() {
   const router = useRouter()
+  const params = useParams()
   const { user } = useAuth()
   const [page, setPage] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+
+  const fundingId = params.id as string
 
   const loadPage = useCallback(async () => {
     try {
@@ -26,7 +29,7 @@ export default function EditFundingPage({ params }: { params: { id: string } }) 
       const { data, error } = await supabase
         .from('funding_pages')
         .select('*')
-        .eq('id', params.id)
+        .eq('id', fundingId)
         .single()
 
       if (error) throw error
@@ -37,7 +40,7 @@ export default function EditFundingPage({ params }: { params: { id: string } }) 
     } finally {
       setLoading(false)
     }
-  }, [params.id])
+  }, [fundingId])
 
   useEffect(() => {
     if (user) {
@@ -61,11 +64,11 @@ export default function EditFundingPage({ params }: { params: { id: string } }) 
           bitcoin_address: page.bitcoin_address,
           is_public: page.is_public
         })
-        .eq('id', params.id)
+        .eq('id', fundingId)
 
       if (error) throw error
       toast.success('Funding page updated successfully')
-      router.push(`/fund-us/${params.id}`)
+      router.push(`/fund-us/${fundingId}`)
     } catch (err) {
       console.error('Error updating page:', err)
       toast.error('Failed to update funding page')
@@ -132,7 +135,7 @@ export default function EditFundingPage({ params }: { params: { id: string } }) 
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push(`/fund-us/${params.id}`)}
+              onClick={() => router.push(`/fund-us/${fundingId}`)}
             >
               Cancel
             </Button>

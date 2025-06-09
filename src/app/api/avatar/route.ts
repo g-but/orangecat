@@ -156,7 +156,7 @@ async function secureImageProcessing(buffer: Buffer) {
 export async function POST(req: NextRequest) {
   try {
     // 🔒 CRITICAL: Verify user authentication FIRST
-    const supabase = createServerClient()
+    const supabase = await createServerClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     
     if (!user || userError) {
