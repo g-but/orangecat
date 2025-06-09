@@ -20,7 +20,7 @@ import React from 'react'
 /**
  * Enhanced lazy loading with error boundary and loading states
  */
-export function createLazyComponent<T extends JSX.IntrinsicAttributes = {}>(
+export function createLazyComponent<T = any>(
   importFn: () => Promise<{ default: ComponentType<T> }>,
   fallback?: ComponentType
 ) {
@@ -29,7 +29,7 @@ export function createLazyComponent<T extends JSX.IntrinsicAttributes = {}>(
   return function LazyWrapper(props: T) {
     return (
       <Suspense fallback={fallback ? React.createElement(fallback) : <div>Loading...</div>}>
-        <LazyComponent {...(props as T)} />
+        <LazyComponent {...(props as any)} />
       </Suspense>
     )
   }
@@ -118,7 +118,8 @@ export class PerformanceCache<T = any> {
 
   clear(): void {
     if (this.onEvict) {
-      for (const [key, entry] of this.cache) {
+      const entries = Array.from(this.cache.entries())
+      for (const [key, entry] of entries) {
         this.onEvict(key, entry.value)
       }
     }

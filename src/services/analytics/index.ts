@@ -197,10 +197,10 @@ class AnalyticsService {
         isDemo: false,
         timeline: FEATURE_FLAGS.wallet.timeline,
         stats: {
-          balance: this.createMetricValue(walletData.balance, 'api'),
+                    balance: this.createMetricValue(walletData.balance, 'api'),
           transactionCount: this.createMetricValue(walletData.transactions.length, 'api'),
           lastUpdated: this.createMetricValue(
-            new Date(walletData.lastUpdated).toLocaleTimeString(), 
+            walletData.lastUpdated ? new Date(walletData.lastUpdated).toLocaleTimeString() : 'Unknown',
             'api'
           )
         }
