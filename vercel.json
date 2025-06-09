@@ -4,12 +4,13 @@
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
-  "installCommand": "npm ci --only=production --audit --fund=false",
   "devCommand": "npm run dev",
+  "installCommand": "npm install",
   
   "env": {
     "NODE_ENV": "production",
-    "NEXT_TELEMETRY_DISABLED": "1"
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "NPM_CONFIG_FUND": "false"
   },
   
   "build": {
@@ -20,7 +21,7 @@
   },
   
   "functions": {
-    "src/app/api/**/*.ts": {
+    "app/api/**/*.ts": {
       "maxDuration": 30,
       "memory": 1024
     },
