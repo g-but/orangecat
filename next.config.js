@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  // Enable SWC minification for better performance
-  swcMinify: true,
+  // SWC minification is enabled by default in Next.js 15
   
   // Image optimization
   images: {
