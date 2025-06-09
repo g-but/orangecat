@@ -55,7 +55,7 @@ jest.mock('@/services/supabase/client', () => ({
 }))
 
 // Mock other dependencies
-jest.mock('@/store/auth', () => ({
+jest.mock('@/stores/auth', () => ({
   useAuthStore: jest.fn()
 }))
 

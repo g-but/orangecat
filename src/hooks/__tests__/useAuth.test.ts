@@ -13,7 +13,7 @@ const mockAuthStore = {
   signOut: jest.fn()
 }
 
-jest.mock('@/store/auth', () => ({
+jest.mock('@/stores/auth', () => ({
   useAuthStore: () => mockAuthStore
 }))
 

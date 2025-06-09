@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useAuthStore } from '@/store/auth'
+import { useAuthStore } from '@/stores/auth'
 import Loading from '@/components/Loading'
 import type { User, Session } from '@supabase/supabase-js' // Import Supabase types
 import type { Profile } from '@/types/database' // Import Profile type
