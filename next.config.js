@@ -31,13 +31,7 @@ const nextConfig = {
         pathname: '/storage/v1/object/public/**',
       },
     ],
-    // Fallback for older configuration compatibility
-    domains: [
-      'images.unsplash.com',
-      'github.com',
-      'ohkueislstxomdjavyhs.supabase.co',
-      'supabase.co',
-    ],
+    // Removed deprecated `domains` configuration per Next.js 15 guidance
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -70,6 +64,17 @@ const nextConfig = {
         hints: 'warning',
       }
     }
+    // Suppress "Critical dependency" warnings coming from dynamic requires in @supabase/realtime-js
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      (warning) =>
+        typeof warning.message === 'string' &&
+        warning.message.includes('Critical dependency') &&
+        warning.module &&
+        warning.module.resource &&
+        warning.module.resource.includes('@supabase/realtime-js')
+    ]
+
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
