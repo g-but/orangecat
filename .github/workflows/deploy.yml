@@ -35,11 +35,48 @@ jobs:
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
-      - name: Deploy to Vercel
+      - name: 🚀 Deploy to Vercel
         uses: amondnet/vercel-action@v25
+        id: vercel_deploy
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           working-directory: ./
-          vercel-args: '--prod' 
+          vercel-args: ${{ github.event_name == 'push' && '--prod' || '' }}
+  
+      # ----- Automated Preview Quality Checks -----
+      - name: ⏱️ Wait for Deployment to be Ready
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Waiting for deployment URL to be reachable..."
+          URL=${{ steps.vercel_deploy.outputs.preview-url }}
+          for i in {1..30}; do
+            if curl -sf "$URL" > /dev/null; then
+              echo "Deployment is live: $URL" && exit 0
+            fi
+            sleep 10
+          done
+          echo "Timed out waiting for deployment to become available" && exit 1
+
+      - name: 🌐 Lighthouse Audit
+        if: github.event_name == 'pull_request'
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: ${{ steps.vercel_deploy.outputs.preview-url }}
+          uploadArtifacts: true
+          artifactName: lighthouse-${{ github.run_number }}
+          temporaryPublicStorage: true
+        id: lighthouse
+  
+      - name: 💬 Comment PR with Lighthouse Scores
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          header: lighthouse-report
+          message: |
+            ### 🔍 Lighthouse Report
+            **Preview URL:** ${{ steps.vercel_deploy.outputs.preview-url }}
+            
+            Lighthouse HTML report & JSON results have been uploaded as workflow artifacts. Click **Actions → run → Artifacts → lighthouse-${{ github.run_number }}** to download and review full scores. 
