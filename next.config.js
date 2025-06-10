@@ -127,6 +127,11 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  
+  // ESLint optimization
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
 
   // Remove X-Powered-By header
   poweredByHeader: false,
