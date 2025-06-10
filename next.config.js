@@ -123,10 +123,9 @@ const nextConfig = {
   // Output configuration
   output: 'standalone',
   
-  // TypeScript optimization - skip all TypeScript checks
+  // TypeScript optimization - completely skip TypeScript validation
   typescript: {
     ignoreBuildErrors: true,
-    tsconfigPath: './tsconfig.json',
   },
   
   // ESLint optimization
