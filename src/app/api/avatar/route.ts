@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import supabaseAdmin from '@/services/supabase/admin'
 import { createServerClient } from '@/services/supabase/server'
-import sharp from 'sharp'
 import path from 'path'
 import { logger } from '@/utils/logger'
 
@@ -101,6 +100,8 @@ async function validateUploadedFile(file: File, buffer: Buffer) {
  * Secure image processing with comprehensive sanitization
  */
 async function secureImageProcessing(buffer: Buffer) {
+  // Dynamically import sharp at runtime to prevent build-time native binding issues
+  const sharp = (await import('sharp')).default
   try {
     // Process with Sharp - automatically strips metadata and sanitizes
     const processedImage = await sharp(buffer)
