@@ -1,7 +1,7 @@
 ---
 created_date: 2025-06-05
-last_modified_date: 2025-06-08
-last_modified_summary: Updated to clarify that GitHub + Vercel auto-deployment is the ONLY deployment method
+last_modified_date: 2025-06-10
+last_modified_summary: Updated production URL from orangecat.com to orangecat.ch and clarified deployment configuration
 ---
 
 # OrangeCat Deployment Guide
@@ -49,16 +49,14 @@ git push origin main
 
 ## Domains
 
-- Primary: https://www.orangecat.com
-- Redirect: https://orangecat.com → https://www.orangecat.com
+- Primary: https://orangecat.ch
 - Preview: https://orangecat.vercel.app
 
 ## DNS Configuration
 
 ### Required Records
 
-- orangecat.com (redirects to www)
-- www.orangecat.com (main production domain)
+- orangecat.ch (main production domain)
 - orangecat.vercel.app (preview domain)
 
 ## Environment Variables
@@ -71,7 +69,7 @@ All environment variables are configured in:
 ### Required Production Variables
 
 ```env
-NEXT_PUBLIC_SITE_URL=https://www.orangecat.com
+NEXT_PUBLIC_SITE_URL=https://orangecat.ch
 NEXT_PUBLIC_SITE_NAME=OrangeCat
 NODE_ENV=production
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -90,8 +88,7 @@ NEXT_PUBLIC_SITE_NAME=OrangeCat (Dev)
 ## Deployment Checklist
 
 ### DNS Setup
-- ✓ orangecat.com redirects to www.orangecat.com
-- ✓ www.orangecat.com assigned to main branch
+- ✓ orangecat.ch assigned to main branch
 - ✓ orangecat.vercel.app assigned to main branch
 
 ### Environment Variables
@@ -107,12 +104,11 @@ NEXT_PUBLIC_SITE_NAME=OrangeCat (Dev)
 ## Testing
 
 ### URLs to Verify
-- https://www.orangecat.com (production)
+- https://orangecat.ch (production)
 - https://orangecat.vercel.app (preview)
 
 ### Checklist
-- [ ] Website accessible at https://www.orangecat.com
-- [ ] Redirect from https://orangecat.com working
+- [ ] Website accessible at https://orangecat.ch
 - [ ] Preview site at https://orangecat.vercel.app working
 
 ## Monitoring
@@ -133,7 +129,7 @@ For deployment issues, contact: [Your Contact Information]
 After pushing to main, verify deployment:
 
 1. **Check GitHub Actions**: Visit `https://github.com/g-but/orangecat/actions`
-2. **Verify Deployment**: Check https://www.orangecat.com
+2. **Verify Deployment**: Check https://orangecat.ch
 3. **Monitor Logs**: Use Vercel dashboard
 
 ## Troubleshooting

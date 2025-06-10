@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orangecat.com';
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orangecat.ch';
 const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeCat';
 
 export const metadata: Metadata = {
