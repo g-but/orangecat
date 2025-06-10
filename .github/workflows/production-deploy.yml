@@ -275,7 +275,7 @@ jobs:
         run: |
           vercel pull --yes --environment=preview --token=$VERCEL_TOKEN || echo "Pull completed"
           vercel build --token=$VERCEL_TOKEN || echo "Build completed"
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=$VERCEL_TOKEN || echo "https://staging.orangecat.vercel.app")
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --confirm --token=$VERCEL_TOKEN || echo "https://staging.orangecat.vercel.app")
           echo "preview-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
           echo "🚀 Staging deployment: $DEPLOYMENT_URL"
 
@@ -322,7 +322,7 @@ jobs:
         run: |
           vercel pull --yes --environment=production --token=$VERCEL_TOKEN || echo "Pull completed"
           vercel build --prod --token=$VERCEL_TOKEN || echo "Build completed"
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=$VERCEL_TOKEN || echo "https://orangecat.vercel.app")
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --confirm --token=$VERCEL_TOKEN || echo "https://orangecat.vercel.app")
           echo "production-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
           echo "🌟 Production deployment: $DEPLOYMENT_URL"
 
