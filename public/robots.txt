@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://orangecat.com/sitemap.xml 
+Sitemap: https://orangecat.ch/sitemap.xml 
