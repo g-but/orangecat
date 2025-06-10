@@ -192,6 +192,13 @@ jobs:
             package.json
             next.config.js
 
+      - name: 📤 Upload Bundle Analysis
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-analysis
+          path: .next/bundle-analysis.json
+
   # ==================== SECURITY VALIDATION ====================
   
   security-validation:
