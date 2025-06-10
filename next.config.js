@@ -42,6 +42,11 @@ const nextConfig = {
     esmExternals: true,
     optimizeCss: true,
     optimizePackageImports: ['@supabase/supabase-js'],
+    modularizeImports: {
+      'lucide-react': {
+        transform: 'lucide-react/lib/icons/{{member}}',
+      },
+    },
   },
 
   // Webpack optimizations
