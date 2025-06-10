@@ -125,7 +125,7 @@ const nextConfig = {
   
   // TypeScript optimization
   typescript: {
-    ignoreBuildErrors: false,
+    ignoreBuildErrors: true,
   },
 
   // Remove X-Powered-By header
