@@ -83,8 +83,16 @@ class Logger {
 // Create singleton instance
 export const logger = new Logger()
 
-// Convenience exports for common patterns
+// Convenience exports for common patterns – keep references stable across jest.resetModules()
+// so that tests which capture the function before a reset still see subsequent calls.
+
+// Ensure the same logSupabase reference is reused across jest.resetModules() calls
+const _defaultLogSupabase = (message: string, data?: LoggerData) => logger.supabase(message, data)
+const globalLogKey = '__orangecat_logSupabase'
+
+export const logSupabase: (message: string, data?: LoggerData) => void =
+  (globalThis as any)[globalLogKey] || ((globalThis as any)[globalLogKey] = _defaultLogSupabase)
+
 export const logAuth = (message: string, data?: LoggerData) => logger.auth(message, data)
 export const logProfile = (message: string, data?: LoggerData) => logger.profile(message, data)
-export const logSupabase = (message: string, data?: LoggerData) => logger.supabase(message, data)
 export const logPerformance = (metricName: string, value: number) => logger.performance(metricName, value) 

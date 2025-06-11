@@ -41,16 +41,12 @@ const nextConfig = {
   experimental: {
     esmExternals: true,
     optimizeCss: true,
-    optimizePackageImports: ['@supabase/supabase-js'],
-    modularizeImports: {
-      'lucide-react': {
-        transform: 'lucide-react/lib/icons/{{member}}',
-      },
-    },
+    optimizePackageImports: ['@supabase/supabase-js', 'lucide-react', 'framer-motion'],
+    // Removed modularizeImports from experimental as it was causing warnings
   },
 
-  // Webpack optimizations
-  webpack: (config, { dev, isServer }) => {
+  // Advanced webpack optimizations for bundle size
+  webpack: (config, { dev, isServer, webpack }) => {
     // Add explicit alias resolution
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -58,17 +54,83 @@ const nextConfig = {
     };
 
     if (!dev) {
-      // Enable tree shaking
+      // Enhanced tree shaking and dead code elimination
       config.optimization.usedExports = true
       config.optimization.sideEffects = false
       
-      // Performance budgets
+      // Advanced code splitting optimization
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        minSize: 20000,
+        minRemainingSize: 0,
+        minChunks: 1,
+        maxAsyncRequests: 30,
+        maxInitialRequests: 30,
+        enforceSizeThreshold: 50000,
+        cacheGroups: {
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            priority: -10,
+            chunks: 'all',
+            maxSize: 200000, // Split large vendor chunks
+          },
+          supabase: {
+            test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+            name: 'supabase',
+            priority: 10,
+            chunks: 'all',
+            maxSize: 150000,
+          },
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+            name: 'react',
+            priority: 20,
+            chunks: 'all',
+          },
+          ui: {
+            test: /[\\/]src[\\/](components|lib)[\\/]/,
+            name: 'ui',
+            priority: 5,
+            chunks: 'all',
+            maxSize: 100000,
+          },
+        },
+      }
+      
+      // Performance budgets (stricter)
       config.performance = {
-        maxAssetSize: 250000,
-        maxEntrypointSize: 400000,
+        maxAssetSize: 200000, // 200KB instead of 250KB
+        maxEntrypointSize: 350000, // 350KB instead of 400KB
         hints: 'warning',
       }
+
+      // Bundle analyzer in development
+      if (process.env.ANALYZE) {
+        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+        config.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: true,
+          })
+        )
+      }
     }
+
+    // Enhanced dynamic imports for better code splitting
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'process.env.NEXT_RUNTIME': JSON.stringify(
+          isServer ? 'nodejs' : 'edge'
+        ),
+      })
+    )
+
     // Suppress "Critical dependency" warnings coming from dynamic requires in @supabase/realtime-js
     config.ignoreWarnings = [
       ...(config.ignoreWarnings || []),
@@ -97,7 +159,7 @@ const nextConfig = {
   // Generate ETags for better caching
   generateEtags: true,
   
-  // Headers for performance
+  // Enhanced headers for performance
   async headers() {
     return [
       {
@@ -118,6 +180,15 @@ const nextConfig = {
           },
         ],
       },
+      {
+        source: '/api/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, s-maxage=3600', // 5min browser, 1hr CDN
+          },
+        ],
+      },
     ]
   },
 
@@ -125,7 +196,7 @@ const nextConfig = {
   ...(process.env.NODE_ENV === 'production' && {
     compiler: {
       removeConsole: {
-        exclude: ['error'],
+        exclude: ['error', 'warn'],
       },
     },
   }),
@@ -154,7 +225,9 @@ if (process.env.NODE_ENV === 'production') {
   console.log('🚀 Performance optimizations enabled:')
   console.log('  ✅ SWC Minification')
   console.log('  ✅ Image Optimization') 
-  console.log('  ✅ Tree Shaking')
+  console.log('  ✅ Advanced Tree Shaking')
+  console.log('  ✅ Smart Code Splitting')
   console.log('  ✅ Compression')
-  console.log('  ✅ Caching Headers')
+  console.log('  ✅ Enhanced Caching Headers')
+  console.log('  ✅ Bundle Size Optimization')
 } 

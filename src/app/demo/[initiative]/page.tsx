@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { getInitiative } from '@/data/initiatives'
+import { loadInitiative } from '@/data/initiatives-lazy'
 import DemoPage from '@/components/pages/DemoPage'
 
 interface DemoPageProps {
@@ -10,7 +10,7 @@ interface DemoPageProps {
 
 export default async function Demo({ params }: DemoPageProps) {
   const { initiative } = await params
-  const initiativeData = getInitiative(initiative)
+  const initiativeData = await loadInitiative(initiative)
   
   if (!initiativeData) {
     notFound()
