@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { ArrowLeft, Play, Pause, RotateCcw, ExternalLink } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { ArrowLeft, Play, Pause, RotateCcw, ExternalLink, Building } from 'lucide-react'
 import Link from 'next/link'
-import { Initiative, getIconComponent } from '@/data/initiatives'
+import { Initiative, loadIconComponent } from '@/data/initiatives-lazy'
 import Button from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { LucideIcon } from 'lucide-react'
 
 interface DemoPageProps {
   initiative: Initiative
@@ -23,8 +24,12 @@ export default function DemoPage({ initiative }: DemoPageProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
+  const [IconComponent, setIconComponent] = useState<LucideIcon>(Building)
 
-  const IconComponent = getIconComponent(initiative.icon)
+  // Lazy load the icon component
+  useEffect(() => {
+    loadIconComponent(initiative.icon).then(setIconComponent)
+  }, [initiative.icon])
 
   // Demo steps specific to each initiative
   const getDemoSteps = (initiativeId: string): DemoStep[] => {

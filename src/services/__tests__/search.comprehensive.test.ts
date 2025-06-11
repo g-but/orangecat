@@ -10,16 +10,19 @@
  * Last Modified Summary: Comprehensive SearchService tests for production readiness
  */
 
-// Mock Supabase client with proper hoisting
-jest.mock('@supabase/ssr', () => ({
-  createBrowserClient: jest.fn(() => ({
-    from: jest.fn()
-            }))
-          }))
+// Mock Supabase client
+jest.mock('@/services/supabase/client', () => ({
+  __esModule: true,
+  default: {
+    from: jest.fn(),
+    auth: { getUser: jest.fn() },
+    rpc: jest.fn()
+  }
+}))
 
 // Get the mocked client
-import { createBrowserClient } from '@supabase/ssr'
-const mockSupabase = createBrowserClient('test', 'test') as jest.Mocked<any>
+import supabase from '@/services/supabase/client'
+const mockSupabase = supabase as jest.Mocked<typeof supabase>
 
 // Import after mocking
 import { 
@@ -33,6 +36,20 @@ import {
   SearchFundingPage
 } from '../search'
 
+// Helper function to create consistent mock chain
+const createMockQuery = (data: any[], error: any = null) => ({
+  select: jest.fn().mockReturnThis(),
+  eq: jest.fn().mockReturnThis(),
+  or: jest.fn().mockReturnThis(),
+  order: jest.fn().mockReturnThis(),
+  range: jest.fn().mockResolvedValue({ data, error }),
+  limit: jest.fn().mockResolvedValue({ data, error }),
+  not: jest.fn().mockReturnThis(),
+  gte: jest.fn().mockReturnThis(),
+  lte: jest.fn().mockReturnThis(),
+  in: jest.fn().mockReturnThis(),
+})
+
 describe('🔍 Search Service - Comprehensive Coverage', () => {
   
   beforeEach(() => {
@@ -44,18 +61,7 @@ describe('🔍 Search Service - Comprehensive Coverage', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {})
     
     // Setup default mock responses
-    mockSupabase.from.mockReturnValue({
-      select: jest.fn().mockReturnThis(),
-      eq: jest.fn().mockReturnThis(),
-      or: jest.fn().mockReturnThis(),
-      order: jest.fn().mockReturnThis(),
-      range: jest.fn().mockResolvedValue({ data: [], error: null }),
-      limit: jest.fn().mockResolvedValue({ data: [], error: null }),
-      not: jest.fn().mockReturnThis(),
-      gte: jest.fn().mockReturnThis(),
-      lte: jest.fn().mockReturnThis(),
-      in: jest.fn().mockReturnThis(),
-    })
+    mockSupabase.from.mockReturnValue(createMockQuery([], null))
   })
 
   afterEach(() => {
@@ -97,14 +103,8 @@ describe('🔍 Search Service - Comprehensive Coverage', () => {
         }
       ]
 
-      // Mock the complete chain
-      const mockQuery = {
-        select: jest.fn().mockReturnThis(),
-        or: jest.fn().mockReturnThis(),
-        order: jest.fn().mockReturnThis(),
-        range: jest.fn().mockResolvedValue({ data: mockProfiles, error: null })
-      }
-      mockSupabase.from.mockReturnValue(mockQuery)
+      // Use consistent mock pattern
+      mockSupabase.from.mockReturnValue(createMockQuery(mockProfiles, null))
 
       const options: SearchOptions = {
         query: 'test',
@@ -145,17 +145,8 @@ describe('🔍 Search Service - Comprehensive Coverage', () => {
         }
       ]
 
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-            eq: jest.fn(() => ({
-            or: jest.fn(() => ({
-              order: jest.fn(() => ({
-                range: jest.fn(() => Promise.resolve({ data: mockCampaigns, error: null }))
-              }))
-            }))
-          }))
-        }))
-      })
+      // Use consistent mock pattern
+      mockSupabase.from.mockReturnValue(createMockQuery(mockCampaigns, null))
 
       const options: SearchOptions = {
         query: 'campaign',
@@ -202,35 +193,17 @@ describe('🔍 Search Service - Comprehensive Coverage', () => {
         }]
       }]
 
-      // Mock both profile and campaign queries
+      // Mock both profile and campaign queries consistently
       let callCount = 0
       mockSupabase.from.mockImplementation((table) => {
         callCount++
         if (table === 'profiles') {
-          return {
-          select: jest.fn(() => ({
-            or: jest.fn(() => ({
-                order: jest.fn(() => ({
-                  range: jest.fn(() => Promise.resolve({ data: mockProfiles, error: null }))
-                  }))
-                }))
-              }))
-          }
+          return createMockQuery(mockProfiles, null)
         } else if (table === 'funding_pages') {
-          return {
-          select: jest.fn(() => ({
-              eq: jest.fn(() => ({
-                or: jest.fn(() => ({
-                order: jest.fn(() => ({
-                    range: jest.fn(() => Promise.resolve({ data: mockCampaigns, error: null }))
-                  }))
-                }))
-              }))
-            }))
-          }
+          return createMockQuery(mockCampaigns, null)
         }
-        return { select: () => ({ data: [], error: null }) }
-        })
+        return createMockQuery([], null)
+      })
 
       const options: SearchOptions = {
         query: 'test',

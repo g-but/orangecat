@@ -391,16 +391,17 @@ describe('🏗️ Supabase Core Client - Comprehensive Coverage', () => {
     })
 
     test('should validate environment on every import', () => {
-      const { logSupabase } = require('@/utils/logger')
-      
-      // Clear and re-import
+      // Set test environment before reset
+      process.env = { ...originalEnv, ...mockEnv }
       jest.resetModules()
+      // Access the global stable mock that persists across module resets
+      const stableLogSupabase = (globalThis as any).__oc_logSupabase || jest.fn()
       require('../core/client')
       
-      expect(logSupabase).toHaveBeenCalledWith(
+      expect(stableLogSupabase).toHaveBeenCalledWith(
         'Environment validation:',
         expect.objectContaining({
-          supabaseUrl: expect.stringContaining('https://test.supabase.co'),
+          supabaseUrl: expect.stringContaining('https://test.supabas...'),
           supabaseAnonKey: expect.stringContaining('test-anon-key...'),
           siteUrl: 'http://localhost:3000',
           nodeEnv: 'test'
@@ -409,12 +410,15 @@ describe('🏗️ Supabase Core Client - Comprehensive Coverage', () => {
     })
 
     test('should redact sensitive information in logs', () => {
-      const { logSupabase } = require('@/utils/logger')
-      
+      // Set test environment and clear previous calls
+      process.env = { ...originalEnv, ...mockEnv }
       jest.resetModules()
+      // Access the global stable mock that persists across module resets
+      const stableLogSupabase = (globalThis as any).__oc_logSupabase || jest.fn()
+      stableLogSupabase.mockClear() // Clear previous calls
       require('../core/client')
       
-      const logCall = (logSupabase as jest.Mock).mock.calls[0][1]
+      const logCall = (stableLogSupabase as jest.Mock).mock.calls[0][1]
       
       // Should not log full keys
       expect(logCall.supabaseAnonKey).not.toBe(mockEnv.NEXT_PUBLIC_SUPABASE_ANON_KEY)

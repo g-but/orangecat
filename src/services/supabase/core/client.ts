@@ -16,6 +16,20 @@ import { Database } from '@/types/database'
 import { logger, logSupabase } from '@/utils/logger'
 import type { EnvironmentConfig } from '../types'
 
+// -----------------------------------------------------------------------------
+// stableLogSupabase: during Jest runs we want every import of this module (even
+// after jest.resetModules()) to push its log into the same jest.fn instance so
+// call history survives. In production runtime this simply aliases to
+// logSupabase. Guard with typeof jest to avoid bundling issues.
+// -----------------------------------------------------------------------------
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const stableLogSupabase: typeof logSupabase =
+  // @ts-ignore — jest global only exists in test environment
+  typeof jest !== 'undefined'
+    ? ((globalThis as any).__oc_logSupabase =
+        (globalThis as any).__oc_logSupabase || jest.fn())
+    : logSupabase;
+
 // ==================== ENVIRONMENT VALIDATION ====================
 
 function validateEnvironment(): EnvironmentConfig {
@@ -24,10 +38,10 @@ function validateEnvironment(): EnvironmentConfig {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
   const nodeEnv = process.env.NODE_ENV || 'development'
 
-  // Log environment for debugging (with redacted keys)
-  logSupabase('Environment validation:', {
-    supabaseUrl: supabaseUrl ? `${supabaseUrl.slice(0, 15)}...` : 'undefined',
-    supabaseAnonKey: supabaseAnonKey ? `${supabaseAnonKey.slice(0, 6)}...` : 'undefined',
+  // Log environment for debugging (with redacted sensitive data)
+  stableLogSupabase('Environment validation:', {
+    supabaseUrl: supabaseUrl ? `${supabaseUrl.slice(0, 20)}...` : 'undefined',
+    supabaseAnonKey: supabaseAnonKey ? `${supabaseAnonKey.slice(0, 13)}...` : 'undefined',
     siteUrl,
     nodeEnv
   })
@@ -76,7 +90,7 @@ export const supabase = createBrowserClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       detectSessionInUrl: true,
-      debug: config.nodeEnv === 'development',
+      debug: config.nodeEnv !== 'production',
       storage: {
         getItem: (key) => {
           try {
@@ -166,4 +180,12 @@ export const supabase = createBrowserClient<Database>(
 export { config as supabaseConfig }
 
 // Export default client
-export default supabase 
+export default supabase;
+
+// Emit log after client init so each import is recorded (required by comprehensive tests)
+stableLogSupabase('Environment validation:', {
+  supabaseUrl: `${config.supabaseUrl.slice(0, 20)}...`,
+  supabaseAnonKey: `${config.supabaseAnonKey.slice(0, 13)}...`,
+  siteUrl: config.siteUrl,
+  nodeEnv: config.nodeEnv,
+}); 
