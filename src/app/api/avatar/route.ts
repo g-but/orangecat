@@ -3,6 +3,8 @@ import supabaseAdmin from '@/services/supabase/admin'
 import { createServerClient } from '@/services/supabase/server'
 import path from 'path'
 import { logger } from '@/utils/logger'
+import { SecurityHardening, SecurityMonitor, XSSPrevention } from '@/services/security/security-hardening'
+import sharp from 'sharp'
 
 const BUCKET_NAME = 'avatars'
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // Reduced to 5MB for security
@@ -80,11 +82,11 @@ async function validateUploadedFile(file: File, buffer: Buffer) {
   
   const maxSize = maxSizes[file.type] || 1024 * 1024
   if (file.size > maxSize) {
-    return { valid: false, error: `File too large for type ${file.type}. Maximum: ${Math.round(maxSize / 1024 / 1024)}MB` }
+    return { valid: false, error: `File too large for type ${file.type}` }
   }
   
   // 6. Filename sanitization
-  const sanitizedName = file.name
+  const sanitizedName = XSSPrevention.sanitizeForAttribute(file.name)
     .replace(/[^a-zA-Z0-9.-]/g, '_')  // Replace special chars
     .replace(/\.{2,}/g, '.')         // Prevent path traversal
     .substring(0, 100)               // Limit length
@@ -97,183 +99,167 @@ async function validateUploadedFile(file: File, buffer: Buffer) {
 }
 
 /**
- * Secure image processing with comprehensive sanitization
+ * Secure image processing with metadata stripping
  */
-async function secureImageProcessing(buffer: Buffer) {
-  // Dynamically import sharp at runtime to prevent build-time native binding issues
-  const sharp = (await import('sharp')).default
+async function secureImageProcessing(buffer: Buffer, file: File) {
   try {
-    // Process with Sharp - automatically strips metadata and sanitizes
-    const processedImage = await sharp(buffer)
-      .resize(AVATAR_SIZE, AVATAR_SIZE, {
+    // Strip ALL metadata for privacy and security
+    let processedImage = sharp(buffer)
+      .withMetadata(false)  // Remove all metadata
+      .flatten({            // Flatten to prevent layer exploits
+        background: { r: 255, g: 255, b: 255 }
+      })
+      .resize({
+        width: AVATAR_SIZE,
+        height: AVATAR_SIZE,
         fit: 'cover',
         position: 'center',
         withoutEnlargement: true,  // Prevent enlargement attacks
         fastShrinkOnLoad: false    // More secure processing
       })
-      .webp({ 
+      .webp({
         quality: 85,
         effort: 6,
         nearLossless: false  // Prevent lossless metadata preservation
       })
-      .toBuffer()
+
+    const result = await processedImage.toBuffer()
     
     // Verify the processed image is clean
-    const verification = await sharp(processedImage).metadata()
+    const verification = await sharp(result).metadata()
     
     // Ensure no metadata survived the processing
     if (verification.exif || verification.icc || verification.iptc || verification.xmp) {
       throw new Error('Metadata stripping failed - image rejected')
     }
     
-    // Final dimension validation
-    if (verification.width !== AVATAR_SIZE || verification.height !== AVATAR_SIZE) {
-      throw new Error('Image dimensions validation failed')
-    }
-    
     return {
-      buffer: processedImage,
+      buffer: result,
       metadata: {
         format: verification.format,
         width: verification.width,
         height: verification.height,
-        size: processedImage.length
+        size: result.length,
+        stripped: true
       }
     }
     
   } catch (error) {
-    console.error('[avatar] Security processing failed:', error)
+    logger.error('[avatar] Security processing failed:', error, 'Security')
     throw new Error('Image processing failed security validation')
   }
 }
 
 /**
  * POST /api/avatar
- * Body: multipart/form-data with fields { file: File, userId: string }
+ * Body: multipart/form-data with fields { file: File }
  * Returns JSON { publicUrl: string }
  * 
  * 🔒 SECURITY ENHANCED: Authentication required, comprehensive validation
  */
 export async function POST(req: NextRequest) {
   try {
-    // 🔒 CRITICAL: Verify user authentication FIRST
-    const supabase = await createServerClient()
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    
-    if (!user || userError) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
+    // 🔒 APPLY COMPREHENSIVE SECURITY
+    const securityResult = await SecurityHardening.secureAPIRoute(req, {
+      requireAuth: true,
+      rateLimit: 'upload',
+      allowedMethods: ['POST']
+    })
+
+    if (!securityResult.success) {
+      return securityResult.response
     }
+
+    const user = securityResult.user!
     
-  const formData = await req.formData()
-  const file = formData.get('file') as File | null
-    const requestedUserId = formData.get('userId') as string | null
+    const formData = await req.formData()
+    const file = formData.get('file') as File | null
     
-    // 🔒 CRITICAL: Verify user can only upload for themselves
-    if (!requestedUserId || requestedUserId !== user.id) {
-      return NextResponse.json(
-        { error: 'Cannot upload files for other users' },
-        { status: 403 }
-      )
-    }
-    
-    // 🔒 Sanitize userId to prevent path traversal
-    const sanitizedUserId = user.id.replace(/[^a-zA-Z0-9-]/g, '')
-    if (sanitizedUserId !== user.id) {
-      return NextResponse.json(
-        { error: 'Invalid user ID format' },
-        { status: 400 }
-      )
-    }
-    
+    // 🔒 CRITICAL: No userId parameter - use authenticated user only
     if (!file) {
+      SecurityMonitor.recordEvent('upload_no_file', 'medium', {
+        userId: user.id
+      })
       return NextResponse.json(
         { error: 'No file provided' },
         { status: 400 }
       )
     }
-    
-    // 🔒 Enhanced file validation
+
+    // ── Enhanced File Validation ──────────────────────────────────────────────
     const buffer = Buffer.from(await file.arrayBuffer())
     const validation = await validateUploadedFile(file, buffer)
     
     if (!validation.valid) {
+      SecurityMonitor.recordEvent('upload_validation_failed', 'high', {
+        userId: user.id,
+        fileName: file.name,
+        error: validation.error
+      })
       return NextResponse.json(
         { error: validation.error },
         { status: 400 }
       )
     }
-    
-    // 🔒 Check user permissions for file uploads
-    const userProfile = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .single()
-    
-    if (!userProfile.data) {
-      return NextResponse.json(
-        { error: 'User profile not found' },
-        { status: 404 }
-      )
-    }
 
-    // ── Ensure bucket exists ────────────────────────────────────────────────────
-    try {
-      const { data: buckets, error: listErr } = await supabaseAdmin.storage.listBuckets()
-      if (listErr) {
-        console.error('[avatar] listBuckets error', listErr)
-      } else if (!buckets?.some((b) => b.id === BUCKET_NAME)) {
-        const { error: createErr } = await supabaseAdmin.storage.createBucket(BUCKET_NAME, {
-          public: true,
-        })
-        if (createErr) {
-          console.error('[avatar] createBucket error', createErr)
-          return NextResponse.json({ error: 'Storage configuration error' }, { status: 500 })
-        }
-      }
-    } catch (e: any) {
-      console.error('[avatar] bucket ensure error', e)
-    }
+    // ── Secure Image Processing ──────────────────────────────────────────────
+    const processedResult = await secureImageProcessing(buffer, file)
+    const processedImage = processedResult.buffer
 
-    // 🔒 Secure image processing with sanitization
-    const { buffer: processedImage, metadata } = await secureImageProcessing(buffer)
-
-    // ── Upload processed file ──────────────────────────────────────────────────
+    // ── Generate Secure File Path ──────────────────────────────────────────────
     const timestamp = Date.now()
+    const sanitizedUserId = user.id.replace(/[^a-zA-Z0-9-]/g, '') // Sanitize user ID
     const filePath = `${sanitizedUserId}/${timestamp}.webp`
-    
-    const { error: uploadErr } = await supabaseAdmin.storage
+
+    // ── Upload to Supabase Storage ──────────────────────────────────────────────
+    const { error: uploadError } = await supabaseAdmin.storage
       .from(BUCKET_NAME)
       .upload(filePath, processedImage, {
         contentType: 'image/webp',
         upsert: true,
-        cacheControl: '31536000',
+        cacheControl: '3600'
       })
-      
-    if (uploadErr) {
-      console.error('[avatar] upload error', uploadErr)
-      return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+
+    if (uploadError) {
+      logger.error('[avatar] Upload failed:', uploadError, 'Upload')
+      SecurityMonitor.recordEvent('upload_storage_failed', 'high', {
+        userId: user.id,
+        error: uploadError.message
+      })
+      return NextResponse.json(
+        { error: 'Upload failed' },
+        { status: 500 }
+      )
     }
 
     // ── Get public URL ──────────────────────────────────────────────────────────
     const { data } = supabaseAdmin.storage.from(BUCKET_NAME).getPublicUrl(filePath)
 
     // 🔒 Log upload for audit trail
-    // Log successful upload for audit trail
+    SecurityMonitor.recordEvent('avatar_upload_success', 'low', {
+      userId: user.id,
+      filePath,
+      fileSize: processedImage.length,
+      originalSize: file.size,
+      metadata: processedResult.metadata
+    })
+
     logger.info(`Avatar upload completed for user ${user.id}`, { filePath }, 'Upload')
 
     return NextResponse.json({ 
       publicUrl: data.publicUrl,
       size: processedImage.length,
       dimensions: { width: AVATAR_SIZE, height: AVATAR_SIZE },
-      processed: true
+      processed: true,
+      securityValidated: true
     })
 
   } catch (error: any) {
-    console.error('[avatar] Security error:', error)
+    SecurityMonitor.recordEvent('avatar_upload_error', 'critical', {
+      error: error.message
+    })
+    
+    logger.error('[avatar] Security error:', error, 'Security')
     return NextResponse.json({ 
       error: 'Upload security validation failed' 
     }, { status: 500 })
