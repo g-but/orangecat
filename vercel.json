@@ -5,7 +5,7 @@
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "installCommand": "npm install && npm install --include=optional sharp",
   
   "env": {
     "NODE_ENV": "production",
@@ -16,7 +16,11 @@
   "build": {
     "env": {
       "NODE_ENV": "production",
-      "NEXT_TELEMETRY_DISABLED": "1"
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "DISABLE_ESLINT_PLUGIN": "true",
+      "SKIP_ENV_VALIDATION": "true",
+      "NODE_OPTIONS": "--max-old-space-size=4096",
+      "SHARP_VERSION": "0.34.2"
     }
   },
   
