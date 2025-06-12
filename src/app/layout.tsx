@@ -1,3 +1,4 @@
+import '../polyfills'
 import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import Header from '@/components/layout/Header'
@@ -83,18 +84,45 @@ export default async function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-        {/* Global polyfill for server-side rendering compatibility */}
+        {/* Enhanced global polyfill for Vercel deployment compatibility */}
         <Script
           id="global-polyfill"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              if (typeof self === 'undefined') {
-                globalThis.self = globalThis;
-              }
-              if (typeof global === 'undefined') {
-                globalThis.global = globalThis;
-              }
+              (function() {
+                // Ensure globalThis exists first
+                if (typeof globalThis === 'undefined') {
+                  if (typeof global !== 'undefined') {
+                    global.globalThis = global;
+                  } else if (typeof window !== 'undefined') {
+                    window.globalThis = window;
+                  } else if (typeof self !== 'undefined') {
+                    self.globalThis = self;
+                  } else {
+                    // Create a minimal globalThis
+                    var globalThis = {};
+                  }
+                }
+                
+                // Define self if it doesn't exist
+                if (typeof self === 'undefined') {
+                  globalThis.self = globalThis;
+                  if (typeof global !== 'undefined') {
+                    global.self = globalThis;
+                  }
+                }
+                
+                // Define global if it doesn't exist
+                if (typeof global === 'undefined') {
+                  globalThis.global = globalThis;
+                }
+                
+                // Ensure window exists in appropriate contexts
+                if (typeof window === 'undefined' && typeof globalThis !== 'undefined') {
+                  globalThis.window = globalThis;
+                }
+              })();
             `,
           }}
         />
