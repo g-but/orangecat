@@ -3,7 +3,6 @@
  * Real-time synchronization with conflict resolution
  */
 
-import { createBrowserClient } from '@supabase/ssr'
 import { 
   DraftState, 
   DraftEvent, 
@@ -17,10 +16,7 @@ import {
 
 export class DraftEngine {
   private static instance: DraftEngine
-  private supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  private supabase: any = null
   
   private drafts = new Map<string, DraftState>()
   private eventStore: DraftEvent[] = []
@@ -28,6 +24,22 @@ export class DraftEngine {
   private syncTimer: NodeJS.Timeout | null = null
   private clientId = this.generateClientId()
   private sessionId = this.generateSessionId()
+
+  private async getSupabaseClient() {
+    if (typeof window === 'undefined') {
+      throw new Error('DraftEngine can only be used in browser environment')
+    }
+    
+    if (!this.supabase) {
+      const { createBrowserClient } = await import('@supabase/ssr')
+      this.supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      )
+    }
+    
+    return this.supabase
+  }
 
   static getInstance(): DraftEngine {
     if (!DraftEngine.instance) {
@@ -153,8 +165,9 @@ export class DraftEngine {
     if (!draft) throw new Error(`Draft ${draftId} not found`)
 
     try {
+      const supabase = await this.getSupabaseClient()
       // Check for remote changes
-      const { data: remoteDraft, error } = await this.supabase
+      const { data: remoteDraft, error } = await supabase
         .from('campaign_drafts')
         .select('*')
         .eq('id', draftId)
@@ -192,7 +205,7 @@ export class DraftEngine {
         session_id: this.sessionId
       }
 
-      const { error: syncError } = await this.supabase
+      const { error: syncError } = await supabase
         .from('campaign_drafts')
         .upsert(syncData)
 

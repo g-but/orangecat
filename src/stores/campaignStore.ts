@@ -17,13 +17,26 @@
 
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { createBrowserClient } from '@supabase/ssr'
 import { FundingPage } from '@/types/database'
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Create Supabase client only in browser environment
+let supabase: any = null
+
+const getSupabaseClient = async () => {
+  if (typeof window === 'undefined') {
+    throw new Error('Supabase client can only be used in browser environment')
+  }
+  
+  if (!supabase) {
+    const { createBrowserClient } = await import('@supabase/ssr')
+    supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+  
+  return supabase
+}
 
 // TYPES
 export interface CampaignFormData {
@@ -117,6 +130,7 @@ export const useCampaignStore = create<CampaignState>()(
         set({ isLoading: true, error: null })
         
         try {
+          const supabase = await getSupabaseClient()
           const { data, error } = await supabase
             .from('funding_pages')
             .select('*')
@@ -157,6 +171,7 @@ export const useCampaignStore = create<CampaignState>()(
         set({ isSyncing: true, error: null })
         
         try {
+          const supabase = await getSupabaseClient()
           const draftData = {
             user_id: userId,
             title: data.title || 'Untitled Campaign',
@@ -262,6 +277,7 @@ export const useCampaignStore = create<CampaignState>()(
         set({ isSyncing: true, error: null })
         
         try {
+          const supabase = await getSupabaseClient()
           const { data, error } = await supabase
             .from('funding_pages')
             .update({ 
@@ -311,6 +327,7 @@ export const useCampaignStore = create<CampaignState>()(
         set({ isSyncing: true, error: null })
         
         try {
+          const supabase = await getSupabaseClient()
           const { error } = await supabase
             .from('funding_pages')
             .delete()
@@ -341,6 +358,7 @@ export const useCampaignStore = create<CampaignState>()(
         set({ isSyncing: true, error: null })
         
         try {
+          const supabase = await getSupabaseClient()
           const { data, error } = await supabase
             .from('funding_pages')
             .update({ 
@@ -390,6 +408,7 @@ export const useCampaignStore = create<CampaignState>()(
         set({ isSyncing: true, error: null })
         
         try {
+          const supabase = await getSupabaseClient()
           const { data, error } = await supabase
             .from('funding_pages')
             .update({ 
@@ -463,6 +482,7 @@ export const useCampaignStore = create<CampaignState>()(
         set({ isSyncing: true, error: null })
         
         try {
+          const supabase = await getSupabaseClient()
           const updateData = {
             title: data.title || 'Untitled Campaign',
             description: data.description || null,
