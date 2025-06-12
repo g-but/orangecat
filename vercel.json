@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "alias": ["orangecat.vercel.app"],
+  "alias": ["orangecat.ch"],
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "outputDirectory": ".next",
