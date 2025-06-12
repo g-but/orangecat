@@ -3,7 +3,7 @@ import supabaseAdmin from '@/services/supabase/admin'
 import { createServerClient } from '@/services/supabase/server'
 import path from 'path'
 import { logger } from '@/utils/logger'
-import { SecurityHardening, SecurityMonitor, XSSPrevention } from '@/services/security/security-hardening'
+// import { SecurityHardening, SecurityMonitor, XSSPrevention } from '@/services/security/security-hardening'
 import sharp from 'sharp'
 
 const BUCKET_NAME = 'avatars'

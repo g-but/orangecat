@@ -563,25 +563,40 @@ export class SecurityHardening {
       // 3. Authentication check
       let user = null
       if (requireAuth) {
-        const supabase = await createServerClient()
-        const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
+        try {
+          const supabase = await createServerClient()
+          const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
         
-        if (!authUser || authError) {
-          SecurityMonitor.recordEvent('unauthorized_access', 'medium', {
+          if (!authUser || authError) {
+            SecurityMonitor.recordEvent('unauthorized_access', 'medium', {
+              ip: clientIP,
+              url: request.url
+            })
+            
+            return {
+              success: false,
+              response: NextResponse.json(
+                { error: 'Authentication required' },
+                { status: 401 }
+              )
+            }
+          }
+          
+          user = authUser
+        } catch (authError) {
+          SecurityMonitor.recordEvent('auth_error', 'high', {
             ip: clientIP,
-            url: request.url
+            error: (authError as Error).message
           })
           
           return {
             success: false,
             response: NextResponse.json(
-              { error: 'Authentication required' },
-              { status: 401 }
+              { error: 'Authentication failed' },
+              { status: 500 }
             )
           }
         }
-        
-        user = authUser
       }
 
       // 4. Input validation
