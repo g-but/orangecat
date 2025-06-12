@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  // SWC minification is enabled by default in Next.js 15
+  // Move serverExternalPackages to root level (not experimental)
+  serverExternalPackages: ['@supabase/supabase-js'],
   
   // Image optimization
   images: {
@@ -35,50 +36,76 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 31536000, // 1 year
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   // Experimental features (only supported ones)
   experimental: {
-    esmExternals: true,
-    optimizeCss: true,
-    optimizePackageImports: ['@supabase/supabase-js', 'lucide-react', 'framer-motion'],
+    optimizePackageImports: ['lucide-react', 'framer-motion'], // Remove @supabase/supabase-js to avoid conflict
     // Removed modularizeImports from experimental as it was causing warnings
   },
 
   // Advanced webpack optimizations for bundle size
   webpack: (config, { dev, isServer, webpack }) => {
-    // Add explicit alias resolution
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, 'src'),
-    };
-
-    // Handle Node.js polyfills for client-side
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-        crypto: false,
-        stream: false,
-        url: false,
-        zlib: false,
-        http: false,
-        https: false,
-        assert: false,
-        os: false,
-        path: false,
-      };
+    // Add polyfills for server-side rendering
+    if (isServer) {
+      // Inject global polyfills at the top of every bundle
+      config.plugins.push(
+        new webpack.BannerPlugin({
+          banner: `
+            if (typeof self === 'undefined') {
+              globalThis.self = globalThis;
+            }
+            if (typeof global === 'undefined') {
+              globalThis.global = globalThis;
+            }
+          `,
+          raw: true,
+          entryOnly: false,
+        })
+      );
     }
 
-    // Simple global polyfill using DefinePlugin
+    // Define global variables for both client and server
     config.plugins.push(
       new webpack.DefinePlugin({
         'global': 'globalThis',
         'self': 'globalThis',
       })
-    )
+    );
+
+    // Provide polyfills
+    config.plugins.push(
+      new webpack.ProvidePlugin({
+        global: 'globalThis',
+        self: 'globalThis',
+      })
+    );
+
+    // Configure fallbacks for Node.js polyfills
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+      crypto: false,
+      stream: false,
+      url: false,
+      zlib: false,
+      http: false,
+      https: false,
+      assert: false,
+      os: false,
+      path: false,
+    };
+
+    // Add explicit alias resolution
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': require('path').resolve(__dirname, 'src'),
+    };
 
     if (!dev) {
       // Enhanced tree shaking and dead code elimination
@@ -173,29 +200,32 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/:all*(svg|jpg|png|gif|webp|avif)',
+        source: '/(.*)',
         headers: [
           {
-            key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin',
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
           },
         ],
       },
       {
-        source: '/_next/static/:path*',
+        source: '/static/(.*)',
         headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
-          },
-        ],
-      },
-      {
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'public, max-age=300, s-maxage=3600', // 5min browser, 1hr CDN
           },
         ],
       },
@@ -226,6 +256,26 @@ const nextConfig = {
 
   // Remove X-Powered-By header
   poweredByHeader: false,
+
+  // Performance budgets
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
+
+  // Bundle analyzer (only in development)
+  ...(process.env.ANALYZE === 'true' && {
+    webpack: (config, options) => {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'server',
+          openAnalyzer: true,
+        })
+      );
+      return config;
+    },
+  }),
 }
 
 module.exports = nextConfig
