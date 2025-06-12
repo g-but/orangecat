@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 // List of public routes that don't require auth
 const publicRoutes = ['/', '/auth', '/login', '/register', '/privacy', '/terms', '/about', '/blog']
@@ -18,41 +17,23 @@ export async function middleware(request: NextRequest) {
   // Add pathname to headers so layout can access it
   response.headers.set('x-pathname', request.nextUrl.pathname)
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: CookieOptions) {
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-        },
-      },
-    }
-  )
-
   try {
-    // Use getUser() for security - validates authentication with server
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    // Check for authentication by looking for Supabase auth cookies
+    // This is Edge Runtime compatible
+    const accessToken = request.cookies.get('sb-access-token')?.value ||
+                       request.cookies.get('supabase-auth-token')?.value ||
+                       request.cookies.get('supabase.auth.token')?.value
+
+    // More comprehensive check for any Supabase auth cookies
+    const hasAuthCookie = Array.from(request.cookies.getAll()).some(cookie => 
+      cookie.name.includes('supabase') && cookie.name.includes('auth')
+    )
     
     // Extract the path from the URL
     const path = request.nextUrl.pathname
     
     // If user is not authenticated and trying to access a protected route, redirect to /auth
-    if ((!user || userError) && protectedRoutes.some(route => path.startsWith(route))) {
+    if ((!accessToken && !hasAuthCookie) && protectedRoutes.some(route => path.startsWith(route))) {
       const redirectUrl = new URL('/auth', request.url)
       redirectUrl.searchParams.set('mode', 'login')
       redirectUrl.searchParams.set('from', path)
@@ -60,7 +41,7 @@ export async function middleware(request: NextRequest) {
     }
     
     // If user is authenticated and trying to access /auth, redirect to /dashboard
-    if (user && !userError && path === '/auth') {
+    if ((accessToken || hasAuthCookie) && path === '/auth') {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
   } catch (error) {
