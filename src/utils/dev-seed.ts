@@ -1,9 +1,21 @@
-import { createBrowserClient } from '@supabase/ssr'
+// Create Supabase client only in browser environment
+let supabase: any = null
 
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+const getSupabaseClient = async () => {
+  if (typeof window === 'undefined') {
+    throw new Error('Dev seed utility can only be used in browser environment')
+  }
+  
+  if (!supabase) {
+    const { createBrowserClient } = await import('@supabase/ssr')
+    supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+  
+  return supabase
+}
 
 // Sample data for testing
 const sampleProfiles = [
@@ -113,7 +125,8 @@ export async function seedDevelopmentData() {
     }
     
     // Check if data already exists
-    const { data: existingProfiles } = await supabase
+    const supabaseClient = await getSupabaseClient()
+    const { data: existingProfiles } = await supabaseClient
       .from('profiles')
       .select('id')
       .limit(1)

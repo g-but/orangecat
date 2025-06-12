@@ -1,4 +1,3 @@
-import { createBrowserClient } from '@supabase/ssr'
 import { 
   getUserFundraisingStats, 
   getUserFundingPages, 

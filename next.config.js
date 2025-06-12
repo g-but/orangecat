@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  // Move serverExternalPackages to root level (not experimental)
-  serverExternalPackages: ['@supabase/supabase-js'],
+  // Externalize Supabase packages for server-side rendering
+  serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
   
   // Image optimization
   images: {
@@ -43,46 +43,24 @@ const nextConfig = {
 
   // Experimental features (only supported ones)
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion'], // Remove @supabase/supabase-js to avoid conflict
+    optimizePackageImports: ['lucide-react', 'framer-motion'],
     // Removed modularizeImports from experimental as it was causing warnings
   },
 
   // Advanced webpack optimizations for bundle size
   webpack: (config, { dev, isServer, webpack }) => {
-    // Add polyfills for server-side rendering
+    // Exclude Supabase packages from server-side bundling
     if (isServer) {
-      // Inject global polyfills at the top of every bundle
-      config.plugins.push(
-        new webpack.BannerPlugin({
-          banner: `
-            if (typeof self === 'undefined') {
-              globalThis.self = globalThis;
-            }
-            if (typeof global === 'undefined') {
-              globalThis.global = globalThis;
-            }
-          `,
-          raw: true,
-          entryOnly: false,
-        })
-      );
+      config.externals = config.externals || []
+      config.externals.push({
+        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
+        '@supabase/ssr': 'commonjs @supabase/ssr',
+        '@supabase/auth-js': 'commonjs @supabase/auth-js',
+        '@supabase/realtime-js': 'commonjs @supabase/realtime-js',
+        '@supabase/postgrest-js': 'commonjs @supabase/postgrest-js',
+        '@supabase/storage-js': 'commonjs @supabase/storage-js',
+      })
     }
-
-    // Define global variables for both client and server
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        'global': 'globalThis',
-        'self': 'globalThis',
-      })
-    );
-
-    // Provide polyfills
-    config.plugins.push(
-      new webpack.ProvidePlugin({
-        global: 'globalThis',
-        self: 'globalThis',
-      })
-    );
 
     // Configure fallbacks for Node.js polyfills
     config.resolve.fallback = {
@@ -101,6 +79,23 @@ const nextConfig = {
       path: false,
     };
 
+    // Define global variables for both client and server
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+        'global': 'globalThis',
+        'self': 'globalThis',
+      })
+    );
+
+    // Provide polyfills for global variables
+    config.plugins.push(
+      new webpack.ProvidePlugin({
+        global: 'globalThis',
+        self: 'globalThis',
+      })
+    );
+
     // Add explicit alias resolution
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -108,86 +103,37 @@ const nextConfig = {
     };
 
     if (!dev) {
-      // Enhanced tree shaking and dead code elimination
-      config.optimization.usedExports = true
-      config.optimization.sideEffects = false
-      
-      // Advanced code splitting optimization
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        minSize: 20000,
-        minRemainingSize: 0,
-        minChunks: 1,
-        maxAsyncRequests: 30,
-        maxInitialRequests: 30,
-        enforceSizeThreshold: 50000,
-        cacheGroups: {
-          default: {
-            minChunks: 2,
-            priority: -20,
-            reuseExistingChunk: true,
-          },
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            priority: -10,
-            chunks: 'all',
-            maxSize: 200000, // Split large vendor chunks
-          },
-          supabase: {
-            test: /[\\/]node_modules[\\/]@supabase[\\/]/,
-            name: 'supabase',
-            priority: 10,
-            chunks: 'all',
-            maxSize: 150000,
-          },
-          react: {
-            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
-            name: 'react',
-            priority: 20,
-            chunks: 'all',
-          },
-          ui: {
-            test: /[\\/]src[\\/](components|lib)[\\/]/,
-            name: 'ui',
-            priority: 5,
-            chunks: 'all',
-            maxSize: 100000,
+      // Production optimizations
+      config.optimization = {
+        ...config.optimization,
+        usedExports: true,
+        sideEffects: false,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+            supabase: {
+              test: /[\\/]node_modules[\\/]@supabase[\\/]/,
+              name: 'supabase',
+              chunks: 'all',
+              priority: 10,
+            },
+            ui: {
+              test: /[\\/]src[\\/](components|ui)[\\/]/,
+              name: 'ui',
+              chunks: 'all',
+              priority: 5,
+            },
           },
         },
-      }
-      
-      // Performance budgets (stricter)
-      config.performance = {
-        maxAssetSize: 200000, // 200KB instead of 250KB
-        maxEntrypointSize: 350000, // 350KB instead of 400KB
-        hints: 'warning',
-      }
-
-      // Bundle analyzer in development
-      if (process.env.ANALYZE) {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            openAnalyzer: true,
-          })
-        )
-      }
+      };
     }
 
-    // Suppress "Critical dependency" warnings coming from dynamic requires in @supabase/realtime-js
-    config.ignoreWarnings = [
-      ...(config.ignoreWarnings || []),
-      (warning) =>
-        typeof warning.message === 'string' &&
-        warning.message.includes('Critical dependency') &&
-        warning.module &&
-        warning.module.resource &&
-        warning.module.resource.includes('@supabase/realtime-js')
-    ]
-
-    return config
+    return config;
   },
 
   // Enable compression
@@ -265,14 +211,16 @@ const nextConfig = {
 
   // Bundle analyzer (only in development)
   ...(process.env.ANALYZE === 'true' && {
-    webpack: (config, options) => {
-      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-      config.plugins.push(
-        new BundleAnalyzerPlugin({
-          analyzerMode: 'server',
-          openAnalyzer: true,
-        })
-      );
+    webpack: (config, { isServer }) => {
+      if (!isServer) {
+        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+        config.plugins.push(
+          new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: false,
+          })
+        );
+      }
       return config;
     },
   }),

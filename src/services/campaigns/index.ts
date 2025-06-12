@@ -11,16 +11,28 @@
  * 4. Violation of DRY principles
  */
 
-import { createBrowserClient } from '@supabase/ssr'
 import { FundingPage } from '@/types/database'
 import type { CampaignFormData, CampaignDraftData, safeParseCampaignGoal } from '@/types/campaign'
 import { getErrorMessage, type CatchError } from '@/types/common'
 
-// Default client for production
-const defaultSupabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+// Create Supabase client only in browser environment
+let defaultSupabase: any = null
+
+const getSupabaseClient = async () => {
+  if (typeof window === 'undefined') {
+    throw new Error('Campaign service can only be used in browser environment')
+  }
+  
+  if (!defaultSupabase) {
+    const { createBrowserClient } = await import('@supabase/ssr')
+    defaultSupabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+  }
+  
+  return defaultSupabase
+}
 
 export interface CampaignFilters {
   userId?: string
@@ -62,7 +74,7 @@ export class CampaignService {
 
   // Allow regular instantiation for testing with optional client injection
   constructor(supabaseClient?: any) {
-    this.supabase = supabaseClient || defaultSupabase
+    this.supabase = supabaseClient || getSupabaseClient()
   }
 
   /**
@@ -77,7 +89,8 @@ export class CampaignService {
       }
 
       // 1. Get all database campaigns
-      const { data: dbCampaigns, error } = await this.supabase
+      const supabase = await this.supabase
+      const { data: dbCampaigns, error } = await supabase
         .from('funding_pages')
         .select('*')
         .eq('user_id', userId)
@@ -217,9 +230,11 @@ export class CampaignService {
 
       let resultId: string
 
+      const supabase = await this.supabase
+      
       if (draftId) {
         // Update existing draft
-        const { data, error } = await this.supabase
+        const { data, error } = await supabase
           .from('funding_pages')
           .update(draftData)
           .eq('id', draftId)
@@ -231,7 +246,7 @@ export class CampaignService {
         resultId = data.id
       } else {
         // Create new draft
-        const { data, error } = await this.supabase
+        const { data, error } = await supabase
           .from('funding_pages')
           .insert(draftData)
           .select()
@@ -293,7 +308,8 @@ export class CampaignService {
         is_public: true
       }
 
-      const { data, error } = await this.supabase
+      const supabase = await this.supabase
+      const { data, error } = await supabase
         .from('funding_pages')
         .update(publishData)
         .eq('id', campaignId)
