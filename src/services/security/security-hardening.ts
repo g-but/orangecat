@@ -10,7 +10,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
 import { logger } from '@/utils/logger'
 import { z } from 'zod'
 
@@ -564,7 +563,9 @@ export class SecurityHardening {
       let user = null
       if (requireAuth) {
         try {
-          const supabase = await createServerClient()
+          // Only import and use createServerClient when actually needed
+          const { createServerClient: createClient } = await import('@/services/supabase/server')
+          const supabase = await createClient()
           const { data: { user: authUser }, error: authError } = await supabase.auth.getUser()
         
           if (!authUser || authError) {
