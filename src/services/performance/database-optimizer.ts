@@ -350,22 +350,26 @@ export const ProfileQueries = {
   async getProfile(userId: string) {
     return dbOptimizer.optimizedQuery(
       `profile:${userId}`,
-      () => supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
+      async () => {
+        return await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+      }
     )
   },
 
   async getProfileByUsername(username: string) {
     return dbOptimizer.optimizedQuery(
       `profile:username:${username}`,
-      () => supabase
-        .from('profiles')
-        .select('*')
-        .eq('username', username)
-        .single(),
+      async () => {
+        return await supabase
+          .from('profiles')
+          .select('*')
+          .eq('username', username)
+          .single()
+      },
       { ttl: 10 * 60 * 1000 } // 10 minutes
     )
   },
@@ -373,11 +377,13 @@ export const ProfileQueries = {
   async searchProfiles(query: string) {
     return dbOptimizer.optimizedQuery(
       `profiles:search:${query}`,
-      () => supabase
-        .from('profiles')
-        .select('id, username, full_name, avatar_url')
-        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
-        .limit(20),
+      async () => {
+        return await supabase
+          .from('profiles')
+          .select('id, username, full_name, avatar_url')
+          .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
+          .limit(20)
+      },
       { ttl: 2 * 60 * 1000 } // 2 minutes
     )
   }
@@ -390,29 +396,33 @@ export const FundingQueries = {
   async getUserFundingPages(userId: string) {
     return dbOptimizer.optimizedQuery(
       `funding:user:${userId}`,
-      () => supabase
-        .from('funding_pages')
-        .select(`
-          *,
-          profiles!funding_pages_creator_id_fkey (
-            username,
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('creator_id', userId)
+      async () => {
+        return await supabase
+          .from('funding_pages')
+          .select(`
+            *,
+            profiles!funding_pages_creator_id_fkey (
+              username,
+              full_name,
+              avatar_url
+            )
+          `)
+          .eq('creator_id', userId)
+      }
     )
   },
 
   async getDashboardData(userId: string) {
     return dbOptimizer.parallelQueries({
-      profile: () => ProfileQueries.getProfile(userId),
-      fundingPages: () => FundingQueries.getUserFundingPages(userId),
-      stats: () => supabase
-        .from('user_stats')
-        .select('*')
-        .eq('user_id', userId)
-        .single()
+      profile: async () => await ProfileQueries.getProfile(userId),
+      fundingPages: async () => await FundingQueries.getUserFundingPages(userId),
+      stats: async () => {
+        return await supabase
+          .from('user_stats')
+          .select('*')
+          .eq('user_id', userId)
+          .single()
+      }
     })
   }
 }

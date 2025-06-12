@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth'
 import { updateProfile as supabaseUpdateProfile } from '@/services/supabase/profiles'
 import { toast } from 'sonner'
 import { logProfile, logger } from '@/utils/logger'
+import { dbOptimizer } from './performance/database-optimizer'
 
 export interface ProfileUpdateResult {
   success: boolean
@@ -18,11 +19,21 @@ export class ProfileService {
   static async getProfile(userId: string): Promise<Profile | null> {
     try {
       logProfile('ProfileService: Getting profile for user:', userId);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single()
+      
+      // Use optimized database query with caching
+      const result = await dbOptimizer.optimizedQuery(
+        `profile:${userId}`,
+        async () => {
+          return await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', userId)
+            .single()
+        },
+        { ttl: 5 * 60 * 1000 } // 5 minutes cache
+      )
+      
+      const { data, error } = result as any
 
       if (error) {
         logger.error('ProfileService: Error fetching profile:', { error }, 'Profile');
@@ -33,6 +44,38 @@ export class ProfileService {
       return data
     } catch (error) {
       logger.error('ProfileService: Exception in getProfile:', { error }, 'Profile')
+      return null
+    }
+  }
+
+  static async getProfileByUsername(username: string): Promise<Profile | null> {
+    try {
+      logProfile('ProfileService: Getting profile by username:', username);
+      
+      // Use optimized database query with longer cache for usernames
+      const result = await dbOptimizer.optimizedQuery(
+        `profile:username:${username}`,
+        async () => {
+          return await supabase
+            .from('profiles')
+            .select('*')
+            .eq('username', username)
+            .single()
+        },
+        { ttl: 10 * 60 * 1000 } // 10 minutes cache for username lookups
+      )
+      
+      const { data, error } = result as any
+
+      if (error) {
+        logger.error('ProfileService: Error fetching profile by username:', { error }, 'Profile');
+        throw error;
+      }
+      
+      logProfile('ProfileService: Profile fetched by username successfully:', data);
+      return data
+    } catch (error) {
+      logger.error('ProfileService: Exception in getProfileByUsername:', { error }, 'Profile')
       return null
     }
   }
