@@ -83,6 +83,21 @@ export default async function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`} suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+        {/* Global polyfill for server-side rendering compatibility */}
+        <Script
+          id="global-polyfill"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof self === 'undefined') {
+                globalThis.self = globalThis;
+              }
+              if (typeof global === 'undefined') {
+                globalThis.global = globalThis;
+              }
+            `,
+          }}
+        />
         {/* Auth cleanup script removed to fix MIME errors */}
       </head>
       <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white safe-area-padding" suppressHydrationWarning>
