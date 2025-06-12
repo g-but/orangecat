@@ -53,6 +53,33 @@ const nextConfig = {
       '@': require('path').resolve(__dirname, 'src'),
     };
 
+    // Handle Node.js polyfills for client-side
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
+      };
+    }
+
+    // Simple global polyfill using DefinePlugin
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'global': 'globalThis',
+        'self': 'globalThis',
+      })
+    )
+
     if (!dev) {
       // Enhanced tree shaking and dead code elimination
       config.optimization.usedExports = true
@@ -122,15 +149,6 @@ const nextConfig = {
       }
     }
 
-    // Enhanced dynamic imports for better code splitting
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        'process.env.NEXT_RUNTIME': JSON.stringify(
-          isServer ? 'nodejs' : 'edge'
-        ),
-      })
-    )
-
     // Suppress "Critical dependency" warnings coming from dynamic requires in @supabase/realtime-js
     config.ignoreWarnings = [
       ...(config.ignoreWarnings || []),
@@ -142,14 +160,6 @@ const nextConfig = {
         warning.module.resource.includes('@supabase/realtime-js')
     ]
 
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
-    }
     return config
   },
 

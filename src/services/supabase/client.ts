@@ -8,48 +8,165 @@
  * AFTER: ~60 lines, single responsibility, clean imports
  * 
  * Created: 2025-06-08 (refactored from massive client.ts)
- * Last Modified: 2025-06-08
- * Last Modified Summary: Major refactor - extracted auth, profiles, campaigns into separate services
+ * Last Modified: 2025-06-12
+ * Last Modified Summary: Made server-safe by removing 'use client' and adding browser checks
  */
 
-'use client'
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined'
 
 // ==================== CORE CLIENT EXPORTS ====================
-export { supabase as default, supabase, supabaseConfig } from './core/client'
+// Only export actual client if we're in browser, otherwise export null
+let supabase: any = null
+let supabaseConfig: any = null
+
+if (isBrowser) {
+  try {
+    const coreClient = require('./core/client')
+    supabase = coreClient.supabase || coreClient.default
+    supabaseConfig = coreClient.supabaseConfig
+  } catch (error) {
+    console.warn('Failed to load Supabase client:', error)
+  }
+}
+
+export { supabase as default, supabase, supabaseConfig }
 
 // ==================== AUTH SERVICE EXPORTS ====================
-export {
-  signIn,
-  signUp,
-  signOut,
-  resetPassword,
-  updatePassword,
-  getSession,
-  getUser,
-  onAuthStateChange,
-  isAuthenticated,
-  getCurrentUserId
-} from './auth'
+// Server-safe wrappers for auth functions
+export const signIn = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { signIn: fn } = await import('./auth')
+  return fn(...args)
+}
+
+export const signUp = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { signUp: fn } = await import('./auth')
+  return fn(...args)
+}
+
+export const signOut = async (...args: any[]) => {
+  if (!isBrowser) return { error: null }
+  const { signOut: fn } = await import('./auth')
+  return fn(...args)
+}
+
+export const resetPassword = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { resetPassword: fn } = await import('./auth')
+  return fn(...args)
+}
+
+export const updatePassword = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { updatePassword: fn } = await import('./auth')
+  return fn(...args)
+}
+
+export const getSession = async (...args: any[]) => {
+  if (!isBrowser) return { data: { session: null }, error: null }
+  const { getSession: fn } = await import('./auth')
+  return fn(...args)
+}
+
+export const getUser = async (...args: any[]) => {
+  if (!isBrowser) return { data: { user: null }, error: null }
+  const { getUser: fn } = await import('./auth')
+  return fn(...args)
+}
+
+export const onAuthStateChange = (...args: any[]) => {
+  if (!isBrowser) return { data: { subscription: null }, error: null }
+  const { onAuthStateChange: fn } = require('./auth')
+  return fn(...args)
+}
+
+export const isAuthenticated = async (...args: any[]) => {
+  if (!isBrowser) return false
+  const { isAuthenticated: fn } = await import('./auth')
+  return fn(...args)
+}
+
+export const getCurrentUserId = async (...args: any[]) => {
+  if (!isBrowser) return null
+  const { getCurrentUserId: fn } = await import('./auth')
+  return fn(...args)
+}
 
 // ==================== PROFILES SERVICE EXPORTS ====================
-export {
-  getProfile,
-  updateProfile,
-  createProfile,
-  isUsernameAvailable,
-  getProfileByUsername,
-  searchProfiles,
-  validateProfileData
-} from './profiles'
+export const getProfile = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { getProfile: fn } = await import('./profiles')
+  return fn(...args)
+}
+
+export const updateProfile = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { updateProfile: fn } = await import('./profiles')
+  return fn(...args)
+}
+
+export const createProfile = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { createProfile: fn } = await import('./profiles')
+  return fn(...args)
+}
+
+export const isUsernameAvailable = async (...args: any[]) => {
+  if (!isBrowser) return false
+  const { isUsernameAvailable: fn } = await import('./profiles')
+  return fn(...args)
+}
+
+export const getProfileByUsername = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { getProfileByUsername: fn } = await import('./profiles')
+  return fn(...args)
+}
+
+export const searchProfiles = async (...args: any[]) => {
+  if (!isBrowser) return { data: [], error: null }
+  const { searchProfiles: fn } = await import('./profiles')
+  return fn(...args)
+}
+
+export const validateProfileData = (...args: any[]) => {
+  if (!isBrowser) return { isValid: false, errors: ['Server-side execution not supported'] }
+  const { validateProfileData: fn } = require('./profiles')
+  return fn(...args)
+}
 
 // ==================== FUNDRAISING SERVICE EXPORTS ====================
-export {
-  getFundingPage,
-  getUserFundingPages,
-  getUserFundraisingStats,
-  getUserFundraisingActivity,
-  getGlobalFundraisingStats
-} from './fundraising'
+export const getFundingPage = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { getFundingPage: fn } = await import('./fundraising')
+  return fn(...args)
+}
+
+export const getUserFundingPages = async (...args: any[]) => {
+  if (!isBrowser) return { data: [], error: null }
+  const { getUserFundingPages: fn } = await import('./fundraising')
+  return fn(...args)
+}
+
+export const getUserFundraisingStats = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { getUserFundraisingStats: fn } = await import('./fundraising')
+  return fn(...args)
+}
+
+export const getUserFundraisingActivity = async (...args: any[]) => {
+  if (!isBrowser) return { data: [], error: null }
+  const { getUserFundraisingActivity: fn } = await import('./fundraising')
+  return fn(...args)
+}
+
+export const getGlobalFundraisingStats = async (...args: any[]) => {
+  if (!isBrowser) return { data: null, error: new Error('Server-side execution not supported') }
+  const { getGlobalFundraisingStats: fn } = await import('./fundraising')
+  return fn(...args)
+}
 
 // ==================== TYPE EXPORTS ====================
 export type {

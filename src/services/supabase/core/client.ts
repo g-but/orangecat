@@ -5,16 +5,16 @@
  * with proper configuration and environment validation.
  * 
  * Created: 2025-06-08
- * Last Modified: 2025-06-08
- * Last Modified Summary: Extracted from massive client.ts, clean separation of concerns
+ * Last Modified: 2025-06-12
+ * Last Modified Summary: Fixed server-side build errors by adding browser environment checks
  */
 
-'use client'
-
-import { createBrowserClient } from '@supabase/ssr'
-import { Database } from '@/types/database'
+import type { Database } from '@/types/database'
 import { logger, logSupabase } from '@/utils/logger'
 import type { EnvironmentConfig } from '../types'
+
+// Check if we're in a browser environment
+const isBrowser = typeof window !== 'undefined'
 
 // -----------------------------------------------------------------------------
 // stableLogSupabase: during Jest runs we want every import of this module (even
@@ -50,23 +50,25 @@ function validateEnvironment(): EnvironmentConfig {
     throw new Error('Missing Supabase environment variables: NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be defined')
   }
 
-  // Validate URL format
-  try {
-    const url = new URL(supabaseUrl)
-    
-    // Check protocol
-    if (url.protocol !== 'https:') {
-      logger.error('Supabase URL should use https protocol:', url.protocol, 'Supabase')
+  // Validate URL format only in browser environment
+  if (isBrowser) {
+    try {
+      const url = new URL(supabaseUrl)
+      
+      // Check protocol
+      if (url.protocol !== 'https:') {
+        logger.error('Supabase URL should use https protocol:', url.protocol, 'Supabase')
+      }
+      
+      // Check domain
+      if (!url.hostname.includes('supabase')) {
+        logger.warn('Supabase URL does not appear to be a valid Supabase domain', undefined, 'Supabase')
+      }
+      
+    } catch (error) {
+      logger.error('Invalid Supabase URL format:', { url: supabaseUrl, error }, 'Supabase')
+      throw new Error('Invalid Supabase URL format. Check your environment variables.')
     }
-    
-    // Check domain
-    if (!url.hostname.includes('supabase')) {
-      logger.warn('Supabase URL does not appear to be a valid Supabase domain', undefined, 'Supabase')
-    }
-    
-  } catch (error) {
-    logger.error('Invalid Supabase URL format:', { url: supabaseUrl, error }, 'Supabase')
-    throw new Error('Invalid Supabase URL format. Check your environment variables.')
   }
 
   return {
@@ -77,115 +79,142 @@ function validateEnvironment(): EnvironmentConfig {
   }
 }
 
+// ==================== STORAGE HELPERS ====================
+
+// Safe storage helpers that work on both server and client
+const safeStorage = {
+  getItem: (key: string) => {
+    if (!isBrowser) return null
+    
+    try {
+      // Try localStorage first, then sessionStorage
+      let value = null
+      
+      try {
+        value = localStorage.getItem(key)
+      } catch (e) {
+        logger.warn('Error reading from localStorage', { error: (e as Error).message }, 'Supabase')
+      }
+      
+      if (!value) {
+        try {
+          value = sessionStorage.getItem(key)
+        } catch (e) {
+          logger.warn('Error reading from sessionStorage', { error: (e as Error).message }, 'Supabase')
+        }
+      }
+      
+      return value ? JSON.parse(value) : null
+    } catch (error) {
+      logger.warn('Error reading from storage', { error: (error as Error).message }, 'Supabase')
+      return null
+    }
+  },
+  
+  setItem: (key: string, value: any) => {
+    if (!isBrowser) return
+    
+    try {
+      const jsonValue = JSON.stringify(value)
+      
+      // Try to save in both storages for redundancy
+      let success = false
+      
+      try {
+        localStorage.setItem(key, jsonValue)
+        success = true
+      } catch (e) {
+        logger.warn('Unable to save to localStorage', { error: (e as Error).message }, 'Supabase')
+      }
+      
+      try {
+        sessionStorage.setItem(key, jsonValue)
+        success = true
+      } catch (e) {
+        logger.warn('Unable to save to sessionStorage', { error: (e as Error).message }, 'Supabase')
+      }
+      
+      if (!success) {
+        logger.error('Failed to store auth data in any storage mechanism', { key }, 'Supabase')
+      }
+    } catch (error) {
+      logger.warn('Error writing to storage', { error: (error as Error).message }, 'Supabase')
+    }
+  },
+  
+  removeItem: (key: string) => {
+    if (!isBrowser) return
+    
+    try {
+      // Clean up from both storages
+      try {
+        localStorage.removeItem(key)
+      } catch (e) {
+        logger.warn('Unable to remove from localStorage', { error: (e as Error).message }, 'Supabase')
+      }
+      
+      try {
+        sessionStorage.removeItem(key)
+      } catch (e) {
+        logger.warn('Unable to remove from sessionStorage', { error: (e as Error).message }, 'Supabase')
+      }
+    } catch (error) {
+      logger.warn('Error removing from storage', { error: (error as Error).message }, 'Supabase')
+    }
+  }
+}
+
 // ==================== CLIENT CONFIGURATION ====================
 
 const config = validateEnvironment()
 
 // Create the Supabase client with proper configuration
-export const supabase = createBrowserClient<Database>(
-  config.supabaseUrl,
-  config.supabaseAnonKey,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      debug: config.nodeEnv !== 'production',
-      storage: {
-        getItem: (key) => {
-          try {
-            // Try localStorage first, then sessionStorage
-            let value = null
-            
-            try {
-              value = localStorage.getItem(key)
-            } catch (e) {
-              logger.warn('Error reading from localStorage', { error: (e as Error).message }, 'Supabase')
-            }
-            
-            if (!value) {
-              try {
-                value = sessionStorage.getItem(key)
-              } catch (e) {
-                logger.warn('Error reading from sessionStorage', { error: (e as Error).message }, 'Supabase')
-              }
-            }
-            
-            return value ? JSON.parse(value) : null
-          } catch (error) {
-            logger.warn('Error reading from storage', { error: (error as Error).message }, 'Supabase')
-            return null
-          }
+// Only create the client if we have the required environment variables and we're in browser
+let supabase: any = null
+
+if (config.supabaseUrl && config.supabaseAnonKey && isBrowser) {
+  // Dynamic import to avoid server-side execution
+  import('@supabase/ssr').then(({ createBrowserClient }) => {
+    supabase = createBrowserClient<Database>(
+      config.supabaseUrl,
+      config.supabaseAnonKey,
+      {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true,
+          detectSessionInUrl: true,
+          debug: config.nodeEnv !== 'production',
+          storage: safeStorage
         },
-        setItem: (key, value) => {
-          try {
-            const jsonValue = JSON.stringify(value)
-            
-            // Try to save in both storages for redundancy
-            let success = false
-            
-            try {
-              localStorage.setItem(key, jsonValue)
-              success = true
-            } catch (e) {
-              logger.warn('Unable to save to localStorage', { error: (e as Error).message }, 'Supabase')
-            }
-            
-            try {
-              sessionStorage.setItem(key, jsonValue)
-              success = true
-            } catch (e) {
-              logger.warn('Unable to save to sessionStorage', { error: (e as Error).message }, 'Supabase')
-            }
-            
-            if (!success) {
-              logger.error('Failed to store auth data in any storage mechanism', { key }, 'Supabase')
-            }
-          } catch (error) {
-            logger.warn('Error writing to storage', { error: (error as Error).message }, 'Supabase')
-          }
+        cookieOptions: {
+          path: '/',
+          sameSite: 'lax',
+          secure: config.nodeEnv === 'production',
         },
-        removeItem: (key) => {
-          try {
-            // Clean up from both storages
-            try {
-              localStorage.removeItem(key)
-            } catch (e) {
-              logger.warn('Unable to remove from localStorage', { error: (e as Error).message }, 'Supabase')
-            }
-            
-            try {
-              sessionStorage.removeItem(key)
-            } catch (e) {
-              logger.warn('Unable to remove from sessionStorage', { error: (e as Error).message }, 'Supabase')
-            }
-          } catch (error) {
-            logger.warn('Error removing from storage', { error: (error as Error).message }, 'Supabase')
-          }
+        db: {
+          schema: 'public'
         }
       }
-    },
-    cookieOptions: {
-      path: '/',
-      sameSite: 'lax',
-      secure: config.nodeEnv === 'production',
-    },
-    db: {
-      schema: 'public'
-    }
-  }
-)
+    )
+  }).catch(error => {
+    logger.error('Failed to initialize Supabase client:', error, 'Supabase')
+  })
+}
 
 // Export configuration for use by other services
 export { config as supabaseConfig }
 
-// Export default client
-export default supabase;
+// Export client (will be null if environment variables are missing or on server)
+export { supabase }
+export default supabase
 
 // Emit log after client init so each import is recorded (required by comprehensive tests)
-stableLogSupabase('Environment validation:', {
-  supabaseUrl: `${config.supabaseUrl.slice(0, 20)}...`,
-  supabaseAnonKey: `${config.supabaseAnonKey.slice(0, 13)}...`,
-  siteUrl: config.siteUrl,
-  nodeEnv: config.nodeEnv,
-}); 
+// Only log if we're in browser environment to avoid server-side issues
+if (isBrowser) {
+  stableLogSupabase('Environment validation:', {
+    supabaseUrl: `${config.supabaseUrl.slice(0, 20)}...`,
+    supabaseAnonKey: `${config.supabaseAnonKey.slice(0, 13)}...`,
+    siteUrl: config.siteUrl,
+    nodeEnv: config.nodeEnv,
+  })
+} 
