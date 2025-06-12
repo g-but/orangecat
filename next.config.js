@@ -44,7 +44,6 @@ const nextConfig = {
   // Experimental features (only supported ones)
   experimental: {
     optimizePackageImports: ['lucide-react', 'framer-motion'],
-    // Removed modularizeImports from experimental as it was causing warnings
   },
 
   // Advanced webpack optimizations for bundle size
@@ -77,63 +76,17 @@ const nextConfig = {
       assert: false,
       os: false,
       path: false,
-    };
+    }
 
-    // Define global variables for both client and server
+    // Simple global polyfills
     config.plugins.push(
       new webpack.DefinePlugin({
-        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
         'global': 'globalThis',
         'self': 'globalThis',
       })
-    );
+    )
 
-    // Provide polyfills for global variables
-    config.plugins.push(
-      new webpack.ProvidePlugin({
-        global: 'globalThis',
-        self: 'globalThis',
-      })
-    );
-
-    // Add explicit alias resolution
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': require('path').resolve(__dirname, 'src'),
-    };
-
-    if (!dev) {
-      // Production optimizations
-      config.optimization = {
-        ...config.optimization,
-        usedExports: true,
-        sideEffects: false,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            vendor: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'vendors',
-              chunks: 'all',
-            },
-            supabase: {
-              test: /[\\/]node_modules[\\/]@supabase[\\/]/,
-              name: 'supabase',
-              chunks: 'all',
-              priority: 10,
-            },
-            ui: {
-              test: /[\\/]src[\\/](components|ui)[\\/]/,
-              name: 'ui',
-              chunks: 'all',
-              priority: 5,
-            },
-          },
-        },
-      };
-    }
-
-    return config;
+    return config
   },
 
   // Enable compression
