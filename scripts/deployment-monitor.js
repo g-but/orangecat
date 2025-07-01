@@ -37,16 +37,22 @@ class DeploymentMonitor {
   }
 
   async startMonitoring() {
-    this.log('🚀 Starting deployment monitoring...', 'info');
-    this.log('📊 Monitoring GitHub Actions workflow...', 'info');
+    this.log('🚀 Starting COMPREHENSIVE deployment monitoring...', 'info');
+    this.log('📊 Real-time GitHub Actions workflow tracking...', 'info');
+    this.log('🔗 Vercel Dashboard: https://vercel.com/dashboard', 'info');
+    this.log('📱 GitHub Actions: https://github.com/g-but/orangecat/actions', 'info');
     
     this.isMonitoring = true;
+    
+    // Always show key monitoring links
+    this.displayMonitoringDashboard();
     
     // Check if GitHub CLI is available
     if (await this.checkGitHubCLI()) {
       await this.monitorGitHubActions();
     } else {
-      this.log('⚠️ GitHub CLI not available. Monitoring production site only.', 'warning');
+      this.log('⚠️ GitHub CLI not available. Switching to production site monitoring.', 'warning');
+      this.log('💡 Install GitHub CLI for full workflow monitoring: gh auth login', 'info');
       await this.monitorProductionSite();
     }
   }
@@ -60,12 +66,18 @@ class DeploymentMonitor {
   }
 
   async monitorGitHubActions() {
-    this.log('🔍 Checking GitHub Actions workflow status...', 'info');
+    this.log('🔍 ACTIVE GitHub Actions workflow monitoring...', 'info');
+    this.log('📊 Checking every 10 seconds for updates...', 'info');
+    
+    let lastStatus = '';
+    let stepCount = 0;
     
     const checkWorkflow = () => {
-      exec('gh run list --limit 1 --json status,conclusion,url,createdAt', (error, stdout) => {
+      exec('gh run list --limit 1 --json status,conclusion,url,createdAt,jobs', (error, stdout) => {
         if (error) {
-          this.log(`❌ Failed to check workflow: ${error.message}`, 'error');
+          this.log(`❌ GitHub CLI error: ${error.message}`, 'error');
+          this.log('💡 Trying manual check - switch to production monitoring...', 'warning');
+          this.monitorProductionSite();
           return;
         }
 
@@ -73,25 +85,44 @@ class DeploymentMonitor {
           const runs = JSON.parse(stdout);
           if (runs.length > 0) {
             const latestRun = runs[0];
-            this.log(`📋 Workflow Status: ${latestRun.status}`, 'info');
+            
+            // Only log status changes to avoid spam
+            if (latestRun.status !== lastStatus) {
+              stepCount++;
+              this.log(`🔄 [Step ${stepCount}] Workflow Status: ${latestRun.status.toUpperCase()}`, 'info');
+              this.log(`🔗 Live Workflow: ${latestRun.url}`, 'info');
+              lastStatus = latestRun.status;
+            }
             
             if (latestRun.status === 'completed') {
               if (latestRun.conclusion === 'success') {
-                this.log('✅ Deployment workflow completed successfully!', 'success');
-                this.log(`🔗 Workflow URL: ${latestRun.url}`, 'info');
+                this.log('🎉 DEPLOYMENT WORKFLOW SUCCESS!', 'success');
+                this.log('✅ All quality gates passed', 'success');
+                this.log('✅ Build completed successfully', 'success');
+                this.log('✅ Vercel deployment triggered', 'success');
+                this.log(`🔗 Full Workflow Details: ${latestRun.url}`, 'info');
                 this.startProductionMonitoring();
               } else {
-                this.log(`❌ Deployment workflow failed: ${latestRun.conclusion}`, 'error');
-                this.log(`🔗 Check details: ${latestRun.url}`, 'error');
+                this.log(`🚨 DEPLOYMENT WORKFLOW FAILED: ${latestRun.conclusion}`, 'error');
+                this.handleWorkflowFailure(latestRun);
                 this.stopMonitoring();
               }
             } else if (latestRun.status === 'in_progress') {
-              this.log('⏳ Deployment in progress...', 'info');
+              this.log(`⏳ [Active] Deployment pipeline running... (${stepCount * 10}s elapsed)`, 'info');
+              this.getWorkflowDetails(latestRun.url);
+              setTimeout(checkWorkflow, this.checkInterval);
+            } else if (latestRun.status === 'queued') {
+              this.log('🔄 Deployment queued - waiting for runner...', 'info');
               setTimeout(checkWorkflow, this.checkInterval);
             }
+          } else {
+            this.log('⚠️ No recent workflows found - checking again...', 'warning');
+            setTimeout(checkWorkflow, this.checkInterval);
           }
         } catch (parseError) {
           this.log(`❌ Failed to parse workflow data: ${parseError.message}`, 'error');
+          this.log('🔄 Retrying in 10 seconds...', 'info');
+          setTimeout(checkWorkflow, this.checkInterval);
         }
       });
     };
@@ -107,35 +138,60 @@ class DeploymentMonitor {
   }
 
   async monitorProductionSite() {
+    this.log('🌐 STARTING PRODUCTION SITE MONITORING', 'info');
+    this.log('🔗 Vercel Project: https://vercel.com/g-but/orangecat', 'info');
+    this.log('🔗 Production Site: https://orangecat.ch', 'info');
+    this.log('🏥 Health Endpoint: https://orangecat.ch/api/health', 'info');
+    
     const checkSite = async () => {
       this.currentCheck++;
       
       if (this.currentCheck > this.maxChecks) {
-        this.log('⏰ Monitoring timeout reached', 'warning');
+        this.log('⏰ MONITORING TIMEOUT - Final attempt failed', 'error');
+        this.log('🆘 MANUAL CHECK REQUIRED:', 'error');
+        this.log('   1. Check Vercel Dashboard: https://vercel.com/dashboard', 'error');
+        this.log('   2. Check GitHub Actions: https://github.com/g-but/orangecat/actions', 'error');
+        this.log('   3. Check site manually: https://orangecat.ch', 'error');
         this.stopMonitoring();
         return;
       }
 
-      this.log(`🔍 Health check ${this.currentCheck}/${this.maxChecks}`, 'info');
+      this.log(`🔍 [Check ${this.currentCheck}/${this.maxChecks}] Testing production endpoints...`, 'info');
+      
+      const progress = Math.round((this.currentCheck / this.maxChecks) * 100);
+      this.log(`📊 Monitor Progress: ${progress}% complete`, 'info');
 
       try {
-        // Check main site
+        // Check main site with detailed feedback
+        this.log('🌐 Testing main site (https://orangecat.ch)...', 'info');
         const mainSiteStatus = await this.checkUrl('https://orangecat.ch');
         
-        // Check API health
+        // Check API health with detailed feedback
+        this.log('🏥 Testing health API (/api/health)...', 'info');
         const apiHealthStatus = await this.checkUrl('https://orangecat.ch/api/health');
         
         if (mainSiteStatus && apiHealthStatus) {
-          this.log('✅ Production site is healthy!', 'success');
-          this.log('🎉 Deployment monitoring complete', 'success');
+          this.log('🎉 SUCCESS! Production site is fully operational!', 'success');
+          this.log('✅ Main site: RESPONSIVE', 'success');
+          this.log('✅ Health API: HEALTHY', 'success');
+          this.log('✅ Deployment: COMPLETE', 'success');
           await this.generateStatusReport();
           this.stopMonitoring();
         } else {
-          this.log('⚠️ Site not fully responsive yet...', 'warning');
+          if (!mainSiteStatus) {
+            this.log('⚠️ Main site not responsive - likely still deploying...', 'warning');
+            this.log('💡 Vercel deployment may be in progress', 'info');
+          }
+          if (!apiHealthStatus) {
+            this.log('⚠️ Health API not ready - backend still initializing...', 'warning');
+            this.log('💡 Database connections may be starting up', 'info');
+          }
+          this.log(`🔄 Retrying in 10 seconds... (${this.maxChecks - this.currentCheck} attempts left)`, 'info');
           setTimeout(checkSite, this.checkInterval);
         }
       } catch (error) {
         this.log(`❌ Error during site check: ${error.message}`, 'error');
+        this.log('🔄 Network issue - retrying...', 'warning');
         setTimeout(checkSite, this.checkInterval);
       }
     };
@@ -145,23 +201,132 @@ class DeploymentMonitor {
 
   checkUrl(url) {
     return new Promise((resolve) => {
+      const startTime = Date.now();
+      
       const request = https.get(url, (response) => {
+        const responseTime = Date.now() - startTime;
         const statusOk = response.statusCode >= 200 && response.statusCode < 300;
-        this.log(`${statusOk ? '✅' : '❌'} ${url}: ${response.statusCode}`, 
-                 statusOk ? 'success' : 'error');
+        
+        if (statusOk) {
+          this.log(`✅ ${url}: HTTP ${response.statusCode} (${responseTime}ms)`, 'success');
+          
+          // Try to read response body for additional info
+          let body = '';
+          response.on('data', chunk => body += chunk);
+          response.on('end', () => {
+            if (url.includes('/api/health') && body) {
+              try {
+                const healthData = JSON.parse(body);
+                this.log(`🏥 Health Status: ${JSON.stringify(healthData)}`, 'success');
+              } catch (e) {
+                this.log(`🏥 Health Response: ${body.substring(0, 100)}...`, 'info');
+              }
+            }
+          });
+        } else {
+          this.log(`❌ ${url}: HTTP ${response.statusCode} (${responseTime}ms)`, 'error');
+          if (response.statusCode === 404) {
+            this.log('💡 404 Error - Site may not be deployed yet', 'warning');
+          } else if (response.statusCode >= 500) {
+            this.log('💡 Server Error - Backend issues, checking Vercel logs recommended', 'warning');
+          }
+        }
+        
         resolve(statusOk);
       });
 
       request.on('error', (error) => {
-        this.log(`❌ ${url}: ${error.message}`, 'error');
+        const responseTime = Date.now() - startTime;
+        this.log(`❌ ${url}: ${error.message} (${responseTime}ms)`, 'error');
+        
+        if (error.code === 'ENOTFOUND') {
+          this.log('💡 DNS Resolution failed - domain may not be configured', 'warning');
+        } else if (error.code === 'ECONNREFUSED') {
+          this.log('💡 Connection refused - service not running yet', 'warning');
+        } else if (error.code === 'ETIMEDOUT') {
+          this.log('💡 Connection timeout - slow deployment or network issues', 'warning');
+        }
+        
         resolve(false);
       });
 
-      request.setTimeout(5000, () => {
-        this.log(`⏰ ${url}: timeout`, 'warning');
+      request.setTimeout(10000, () => {
+        this.log(`⏰ ${url}: Request timeout (10s) - site may be slow to respond`, 'warning');
         request.destroy();
         resolve(false);
       });
+    });
+  }
+
+  displayMonitoringDashboard() {
+    this.log('', 'info');
+    this.log('📊 LIVE MONITORING DASHBOARD', 'info');
+    this.log('═══════════════════════════════', 'info');
+    this.log('🔗 GitHub Actions: https://github.com/g-but/orangecat/actions', 'info');
+    this.log('🔗 Vercel Dashboard: https://vercel.com/dashboard', 'info');
+    this.log('🔗 Vercel Project: https://vercel.com/g-but/orangecat', 'info');
+    this.log('🔗 Production Site: https://orangecat.ch', 'info');
+    this.log('🔗 Health Check: https://orangecat.ch/api/health', 'info');
+    this.log('═══════════════════════════════', 'info');
+    this.log('', 'info');
+  }
+
+  handleWorkflowFailure(run) {
+    this.log('🚨 DEPLOYMENT FAILURE ANALYSIS', 'error');
+    this.log('═══════════════════════════════', 'error');
+    
+    switch (run.conclusion) {
+      case 'failure':
+        this.log('❌ Build or deployment step failed', 'error');
+        this.log('🔍 TROUBLESHOOTING STEPS:', 'error');
+        this.log('   1. Check build logs in GitHub Actions', 'error');
+        this.log('   2. Look for TypeScript errors', 'error');
+        this.log('   3. Verify environment variables', 'error');
+        this.log('   4. Check Vercel deployment logs', 'error');
+        break;
+      case 'cancelled':
+        this.log('⏹️ Deployment was cancelled', 'warning');
+        this.log('💡 Possible reasons: Manual cancellation or timeout', 'info');
+        break;
+      case 'timed_out':
+        this.log('⏰ Deployment timed out (30 min limit)', 'error');
+        this.log('🔍 LIKELY ISSUES:', 'error');
+        this.log('   1. Very large build taking too long', 'error');
+        this.log('   2. Hanging tests or processes', 'error');
+        this.log('   3. Network issues during deployment', 'error');
+        break;
+      default:
+        this.log(`❓ Unknown failure: ${run.conclusion}`, 'error');
+    }
+    
+    this.log('', 'error');
+    this.log('🛠️ IMMEDIATE ACTIONS:', 'error');
+    this.log(`   1. Open workflow: ${run.url}`, 'error');
+    this.log('   2. Check Vercel dashboard for deployment status', 'error');
+    this.log('   3. Review the last commit for potential issues', 'error');
+    this.log('   4. Run local build to reproduce error: npm run build', 'error');
+    this.log('═══════════════════════════════', 'error');
+  }
+
+  getWorkflowDetails(workflowUrl) {
+    // Get additional workflow details if possible
+    exec('gh run view --json steps', (error, stdout) => {
+      if (!error && stdout) {
+        try {
+          const workflowData = JSON.parse(stdout);
+          if (workflowData.steps) {
+            const currentStep = workflowData.steps.find(step => step.status === 'in_progress');
+            if (currentStep) {
+              this.log(`🔄 Current Step: ${currentStep.name}`, 'info');
+            }
+            
+            const completedSteps = workflowData.steps.filter(step => step.status === 'completed');
+            this.log(`✅ Completed Steps: ${completedSteps.length}/${workflowData.steps.length}`, 'info');
+          }
+        } catch (e) {
+          // Silently fail - this is just bonus info
+        }
+      }
     });
   }
 
