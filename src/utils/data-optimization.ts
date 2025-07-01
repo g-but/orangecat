@@ -444,7 +444,6 @@ export function usePaginatedData<T>(
       
       setHasMore(newData.length === pageSize)
     } catch (error) {
-      console.error('Error loading paginated data:', error)
     } finally {
       setLoading(false)
     }

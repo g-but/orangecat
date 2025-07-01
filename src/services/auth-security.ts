@@ -2,11 +2,12 @@
  * AUTHENTICATION SECURITY SERVICE
  * 
  * Created: 2025-06-08
- * Last Modified: 2025-06-08  
- * Last Modified Summary: Enhanced authentication security service
+ * Last Modified: 2025-01-17  
+ * Last Modified Summary: Fixed duplicate client instance causing auth conflicts
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { getSupabaseClient } from '@/services/supabase/client'
 import { 
   AuthSecurity, 
   SecurityMonitor, 
@@ -24,10 +25,7 @@ interface AuthResult {
 }
 
 export class AuthSecurityService {
-  private supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  private supabase = getSupabaseClient()
 
   async secureLogin(
     email: string, 

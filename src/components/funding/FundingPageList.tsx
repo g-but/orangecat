@@ -54,7 +54,6 @@ export default function FundingPageList() {
                 const walletData = await fetchBitcoinWalletData(page.bitcoin_address);
                 balanceValue = walletData?.balance; 
               } catch (balanceError) {
-                console.warn(`Failed to fetch balance for ${page.bitcoin_address}:`, balanceError);
               }
             }
             return { ...page, current_balance: balanceValue };
@@ -64,7 +63,6 @@ export default function FundingPageList() {
       }
 
     } catch (err) {
-      console.error('Error loading pages:', err);
       setError('Failed to load funding pages');
       toast.error('Failed to load funding pages');
     } finally {

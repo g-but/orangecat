@@ -169,12 +169,10 @@ export default function ProfileSetupPage() {
       clearTimeout(timeoutId)
 
       if (supabaseError) {
-        console.error('Profile setup: Supabase error', supabaseError)
         throw supabaseError
       }
 
       if (!returnedProfile) {
-        console.error('Profile setup: No profile returned')
         throw new Error('Failed to update profile: No data returned')
       }
 
@@ -187,7 +185,6 @@ export default function ProfileSetupPage() {
         router.push('/dashboard')
       }, 1500)
     } catch (err: any) {
-      console.error('Error updating profile:', err)
       toast.error(err.message || 'Failed to update profile')
     } finally {
       setIsLoading(false)

@@ -13,47 +13,62 @@ import {
   TrendingUp,
   Zap,
   Sparkles,
+  Rocket,
 } from 'lucide-react'
 import { NavSection, NavItem } from '@/hooks/useNavigation'
 
 // Enhanced navigation structure with better UX flow and information architecture
 export const navigationSections: NavSection[] = [
   {
-    id: 'core',
-    title: 'Core',
+    id: 'main',
+    title: 'Main',
     priority: 1,
     defaultExpanded: true,
     requiresAuth: true,
     items: [
       { 
-        name: 'Dashboard', 
+        name: 'Home', 
         href: '/dashboard', 
-        icon: LayoutDashboard, 
-        description: 'Your main dashboard overview',
+        icon: Home, 
+        description: 'Your main home overview',
         requiresAuth: true
       },
-      { 
-        name: 'Profile', 
-        href: '/profile/me', 
-        icon: UserCircle, 
-        description: 'Your public profile page',
-        requiresAuth: true
-      },
-    ]
-  },
-  {
-    id: 'active',
-    title: 'Active Products',
-    priority: 2,
-    defaultExpanded: true,
-    requiresAuth: true,
-    items: [
       { 
         name: 'Fundraising', 
         href: '/dashboard/fundraising', 
         icon: Handshake, 
         description: 'Manage your Bitcoin campaigns',
         badge: 'Live',
+        requiresAuth: true
+      },
+    ]
+  },
+  {
+    id: 'social',
+    title: 'Social & Collaboration',
+    priority: 2,
+    defaultExpanded: true,
+    requiresAuth: true,
+    items: [
+      { 
+        name: 'People', 
+        href: '/people', 
+        icon: Users, 
+        description: 'Connect with Bitcoin enthusiasts',
+        requiresAuth: true
+      },
+      { 
+        name: 'Organizations', 
+        href: '/organizations', 
+        icon: Building, 
+        description: 'Join or create Bitcoin organizations',
+        requiresAuth: true
+      },
+      { 
+        name: 'Projects', 
+        href: '/projects', 
+        icon: Rocket, 
+        description: 'Discover and support Bitcoin projects',
         requiresAuth: true
       },
     ]
@@ -66,22 +81,6 @@ export const navigationSections: NavSection[] = [
     collapsible: true,
     requiresAuth: true,
     items: [
-      { 
-        name: 'Organizations', 
-        href: '/dashboard/organizations', 
-        icon: Building, 
-        comingSoon: true,
-        description: 'Manage your organizations',
-        requiresAuth: true
-      },
-      { 
-        name: 'Projects', 
-        href: '/dashboard/projects', 
-        icon: Briefcase, 
-        comingSoon: true,
-        description: 'Track your projects',
-        requiresAuth: true
-      },
       { 
         name: 'Events', 
         href: '/dashboard/events', 
@@ -96,14 +95,6 @@ export const navigationSections: NavSection[] = [
         icon: Wallet, 
         comingSoon: true,
         description: 'Manage your digital assets',
-        requiresAuth: true
-      },
-      { 
-        name: 'Network', 
-        href: '/dashboard/people', 
-        icon: Users, 
-        comingSoon: true,
-        description: 'Connect with people',
         requiresAuth: true
       },
     ]
@@ -148,8 +139,10 @@ export const navigationLabels = {
 // Navigation keyboard shortcuts
 export const navigationShortcuts = {
   TOGGLE_SIDEBAR: 'cmd+b',
-  GO_TO_DASHBOARD: 'cmd+1',
-  GO_TO_PROFILE: 'cmd+2',
-  GO_TO_FUNDRAISING: 'cmd+3',
+  GO_TO_HOME: 'cmd+1',
+  GO_TO_FUNDRAISING: 'cmd+2',
+  GO_TO_PEOPLE: 'cmd+3',
+  GO_TO_ORGANIZATIONS: 'cmd+4',
+  GO_TO_PROJECTS: 'cmd+5',
   GO_TO_SETTINGS: 'cmd+,',
 } as const 

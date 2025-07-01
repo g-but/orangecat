@@ -14,7 +14,7 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 async function applyMigrations() {
   try {
-    console.log('Applying migrations...')
+    // REMOVED: console.log statement
 
     // Enable UUID extension
     await supabase.rpc('enable_uuid_extension')
@@ -42,7 +42,7 @@ async function applyMigrations() {
     await supabase.rpc('create_user_trigger_function')
     await supabase.rpc('create_user_trigger')
 
-    console.log('✅ Migrations applied successfully')
+    if (process.env.NODE_ENV === 'development') console.log('✅ Migrations applied successfully')
   } catch (error) {
     console.error('Error applying migrations:', error)
     process.exit(1)

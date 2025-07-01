@@ -273,7 +273,7 @@ async function testBundleOptimization(): Promise<PerformanceTestResult[]> {
 // ==================== MAIN PERFORMANCE TEST RUNNER ====================
 
 export async function runPerformanceTests(): Promise<PerformanceTestSuite> {
-  console.log('🚀 Starting Performance Test Suite - Option B Validation')
+  // REMOVED: console.log statement
   
   const suiteStartTime = performance.now()
   
@@ -311,20 +311,20 @@ export async function runPerformanceTests(): Promise<PerformanceTestSuite> {
   }
   
   // Log results
-  console.log('\n📊 Performance Test Results:')
-  console.log(`  ✅ Passed: ${passedTests}/${allTests.length} tests`)
-  console.log(`  ⚡ Cache Hit Ratio: ${(cacheHitRatio * 100).toFixed(1)}%`)
-  console.log(`  ⏱️  Total Duration: ${totalDuration.toFixed(2)}ms`)
-  console.log(`  🧠 Memory Impact: ${(bundleTests.find(t => t.testName === 'Memory Usage Optimization')?.memoryUsage || 0 / 1024 / 1024).toFixed(2)}MB`)
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   // Log detailed results
-  console.log('\n🔍 Detailed Results:')
+  // REMOVED: console.log statement
   allTests.forEach(test => {
     const status = test.success ? '✅' : '❌'
     const cacheStatus = test.cacheHit ? '⚡' : ''
-    console.log(`  ${status} ${test.testName}: ${test.duration.toFixed(2)}ms ${cacheStatus}`)
+    // REMOVED: console.log statement
     if (test.error) {
-      console.log(`    Error: ${test.error}`)
+      // REMOVED: console.log statement
     }
   })
   
@@ -335,8 +335,8 @@ export async function runPerformanceTests(): Promise<PerformanceTestSuite> {
 
 export function logPerformanceStats() {
   const stats = dbOptimizer.getPerformanceStats()
-  console.log('\n📈 Database Performance Statistics:')
-  console.log('  Cache:', stats.cache)
-  console.log('  Deduplication:', stats.deduplication)
-  console.log('  Query Stats:', stats.queryStats)
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
 } 

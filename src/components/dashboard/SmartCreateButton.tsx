@@ -115,8 +115,9 @@ export default function SmartCreateButton({
 export function HeaderCreateButton() {
   return (
     <SmartCreateButton 
-      className="min-h-[44px] flex items-center"
+      className="min-h-[36px] flex items-center text-sm"
       variant="outline"
+      size="sm"
       showIcon={true}
     />
   )

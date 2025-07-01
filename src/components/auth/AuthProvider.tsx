@@ -25,34 +25,45 @@ export function AuthProvider({ user, session, profile, children }: AuthProviderP
     setInitialAuthState(user, session, profile)
   }, [user, session, profile, setInitialAuthState])
 
-  // After hydration, always check Supabase for a valid session
+  // Set up auth state listener for real-time updates (SINGLE SOURCE OF TRUTH)
   useEffect(() => {
     if (!hydrated) return;
-    let cancelled = false;
-    async function checkSession() {
-      try {
-        // Use getUser() for security - it validates with the server
-        const { data: { user }, error } = await supabase.auth.getUser();
-        if (error || !user) {
-          if (process.env.NODE_ENV === 'development') {
-            console.warn('AuthProvider: No valid authenticated user found after hydration, clearing store.', { error });
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        // REMOVED: console.log statement for security
+        
+        if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+          if (session?.user) {
+            // REMOVED: console.log statement for security
+            setInitialAuthState(session.user, session, null);
+            setAuthError(null);
+            
+            // CRITICAL: Fetch profile after auth state is set
+            // REMOVED: console.log statement for security
+            const { fetchProfile } = useAuthStore.getState();
+            fetchProfile().then(() => {
+              if (process.env.NODE_ENV === 'development') console.log('✅ AuthProvider: Profile fetched successfully');
+            }).catch(error => {
+            });
           }
-          setAuthError('Could not connect to authentication service. Please check your internet connection or try again later.');
+        } else if (event === 'SIGNED_OUT') {
+          // REMOVED: console.log statement for security
           clear();
-        } else {
-          setAuthError(null); // Clear any previous error
+          setAuthError(null);
+        } else if (event === 'TOKEN_REFRESHED' && session) {
+          // REMOVED: console.log statement for security
+          // Don't clear profile on token refresh - keep existing profile data
+          const currentProfile = useAuthStore.getState().profile;
+          setInitialAuthState(session.user, session, currentProfile);
         }
-      } catch (err) {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('AuthProvider: Error checking user authentication after hydration:', err);
-        }
-        setAuthError('Could not connect to authentication service. Please check your internet connection or try again later.');
-        clear();
       }
-    }
-    checkSession();
-    return () => { cancelled = true; };
-  }, [hydrated, clear, setAuthError]);
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [hydrated, clear, setAuthError, setInitialAuthState]);
 
   // While zustand re-hydrates render nothing (fast)
   if (!hydrated) return <Loading fullScreen />

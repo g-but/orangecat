@@ -6,6 +6,7 @@
  */
 
 import { useCampaignStore, CampaignFormData } from '@/stores/campaignStore'
+import { logger } from './logger'
 
 interface LegacyLocalStorageDraft {
   formData: CampaignFormData
@@ -62,7 +63,6 @@ export async function migrateLegacyDrafts(userId: string): Promise<{
                   // Migrated draft successfully
 
       } catch (error) {
-        console.error(`❌ Failed to migrate ${key}:`, error)
         results.errors.push(`Failed to migrate ${key}: ${error}`)
       }
     }
@@ -87,7 +87,6 @@ export async function migrateLegacyDrafts(userId: string): Promise<{
     return results
 
   } catch (error) {
-    console.error('💥 Migration failed:', error)
     results.errors.push(`Migration failed: ${error}`)
     return results
   }
@@ -139,7 +138,6 @@ export function getLegacyDraftPreview(): Array<{
           size: rawData.length
         })
       } catch (error) {
-        console.error(`Failed to preview ${key}:`, error)
       }
     }
   })
@@ -169,11 +167,10 @@ export async function recoverSpecificDraft(
     const { saveDraft } = useCampaignStore.getState()
     const newDraftId = await saveDraft(userId, legacyDraft.formData)
 
-    console.log(`✅ Recovered draft "${legacyDraft.formData.title}" -> ${newDraftId}`)
+            if (process.env.NODE_ENV === 'development') logger.info(`Recovered draft "${legacyDraft.formData.title}" -> ${newDraftId}`)
     return newDraftId
 
   } catch (error) {
-    console.error(`❌ Failed to recover draft ${storageKey}:`, error)
     throw error
   }
 }
@@ -196,7 +193,7 @@ export async function recreateMaoDraft(userId: string): Promise<string> {
   }
 
   const draftId = await saveDraft(userId, maoDraft)
-  console.log(`✅ Recreated "mao" draft with ID: ${draftId}`)
+  // REMOVED: console.log statement
   
   return draftId
 } 

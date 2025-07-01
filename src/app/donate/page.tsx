@@ -42,7 +42,6 @@ export default function DonatePage() {
       // Redirect to payment processing
       router.push('/payment')
     } catch (error) {
-      console.error('Error creating donation:', error)
     }
   }
 

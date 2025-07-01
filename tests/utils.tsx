@@ -1,6 +1,6 @@
 import { render as rtlRender, RenderOptions } from '@testing-library/react'
 import { ReactElement } from 'react'
-import { TestWrapper } from '../TestWrapper'
+import { TestWrapper } from './TestWrapper'
 
 // Custom render function that includes providers
 function render(ui: ReactElement, options?: RenderOptions) {

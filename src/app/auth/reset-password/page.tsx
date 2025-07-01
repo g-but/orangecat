@@ -33,7 +33,6 @@ export default function ResetPasswordPage() {
         refresh_token: refreshToken
       }).then(({ error }) => {
         if (error) {
-          console.error('Error setting session:', error)
           setStep('error')
           setError('Invalid or expired reset link. Please request a new password reset.')
         } else {
@@ -75,7 +74,6 @@ export default function ResetPasswordPage() {
 
       setStep('success')
     } catch (error: any) {
-      console.error('Password reset error:', error)
       setError(error.message || 'Failed to reset password. Please try again.')
     } finally {
       setIsLoading(false)

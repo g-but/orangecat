@@ -113,7 +113,6 @@ export default function LightningPayment({
       
     } catch (error) {
       toast.error('Failed to generate Lightning invoice')
-      console.error('Invoice generation error:', error)
     } finally {
       setIsGenerating(false)
     }

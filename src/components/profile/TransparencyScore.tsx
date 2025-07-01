@@ -41,7 +41,6 @@ export function TransparencyScore({ profile }: TransparencyScoreProps) {
         const result = await calculateTransparencyScore(transparencyData)
         setScore(result.score)
       } catch (error) {
-        console.error('Error calculating transparency score:', error)
       } finally {
         setLoading(false)
       }

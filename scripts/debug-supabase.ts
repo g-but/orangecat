@@ -18,7 +18,7 @@ const envFiles = ['.env.local', '.env'];
 envFiles.forEach(file => {
   const envPath = path.resolve(process.cwd(), file);
   if (fs.existsSync(envPath)) {
-    console.log(`Loading environment from ${file}`);
+    // REMOVED: console.log statement
     dotenv.config({ path: envPath });
   }
 });
@@ -36,14 +36,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const url = supabaseUrl as string;
 const key = supabaseAnonKey as string;
 
-console.log(`🔍 Testing Supabase connection to: ${url}`);
+// REMOVED: console.log statement
 
 // Test DNS resolution
 async function testDns() {
   const urlObj = new URL(url);
   const hostname = urlObj.hostname;
   
-  console.log(`\n📡 Testing DNS resolution for: ${hostname}`);
+  // REMOVED: console.log statement
   
   return new Promise<void>((resolve) => {
     const startTime = performance.now();
@@ -52,8 +52,8 @@ async function testDns() {
       if (err) {
         console.error(`❌ DNS lookup failed: ${err.message}`);
       } else {
-        console.log(`✅ DNS resolved to: ${address} (IPv${family})`);
-        console.log(`⏱️ Resolution time: ${(endTime - startTime).toFixed(2)}ms`);
+        if (process.env.NODE_ENV === 'development') console.log(`✅ DNS resolved to: ${address} (IPv${family})`);
+        // REMOVED: console.log statement
       }
       resolve();
     });
@@ -62,7 +62,7 @@ async function testDns() {
 
 // Test HTTP connection
 async function testHttpConnection() {
-  console.log(`\n🌐 Testing HTTP connection to Supabase`);
+  // REMOVED: console.log statement
   
   try {
     const startTime = performance.now();
@@ -72,8 +72,8 @@ async function testHttpConnection() {
     });
     const endTime = performance.now();
     
-    console.log(`✅ HTTP connection successful (${response.status})`);
-    console.log(`⏱️ Response time: ${(endTime - startTime).toFixed(2)}ms`);
+    if (process.env.NODE_ENV === 'development') console.log(`✅ HTTP connection successful (${response.status})`);
+    // REMOVED: console.log statement
     return true;
   } catch (error: any) {
     console.error(`❌ HTTP connection failed: ${error.message}`);
@@ -83,7 +83,7 @@ async function testHttpConnection() {
 
 // Test Supabase API with a simple query
 async function testSupabaseApi() {
-  console.log(`\n🧪 Testing Supabase API with a simple query`);
+  // REMOVED: console.log statement
   
   const supabase = createClient(url, key);
   
@@ -99,8 +99,8 @@ async function testSupabaseApi() {
       return false;
     }
     
-    console.log(`✅ Supabase query successful`);
-    console.log(`⏱️ Query time: ${(endTime - startTime).toFixed(2)}ms`);
+    if (process.env.NODE_ENV === 'development') console.log(`✅ Supabase query successful`);
+    // REMOVED: console.log statement
     return true;
   } catch (error: any) {
     console.error(`❌ Supabase query exception: ${error.message}`);
@@ -110,7 +110,7 @@ async function testSupabaseApi() {
 
 // Test a profile update (no actual update, just test permission)
 async function testProfileUpdate() {
-  console.log(`\n✏️ Testing profile update permission`);
+  // REMOVED: console.log statement
   
   const supabase = createClient(url, key);
   
@@ -120,8 +120,8 @@ async function testProfileUpdate() {
     
     if (error) {
       if (error.message.includes('does not exist')) {
-        console.log(`ℹ️ RPC function 'check_profile_update_permission' doesn't exist (this is normal)`);
-        console.log(`ℹ️ To implement it, create an RPC function in Supabase that checks permissions`);
+        // REMOVED: console.log statement
+        // REMOVED: console.log statement
         return true;
       }
       
@@ -129,7 +129,7 @@ async function testProfileUpdate() {
       return false;
     }
     
-    console.log(`✅ Profile update permission check passed`);
+    if (process.env.NODE_ENV === 'development') console.log(`✅ Profile update permission check passed`);
     return true;
   } catch (error: any) {
     console.error(`❌ Permission check exception: ${error.message}`);
@@ -139,7 +139,7 @@ async function testProfileUpdate() {
 
 // Run all tests
 async function runTests() {
-  console.log('🚀 Starting Supabase connection tests...\n');
+  // REMOVED: console.log statement
   
   await testDns();
   const httpSuccess = await testHttpConnection();
@@ -152,7 +152,7 @@ async function runTests() {
   await testSupabaseApi();
   await testProfileUpdate();
   
-  console.log('\n🏁 All tests completed!');
+  // REMOVED: console.log statement
 }
 
 runTests().catch(err => {

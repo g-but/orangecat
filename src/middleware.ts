@@ -20,14 +20,27 @@ export async function middleware(request: NextRequest) {
   try {
     // Check for authentication by looking for Supabase auth cookies
     // This is Edge Runtime compatible
+    const allCookies = Array.from(request.cookies.getAll())
+    
+    // Check for the specific Supabase auth token cookie pattern
+    const supabaseAuthCookie = allCookies.find(cookie => 
+      cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')
+    )
+    
+    // Also check for legacy formats
     const accessToken = request.cookies.get('sb-access-token')?.value ||
                        request.cookies.get('supabase-auth-token')?.value ||
-                       request.cookies.get('supabase.auth.token')?.value
+                       request.cookies.get('supabase.auth.token')?.value ||
+                       supabaseAuthCookie?.value
 
     // More comprehensive check for any Supabase auth cookies
-    const hasAuthCookie = Array.from(request.cookies.getAll()).some(cookie => 
-      cookie.name.includes('supabase') && cookie.name.includes('auth')
-    )
+    const hasAuthCookie = !!supabaseAuthCookie || !!accessToken || 
+                         allCookies.some(cookie => 
+                           cookie.name.includes('supabase') && 
+                           cookie.name.includes('auth') && 
+                           cookie.value && 
+                           cookie.value.length > 10
+                         )
     
     // Extract the path from the URL
     const path = request.nextUrl.pathname
@@ -40,12 +53,12 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
     
-    // If user is authenticated and trying to access /auth, redirect to /dashboard
-    if ((accessToken || hasAuthCookie) && path === '/auth') {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
+    // Let client-side handle auth page redirects to avoid loops
+    // The auth page will redirect on the client side after hydration
+    // if ((accessToken || hasAuthCookie) && path === '/auth') {
+    //   return NextResponse.redirect(new URL('/dashboard', request.url))
+    // }
   } catch (error) {
-    console.error('Middleware error:', error)
   }
 
   return response

@@ -1,4 +1,5 @@
-import { FundingPage, Transaction } from '@/types/database'
+import { FundingPage, Transaction } from '@/types/funding'
+import { logger } from '@/utils/logger'
 
 // Create Supabase client only in browser environment
 let supabase: any = null
@@ -78,7 +79,7 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
       activeCampaigns
     }
   } catch (error) {
-    console.error('Error fetching fundraising stats:', error)
+    logger.error('Error fetching fundraising stats', error, 'Fundraising')
     return {
       totalCampaigns: 0,
       totalRaised: 0,
@@ -156,7 +157,7 @@ export async function getUserFundraisingActivity(userId: string, limit: number =
       .slice(0, limit)
 
   } catch (error) {
-    console.error('Error fetching fundraising activity:', error)
+    logger.error('Error fetching fundraising activity', error, 'Fundraising')
     return []
   }
 }
@@ -176,7 +177,7 @@ export async function getUserFundingPages(userId: string): Promise<FundingPage[]
     if (error) throw error
     return data || []
   } catch (error) {
-    console.error('Error fetching funding pages:', error)
+    logger.error('Error fetching funding pages', error, 'Fundraising')
     return []
   }
 }
@@ -202,7 +203,7 @@ export async function getFundingPage(pageId: string): Promise<FundingPage | null
     }
     return data
   } catch (error) {
-    console.error('Error fetching funding page:', error)
+    logger.error('Error fetching funding page', error, 'Fundraising')
     return null
   }
 }
@@ -244,7 +245,7 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
       activeCampaigns
     }
   } catch (error) {
-    console.error('Error fetching global fundraising stats:', error)
+    logger.error('Error fetching global fundraising stats', error, 'Fundraising')
     return {
       totalCampaigns: 0,
       totalRaised: 0,
@@ -285,7 +286,7 @@ export async function getRecentDonationsCount(userId: string): Promise<number> {
 
     return count || 0
   } catch (error) {
-    console.error('Error getting recent donations count:', error)
+    logger.error('Error getting recent donations count', error, 'Fundraising')
     return 0
   }
 }

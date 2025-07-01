@@ -6,8 +6,6 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseServiceKey) {
   console.error('Missing Supabase environment variables!');
-  console.log('NEXT_PUBLIC_SUPABASE_URL:', !!supabaseUrl);
-  console.log('SUPABASE_SERVICE_ROLE_KEY:', !!supabaseServiceKey);
   process.exit(1);
 }
 
@@ -20,10 +18,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 async function createUserAccount() {
-  const email = 'butaeff@gmail.com';
-  const password = 'password123'; // Use a secure password
-  
-  console.log('Creating user account for:', email);
+  const email = 'test@orangecat.ch';
+  const password = 'TestPassword123!'; // Use the same password we tested with
   
   try {
     // First, check if user already exists
@@ -37,11 +33,10 @@ async function createUserAccount() {
     const existingUser = existingUsers.users.find(user => user.email === email);
     
     if (existingUser) {
-      console.log('User already exists!');
+      console.log('✅ User already exists');
       console.log('User ID:', existingUser.id);
-      console.log('Email confirmed:', existingUser.email_confirmed_at ? 'Yes' : 'No');
       
-      // Check if profile exists
+      // Check if profile exists with proper schema
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -49,14 +44,15 @@ async function createUserAccount() {
         .single();
         
       if (profileError) {
-        console.log('Profile does not exist, creating one...');
+        console.log('🔧 Creating missing profile...');
         
         const { data: newProfile, error: createProfileError } = await supabase
           .from('profiles')
           .insert({
             id: existingUser.id,
-            username: 'butaeff',
-            display_name: 'Butaeff',
+            username: 'testuser',
+            display_name: 'Test User',
+            bio: 'Test user for authentication testing',
             email: email,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
@@ -67,17 +63,18 @@ async function createUserAccount() {
         if (createProfileError) {
           console.error('Error creating profile:', createProfileError);
         } else {
-          console.log('Profile created successfully:', newProfile);
+          console.log('✅ Profile created successfully');
         }
       } else {
-        console.log('Profile already exists:', profile);
+        console.log('✅ Profile already exists');
+        console.log('Profile:', profile);
       }
       
       return;
     }
     
     // Create new user
-    console.log('Creating new user...');
+    console.log('🔧 Creating new user account...');
     const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
       email: email,
       password: password,
@@ -89,18 +86,19 @@ async function createUserAccount() {
       return;
     }
     
-    console.log('User created successfully!');
+    console.log('✅ User account created successfully');
     console.log('User ID:', newUser.user.id);
-    console.log('Email:', newUser.user.email);
+    console.log('Email confirmed:', newUser.user.email_confirmed_at ? 'Yes' : 'No');
     
     // Create profile for new user
-    console.log('Creating profile...');
+    console.log('🔧 Creating user profile...');
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .insert({
         id: newUser.user.id,
-        username: 'butaeff',
-        display_name: 'Butaeff',
+        username: 'testuser',
+        display_name: 'Test User',
+        bio: 'Test user for authentication testing',
         email: email,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -111,12 +109,12 @@ async function createUserAccount() {
     if (profileError) {
       console.error('Error creating profile:', profileError);
     } else {
-      console.log('Profile created successfully:', profile);
+      console.log('✅ Profile created successfully');
     }
     
-    console.log('\n✅ Setup complete! You can now log in with:');
+    console.log('🎉 Complete! You can now login with:');
     console.log('Email:', email);
-    console.log('Password:', password);
+    console.log('Password: TestPassword123!');
     
   } catch (err) {
     console.error('Script failed:', err);

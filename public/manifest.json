@@ -1,0 +1,97 @@
+{
+  "name": "OrangeCat - Bitcoin Crowdfunding Platform",
+  "short_name": "OrangeCat",
+  "description": "The premier Bitcoin-native crowdfunding platform for funding your ideas and projects",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F7931A",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "categories": ["finance", "productivity", "business"],
+  "icons": [
+    {
+      "src": "/images/orange-cat-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Create Campaign",
+      "short_name": "Create",
+      "description": "Start a new funding campaign",
+      "url": "/create"
+    },
+    {
+      "name": "Discover Projects",
+      "short_name": "Discover",
+      "description": "Browse and discover projects to fund",
+      "url": "/discover"
+    },
+    {
+      "name": "My Dashboard",
+      "short_name": "Dashboard",
+      "description": "View your campaigns and activity",
+      "url": "/dashboard"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-homepage.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Homepage - Mobile View"
+    },
+    {
+      "src": "/screenshots/mobile-discover.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Discover Projects - Mobile View"
+    },
+    {
+      "src": "/screenshots/desktop-homepage.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Homepage - Desktop View"
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "launch_handler": {
+    "client_mode": "focus-existing"
+  },
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "protocol_handlers": [
+    {
+      "protocol": "web+bitcoin",
+      "url": "/payment?address=%s"
+    },
+    {
+      "protocol": "web+lightning", 
+      "url": "/payment?invoice=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/create",
+      "accept": {
+        "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+        "video/*": [".mp4", ".webm", ".mov"]
+      }
+    }
+  ]
+} 

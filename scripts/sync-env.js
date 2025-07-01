@@ -25,7 +25,7 @@ const ENVIRONMENTS = ['production']; // Vercel environments to update
 function ensureVercelLogin() {
   try {
     execSync('vercel whoami', { stdio: 'pipe' });
-    console.log('✅ Vercel CLI authentication verified');
+    // REMOVED: console.log statement for security
   } catch (error) {
     console.error('❌ Not logged in to Vercel CLI. Please run: vercel login');
     process.exit(1);
@@ -72,14 +72,14 @@ async function pushToVercel() {
   const envVars = readEnvFile();
   const envKeys = Object.keys(envVars).filter(key => !EXCLUDED_VARS.includes(key));
   
-  console.log(`📤 Pushing ${envKeys.length} environment variables to Vercel...`);
+  // REMOVED: console.log statement
   
   for (const env of ENVIRONMENTS) {
     for (const key of envKeys) {
       const value = envVars[key];
       
       try {
-        console.log(`⏳ Setting ${key} for ${env} environment...`);
+        // REMOVED: console.log statement
         execSync(`vercel env add ${key} ${env}`, { 
           input: Buffer.from(`${value}\n`),
           stdio: ['pipe', 'inherit', 'inherit']
@@ -90,10 +90,10 @@ async function pushToVercel() {
     }
   }
   
-  console.log('✅ Environment variables pushed to Vercel');
+  if (process.env.NODE_ENV === 'development') console.log('✅ Environment variables pushed to Vercel');
   
   // Deploy is handled by GitHub Actions or manually
-  console.log('ℹ️ Remember to redeploy your application to apply these changes');
+  // REMOVED: console.log statement
 }
 
 // Execute the script

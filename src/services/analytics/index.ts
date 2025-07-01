@@ -13,6 +13,7 @@ import {
   demoPeople, 
   demoCampaigns 
 } from '@/data/dashboardConfigs'
+import { logger } from '@/utils/logger'
 
 // Types for our analytics system
 export interface MetricValue {
@@ -90,12 +91,12 @@ class AnalyticsService {
     try {
       const result = calculation()
       if (typeof result === 'number' && (isNaN(result) || !isFinite(result))) {
-        console.warn(`Invalid calculation result for ${context}:`, result)
+        logger.warn(`Invalid calculation result for ${context}`, { result }, 'Analytics')
         return fallback
       }
       return result
     } catch (error) {
-      console.error(`Calculation failed for ${context}:`, error)
+      logger.error(`Calculation failed for ${context}`, error, 'Analytics')
       return fallback
     }
   }
@@ -148,7 +149,7 @@ class AnalyticsService {
       this.setCachedData(cacheKey, metrics)
       return metrics
     } catch (error) {
-      console.error('Error fetching fundraising metrics:', error)
+      logger.error('Error fetching fundraising metrics', error, 'Analytics')
       return this.getFallbackFundraisingMetrics()
     }
   }
@@ -208,7 +209,7 @@ class AnalyticsService {
       this.setCachedData(cacheKey, metrics)
       return metrics
     } catch (error) {
-      console.error('Error fetching wallet metrics:', error)
+      logger.error('Error fetching wallet metrics', error, 'Analytics')
       return {
         isEnabled: true,
         isDemo: false,
@@ -398,7 +399,7 @@ class AnalyticsService {
         people: this.getPeopleMetrics()
       }
     } catch (error) {
-      console.error('Error fetching all metrics:', error)
+      logger.error('Error fetching all metrics', error, 'Analytics')
       throw error
     }
   }

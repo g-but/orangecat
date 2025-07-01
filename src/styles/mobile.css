@@ -1,0 +1,491 @@
+/* =====================================================================
+ * ORANGECAT MOBILE & PWA ENHANCEMENTS
+ * ===================================================================== */
+
+/* PWA and Mobile-Specific Animations */
+@keyframes ripple {
+  0% { 
+    transform: scale(0); 
+    opacity: 1; 
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 0; 
+  }
+}
+
+@keyframes bounce-in {
+  0% { 
+    transform: scale(0.3); 
+    opacity: 0; 
+  }
+  50% { 
+    transform: scale(1.05); 
+  }
+  70% { 
+    transform: scale(0.9); 
+  }
+  100% { 
+    transform: scale(1); 
+    opacity: 1; 
+  }
+}
+
+@keyframes slide-up {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse-orange {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(247, 147, 26, 0.7); 
+  }
+  70% { 
+    box-shadow: 0 0 0 10px rgba(247, 147, 26, 0); 
+  }
+}
+
+/* =====================================================================
+ * PWA-SPECIFIC STYLES
+ * ===================================================================== */
+
+/* PWA Viewport Fix for Mobile */
+.viewport-fix {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+}
+
+/* PWA Safe Areas */
+.safe-area-padding {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.safe-area-margin {
+  margin-top: env(safe-area-inset-top);
+  margin-bottom: env(safe-area-inset-bottom);
+  margin-left: env(safe-area-inset-left);
+  margin-right: env(safe-area-inset-right);
+}
+
+/* PWA-specific layouts */
+.pwa-layout {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  /* Prevent bounce scrolling on iOS */
+  overscroll-behavior: none;
+  /* Better scrolling performance */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* PWA status bar styling */
+.pwa-status-bar {
+  height: env(safe-area-inset-top);
+  background: linear-gradient(135deg, #f7931a 0%, #e8830f 100%);
+}
+
+/* =====================================================================
+ * MOBILE OPTIMIZATION STYLES
+ * ===================================================================== */
+
+/* Better touch feedback */
+.touch-optimized {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  cursor: pointer;
+}
+
+.touch-optimized:active {
+  transform: scale(0.95);
+  transition: transform 0.1s ease-out;
+}
+
+/* Enhanced mobile input */
+.input-mobile {
+  min-height: 48px;
+  padding: 12px 16px;
+  font-size: 16px; /* Prevents zoom on iOS */
+  -webkit-appearance: none;
+  -webkit-text-size-adjust: 100%;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.input-mobile:focus {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile-optimized buttons */
+.btn-mobile {
+  min-height: 48px;
+  padding: 12px 24px;
+  font-size: 16px;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.btn-mobile:active {
+  transform: scale(0.95);
+}
+
+/* Ripple effect for buttons */
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+/* PWA-specific animations */
+.pwa-bounce-in {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.pwa-slide-up {
+  animation: slide-up 0.4s ease-out;
+}
+
+.pwa-pulse {
+  animation: pulse-orange 2s infinite;
+}
+
+/* =====================================================================
+ * PWA INSTALL BANNER
+ * ===================================================================== */
+
+.pwa-install-banner {
+  position: fixed;
+  top: 64px; /* Account for header */
+  left: 16px;
+  right: 16px;
+  z-index: 50;
+  background: linear-gradient(135deg, #f7931a 0%, #e8830f 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+.pwa-install-banner.hidden {
+  transform: translateY(-120%);
+  opacity: 0;
+}
+
+@media (min-width: 768px) {
+  .pwa-install-banner {
+    max-width: 384px;
+    left: auto;
+    right: 16px;
+  }
+}
+
+/* =====================================================================
+ * MOBILE-FIRST MODAL
+ * ===================================================================== */
+
+.modal-mobile {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+.modal-content-mobile {
+  background: white;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  border-radius: 16px 16px 0 0;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+@media (min-width: 640px) {
+  .modal-mobile {
+    align-items: center;
+    padding: 16px;
+  }
+  
+  .modal-content-mobile {
+    border-radius: 16px;
+    max-width: 448px;
+    max-height: 80vh;
+  }
+}
+
+/* =====================================================================
+ * TOUCH-OPTIMIZED LISTS
+ * ===================================================================== */
+
+.touch-list {
+  border-top: 1px solid #e5e7eb;
+}
+
+.touch-list-item {
+  padding: 16px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e5e7eb;
+  background: white;
+  transition: background-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-list-item:hover {
+  background-color: #f9fafb;
+}
+
+.touch-list-item:active {
+  background-color: #f3f4f6;
+}
+
+/* =====================================================================
+ * SWIPE GESTURES
+ * ===================================================================== */
+
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.swipe-indicator-left {
+  left: 16px;
+  color: #ef4444;
+}
+
+.swipe-indicator-right {
+  right: 16px;
+  color: #10b981;
+}
+
+.swipe-active .swipe-indicator {
+  opacity: 1;
+}
+
+/* =====================================================================
+ * PULL-TO-REFRESH
+ * ===================================================================== */
+
+.pull-refresh-indicator {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(247, 147, 26, 0.1);
+  color: #f7931a;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+/* =====================================================================
+ * MOBILE-OPTIMIZED TOASTS
+ * ===================================================================== */
+
+.toast-mobile {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  z-index: 50;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  transform: translateY(0);
+  transition: all 0.3s ease;
+}
+
+.toast-mobile.entering {
+  transform: translateY(100%);
+}
+
+.toast-mobile.exiting {
+  transform: translateY(100%);
+  opacity: 0;
+}
+
+@media (min-width: 640px) {
+  .toast-mobile {
+    bottom: auto;
+    top: 80px;
+    right: 16px;
+    left: auto;
+    max-width: 384px;
+  }
+  
+  .toast-mobile.entering {
+    transform: translateX(100%);
+  }
+  
+  .toast-mobile.exiting {
+    transform: translateX(100%);
+  }
+}
+
+/* =====================================================================
+ * HAPTIC FEEDBACK VISUAL INDICATOR
+ * ===================================================================== */
+
+.haptic-feedback {
+  animation: pulse 0.3s ease-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* =====================================================================
+ * DEVICE-SPECIFIC STYLES
+ * ===================================================================== */
+
+/* Touch device specific styles */
+@media (hover: none) and (pointer: coarse) {
+  .touch-device-only {
+    display: block !important;
+  }
+  
+  .touch-device-hidden {
+    display: none !important;
+  }
+  
+  /* Larger touch targets on touch devices */
+  .btn, .nav-link, .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Mouse device specific styles */
+@media (hover: hover) and (pointer: fine) {
+  .touch-device-only {
+    display: none !important;
+  }
+  
+  .touch-device-hidden {
+    display: block !important;
+  }
+}
+
+/* =====================================================================
+ * iOS-SPECIFIC FIXES
+ * ===================================================================== */
+
+@supports (-webkit-touch-callout: none) {
+  .ios-fix {
+    /* Fix for iOS Safari address bar height changes */
+    min-height: -webkit-fill-available;
+  }
+  
+  .ios-input-fix {
+    /* Prevent iOS zoom on input focus */
+    transform: translateZ(0);
+  }
+  
+  /* Fix iOS Safari bounce */
+  .ios-no-bounce {
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Fix iOS Safari viewport */
+  .ios-viewport-fix {
+    width: 100vw;
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+}
+
+/* =====================================================================
+ * ANDROID-SPECIFIC FIXES
+ * ===================================================================== */
+
+@media screen and (-webkit-min-device-pixel-ratio: 0) and (min-device-width: 320px) {
+  .android-fix {
+    /* Android Chrome address bar fix */
+    min-height: calc(100vh - 56px);
+  }
+  
+  /* Android input focus fix */
+  .android-input-fix {
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+}
+
+/* =====================================================================
+ * UTILITIES
+ * ===================================================================== */
+
+.tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.user-select-none {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+.overscroll-none {
+  overscroll-behavior: none;
+}
+
+.webkit-scrolling-touch {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile-first spacing utilities */
+.mobile-p-4 {
+  padding: 16px;
+}
+
+.mobile-p-6 {
+  padding: 24px;
+}
+
+.mobile-gap-4 > * + * {
+  margin-top: 16px;
+}
+
+.mobile-gap-6 > * + * {
+  margin-top: 24px;
+} 

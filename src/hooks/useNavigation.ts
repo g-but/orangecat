@@ -97,7 +97,6 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
         collapsedSections: initialCollapsed,
       }))
     } catch (error) {
-      console.warn('Failed to load navigation state from localStorage:', error)
       // Fall back to defaults
       const defaultCollapsed = new Set<string>()
       sections.forEach(section => {
@@ -142,7 +141,6 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
     try {
       localStorage.setItem(STORAGE_KEYS.SIDEBAR_OPEN, JSON.stringify(isOpen))
     } catch (error) {
-      console.warn('Failed to save sidebar state to localStorage:', error)
     }
   }, [])
 
@@ -151,7 +149,6 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
     try {
       localStorage.setItem(STORAGE_KEYS.COLLAPSED_SECTIONS, JSON.stringify(Array.from(collapsed)))
     } catch (error) {
-      console.warn('Failed to save collapsed sections to localStorage:', error)
     }
   }, [])
 
@@ -234,7 +231,6 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
       localStorage.removeItem(STORAGE_KEYS.SIDEBAR_OPEN)
       localStorage.removeItem(STORAGE_KEYS.COLLAPSED_SECTIONS)
     } catch (error) {
-      console.warn('Failed to clear navigation state from localStorage:', error)
     }
 
     const defaultCollapsed = new Set<string>()

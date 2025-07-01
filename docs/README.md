@@ -15,26 +15,26 @@ last_modified_summary: Added documentation standards including creation and modi
 
 **👋 First time here?** Follow this path:
 
-1. **[🛠️ Development Setup](SETUP.md)** - Get your dev environment running
-2. **[🏗️ Architecture Overview](ARCHITECTURE.md)** - Understand the system design
-3. **[📖 Contributing Guide](CONTRIBUTING.md)** - How to contribute code
-4. **[🔐 Security Guidelines](SECURITY.md)** - Security best practices
+1. **[🛠️ Development Setup](../SETUP.md)** - Get your dev environment running
+2. **[🏗️ Architecture Overview](../ARCHITECTURE.md)** - Understand the system design
+3. **[📖 Contributing Guide](../CONTRIBUTING.md)** - How to contribute code
+4. **[🔐 Security Guidelines](../SECURITY.md)** - Security best practices
 
 ---
 
 ## 📋 Table of Contents
 
 ### 🏗️ **System & Architecture**
-- [🏗️ Architecture Overview](ARCHITECTURE.md) - System design and technical decisions
-- [🗄️ Database Schema](database-schema.md) - Complete database structure
+- [🏗️ Architecture Overview](../ARCHITECTURE.md) - System design and technical decisions
+- [🗄️ Database Schema](architecture/database-schema.md) - Complete database structure
 - [🔧 API Reference](api/README.md) - REST API documentation
-- [🔐 Authentication System](auth_system.md) - Auth flow and security
+- [🔐 Authentication System](security/auth_system.md) - Auth flow and security
 
 ### 🛠️ **Development**
-- [🛠️ Development Setup](SETUP.md) - Local environment setup
-- [🚀 Deployment Guide](DEPLOYMENT.md) - Production deployment
-- [📖 Contributing Guidelines](CONTRIBUTING.md) - How to contribute
-- [🧪 Testing Guide](TESTING.md) - Testing strategies and setup
+- [🛠️ Development Setup](../SETUP.md) - Local environment setup
+- [🚀 Deployment Guide](../DEPLOYMENT.md) - Production deployment
+- [📖 Contributing Guidelines](../CONTRIBUTING.md) - How to contribute
+- [🧪 Testing Guide](../TESTING.md) - Testing strategies and setup
 
 ### 🎨 **Design & UI**
 - [🎨 Design System](design-system/README.md) - Colors, typography, components
@@ -48,7 +48,7 @@ last_modified_summary: Added documentation standards including creation and modi
 - [📊 Analytics Dashboard](features/dashboard.md) - Real-time analytics
 
 ### 🔐 **Security**
-- [🔐 Security Guidelines](SECURITY.md) - Security best practices
+- [🔐 Security Guidelines](../SECURITY.md) - Security best practices
 - [🛡️ Security Audit](../SECURITY_AUDIT_REPORT.md) - Latest security audit
 - [🚨 Incident Response](security/incident-response.md) - Security incidents
 
@@ -139,9 +139,9 @@ docs/
 ## 🎯 How to Use This Documentation
 
 ### **👨‍💻 For Developers**
-1. Start with [Development Setup](SETUP.md)
-2. Review [Architecture Overview](ARCHITECTURE.md)
-3. Check [Contributing Guidelines](CONTRIBUTING.md)
+1. Start with [Development Setup](../SETUP.md)
+2. Review [Architecture Overview](../ARCHITECTURE.md)
+3. Check [Contributing Guidelines](../CONTRIBUTING.md)
 4. Explore [Component Documentation](components/README.md)
 
 ### **🎨 For Designers**
@@ -151,13 +151,13 @@ docs/
 4. Review [Typography](design-system/typography.md)
 
 ### **🔐 For Security Engineers**
-1. Read [Security Guidelines](SECURITY.md)
+1. Read [Security Guidelines](../SECURITY.md)
 2. Review [Security Audit Report](../SECURITY_AUDIT_REPORT.md)
-3. Check [Authentication System](auth_system.md)
+3. Check [Authentication System](security/auth_system.md)
 4. Understand [Validation Framework](features/validation.md)
 
 ### **📊 For DevOps/SRE**
-1. Review [Deployment Guide](DEPLOYMENT.md)
+1. Review [Deployment Guide](../DEPLOYMENT.md)
 2. Set up [Monitoring](operations/monitoring.md)
 3. Understand [Troubleshooting](operations/troubleshooting.md)
 4. Review [Maintenance Procedures](operations/maintenance.md)

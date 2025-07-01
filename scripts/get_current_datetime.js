@@ -29,13 +29,13 @@ const fullDateTime = `${dateOnly} ${timeOnly}`;
 const unixTimestamp = Math.floor(now.getTime() / 1000);
 
 // Output all formats
-console.log('Current Date and Time:');
-console.log('---------------------');
-console.log(`ISO Format: ${iso}`);
-console.log(`Date Only: ${dateOnly}`);
-console.log(`Time Only: ${timeOnly}`);
-console.log(`Full DateTime: ${fullDateTime}`);
-console.log(`Unix Timestamp: ${unixTimestamp}`);
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Export the values for use in other scripts
 module.exports = {

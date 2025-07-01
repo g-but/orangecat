@@ -3,7 +3,7 @@ import { logger } from './logger'
 // Performance monitoring
 export const trackPerformance = (metricName: string, value: number) => {
   if (process.env.NODE_ENV === 'production') {
-    // Log to Vercel Analytics - use proper logger instead of console.log
+    // REMOVED: console.log statement
     logger.performance(metricName, value);
   }
 };
@@ -12,7 +12,7 @@ export const trackPerformance = (metricName: string, value: number) => {
 export const trackError = (error: Error, context?: Record<string, any>) => {
   if (process.env.NODE_ENV === 'production') {
     // Log to Vercel Error Tracking
-    console.error('[Error]', {
+    logger.error('Application error', {
       message: error.message,
       stack: error.stack,
       context,
@@ -23,7 +23,7 @@ export const trackError = (error: Error, context?: Record<string, any>) => {
 // Page view tracking
 export const trackPageView = (path: string) => {
   if (process.env.NODE_ENV === 'production') {
-    // Log to Vercel Analytics - use proper logger instead of console.log
+    // REMOVED: console.log statement
     logger.info(`Page View: ${path}`, undefined, 'Analytics');
   }
 };
@@ -31,7 +31,7 @@ export const trackPageView = (path: string) => {
 // Custom event tracking
 export const trackEvent = (eventName: string, properties?: Record<string, any>) => {
   if (process.env.NODE_ENV === 'production') {
-    // Log to Vercel Analytics - use proper logger instead of console.log
+    // REMOVED: console.log statement
     logger.info(`Event: ${eventName}`, properties, 'Analytics');
   }
 }; 

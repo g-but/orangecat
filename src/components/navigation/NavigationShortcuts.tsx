@@ -2,11 +2,10 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useNavigation } from '@/hooks/useNavigation'
-import { navigationShortcuts } from '@/config/navigationConfig'
+import { useNavigation, NavSection } from '@/hooks/useNavigation'
 
 interface NavigationShortcutsProps {
-  sections: any[]
+  sections: NavSection[]
 }
 
 export function NavigationShortcuts({ sections }: NavigationShortcutsProps) {
@@ -32,11 +31,19 @@ export function NavigationShortcuts({ sections }: NavigationShortcutsProps) {
         },
         '2': () => {
           event.preventDefault()
-          router.push('/profile/me')
+          router.push('/dashboard/fundraising')
         },
         '3': () => {
           event.preventDefault()
-          router.push('/dashboard/fundraising')
+          router.push('/people')
+        },
+        '4': () => {
+          event.preventDefault()
+          router.push('/organizations')
+        },
+        '5': () => {
+          event.preventDefault()
+          router.push('/projects')
         },
         ',': () => {
           event.preventDefault()

@@ -82,7 +82,6 @@ export default function SettingsPage() {
       if (error) throw error
       toast.success('Confirmation email sent! Please check your inbox.')
     } catch (error: any) {
-      console.error('Error updating email:', error)
       toast.error(error.message || 'Failed to update email.')
     } finally {
       setIsSubmittingEmail(false)
@@ -145,7 +144,6 @@ export default function SettingsPage() {
       await signOut()
       router.push('/')
     } catch (error: any) {
-      console.error('Error deleting account:', error)
       toast.error(error.message || 'Failed to delete account.')
     } finally {
       setIsDeleting(false)

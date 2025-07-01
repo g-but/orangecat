@@ -1,4 +1,5 @@
 import supabase from '@/services/supabase/client'
+import { logger } from '@/utils/logger'
 
 // Search interfaces
 export interface SearchProfile {
@@ -379,7 +380,7 @@ async function getSearchFacets(): Promise<SearchResponse['facets']> {
     
     return facets
   } catch (error) {
-    console.error('Error getting search facets:', error)
+    logger.error('Error getting search facets', error, 'Search')
     return {
       categories: [],
       totalProfiles: 0,
@@ -456,11 +457,11 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
     if (type === 'all') {
       const [profiles, campaigns] = await Promise.all([
         searchProfiles(query, limit, offset).catch(error => {
-          console.warn('Error searching profiles:', error)
+          logger.warn('Error searching profiles', error, 'Search')
           return []
         }),
         searchFundingPages(query, filters, limit, offset).catch(error => {
-          console.warn('Error searching campaigns:', error)
+          logger.warn('Error searching campaigns', error, 'Search')
           return []
         })
       ])
@@ -495,7 +496,7 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
           results.push(result)
         })
       } catch (profileError) {
-        console.warn('Error searching profiles:', profileError)
+        logger.warn('Error searching profiles', profileError, 'Search')
         }
     }
     
@@ -510,7 +511,7 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
           results.push(result)
         })
       } catch (campaignError) {
-        console.warn('Error searching campaigns:', campaignError)
+        logger.warn('Error searching campaigns', campaignError, 'Search')
         }
       }
     }
@@ -528,7 +529,7 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
     try {
       facets = await getSearchFacets()
       } catch (facetsError) {
-        console.warn('Error getting facets:', facetsError)
+        logger.warn('Error getting facets', facetsError, 'Search')
       }
     }
     
@@ -544,7 +545,7 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
     
     return response
   } catch (error) {
-    console.error('Search error:', error)
+    logger.error('Search error', error, 'Search')
     
     // Return empty results on error
     const errorResponse: SearchResponse = {
@@ -599,7 +600,7 @@ export async function getTrending(): Promise<SearchResponse> {
         results.push({ type: 'campaign', data: campaign })
       })
     } else if (campaignsData.error) {
-      console.warn('Error fetching campaigns for trending:', campaignsData.error)
+      logger.warn('Error fetching campaigns for trending', { error: campaignsData.error.message }, 'Search')
     }
     
     // Process profiles
@@ -608,7 +609,7 @@ export async function getTrending(): Promise<SearchResponse> {
         results.push({ type: 'profile', data: profile })
       })
     } else if (profilesData.error) {
-      console.warn('Error fetching profiles for trending:', profilesData.error)
+      logger.warn('Error fetching profiles for trending', { error: profilesData.error.message }, 'Search')
     }
     
     return {
@@ -617,7 +618,7 @@ export async function getTrending(): Promise<SearchResponse> {
       hasMore: false // Trending is always a fixed set
     }
   } catch (error) {
-    console.error('Error getting trending content:', error)
+    logger.error('Error getting trending content', error, 'Search')
     return {
       results: [],
       totalCount: 0,
@@ -676,7 +677,7 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
     
     return Array.from(suggestions).slice(0, limit)
   } catch (error) {
-    console.error('Error getting search suggestions:', error)
+    logger.error('Error getting search suggestions', error, 'Search')
     return []
   }
 } 

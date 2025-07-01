@@ -8,7 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseKey)
 
 async function setupDatabase() {
   try {
-    console.log('Setting up database...')
+    // REMOVED: console.log statement
 
     // Sign in
     const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -16,7 +16,7 @@ async function setupDatabase() {
       password: process.env.USER_PASSWORD || 'your-password'
     })
     if (signInError) throw signInError
-    console.log('✅ Signed in')
+    if (process.env.NODE_ENV === 'development') console.log('✅ Signed in')
 
     // Create initial profile
     const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -32,10 +32,10 @@ async function setupDatabase() {
           updated_at: new Date().toISOString()
         })
       if (profileError) throw profileError
-      console.log('✅ Initial profile created')
+      // REMOVED: console.log statement
     }
 
-    console.log('🎉 Database setup complete!')
+    // REMOVED: console.log statement
   } catch (error) {
     console.error('Error setting up database:', error)
     process.exit(1)

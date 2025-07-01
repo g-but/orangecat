@@ -14,7 +14,6 @@ export async function POST(request: Request) {
     const { error } = await supabase.auth.signOut()
     
     if (error) {
-      console.error('[AUTH] Signout error:', error)
     }
 
     const cookieStore = await cookies()
@@ -25,7 +24,7 @@ export async function POST(request: Request) {
       if (cookie.name.startsWith('sb-') ||
           cookie.name.includes('supabase') ||
           cookie.name.includes('auth')) {
-        console.log(`[AUTH] Clearing cookie: ${cookie.name}`)
+        // REMOVED: console.log statement for security
         cookieStore.delete(cookie.name)
       }
     })
@@ -52,7 +51,6 @@ export async function POST(request: Request) {
     return response
 
   } catch (error) {
-    console.error('[AUTH] Signout error:', error)
     return NextResponse.json(
       { error: 'Failed to sign out' },
       { status: 500 }

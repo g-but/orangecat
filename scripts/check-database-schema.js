@@ -2,114 +2,151 @@ const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing Supabase environment variables!');
+if (!supabaseUrl || !supabaseKey) {
+  console.error('❌ Missing Supabase environment variables!');
   process.exit(1);
 }
 
-// Use service role key for admin operations
-const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function checkDatabaseSchema() {
-  console.log('🔍 Checking current database schema...\n');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   try {
-    // Check if profiles table exists and get its structure
-    console.log('🔍 Checking profiles table...');
-    const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .limit(1);
+    // Check what tables exist using raw SQL
+    // REMOVED: console.log statement
+    const { data: tables, error: tablesError } = await supabase.rpc('exec_sql', {
+      sql: `
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public' 
+        ORDER BY table_name;
+      `
+    });
+    
+    if (tablesError) {
+      // Fallback: try to check specific tables directly
+      // REMOVED: console.log statement
       
-    if (profileError) {
-      console.error('❌ Cannot access profiles table:', profileError);
-    } else {
-      console.log('✅ Profiles table is accessible');
-      if (profileData && profileData.length > 0) {
-        console.log('✅ Current profiles table columns:', Object.keys(profileData[0]));
-      } else {
-        console.log('⚠️ Profiles table is empty, checking for existence...');
-        // Try to insert a test record to see what columns are expected
-        const { error: insertError } = await supabase
-          .from('profiles')
-          .insert({ id: '00000000-0000-0000-0000-000000000000' });
-        
-        if (insertError) {
-          console.log('Insert error (reveals expected columns):', insertError.message);
+      const tablesToCheck = [
+        'profiles', 'funding_pages', 'transactions', 
+        'profile_associations', 'organizations', 'memberships'
+      ];
+      
+      const existingTables = [];
+      for (const tableName of tablesToCheck) {
+        try {
+          const { error } = await supabase.from(tableName).select('*').limit(1);
+          if (!error) {
+            existingTables.push(tableName);
+          }
+        } catch (e) {
+          // Table doesn't exist
         }
       }
-    }
-    
-    // Check your specific user profile
-    console.log('\n👤 Checking your profile data...');
-    const userId = 'c7f91de5-214b-4210-a0c7-ab4ad1ac70c9';
-    const { data: userProfile, error: userError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
       
-    if (userError) {
-      console.error('❌ Error fetching your profile:', userError);
-    } else if (userProfile) {
-      console.log('✅ Your current profile:');
-      console.log(JSON.stringify(userProfile, null, 2));
-    } else {
-      console.log('❌ Your profile not found');
-    }
-    
-    // Check other tables if they exist
-    const tablesToCheck = ['funding_pages', 'transactions'];
-    for (const tableName of tablesToCheck) {
-      console.log(`\n📊 Checking ${tableName} table...`);
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('*')
-        .limit(1);
-        
-      if (error) {
-        console.log(`❌ ${tableName} table not accessible: ${error.message}`);
-      } else {
-        console.log(`✅ ${tableName} table exists and is accessible`);
-        if (data && data.length > 0) {
-          console.log(`Sample structure:`, Object.keys(data[0]));
-        } else {
-          console.log(`${tableName} table is empty`);
-        }
+      if (process.env.NODE_ENV === 'development') console.log('✅ Found tables by direct check:');
+      existingTables.forEach(table => {
+        // REMOVED: console.log statement
+      });
+      
+      // Check if association system tables exist
+      const associationTables = ['profile_associations', 'organizations', 'memberships'];
+      const existingAssociationTables = existingTables.filter(t => 
+        associationTables.includes(t)
+      );
+      
+      // REMOVED: console.log statement
+      if (existingAssociationTables.length === 0) {
+        // REMOVED: console.log statement
       }
-    }
-    
-    // Test the specific update that's failing
-    console.log('\n🧪 Testing the failing update...');
-    const testData = {
-      username: 'test',
-      display_name: 'test',
-      bio: 'test bio',
-      bitcoin_address: 'bc1qtest'
-    };
-    
-    const { data: updateResult, error: updateError } = await supabase
-      .from('profiles')
-      .update(testData)
-      .eq('id', userId)
-      .select('*');
       
-    if (updateError) {
-      console.error('❌ Update test failed:', updateError);
-      console.log('This confirms the column issue!');
     } else {
-      console.log('✅ Update test succeeded:', updateResult);
+      if (process.env.NODE_ENV === 'development') console.log('✅ Found tables:');
+      tables.forEach(table => {
+        // REMOVED: console.log statement
+      });
     }
     
-  } catch (error) {
-    console.error('❌ Unexpected error:', error);
+    // Check user data in auth.users
+    // REMOVED: console.log statement for security
+    try {
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      if (authError) {
+        console.error('❌ Error checking auth users:', authError.message);
+      } else {
+        // REMOVED: console.log statement for security
+        authUsers.users.forEach((user, index) => {
+          // REMOVED: console.log statement for security
+        });
+      }
+    } catch (err) {
+      console.error('❌ Error accessing auth.users:', err.message);
+    }
+    
+    // Check profiles table
+    // REMOVED: console.log statement
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, display_name, created_at')
+      .order('created_at');
+    
+    if (profilesError) {
+      console.error('❌ Error checking profiles:', profilesError.message);
+    } else {
+      if (process.env.NODE_ENV === 'development') console.log(`✅ Found ${profiles.length} profiles:`);
+      profiles.forEach((profile, index) => {
+        // REMOVED: console.log statement for security
+      });
+    }
+    
+    // Check funding_pages table
+    // REMOVED: console.log statement
+    const { data: campaigns, error: campaignsError } = await supabase
+      .from('funding_pages')
+      .select('id, title, user_id, created_at')
+      .order('created_at');
+    
+    if (campaignsError) {
+      console.error('❌ Error checking campaigns:', campaignsError.message);
+    } else {
+      if (process.env.NODE_ENV === 'development') console.log(`✅ Found ${campaigns.length} campaigns:`);
+      campaigns.forEach((campaign, index) => {
+        // REMOVED: console.log statement for security
+      });
+    }
+    
+    // Summary and recommendations
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement for security
+    
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement for security
+    // REMOVED: console.log statement
+    
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    
+  } catch (err) {
+    console.error('❌ Investigation failed:', err.message);
   }
 }
 

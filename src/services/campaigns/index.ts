@@ -11,9 +11,10 @@
  * 4. Violation of DRY principles
  */
 
-import { FundingPage } from '@/types/database'
+import { FundingPage } from '@/types/funding'
 import type { CampaignFormData, CampaignDraftData, safeParseCampaignGoal } from '@/types/campaign'
 import { getErrorMessage, type CatchError } from '@/types/common'
+import { logger } from '@/utils/logger'
 
 // Create Supabase client only in browser environment
 let defaultSupabase: any = null
@@ -132,7 +133,7 @@ export class CampaignService {
       return allCampaigns
 
     } catch (error) {
-      console.error('Error loading campaigns:', error)
+      logger.error('Error loading campaigns', error, 'Campaign')
       throw error
     }
   }
@@ -267,7 +268,7 @@ export class CampaignService {
       return resultId
 
     } catch (error) {
-      console.error('Error saving draft:', error)
+      logger.error('Error saving draft', error, 'Campaign')
       throw error
     }
   }
@@ -331,7 +332,7 @@ export class CampaignService {
       }
 
     } catch (error) {
-      console.error('Error publishing campaign:', error)
+      logger.error('Error publishing campaign', error, 'Campaign')
       throw error
     }
   }
@@ -358,7 +359,7 @@ export class CampaignService {
         draftId: data.draftId
       }
     } catch (error) {
-      console.error('Error loading local draft:', error)
+      logger.error('Error loading local draft', error, 'Campaign')
       return null
     }
   }
@@ -367,7 +368,7 @@ export class CampaignService {
     try {
       localStorage.removeItem(this.localStorageKey(userId))
     } catch (error) {
-      console.error('Error clearing local draft:', error)
+      logger.error('Error clearing local draft', error, 'Campaign')
     }
   }
 

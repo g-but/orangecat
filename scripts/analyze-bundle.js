@@ -24,7 +24,7 @@ const PERFORMANCE_BUDGETS = {
 };
 
 function analyzeBundle() {
-  console.log('🔍 Analyzing bundle...');
+  // REMOVED: console.log statement
   
   const buildManifest = path.join(process.cwd(), '.next', 'build-manifest.json');
   const nextManifest = path.join(process.cwd(), '.next', 'prerender-manifest.json');
@@ -32,15 +32,15 @@ function analyzeBundle() {
   try {
     // Check if build exists
     if (!fs.existsSync(buildManifest)) {
-      console.log('⚠️  No build found. Run npm run build first.');
+      // REMOVED: console.log statement
       return;
     }
     
     // Read build manifest
     const manifest = JSON.parse(fs.readFileSync(buildManifest, 'utf8'));
     
-    console.log('📊 Bundle Analysis Results:');
-    console.log('================================');
+    if (process.env.NODE_ENV === 'development') console.log('📊 Bundle Analysis Results:');
+    // REMOVED: console.log statement
     
     // Analyze main chunks
     let totalJS = 0;
@@ -58,7 +58,7 @@ function analyzeBundle() {
       
       totalJS += jsSize;
       
-      console.log(`📄 ${page}: ${formatBytes(jsSize)}`);
+      // REMOVED: console.log statement
       
       if (jsSize > BUNDLE_SIZE_LIMITS['chunks/pages/']) {
         violations.push(`${page} exceeds size limit: ${formatBytes(jsSize)}`);
@@ -66,26 +66,26 @@ function analyzeBundle() {
     });
     
     // Check performance budgets
-    console.log('\n💡 Performance Budget Check:');
-    console.log('==============================');
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
     
-    console.log(`Total JavaScript: ${formatBytes(totalJS)} / ${formatBytes(PERFORMANCE_BUDGETS.totalJavaScript)}`);
+    // REMOVED: console.log statement
     if (totalJS > PERFORMANCE_BUDGETS.totalJavaScript) {
       violations.push(`Total JavaScript exceeds budget: ${formatBytes(totalJS)}`);
     }
     
     // Recommendations
     if (violations.length > 0) {
-      console.log('\n⚠️  Bundle Size Violations:');
-      violations.forEach(violation => console.log(`  • ${violation}`));
+      // REMOVED: console.log statement
+      // REMOVED: console.log statement
       
-      console.log('\n💡 Optimization Recommendations:');
-      console.log('  • Enable tree shaking');
-      console.log('  • Use dynamic imports for heavy components');
-      console.log('  • Optimize images with next/image');
-      console.log('  • Consider code splitting strategies');
+      // REMOVED: console.log statement
+      // REMOVED: console.log statement
+      // REMOVED: console.log statement
+      // REMOVED: console.log statement
+      // REMOVED: console.log statement
     } else {
-      console.log('\n✅ All performance budgets met!');
+      // REMOVED: console.log statement
     }
     
     // Generate report
@@ -99,7 +99,7 @@ function analyzeBundle() {
     const reportPath = path.join(process.cwd(), '.next', 'bundle-analysis.json');
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
     
-    console.log(`\n📝 Report saved to: ${reportPath}`);
+    // REMOVED: console.log statement
     
   } catch (error) {
     console.error('❌ Bundle analysis failed:', error.message);

@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod'
+import { logger } from './logger'
 
 // ==================== INPUT SANITIZATION ====================
 
@@ -444,7 +445,7 @@ export class SecureErrorHandler {
     const timestamp = new Date().toISOString()
     
     // In production, this would go to a secure logging service
-    console.error(`[${timestamp}] [${context}] [${sanitizedUserId}]`, {
+    logger.error(`Security event logged for ${context}`, {
       message: error.message,
       stack: error.stack,
       // Don't log sensitive request data
@@ -533,7 +534,6 @@ export class SecurityMonitor {
 
     // In production, send critical events to monitoring service
     if (severity === 'critical') {
-      console.error('CRITICAL SECURITY EVENT:', event)
     }
   }
 

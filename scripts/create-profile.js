@@ -32,7 +32,7 @@ if (!userId) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function createProfile() {
-  console.log(`🔍 Creating profile for user: ${userId}`);
+  // REMOVED: console.log statement for security
   
   const newProfile = {
     id: userId,
@@ -46,7 +46,7 @@ async function createProfile() {
   };
   
   try {
-    console.log('Profile data to insert:', newProfile);
+    // REMOVED: console.log statement
     
     // First check if profile already exists
     const { data: existingProfile } = await supabase
@@ -56,7 +56,7 @@ async function createProfile() {
       .single();
       
     if (existingProfile) {
-      console.log('✅ Profile already exists. No need to create a new one.');
+      if (process.env.NODE_ENV === 'development') console.log('✅ Profile already exists. No need to create a new one.');
       return;
     }
     
@@ -87,8 +87,8 @@ WITH CHECK (auth.uid() = id);`);
       process.exit(1);
     }
     
-    console.log(`✅ Profile created successfully!`);
-    console.log(`👉 Profile data:`, data);
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
     
   } catch (error) {
     console.error(`❌ Exception during profile creation:`, error);
@@ -99,7 +99,7 @@ WITH CHECK (auth.uid() = id);`);
 // Run the function
 createProfile()
   .then(() => {
-    console.log('Done.');
+    // REMOVED: console.log statement
     process.exit(0);
   })
   .catch(err => {

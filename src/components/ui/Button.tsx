@@ -72,4 +72,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
 Button.displayName = 'Button'
 
+// Export both named and default exports to handle different import patterns
+export { Button }
 export default Button 

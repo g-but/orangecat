@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth'
 import { createServerClient } from '@/services/supabase/server'
 import { 
   isValidBitcoinAddress, 
@@ -46,18 +47,10 @@ function checkRateLimit(identifier: string): boolean {
   return true
 }
 
-export async function POST(request: Request) {
+async function handleProfileUpdate(request: AuthenticatedRequest) {
   try {
     const supabase = await createServerClient()
-
-    // Get the current authenticated user for security
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (!user || userError) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    }
+    const user = request.user // User is already authenticated by withAuth middleware
 
     // Rate limiting check
     const clientIP = request.headers.get('x-forwarded-for') || 
@@ -148,7 +141,6 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
-      console.error('Profile update error:', error)
       return NextResponse.json(
         { error: 'Failed to update profile' },
         { status: 500 }
@@ -171,10 +163,12 @@ export async function POST(request: Request) {
     })
 
   } catch (error) {
-    console.error('Profile update error:', error)
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }
-} 
+}
+
+// Export the wrapped handler
+export const POST = withAuth(handleProfileUpdate) 

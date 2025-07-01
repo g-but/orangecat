@@ -12,7 +12,7 @@ export async function GET(request: Request) {
     if (cookie.name.startsWith('sb-') || 
         cookie.name.includes('supabase') || 
         cookie.name.includes('auth')) {
-      console.log(`[API] Clearing cookie: ${cookie.name}`)
+      // REMOVED: console.log statement
       cookieStore.delete(cookie.name)
     }
   })
