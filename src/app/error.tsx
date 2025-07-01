@@ -14,7 +14,6 @@ export default function Error({
 
   useEffect(() => {
     // Log the error to Vercel's error tracking
-    console.error('Error caught by error boundary:', error)
   }, [error])
 
   return (

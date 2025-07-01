@@ -10,8 +10,8 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-console.log('🚀 OrangeCat Production Deployment Plan');
-console.log('=====================================\n');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Get current date for documentation
 function getCurrentDate() {
@@ -35,8 +35,8 @@ function getProjectInfo() {
 
 // Check environment variables
 function checkEnvironmentVariables() {
-  console.log('🔍 Environment Variables Assessment');
-  console.log('----------------------------------');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   const requiredProdVars = [
     'NEXT_PUBLIC_SITE_URL',
@@ -53,14 +53,14 @@ function checkEnvironmentVariables() {
   requiredProdVars.forEach(varName => {
     if (process.env[varName]) {
       presentVars.push(varName);
-      console.log(`✅ ${varName}`);
+      if (process.env.NODE_ENV === 'development') console.log(`✅ ${varName}`);
     } else {
       missingVars.push(varName);
-      console.log(`❌ ${varName} - Missing`);
+      // REMOVED: console.log statement
     }
   });
   
-  console.log(`\nSummary: ${presentVars.length}/${requiredProdVars.length} required variables present`);
+  // REMOVED: console.log statement
   
   return {
     missing: missingVars,
@@ -71,26 +71,26 @@ function checkEnvironmentVariables() {
 
 // Check build configuration
 function checkBuildConfiguration() {
-  console.log('\n🔧 Build Configuration Assessment');
-  console.log('--------------------------------');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   const checks = [];
   
   // Check next.config.js
   if (fileExists('next.config.js')) {
-    console.log('✅ next.config.js exists');
+    if (process.env.NODE_ENV === 'development') console.log('✅ next.config.js exists');
     checks.push({ name: 'Next.js config', status: 'ok' });
   } else {
-    console.log('❌ next.config.js missing');
+    // REMOVED: console.log statement
     checks.push({ name: 'Next.js config', status: 'missing' });
   }
   
   // Check vercel.json
   if (fileExists('vercel.json')) {
-    console.log('✅ vercel.json exists');
+    if (process.env.NODE_ENV === 'development') console.log('✅ vercel.json exists');
     checks.push({ name: 'Vercel config', status: 'ok' });
   } else {
-    console.log('❌ vercel.json missing');
+    // REMOVED: console.log statement
     checks.push({ name: 'Vercel config', status: 'missing' });
   }
   
@@ -100,10 +100,10 @@ function checkBuildConfiguration() {
   
   requiredScripts.forEach(script => {
     if (projectInfo.scripts[script]) {
-      console.log(`✅ npm script "${script}" exists`);
+      if (process.env.NODE_ENV === 'development') console.log(`✅ npm script "${script}" exists`);
       checks.push({ name: `Script: ${script}`, status: 'ok' });
     } else {
-      console.log(`❌ npm script "${script}" missing`);
+      // REMOVED: console.log statement
       checks.push({ name: `Script: ${script}`, status: 'missing' });
     }
   });
@@ -113,8 +113,8 @@ function checkBuildConfiguration() {
 
 // Check test status
 function checkTestStatus() {
-  console.log('\n🧪 Test Status Assessment');
-  console.log('------------------------');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   try {
     // Run tests and capture output
@@ -123,28 +123,28 @@ function checkTestStatus() {
       timeout: 30000 
     });
     
-    console.log('✅ Tests executed successfully');
+    if (process.env.NODE_ENV === 'development') console.log('✅ Tests executed successfully');
     
     // Parse test results (basic parsing)
     const lines = testOutput.split('\n');
     const resultLine = lines.find(line => line.includes('Tests:') || line.includes('Test Suites:'));
     
     if (resultLine) {
-      console.log(`📊 ${resultLine}`);
+      if (process.env.NODE_ENV === 'development') console.log(`📊 ${resultLine}`);
     }
     
     return { status: 'passed', output: testOutput };
   } catch (error) {
-    console.log('❌ Tests failed');
-    console.log(`Error: ${error.message}`);
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
     return { status: 'failed', error: error.message };
   }
 }
 
 // Check security considerations
 function checkSecurity() {
-  console.log('\n🔒 Security Assessment');
-  console.log('---------------------');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   const securityChecks = [];
   
@@ -152,10 +152,10 @@ function checkSecurity() {
   if (fileExists('.gitignore')) {
     const gitignore = fs.readFileSync('.gitignore', 'utf-8');
     if (gitignore.includes('.env')) {
-      console.log('✅ .env files are in .gitignore');
+      if (process.env.NODE_ENV === 'development') console.log('✅ .env files are in .gitignore');
       securityChecks.push({ name: 'Environment file security', status: 'ok' });
     } else {
-      console.log('⚠️  .env files should be in .gitignore');
+      // REMOVED: console.log statement
       securityChecks.push({ name: 'Environment file security', status: 'warning' });
     }
   }
@@ -163,10 +163,10 @@ function checkSecurity() {
   // Check if production URL uses HTTPS
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   if (siteUrl && siteUrl.startsWith('https://')) {
-    console.log('✅ Site URL uses HTTPS');
+    if (process.env.NODE_ENV === 'development') console.log('✅ Site URL uses HTTPS');
     securityChecks.push({ name: 'HTTPS configuration', status: 'ok' });
   } else {
-    console.log('⚠️  Site URL should use HTTPS in production');
+    // REMOVED: console.log statement
     securityChecks.push({ name: 'HTTPS configuration', status: 'warning' });
   }
   
@@ -175,23 +175,23 @@ function checkSecurity() {
 
 // Check deployment configuration
 function checkDeploymentConfig() {
-  console.log('\n🚀 Deployment Configuration');
-  console.log('---------------------------');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   const deploymentChecks = [];
   
   // Check GitHub Actions
   if (fileExists('.github/workflows/ci.yml') || fileExists('.github/workflows/deploy.yml')) {
-    console.log('✅ GitHub Actions workflows configured');
+    if (process.env.NODE_ENV === 'development') console.log('✅ GitHub Actions workflows configured');
     deploymentChecks.push({ name: 'CI/CD pipeline', status: 'ok' });
   } else {
-    console.log('⚠️  No GitHub Actions workflows found');
+    // REMOVED: console.log statement
     deploymentChecks.push({ name: 'CI/CD pipeline', status: 'warning' });
   }
   
   // Check if Vercel is configured
   if (fileExists('vercel.json')) {
-    console.log('✅ Vercel configuration present');
+    if (process.env.NODE_ENV === 'development') console.log('✅ Vercel configuration present');
     deploymentChecks.push({ name: 'Vercel config', status: 'ok' });
   }
   
@@ -200,8 +200,8 @@ function checkDeploymentConfig() {
 
 // Generate deployment plan
 function generateDeploymentPlan(assessments) {
-  console.log('\n📋 Production Deployment Plan');
-  console.log('=============================');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   const plan = [];
   
@@ -259,9 +259,9 @@ function generateDeploymentPlan(assessments) {
   
   // Display plan
   plan.forEach((item, index) => {
-    console.log(`\n${index + 1}. [${item.priority}] ${item.task}`);
-    console.log(`   ${item.details}`);
-    console.log(`   Command: ${item.command}`);
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
   });
   
   return plan;
@@ -302,7 +302,7 @@ function generateReadinessReport(assessments, plan) {
 // Main execution
 async function main() {
   try {
-    console.log('Starting production readiness assessment...\n');
+    // REMOVED: console.log statement
     
     // Run all assessments
     const assessments = {
@@ -320,16 +320,16 @@ async function main() {
     const report = generateReadinessReport(assessments, plan);
     
     // Display final recommendation
-    console.log('\n🎯 Production Readiness Assessment');
-    console.log('==================================');
-    console.log(`${report.recommendation}`);
-    console.log(`Summary: ${report.summary}`);
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
     
     if (report.nextSteps.length > 0) {
-      console.log('\n⚠️  High Priority Actions Required:');
+      // REMOVED: console.log statement
       report.nextSteps.forEach((step, index) => {
-        console.log(`${index + 1}. ${step.task}`);
-        console.log(`   ${step.details}`);
+        // REMOVED: console.log statement
+        // REMOVED: console.log statement
       });
     }
     
@@ -362,7 +362,7 @@ ${plan.map((item, index) => `${index + 1}. [${item.priority}] ${item.task}\n   $
 `;
     
     fs.writeFileSync(reportPath, reportContent);
-    console.log(`\n📄 Report saved: ${reportPath}`);
+    // REMOVED: console.log statement
     
   } catch (error) {
     console.error('❌ Assessment failed:', error.message);

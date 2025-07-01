@@ -1,98 +1,221 @@
-import type { LoggerData } from '@/types/common'
+/**
+ * PRODUCTION-SAFE LOGGER
+ * 
+ * Replaces console.log statements with proper logging
+ * that's safe for production use and provides structured logging.
+ * 
+ * Created: 2025-06-30
+ * Purpose: Eliminate console.log statements and provide structured logging
+ */
+
+// =====================================================================
+// 🎯 LOGGER TYPES
+// =====================================================================
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
 interface LogEntry {
   timestamp: string
   level: LogLevel
-  context?: string
   message: string
-  data?: LoggerData
+  data?: any
+  source?: string
 }
+
+// =====================================================================
+// 🔧 LOGGER CONFIGURATION
+// =====================================================================
+
+const LOGGER_CONFIG = {
+  // Only log errors and warnings in production
+  productionLevel: 'warn' as LogLevel,
+  
+  // Log everything in development
+  developmentLevel: 'debug' as LogLevel,
+  
+  // Get current environment
+  get environment() {
+    return process.env.NODE_ENV || 'development'
+  },
+  
+  // Get active log level
+  get activeLevel() {
+    return this.environment === 'production' ? this.productionLevel : this.developmentLevel
+  }
+}
+
+const LOG_LEVELS = {
+  debug: 0,
+  info: 1,
+  warn: 2,
+  error: 3
+}
+
+// =====================================================================
+// 🔧 LOGGER IMPLEMENTATION
+// =====================================================================
 
 class Logger {
-  private isDevelopment = process.env.NODE_ENV === 'development'
-  private isProduction = process.env.NODE_ENV === 'production'
-
-  private formatMessage(level: LogLevel, context: string | undefined, message: string): string {
-    const timestamp = new Date().toISOString()
-    const contextStr = context ? `[${context}]` : ''
-    return `${timestamp} ${level.toUpperCase()} ${contextStr} ${message}`
-  }
-
   private shouldLog(level: LogLevel): boolean {
-    // In production, only log warnings and errors
-    if (this.isProduction) {
-      return level === 'warn' || level === 'error'
-    }
-    // In development, log everything
-    return true
+    return LOG_LEVELS[level] >= LOG_LEVELS[LOGGER_CONFIG.activeLevel]
   }
 
-  debug(message: string, data?: LoggerData, context?: string): void {
+  private formatLogEntry(level: LogLevel, message: string, data?: any, source?: string): LogEntry {
+    return {
+      timestamp: new Date().toISOString(),
+      level,
+      message,
+      data,
+      source
+    }
+  }
+
+  private output(entry: LogEntry): void {
+    const { timestamp, level, message, data, source } = entry
+    
+    // In production, use structured logging
+    if (LOGGER_CONFIG.environment === 'production') {
+      // Send to proper logging service in production
+      // For now, use console for critical errors only
+      if (level === 'error') {
+        console.error(JSON.stringify(entry))
+      }
+      return
+    }
+
+    // Development logging with colors and formatting
+    const prefix = `[${timestamp}] ${level.toUpperCase()}`
+    const sourceInfo = source ? ` (${source})` : ''
+    
+    switch (level) {
+      case 'debug':
+        console.debug(`🔍 ${prefix}${sourceInfo}:`, message, data || '')
+        break
+      case 'info':
+        console.info(`ℹ️  ${prefix}${sourceInfo}:`, message, data || '')
+        break
+      case 'warn':
+        console.warn(`⚠️  ${prefix}${sourceInfo}:`, message, data || '')
+        break
+      case 'error':
+        console.error(`❌ ${prefix}${sourceInfo}:`, message, data || '')
+        break
+    }
+  }
+
+  debug(message: string, data?: any, source?: string): void {
     if (!this.shouldLog('debug')) return
-    
-    if (this.isDevelopment) {
-      console.debug(this.formatMessage('debug', context, message), data ? data : '')
-    }
+    this.output(this.formatLogEntry('debug', message, data, source))
   }
 
-  info(message: string, data?: LoggerData, context?: string): void {
+  info(message: string, data?: any, source?: string): void {
     if (!this.shouldLog('info')) return
-    
-    if (this.isDevelopment) {
-      console.info(this.formatMessage('info', context, message), data ? data : '')
-    }
+    this.output(this.formatLogEntry('info', message, data, source))
   }
 
-  warn(message: string, data?: LoggerData, context?: string): void {
+  warn(message: string, data?: any, source?: string): void {
     if (!this.shouldLog('warn')) return
-    
-    console.warn(this.formatMessage('warn', context, message), data ? data : '')
+    this.output(this.formatLogEntry('warn', message, data, source))
   }
 
-  error(message: string, error?: LoggerData, context?: string): void {
+  error(message: string, data?: any, source?: string): void {
     if (!this.shouldLog('error')) return
-    
-    console.error(this.formatMessage('error', context, message), error ? error : '')
+    this.output(this.formatLogEntry('error', message, data, source))
   }
 
-  // Performance logging
-  performance(metricName: string, value: number, context?: string): void {
-    if (this.isDevelopment) {
-      this.debug(`Performance: ${metricName}: ${value}ms`, undefined, context || 'Performance')
-    }
+  // Specialized logging methods
+  supabase(message: string, data?: any): void {
+    this.info(`[Supabase] ${message}`, data, 'supabase')
   }
 
-  // Auth-specific logging helper
-  auth(message: string, data?: LoggerData): void {
-    this.debug(message, data, 'Auth')
+  auth(message: string, data?: any): void {
+    this.info(`[Auth] ${message}`, data, 'auth')
   }
 
-  // Profile-specific logging helper  
-  profile(message: string, data?: LoggerData): void {
-    this.debug(message, data, 'Profile')
+  api(message: string, data?: any): void {
+    this.info(`[API] ${message}`, data, 'api')
   }
 
-  // Supabase-specific logging helper
-  supabase(message: string, data?: LoggerData): void {
-    this.debug(message, data, 'Supabase')
+  database(message: string, data?: any): void {
+    this.info(`[Database] ${message}`, data, 'database')
+  }
+
+  performance(message: string, data?: any): void {
+    this.debug(`[Performance] ${message}`, data, 'performance')
   }
 }
 
-// Create singleton instance
+// =====================================================================
+// 🔧 SINGLETON EXPORT
+// =====================================================================
+
 export const logger = new Logger()
 
-// Convenience exports for common patterns – keep references stable across jest.resetModules()
-// so that tests which capture the function before a reset still see subsequent calls.
+// =====================================================================
+// 🔧 HELPER FUNCTIONS
+// =====================================================================
 
-// Ensure the same logSupabase reference is reused across jest.resetModules() calls
-const _defaultLogSupabase = (message: string, data?: LoggerData) => logger.supabase(message, data)
-const globalLogKey = '__orangecat_logSupabase'
+/**
+ * Migration helper to replace console.log calls
+ * Use this to gradually replace console.log throughout the codebase
+ */
+export function safeLog(message: string, data?: any, level: LogLevel = 'debug'): void {
+  logger[level](message, data)
+}
 
-export const logSupabase: (message: string, data?: LoggerData) => void =
-  (globalThis as any)[globalLogKey] || ((globalThis as any)[globalLogKey] = _defaultLogSupabase)
+/**
+ * Error boundary logger
+ */
+export function logError(error: Error, context?: string): void {
+  logger.error(
+    `Error in ${context || 'application'}`, 
+    {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    },
+    context
+  )
+}
 
-export const logAuth = (message: string, data?: LoggerData) => logger.auth(message, data)
-export const logProfile = (message: string, data?: LoggerData) => logger.profile(message, data)
-export const logPerformance = (metricName: string, value: number) => logger.performance(metricName, value) 
+/**
+ * Performance timing logger
+ */
+export function logTiming(operation: string, startTime: number): void {
+  const endTime = Date.now()
+  const duration = endTime - startTime
+  logger.performance(`${operation} completed in ${duration}ms`)
+}
+
+// =====================================================================
+// 🔄 BACKWARD COMPATIBILITY - OLD LOGGER FUNCTIONS
+// =====================================================================
+// TODO: Gradually migrate these to use logger.auth(), logger.supabase(), etc.
+
+/**
+ * @deprecated Use logger.auth() instead
+ */
+export function logAuth(message: string, data?: any): void {
+  logger.auth(message, data)
+}
+
+/**
+ * @deprecated Use logger.supabase() instead
+ */
+export function logSupabase(message: string, data?: any): void {
+  logger.supabase(message, data)
+}
+
+/**
+ * @deprecated Use logger.info() or logger.debug() instead
+ */
+export function logProfile(message: string, data?: any): void {
+  logger.info(`[Profile] ${message}`, data)
+}
+
+/**
+ * @deprecated Use logger.performance() instead
+ */
+export function logPerformance(metricName: string, value: number): void {
+  logger.performance(`${metricName}: ${value}ms`)
+} 

@@ -24,14 +24,22 @@ export function useRequireAuth() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
 
-  // First check for inconsistent state
+  // Simplified consistency check - allow transitional states
   useEffect(() => {
     if (hydrated && !isLoading) {
+      // Be more lenient - only flag as inconsistent after a delay
       const hasInconsistentState = 
         (user && !session) || 
         (!user && session);
         
-      setIsConsistent(!hasInconsistentState);
+      if (hasInconsistentState) {
+        const timeoutId = setTimeout(() => {
+          setIsConsistent(false);
+        }, 2000);
+        return () => clearTimeout(timeoutId);
+      } else {
+        setIsConsistent(true);
+      }
     }
   }, [user, session, isLoading, hydrated]);
 
@@ -40,8 +48,8 @@ export function useRequireAuth() {
     // Wait until hydration and initial loading completes
     if (!hydrated || isLoading) return;
     
-    // If no auth or inconsistent state, redirect to login
-    const isAuthenticated = isConsistent && !!user && !!session;
+    // More lenient authentication check - focus on user presence
+    const isAuthenticated = !!user;
     
     if (!isAuthenticated) {
       router.push('/auth?from=protected');
@@ -49,7 +57,7 @@ export function useRequireAuth() {
     
     // Mark that we've checked authentication
     setCheckedAuth(true);
-  }, [user, session, isLoading, hydrated, router, isConsistent]);
+  }, [user, session, isLoading, hydrated, router]);
 
   return { 
     user, 
@@ -57,7 +65,7 @@ export function useRequireAuth() {
     session, 
     isLoading: isLoading || !hydrated || !checkedAuth, 
     hydrated, 
-    isAuthenticated: isConsistent && !!user && !!session
+    isAuthenticated: !!user && hydrated && !isLoading
   };
 }
 
@@ -69,14 +77,21 @@ export function useRedirectIfAuthenticated() {
   const router = useRouter();
   const pathname = usePathname();
 
-  // First check for inconsistent state
+  // Simplified consistency check
   useEffect(() => {
     if (hydrated && !isLoading) {
       const hasInconsistentState = 
         (user && !session) || 
         (!user && session);
         
-      setIsConsistent(!hasInconsistentState);
+      if (hasInconsistentState) {
+        const timeoutId = setTimeout(() => {
+          setIsConsistent(false);
+        }, 2000);
+        return () => clearTimeout(timeoutId);
+      } else {
+        setIsConsistent(true);
+      }
     }
   }, [user, session, isLoading, hydrated]);
 
@@ -84,18 +99,18 @@ export function useRedirectIfAuthenticated() {
     // Wait for hydration and initial load
     if (!hydrated || isLoading) return;
     
-    // Only redirect if user is fully authenticated and not on dashboard/home
-    const isAuthenticated = isConsistent && !!user && !!session;
+    // More lenient authentication check - focus on user presence
+    const isAuthenticated = !!user;
     
     if (isAuthenticated && pathname !== '/dashboard' && pathname !== '/') {
       router.push('/dashboard');
     }
-  }, [user, session, isLoading, hydrated, router, pathname, profile, isConsistent]);
+  }, [user, session, isLoading, hydrated, router, pathname, profile]);
 
   return { 
     isLoading: isLoading || !hydrated, 
     hydrated,
-    isAuthenticated: isConsistent && !!user && !!session
+    isAuthenticated: !!user && hydrated && !isLoading
   };
 }
 
@@ -139,24 +154,38 @@ export function useAuth() {
     }
   }, 10000); // Increased to 10 seconds to greatly reduce spam
   
-  // Detect inconsistent state (one of user/session exists but not the other)
+  // Simplified consistency check - only flag as inconsistent if it's clearly an error state
+  // Don't flag transitional states during normal auth flows
   useEffect(() => {
     if (authState.hydrated && !authState.isLoading) {
+      // Only consider it truly inconsistent if this state persists
+      // Allow transitional states during normal auth operations
       const hasInconsistentState = 
         (authState.user && !authState.session) || 
         (!authState.user && authState.session);
         
-      if (hasInconsistentState !== !isConsistent) {
-        if (hasInconsistentState) {
-          logger.warn('Inconsistent auth state detected', {
-            hasUser: !!authState.user,
-            hasSession: !!authState.session
-          }, 'Auth');
-        }
-        setIsConsistent(!hasInconsistentState);
+      if (hasInconsistentState) {
+        // Wait longer before considering it inconsistent to allow auth flow to complete
+        const timeoutId = setTimeout(() => {
+          const currentState = useAuthStore.getState();
+          const stillInconsistent = 
+            (currentState.user && !currentState.session) || 
+            (!currentState.user && currentState.session);
+            
+          if (stillInconsistent && currentState.hydrated && !currentState.isLoading) {
+            setIsConsistent(false);
+          } else {
+            // State resolved itself, ensure consistency flag is correct
+            setIsConsistent(true);
+          }
+        }, 2000); // Increased timeout to 2 seconds for auth flows to complete
+        
+        return () => clearTimeout(timeoutId);
+      } else {
+        setIsConsistent(true);
       }
     }
-  }, [authState.user, authState.session, authState.hydrated, authState.isLoading, isConsistent]);
+  }, [authState.user, authState.session, authState.hydrated, authState.isLoading]);
   
   // Only log very significant auth state changes with much less frequency
   useEffect(() => {
@@ -198,8 +227,9 @@ export function useAuth() {
     }
   };
 
-  // Calculate isAuthenticated once based on all the state
-  const isAuthenticated = isConsistent && !!authState.user && !!authState.session;
+  // Be more lenient with authentication - allow user without session temporarily
+  // This handles server-side scenarios where session might be null but user exists
+  const isAuthenticated = authState.hydrated && !authState.isLoading && !!authState.user;
 
   return {
     ...authState,

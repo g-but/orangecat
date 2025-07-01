@@ -1,398 +1,614 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import Image from 'next/image'
 import { useAuth } from '@/hooks/useAuth'
-import { ProfileFormData } from '@/types/database'
-import Input from '@/components/ui/Input'
-import Textarea from '@/components/ui/Textarea'
+import { User, Camera, Bitcoin, Shield, Globe, Edit3, Save, X, Upload, CheckCircle, AlertCircle, Star, MapPin, Link as LinkIcon, Calendar, Users, Heart, Eye } from 'lucide-react'
 import Button from '@/components/ui/Button'
-import DefaultAvatar from '@/components/ui/DefaultAvatar'
+import Input from '@/components/ui/Input'
+import Card from '@/components/ui/Card'
 import Loading from '@/components/Loading'
 import { toast } from 'sonner'
-import { ProfileService } from '@/services/profileService'
-import { 
-  User, 
-  Globe,
-  Save,
-  ArrowLeft,
-  Camera,
-  Zap,
-  Bitcoin,
-  ExternalLink
-} from 'lucide-react'
+import { ProfileStorageService } from '@/services/profile/profileStorageService'
+import ProfileService from '@/services/profileService'
 
 export default function ProfilePage() {
-  const { user, profile, hydrated, isLoading, fetchProfile } = useAuth()
+  const { user, profile, hydrated, isLoading } = useAuth()
   const router = useRouter()
   
-  const [profileData, setProfileData] = useState<ProfileFormData>({
-    username: '',
+  // State management
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
+  const [profileData, setProfileData] = useState({
     display_name: '',
     bio: '',
+    location: '',
     website: '',
+    twitter: '',
+    linkedin: '',
+    github: '',
+    avatar_url: '',
+    banner_url: '',
     bitcoin_address: '',
     lightning_address: '',
-    avatar_url: ''
+    public_profile: true,
+    allow_donations: true,
   })
+  const [completionPercentage, setCompletionPercentage] = useState(0)
+  const [dragActive, setDragActive] = useState(false)
+  const [uploadType, setUploadType] = useState<'avatar' | 'banner' | null>(null)
 
-  const [isSubmittingProfile, setIsSubmittingProfile] = useState(false)
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
-
-  // Initialize form data
-  useEffect(() => {
-    if (profile) {
-      setProfileData({
-        username: profile.username || '',
-        display_name: profile.display_name || '',
-        bio: profile.bio || '',
-        website: profile.website || '',
-        bitcoin_address: profile.bitcoin_address || '',
-        lightning_address: profile.lightning_address || '',
-        avatar_url: profile.avatar_url || ''
-      })
-    }
-  }, [profile])
-
-  // Show loading state while hydrating - AFTER all hooks
+  // Check authentication
   if (!hydrated || isLoading) {
     return <Loading fullScreen />
   }
 
-  // Redirect if not authenticated - AFTER all hooks
+  // Handle redirect on client side only
+  useEffect(() => {
+    if (hydrated && !isLoading && !user) {
+      router.push('/auth')
+    }
+  }, [hydrated, isLoading, user, router])
+
   if (!user) {
-    router.push('/auth')
     return <Loading fullScreen />
   }
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setProfileData(prev => ({ ...prev, [name]: value }))
-  }
-
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!e.target.files || e.target.files.length === 0) {
-        return
-      }
-      const file = e.target.files[0]
-
-      // Validate file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('File size too large. Maximum size is 10MB.')
-        return
-      }
-
-      // Validate file type
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif']
-      if (!allowedTypes.includes(file.type)) {
-        toast.error('Invalid file type. Only JPEG, PNG, WebP, and GIF files are allowed.')
-        return
-      }
-
-      setIsUploadingAvatar(true)
-
-      const body = new FormData()
-      body.append('file', file)
-      body.append('userId', user!.id)
-
-      const res = await fetch('/api/avatar', {
-        method: 'POST',
-        body,
+  // Initialize profile data
+  useEffect(() => {
+    if (profile) {
+      setProfileData({
+        display_name: profile.display_name || '',
+        bio: profile.bio || '',
+        location: profile.location || '',
+        website: profile.website || '',
+        twitter: profile.twitter || '',
+        linkedin: profile.linkedin || '',
+        github: profile.github || '',
+        avatar_url: profile.avatar_url || '',
+        banner_url: profile.banner_url || '',
+        bitcoin_address: profile.bitcoin_address || '',
+        lightning_address: profile.lightning_address || '',
+        public_profile: profile.public_profile ?? true,
+        allow_donations: profile.allow_donations ?? true,
       })
+    }
+  }, [profile])
 
-      const json = await res.json()
-      if (!res.ok) {
-        throw new Error(json.error || 'Upload failed')
-      }
+  // Calculate completion percentage
+  useEffect(() => {
+    const fields = [
+      profileData.display_name,
+      profileData.bio,
+      profileData.location,
+      profileData.avatar_url,
+      profileData.bitcoin_address,
+    ]
+    const optionalFields = [
+      profileData.website,
+      profileData.twitter,
+      profileData.banner_url,
+      profileData.lightning_address,
+    ]
+    
+    const requiredCompleted = fields.filter(field => field && field.trim()).length
+    const optionalCompleted = optionalFields.filter(field => field && field.trim()).length
+    
+    const percentage = Math.round(((requiredCompleted * 2 + optionalCompleted) / (fields.length * 2 + optionalFields.length)) * 100)
+    setCompletionPercentage(Math.min(percentage, 100))
+  }, [profileData])
 
-      setProfileData((prev) => ({
-        ...prev,
-        avatar_url: json.publicUrl,
-      }))
-
-      toast.success('Avatar uploaded successfully!')
-    } catch (error: any) {
-      console.error('Error uploading avatar:', error)
-      toast.error(error.message || 'Error uploading avatar')
-    } finally {
-      setIsUploadingAvatar(false)
+  // Drag and drop handlers
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.type === 'dragenter' || e.type === 'dragover') {
+      setDragActive(true)
+    } else if (e.type === 'dragleave') {
+      setDragActive(false)
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleDrop = (e: React.DragEvent, type: 'avatar' | 'banner') => {
     e.preventDefault()
-    setIsSubmittingProfile(true)
+    e.stopPropagation()
+    setDragActive(false)
+    
+    const files = e.dataTransfer.files
+    if (files && files[0]) {
+      handleFileUpload(files[0], type)
+    }
+  }
+
+  const handleFileUpload = async (file: File, type: 'avatar' | 'banner') => {
+    if (!user?.id) {
+      toast.error('User not authenticated')
+      return
+    }
 
     try {
-      const result = await ProfileService.updateProfile(user!.id, profileData)
+      // Show upload progress
+      setUploadProgress(prev => ({ ...prev, [type]: 0 }))
+
+      // Upload to Supabase Storage
+      const result = await ProfileStorageService[type === 'avatar' ? 'uploadAvatar' : 'uploadBanner'](
+        user.id,
+        file,
+        (progress) => {
+          setUploadProgress(prev => ({ ...prev, [type]: progress.percentage }))
+        }
+      )
 
       if (!result.success) {
-        throw new Error(result.error || 'Failed to update profile')
+        toast.error(result.error || 'Upload failed')
+        return
       }
 
-      if (result.warning) {
-        toast.warning(result.warning)
-      }
+      // Update profile data with new URL
+      setProfileData(prev => ({
+        ...prev,
+        [type === 'avatar' ? 'avatar_url' : 'banner_url']: result.url || ''
+      }))
 
-      await fetchProfile()
+      // Clear progress
+      setUploadProgress(prev => ({ ...prev, [type]: 100 }))
       
-      if (!result.warning) {
-        toast.success('Profile updated successfully!')
+      toast.success(`${type === 'avatar' ? 'Avatar' : 'Banner'} uploaded successfully!`)
+
+      // Auto-save if we have the profile update functionality
+      if (profile?.id) {
+        await handleSave()
       }
-    } catch (error: any) {
-      console.error('Error updating profile:', error)
-      toast.error(error.message || 'Failed to update profile.')
+
+    } catch (error) {
+      toast.error('Upload failed')
     } finally {
-      setIsSubmittingProfile(false)
+      // Clear progress after delay
+      setTimeout(() => {
+        setUploadProgress(prev => {
+          const updated = { ...prev }
+          delete updated[type]
+          return updated
+        })
+      }, 2000)
     }
+  }
+
+  const handleSave = async () => {
+    if (!user?.id) {
+      toast.error('User not authenticated')
+      return
+    }
+
+    try {
+      setIsSaving(true)
+
+      // Save profile data to database
+      const result = await ProfileService.updateProfile(user.id, {
+        display_name: profileData.display_name,
+        bio: profileData.bio,
+        location: profileData.location,
+        website: profileData.website,
+        twitter: profileData.twitter,
+        linkedin: profileData.linkedin,
+        github: profileData.github,
+        avatar_url: profileData.avatar_url,
+        banner_url: profileData.banner_url,
+        bitcoin_address: profileData.bitcoin_address,
+        lightning_address: profileData.lightning_address,
+        public_profile: profileData.public_profile,
+        allow_donations: profileData.allow_donations,
+      })
+
+      if (!result.success) {
+        toast.error(result.error || 'Failed to update profile')
+        return
+      }
+
+      toast.success('Profile updated successfully!')
+      setIsEditing(false)
+
+    } catch (error) {
+      toast.error('Failed to update profile')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const getCompletionColor = () => {
+    if (completionPercentage >= 90) return 'from-green-500 to-emerald-600'
+    if (completionPercentage >= 70) return 'from-orange-500 to-yellow-600'
+    if (completionPercentage >= 40) return 'from-orange-500 to-red-600'
+    return 'from-red-500 to-red-600'
+  }
+
+  const getBadgeColor = (percentage: number) => {
+    if (percentage >= 90) return 'bg-green-100 text-green-800 border-green-200'
+    if (percentage >= 70) return 'bg-orange-100 text-orange-800 border-orange-200'
+    return 'bg-red-100 text-red-800 border-red-200'
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-teal-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 shadow-sm">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center">
-            <Button
-              variant="ghost"
-              onClick={() => router.push('/dashboard')}
-              className="mr-3 p-2 min-h-[44px] min-w-[44px] touch-manipulation"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Edit Profile</h1>
-              <p className="text-gray-600 mt-1 text-sm">Update your public profile information</p>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-orange-50/30">
+      {/* Banner Section */}
+      <div className="relative h-48 md:h-64">
+        <div 
+          className={`w-full h-full bg-gradient-to-r from-orange-400 via-orange-500 to-tiffany-500 relative overflow-hidden ${
+            isEditing ? 'cursor-pointer' : ''
+          }`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={(e) => handleDrop(e, 'banner')}
+          onClick={() => isEditing && setUploadType('banner')}
+        >
+          {profileData.banner_url && (
+            <img 
+              src={profileData.banner_url} 
+              alt="Profile Banner" 
+              className="w-full h-full object-cover"
+            />
+          )}
+          
+          {/* Upload Overlay */}
+          {isEditing && (
+            <div className={`absolute inset-0 bg-black/40 flex items-center justify-center transition-opacity ${
+              dragActive ? 'opacity-100' : 'opacity-0 hover:opacity-100'
+            }`}>
+              <div className="text-center text-white">
+                <Upload className="w-8 h-8 mx-auto mb-2" />
+                <p className="text-sm font-medium">Upload Banner</p>
+                <p className="text-xs opacity-75">Drag & drop or click</p>
+              </div>
             </div>
+          )}
+        </div>
+        
+        {/* Completion Badge */}
+        <div className="absolute top-4 right-4">
+          <div className={`px-3 py-1 rounded-full border ${getBadgeColor(completionPercentage)} flex items-center space-x-2`}>
+            <div className="w-2 h-2 rounded-full bg-current"></div>
+            <span className="text-sm font-medium">{completionPercentage}% Complete</span>
           </div>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500 to-teal-500 px-4 sm:px-6 py-4">
-            <div className="flex items-center text-white">
-              <User className="w-6 h-6 mr-3 flex-shrink-0" />
-              <div>
-                <h2 className="text-lg sm:text-xl font-bold">Your Profile</h2>
-                <p className="text-orange-100 text-sm mt-1">This information will be displayed publicly</p>
-              </div>
-            </div>
-          </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          {/* Left Column - Profile Info */}
+          <div className="lg:col-span-1">
+            <Card className="p-6 bg-white/95 backdrop-blur-sm shadow-lg border-0">
+              
+              {/* Avatar Section */}
+              <div className="text-center mb-6">
+                <div 
+                  className={`relative w-32 h-32 mx-auto mb-4 ${isEditing ? 'cursor-pointer' : ''}`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={(e) => handleDrop(e, 'avatar')}
+                  onClick={() => isEditing && setUploadType('avatar')}
+                >
+                  <div className="w-full h-full rounded-full bg-gradient-to-br from-orange-400 to-tiffany-500 p-1 shadow-lg">
+                    <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+                      {profileData.avatar_url ? (
+                        <img 
+                          src={profileData.avatar_url} 
+                          alt="Profile Avatar" 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <User className="w-12 h-12 text-gray-400" />
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* Upload Overlay for Avatar */}
+                  {isEditing && (
+                    <div className={`absolute inset-0 bg-black/40 rounded-full flex items-center justify-center transition-opacity ${
+                      dragActive ? 'opacity-100' : 'opacity-0 hover:opacity-100'
+                    }`}>
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
+                  )}
+                </div>
 
-          <div className="p-4 sm:p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Avatar Upload */}
-              <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 pb-6 border-b border-gray-100">
-                <div className="relative">
-                  {profileData.avatar_url ? (
-                    <Image
-                      src={profileData.avatar_url}
-                      alt="Profile"
-                      width={120}
-                      height={120}
-                      className="rounded-full object-cover border-4 border-white shadow-lg"
+                {/* Name and Basic Info */}
+                <div className="space-y-2">
+                  {isEditing ? (
+                    <Input
+                      value={profileData.display_name}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, display_name: e.target.value }))}
+                      placeholder="Your display name"
+                      className="text-center text-xl font-bold"
                     />
                   ) : (
-                    <DefaultAvatar size={120} className="border-4 border-white shadow-lg" />
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      {profileData.display_name || user.email?.split('@')[0] || 'Anonymous User'}
+                    </h1>
                   )}
                   
-                  {/* Upload overlay */}
-                  <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full opacity-0 hover:opacity-100 transition-opacity cursor-pointer touch-manipulation">
-                    <Camera className="w-8 h-8 text-white" />
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                      disabled={isUploadingAvatar}
-                    />
-                  </label>
+                  <p className="text-gray-600">{user.email}</p>
                   
-                  {isUploadingAvatar && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 rounded-full">
-                      <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full"></div>
+                  {profileData.location && (
+                    <div className="flex items-center justify-center text-gray-500">
+                      <MapPin className="w-4 h-4 mr-1" />
+                      <span className="text-sm">{profileData.location}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Profile Completion */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Profile Completion</span>
+                  <span className="text-sm font-bold text-gray-900">{completionPercentage}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full bg-gradient-to-r ${getCompletionColor()} transition-all duration-500`}
+                    style={{ width: `${completionPercentage}%` }}
+                  ></div>
+                </div>
+                {completionPercentage < 100 && (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Complete your profile to increase visibility and trust
+                  </p>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                {isEditing ? (
+                  <div className="flex space-x-2">
+                    <Button 
+                      onClick={handleSave}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Changes
+                    </Button>
+                    <Button 
+                      onClick={() => setIsEditing(false)}
+                      variant="outline"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button 
+                    onClick={() => setIsEditing(true)}
+                    className="w-full bg-gradient-to-r from-orange-600 to-tiffany-600 hover:from-orange-700 hover:to-tiffany-700"
+                  >
+                    <Edit3 className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </Button>
+                )}
+                
+                <Button variant="outline" className="w-full">
+                  <Eye className="w-4 h-4 mr-2" />
+                  View Public Profile
+                </Button>
+              </div>
+
+              {/* Quick Stats */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <div className="grid grid-cols-2 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-orange-600">0</div>
+                    <div className="text-sm text-gray-500">Campaigns</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-tiffany-600">0</div>
+                    <div className="text-sm text-gray-500">Supporters</div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* Right Column - Detailed Info */}
+          <div className="lg:col-span-2 space-y-6">
+            
+            {/* Bio Section */}
+            <Card className="p-6 bg-white/95 backdrop-blur-sm shadow-lg border-0">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900 flex items-center">
+                  <User className="w-5 h-5 mr-2 text-orange-600" />
+                  About Me
+                </h2>
+              </div>
+              
+              {isEditing ? (
+                <textarea
+                  value={profileData.bio}
+                  onChange={(e) => setProfileData(prev => ({ ...prev, bio: e.target.value }))}
+                  placeholder="Tell the world about yourself, your projects, and what you're passionate about..."
+                  className="w-full h-32 p-4 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                />
+              ) : (
+                <p className="text-gray-700 leading-relaxed">
+                  {profileData.bio || "No bio added yet. Share your story to connect with your community!"}
+                </p>
+              )}
+            </Card>
+
+            {/* Bitcoin & Payment Info */}
+            <Card className="p-6 bg-white/95 backdrop-blur-sm shadow-lg border-0">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center mb-4">
+                <Bitcoin className="w-5 h-5 mr-2 text-orange-600" />
+                Bitcoin & Payment Details
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bitcoin Address
+                  </label>
+                  {isEditing ? (
+                    <Input
+                      value={profileData.bitcoin_address}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, bitcoin_address: e.target.value }))}
+                      placeholder="bc1q..."
+                    />
+                  ) : (
+                    <div className="p-3 bg-gray-50 rounded-lg font-mono text-sm break-all">
+                      {profileData.bitcoin_address || 'Not set'}
                     </div>
                   )}
                 </div>
                 
-                <div className="text-center sm:text-left">
-                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">Profile Picture</h3>
-                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
-                    Click on your avatar to upload a new picture. JPG, PNG, or GIF up to 10MB.
-                  </p>
-                  <label className="inline-block">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={isUploadingAvatar}
-                      className="min-h-[44px] px-4 sm:px-6 touch-manipulation"
-                    >
-                      {isUploadingAvatar ? (
-                        <>
-                          <div className="animate-spin w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full mr-2"></div>
-                          Uploading...
-                        </>
-                      ) : (
-                        <>
-                          <Camera className="w-4 h-4 mr-2" />
-                          Choose File
-                        </>
-                      )}
-                    </Button>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                      disabled={isUploadingAvatar}
-                    />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Lightning Address
                   </label>
-                </div>
-              </div>
-
-              {/* Basic Info */}
-              <div className="space-y-4 sm:space-y-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                  Basic Information
-                </h3>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                  <Input
-                    label="Username"
-                    name="username"
-                    value={profileData.username}
-                    onChange={handleInputChange}
-                    placeholder="your_username"
-                    icon={User}
-                    className="min-h-[48px] text-base"
-                  />
-                  <Input
-                    label="Display Name"
-                    name="display_name"
-                    value={profileData.display_name}
-                    onChange={handleInputChange}
-                    placeholder="Your Full Name"
-                    icon={User}
-                    className="min-h-[48px] text-base"
-                  />
-                </div>
-
-                <Textarea
-                  label="Bio"
-                  name="bio"
-                  value={profileData.bio}
-                  onChange={handleInputChange}
-                  placeholder="Tell people about yourself, your interests, or what you're working on..."
-                  rows={4}
-                  className="min-h-[120px] text-base resize-none"
-                />
-
-                <Input
-                  label="Website"
-                  name="website"
-                  value={profileData.website}
-                  onChange={handleInputChange}
-                  placeholder="https://yourwebsite.com"
-                  icon={Globe}
-                  className="min-h-[48px] text-base"
-                />
-              </div>
-
-              {/* Bitcoin & Lightning */}
-              <div className="space-y-4 sm:space-y-6">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                  Bitcoin & Lightning
-                </h3>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                  <div className="space-y-3">
+                  {isEditing ? (
                     <Input
-                      label="Bitcoin Address"
-                      name="bitcoin_address"
-                      value={profileData.bitcoin_address}
-                      onChange={handleInputChange}
-                      placeholder="bc1q..."
-                      className="font-mono text-sm sm:text-base min-h-[48px] break-all"
-                      icon={Bitcoin}
+                      value={profileData.lightning_address}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, lightning_address: e.target.value }))}
+                      placeholder="you@domain.com"
                     />
-                    {!profileData.bitcoin_address && (
-                      <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                        <div className="flex items-start gap-3">
-                          <Bitcoin className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                          <div>
-                            <h4 className="font-semibold text-orange-900 text-sm mb-1">Need a Bitcoin wallet?</h4>
-                            <p className="text-orange-800 text-xs mb-2">
-                              Get help setting up your first Bitcoin wallet.
-                            </p>
-                            <Link 
-                              href="/bitcoin-wallet-guide" 
-                              target="_blank"
-                              className="inline-flex items-center px-2 py-1 border border-orange-600 text-orange-600 rounded text-xs font-medium hover:bg-orange-50 transition-colors"
-                            >
-                              <ExternalLink className="w-3 h-3 mr-1" />
-                              Setup Guide
-                            </Link>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <Input
-                    label="Lightning Address"
-                    name="lightning_address"
-                    value={profileData.lightning_address}
-                    onChange={handleInputChange}
-                    placeholder="you@getalby.com"
-                    icon={Zap}
-                    className="min-h-[48px] text-base"
-                  />
-                </div>
-                
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-                  <p className="text-sm sm:text-base text-blue-800 leading-relaxed">
-                    <strong>Tip:</strong> Adding your Bitcoin and Lightning addresses allows people to send you tips and donations directly.
-                  </p>
+                  ) : (
+                    <div className="p-3 bg-gray-50 rounded-lg font-mono text-sm">
+                      {profileData.lightning_address || 'Not set'}
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <div className="flex flex-col sm:flex-row justify-end pt-4 sm:pt-6 border-t border-gray-100 gap-3 sm:gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push('/dashboard')}
-                  className="w-full sm:w-auto min-h-[48px] px-6 sm:px-8 py-3 text-base font-medium touch-manipulation"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmittingProfile || isUploadingAvatar}
-                  className="w-full sm:w-auto bg-gradient-to-r from-orange-500 to-teal-500 hover:from-orange-600 hover:to-teal-600 text-white px-6 sm:px-8 py-3 text-base sm:text-lg font-semibold min-h-[48px] touch-manipulation"
-                >
-                  {isSubmittingProfile ? (
-                    <>
-                      <div className="w-5 h-5 animate-spin rounded-full border-2 border-white border-t-transparent mr-2 flex-shrink-0" />
-                      <span>Saving...</span>
-                    </>
+              {profileData.bitcoin_address && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-orange-50 to-tiffany-50 rounded-lg border border-orange-200">
+                  <div className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                    <span className="text-sm font-medium text-green-800">
+                      Ready to receive Bitcoin donations
+                    </span>
+                  </div>
+                </div>
+              )}
+            </Card>
+
+            {/* Contact & Social */}
+            <Card className="p-6 bg-white/95 backdrop-blur-sm shadow-lg border-0">
+              <h2 className="text-xl font-bold text-gray-900 flex items-center mb-4">
+                <Globe className="w-5 h-5 mr-2 text-orange-600" />
+                Contact & Social
+              </h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Website
+                  </label>
+                  {isEditing ? (
+                    <Input
+                      value={profileData.website}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, website: e.target.value }))}
+                      placeholder="https://yourwebsite.com"
+                    />
                   ) : (
-                    <>
-                      <Save className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
-                      <span>Save Profile</span>
-                    </>
+                    profileData.website && (
+                      <a 
+                        href={profileData.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center text-orange-600 hover:text-orange-700"
+                      >
+                        <LinkIcon className="w-4 h-4 mr-2" />
+                        {profileData.website}
+                      </a>
+                    )
                   )}
-                </Button>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Location
+                  </label>
+                  {isEditing ? (
+                    <Input
+                      value={profileData.location}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, location: e.target.value }))}
+                      placeholder="City, Country"
+                    />
+                  ) : (
+                    <div className="text-gray-700">{profileData.location || 'Not specified'}</div>
+                  )}
+                </div>
               </div>
-            </form>
+            </Card>
+
+            {/* Privacy Settings */}
+            {isEditing && (
+              <Card className="p-6 bg-white/95 backdrop-blur-sm shadow-lg border-0">
+                <h2 className="text-xl font-bold text-gray-900 flex items-center mb-4">
+                  <Shield className="w-5 h-5 mr-2 text-orange-600" />
+                  Privacy Settings
+                </h2>
+                
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-gray-900">Public Profile</h3>
+                      <p className="text-sm text-gray-500">Allow others to find and view your profile</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={profileData.public_profile}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, public_profile: e.target.checked }))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    </label>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-gray-900">Allow Donations</h3>
+                      <p className="text-sm text-gray-500">Enable Bitcoin donations to your profile</p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={profileData.allow_donations}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, allow_donations: e.target.checked }))}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </Card>
+            )}
           </div>
         </div>
       </div>
+
+      {/* File Upload Input (Hidden) */}
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        id="file-upload"
+        onChange={(e) => {
+          const file = e.target.files?.[0]
+          if (file && uploadType) {
+            handleFileUpload(file, uploadType)
+            setUploadType(null)
+          }
+        }}
+      />
+      
+      {/* Trigger file input when needed */}
+      {uploadType && (
+        <script>
+          {document.getElementById('file-upload')?.click()}
+        </script>
+      )}
     </div>
   )
-}
+} 

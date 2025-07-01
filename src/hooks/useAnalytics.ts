@@ -41,7 +41,6 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
       setMetrics(data)
       setLastUpdated(new Date())
     } catch (err) {
-      console.error('Error fetching analytics:', err)
       setError(err instanceof Error ? err.message : 'Failed to fetch analytics data')
     } finally {
       setIsLoading(false)

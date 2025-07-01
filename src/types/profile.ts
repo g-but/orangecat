@@ -4,11 +4,135 @@ export interface Profile {
   display_name?: string | null; // Matches form and a clean schema version
   bio?: string | null;
   avatar_url?: string | null;
+  banner_url?: string | null;
   website?: string | null;    // Confirmed by logs to be in profile state
   email?: string | null;      // From original user-provided type & some migrations
   bitcoin_address?: string | null; // From form data
   lightning_address?: string | null; // Present in some schema versions
   created_at: string;
   updated_at: string;
-  // Removed: full_name, user_id
-} 
+  
+  // Enhanced categorization and association system
+  profile_type?: ProfileType;
+  category_tags?: string[];
+  associated_entities?: AssociatedEntity[];
+  inspiration_statement?: string | null; // What inspires supporters to contribute
+  impact_metrics?: ImpactMetric[];
+  verification_status?: VerificationStatus;
+}
+
+export type ProfileType = 'individual' | 'campaign' | 'organization' | 'collective' | 'project';
+
+export interface AssociatedEntity {
+  id: string;
+  type: ProfileType;
+  name: string;
+  relationship: RelationshipType;
+  verified: boolean;
+}
+
+export type RelationshipType = 
+  | 'creator' 
+  | 'collaborator' 
+  | 'supporter' 
+  | 'beneficiary' 
+  | 'member' 
+  | 'founder' 
+  | 'participant';
+
+export interface ImpactMetric {
+  label: string;
+  value: string | number;
+  description?: string;
+  icon?: string;
+}
+
+export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'featured';
+
+// Profile categories with purposes
+export const PROFILE_CATEGORIES = {
+  individual: {
+    label: 'Individual',
+    description: 'A person with goals, dreams, and projects that need support',
+    icon: '👤',
+    color: 'blue',
+    inspirationPrompts: [
+      'What drives you to create and build?',
+      'How will Bitcoin support change your life or work?',
+      'What impact do you want to make in the world?'
+    ]
+  },
+  campaign: {
+    label: 'Campaign',
+    description: 'A specific project or initiative seeking Bitcoin funding',
+    icon: '🎯',
+    color: 'orange',
+    inspirationPrompts: [
+      'What problem does this campaign solve?',
+      'How will supporters see their impact?',
+      'What makes this campaign unique and worthy of support?'
+    ]
+  },
+  organization: {
+    label: 'Organization',
+    description: 'A company, nonprofit, or group working towards a mission',
+    icon: '🏢',
+    color: 'green',
+    inspirationPrompts: [
+      'What is your organization\'s mission and vision?',
+      'How does Bitcoin funding advance your goals?',
+      'What impact has your organization already made?'
+    ]
+  },
+  collective: {
+    label: 'Collective',
+    description: 'A group of individuals working together on shared goals',
+    icon: '👥',
+    color: 'purple',
+    inspirationPrompts: [
+      'What brings this collective together?',
+      'How does the group amplify individual efforts?',
+      'What unique value does collaboration create?'
+    ]
+  },
+  project: {
+    label: 'Project',
+    description: 'An ongoing initiative or creative work seeking ongoing support',
+    icon: '🚀',
+    color: 'teal',
+    inspirationPrompts: [
+      'What makes this project innovative or important?',
+      'How will ongoing support help the project grow?',
+      'What milestones and goals lie ahead?'
+    ]
+  }
+} as const;
+
+// Category tags for better discovery and association
+export const CATEGORY_TAGS = {
+  // Purpose-based tags
+  education: { label: 'Education', icon: '📚', color: 'blue' },
+  technology: { label: 'Technology', icon: '💻', color: 'indigo' },
+  art: { label: 'Art & Creativity', icon: '🎨', color: 'pink' },
+  environment: { label: 'Environment', icon: '🌱', color: 'green' },
+  social: { label: 'Social Impact', icon: '🤝', color: 'purple' },
+  health: { label: 'Health & Wellness', icon: '❤️', color: 'red' },
+  business: { label: 'Business & Entrepreneurship', icon: '💼', color: 'orange' },
+  research: { label: 'Research & Development', icon: '🔬', color: 'cyan' },
+  community: { label: 'Community Building', icon: '🏘️', color: 'yellow' },
+  journalism: { label: 'Journalism & Media', icon: '📰', color: 'gray' },
+  
+  // Bitcoin-specific tags
+  bitcoin_education: { label: 'Bitcoin Education', icon: '₿', color: 'orange' },
+  lightning: { label: 'Lightning Network', icon: '⚡', color: 'yellow' },
+  mining: { label: 'Bitcoin Mining', icon: '⛏️', color: 'orange' },
+  development: { label: 'Bitcoin Development', icon: '🔧', color: 'blue' },
+  adoption: { label: 'Bitcoin Adoption', icon: '🌍', color: 'green' },
+  
+  // Stage/Status tags
+  startup: { label: 'Startup', icon: '🌟', color: 'purple' },
+  established: { label: 'Established', icon: '🏆', color: 'gold' },
+  experimental: { label: 'Experimental', icon: '🧪', color: 'teal' },
+  collaborative: { label: 'Open to Collaboration', icon: '🤝', color: 'blue' },
+  urgent: { label: 'Urgent Need', icon: '🚨', color: 'red' }
+} as const; 

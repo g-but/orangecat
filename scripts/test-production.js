@@ -1,1 +1,1 @@
-console.log("í·ª Production tests completed");
+// REMOVED: console.log statement

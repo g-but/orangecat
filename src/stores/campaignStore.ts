@@ -17,7 +17,8 @@
 
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
-import { FundingPage } from '@/types/database'
+import { FundingPage } from '@/types/funding'
+import { logger } from '@/utils/logger'
 
 // Create Supabase client only in browser environment
 let supabase: any = null
@@ -155,7 +156,7 @@ export const useCampaignStore = create<CampaignState>()(
           })
           
         } catch (error) {
-          console.error('Failed to load campaigns:', error)
+          logger.error('Failed to load campaigns:', error, 'Campaign')
           set({ 
             error: error instanceof Error ? error.message : 'Failed to load campaigns',
             isLoading: false 
@@ -239,7 +240,7 @@ export const useCampaignStore = create<CampaignState>()(
           return draftId!
           
         } catch (error) {
-          console.error('Failed to save draft:', error)
+          logger.error('Failed to save draft:', error, 'Campaign')
           set({ 
             error: error instanceof Error ? error.message : 'Failed to save draft',
             isSyncing: false 
@@ -313,7 +314,7 @@ export const useCampaignStore = create<CampaignState>()(
           }))
           
         } catch (error) {
-          console.error('Failed to publish campaign:', error)
+          logger.error('Failed to publish campaign:', error, 'Campaign')
           set({ 
             error: error instanceof Error ? error.message : 'Failed to publish campaign',
             isSyncing: false 
@@ -344,7 +345,7 @@ export const useCampaignStore = create<CampaignState>()(
           }))
           
         } catch (error) {
-          console.error('Failed to delete campaign:', error)
+          logger.error('Failed to delete campaign', error, 'Campaign')
           set({ 
             error: error instanceof Error ? error.message : 'Failed to delete campaign',
             isSyncing: false 
@@ -394,7 +395,7 @@ export const useCampaignStore = create<CampaignState>()(
           }))
           
         } catch (error) {
-          console.error('Failed to pause campaign:', error)
+          logger.error('Failed to pause campaign', error, 'Campaign')
           set({ 
             error: error instanceof Error ? error.message : 'Failed to pause campaign',
             isSyncing: false 
@@ -444,7 +445,7 @@ export const useCampaignStore = create<CampaignState>()(
           }))
           
         } catch (error) {
-          console.error('Failed to resume campaign:', error)
+          logger.error('Failed to resume campaign', error, 'Campaign')
           set({ 
             error: error instanceof Error ? error.message : 'Failed to resume campaign',
             isSyncing: false 
@@ -524,7 +525,7 @@ export const useCampaignStore = create<CampaignState>()(
           }))
           
         } catch (error) {
-          console.error('Failed to update campaign:', error)
+          logger.error('Failed to update campaign', error, 'Campaign')
           set({ 
             error: error instanceof Error ? error.message : 'Failed to update campaign',
             isSyncing: false 

@@ -11,12 +11,51 @@ export async function getProfiles() {
     .order('created_at', { ascending: false })
 }
 
-export async function getProfile(id: string) {
-  return supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', id)
-    .single()
+export async function getProfile(userId: string): Promise<{ data: Profile | null; error: string | null }> {
+  try {
+    logProfile(`ProfileHelper: Getting profile for user ${userId}`);
+
+    if (!userId) {
+      return { data: null, error: 'User ID is required' };
+    }
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        logProfile('ProfileHelper: Profile not found');
+        return { data: null, error: null }; // Not found is not an error
+      }
+      logger.error('ProfileHelper: Error fetching profile:', { error }, 'Profile');
+      return { data: null, error: error.message };
+    }
+
+    // Map database schema to application schema
+    const profile: Profile = {
+      id: data.id,
+      username: data.username,
+      display_name: data.full_name, // Map full_name to display_name
+      bio: null, // Not available in current schema
+      avatar_url: data.avatar_url,
+      banner_url: null, // Not available in current schema
+      website: data.website,
+      bitcoin_address: null, // Not available in current schema
+      lightning_address: null, // Not available in current schema
+      created_at: data.created_at,
+      updated_at: data.updated_at
+    };
+
+    logProfile('ProfileHelper: Profile fetched successfully');
+    return { data: profile, error: null };
+
+  } catch (error) {
+    logger.error('ProfileHelper: Unexpected error:', { error }, 'Profile');
+    return { data: null, error: 'Failed to fetch profile' };
+  }
 }
 
 /**
@@ -44,15 +83,13 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
       return { data: null, error: 'Permission denied' };
     }
 
-    // Prepare the profile data for creation
+    // Prepare the profile data for creation with ACTUAL database schema
     const profileData = {
       id: userId,
       username: formData.username?.trim() || null,
-      display_name: formData.display_name?.trim() || null,
-      bio: formData.bio?.trim() || null,
+      full_name: formData.display_name?.trim() || null, // Map display_name to full_name
       avatar_url: formData.avatar_url || null,
-      banner_url: formData.banner_url || null,
-      bitcoin_address: formData.bitcoin_address?.trim() || null,
+      website: formData.website?.trim() || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -68,7 +105,6 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
     if (result.error) {
       logger.error('ProfileHelper: Profile creation failed:', { error: result.error }, 'Profile');
       
-      // Handle specific error cases
       if (result.error.code === '23505') {
         return { data: null, error: 'Username is already taken. Please choose another username.' };
       }
@@ -76,17 +112,27 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
       return { data: null, error: result.error.message || 'Failed to create profile' };
     }
 
-    if (!result.data) {
-      logger.error('ProfileHelper: No data returned from profile creation', undefined, 'Profile');
-      return { data: null, error: 'No data returned from create operation' };
-    }
+    // Map database result back to application schema
+    const profile: Profile = {
+      id: result.data.id,
+      username: result.data.username,
+      display_name: result.data.full_name, // Map full_name back to display_name
+      bio: null,
+      avatar_url: result.data.avatar_url,
+      banner_url: null,
+      website: result.data.website,
+      bitcoin_address: null,
+      lightning_address: null,
+      created_at: result.data.created_at,
+      updated_at: result.data.updated_at
+    };
 
-    logProfile('ProfileHelper: Profile creation successful!', { data: result });
-    return { data: result.data, error: null };
+    logProfile('ProfileHelper: Profile created successfully');
+    return { data: profile, error: null };
 
-  } catch (error: any) {
-    logger.error('ProfileHelper: Unexpected error during profile creation:', error, 'Profile');
-    return { data: null, error: error.message || 'An unexpected error occurred' };
+  } catch (error) {
+    logger.error('ProfileHelper: Unexpected error during creation:', { error }, 'Profile');
+    return { data: null, error: 'Failed to create profile' };
   }
 }
 
@@ -115,8 +161,8 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
       return { data: null, error: 'Permission denied' };
     }
 
-    // Prepare the profile data for update
-    const profileData: Partial<Profile> = {
+    // Prepare the profile data for update with ACTUAL database schema
+    const profileData: Record<string, any> = {
       updated_at: new Date().toISOString(),
     };
 
@@ -125,25 +171,20 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
       profileData.username = formData.username?.trim() || null;
     }
 
+    // Map display_name to full_name
     if (formData.display_name !== undefined) {
-      profileData.display_name = formData.display_name?.trim() || null;
-    }
-
-    if (formData.bio !== undefined) {
-      profileData.bio = formData.bio?.trim() || null;
+      profileData.full_name = formData.display_name?.trim() || null;
     }
 
     if (formData.avatar_url !== undefined) {
       profileData.avatar_url = formData.avatar_url || null;
     }
 
-    if (formData.banner_url !== undefined) {
-      profileData.banner_url = formData.banner_url || null;
+    if (formData.website !== undefined) {
+      profileData.website = formData.website?.trim() || null;
     }
 
-    if (formData.bitcoin_address !== undefined) {
-      profileData.bitcoin_address = formData.bitcoin_address?.trim() || null;
-    }
+    // Skip fields not in current schema: bio, banner_url, bitcoin_address, lightning_address
 
     logProfile('ProfileHelper: Prepared update data:', profileData);
 
@@ -168,11 +209,9 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
       const newProfileData = {
         id: userId,
         username: profileData.username,
-        display_name: profileData.display_name,
-        bio: profileData.bio,
+        full_name: profileData.full_name, // Use full_name instead of display_name
         avatar_url: profileData.avatar_url,
-        banner_url: profileData.banner_url,
-        bitcoin_address: profileData.bitcoin_address,
+        website: profileData.website,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -205,17 +244,27 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
       return { data: null, error: result.error.message || 'Failed to update profile' };
     }
 
-    if (!result.data) {
-      logger.error('ProfileHelper: No data returned from database operation', undefined, 'Profile');
-      return { data: null, error: 'No data returned from update operation' };
-    }
+    // Map database result back to application schema
+    const profile: Profile = {
+      id: result.data.id,
+      username: result.data.username,
+      display_name: result.data.full_name, // Map full_name back to display_name
+      bio: null,
+      avatar_url: result.data.avatar_url,
+      banner_url: null,
+      website: result.data.website,
+      bitcoin_address: null,
+      lightning_address: null,
+      created_at: result.data.created_at,
+      updated_at: result.data.updated_at
+    };
 
-    logProfile('ProfileHelper: Operation successful!', { data: result });
-    return { data: result.data, error: null };
+    logProfile('ProfileHelper: Profile operation successful');
+    return { data: profile, error: null };
 
-  } catch (error: any) {
-    logger.error('ProfileHelper: Unexpected error during profile update:', error, 'Profile');
-    return { data: null, error: error.message || 'An unexpected error occurred' };
+  } catch (error) {
+    logger.error('ProfileHelper: Unexpected error during update:', { error }, 'Profile');
+    return { data: null, error: 'Failed to update profile' };
   }
 }
 
@@ -290,7 +339,7 @@ export async function searchProfiles(query: string): Promise<{ data: Profile[]; 
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .or(`username.ilike.${searchTerm},display_name.ilike.${searchTerm}`)
+      .or(`username.ilike.${searchTerm},full_name.ilike.${searchTerm}`)
       .order('username')
       .limit(20);
 
@@ -351,4 +400,34 @@ export function validateProfileData(formData: ProfileFormData): { valid: boolean
   }
 
   return { valid: errors.length === 0, errors };
+}
+
+/**
+ * Delete a user's profile
+ */
+export async function deleteProfile(userId: string): Promise<{ error: string | null }> {
+  try {
+    logProfile(`ProfileHelper: Deleting profile for user ${userId}`);
+
+    if (!userId) {
+      return { error: 'User ID is required' };
+    }
+
+    const { error } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (error) {
+      logger.error('ProfileHelper: Error deleting profile:', { error }, 'Profile');
+      return { error: error.message || 'Failed to delete profile' };
+    }
+
+    logProfile('ProfileHelper: Profile deleted successfully');
+    return { error: null };
+
+  } catch (error) {
+    logger.error('ProfileHelper: Unexpected error during deletion:', { error }, 'Profile');
+    return { error: 'Failed to delete profile' };
+  }
 } 

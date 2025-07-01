@@ -1,3 +1,100 @@
+# 🧡 OrangeCat
+
+**Bitcoin-powered crowdfunding platform built for transparency and impact.**
+
+[![Deploy Status](https://img.shields.io/badge/deploy-one--button-green)](https://github.com/your-org/orangecat/actions/workflows/one-button-deploy.yml)
+[![Production](https://img.shields.io/badge/production-orangecat.ch-orange)](https://orangecat.ch)
+[![Health Check](https://img.shields.io/badge/health-check-passing-green)](https://orangecat.ch/api/health)
+
+## 🚀 Quick Deploy
+
+**Deploy to production in one click:**
+
+```bash
+npm run deploy:production
+```
+
+Or use the [GitHub Actions UI](https://github.com/your-org/orangecat/actions/workflows/one-button-deploy.yml) for web-based deployment.
+
+## 🏗️ Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+
+# Run tests
+npm test
+
+# Verify deployment setup
+npm run deployment:verify
+```
+
+## 🌐 Live Platform
+
+- **Production**: https://orangecat.ch
+- **Staging**: https://staging-orangecat.vercel.app
+- **Health Check**: https://orangecat.ch/api/health
+
+## 📊 Key Features
+
+- **Bitcoin Integration**: Native Bitcoin and Lightning Network support
+- **Transparent Funding**: Real-time campaign tracking and Bitcoin transactions
+- **Security-First**: Enterprise-grade security with comprehensive testing
+- **Mobile Optimized**: Progressive Web App with offline capabilities
+- **One-Button Deploy**: Enterprise CI/CD with automated quality gates
+
+## 🛡️ Deployment System
+
+Our enterprise-grade deployment system includes:
+
+- ✅ **One-click deployment** via GitHub Actions or CLI
+- ✅ **Quality gates**: Automated testing, security scans, type checking
+- ✅ **Zero-downtime deployment** with automatic health checks
+- ✅ **Emergency rollback** capabilities
+- ✅ **Version management** with automatic tagging
+- ✅ **Real-time monitoring** and notifications
+
+See [Deployment Guide](docs/deployment/ONE_BUTTON_DEPLOYMENT.md) for details.
+
+## 🧪 Testing
+
+```bash
+# Unit tests
+npm run test:unit
+
+# Security tests  
+npm run test:security
+
+# End-to-end tests
+npm run test:e2e
+
+# Full test suite
+npm run test:all
+```
+
+## 📚 Documentation
+
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [API Documentation](docs/api/)
+- [Deployment Guide](docs/deployment/ONE_BUTTON_DEPLOYMENT.md)
+- [Security Documentation](docs/security/)
+- [Contributing Guide](docs/contributing/CONTRIBUTING.md)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](docs/contributing/CONTRIBUTING.md) for details.
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+**Built with ❤️ and ⚡ Bitcoin**
+
 # OrangeCat - Bitcoin Fundraising Platform
 
 A modern platform for creating and managing Bitcoin funding pages with transparency features.

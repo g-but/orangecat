@@ -183,7 +183,7 @@ if (config.supabaseUrl && config.supabaseAnonKey && isBrowser) {
           persistSession: true,
           autoRefreshToken: true,
           detectSessionInUrl: true,
-          debug: config.nodeEnv !== 'production',
+          debug: false, // Disabled to prevent console spam
           storage: safeStorage
         },
         cookieOptions: {

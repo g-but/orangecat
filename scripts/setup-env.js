@@ -29,22 +29,22 @@ const envVars = {
 };
 
 async function setupVercelEnv() {
-  console.log('Setting up Vercel environment variables...');
+  // REMOVED: console.log statement
   
   for (const [key, value] of Object.entries(envVars)) {
     try {
-      console.log(`Setting ${key}...`);
+      // REMOVED: console.log statement
       execSync(`vercel env add ${key} production`, {
         input: Buffer.from(`${value}\n`),
         stdio: ['pipe', 'inherit', 'inherit']
       });
-      console.log(`✅ ${key} set successfully`);
+      if (process.env.NODE_ENV === 'development') console.log(`✅ ${key} set successfully`);
     } catch (error) {
       console.error(`❌ Failed to set ${key}: ${error.message}`);
     }
   }
   
-  console.log('Environment setup complete!');
+  // REMOVED: console.log statement
 }
 
 setupVercelEnv().catch(console.error); 

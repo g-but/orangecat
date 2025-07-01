@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OrangeCat - Offline</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f7931a20 0%, #00d4aa20 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    
+    .container {
+      background: white;
+      padding: 3rem 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    
+    .logo {
+      width: 64px;
+      height: 64px;
+      background: #f7931a;
+      border-radius: 50%;
+      margin: 0 auto 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+    }
+    
+    h1 {
+      color: #1f2937;
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+    
+    h2 {
+      color: #f7931a;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+    }
+    
+    p {
+      color: #6b7280;
+      line-height: 1.5;
+      margin-bottom: 2rem;
+    }
+    
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    button {
+      background: #f7931a;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background: #e8830f;
+    }
+    
+    button.secondary {
+      background: transparent;
+      color: #6b7280;
+      border: 1px solid #d1d5db;
+    }
+    
+    button.secondary:hover {
+      background: #f9fafb;
+      color: #374151;
+    }
+    
+    .status {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      border-radius: 0.5rem;
+      color: #92400e;
+      font-size: 0.875rem;
+    }
+    
+    .status.online {
+      background: #dcfce7;
+      border-color: #16a34a;
+      color: #166534;
+    }
+    
+    @media (max-width: 480px) {
+      .container {
+        padding: 2rem 1.5rem;
+      }
+      
+      h1 {
+        font-size: 1.25rem;
+      }
+      
+      h2 {
+        font-size: 1.125rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🟠</div>
+    <h1>OrangeCat</h1>
+    <h2>You're Offline</h2>
+    <p>It looks like you're not connected to the internet. Some features may not be available until you're back online.</p>
+    
+    <div class="buttons">
+      <button onclick="window.location.reload()">Try Again</button>
+      <button class="secondary" onclick="goHome()">Go to Homepage</button>
+    </div>
+    
+    <div id="status" class="status">
+      <span id="status-text">Checking connection...</span>
+    </div>
+  </div>
+
+  <script>
+    // Check online status
+    function updateOnlineStatus() {
+      const statusEl = document.getElementById('status')
+      const statusText = document.getElementById('status-text')
+      
+      if (navigator.onLine) {
+        statusEl.className = 'status online'
+        statusText.textContent = 'Connection restored! You can try refreshing the page.'
+      } else {
+        statusEl.className = 'status'
+        statusText.textContent = 'Still offline. Please check your internet connection.'
+      }
+    }
+    
+    // Update status on load and when online status changes
+    updateOnlineStatus()
+    window.addEventListener('online', updateOnlineStatus)
+    window.addEventListener('offline', updateOnlineStatus)
+    
+    // Auto-reload when connection is restored
+    window.addEventListener('online', () => {
+      setTimeout(() => {
+        window.location.reload()
+      }, 2000) // Wait 2 seconds to ensure stable connection
+    })
+    
+    function goHome() {
+      window.location.href = '/'
+    }
+    
+    // Periodic connection check
+    setInterval(() => {
+      if (navigator.onLine) {
+        // Test actual connectivity with a lightweight request
+        fetch('/api/health', { 
+          method: 'HEAD',
+          cache: 'no-cache' 
+        })
+        .then(() => {
+          // Connection verified, reload
+          window.location.reload()
+        })
+        .catch(() => {
+          // Still having issues, keep checking
+        })
+      }
+    }, 10000) // Check every 10 seconds
+  </script>
+</body>
+</html> 

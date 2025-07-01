@@ -1,237 +1,376 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+/**
+ * DATABASE TYPES - SCALABLE SCHEMA
+ * 
+ * Comprehensive type definitions for the scalable profile system
+ * with Bitcoin-native features, analytics, and extensibility.
+ * 
+ * Created: 2025-01-08
+ * Last Modified: 2025-01-08
+ * Last Modified Summary: Updated for scalable schema with comprehensive features
+ */
 
-export type Database = {
-  public: {
-    Tables: {
-      profiles: {
-        Row: Profile
-        Insert: Omit<Profile, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<Profile, 'id'>>
-      }
-      funding_pages: {
-        Row: FundingPage
-        Insert: Omit<FundingPage, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<FundingPage, 'id'>>
-      }
-      transactions: {
-        Row: Transaction
-        Insert: Omit<Transaction, 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Omit<Transaction, 'id'>>
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
-
-type DefaultSchema = Database[Extract<keyof Database, "public">]
-
-export type Tables<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-    | { schema: keyof Database },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-        Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-      Database[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-      Row: infer R
-    }
-    ? R
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])
-    ? (DefaultSchema["Tables"] &
-        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
-    : never
-
-export type TablesInsert<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Insert: infer I
-    }
-    ? I
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Insert: infer I
-      }
-      ? I
-      : never
-    : never
-
-export type TablesUpdate<
-  DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof Database },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-      Update: infer U
-    }
-    ? U
-    : never
-  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
-    : never
-
-export type Enums<
-  DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof Database },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-    : never
-
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof Database },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database
-  }
-    ? keyof Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never
-
-export const Constants = {
-  public: {
-    Enums: {},
-  },
-} as const
+// =====================================================================
+// 🎯 CORE PROFILE INTERFACE
+// =====================================================================
 
 export interface Profile {
+  // Core identity fields
   id: string
-  username?: string | null
+  username: string | null
   display_name: string | null
-  avatar_url?: string | null
-  banner_url?: string | null
   bio: string | null
-  website?: string | null
-  bitcoin_address: string | null
-  lightning_address?: string | null
+  avatar_url: string | null
+  banner_url: string | null
+  website: string | null
   created_at: string
   updated_at: string
+  
+  // Bitcoin fields (for backward compatibility)
+  bitcoin_address: string | null
+  lightning_address: string | null
 }
+
+// =====================================================================
+// 🚀 SCALABLE PROFILE INTERFACE
+// =====================================================================
+
+export interface ScalableProfile extends Profile {
+  // Contact & Location
+  email: string | null
+  phone: string | null
+  location: string | null
+  timezone: string | null
+  language: string | null
+  currency: string | null
+  
+  // Bitcoin-native features
+  bitcoin_public_key: string | null
+  lightning_node_id: string | null
+  payment_preferences: Record<string, any> | null
+  bitcoin_balance: number | null
+  lightning_balance: number | null
+  
+  // Analytics & Engagement
+  profile_views: number | null
+  follower_count: number | null
+  following_count: number | null
+  campaign_count: number | null
+  total_raised: number | null
+  total_donated: number | null
+  
+  // Verification & Security
+  verification_status: 'unverified' | 'pending' | 'verified' | 'rejected' | null
+  verification_level: number | null
+  kyc_status: 'none' | 'pending' | 'approved' | 'rejected' | null
+  two_factor_enabled: boolean | null
+  last_login_at: string | null
+  login_count: number | null
+  
+  // Customization & Branding
+  theme_preferences: Record<string, any> | null
+  custom_css: string | null
+  profile_color: string | null
+  cover_image_url: string | null
+  profile_badges: any[] | null
+  
+  // Status & Temporal
+  status: 'active' | 'inactive' | 'suspended' | 'deleted' | null
+  last_active_at: string | null
+  profile_completed_at: string | null
+  onboarding_completed: boolean | null
+  terms_accepted_at: string | null
+  privacy_policy_accepted_at: string | null
+  
+  // Extensibility (JSON fields)
+  social_links: Record<string, any> | null
+  preferences: Record<string, any> | null
+  metadata: Record<string, any> | null
+  verification_data: Record<string, any> | null
+  privacy_settings: Record<string, any> | null
+}
+
+// =====================================================================
+// 📝 FORM DATA INTERFACES
+// =====================================================================
 
 export interface ProfileFormData {
+  // Core fields
   username?: string
   display_name?: string
+  bio?: string
   avatar_url?: string
   banner_url?: string
-  bio?: string
   website?: string
+  
+  // Bitcoin fields
   bitcoin_address?: string
   lightning_address?: string
 }
 
-export interface PasswordFormData {
-  currentPassword: string
-  newPassword: string
-  confirmPassword: string
+export interface ScalableProfileFormData extends ProfileFormData {
+  // Contact & Location
+  email?: string
+  phone?: string
+  location?: string
+  timezone?: string
+  language?: string
+  currency?: string
+  
+  // Bitcoin-native features
+  bitcoin_public_key?: string
+  lightning_node_id?: string
+  payment_preferences?: Record<string, any>
+  
+  // Customization
+  profile_color?: string
+  cover_image_url?: string
+  theme_preferences?: Record<string, any>
+  
+  // Extensibility
+  social_links?: Record<string, any>
+  preferences?: Record<string, any>
+  privacy_settings?: Record<string, any>
 }
 
-export interface FundingPage {
+// =====================================================================
+// 🔍 SEARCH & FILTER INTERFACES
+// =====================================================================
+
+export interface ProfileSearchOptions {
+  limit?: number
+  offset?: number
+  status?: 'active' | 'inactive' | 'suspended' | 'deleted'
+  verification_status?: 'unverified' | 'pending' | 'verified' | 'rejected'
+  verification_level?: number
+  orderBy?: string
+  orderDirection?: 'asc' | 'desc'
+  location?: string
+  language?: string
+  currency?: string
+}
+
+export interface ProfileSearchResult {
   id: string
-  user_id: string
-  title: string
-  description?: string | null
-  bitcoin_address?: string | null
-  lightning_address?: string | null
-  website_url?: string | null
-  goal_amount?: number | null
-  total_funding: number
-  contributor_count: number
-  is_active: boolean
-  is_public: boolean
-  is_featured?: boolean
-  slug?: string | null
-  category?: string | null
-  tags?: string[] | null
-  featured_image_url?: string | null
-  end_date?: string | null
-  currency?: string | null
-  created_at: string
-  updated_at: string
+  username: string | null
+  display_name: string | null
+  bio: string | null
+  avatar_url: string | null
+  verification_status: string | null
+  follower_count: number | null
+  rank?: number
 }
 
-export interface FundingPageFormData {
-  title: string
-  description?: string
-  bitcoin_address?: string
-  lightning_address?: string
-  website_url?: string
-  goal_amount?: number
-  categories?: string[] // Changed from single category to array
-  tags?: string[]
-  currency?: 'BTC' | 'SATS'
-  end_date?: string
+// =====================================================================
+// 📊 ANALYTICS INTERFACES
+// =====================================================================
+
+export interface ProfileAnalytics {
+  profile_views: number
+  follower_count: number
+  following_count: number
+  campaign_count: number
+  total_raised: number
+  total_donated: number
 }
 
-export interface Transaction {
-  id: string
-  funding_page_id: string
-  amount: number
-  transaction_hash: string
-  status: 'pending' | 'confirmed' | 'failed'
-  created_at: string
-  updated_at: string
+export interface ProfileAnalyticsUpdate {
+  profile_views?: number
+  follower_count?: number
+  following_count?: number
+  campaign_count?: number
+  total_raised?: number
+  total_donated?: number
 }
 
-export interface ProfileUpdateResult {
+// =====================================================================
+// 🔒 VERIFICATION INTERFACES
+// =====================================================================
+
+export interface VerificationData {
+  type: 'identity' | 'bitcoin' | 'lightning' | 'social' | 'kyc'
+  status: 'pending' | 'approved' | 'rejected'
+  submitted_at: string
+  reviewed_at?: string
+  reviewer_id?: string
+  documents?: string[]
+  notes?: string
+  metadata?: Record<string, any>
+}
+
+export interface ProfileVerification {
+  verification_status: 'unverified' | 'pending' | 'verified' | 'rejected'
+  verification_level: number
+  kyc_status: 'none' | 'pending' | 'approved' | 'rejected'
+  verification_data: Record<string, VerificationData>
+}
+
+// =====================================================================
+// 💰 BITCOIN INTERFACES
+// =====================================================================
+
+export interface BitcoinProfile {
+  bitcoin_address: string | null
+  lightning_address: string | null
+  bitcoin_public_key: string | null
+  lightning_node_id: string | null
+  bitcoin_balance: number
+  lightning_balance: number
+  payment_preferences: {
+    preferred_method: 'bitcoin' | 'lightning' | 'both'
+    auto_accept_payments: boolean
+    payment_notifications: boolean
+    minimum_amount?: number
+    maximum_amount?: number
+    fee_preference: 'low' | 'medium' | 'high'
+  }
+}
+
+// =====================================================================
+// 🎨 CUSTOMIZATION INTERFACES
+// =====================================================================
+
+export interface ProfileCustomization {
+  theme_preferences: {
+    theme: 'light' | 'dark' | 'auto'
+    accent_color: string
+    font_family: string
+    font_size: 'small' | 'medium' | 'large'
+    compact_mode: boolean
+  }
+  profile_color: string
+  cover_image_url: string | null
+  custom_css: string | null
+  profile_badges: Array<{
+    id: string
+    type: 'verification' | 'achievement' | 'custom'
+    name: string
+    icon: string
+    color: string
+    earned_at: string
+  }>
+}
+
+// =====================================================================
+// 🔗 SOCIAL LINKS INTERFACE
+// =====================================================================
+
+export interface SocialLinks {
+  twitter?: string
+  github?: string
+  linkedin?: string
+  instagram?: string
+  youtube?: string
+  tiktok?: string
+  discord?: string
+  telegram?: string
+  nostr?: string
+  mastodon?: string
+  custom?: Array<{
+    name: string
+    url: string
+    icon?: string
+  }>
+}
+
+// =====================================================================
+// ⚙️ PREFERENCES INTERFACE
+// =====================================================================
+
+export interface ProfilePreferences {
+  notifications: {
+    email_notifications: boolean
+    push_notifications: boolean
+    campaign_updates: boolean
+    follower_notifications: boolean
+    payment_notifications: boolean
+    security_alerts: boolean
+  }
+  privacy: {
+    profile_visibility: 'public' | 'followers' | 'private'
+    show_email: boolean
+    show_phone: boolean
+    show_location: boolean
+    show_bitcoin_address: boolean
+    show_analytics: boolean
+  }
+  display: {
+    show_verification_badge: boolean
+    show_follower_count: boolean
+    show_campaign_count: boolean
+    show_total_raised: boolean
+  }
+}
+
+// =====================================================================
+// 📈 PROFILE STATISTICS INTERFACE
+// =====================================================================
+
+export interface ProfileStatistics {
+  total_profiles: number
+  active_profiles: number
+  verified_profiles: number
+  new_profiles_30d: number
+  active_profiles_7d: number
+  avg_followers: number
+  total_platform_raised: number
+  total_platform_donated: number
+}
+
+// =====================================================================
+// 🔄 API RESPONSE INTERFACES
+// =====================================================================
+
+export interface ProfileResponse {
   success: boolean
-  data?: any
+  profile?: ScalableProfile
   error?: string
   warning?: string
 }
+
+export interface ProfileListResponse {
+  success: boolean
+  profiles: ScalableProfile[]
+  total_count: number
+  has_more: boolean
+  error?: string
+}
+
+export interface ProfileSearchResponse {
+  success: boolean
+  results: ProfileSearchResult[]
+  total_count: number
+  has_more: boolean
+  error?: string
+}
+
+// =====================================================================
+// 🛠️ UTILITY TYPES
+// =====================================================================
+
+export type ProfileStatus = 'active' | 'inactive' | 'suspended' | 'deleted'
+export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'rejected'
+export type KYCStatus = 'none' | 'pending' | 'approved' | 'rejected'
+
+// Partial update types
+export type ProfileUpdate = Partial<ScalableProfile>
+export type ProfileFormUpdate = Partial<ScalableProfileFormData>
+
+// Database table types (for Supabase)
+export interface Database {
+  public: {
+    Tables: {
+      profiles: {
+        Row: ScalableProfile
+        Insert: Partial<ScalableProfile>
+        Update: Partial<ScalableProfile>
+      }
+    }
+  }
+}
+
+// =====================================================================
+// 📋 EXPORT ALL TYPES
+// =====================================================================
+
+// Note: All interfaces are already exported inline above
+// Removed duplicate export type declarations to fix TypeScript errors

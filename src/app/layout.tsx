@@ -1,20 +1,21 @@
-import '../polyfills'
 import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
-import Header from '@/components/layout/Header'
-import Footer from '@/components/layout/Footer'
 import ClientErrorBoundary from '@/components/ClientErrorBoundary'
-import { Toaster } from 'sonner'
-import { Suspense } from 'react'
+import { Suspense, lazy } from 'react'
 import Loading from '@/components/Loading'
-import { Analytics } from '@vercel/analytics/react'
-import { SpeedInsights } from '@vercel/speed-insights/next'
 import { createServerClient } from '@/services/supabase/server'
-import { AuthProvider } from '@/components/auth/AuthProvider'
+import { AuthProvider } from '@/components/AuthProvider'
 import { headers } from 'next/headers'
 import Script from 'next/script'
 import { GlobalAuthErrorBanner } from '@/components/Loading'
 import { GlobalAuthLoader } from '@/components/Loading'
+
+// Dynamic imports for non-critical components
+const DynamicToaster = lazy(() => import('sonner').then(module => ({ default: module.Toaster })))
+const DynamicAnalytics = lazy(() => import('@vercel/analytics/react').then(module => ({ default: module.Analytics })))
+const DynamicSpeedInsights = lazy(() => import('@vercel/speed-insights/next').then(module => ({ default: module.SpeedInsights })))
+const DynamicUnifiedHeader = lazy(() => import('@/components/layout/UnifiedHeader'))
+const DynamicFooter = lazy(() => import('@/components/layout/Footer'))
 
 const inter = Inter({
   subsets: ['latin'],
@@ -46,15 +47,11 @@ export default async function RootLayout({
 
   const supabase = await createServerClient()
   
-  // Use getUser() for security - validates authentication with server
+  // Get user for secure auth state (getUser() validates token with server)
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   
-  // Get session only if we have a valid authenticated user
-  let session = null
-  if (user && !userError) {
-    const { data: { session: userSession } } = await supabase.auth.getSession()
-    session = userSession
-  }
+  // Use null for session - AuthProvider handles user-only auth state
+  const session = null
 
   // Try to get profile data if user exists and is authenticated
   let profile = null
@@ -75,58 +72,144 @@ export default async function RootLayout({
   }
 
   // Debug logs for SSR state (after profile fetch attempt)
-  // console.log('SSR session after profile fetch:', session)
-  // console.log('SSR user after profile fetch:', user)
-  // console.log('SSR profile after profile fetch:', profile)
-  // console.log('SSR headers:', Object.fromEntries(headersList.entries()))
+  // REMOVED: console.log statement for security
+  // REMOVED: console.log statement for security
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
 
   return (
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`} suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
-        {/* Enhanced global polyfill for Vercel deployment compatibility */}
+        {/* Mobile-first viewport with PWA support */}
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+        
+        {/* PWA Manifest */}
+        <link rel="manifest" href="/manifest.json" />
+        
+        {/* PWA Theme Colors */}
+        <meta name="theme-color" content="#F7931A" />
+        <meta name="background-color" content="#ffffff" />
+        
+        {/* Mobile Safari PWA */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="OrangeCat" />
+        
+        {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+        
+        {/* Mobile Chrome PWA */}
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="application-name" content="OrangeCat" />
+        
+        {/* Windows PWA */}
+        <meta name="msapplication-TileColor" content="#F7931A" />
+        <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+        
+        {/* Preconnect to external domains */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        
+        {/* Service Worker Registration */}
+        <Script
+          id="service-worker-registration"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                      console.log('[SW] Registration successful:', registration.scope);
+                      
+                      // Check for updates
+                      registration.addEventListener('updatefound', function() {
+                        const newWorker = registration.installing;
+                        if (newWorker) {
+                          newWorker.addEventListener('statechange', function() {
+                            if (newWorker.state === 'installed') {
+                              if (navigator.serviceWorker.controller) {
+                                // New content available, notify user
+                                console.log('[SW] New content available');
+                              } else {
+                                // Content cached for first time
+                                console.log('[SW] Content cached for offline use');
+                              }
+                            }
+                          });
+                        }
+                      });
+                    })
+                    .catch(function(error) {
+                      console.log('[SW] Registration failed:', error);
+                    });
+                });
+              }
+            `,
+          }}
+        />
+        
+        {/* PWA Install Prompt */}
+        <Script
+          id="pwa-install-prompt"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              let deferredPrompt;
+              let installButton;
+              
+              window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('[PWA] Install prompt available');
+                e.preventDefault();
+                deferredPrompt = e;
+                
+                // Show install button if available
+                installButton = document.getElementById('pwa-install-btn');
+                if (installButton) {
+                  installButton.style.display = 'block';
+                  installButton.addEventListener('click', () => {
+                    if (deferredPrompt) {
+                      deferredPrompt.prompt();
+                      deferredPrompt.userChoice.then((choiceResult) => {
+                        console.log('[PWA] User choice:', choiceResult.outcome);
+                        deferredPrompt = null;
+                        installButton.style.display = 'none';
+                      });
+                    }
+                  });
+                }
+              });
+              
+              window.addEventListener('appinstalled', (evt) => {
+                console.log('[PWA] App installed');
+                if (installButton) {
+                  installButton.style.display = 'none';
+                }
+              });
+            `,
+          }}
+        />
+        
+        {/* Simplified global polyfill */}
         <Script
           id="global-polyfill"
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              (function() {
-                // Ensure globalThis exists first
-                if (typeof globalThis === 'undefined') {
-                  if (typeof global !== 'undefined') {
-                    global.globalThis = global;
-                  } else if (typeof window !== 'undefined') {
-                    window.globalThis = window;
-                  } else if (typeof self !== 'undefined') {
-                    self.globalThis = self;
-                  } else {
-                    // Create a minimal globalThis
-                    var globalThis = {};
-                  }
+              if (typeof globalThis === 'undefined') {
+                if (typeof global !== 'undefined') {
+                  global.globalThis = global;
+                } else if (typeof window !== 'undefined') {
+                  window.globalThis = window;
+                } else if (typeof self !== 'undefined') {
+                  self.globalThis = self;
                 }
-                
-                // Define self if it doesn't exist
-                if (typeof self === 'undefined') {
-                  globalThis.self = globalThis;
-                  if (typeof global !== 'undefined') {
-                    global.self = globalThis;
-                  }
-                }
-                
-                // Define global if it doesn't exist
-                if (typeof global === 'undefined') {
-                  globalThis.global = globalThis;
-                }
-                
-                // Ensure window exists in appropriate contexts
-                if (typeof window === 'undefined' && typeof globalThis !== 'undefined') {
-                  globalThis.window = globalThis;
-                }
-              })();
+              }
             `,
           }}
         />
-        {/* Auth cleanup script removed to fix MIME errors */}
       </head>
       <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white safe-area-padding" suppressHydrationWarning>
         <AuthProvider user={user} session={session} profile={profile}>
@@ -136,25 +219,35 @@ export default async function RootLayout({
               {/* Global loading overlay based on auth store */}
               <GlobalAuthLoader />
               <div className="min-h-screen flex flex-col">
-                {/* Only show main header on public routes */}
-                {!isAuthenticatedRoute && <Header />}
+                {/* Global consistent header for all pages */}
+                <Suspense fallback={<div className="h-16 sm:h-20 bg-white shadow-sm" />}>
+                  <DynamicUnifiedHeader showSearch={true} />
+                </Suspense>
                 <main className={`flex-grow ${!isAuthenticatedRoute ? 'pt-16 sm:pt-20' : ''}`}>
                   {children}
                 </main>
-                <Footer />
+                <Suspense fallback={<div className="h-32 bg-gray-50" />}>
+                  <DynamicFooter />
+                </Suspense>
               </div>
             </Suspense>
           </ClientErrorBoundary>
-          <Toaster 
-            position="top-right" 
-            toastOptions={{
-              style: {
-                marginTop: '4rem',
-              },
-            }}
-          />
-          <Analytics />
-          <SpeedInsights />
+          <Suspense fallback={null}>
+            <DynamicToaster 
+              position="top-right" 
+              toastOptions={{
+                style: {
+                  marginTop: '4rem',
+                },
+              }}
+            />
+          </Suspense>
+          <Suspense fallback={null}>
+            <DynamicAnalytics />
+          </Suspense>
+          <Suspense fallback={null}>
+            <DynamicSpeedInsights />
+          </Suspense>
         </AuthProvider>
       </body>
     </html>

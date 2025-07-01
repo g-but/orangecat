@@ -1,0 +1,117 @@
+/**
+ * PROFILE SERVICE - MODULAR ARCHITECTURE
+ * 
+ * Created: 2025-01-09
+ * Last Modified: 2025-01-09
+ * Last Modified Summary: ✅ REFACTORED from 808-line monolith to modular architecture - Option A Phase 1 Complete
+ * 
+ * BEFORE: 808 lines in single file (102% over 400-line limit)
+ * AFTER: 6 focused modules with single responsibilities
+ * 
+ * Architecture Benefits:
+ * - Single Responsibility Principle
+ * - Better testability
+ * - Easier maintenance
+ * - Improved code reuse
+ * - Clear separation of concerns
+ */
+
+// Export all types
+export type {
+  ScalableProfile,
+  ScalableProfileFormData,
+  ProfileAnalytics,
+  ProfileServiceResponse
+} from './types';
+
+// Export all modules
+export { ProfileMapper } from './mapper';
+export { ProfileReader } from './reader';
+export { ProfileWriter } from './writer';
+
+// Main service class that combines all operations
+import { ProfileReader } from './reader';
+import { ProfileWriter } from './writer';
+import type { ScalableProfile, ScalableProfileFormData, ProfileAnalytics, ProfileServiceResponse } from './types';
+import { logger } from '@/utils/logger';
+
+export class ProfileService {
+  // =====================================================================
+  // 📖 READ OPERATIONS
+  // =====================================================================
+  
+  static async getProfile(userId: string): Promise<ScalableProfile | null> {
+    return ProfileReader.getProfile(userId);
+  }
+
+  static async getProfiles(options: {
+    limit?: number;
+    offset?: number;
+    orderBy?: string;
+    orderDirection?: 'asc' | 'desc';
+  } = {}): Promise<ScalableProfile[]> {
+    return ProfileReader.getProfiles(options);
+  }
+
+  static async searchProfiles(
+    searchTerm: string,
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<ScalableProfile[]> {
+    return ProfileReader.searchProfiles(searchTerm, limit, offset);
+  }
+
+  static async getAllProfiles(): Promise<ScalableProfile[]> {
+    return ProfileReader.getAllProfiles();
+  }
+
+  static async incrementProfileViews(userId: string): Promise<void> {
+    return ProfileReader.incrementProfileViews(userId);
+  }
+
+  // =====================================================================
+  // ✏️ WRITE OPERATIONS
+  // =====================================================================
+
+  static async updateProfile(
+    userId: string,
+    formData: ScalableProfileFormData
+  ): Promise<ProfileServiceResponse<ScalableProfile>> {
+    return ProfileWriter.updateProfile(userId, formData);
+  }
+
+  static async createProfile(
+    userId: string,
+    formData: ScalableProfileFormData
+  ): Promise<ProfileServiceResponse<ScalableProfile>> {
+    return ProfileWriter.createProfile(userId, formData);
+  }
+
+  static async updateAnalytics(
+    userId: string,
+    analytics: ProfileAnalytics
+  ): Promise<ProfileServiceResponse<void>> {
+    return ProfileWriter.updateAnalytics(userId, analytics);
+  }
+
+  static async deleteProfile(userId: string): Promise<ProfileServiceResponse<void>> {
+    return ProfileWriter.deleteProfile(userId);
+  }
+
+  static async fallbackProfileUpdate(
+    userId: string,
+    updates: Record<string, any>
+  ): Promise<ProfileServiceResponse<any>> {
+    return ProfileWriter.fallbackUpdate(userId, updates);
+  }
+
+  // =====================================================================
+  // 🔐 LEGACY COMPATIBILITY METHODS
+  // =====================================================================
+
+  static async updatePassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
+    // This method should be moved to an auth service
+    logger.warn('ProfileService.updatePassword is deprecated. Use AuthService instead.', undefined, 'Profile');
+    return { success: false, error: 'Method deprecated. Use AuthService.' };
+  }
+} 

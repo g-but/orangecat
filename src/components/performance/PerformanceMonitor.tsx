@@ -17,8 +17,8 @@
 
 import React, { useEffect, useState, useCallback } from 'react'
 import { performanceMonitor } from '@/services/performance/database-optimizer'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/Badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { 
   Activity, 
   Clock, 
@@ -66,10 +66,10 @@ function useRenderPerformance(componentName: string) {
  * Hook to track API performance
  */
 function useAPIPerformance() {
-  const trackAPI = useCallback(async <T>(
+  const trackAPI = useCallback(async (
     name: string,
-    apiCall: () => Promise<T>
-  ): Promise<T> => {
+    apiCall: () => Promise<any>
+  ): Promise<any> => {
     const startTime = performance.now()
     try {
       const result = await apiCall()

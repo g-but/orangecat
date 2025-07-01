@@ -23,7 +23,10 @@ import {
   Heart,
   Copy,
   Eye,
-  Zap
+  Zap,
+  Plus,
+  Target,
+  Sparkles
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import Loading from '@/components/Loading'
@@ -36,6 +39,11 @@ import { useBitcoinWallet } from '@/hooks/useBitcoinWallet'
 import { getTransactionUrl } from '@/services/bitcoin'
 import DefaultAvatar from '@/components/ui/DefaultAvatar'
 import { sanitizeBioForDisplay } from '@/utils/validation'
+import { FundingPage } from '@/types/funding'
+import { getUserFundingPages } from '@/services/supabase/fundraising'
+import { fetchBitcoinWalletData } from '@/services/bitcoin'
+import ProfileAssociations from '@/components/profile/ProfileAssociations'
+import CreateAssociationButton from '@/components/profile/CreateAssociationButton'
 
 // Get Mempool.space address URL
 const getAddressUrl = (address: string): string => {
@@ -53,6 +61,7 @@ export default function PublicProfilePage() {
   const { user: currentUser, profile: currentUserProfile } = useAuthStore()
   
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [fundingPages, setFundingPages] = useState<FundingPage[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -82,7 +91,6 @@ export default function PublicProfilePage() {
             .eq('id', currentUser.id)
             .single()
             if (fetchError) {
-                console.error('Error fetching own profile by ID:', fetchError)
                 setError('Could not load your profile. Please try again.')
                 setProfile(null)
             } else {
@@ -105,12 +113,23 @@ export default function PublicProfilePage() {
         .single()
 
       if (fetchError) {
-        console.error('Error fetching profile:', fetchError)
         setError('Profile not found or an error occurred.')
         setProfile(null)
-      } else {
-        setProfile(data)
+        setIsLoading(false)
+        return
       }
+
+        setProfile(data)
+
+      // Fetch funding pages for this user
+      try {
+        // REMOVED: console.log statement for security
+        const userFundingPages = await getUserFundingPages(data.id)
+        // REMOVED: console.log statement
+        setFundingPages(userFundingPages as FundingPage[])
+      } catch (fundingError) {
+      }
+
       setIsLoading(false)
     }
 
@@ -229,10 +248,61 @@ export default function PublicProfilePage() {
                       </p>
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-2 px-4 py-2 bg-orange-100 rounded-full">
-                      <Bitcoin className="w-5 h-5 text-orange-600" />
-                      <span className="text-orange-800 font-medium">Bitcoin User</span>
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full">
+                      <span className="text-lg">👤</span>
+                      <span className="text-blue-800 font-medium">Individual</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="px-3 py-1 bg-orange-100 text-orange-700 text-sm rounded-full border border-orange-200">
+                        ₿ Bitcoin Education
+                      </span>
+                      <span className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full border border-blue-200">
+                        💻 Technology
+                      </span>
+                      <span className="px-3 py-1 bg-green-100 text-green-700 text-sm rounded-full border border-green-200">
+                        🤝 Community Building
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Inspiration & Why Support Section */}
+            <Card className="shadow-xl border-0 bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <Sparkles className="w-5 h-5 text-orange-600" />
+                  <h3 className="text-xl font-semibold text-gray-900">Why Support {profile.display_name}?</h3>
+                </div>
+                <div className="bg-white/80 rounded-lg p-4 mb-4">
+                  <p className="text-gray-700 italic text-lg leading-relaxed">
+                    "I'm passionate about making Bitcoin education accessible to everyone. Your support helps me create free content, tutorials, and resources that empower people to understand and use Bitcoin confidently."
+                  </p>
+                </div>
+                
+                {/* Associated Projects */}
+                <h4 className="text-lg font-semibold text-gray-900 mb-3">Associated Projects</h4>
+                <div className="space-y-3">
+                  {/* Orange Cat Campaign Association */}
+                  <div className="flex items-center justify-between p-4 bg-white rounded-lg border border-orange-200 hover:bg-orange-50 transition-colors cursor-pointer">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm">🎯</span>
+                      </div>
+                      <div>
+                        <h5 className="font-semibold text-gray-900">Orange Cat</h5>
+                        <p className="text-sm text-gray-600">Creator • Bitcoin Education Campaign</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full">Campaign</span>
+                          <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full">Active</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">₿0.45 raised</p>
+                      <p className="text-xs text-gray-500">23 supporters</p>
                     </div>
                   </div>
                 </div>
@@ -392,6 +462,44 @@ export default function PublicProfilePage() {
 
           {/* Right Column - Additional Info */}
           <div className="space-y-6">
+            {/* Profile Associations - LIVE DATABASE INTEGRATION */}
+            <div className="space-y-4">
+              <ProfileAssociations
+                profileId={profile.id}
+                maxVisible={3}
+                associations={
+                  // Fallback to legacy format for existing campaigns while database is being populated
+                  fundingPages.length > 0 ? fundingPages.map(page => ({
+                    type: 'creator' as const,
+                    entity: {
+                      username: page.slug || page.id,
+                      name: page.title,
+                      type: 'campaign' as const,
+                      description: page.description || 'A Bitcoin fundraising campaign',
+                      url: `/campaign/${page.slug || page.id}`
+                    },
+                    relationship: 'created' as const,
+                    metadata: {
+                      role: 'Creator',
+                      since: new Date(page.created_at).getFullYear().toString(),
+                      status: page.is_active ? 'active' as const : 'inactive' as const
+                    }
+                  })) : []
+                }
+              />
+              
+              {/* Add Association Button (only for own profile) */}
+              {viewingOwnProfile && (
+                <div className="flex justify-center">
+                  <CreateAssociationButton
+                    onAssociationCreated={() => {
+                      // Refresh the profile associations
+                      window.location.reload()
+                    }}
+                  />
+                </div>
+              )}
+            </div>
             {/* Quick Actions */}
             {!viewingOwnProfile && profile.bitcoin_address && (
               <Card className="shadow-xl border-0 bg-gradient-to-br from-orange-500 to-orange-600 text-white">
@@ -437,24 +545,184 @@ export default function PublicProfilePage() {
                   )}
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Profile Type</span>
-                    <span className="font-medium text-orange-600">Bitcoin User</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">👤</span>
+                      <span className="font-medium text-blue-600">Individual</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Category</span>
+                    <div className="flex flex-wrap gap-1 justify-end">
+                      <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full border border-orange-200">
+                        ₿ Bitcoin Education
+                      </span>
+                      <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full border border-blue-200">
+                        💻 Technology
+                      </span>
+                    </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Funding Pages */}
+            {/* My Campaigns */}
             <Card className="shadow-xl border-0 bg-white/80 backdrop-blur-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="w-5 h-5 text-gray-600" />
-                  Funding Pages
+                <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-5 h-5 text-orange-600" />
+                    {viewingOwnProfile ? 'My Campaigns' : `${profile.display_name || profile.username}'s Campaigns`}
+                    {fundingPages.length > 0 && (
+                      <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
+                        {fundingPages.length}
+                      </span>
+                    )}
+                  </div>
+                  {viewingOwnProfile && (
+                    <Link href="/create">
+                      <Button size="sm" variant="outline">
+                        <Plus className="w-4 h-4 mr-1" />
+                        Create
+                      </Button>
+                    </Link>
+                  )}
                 </CardTitle>
+                <CardDescription>
+                  {viewingOwnProfile 
+                    ? 'Bitcoin fundraising campaigns you created'
+                    : `Bitcoin campaigns created by ${profile.display_name || profile.username}`
+                  }
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-500 text-center py-4">
-                  No funding pages created yet
-                </p>
+                {walletLoading ? (
+                  <div className="animate-pulse space-y-3">
+                    <div className="h-20 bg-gray-200 rounded-lg"></div>
+                    <div className="h-20 bg-gray-200 rounded-lg"></div>
+                  </div>
+                ) : fundingPages.length > 0 ? (
+                  <div className="space-y-4">
+                    {fundingPages.map((page) => (
+                      <div
+                        key={page.id}
+                        className="group p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:shadow-md transition-all cursor-pointer bg-gradient-to-r from-white to-orange-50/20"
+                        onClick={() => router.push(`/campaign/${page.slug || page.id}`)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h4 className="font-semibold text-gray-900 group-hover:text-orange-700 transition-colors">
+                                {page.title}
+                              </h4>
+                              {page.title?.toLowerCase().includes('orange cat') && (
+                                <div className="flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full border border-orange-200">
+                                  <span>🎯</span>
+                                  Featured
+                                </div>
+                              )}
+                              {page.is_active ? (
+                                <div className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                                  Active
+                                </div>
+                              ) : (
+                                <div className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                                  Draft
+                                </div>
+                              )}
+                            </div>
+                            
+                            {page.description && (
+                              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                                {page.description}
+                              </p>
+                            )}
+                            
+                            {/* Campaign Progress */}
+                            <div className="mb-3">
+                              <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+                                <span>Progress</span>
+                                <span>
+                                  {page.goal_amount 
+                                    ? `${Math.round(((page.total_funding || 0) / page.goal_amount) * 100)}% of goal`
+                                    : 'No goal set'
+                                  }
+                                </span>
+                              </div>
+                              {page.goal_amount && (
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                  <div 
+                                    className="bg-gradient-to-r from-orange-500 to-orange-600 h-2 rounded-full transition-all duration-300"
+                                    style={{ 
+                                      width: `${Math.min(((page.total_funding || 0) / page.goal_amount) * 100, 100)}%` 
+                                    }}
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            
+                            <div className="flex items-center gap-6 text-xs text-gray-500">
+                              <div className="flex items-center gap-1">
+                                <Bitcoin className="w-3 h-3 text-orange-500" />
+                                <span className="font-medium">₿{(page.total_funding || 0).toFixed(8)} raised</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Target className="w-3 h-3 text-purple-500" />
+                                <span className="font-medium">{page.contributor_count || 0} supporters</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="w-3 h-3 text-blue-500" />
+                                <span>{new Date(page.created_at).toLocaleDateString()}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="flex flex-col items-end gap-2">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <ExternalLink className="w-4 h-4 text-gray-400" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* View All Button */}
+                    {fundingPages.length > 3 && (
+                      <div className="text-center pt-2">
+                        <Link href={viewingOwnProfile ? "/dashboard/fundraising" : `/discover?creator=${profile.username}`}>
+                          <Button variant="outline" size="sm">
+                            View All {fundingPages.length} Campaigns
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="p-4 bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg border border-orange-200 mb-4">
+                      <Target className="w-12 h-12 text-orange-400 mx-auto mb-3" />
+                      <p className="text-gray-600 mb-2">
+                        {viewingOwnProfile 
+                          ? "You haven't created any campaigns yet" 
+                          : `${profile.display_name || profile.username} hasn't created any campaigns yet`
+                        }
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {viewingOwnProfile 
+                          ? "Start your first Bitcoin fundraising campaign" 
+                          : "Check back later for new campaigns"
+                        }
+                      </p>
+                    </div>
+                    {viewingOwnProfile && (
+                      <Link href="/create">
+                        <Button>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Create Your First Campaign
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>

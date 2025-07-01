@@ -40,7 +40,6 @@ export default function OrangeCatDonationPage() {
       const data = await fetchBitcoinWalletData(donationAddress);
       setWalletData(data);
     } catch (error) {
-      console.error("Failed to fetch wallet data:", error);
       setWalletFetchError("Could not load live wallet data. Please try refreshing.");
     }
     setIsLoadingWalletData(false);
@@ -59,7 +58,6 @@ export default function OrangeCatDonationPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }).catch(err => {
-      console.error('Failed to copy address: ', err);
       alert('Failed to copy address.');
     });
   };

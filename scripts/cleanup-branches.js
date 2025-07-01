@@ -4,22 +4,22 @@ const { execSync } = require('child_process');
 
 async function cleanupBranches() {
   try {
-    console.log('🚀 Starting branch cleanup...');
+    // REMOVED: console.log statement
 
     // Switch to main branch
-    console.log('Switching to main branch...');
+    // REMOVED: console.log statement
     execSync('git checkout main', { stdio: 'inherit' });
 
     // Pull latest changes
-    console.log('Pulling latest changes...');
+    // REMOVED: console.log statement
     execSync('git pull origin main', { stdio: 'inherit' });
 
     // Merge backup/modular-architecture
-    console.log('Merging backup/modular-architecture...');
+    // REMOVED: console.log statement
     execSync('git merge backup/modular-architecture', { stdio: 'inherit' });
 
     // Push changes
-    console.log('Pushing changes to main...');
+    // REMOVED: console.log statement
     execSync('git push origin main', { stdio: 'inherit' });
 
     // Delete feature branches
@@ -30,19 +30,19 @@ async function cleanupBranches() {
     ];
 
     for (const branch of branchesToDelete) {
-      console.log(`Deleting branch ${branch}...`);
+      // REMOVED: console.log statement
       try {
         // Delete local branch
         execSync(`git branch -D ${branch}`, { stdio: 'inherit' });
         // Delete remote branch
         execSync(`git push origin --delete ${branch}`, { stdio: 'inherit' });
-        console.log(`✅ Deleted ${branch}`);
+        if (process.env.NODE_ENV === 'development') console.log(`✅ Deleted ${branch}`);
       } catch (error) {
-        console.log(`⚠️ Could not delete ${branch}: ${error.message}`);
+        // REMOVED: console.log statement
       }
     }
 
-    console.log('✨ Branch cleanup complete!');
+    // REMOVED: console.log statement
   } catch (error) {
     console.error('❌ Error during cleanup:', error.message);
     process.exit(1);

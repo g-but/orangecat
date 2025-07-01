@@ -78,7 +78,7 @@ export async function getFeaturedCampaigns(limit: number = 6): Promise<FeaturedC
 
     return featuredCampaigns
   } catch (error) {
-    console.error('Error fetching featured campaigns:', error)
+    logger.error('Error fetching featured campaigns', error, 'Featured')
     return []
   }
 }
@@ -107,7 +107,7 @@ export async function getTrendingCampaigns(limit: number = 3): Promise<FeaturedC
       profiles: Array.isArray(campaign.profiles) ? campaign.profiles[0] : campaign.profiles
     }))
   } catch (error) {
-    console.error('Error fetching trending campaigns:', error)
+    logger.error('Error fetching trending campaigns', error, 'Featured')
     return []
   }
 }
@@ -139,7 +139,7 @@ export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign
       profiles: Array.isArray(campaign.profiles) ? campaign.profiles[0] : campaign.profiles
     }))
   } catch (error) {
-    console.error('Error fetching staff picks:', error)
+    logger.error('Error fetching staff picks', error, 'Featured')
     return []
   }
 }
@@ -177,7 +177,7 @@ export async function getNearlyFundedCampaigns(limit: number = 3): Promise<Featu
       profiles: Array.isArray(campaign.profiles) ? campaign.profiles[0] : campaign.profiles
     }))
   } catch (error) {
-    console.error('Error fetching nearly funded campaigns:', error)
+    logger.error('Error fetching nearly funded campaigns', error, 'Featured')
     return []
   }
 }
@@ -209,7 +209,7 @@ export async function getNewAndNoteworthy(limit: number = 3): Promise<FeaturedCa
       profiles: Array.isArray(campaign.profiles) ? campaign.profiles[0] : campaign.profiles
     }))
   } catch (error) {
-    console.error('Error fetching new and noteworthy campaigns:', error)
+    logger.error('Error fetching new and noteworthy campaigns', error, 'Featured')
     return []
   }
 }

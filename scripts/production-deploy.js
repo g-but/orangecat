@@ -17,8 +17,8 @@ const args = process.argv.slice(2);
 const forceDeployment = args.includes('--force');
 const skipTests = args.includes('--skip-tests');
 
-console.log('🚀 OrangeCat Production Deployment');
-console.log('==================================\n');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Get current date for documentation
 function getCurrentDate() {
@@ -27,18 +27,18 @@ function getCurrentDate() {
 
 // Execute command with error handling
 function runCommand(command, description) {
-  console.log(`📋 ${description}...`);
+  // REMOVED: console.log statement
   try {
     const result = execSync(command, { 
       encoding: 'utf-8', 
       stdio: 'pipe',
       cwd: process.cwd()
     });
-    console.log(`✅ ${description} completed successfully`);
+    if (process.env.NODE_ENV === 'development') console.log(`✅ ${description} completed successfully`);
     return { success: true, output: result };
   } catch (error) {
-    console.log(`❌ ${description} failed:`);
-    console.log(error.stdout || error.message);
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
     return { success: false, error: error.message };
   }
 }
@@ -58,96 +58,96 @@ const checks = {
   deploymentReady: false
 };
 
-console.log('Phase 1: Environment Validation');
-console.log('-------------------------------');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Check 1: Environment Variables
-console.log('🔍 Checking environment configuration...');
+// REMOVED: console.log statement
 if (fileExists('.env.production') || fileExists('config/production.env.template')) {
-  console.log('✅ Production environment template found');
+  if (process.env.NODE_ENV === 'development') console.log('✅ Production environment template found');
   checks.environmentSetup = true;
 } else {
-  console.log('⚠️  No production environment file found');
-  console.log('📝 Please create .env.production with required variables');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
 }
 
 // Check 2: Dependencies
-console.log('🔍 Checking dependencies...');
+// REMOVED: console.log statement
 const depCheck = runCommand('npm audit --production', 'Security audit');
 if (depCheck.success) {
   checks.dependenciesInstalled = true;
 }
 
-console.log('\nPhase 2: Critical Issue Resolution');
-console.log('----------------------------------');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Issue 1: Fix failing tests (if not skipped)
 if (!skipTests) {
-  console.log('🔧 Addressing critical test failures...');
+  // REMOVED: console.log statement
   
   // Fix environment test issues
-  console.log('🧪 Fixing environment validation tests...');
+  // REMOVED: console.log statement
   const envTestFix = runCommand('npm test -- --testNamePattern="Environment" --updateSnapshot', 'Environment test fixes');
   
   // Quick Bitcoin validation test fix
-  console.log('🧪 Running Bitcoin validation tests...');
+  // REMOVED: console.log statement
   const bitcoinTestFix = runCommand('npm test -- --testPathPattern="bitcoinValidation" --bail', 'Bitcoin validation tests');
   
   if (envTestFix.success && bitcoinTestFix.success) {
-    console.log('✅ Critical tests resolved');
+    if (process.env.NODE_ENV === 'development') console.log('✅ Critical tests resolved');
     checks.testsFixed = true;
   } else {
-    console.log('⚠️  Some tests still failing - proceeding with caution');
+    // REMOVED: console.log statement
     if (!forceDeployment) {
-      console.log('❌ Use --force to deploy with failing tests (NOT RECOMMENDED)');
+      // REMOVED: console.log statement
       process.exit(1);
     }
   }
 } else {
-  console.log('⏭️  Skipping test fixes (--skip-tests flag)');
+  // REMOVED: console.log statement
   checks.testsFixed = true;
 }
 
 // Issue 2: Security hardening verification
-console.log('🔐 Verifying security hardening...');
+// REMOVED: console.log statement
 if (fileExists('src/services/security/index.ts')) {
-  console.log('✅ Security services implemented');
+  if (process.env.NODE_ENV === 'development') console.log('✅ Security services implemented');
   checks.securityIssuesResolved = true;
 } else {
-  console.log('⚠️  Security implementation not found');
+  // REMOVED: console.log statement
 }
 
-console.log('\nPhase 3: Production Build');
-console.log('------------------------');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Clean previous builds
-console.log('🧹 Cleaning previous builds...');
+// REMOVED: console.log statement
 const cleanResult = runCommand('rm -rf .next && rm -rf out', 'Clean build directories');
 
 // Create production build
-console.log('🏗️  Creating production build...');
+// REMOVED: console.log statement
 const buildResult = runCommand('npm run build', 'Production build');
 if (buildResult.success) {
-  console.log('✅ Production build successful');
+  if (process.env.NODE_ENV === 'development') console.log('✅ Production build successful');
   checks.buildSuccessful = true;
 } else {
-  console.log('❌ Production build failed');
+  // REMOVED: console.log statement
   if (!forceDeployment) {
-    console.log('Fix build errors before deployment');
+    // REMOVED: console.log statement
     process.exit(1);
   }
 }
 
 // Verify build output
 if (fileExists('.next') || fileExists('out')) {
-  console.log('✅ Build output verified');
+  if (process.env.NODE_ENV === 'development') console.log('✅ Build output verified');
 } else {
-  console.log('❌ Build output missing');
+  // REMOVED: console.log statement
   process.exit(1);
 }
 
-console.log('\nPhase 4: Deployment Preparation');
-console.log('-------------------------------');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Create deployment summary
 const deploymentSummary = {
@@ -180,44 +180,44 @@ fs.writeFileSync(
   JSON.stringify(deploymentSummary, null, 2)
 );
 
-console.log('\nPhase 5: Deployment Decision');
-console.log('----------------------------');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 if (readyForDeployment || forceDeployment) {
-  console.log('🎉 Production deployment ready!');
-  console.log('\n📋 Deployment Summary:');
-  console.log(`   • Environment Setup: ${checks.environmentSetup ? '✅' : '❌'}`);
-  console.log(`   • Dependencies: ${checks.dependenciesInstalled ? '✅' : '❌'}`);
-  console.log(`   • Tests Fixed: ${checks.testsFixed ? '✅' : '❌'}`);
-  console.log(`   • Security: ${checks.securityIssuesResolved ? '✅' : '❌'}`);
-  console.log(`   • Build Successful: ${checks.buildSuccessful ? '✅' : '❌'}`);
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
-  console.log('\n🚀 Next Steps:');
-  console.log('1. Set production environment variables in your deployment platform');
-  console.log('2. Run: npm run deploy (or use your deployment platform)');
-  console.log('3. Verify deployment at your production URL');
-  console.log('4. Monitor for any issues');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   // Update production checklist status
   const productionStatus = forceDeployment ? '🟡 READY (FORCED)' : '🟢 READY';
-  console.log(`\n🎯 Production Status: ${productionStatus}`);
+  // REMOVED: console.log statement
   
   checks.deploymentReady = true;
 } else {
-  console.log('❌ Production deployment NOT ready');
-  console.log('\n🔧 Issues to resolve:');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   deploymentSummary.issues.remaining.forEach(issue => {
-    console.log(`   • ${issue}`);
+    // REMOVED: console.log statement
   });
-  console.log('\nFix these issues and run the script again.');
+  // REMOVED: console.log statement
   process.exit(1);
 }
 
-console.log('\n📄 Deployment summary saved to: deployment/deployment-summary.json');
-console.log('📊 Update memory:', JSON.stringify({
+// REMOVED: console.log statement
+// REMOVED: console.log statement
   action: 'update',
   status: 'Option D: Production Deployment - ' + (checks.deploymentReady ? 'COMPLETED' : 'IN PROGRESS'),
   completionRate: Object.values(checks).filter(Boolean).length + '/' + Object.keys(checks).length + ' checks passed'
 }));
 
-console.log('\n🎉 OrangeCat Production Deployment Complete!'); 
+// REMOVED: console.log statement

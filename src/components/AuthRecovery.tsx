@@ -57,7 +57,6 @@ export default function AuthRecovery({ error, email, onRetry, onClearError }: Au
       }, 2000)
 
     } catch (error) {
-      console.error('Recovery error:', error)
       setRecoveryMessage('Failed to clear authentication state. Please refresh the page manually.')
     } finally {
       setIsRecovering(false)
@@ -86,7 +85,6 @@ export default function AuthRecovery({ error, email, onRetry, onClearError }: Au
         setRecoveryMessage('Password reset email sent! Check your inbox and follow the instructions.')
       }
     } catch (error) {
-      console.error('Password reset error:', error)
       setRecoveryMessage('Failed to send password reset email. Please try again.')
     } finally {
       setIsRecovering(false)

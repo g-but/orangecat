@@ -63,7 +63,6 @@ export function GlobalAuthErrorBanner() {
 
   useEffect(() => {
     if (authError) {
-      console.warn('GlobalAuthErrorBanner: Showing auth error:', authError);
     }
   }, [authError]);
 

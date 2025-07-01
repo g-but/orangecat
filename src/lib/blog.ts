@@ -72,7 +72,6 @@ export function getBlogPost(slug: string): BlogPost | null {
       content
     }
   } catch (error) {
-    console.error(`Error reading blog post ${slug}:`, error)
     return null
   }
 }
@@ -177,7 +176,6 @@ export function saveBlogPost(slug: string, content: string): boolean {
     fs.writeFileSync(fullPath, content, 'utf8')
     return true
   } catch (error) {
-    console.error(`Error saving blog post ${slug}:`, error)
     return false
   }
 } 

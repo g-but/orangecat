@@ -9,15 +9,15 @@
 const fs = require('fs');
 const { execSync } = require('child_process');
 
-console.log('🚀 OrangeCat Production Deployment Checklist');
-console.log('============================================\n');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Current Status from Assessment
-console.log('📊 Current Production Readiness Status: 🔴 NOT READY');
-console.log('✅ Option A: Service Testing (79.3% success rate, ProfileService 100%)');
-console.log('✅ Option B: Performance Optimization (complete)');
-console.log('✅ Option C: Security Hardening (comprehensive implementation)');
-console.log('🔴 Option D: Production Deployment (BLOCKED by critical issues)\n');
+if (process.env.NODE_ENV === 'development') console.log('📊 Current Production Readiness Status: 🔴 NOT READY');
+if (process.env.NODE_ENV === 'development') console.log('✅ Option A: Service Testing (79.3% success rate, ProfileService 100%)');
+// REMOVED: console.log statement
+if (process.env.NODE_ENV === 'development') console.log('✅ Option C: Security Hardening (comprehensive implementation)');
+// REMOVED: console.log statement
 
 // Critical Blocking Issues
 const criticalIssues = [
@@ -118,77 +118,77 @@ const deploymentOptions = [
 ];
 
 // Display Critical Issues
-console.log('🚨 Critical Blocking Issues:');
-console.log('============================');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 criticalIssues.forEach((issue, index) => {
-  console.log(`\n${index + 1}. [${issue.priority}] ${issue.issue}`);
-  console.log(`   Description: ${issue.description}`);
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   if (issue.variables) {
-    console.log(`   Missing Variables: ${issue.variables.join(', ')}`);
+    // REMOVED: console.log statement
   }
   if (issue.impact) {
-    console.log(`   Impact: ${issue.impact}`);
+    // REMOVED: console.log statement
   }
-  console.log(`   Action Required: ${issue.action}`);
-  console.log(`   Commands: ${issue.commands.join(', ')}`);
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
 });
 
 // Display Deployment Options
-console.log('\n\n🎯 Deployment Strategy Options:');
-console.log('===============================');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 deploymentOptions.forEach((option, index) => {
-  console.log(`\n${option.name}:`);
-  console.log(`Description: ${option.description}`);
-  console.log(`Rationale: ${option.rationale}`);
-  console.log(`Estimated Time: ${option.estimatedTime}`);
-  console.log(`Risk Level: ${option.riskLevel}`);
-  console.log('Steps:');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   option.steps.forEach(step => {
-    console.log(`   ${step}`);
+    // REMOVED: console.log statement
   });
 });
 
 // Recommendation
-console.log('\n\n💡 RECOMMENDATION: Option 1 (Fix Tests First)');
-console.log('==============================================');
-console.log('Rationale:');
-console.log('- Tests validate code correctness and prevent regressions');
-console.log('- 83.3% success rate is good foundation, need to fix remaining 16.7%');
-console.log('- Security and ProfileService tests are already strong');
-console.log('- Lower risk approach ensures production stability');
-console.log('- Environment variables can be set up once tests are stable');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Next Immediate Actions
-console.log('\n\n⚡ IMMEDIATE NEXT ACTIONS:');
-console.log('=========================');
-console.log('1. 🔧 Fix Auth Service test failures (highest priority)');
-console.log('   - Auth tests are failing due to mocking issues');
-console.log('   - Critical for user authentication in production');
-console.log('');
-console.log('2. 🔧 Fix Featured/Search Service mock setup');
-console.log('   - Supabase mocking infrastructure needs completion');
-console.log('   - These services are already architected correctly');
-console.log('');
-console.log('3. ⚙️  Configure production environment variables');
-console.log('   - Set up Vercel environment variables');
-console.log('   - Ensure HTTPS URLs for production');
-console.log('');
-console.log('4. 🏗️  Verify production build process');
-console.log('   - Test build with production environment');
-console.log('   - Validate bundle size and performance');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement for security
+// REMOVED: console.log statement
+// REMOVED: console.log statement for security
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Production Readiness Metrics
-console.log('\n\n📈 Production Readiness Progress:');
-console.log('=================================');
-console.log('Overall: 75% Complete (3/4 major phases done)');
-console.log('✅ Testing Infrastructure: 79.3% (strong foundation)');
-console.log('✅ Performance Optimization: 100% (complete)');
-console.log('✅ Security Hardening: 95% (comprehensive implementation)');
-console.log('🔄 Production Deployment: 25% (environment setup needed)');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+if (process.env.NODE_ENV === 'development') console.log('✅ Testing Infrastructure: 79.3% (strong foundation)');
+// REMOVED: console.log statement
+if (process.env.NODE_ENV === 'development') console.log('✅ Security Hardening: 95% (comprehensive implementation)');
+// REMOVED: console.log statement
 
-console.log('\n\n🎯 TARGET: Production deployment within 4-6 hours');
-console.log('Focus: Fix remaining 163 test failures + environment setup');
-console.log('Expected Result: 🟢 PRODUCTION READY');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 // Create action plan file
 const actionPlan = {
@@ -212,10 +212,10 @@ if (!fs.existsSync('docs/deployment')) {
 }
 
 fs.writeFileSync('docs/deployment/action-plan.json', JSON.stringify(actionPlan, null, 2));
-console.log('\n📄 Action plan saved to: docs/deployment/action-plan.json');
+// REMOVED: console.log statement
 
-console.log('\n✅ Production deployment checklist complete!');
-console.log('Next: Choose deployment strategy and begin execution.');
+// REMOVED: console.log statement
+// REMOVED: console.log statement
 
 module.exports = {
   criticalIssues,

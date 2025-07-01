@@ -116,11 +116,9 @@ const sampleCampaigns = [
 
 export async function seedDevelopmentData() {
   try {
-    console.log('🌱 Starting development data seeding...')
     
     // Check if we're in development
     if (process.env.NODE_ENV !== 'development') {
-      console.warn('⚠️ Seeding is only available in development mode')
       return
     }
     
@@ -132,20 +130,13 @@ export async function seedDevelopmentData() {
       .limit(1)
     
     if (existingProfiles && existingProfiles.length > 0) {
-      console.log('📊 Data already exists, skipping seed')
       return
     }
     
-    console.log('👥 Creating sample profiles...')
     
     // Create profiles (this will require authentication, so this is more of a template)
     // In a real scenario, you'd need to create users first through Supabase Auth
     
-    console.log('🎯 Sample data template created!')
-    console.log('📝 To actually seed data, you would need to:')
-    console.log('1. Create user accounts through Supabase Auth')
-    console.log('2. Use those user IDs to create profiles and campaigns')
-    console.log('3. Or use Supabase SQL editor to insert data directly')
     
     return {
       profiles: sampleProfiles,
@@ -153,7 +144,6 @@ export async function seedDevelopmentData() {
     }
     
   } catch (error) {
-    console.error('❌ Error seeding development data:', error)
     throw error
   }
 }

@@ -12,29 +12,29 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function testAuth() {
-  console.log('Testing Supabase connection...');
-  console.log('URL:', supabaseUrl);
-  console.log('Key:', supabaseKey.substring(0, 20) + '...');
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
+  // REMOVED: console.log statement
   
   try {
     // Test basic connection
     const { data, error } = await supabase.from('profiles').select('count').limit(1);
-    console.log('Connection test:', { data, error });
+    // REMOVED: console.log statement
     
     // Test auth with the email you're trying to use
-    console.log('\nTesting sign in with butaeff@gmail.com...');
+    // REMOVED: console.log statement
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: 'butaeff@gmail.com',
+      email: 'mao@gmail.com',
       password: 'yourpassword' // Replace with actual password
     });
     
-    console.log('Auth result:', { authData, authError });
+    // REMOVED: console.log statement for security
     
     if (authError) {
-      console.log('\nChecking if user exists...');
+      // REMOVED: console.log statement for security
       // Check if this is a user not found vs wrong password
-      const { data: userData, error: userError } = await supabase.auth.admin.getUserById('butaeff@gmail.com');
-      console.log('User lookup:', { userData, userError });
+      const { data: userData, error: userError } = await supabase.auth.admin.getUserById('mao@gmail.com');
+      // REMOVED: console.log statement
     }
     
   } catch (err) {

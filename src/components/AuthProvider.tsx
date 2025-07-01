@@ -16,45 +16,49 @@ interface AuthProviderProps {
 export function AuthProvider({ user, session, profile, children }: AuthProviderProps) {
   const setInitialAuthState = useAuthStore((s) => s.setInitialAuthState);
   const storeHydrated = useAuthStore((s) => s.hydrated);
-  // const storeIsLoading = useAuthStore((s) => s.isLoading); // No longer used for top-level loading
   const isInitialized = useRef(false);
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('AuthProvider render: storeHydrated=', storeHydrated, 'props=', {
-      user,
-      session,
-      profile,
-    });
+    // REMOVED: console.log statement for security
   }
 
   useEffect(() => {
     // Initialize the store only once with the server-provided state.
-    // Subsequent auth changes are handled by onAuthStateChange in the store itself.
     if (!isInitialized.current) {
       if (process.env.NODE_ENV === 'development') {
-        console.log('AuthProvider useEffect: Setting initial auth state from props.', {
-          user,
-          session,
-          profile,
-        });
+        // REMOVED: console.log statement for security
       }
       setInitialAuthState(user, session, profile);
       isInitialized.current = true;
     }
   }, [user, session, profile, setInitialAuthState]);
 
-  // Only show a full-screen loading indicator until the store is hydrated
-  // from either server props (initial load) or persisted state (client-side navigation).
+  // Add a timeout to prevent infinite loading
+  useEffect(() => {
+    if (!storeHydrated) {
+      const timeout = setTimeout(() => {
+        // REMOVED: console.log statement for security
+        // Force hydration immediately if not hydrated (reduced timeout)
+        const store = useAuthStore.getState();
+        if (!store.hydrated) {
+          store.setInitialAuthState(user, session, profile);
+        }
+      }, 100); // FIXED: Much shorter timeout (100ms)
+
+      return () => clearTimeout(timeout);
+    }
+  }, [storeHydrated, user, session, profile]);
+
+  // Show loading only briefly, not indefinitely
   if (!storeHydrated) {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`AuthProvider: Rendering loading indicator (storeHydrated: ${storeHydrated})`);
+      // REMOVED: console.log statement for security
     }
-    // Add suppressHydrationWarning here if Loading component or its direct parent causes it
     return <div suppressHydrationWarning><Loading fullScreen /></div>;
   }
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('AuthProvider: Store is hydrated. Rendering children.');
+    // REMOVED: console.log statement for security
   }
   return <>{children}</>;
 } 

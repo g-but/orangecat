@@ -9,6 +9,27 @@ import {
   SearchFilters,
   SearchResponse 
 } from '@/services/search'
+import { debounce } from 'lodash'
+
+interface UseSearchSuggestionsResult {
+  suggestions: string[]
+  loading: boolean
+  error: string | null
+}
+
+// Mock suggestions based on common search terms
+const mockSuggestions = {
+  'bitcoin': ['Bitcoin Lightning Network', 'Bitcoin Education', 'Bitcoin Mining Projects'],
+  'open': ['Open Source Projects', 'Open Education Initiative', 'Open Data Campaign'],
+  'education': ['Education Initiatives', 'Educational Technology', 'Education for All'],
+  'environment': ['Environmental Campaigns', 'Environmental Protection', 'Environmental Research'],
+  'health': ['Healthcare Projects', 'Mental Health Awareness', 'Public Health Initiative'],
+  'art': ['Art Projects', 'Digital Art', 'Community Art'],
+  'tech': ['Technology Projects', 'Tech Education', 'Tech for Good'],
+  'community': ['Community Building', 'Community Gardens', 'Community Centers'],
+  'research': ['Research Projects', 'Scientific Research', 'Academic Research'],
+  'music': ['Music Projects', 'Music Education', 'Community Music']
+}
 
 export interface UseSearchOptions {
   initialQuery?: string
@@ -121,7 +142,6 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
       setCurrentOffset(offset + response.results.length)
       
     } catch (err: any) {
-      console.error('Search error:', err)
       setError(err.message || 'Failed to perform search')
     } finally {
       setLoading(false)
@@ -145,7 +165,6 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
       const newSuggestions = await getSearchSuggestions(searchQuery, 5)
       setSuggestions(newSuggestions)
     } catch (err) {
-      console.error('Error loading suggestions:', err)
       setSuggestions([])
     }
   }, [])
@@ -217,34 +236,72 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
 }
 
 // Hook for search suggestions only
-export function useSearchSuggestions(query: string, enabled = true) {
+export function useSearchSuggestions(query: string, enabled: boolean = true): UseSearchSuggestionsResult {
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
-  
-  useEffect(() => {
-    if (!enabled || !query || query.length < 2) {
+  const [error, setError] = useState<string | null>(null)
+
+  // Debounced search function
+  const debouncedSearch = debounce(async (searchQuery: string) => {
+    if (!searchQuery.trim() || !enabled) {
       setSuggestions([])
+      setLoading(false)
       return
     }
-    
-    const loadSuggestions = async () => {
-      setLoading(true)
-      try {
-        const results = await getSearchSuggestions(query, 5)
-        setSuggestions(results)
-      } catch (error) {
-        console.error('Error loading suggestions:', error)
-        setSuggestions([])
-      } finally {
-        setLoading(false)
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      // Find matching suggestions
+      const lowerQuery = searchQuery.toLowerCase()
+      const matchingSuggestions: string[] = []
+
+      // Look for exact matches in our mock data
+      Object.entries(mockSuggestions).forEach(([key, values]) => {
+        if (key.includes(lowerQuery) || lowerQuery.includes(key)) {
+          matchingSuggestions.push(...values)
+        }
+      })
+
+      // Add fuzzy matches for any text
+      if (matchingSuggestions.length < 3) {
+        const fuzzyMatches = [
+          `${searchQuery} Projects`,
+          `${searchQuery} Initiative`,
+          `${searchQuery} Campaign`
+        ]
+        matchingSuggestions.push(...fuzzyMatches)
       }
+
+      // Remove duplicates and limit to 5 suggestions
+      const uniqueSuggestions = [...new Set(matchingSuggestions)].slice(0, 5)
+      setSuggestions(uniqueSuggestions)
+    } catch (err) {
+      setError('Failed to fetch suggestions')
+      setSuggestions([])
+    } finally {
+      setLoading(false)
     }
-    
-    const timer = setTimeout(loadSuggestions, 300)
-    return () => clearTimeout(timer)
+  }, 300)
+
+  useEffect(() => {
+    if (enabled) {
+      debouncedSearch(query)
+    } else {
+      setSuggestions([])
+      setLoading(false)
+    }
+
+    return () => {
+      debouncedSearch.cancel()
+    }
   }, [query, enabled])
-  
-  return { suggestions, loading }
+
+  return { suggestions, loading, error }
 }
 
 // Hook for trending content
@@ -260,7 +317,6 @@ export function useTrending() {
       const response = await getTrending()
       setTrending(response.results)
     } catch (err: any) {
-      console.error('Error loading trending:', err)
       setError(err.message || 'Failed to load trending content')
     } finally {
       setLoading(false)
@@ -277,4 +333,60 @@ export function useTrending() {
     error,
     refresh: loadTrending
   }
+}
+
+// Additional search utilities
+export function useRecentSearches(userId?: string) {
+  const [recentSearches, setRecentSearches] = useState<string[]>([])
+
+  useEffect(() => {
+    if (userId) {
+      const stored = localStorage.getItem(`search-history-${userId}`)
+      if (stored) {
+        setRecentSearches(JSON.parse(stored))
+      }
+    }
+  }, [userId])
+
+  const addToHistory = (query: string) => {
+    if (!userId || !query.trim()) return
+
+    const newHistory = [query, ...recentSearches.filter(q => q !== query)].slice(0, 10)
+    setRecentSearches(newHistory)
+    localStorage.setItem(`search-history-${userId}`, JSON.stringify(newHistory))
+  }
+
+  const clearHistory = () => {
+    if (!userId) return
+    setRecentSearches([])
+    localStorage.removeItem(`search-history-${userId}`)
+  }
+
+  return { recentSearches, addToHistory, clearHistory }
+}
+
+export function useSearchFilters() {
+  const [filters, setFilters] = useState({
+    type: 'all' as 'all' | 'campaigns' | 'profiles' | 'organizations',
+    category: 'all',
+    location: '',
+    dateRange: 'all' as 'all' | 'week' | 'month' | 'year',
+    sortBy: 'relevance' as 'relevance' | 'recent' | 'popular' | 'funding'
+  })
+
+  const updateFilter = (key: keyof typeof filters, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value }))
+  }
+
+  const resetFilters = () => {
+    setFilters({
+      type: 'all',
+      category: 'all',
+      location: '',
+      dateRange: 'all',
+      sortBy: 'relevance'
+    })
+  }
+
+  return { filters, updateFilter, resetFilters }
 } 

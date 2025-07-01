@@ -14,6 +14,7 @@
 
 import { lazy, ComponentType, Suspense, ReactNode } from 'react'
 import React from 'react'
+import { logger } from './logger'
 
 // ==================== LAZY LOADING UTILITIES ====================
 
@@ -327,9 +328,8 @@ export async function importWithFallback<T>(
     try {
       return await importFn()
     } catch (error) {
-      console.warn(`Import failed (attempt ${i + 1}/${retries}):`, error)
+              logger.warn(`Import failed (attempt ${i + 1}/${retries})`, { error })
       if (i === retries - 1) {
-        console.error('All import attempts failed, using fallback')
         return fallback
       }
       // Wait before retry

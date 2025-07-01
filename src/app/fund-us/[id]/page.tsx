@@ -41,7 +41,6 @@ export default function FundingPage() {
       if (error) throw error
       setPage(data)
     } catch (err) {
-      console.error('Error loading page:', err)
       toast.error('Failed to load funding page')
     } finally {
       setLoading(false)

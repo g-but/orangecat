@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { fetchBitcoinWalletData } from '@/services/bitcoin';
 import { BitcoinWalletData } from '@/types/bitcoin/index';
+import { logger } from '@/utils/logger';
 
 export function useBitcoinWallet(walletAddress: string) {
   const [walletData, setWalletData] = useState<BitcoinWalletData | null>(null);
@@ -21,7 +22,7 @@ export function useBitcoinWallet(walletAddress: string) {
       const data = await fetchBitcoinWalletData(walletAddress);
       setWalletData(data);
     } catch (err) {
-      console.error('Error fetching wallet data:', err);
+      logger.error('Error fetching wallet data:', err, 'Bitcoin');
       setError('Failed to fetch wallet data. Please try again later.');
     } finally {
       setIsLoading(false);

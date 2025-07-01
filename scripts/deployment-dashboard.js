@@ -172,57 +172,57 @@ class DeploymentDashboard {
   renderDashboard() {
     const now = new Date().toLocaleString();
     
-    console.log('╔══════════════════════════════════════════════════════════════════╗');
-    console.log('║                    🚀 ORANGECAT DEPLOYMENT DASHBOARD             ║');
-    console.log('╠══════════════════════════════════════════════════════════════════╣');
-    console.log(`║ Last Update: ${now.padEnd(49)} ║`);
-    console.log('╠══════════════════════════════════════════════════════════════════╣');
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
     
     // Production Status
     const prodEmoji = this.getStatusEmoji(this.status.production.status);
     const prodStatus = this.status.production.status.toUpperCase().padEnd(10);
     const prodTime = this.status.production.responseTime ? `${this.status.production.responseTime}ms` : 'N/A';
-    console.log(`║ PRODUCTION:  ${prodEmoji} ${prodStatus} Response: ${prodTime.padEnd(12)} ║`);
+    // REMOVED: console.log statement
     
     // Staging Status
     const stagingEmoji = this.getStatusEmoji(this.status.staging.status);
     const stagingStatus = this.status.staging.status.toUpperCase().padEnd(10);
     const stagingTime = this.status.staging.responseTime ? `${this.status.staging.responseTime}ms` : 'N/A';
-    console.log(`║ STAGING:     ${stagingEmoji} ${stagingStatus} Response: ${stagingTime.padEnd(12)} ║`);
+    // REMOVED: console.log statement
     
-    console.log('╠══════════════════════════════════════════════════════════════════╣');
+    // REMOVED: console.log statement
     
     // Deployment Status
     const deployStatus = this.status.deployment.inProgress ? '🔄 IN PROGRESS' : '✅ IDLE';
-    console.log(`║ DEPLOYMENT:  ${deployStatus.padEnd(49)} ║`);
+    // REMOVED: console.log statement
     
-    console.log('╠══════════════════════════════════════════════════════════════════╣');
+    // REMOVED: console.log statement
     
     // Metrics
     const uptime = this.formatUptime(this.status.metrics.uptime);
-    console.log(`║ UPTIME:      ${uptime.padEnd(49)} ║`);
-    console.log(`║ ERRORS:      ${this.status.metrics.errors.toString().padEnd(49)} ║`);
-    console.log(`║ DEPLOYMENTS: ${this.status.metrics.deployments.toString().padEnd(49)} ║`);
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
     
-    console.log('╠══════════════════════════════════════════════════════════════════╣');
+    // REMOVED: console.log statement
     
     // Recent History (last 10 checks)
-    console.log('║ RECENT HISTORY:                                                  ║');
+    // REMOVED: console.log statement
     const recentHistory = this.history.slice(-10);
     recentHistory.forEach(entry => {
       const time = new Date(entry.timestamp).toLocaleTimeString();
       const prodIcon = this.getStatusEmoji(entry.production);
       const stagingIcon = this.getStatusEmoji(entry.staging);
       const responseTime = entry.responseTime ? `${entry.responseTime}ms` : 'N/A';
-      console.log(`║ ${time} - Prod: ${prodIcon} Staging: ${stagingIcon} RT: ${responseTime.padEnd(8)} ║`);
+      // REMOVED: console.log statement
     });
     
-    console.log('╠══════════════════════════════════════════════════════════════════╣');
-    console.log('║ COMMANDS:                                                        ║');
-    console.log('║ • Ctrl+C to exit                                                ║');
-    console.log('║ • npm run deploy:quick for immediate deployment                 ║');
-    console.log('║ • npm run health:check for manual health check                 ║');
-    console.log('╚══════════════════════════════════════════════════════════════════╝');
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
   }
 
   async saveReport() {
@@ -238,7 +238,7 @@ class DeploymentDashboard {
   }
 
   async start() {
-    console.log('🚀 Starting OrangeCat Deployment Dashboard...\n');
+    // REMOVED: console.log statement
     
     // Initial status check
     await this.updateStatus();
@@ -253,15 +253,15 @@ class DeploymentDashboard {
     
     // Handle graceful shutdown
     process.on('SIGINT', () => {
-      console.log('\n\n🛑 Dashboard shutting down...');
+      // REMOVED: console.log statement
       clearInterval(interval);
       this.saveReport();
-      console.log('📝 Final status saved to deployment-status.json');
+      // REMOVED: console.log statement
       process.exit(0);
     });
     
-    console.log(`\n⏱️  Dashboard will refresh every ${this.config.refreshInterval / 1000} seconds`);
-    console.log('Press Ctrl+C to stop monitoring\n');
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
   }
 
   // Static method for one-time status check
@@ -269,10 +269,10 @@ class DeploymentDashboard {
     const dashboard = new DeploymentDashboard();
     await dashboard.updateStatus();
     
-    console.log('🔍 Quick Health Check:');
-    console.log('======================');
-    console.log(`Production: ${dashboard.getStatusEmoji(dashboard.status.production.status)} ${dashboard.status.production.status} (${dashboard.status.production.responseTime}ms)`);
-    console.log(`Staging: ${dashboard.getStatusEmoji(dashboard.status.staging.status)} ${dashboard.status.staging.status} (${dashboard.status.staging.responseTime}ms)`);
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
     
     return dashboard.status;
   }

@@ -18,10 +18,10 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 async function fixProfilesSchema() {
-  console.log('🔧 Fixing profiles table schema...\n');
+  // REMOVED: console.log statement
   
   try {
-    console.log('📋 Current profiles table structure:');
+    // REMOVED: console.log statement
     const { data: currentProfile, error } = await supabase
       .from('profiles')
       .select('*')
@@ -33,10 +33,10 @@ async function fixProfilesSchema() {
     }
     
     if (currentProfile && currentProfile.length > 0) {
-      console.log('Current columns:', Object.keys(currentProfile[0]));
+      // REMOVED: console.log statement
     }
     
-    console.log('\n🔄 Adding missing columns to profiles table...');
+    // REMOVED: console.log statement
     
     // Add missing columns one by one
     const columnsToAdd = [
@@ -48,7 +48,7 @@ async function fixProfilesSchema() {
     ];
     
     for (const column of columnsToAdd) {
-      console.log(`Adding column: ${column.name} (${column.type}) - ${column.description}`);
+      // REMOVED: console.log statement
       
       try {
         // Try to add the column - if it already exists, this will fail gracefully
@@ -57,7 +57,7 @@ async function fixProfilesSchema() {
         });
         
         if (addError) {
-          console.log(`⚠️ Could not add ${column.name} via RPC, trying direct approach...`);
+          // REMOVED: console.log statement
           
           // Try to test if column exists by attempting to select it
           const { error: testError } = await supabase
@@ -66,19 +66,19 @@ async function fixProfilesSchema() {
             .limit(1);
             
           if (testError && testError.message.includes('column')) {
-            console.log(`❌ Column ${column.name} does not exist and cannot be added via client`);
+            // REMOVED: console.log statement
           } else {
-            console.log(`✅ Column ${column.name} already exists`);
+            if (process.env.NODE_ENV === 'development') console.log(`✅ Column ${column.name} already exists`);
           }
         } else {
-          console.log(`✅ Successfully added column ${column.name}`);
+          // REMOVED: console.log statement
         }
       } catch (err) {
-        console.log(`⚠️ Error with column ${column.name}:`, err.message);
+        // REMOVED: console.log statement
       }
     }
     
-    console.log('\n🧪 Testing updated schema...');
+    // REMOVED: console.log statement
     
     // Test if we can now update with the expected columns
     const userId = 'c7f91de5-214b-4210-a0c7-ab4ad1ac70c9';
@@ -97,20 +97,20 @@ async function fixProfilesSchema() {
       
     if (updateError) {
       console.error('❌ Update test still failing:', updateError);
-      console.log('\n📝 Manual SQL commands needed:');
-      console.log('Go to your Supabase SQL Editor and run:');
-      console.log('');
+      // REMOVED: console.log statement
+      // REMOVED: console.log statement
+      // REMOVED: console.log statement
       columnsToAdd.forEach(col => {
-        console.log(`ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS ${col.name} ${col.type};`);
+        // REMOVED: console.log statement
       });
-      console.log('');
+      // REMOVED: console.log statement
     } else {
-      console.log('✅ Update test succeeded!');
-      console.log('Updated profile:', JSON.stringify(updateResult[0], null, 2));
+      if (process.env.NODE_ENV === 'development') console.log('✅ Update test succeeded!');
+      // REMOVED: console.log statement
     }
     
     // Check final schema
-    console.log('\n📋 Final profiles table structure:');
+    // REMOVED: console.log statement
     const { data: finalProfile } = await supabase
       .from('profiles')
       .select('*')
@@ -118,9 +118,9 @@ async function fixProfilesSchema() {
       .single();
       
     if (finalProfile) {
-      console.log('✅ All columns:', Object.keys(finalProfile));
-      console.log('✅ Your profile data:');
-      console.log(JSON.stringify(finalProfile, null, 2));
+      if (process.env.NODE_ENV === 'development') console.log('✅ All columns:', Object.keys(finalProfile));
+      // REMOVED: console.log statement
+      // REMOVED: console.log statement
     }
     
   } catch (error) {

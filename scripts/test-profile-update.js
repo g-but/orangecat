@@ -32,12 +32,12 @@ if (!userId) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function testProfileUpdate() {
-  console.log(`🔍 Testing profile update for user: ${userId}`);
+  // REMOVED: console.log statement
   
   const testValue = 'Test update from Node.js ' + new Date().toISOString();
   
   try {
-    console.log('Making request to update profile...');
+    // REMOVED: console.log statement
     const startTime = Date.now();
     
     const { data, error, status } = await supabase
@@ -60,9 +60,9 @@ async function testProfileUpdate() {
       process.exit(1);
     }
     
-    console.log(`✅ Update successful! Request took ${endTime - startTime}ms`);
-    console.log(`👉 Updated bio to: "${data.bio}"`);
-    console.log(`👉 Other profile data:`, {
+    if (process.env.NODE_ENV === 'development') console.log(`✅ Update successful! Request took ${endTime - startTime}ms`);
+    // REMOVED: console.log statement
+    // REMOVED: console.log statement
       username: data.username,
       display_name: data.display_name,
       bitcoin_address: data.bitcoin_address
@@ -77,7 +77,7 @@ async function testProfileUpdate() {
 // Run the test
 testProfileUpdate()
   .then(() => {
-    console.log('Test completed successfully.');
+    // REMOVED: console.log statement
     process.exit(0);
   })
   .catch(err => {

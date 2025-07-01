@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 
+const { getOptimizedWebpackConfig } = require('./scripts/webpack-bundle-optimizer');
+
 const nextConfig = {
   // Externalize Supabase packages for server-side rendering
   serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
@@ -31,8 +33,13 @@ const nextConfig = {
         port: '',
         pathname: '/storage/v1/object/public/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'example.com',
+        port: '',
+        pathname: '/**',
+      },
     ],
-    // Removed deprecated `domains` configuration per Next.js 15 guidance
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -41,52 +48,10 @@ const nextConfig = {
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
-  // Experimental features (only supported ones)
+  // Experimental features for performance
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
-  },
-
-  // Advanced webpack optimizations for bundle size
-  webpack: (config, { dev, isServer, webpack }) => {
-    // Exclude Supabase packages from server-side bundling
-    if (isServer) {
-      config.externals = config.externals || []
-      config.externals.push({
-        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
-        '@supabase/ssr': 'commonjs @supabase/ssr',
-        '@supabase/auth-js': 'commonjs @supabase/auth-js',
-        '@supabase/realtime-js': 'commonjs @supabase/realtime-js',
-        '@supabase/postgrest-js': 'commonjs @supabase/postgrest-js',
-        '@supabase/storage-js': 'commonjs @supabase/storage-js',
-      })
-    }
-
-    // Configure fallbacks for Node.js polyfills
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      fs: false,
-      net: false,
-      tls: false,
-      crypto: false,
-      stream: false,
-      url: false,
-      zlib: false,
-      http: false,
-      https: false,
-      assert: false,
-      os: false,
-      path: false,
-    }
-
-    // Simple global polyfills
-    config.plugins.push(
-      new webpack.DefinePlugin({
-        'global': 'globalThis',
-        'self': 'globalThis',
-      })
-    )
-
-    return config
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-dropdown-menu'],
+    webpackBuildWorker: true,
   },
 
   // Enable compression
@@ -162,15 +127,76 @@ const nextConfig = {
     pagesBufferLength: 2,
   },
 
-  // Bundle analyzer (only in development)
+  // Advanced webpack optimizations for bundle size
+  webpack: (config, options) => {
+    const { dev, isServer, webpack } = options;
+    
+    // Apply comprehensive bundle optimizations
+    if (!dev) {
+      config = getOptimizedWebpackConfig(config, options);
+    }
+
+    // Exclude Supabase packages from server-side bundling
+    if (isServer) {
+      config.externals = config.externals || []
+      config.externals.push({
+        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
+        '@supabase/ssr': 'commonjs @supabase/ssr',
+        '@supabase/auth-js': 'commonjs @supabase/auth-js',
+        '@supabase/realtime-js': 'commonjs @supabase/realtime-js',
+        '@supabase/postgrest-js': 'commonjs @supabase/postgrest-js',
+        '@supabase/storage-js': 'commonjs @supabase/storage-js',
+      })
+    }
+
+    // Configure fallbacks for Node.js polyfills (only for client-side)
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+        stream: false,
+        url: false,
+        zlib: false,
+        http: false,
+        https: false,
+        assert: false,
+        os: false,
+        path: false,
+      };
+      
+      // Simple global polyfills
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'global': 'globalThis',
+          'self': 'globalThis',
+        })
+      );
+    }
+
+    return config
+  },
+
+  // Bundle analyzer (only when requested)
   ...(process.env.ANALYZE === 'true' && {
-    webpack: (config, { isServer }) => {
+    webpack: (config, { isServer, webpack, dev }) => {
+      // Apply all optimizations first
+      if (!dev) {
+        config = getOptimizedWebpackConfig(config, { dev, isServer, webpack });
+      }
+      
+      // Add bundle analyzer
       if (!isServer) {
         const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
         config.plugins.push(
           new BundleAnalyzerPlugin({
             analyzerMode: 'static',
             openAnalyzer: false,
+            generateStatsFile: true,
+            reportFilename: '../bundle-analyzer-report.html',
+            statsFilename: '../webpack-stats.json',
           })
         );
       }
@@ -191,4 +217,4 @@ if (process.env.NODE_ENV === 'production') {
   console.log('  ✅ Compression')
   console.log('  ✅ Enhanced Caching Headers')
   console.log('  ✅ Bundle Size Optimization')
-} 
+}

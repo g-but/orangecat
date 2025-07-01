@@ -6,6 +6,7 @@ import type {
   BlockstreamTransaction
 } from '@/types/bitcoin';
 import { getErrorMessage, type CatchError } from '@/types/common';
+import { logger } from '@/utils/logger';
 
 /**
  * BITCOIN SERVICE - CLASS-BASED ARCHITECTURE WITH DEPENDENCY INJECTION
@@ -237,7 +238,7 @@ export class BitcoinService {
       const walletData = await this.fetchBitcoinWalletData(address);
       return walletData.transactions;
     } catch (error: CatchError) {
-      console.error('Error fetching transactions:', getErrorMessage(error));
+      logger.error('Error fetching transactions:', getErrorMessage(error), 'Bitcoin');
       return [];
     }
   }
@@ -266,7 +267,7 @@ export class BitcoinService {
         
         if (!addressResponse || !addressResponse.ok) {
           const errorText = addressResponse ? await addressResponse.text() : 'No response';
-          console.warn(`API Error from ${provider.name} (Address - ${addressResponse?.status || 'unknown'}): ${errorText}`);
+          logger.warn(`API Error from ${provider.name} (Address - ${addressResponse?.status || 'unknown'}): ${errorText}`, undefined, 'Bitcoin');
           lastError = new Error(`Provider ${provider.name} address fetch failed: ${addressResponse?.status || 'unknown'}`);
           continue;
         }
@@ -279,7 +280,7 @@ export class BitcoinService {
         
         if (!txsResponse || !txsResponse.ok) {
           const errorText = txsResponse ? await txsResponse.text() : 'No response';
-          console.warn(`API Error from ${provider.name} (Transactions - ${txsResponse?.status || 'unknown'}): ${errorText}`);
+          logger.warn(`API Error from ${provider.name} (Transactions - ${txsResponse?.status || 'unknown'}): ${errorText}`, undefined, 'Bitcoin');
           lastError = new Error(`Provider ${provider.name} transactions fetch failed: ${txsResponse?.status || 'unknown'}`);
           continue;
         }
@@ -296,13 +297,13 @@ export class BitcoinService {
         };
       } catch (error: CatchError) {
         const errorMessage = getErrorMessage(error);
-        console.error(`Error with provider ${provider.name}:`, errorMessage);
+        logger.error(`Error with provider ${provider.name}:`, errorMessage, 'Bitcoin');
         lastError = error instanceof Error ? error : new Error(errorMessage);
         // Continue to next provider
       }
     }
     
-    console.error(`Failed to fetch wallet data for ${cleanAddress} from all providers. Last error:`, lastError);
+    logger.error(`Failed to fetch wallet data for ${cleanAddress} from all providers`, { error: getErrorMessage(lastError) }, 'Bitcoin');
     throw lastError || new Error('Failed to fetch wallet data from any provider for address: ' + cleanAddress);
   }
 

@@ -1,561 +1,555 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Image from "next/image";
-import Card from "@/components/ui/Card";
-import Button from "@/components/ui/Button";
-import { PageLayout, PageHeader, PageSection } from "@/components/layout/PageLayout";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
-  UserCircle2, 
-  Users, 
   Search, 
   Filter, 
   SlidersHorizontal,
   X,
   TrendingUp,
-  Clock,
-  Target,
-  Sparkles,
-  ChevronDown,
   Grid3X3,
   List,
-  ArrowUpDown
+  ArrowUpDown,
+  Bitcoin,
+  Heart,
+  Sparkles,
+  Zap,
+  Star,
+  Target,
+  Users,
+  MapPin
 } from "lucide-react";
-import DefaultAvatar from "@/components/ui/DefaultAvatar";
-import { 
-  search, 
-  getTrending,
-  SearchResult, 
-  SearchType, 
-  SortOption, 
-  SearchFilters,
-  SearchProfile,
-  SearchFundingPage 
-} from "@/services/search";
-import Link from 'next/link'
-import { FundingPage } from '@/types/funding'
-import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
-import { categoryValues } from '@/config/categories'
-import { sanitizeBioForDisplay } from '@/utils/validation'
+import Button from "@/components/ui/Button";
+import ModernCampaignCard from "@/components/ui/ModernCampaignCard";
+import Input from '@/components/ui/Input';
+import { categoryValues, simpleCategories } from '@/config/categories';
+import { useAuth } from '@/hooks/useAuth';
 
 type ViewMode = 'grid' | 'list';
+
+// Mock campaign data for demonstration with enhanced structure
+const mockCampaigns = [
+  {
+    id: '1',
+    title: 'Support Local Bitcoin Education',
+    description: 'Teaching Bitcoin fundamentals in underserved communities across Switzerland.',
+    creator: 'BitcoinEdu Switzerland',
+    category: 'education',
+    goal_amount: 50000,
+    current_amount: 32500,
+    supporters_count: 143,
+    days_left: 21,
+    image: '/api/placeholder/400/250',
+    featured: true,
+    location: 'Zurich, Switzerland',
+    created_at: '2025-01-15',
+    tags: ['education', 'community', 'switzerland'],
+    verified: true
+  },
+  {
+    id: '2', 
+    title: 'Orange Cat Sanctuary Expansion',
+    description: 'Help us expand our cat sanctuary and rescue more orange cats in need.',
+    creator: 'OrangeCat Foundation',
+    category: 'animals',
+    goal_amount: 25000,
+    current_amount: 18750,
+    supporters_count: 89,
+    days_left: 35,
+    image: '/api/placeholder/400/250',
+    featured: false,
+    location: 'Bern, Switzerland',
+    created_at: '2025-01-20',
+    tags: ['animals', 'rescue', 'charity'],
+    verified: true
+  },
+  {
+    id: '3',
+    title: 'Decentralized Music Platform',
+    description: 'Building a platform where musicians can receive Bitcoin payments directly from fans.',
+    creator: 'DecentralSound',
+    category: 'technology',
+    goal_amount: 100000,
+    current_amount: 45000,
+    supporters_count: 234,
+    days_left: 42,
+    image: '/api/placeholder/400/250',
+    featured: true,
+    location: 'Basel, Switzerland',
+    created_at: '2025-01-10',
+    tags: ['technology', 'music', 'bitcoin'],
+    verified: false
+  },
+  {
+    id: '4',
+    title: 'Open Source Bitcoin Wallet',
+    description: 'Developing a secure, user-friendly Bitcoin wallet with advanced privacy features.',
+    creator: 'CryptoDevs Collective',
+    category: 'technology',
+    goal_amount: 75000,
+    current_amount: 62500,
+    supporters_count: 178,
+    days_left: 14,
+    image: '/api/placeholder/400/250',
+    featured: false,
+    location: 'Geneva, Switzerland',
+    created_at: '2025-01-25',
+    tags: ['bitcoin', 'opensource', 'privacy'],
+    verified: true
+  },
+  {
+    id: '5',
+    title: 'Climate Action with Bitcoin',
+    description: 'Using Bitcoin mining to incentivize renewable energy adoption in rural areas.',
+    creator: 'GreenBitcoin Initiative',
+    category: 'environment',
+    goal_amount: 80000,
+    current_amount: 24000,
+    supporters_count: 95,
+    days_left: 28,
+    image: '/api/placeholder/400/250',
+    featured: false,
+    location: 'Lausanne, Switzerland',
+    created_at: '2025-01-18',
+    tags: ['environment', 'renewable', 'mining'],
+    verified: true
+  },
+  {
+    id: '6',
+    title: 'Bitcoin for Small Business',
+    description: 'Helping local restaurants and shops accept Bitcoin payments easily.',
+    creator: 'LocalBitcoin Network',
+    category: 'business',
+    goal_amount: 30000,
+    current_amount: 19500,
+    supporters_count: 67,
+    days_left: 19,
+    image: '/api/placeholder/400/250',
+    featured: false,
+    location: 'Lucerne, Switzerland', 
+    created_at: '2025-01-22',
+    tags: ['business', 'payments', 'local'],
+    verified: true
+  }
+]
 
 export default function DiscoverPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user } = useAuth();
   
-  // Search state
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [searchType, setSearchType] = useState<SearchType>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('relevance');
+  // State management
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'trending');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [showFilters, setShowFilters] = useState(false);
-  
-  // Data state
-  const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [totalResults, setTotalResults] = useState(0);
-  const [hasMore, setHasMore] = useState(false);
-  
-  // Performance optimization with debounced search
-  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedQuery(searchQuery);
-    }, 300);
-    
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
-  // Load search results using the search service
-  const loadResults = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const filters: SearchFilters = {};
-      if (selectedCategories.length > 0) {
-        filters.categories = selectedCategories;
-      }
-      
-      let response;
-      if (!debouncedQuery && searchType === 'all' && selectedCategories.length === 0) {
-        // Show trending content when no search query
-        response = await getTrending();
-      } else {
-        // Perform search
-        response = await search({
-          query: debouncedQuery || undefined,
-          type: searchType,
-          sortBy,
-          filters,
-          limit: 20,
-          offset: 0
-        });
-      }
-      
-      setResults(response.results);
-      setTotalResults(response.totalCount);
-      setHasMore(response.hasMore);
-      
-    } catch (err: any) {
-      console.error('Error loading search results:', err);
-      // More specific error messages
-      if (err.message?.includes('Failed to get trending content')) {
-        setError('No content available yet. Be the first to create a profile or campaign!');
-      } else if (err.message?.includes('Failed to perform search')) {
-        setError('Search is temporarily unavailable. Please try again in a moment.');
-      } else {
-        setError('Unable to load content. This might be because no profiles or campaigns have been created yet.');
-      }
-    } finally {
-      setLoading(false);
+  // Filter and search logic
+  const filteredCampaigns = useMemo(() => {
+    let filtered = [...mockCampaigns];
+
+    // Search term filter
+    if (searchTerm.trim()) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(campaign => 
+        campaign.title.toLowerCase().includes(search) ||
+        campaign.description.toLowerCase().includes(search) ||
+        campaign.creator.toLowerCase().includes(search) ||
+        campaign.tags.some(tag => tag.toLowerCase().includes(search))
+      );
     }
-  }, [debouncedQuery, searchType, selectedCategories, sortBy]);
 
-  // Load results when dependencies change
-  useEffect(() => {
-    loadResults();
-  }, [loadResults]);
+    // Category filter
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(campaign => campaign.category === selectedCategory);
+    }
 
-  // Update URL when search changes
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (debouncedQuery) params.set('q', debouncedQuery);
-    if (searchType !== 'all') params.set('type', searchType);
-    
-    const newUrl = params.toString() ? `?${params.toString()}` : '';
-    window.history.replaceState({}, '', `/discover${newUrl}`);
-  }, [debouncedQuery, searchType]);
+    // Tag filters
+    if (selectedTags.length > 0) {
+      filtered = filtered.filter(campaign =>
+        selectedTags.some(tag => campaign.tags.includes(tag))
+      );
+    }
 
-  // Filter handlers
-  const toggleCategory = (category: string) => {
-    setSelectedCategories(prev => 
-      prev.includes(category) 
-        ? prev.filter(c => c !== category)
-        : [...prev, category]
+    // Sort campaigns
+    switch (sortBy) {
+      case 'trending':
+        filtered.sort((a, b) => b.supporters_count - a.supporters_count);
+        break;
+      case 'newest':
+        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        break;
+      case 'ending_soon':
+        filtered.sort((a, b) => a.days_left - b.days_left);
+        break;
+      case 'most_funded':
+        filtered.sort((a, b) => (b.current_amount / b.goal_amount) - (a.current_amount / a.goal_amount));
+        break;
+      default:
+        break;
+    }
+
+    return filtered;
+  }, [searchTerm, selectedCategory, selectedTags, sortBy]);
+
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    updateURL({ search: value });
+  };
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category);
+    updateURL({ category });
+  };
+
+  const handleSortChange = (sort: string) => {
+    setSortBy(sort);
+    updateURL({ sort });
+  };
+
+  const updateURL = (params: Record<string, string>) => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    Object.entries(params).forEach(([key, value]) => {
+      if (value) {
+        newSearchParams.set(key, value);
+      } else {
+        newSearchParams.delete(key);
+      }
+    });
+    router.push(`/discover?${newSearchParams.toString()}`, { scroll: false });
+  };
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
     );
   };
 
   const clearFilters = () => {
-    setSelectedCategories([]);
-    setSearchQuery('');
-    setSearchType('all');
-    setSortBy('relevance');
+    setSearchTerm('');
+    setSelectedCategory('all');
+    setSelectedTags([]);
+    setSortBy('trending');
+    router.push('/discover');
   };
 
-  // Render functions
-  const renderProfileCard = (profile: SearchProfile) => (
-    <Card
-      key={`profile-${profile.id}`}
-      className={`${viewMode === 'grid' ? 'p-4 sm:p-6' : 'p-3 sm:p-4'} hover:shadow-lg transition-all duration-200 cursor-pointer group touch-manipulation`}
-      onClick={() => router.push(`/profile/${profile.username || profile.id}`)}
-    >
-      <div className={`flex ${viewMode === 'grid' ? 'flex-col items-center text-center' : 'items-center space-x-3 sm:space-x-4'}`}>
-        {profile.avatar_url ? (
-          <Image
-            src={profile.avatar_url}
-            alt={profile.display_name || profile.username || 'User avatar'}
-            width={viewMode === 'grid' ? 64 : 48}
-            height={viewMode === 'grid' ? 64 : 48}
-            className="rounded-full object-cover border-2 border-tiffany-200 group-hover:border-tiffany-400 transition-colors flex-shrink-0"
-          />
-        ) : (
-          <DefaultAvatar 
-            size={viewMode === 'grid' ? 64 : 48}
-            className="border-2 border-tiffany-200 group-hover:border-tiffany-400 transition-colors flex-shrink-0" 
-          />
-        )}
-        
-        <div className={`${viewMode === 'grid' ? 'mt-3 sm:mt-4' : 'flex-1 min-w-0'}`}>
-          <h3 className={`${viewMode === 'grid' ? 'text-base sm:text-lg' : 'text-sm sm:text-base'} font-semibold text-gray-900 group-hover:text-tiffany-700 transition-colors ${viewMode === 'list' ? 'truncate' : ''}`}>
-            {profile.display_name || profile.username || 'Anonymous User'}
-          </h3>
-          {profile.username && profile.display_name && (
-            <p className={`${viewMode === 'grid' ? 'text-sm' : 'text-xs sm:text-sm'} text-gray-500 ${viewMode === 'list' ? 'truncate' : ''}`}>@{profile.username}</p>
-          )}
-          {profile.bio && (
-            <p className={`text-gray-600 mt-1 sm:mt-2 ${viewMode === 'grid' ? 'line-clamp-3 text-sm sm:text-base' : 'line-clamp-2 text-xs sm:text-sm'} leading-relaxed`}>
-              {sanitizeBioForDisplay(profile.bio)}
-            </p>
-          )}
-          <div className={`flex items-center ${viewMode === 'grid' ? 'justify-between' : 'justify-between'} mt-2 sm:mt-3`}>
-            <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-              <Users className="w-3 h-3 mr-1 flex-shrink-0" />
-              <span className="hidden sm:inline">Profile</span>
-            </span>
-            <span className="text-tiffany-600 group-hover:text-tiffany-700 transition-colors text-sm sm:text-base">→</span>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
+  // Get unique tags from all campaigns
+  const allTags = useMemo(() => {
+    const tags = new Set<string>();
+    mockCampaigns.forEach(campaign => {
+      campaign.tags.forEach(tag => tags.add(tag));
+    });
+    return Array.from(tags);
+  }, []);
 
-  const renderCampaignCard = (campaign: SearchFundingPage) => {
-    const progress = campaign.goal_amount ? (campaign.total_funding / campaign.goal_amount) * 100 : 0;
-    
-    return (
-      <Card
-        key={`campaign-${campaign.id}`}
-        className={`${viewMode === 'grid' ? 'p-4 sm:p-6' : 'p-3 sm:p-4'} hover:shadow-lg transition-all duration-200 cursor-pointer group touch-manipulation`}
-        onClick={() => router.push(`/campaign/${campaign.slug || campaign.id}`)}
-      >
-        <div className={`${viewMode === 'list' ? 'flex items-center space-x-3 sm:space-x-4' : ''}`}>
-          {campaign.featured_image_url && viewMode === 'grid' && (
-            <div className="relative h-40 sm:h-48 w-full mb-3 sm:mb-4 rounded-lg overflow-hidden">
-              <Image
-                src={campaign.featured_image_url}
-                alt={campaign.title}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-200"
-              />
-            </div>
-          )}
-          
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between mb-2 sm:mb-3">
-              <h3 className={`${viewMode === 'grid' ? 'text-base sm:text-lg' : 'text-sm sm:text-base'} font-semibold text-gray-900 group-hover:text-tiffany-700 transition-colors line-clamp-2 flex-1 pr-2`}>
-                {campaign.title}
-              </h3>
-              {!campaign.is_active && (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 ml-2 flex-shrink-0">
-                  Inactive
-                </span>
-              )}
-            </div>
-            
-            {/* Creator info */}
-            {campaign.profiles && (
-              <div className="flex items-center mb-2 sm:mb-3 text-xs sm:text-sm text-gray-600">
-                <span className="truncate">by {campaign.profiles.display_name || campaign.profiles.username || 'Anonymous'}</span>
-              </div>
-            )}
-            
-            {campaign.description && (
-              <p className={`text-gray-600 mb-2 sm:mb-3 ${viewMode === 'grid' ? 'line-clamp-3 text-sm sm:text-base' : 'line-clamp-2 text-xs sm:text-sm'} leading-relaxed`}>
-                {campaign.description}
-              </p>
-            )}
-            
-            <div className="space-y-2 sm:space-y-3">
-              {/* Progress bar */}
-              {campaign.goal_amount && (
-                <div>
-                  <div className="flex justify-between text-xs sm:text-sm text-gray-600 mb-1">
-                    <div className="truncate">
-                                            <CurrencyDisplay
-                        amount={campaign.total_funding || 0}
-                        currency="BTC"
-                        size="sm"
-                        showSymbol={true}
-                        className="text-xs sm:text-sm"
-                      />
-                      <span className="ml-1">raised</span>
-                    </div>
-                    <span className="flex-shrink-0 ml-2">{Math.round(progress)}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-tiffany-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min(progress, 100)}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 space-y-1 sm:space-y-0 text-xs sm:text-sm text-gray-500 min-w-0 flex-1">
-                  <span className="flex items-center">
-                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
-                    <span className="truncate">{campaign.contributor_count} supporters</span>
-                  </span>
-                  {campaign.category && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 self-start">
-                      {campaign.category}
-                    </span>
-                  )}
-                </div>
-                <span className="text-tiffany-600 group-hover:text-tiffany-700 transition-colors text-sm sm:text-base ml-2 flex-shrink-0">→</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </Card>
-    );
-  };
+  const stats = useMemo(() => {
+    const totalCampaigns = filteredCampaigns.length;
+    const totalSupporters = filteredCampaigns.reduce((sum, campaign) => sum + campaign.supporters_count, 0);
+    const totalFunding = filteredCampaigns.reduce((sum, campaign) => sum + campaign.current_amount, 0);
+    return { totalCampaigns, totalSupporters, totalFunding };
+  }, [filteredCampaigns]);
 
   return (
-    <PageLayout>
-      <PageHeader
-        title="Discover & Support"
-        description="Find amazing people and projects to support with Bitcoin"
-      />
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/50 via-white to-tiffany-50/30">
+      {/* Hero Section */}
+      <motion.div 
+        className="relative overflow-hidden bg-gradient-to-br from-bitcoinOrange/5 via-tiffany-50/80 to-orange-50/60 border-b border-gray-100/50"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
+        
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <motion.div
+            className="absolute top-20 left-10 w-3 h-3 bg-bitcoinOrange/20 rounded-full"
+            animate={{ 
+              y: [0, -30, 0],
+              opacity: [0.2, 0.6, 0.2] 
+            }}
+            transition={{ 
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut" 
+            }}
+          />
+          <motion.div
+            className="absolute top-40 right-20 w-2 h-2 bg-tiffany-400/30 rounded-full"
+            animate={{ 
+              y: [0, 20, 0],
+              x: [0, 15, 0],
+              opacity: [0.3, 0.7, 0.3] 
+            }}
+            transition={{ 
+              duration: 5,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 0.5 
+            }}
+          />
+        </div>
 
-      <PageSection>
-        {/* Search Header */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6 sm:mb-8">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+          <motion.div 
+            className="text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            {/* Hero Badge */}
+            <motion.div 
+              className="mb-6"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-gradient-to-r from-bitcoinOrange/20 to-tiffany-500/20 border border-bitcoinOrange/30">
+                <Target className="w-4 h-4 text-bitcoinOrange mr-2" />
+                <span className="text-sm font-medium bg-gradient-to-r from-bitcoinOrange to-tiffany-600 bg-clip-text text-transparent">
+                  Discover Amazing Projects
+                </span>
+                <Sparkles className="w-4 h-4 text-tiffany-500 ml-2" />
+              </div>
+            </motion.div>
+
+            <motion.h1 
+              className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 mb-6"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+            >
+              <span className="block">Discover</span>
+              <span className="block bg-gradient-to-r from-tiffany-600 via-bitcoinOrange to-orange-500 bg-clip-text text-transparent">
+                Bitcoin Campaigns
+              </span>
+            </motion.h1>
+
+            <motion.p 
+              className="mt-6 max-w-3xl mx-auto text-lg sm:text-xl text-gray-600 leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.7 }}
+            >
+              Support innovative projects, help local communities, and be part of the Bitcoin revolution.
+            </motion.p>
+
+            {/* Stats */}
+            <motion.div 
+              className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.9 }}
+            >
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50">
+                <div className="text-2xl font-bold text-gray-900">{stats.totalCampaigns}</div>
+                <div className="text-sm text-gray-600">Active Campaigns</div>
+              </div>
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50">
+                <div className="text-2xl font-bold text-bitcoinOrange">{stats.totalSupporters}</div>
+                <div className="text-sm text-gray-600">Total Supporters</div>
+              </div>
+              <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50">
+                <div className="text-2xl font-bold text-tiffany-600">CHF {stats.totalFunding.toLocaleString()}</div>
+                <div className="text-sm text-gray-600">Funds Raised</div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        {/* Search and Filters */}
+        <motion.div 
+          className="mb-8 space-y-6"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.1 }}
+        >
           {/* Search Bar */}
-          <div className="relative mb-4 sm:mb-6">
-            <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
-            <input
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <Input
               type="text"
-              placeholder="Search for people, projects, or campaigns..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 sm:pl-12 pr-10 sm:pr-4 py-3 sm:py-4 text-base sm:text-lg border border-gray-300 rounded-xl focus:ring-2 focus:ring-tiffany-500 focus:border-transparent transition-all duration-200 min-h-[48px] touch-manipulation"
+              placeholder="Search campaigns, creators, or keywords..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-12 pr-4 py-4 text-lg bg-white/80 backdrop-blur-sm border-gray-200/80 rounded-2xl focus:ring-2 focus:ring-bitcoinOrange/20 focus:border-bitcoinOrange"
             />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery('')}
-                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors p-1 min-h-[44px] min-w-[44px] touch-manipulation"
-              >
-                <X className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
-            )}
           </div>
 
-          {/* Search Type Tabs */}
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 lg:gap-0">
-            <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1 overflow-x-auto">
-              {[
-                { key: 'all', label: 'All', icon: Sparkles },
-                { key: 'profiles', label: 'People', icon: Users },
-                { key: 'campaigns', label: 'Campaigns', icon: Target }
-              ].map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setSearchType(key as SearchType)}
-                  className={`flex items-center px-3 sm:px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 whitespace-nowrap min-h-[44px] touch-manipulation ${
-                    searchType === key
-                      ? 'bg-white text-tiffany-700 shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  <Icon className="w-4 h-4 mr-2 flex-shrink-0" />
-                  {label}
-                </button>
-              ))}
-            </div>
+          {/* Filters Row */}
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Category Filter */}
+              <select
+                value={selectedCategory}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                className="px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-xl text-sm font-medium focus:ring-2 focus:ring-bitcoinOrange/20 focus:border-bitcoinOrange"
+              >
+                <option value="all">All Categories</option>
+                <option value="technology">Technology</option>
+                <option value="education">Education</option>
+                <option value="environment">Environment</option>
+                <option value="animals">Animals</option>
+                <option value="business">Business</option>
+              </select>
 
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-              {/* View Mode Toggle */}
-              <div className="flex items-center space-x-1 bg-gray-100 rounded-lg p-1">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-md transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation ${
-                    viewMode === 'grid' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
-                  }`}
-                >
-                  <Grid3X3 className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-md transition-all duration-200 min-h-[44px] min-w-[44px] touch-manipulation ${
-                    viewMode === 'list' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'
-                  }`}
-                >
-                  <List className="w-4 h-4" />
-                </button>
-              </div>
+              {/* Sort Filter */}
+              <select
+                value={sortBy}
+                onChange={(e) => handleSortChange(e.target.value)}
+                className="px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-xl text-sm font-medium focus:ring-2 focus:ring-bitcoinOrange/20 focus:border-bitcoinOrange"
+              >
+                <option value="trending">Trending</option>
+                <option value="newest">Newest</option>
+                <option value="ending_soon">Ending Soon</option>
+                <option value="most_funded">Most Funded</option>
+              </select>
 
-              {/* Sort Dropdown */}
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="appearance-none bg-white border border-gray-300 rounded-lg px-3 sm:px-4 py-2 pr-8 sm:pr-10 text-sm focus:ring-2 focus:ring-tiffany-500 focus:border-transparent min-h-[44px] w-full sm:w-auto touch-manipulation"
-                >
-                  <option value="relevance">Most Relevant</option>
-                  <option value="recent">Most Recent</option>
-                  <option value="popular">Most Popular</option>
-                  <option value="funding">Highest Funded</option>
-                </select>
-                <ArrowUpDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
-
-              {/* Filters Toggle */}
+              {/* Advanced Filters Toggle */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setShowFilters(!showFilters)}
-                className={`min-h-[44px] px-3 sm:px-4 touch-manipulation ${showFilters ? 'bg-tiffany-50 border-tiffany-300' : ''}`}
+                className="border-gray-200/80 hover:bg-gray-50/80 backdrop-blur-sm"
               >
-                <SlidersHorizontal className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Filters</span>
-                <span className="sm:hidden">Filter</span>
-                {selectedCategories.length > 0 && (
-                  <span className="ml-2 bg-tiffany-600 text-white text-xs rounded-full px-2 py-0.5">
-                    {selectedCategories.length}
-                  </span>
-                )}
+                <SlidersHorizontal className="w-4 h-4 mr-2" />
+                Filters
               </Button>
-            </div>
-          </div>
 
-          {/* Filters Panel */}
-          {showFilters && (
-            <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-200">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
-                <h3 className="text-sm font-medium text-gray-900">Categories</h3>
-                {selectedCategories.length > 0 && (
-                  <button
-                    onClick={clearFilters}
-                    className="text-sm text-tiffany-600 hover:text-tiffany-700 transition-colors self-start sm:self-auto min-h-[44px] px-2 touch-manipulation"
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {categoryValues.map(category => (
-                  <button
-                    key={category}
-                    onClick={() => toggleCategory(category)}
-                    className={`px-3 py-2 rounded-full text-sm font-medium transition-all duration-200 min-h-[44px] touch-manipulation ${
-                      selectedCategories.includes(category)
-                        ? 'bg-tiffany-600 text-white'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {category.charAt(0).toUpperCase() + category.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Results */}
-        <div className="space-y-4 sm:space-y-6">
-          {/* Results Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
-                {debouncedQuery ? `Search Results` : 'Discover'}
-              </h2>
-              <p className="text-gray-600 mt-1 text-sm sm:text-base">
-                {loading ? 'Searching...' : `${totalResults} results found`}
-                {debouncedQuery && (
-                  <span className="ml-1">for &quot;{debouncedQuery}&quot;</span>
-                )}
-              </p>
-            </div>
-          </div>
-
-          {/* Loading State */}
-          {loading && (
-            <div className="flex justify-center items-center py-16 sm:py-20">
-              <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-tiffany-500"></div>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <div className="text-center py-12 sm:py-16 px-4">
-              <div className="bg-red-50 rounded-full w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                <X className="w-8 h-8 sm:w-12 sm:h-12 text-red-500" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">Something went wrong</h3>
-              <p className="text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base leading-relaxed">{error}</p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                <Button onClick={loadResults} variant="outline" className="min-h-[44px] touch-manipulation">
-                  Try Again
+              {/* Clear Filters */}
+              {(searchTerm || selectedCategory !== 'all' || selectedTags.length > 0 || sortBy !== 'trending') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearFilters}
+                  className="text-gray-600 hover:text-gray-900"
+                >
+                  <X className="w-4 h-4 mr-1" />
+                  Clear
                 </Button>
-                {error.includes('no profiles or campaigns') && (
-                  <>
-                    <Button href="/create" className="min-h-[44px] touch-manipulation">
-                      Create Campaign
-                    </Button>
-                    <Button href="/profile" variant="outline" className="min-h-[44px] touch-manipulation">
-                      Create Profile
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loading && !error && results.length === 0 && (
-            <div className="text-center py-12 sm:py-16 px-4">
-              <div className="bg-tiffany-50 rounded-full w-16 h-16 sm:w-24 sm:h-24 flex items-center justify-center mx-auto mb-4 sm:mb-6">
-                {debouncedQuery ? (
-                  <Search className="w-8 h-8 sm:w-12 sm:h-12 text-tiffany-500" />
-                ) : (
-                  <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-tiffany-500" />
-                )}
-              </div>
-              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                {debouncedQuery ? 'No results found' : 'Be the first to get started!'}
-              </h3>
-              <p className="text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto text-sm sm:text-base leading-relaxed">
-                {debouncedQuery 
-                  ? 'Try adjusting your search terms or filters, or be the first to create content that matches your search.'
-                  : 'It looks like no one has created any profiles or campaigns yet. This is your chance to be a pioneer!'
-                }
-              </p>
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                {debouncedQuery ? (
-                  <>
-                    <Button onClick={clearFilters} variant="outline" className="min-h-[44px] touch-manipulation">
-                      Clear Search
-                    </Button>
-                    <Button href="/create" className="min-h-[44px] touch-manipulation">
-                      Create Campaign
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button href="/create" size="lg" className="min-h-[48px] touch-manipulation">
-                      Start a Campaign
-                    </Button>
-                    <Button href="/profile" variant="outline" size="lg" className="min-h-[48px] touch-manipulation">
-                      Create Your Profile
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Results Grid */}
-          {!loading && !error && results.length > 0 && (
-            <div className={`grid gap-4 sm:gap-6 ${
-              viewMode === 'grid' 
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
-                : 'grid-cols-1 max-w-4xl mx-auto'
-            }`}>
-              {results.map((result) => 
-                result.type === 'profile' 
-                  ? renderProfileCard(result.data as SearchProfile)
-                  : renderCampaignCard(result.data as SearchFundingPage)
               )}
             </div>
-          )}
-        </div>
-      </PageSection>
 
-      {/* Call to Action */}
-      <PageSection background="tiffany">
-        <div className="text-center px-4">
-          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">Ready to Make an Impact?</h2>
-          <p className="text-gray-600 mb-4 sm:mb-6 max-w-2xl mx-auto text-sm sm:text-base leading-relaxed">
-            Join our community of creators and supporters. Start your own campaign or discover amazing projects to fund.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-            <Button href="/create" size="lg" className="min-h-[48px] touch-manipulation">
-              Start a Campaign
-            </Button>
-            <Button href="/profile" variant="outline" size="lg" className="min-h-[48px] touch-manipulation">
-              Create Your Profile
-            </Button>
+            {/* View Mode Toggle */}
+            <div className="flex items-center gap-2">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/80 p-1">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className="h-8 w-8 p-0"
+                >
+                  <Grid3X3 className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  size="sm"
+                  onClick={() => setViewMode('list')}
+                  className="h-8 w-8 p-0"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
           </div>
-        </div>
-      </PageSection>
-    </PageLayout>
+
+          {/* Advanced Filters Panel */}
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Advanced Filters</h3>
+                  
+                  {/* Tags Filter */}
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">Tags</label>
+                    <div className="flex flex-wrap gap-2">
+                      {allTags.map((tag) => (
+                        <button
+                          key={tag}
+                          onClick={() => toggleTag(tag)}
+                          className={`px-3 py-1 rounded-full text-sm font-medium transition-colors duration-200 ${
+                            selectedTags.includes(tag)
+                              ? 'bg-bitcoinOrange text-white'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+
+        {/* Results */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.3 }}
+        >
+          {filteredCampaigns.length === 0 ? (
+            <div className="text-center py-16">
+              <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No campaigns found</h3>
+              <p className="text-gray-600 mb-6">Try adjusting your search criteria or browse all campaigns.</p>
+              <Button onClick={clearFilters}>Clear Filters</Button>
+            </div>
+          ) : (
+            <>
+              {/* Results Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} found
+                </h2>
+              </div>
+
+              {/* Campaign Grid */}
+              <div className={`grid gap-6 ${
+                viewMode === 'grid' 
+                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
+                  : 'grid-cols-1'
+              }`}>
+                {filteredCampaigns.map((campaign, index) => (
+                  <motion.div
+                    key={campaign.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: index * 0.1 }}
+                  >
+                    <ModernCampaignCard 
+                      campaign={campaign} 
+                      viewMode={viewMode}
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </>
+          )}
+        </motion.div>
+      </div>
+    </div>
   );
 } 

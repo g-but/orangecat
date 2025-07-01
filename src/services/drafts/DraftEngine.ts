@@ -13,6 +13,7 @@ import {
   CampaignFormData,
   DraftQuery
 } from './types'
+import { logger } from '@/utils/logger'
 
 export class DraftEngine {
   private static instance: DraftEngine
@@ -451,7 +452,7 @@ export class DraftEngine {
     try {
       localStorage.setItem(`draft_${draft.id}`, JSON.stringify(draft))
     } catch (error) {
-      console.warn('Failed to save to localStorage:', error)
+      logger.warn('Failed to save to localStorage', error, 'Draft')
     }
   }
 

@@ -22,7 +22,16 @@ import { isValidProfile } from '../types'
 // ==================== PROFILE OPERATIONS ====================
 
 /**
- * Get a user's profile by ID
+ * Get a user's profile by ID with validation and error handling
+ * @param userId - Unique user identifier
+ * @returns Promise<ProfileResponse> - Profile data or error
+ * @example
+ * ```typescript
+ * const { data: profile, error } = await getProfile('user-123');
+ * if (profile) {
+ *   console.log('Username:', profile.username);
+ * }
+ * ```
  */
 export async function getProfile(userId: string): Promise<ProfileResponse> {
   try {
@@ -68,7 +77,24 @@ export async function getProfile(userId: string): Promise<ProfileResponse> {
 }
 
 /**
- * Update a user's profile
+ * Update a user's profile with validation and conflict handling
+ * @param userId - Unique user identifier
+ * @param updates - Profile fields to update
+ * @returns Promise<ProfileUpdateResponse> - Updated profile data with status
+ * @example
+ * ```typescript
+ * const result = await updateProfile('user-123', {
+ *   username: 'newusername',
+ *   display_name: 'New Display Name',
+ *   bio: 'Updated bio'
+ * });
+ * 
+ * if (result.status === 'success') {
+ *   console.log('Profile updated:', result.data?.username);
+ * } else {
+ *   console.error('Update failed:', result.error?.message);
+ * }
+ * ```
  */
 export async function updateProfile(
   userId: string, 
@@ -141,6 +167,20 @@ export async function updateProfile(
 
 /**
  * Create a new profile (typically called after user signup)
+ * @param userId - Unique user identifier from auth system
+ * @param profileData - Optional initial profile data
+ * @returns Promise<ProfileResponse> - Created profile data or error
+ * @example
+ * ```typescript
+ * const { data: profile, error } = await createProfile('user-123', {
+ *   username: 'johndoe',
+ *   display_name: 'John Doe'
+ * });
+ * 
+ * if (profile) {
+ *   console.log('Profile created for:', profile.username);
+ * }
+ * ```
  */
 export async function createProfile(
   userId: string, 
@@ -199,7 +239,18 @@ export async function createProfile(
 }
 
 /**
- * Check if a username is available
+ * Check if a username is available for registration
+ * @param username - Username to check availability
+ * @returns Promise<boolean> - True if username is available, false otherwise
+ * @example
+ * ```typescript
+ * const available = await isUsernameAvailable('johndoe');
+ * if (available) {
+ *   console.log('Username is available for registration');
+ * } else {
+ *   console.log('Username is already taken');
+ * }
+ * ```
  */
 export async function isUsernameAvailable(username: string): Promise<boolean> {
   try {
@@ -239,7 +290,18 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
 }
 
 /**
- * Get profile by username
+ * Get profile by username for public profile viewing
+ * @param username - Username to lookup
+ * @returns Promise<ProfileResponse> - Profile data or error
+ * @example
+ * ```typescript
+ * const { data: profile, error } = await getProfileByUsername('johndoe');
+ * if (profile) {
+ *   console.log('Profile found:', profile.display_name);
+ * } else {
+ *   console.log('Profile not found');
+ * }
+ * ```
  */
 export async function getProfileByUsername(username: string): Promise<ProfileResponse> {
   try {
@@ -287,7 +349,17 @@ export async function getProfileByUsername(username: string): Promise<ProfileRes
 }
 
 /**
- * Search profiles by display name or username
+ * Search profiles by display name or username with fuzzy matching
+ * @param query - Search query string
+ * @param limit - Maximum number of results (default: 10)
+ * @returns Promise<{data: Profile[], error: Error | null}> - Search results
+ * @example
+ * ```typescript
+ * const { data: profiles, error } = await searchProfiles('john', 5);
+ * if (profiles.length > 0) {
+ *   console.log('Found profiles:', profiles.map(p => p.username));
+ * }
+ * ```
  */
 export async function searchProfiles(
   query: string, 
@@ -331,7 +403,20 @@ export async function searchProfiles(
 // ==================== UTILITY FUNCTIONS ====================
 
 /**
- * Validate profile data before operations
+ * Validate profile data before database operations
+ * @param data - Profile data to validate
+ * @returns Validation result with detailed error messages
+ * @example
+ * ```typescript
+ * const validation = validateProfileData({
+ *   username: 'ab', // Too short
+ *   bio: 'x'.repeat(600) // Too long
+ * });
+ * 
+ * if (!validation.isValid) {
+ *   console.log('Validation errors:', validation.errors);
+ * }
+ * ```
  */
 export function validateProfileData(data: Partial<ProfileUpdateData>): { 
   isValid: boolean; 

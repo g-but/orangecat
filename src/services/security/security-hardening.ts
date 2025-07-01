@@ -16,7 +16,16 @@ import { z } from 'zod'
 // ==================== INPUT SANITIZATION SYSTEM ====================
 
 /**
- * XSS Prevention - HTML Entity Encoding
+ * XSS Prevention - HTML Entity Encoding and Content Sanitization
+ * 
+ * Provides comprehensive protection against Cross-Site Scripting (XSS) attacks
+ * by sanitizing user input and encoding dangerous characters.
+ * 
+ * @example
+ * ```typescript
+ * const safeInput = XSSPrevention.sanitizeHTML('<script>alert("xss")</script>');
+ * // Returns: '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
+ * ```
  */
 export class XSSPrevention {
   private static readonly HTML_ENTITIES: Record<string, string> = {
@@ -30,6 +39,11 @@ export class XSSPrevention {
     '=': '&#x3D;'
   }
 
+  /**
+   * Sanitize HTML content by encoding dangerous characters
+   * @param input - Raw HTML content to sanitize
+   * @returns Sanitized string safe for HTML display
+   */
   static sanitizeHTML(input: string): string {
     if (!input || typeof input !== 'string') return ''
     
@@ -38,6 +52,11 @@ export class XSSPrevention {
     })
   }
 
+  /**
+   * Sanitize input for use in HTML attributes with aggressive filtering
+   * @param input - Raw input to sanitize for HTML attributes
+   * @returns Sanitized string safe for HTML attributes
+   */
   static sanitizeForAttribute(input: string): string {
     if (!input || typeof input !== 'string') return ''
     
@@ -52,6 +71,11 @@ export class XSSPrevention {
       .replace(/on\w+=/gi, '')
   }
 
+  /**
+   * Sanitize plain text content with length limits
+   * @param input - Raw text to sanitize
+   * @returns Sanitized text safe for display (max 1000 chars)
+   */
   static sanitizeText(input: string): string {
     if (!input || typeof input !== 'string') return ''
     
@@ -138,6 +162,20 @@ interface RateLimitConfig {
   skipFailedRequests?: boolean
 }
 
+/**
+ * Rate Limiting System for API Protection
+ * 
+ * Implements sliding window rate limiting to prevent abuse and DoS attacks.
+ * Supports different rate limits for different operation types.
+ * 
+ * @example
+ * ```typescript
+ * const result = await RateLimiter.checkLimit('user@example.com', 'auth');
+ * if (!result.allowed) {
+ *   throw new Error(`Rate limit exceeded. Try again in ${result.resetTime - Date.now()}ms`);
+ * }
+ * ```
+ */
 export class RateLimiter {
   private static requests = new Map<string, { count: number; resetTime: number }>()
 
@@ -153,6 +191,12 @@ export class RateLimiter {
     profileUpdate: { windowMs: 5 * 60 * 1000, maxRequests: 10 }, // 10 per 5 minutes
   }
 
+  /**
+   * Check if request is within rate limits
+   * @param identifier - Unique identifier (IP, user ID, email)
+   * @param limitType - Type of rate limit to apply
+   * @returns Rate limit status with remaining requests and reset time
+   */
   static async checkLimit(
     identifier: string, 
     limitType: keyof typeof RateLimiter.LIMITS
@@ -215,13 +259,35 @@ export class RateLimiter {
 
 // ==================== AUTHENTICATION SECURITY ====================
 
+/**
+ * Authentication Security System
+ * 
+ * Provides account lockout protection, password strength validation,
+ * and secure token generation for authentication operations.
+ * 
+ * @example
+ * ```typescript
+ * // Check if account is locked
+ * if (AuthenticationSecurity.isAccountLocked('user@example.com')) {
+ *   throw new Error('Account temporarily locked due to failed attempts');
+ * }
+ * 
+ * // Validate password strength
+ * const validation = AuthenticationSecurity.validatePasswordStrength('password123');
+ * if (!validation.valid) {
+ *   console.log('Password errors:', validation.errors);
+ * }
+ * ```
+ */
 export class AuthenticationSecurity {
   private static readonly LOCKOUT_DURATION = 15 * 60 * 1000 // 15 minutes
   private static readonly MAX_ATTEMPTS = 5
   private static lockedAccounts = new Map<string, number>()
 
   /**
-   * Check if account is locked due to failed attempts
+   * Check if account is locked due to failed authentication attempts
+   * @param identifier - Account identifier (email, username)
+   * @returns True if account is currently locked
    */
   static isAccountLocked(identifier: string): boolean {
     const lockTime = this.lockedAccounts.get(identifier)
@@ -236,7 +302,8 @@ export class AuthenticationSecurity {
   }
 
   /**
-   * Record failed authentication attempt
+   * Record failed authentication attempt and lock account if needed
+   * @param identifier - Account identifier that failed authentication
    */
   static recordFailedAttempt(identifier: string): void {
     const lockUntil = Date.now() + this.LOCKOUT_DURATION
@@ -249,14 +316,17 @@ export class AuthenticationSecurity {
   }
 
   /**
-   * Clear failed attempts on successful authentication
+   * Clear failed attempts record on successful authentication
+   * @param identifier - Account identifier that successfully authenticated
    */
   static clearFailedAttempts(identifier: string): void {
     this.lockedAccounts.delete(identifier)
   }
 
   /**
-   * Validate password strength
+   * Validate password strength against security requirements
+   * @param password - Password to validate
+   * @returns Validation result with detailed error messages
    */
   static validatePasswordStrength(password: string): { valid: boolean; errors: string[] } {
     const errors: string[] = []
@@ -285,7 +355,9 @@ export class AuthenticationSecurity {
   }
 
   /**
-   * Generate secure token
+   * Generate cryptographically secure random token
+   * @param length - Token length (default: 32 characters)
+   * @returns Secure random string suitable for tokens
    */
   static generateSecureToken(length: number = 32): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -372,12 +444,34 @@ interface SecurityEvent {
   details: Record<string, any>
 }
 
+/**
+ * Security Event Monitoring System
+ * 
+ * Tracks and analyzes security events for threat detection and incident response.
+ * Maintains event history and provides alerting for critical security events.
+ * 
+ * @example
+ * ```typescript
+ * // Record security event
+ * SecurityMonitor.recordEvent('suspicious_login', 'high', {
+ *   ip: '192.168.1.1',
+ *   userAgent: 'suspicious-bot'
+ * });
+ * 
+ * // Get security statistics
+ * const stats = SecurityMonitor.getStats();
+ * console.log(`Critical events: ${stats.criticalEvents}`);
+ * ```
+ */
 export class SecurityMonitor {
   private static events: SecurityEvent[] = []
   private static readonly MAX_EVENTS = 1000
 
   /**
-   * Record security event
+   * Record a security event for monitoring and analysis
+   * @param type - Event type identifier
+   * @param severity - Event severity level
+   * @param details - Additional event context and metadata
    */
   static recordEvent(
     type: string,
@@ -406,7 +500,10 @@ export class SecurityMonitor {
   }
 
   /**
-   * Get security events
+   * Retrieve security events with filtering and limiting
+   * @param severity - Optional severity filter
+   * @param limit - Maximum number of events to return (default: 100)
+   * @returns Array of security events sorted by timestamp (newest first)
    */
   static getEvents(
     severity?: SecurityEvent['severity'],
@@ -498,9 +595,44 @@ export class ContentSecurityPolicy {
 
 // ==================== MAIN SECURITY MIDDLEWARE ====================
 
+/**
+ * Comprehensive Security Hardening Middleware
+ * 
+ * Provides complete security protection for API routes including:
+ * - Method validation
+ * - Rate limiting
+ * - Authentication verification
+ * - Input validation
+ * - Security event monitoring
+ * 
+ * @example
+ * ```typescript
+ * // Secure an API route
+ * const security = await SecurityHardening.secureAPIRoute(request, {
+ *   requireAuth: true,
+ *   rateLimit: 'api',
+ *   allowedMethods: ['POST'],
+ *   validateInput: userUpdateSchema
+ * });
+ * 
+ * if (!security.success) {
+ *   return security.response; // Security check failed
+ * }
+ * 
+ * // Security passed, proceed with API logic
+ * const user = security.user;
+ * ```
+ */
 export class SecurityHardening {
   /**
-   * Apply comprehensive security to API routes
+   * Apply comprehensive security protection to API routes
+   * @param request - Next.js request object
+   * @param options - Security configuration options
+   * @param options.requireAuth - Whether authentication is required
+   * @param options.rateLimit - Rate limit type to apply
+   * @param options.validateInput - Zod schema for input validation
+   * @param options.allowedMethods - HTTP methods allowed for this route
+   * @returns Security check result with user data or error response
    */
   static async secureAPIRoute(
     request: NextRequest,

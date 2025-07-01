@@ -48,7 +48,6 @@ export default function FeaturedCampaigns({
       const data = await getFeaturedCampaigns(limit)
       setCampaigns(data)
     } catch (err: any) {
-      console.error('Error loading featured campaigns:', err)
       setError('Failed to load featured campaigns')
     } finally {
       setLoading(false)
