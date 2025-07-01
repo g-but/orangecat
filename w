@@ -73,44 +73,43 @@ echo -e "${GREEN}✅ Pushed to GitHub${NC}"
 # Trigger deployment
 echo -e "${YELLOW}🚀 Triggering deployment...${NC}"
 
-# Use GitHub CLI to trigger workflow
-if gh workflow run one-button-deploy.yml \
-    --field environment=production \
-    --field skip_tests=false \
-    --field force_deploy=false; then
+# Trigger deployment via GitHub Actions (auto-triggered by push)
+echo -e "${GREEN}✅ Deployment triggered successfully!${NC}"
+
+# Start monitoring
+echo -e "${BLUE}🔍 Starting deployment monitoring...${NC}"
+
+# Run the deployment monitor
+if command -v node &> /dev/null; then
+    echo -e "${YELLOW}📊 Running deployment monitor...${NC}"
+    node scripts/deployment-monitor.js &
+    MONITOR_PID=$!
     
-    echo -e "${GREEN}✅ Deployment triggered successfully!${NC}"
-    
-    # Open monitoring
-    echo -e "${BLUE}🔍 Opening deployment monitoring...${NC}"
-    
-    # Wait a moment for workflow to start
-    sleep 3
-    
-    # Open GitHub Actions in browser
-    if command -v start &> /dev/null; then
-        start "https://github.com/g-but/orangecat/actions"
-    elif command -v xdg-open &> /dev/null; then
-        xdg-open "https://github.com/g-but/orangecat/actions"
-    elif command -v open &> /dev/null; then
-        open "https://github.com/g-but/orangecat/actions"
-    else
-        echo -e "${BLUE}📱 Monitor deployment: https://github.com/g-but/orangecat/actions${NC}"
-    fi
+    # Wait a moment for monitor to start
+    sleep 2
     
     echo -e "${GREEN}"
-    echo "🎉 DEPLOYMENT IN PROGRESS!"
+    echo "🎉 DEPLOYMENT & MONITORING ACTIVE!"
     echo ""
     echo "📊 Monitor: https://github.com/g-but/orangecat/actions"
     echo "🌐 Production: https://orangecat.ch"
     echo "🏥 Health: https://orangecat.ch/api/health"
     echo ""
     echo "⏱️  Timeline: 6-9 minutes"
-    echo "📱 You'll be notified when complete"
+    echo "📊 Real-time logs: deployment.log"
+    echo "🔍 Monitor PID: $MONITOR_PID"
     echo -e "${NC}"
     
+    # Open monitoring dashboard
+    if command -v start &> /dev/null; then
+        start "https://github.com/g-but/orangecat/actions"
+    elif command -v xdg-open &> /dev/null; then
+        xdg-open "https://github.com/g-but/orangecat/actions"
+    elif command -v open &> /dev/null; then
+        open "https://github.com/g-but/orangecat/actions"
+    fi
+    
 else
-    echo -e "${RED}❌ Failed to trigger deployment${NC}"
-    echo -e "${YELLOW}💡 Alternative: Push will auto-deploy via GitHub Actions${NC}"
-    exit 1
+    echo -e "${YELLOW}⚠️ Node.js not found. Manual monitoring required.${NC}"
+    echo -e "${BLUE}📱 Monitor deployment: https://github.com/g-but/orangecat/actions${NC}"
 fi 

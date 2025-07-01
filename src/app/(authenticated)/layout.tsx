@@ -8,6 +8,8 @@ import {
   ChevronDown,
   ChevronRight,
   Sparkles,
+  Bell,
+  Search
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useNavigation } from '@/hooks/useNavigation'
@@ -16,6 +18,9 @@ import Image from 'next/image'
 import DefaultAvatar from '@/components/ui/DefaultAvatar'
 import { DevPerformanceMonitor } from '@/components/dashboard/PerformanceMonitor'
 import { NavigationShortcuts } from '@/components/navigation/NavigationShortcuts'
+import { HeaderCreateButton } from '@/components/dashboard/SmartCreateButton'
+import UserProfileDropdown from '@/components/ui/UserProfileDropdown'
+import Logo from '@/components/layout/Logo'
 
 interface AuthenticatedLayoutProps {
   children: React.ReactNode
@@ -48,6 +53,49 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Top Header for authenticated routes */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-200">
+        <div className="flex items-center justify-between h-16 px-4">
+          {/* Left: Logo + Mobile Menu Toggle */}
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={toggleSidebar}
+              className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+              aria-label="Toggle sidebar"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <div className="lg:hidden">
+              <Logo />
+            </div>
+          </div>
+
+          {/* Center: Search */}
+          <div className="hidden md:flex flex-1 max-w-md mx-6">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search campaigns, people..."
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
+              />
+            </div>
+          </div>
+
+          {/* Right: Actions */}
+          <div className="flex items-center space-x-3">
+            <HeaderCreateButton />
+            
+            <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+            </button>
+            
+            <UserProfileDropdown />
+          </div>
+        </div>
+      </header>
+
       {/* Mobile overlay */}
       {navigationState.isSidebarOpen && (
         <div 
@@ -58,7 +106,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
       {/* Sidebar - Only for dashboard pages */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 flex flex-col bg-white shadow-lg transition-all duration-300 ease-in-out border-r border-gray-200
+        className={`fixed top-16 bottom-0 left-0 z-40 flex flex-col bg-white shadow-lg transition-all duration-300 ease-in-out border-r border-gray-200
           ${navigationState.isSidebarOpen 
             ? 'w-64 translate-x-0' 
             : 'w-64 -translate-x-full lg:w-20 lg:translate-x-0'
@@ -259,7 +307,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       </aside>
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ease-in-out ${
+      <div className={`flex-1 transition-all duration-300 ease-in-out pt-16 ${
         navigationState.isSidebarOpen 
           ? 'lg:ml-64' 
           : 'lg:ml-20'
