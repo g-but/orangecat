@@ -219,10 +219,12 @@ export default async function RootLayout({
               {/* Global loading overlay based on auth store */}
               <GlobalAuthLoader />
               <div className="min-h-screen flex flex-col">
-                {/* Global consistent header for all pages */}
-                <Suspense fallback={<div className="h-16 sm:h-20 bg-white shadow-sm" />}>
-                  <DynamicUnifiedHeader showSearch={true} />
-                </Suspense>
+                {/* Global consistent header - only for non-authenticated routes */}
+                {!isAuthenticatedRoute && (
+                  <Suspense fallback={<div className="h-16 sm:h-20 bg-white shadow-sm" />}>
+                    <DynamicUnifiedHeader showSearch={true} />
+                  </Suspense>
+                )}
                 <main className={`flex-grow ${!isAuthenticatedRoute ? 'pt-16 sm:pt-20' : ''}`}>
                   {children}
                 </main>

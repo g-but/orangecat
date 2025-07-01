@@ -63,6 +63,7 @@
     "deployment:setup": "node scripts/verify-deployment-setup.js",
     "w": "./w",
     "deploy": "./w",
+    "deploy:monitor": "node scripts/deployment-monitor.js",
     "mcp:server": "node mcp-server.js",
     "mcp:start": "concurrently \"npm run dev\" \"node scripts/mcp-server.js\" --names \"NEXT,MCP\" --prefix-colors \"cyan,magenta\"",
     "mcp:test": "concurrently \"npm run mcp:server\" \"npm run test:e2e:ui\"",
