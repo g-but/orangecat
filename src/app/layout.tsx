@@ -6,7 +6,7 @@ import Loading from '@/components/Loading'
 import { createServerClient } from '@/services/supabase/server'
 import { headers } from 'next/headers'
 import Script from 'next/script'
-import { GlobalAuthErrorBanner } from '@/components/Loading'
+
 import { GlobalAuthLoader } from '@/components/Loading'
 
 // Dynamic imports for non-critical components
@@ -206,9 +206,6 @@ export default async function RootLayout({
       >
         <ClientErrorBoundary>
           <div className="relative min-h-screen flex flex-col">
-            {/* Global Error Banner */}
-            <GlobalAuthErrorBanner />
-            
             {/* Global Auth Loader */}
             <GlobalAuthLoader />
             
