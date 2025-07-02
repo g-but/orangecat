@@ -7,8 +7,11 @@
  * Last Modified Summary: Initial creation for Option A - Campaign Creation Modernization
  */
 
-import { supabase } from '@/services/supabase/client'
+import supabase from '@/services/supabase/client'
 import { toast } from 'sonner'
+import { logger } from '@/utils/logger'
+import type { CatchError } from '@/types/common'
+import { getErrorMessage } from '@/types/common'
 
 export interface FileUploadResult {
   success: boolean

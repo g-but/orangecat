@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Download, X, Smartphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { logger } from '@/utils/logger'
 
 interface PWAInstallButtonProps {
   className?: string
@@ -112,12 +113,12 @@ export function PWAInstallButton({
       console.log('[PWA] User choice:', choiceResult.outcome)
       
       if (choiceResult.outcome === 'accepted') {
-        console.log('[PWA] User accepted the install prompt')
+        logger.info('PWA install prompt accepted by user', undefined, 'PWA')
       } else {
-        console.log('[PWA] User dismissed the install prompt')
+        logger.info('PWA install prompt dismissed by user', undefined, 'PWA')
       }
     } catch (error) {
-      console.error('[PWA] Install error:', error)
+      logger.error('PWA installation failed', { error: error instanceof Error ? error.message : String(error) }, 'PWA')
     } finally {
       setDeferredPrompt(null)
       setCanInstall(false)

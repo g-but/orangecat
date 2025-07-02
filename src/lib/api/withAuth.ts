@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/services/supabase/server'
 import type { User } from '@supabase/supabase-js'
+import { logger } from '@/utils/logger'
 
 /**
  * Authentication Middleware for API Routes
@@ -49,7 +50,7 @@ export function withAuth(handler: AuthenticatedHandler) {
       return await handler(authenticatedReq, context)
 
     } catch (error: any) {
-      console.error('Authentication middleware error:', error)
+      logger.error('Authentication middleware error', { error: error?.message }, 'Auth')
       return NextResponse.json(
         { error: 'Authentication failed' },
         { status: 500 }
@@ -77,7 +78,7 @@ export function withOptionalAuth(handler: AuthenticatedHandler) {
       return await handler(authenticatedReq, context)
 
     } catch (error: any) {
-      console.error('Optional auth middleware error:', error)
+      logger.error('Optional auth middleware error', { error: error?.message }, 'Auth')
       return NextResponse.json(
         { error: 'Request failed' },
         { status: 500 }

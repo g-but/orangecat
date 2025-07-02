@@ -9,7 +9,7 @@ import {
   SearchFilters,
   SearchResponse 
 } from '@/services/search'
-import { debounce } from 'lodash'
+import _ from 'lodash'
 
 interface UseSearchSuggestionsResult {
   suggestions: string[]
@@ -242,7 +242,7 @@ export function useSearchSuggestions(query: string, enabled: boolean = true): Us
   const [error, setError] = useState<string | null>(null)
 
   // Debounced search function
-  const debouncedSearch = debounce(async (searchQuery: string) => {
+  const debouncedSearch = _.debounce(async (searchQuery: string) => {
     if (!searchQuery.trim() || !enabled) {
       setSuggestions([])
       setLoading(false)

@@ -15,25 +15,7 @@ import { FundingPage } from '@/types/funding'
 import type { CampaignFormData, CampaignDraftData, safeParseCampaignGoal } from '@/types/campaign'
 import { getErrorMessage, type CatchError } from '@/types/common'
 import { logger } from '@/utils/logger'
-
-// Create Supabase client only in browser environment
-let defaultSupabase: any = null
-
-const getSupabaseClient = async () => {
-  if (typeof window === 'undefined') {
-    throw new Error('Campaign service can only be used in browser environment')
-  }
-  
-  if (!defaultSupabase) {
-    const { createBrowserClient } = await import('@supabase/ssr')
-    defaultSupabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  }
-  
-  return defaultSupabase
-}
+import supabase from '@/services/supabase/client'
 
 export interface CampaignFilters {
   userId?: string
@@ -75,7 +57,7 @@ export class CampaignService {
 
   // Allow regular instantiation for testing with optional client injection
   constructor(supabaseClient?: any) {
-    this.supabase = supabaseClient || getSupabaseClient()
+    this.supabase = supabaseClient || supabase
   }
 
   /**

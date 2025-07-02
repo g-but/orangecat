@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { logger } from '@/utils/logger'
 
 /**
  * Standardized API Response Helpers
@@ -204,7 +205,7 @@ export async function withErrorHandling<T>(
   try {
     return await operation()
   } catch (error: any) {
-    console.error('API operation failed:', error)
+    logger.error('API operation failed', { error: error?.message, stack: error?.stack }, 'API')
     
     // Handle specific error types
     if (error.name === 'ValidationError') {

@@ -2,11 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { CheckCircle2, AlertCircle, Loader2, Key } from 'lucide-react'
+import { CheckCircle2, AlertCircle, Loader2, Key, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import supabase from '@/services/supabase/client'
+import Link from 'next/link'
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -17,6 +18,7 @@ export default function ResetPasswordPage() {
     confirmPassword: ''
   })
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -45,25 +47,38 @@ export default function ResetPasswordPage() {
     }
   }, [searchParams])
 
+  const validatePassword = (password: string): string | null => {
+    if (password.length < 8) {
+      return 'Password must be at least 8 characters long'
+    }
+    if (!/(?=.*[a-z])/.test(password)) {
+      return 'Password must contain at least one lowercase letter'
+    }
+    if (!/(?=.*[A-Z])/.test(password)) {
+      return 'Password must contain at least one uppercase letter'
+    }
+    if (!/(?=.*\d)/.test(password)) {
+      return 'Password must contain at least one number'
+    }
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError(null)
 
-    // Validate passwords
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match')
-      setIsLoading(false)
-      return
-    }
-
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters long')
-      setIsLoading(false)
-      return
-    }
-
     try {
+      // Validate passwords
+      if (formData.password !== formData.confirmPassword) {
+        throw new Error('Passwords do not match')
+      }
+
+      const passwordError = validatePassword(formData.password)
+      if (passwordError) {
+        throw new Error(passwordError)
+      }
+
       const { error } = await supabase.auth.updateUser({
         password: formData.password
       })
@@ -84,16 +99,20 @@ export default function ResetPasswordPage() {
     router.push('/auth?mode=login')
   }
 
+  const handleRequestNewReset = () => {
+    router.push('/auth/forgot-password')
+  }
+
   if (step === 'loading') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-tiffany-50 to-white">
-        <Card className="max-w-md w-full mx-4 p-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-tiffany-50 px-4">
+        <Card className="max-w-md w-full p-8 shadow-xl">
           <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto text-tiffany-600" />
-            <h2 className="mt-4 text-xl font-semibold text-gray-900">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto text-orange-600 mb-6" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
               Verifying Reset Link
             </h2>
-            <p className="mt-2 text-gray-600">
+            <p className="text-gray-600">
               Please wait while we verify your password reset link...
             </p>
           </div>
@@ -104,25 +123,34 @@ export default function ResetPasswordPage() {
 
   if (step === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-tiffany-50 to-white">
-        <Card className="max-w-md w-full mx-4 p-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-tiffany-50 px-4">
+        <Card className="max-w-md w-full p-8 shadow-xl">
           <div className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 mb-4">
-              <AlertCircle className="h-6 w-6 text-red-600" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 mb-6">
+              <AlertCircle className="h-8 w-8 text-red-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">
               Reset Link Invalid
-            </h2>
+            </h1>
             <p className="text-gray-600 mb-6">
               {error}
             </p>
-            <Button
-              onClick={handleReturnToLogin}
-              variant="primary"
-              className="w-full"
-            >
-              Back to Login
-            </Button>
+            <div className="space-y-3">
+              <Button
+                onClick={handleRequestNewReset}
+                variant="primary"
+                className="w-full"
+              >
+                Request New Reset Link
+              </Button>
+              <Button
+                onClick={handleReturnToLogin}
+                variant="outline"
+                className="w-full"
+              >
+                Back to Login
+              </Button>
+            </div>
           </div>
         </Card>
       </div>
@@ -131,17 +159,17 @@ export default function ResetPasswordPage() {
 
   if (step === 'success') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-tiffany-50 to-white">
-        <Card className="max-w-md w-full mx-4 p-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-tiffany-50 px-4">
+        <Card className="max-w-md w-full p-8 shadow-xl">
           <div className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 mb-4">
-              <CheckCircle2 className="h-6 w-6 text-green-600" />
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100 mb-6">
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Password Reset Successful
-            </h2>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">
+              Password Updated Successfully
+            </h1>
             <p className="text-gray-600 mb-6">
-              Your password has been updated successfully. You can now sign in with your new password.
+              Your password has been updated. You can now sign in with your new password.
             </p>
             <Button
               onClick={handleReturnToLogin}
@@ -157,26 +185,27 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-tiffany-50 to-white">
-      <Card className="max-w-md w-full mx-4 p-8">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-tiffany-50 px-4">
+      <Card className="max-w-md w-full p-8 shadow-xl">
+        {/* Header */}
         <div className="text-center mb-8">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-tiffany-100 mb-4">
-            <Key className="h-6 w-6 text-tiffany-600" />
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-orange-100 to-tiffany-100 mb-6">
+            <Key className="h-8 w-8 text-orange-600" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900">
-            Set New Password
-          </h2>
-          <p className="mt-2 text-gray-600">
-            Enter your new password below
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Create New Password
+          </h1>
+          <p className="text-gray-600">
+            Enter a strong password to secure your account
           </p>
         </div>
 
         {error && (
-          <div className="rounded-md bg-red-50 p-4 mb-6">
+          <div className="rounded-lg bg-red-50 border border-red-200 p-4 mb-6">
             <div className="flex">
-              <AlertCircle className="h-5 w-5 text-red-400" />
+              <AlertCircle className="h-5 w-5 text-red-400 mt-0.5" />
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                <p className="text-sm font-medium text-red-800">{error}</p>
               </div>
             </div>
           </div>
@@ -189,63 +218,93 @@ export default function ResetPasswordPage() {
               required
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder="New password (min. 6 characters)"
-              className="w-full"
+              placeholder="New password"
               disabled={isLoading}
+              className="w-full"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              style={{ marginTop: '20px', position: 'relative', float: 'right' }}
+            >
+              {showPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
           </div>
           
           <div>
             <Input
-              type={showPassword ? 'text' : 'password'}
+              type={showConfirmPassword ? 'text' : 'password'}
               required
               value={formData.confirmPassword}
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               placeholder="Confirm new password"
-              className="w-full"
               disabled={isLoading}
+              className="w-full"
             />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              style={{ marginTop: '20px', position: 'relative', float: 'right' }}
+            >
+              {showConfirmPassword ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+            </button>
           </div>
 
-          <div className="flex items-center">
-            <input
-              id="show-password"
-              type="checkbox"
-              checked={showPassword}
-              onChange={(e) => setShowPassword(e.target.checked)}
-              className="h-4 w-4 text-tiffany-600 focus:ring-tiffany-500 border-gray-300 rounded"
-              disabled={isLoading}
-            />
-            <label htmlFor="show-password" className="ml-2 block text-sm text-gray-900">
-              Show passwords
-            </label>
+          {/* Password Requirements */}
+          <div className="bg-gray-50 rounded-lg p-4">
+            <h3 className="text-sm font-medium text-gray-900 mb-2">Password Requirements:</h3>
+            <ul className="text-xs text-gray-600 space-y-1">
+              <li className={formData.password.length >= 8 ? 'text-green-600' : ''}>
+                • At least 8 characters long
+              </li>
+              <li className={/(?=.*[a-z])/.test(formData.password) ? 'text-green-600' : ''}>
+                • One lowercase letter
+              </li>
+              <li className={/(?=.*[A-Z])/.test(formData.password) ? 'text-green-600' : ''}>
+                • One uppercase letter
+              </li>
+              <li className={/(?=.*\d)/.test(formData.password) ? 'text-green-600' : ''}>
+                • One number
+              </li>
+            </ul>
           </div>
 
           <Button
             type="submit"
-            disabled={isLoading}
-            className="w-full"
             variant="primary"
+            className="w-full"
+            disabled={isLoading || !formData.password || !formData.confirmPassword}
           >
             {isLoading ? (
-              <div className="flex items-center justify-center">
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                <span>Updating Password...</span>
-              </div>
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Updating Password...
+              </>
             ) : (
               'Update Password'
             )}
           </Button>
         </form>
 
-        <div className="mt-6 text-center">
-          <button
-            onClick={handleReturnToLogin}
-            className="text-sm text-tiffany-600 hover:text-tiffany-500"
-            disabled={isLoading}
+        {/* Footer */}
+        <div className="mt-8 text-center">
+          <Link
+            href="/auth?mode=login"
+            className="inline-flex items-center text-sm text-gray-600 hover:text-orange-600 transition-colors"
           >
+            <ArrowLeft className="w-4 h-4 mr-1" />
             Back to Login
-          </button>
+          </Link>
         </div>
       </Card>
     </div>

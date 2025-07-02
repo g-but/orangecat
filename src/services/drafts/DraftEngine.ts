@@ -14,10 +14,11 @@ import {
   DraftQuery
 } from './types'
 import { logger } from '@/utils/logger'
+import supabase from '@/services/supabase/client'
 
 export class DraftEngine {
   private static instance: DraftEngine
-  private supabase: any = null
+  private supabase = supabase
   
   private drafts = new Map<string, DraftState>()
   private eventStore: DraftEvent[] = []
@@ -25,22 +26,6 @@ export class DraftEngine {
   private syncTimer: NodeJS.Timeout | null = null
   private clientId = this.generateClientId()
   private sessionId = this.generateSessionId()
-
-  private async getSupabaseClient() {
-    if (typeof window === 'undefined') {
-      throw new Error('DraftEngine can only be used in browser environment')
-    }
-    
-    if (!this.supabase) {
-      const { createBrowserClient } = await import('@supabase/ssr')
-      this.supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
-    }
-    
-    return this.supabase
-  }
 
   static getInstance(): DraftEngine {
     if (!DraftEngine.instance) {
@@ -166,9 +151,9 @@ export class DraftEngine {
     if (!draft) throw new Error(`Draft ${draftId} not found`)
 
     try {
-      const supabase = await this.getSupabaseClient()
+      const supabaseClient = this.supabase
       // Check for remote changes
-      const { data: remoteDraft, error } = await supabase
+      const { data: remoteDraft, error } = await supabaseClient
         .from('campaign_drafts')
         .select('*')
         .eq('id', draftId)

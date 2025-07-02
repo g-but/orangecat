@@ -1,17 +1,18 @@
--- Latest migration schema from supabase/migrations/20240325000000_clean_profile_schema.sql
+-- Consolidated schema reflecting latest migration fixes
 -- This schema should be used for local development and testing
+-- Updated: 2025-07-02
 
 -- Enable UUID extension
 create extension if not exists "uuid-ossp";
 
--- Create profiles table
+-- Create profiles table with consistent column names
 create table if not exists public.profiles (
   id uuid references auth.users on delete cascade primary key,
   username text unique,
   display_name text,
   bio text,
   avatar_url text,
-  bitcoin_address text,
+  bitcoin_address text check (bitcoin_address IS NULL OR length(bitcoin_address) >= 26),
   lightning_address text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null,
   updated_at timestamp with time zone default timezone('utc'::text, now()) not null

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Bitcoin, ArrowRight, CheckCircle2, Shield, Zap, Loader2, AlertCircle, Globe, ShieldCheck, Users, Eye, EyeOff, RefreshCw, Mail } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
@@ -396,13 +397,12 @@ export default function AuthPage() {
           <div className="mt-6 space-y-4 text-center">
             {mode === 'login' && (
               <div>
-                <button
-                  onClick={() => setMode('forgot')}
-                  disabled={loading}
-                  className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+                <Link
+                  href="/auth/forgot-password"
+                  className="text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors"
                 >
                   Forgot your password?
-                </button>
+                </Link>
               </div>
             )}
             

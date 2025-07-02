@@ -20,6 +20,7 @@ export function restoreConsole() {
 
 // Function to safely log without browser extension interference
 import type { EventHandlerArgs } from '@/types/common'
+import { logger } from './logger'
 
 export function safeLog(...args: EventHandlerArgs) {
   if (typeof window !== 'undefined') {
@@ -70,7 +71,7 @@ export function isConsoleOverridden(): boolean {
 if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
   // Check if console has been overridden and restore it
   if (isConsoleOverridden()) {
-    console.warn('Console override detected! Restoring original console...');
+    logger.warn('Console override detected! Restoring original console...', undefined, 'DebugUtils');
     restoreConsole();
   }
 } 
