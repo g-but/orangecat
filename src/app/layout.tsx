@@ -4,7 +4,6 @@ import ClientErrorBoundary from '@/components/ClientErrorBoundary'
 import { Suspense, lazy } from 'react'
 import Loading from '@/components/Loading'
 import { createServerClient } from '@/services/supabase/server'
-import { AuthProvider } from '@/components/AuthProvider'
 import { headers } from 'next/headers'
 import Script from 'next/script'
 import { GlobalAuthErrorBanner } from '@/components/Loading'
@@ -43,14 +42,15 @@ export default async function RootLayout({
                               pathname.startsWith('/people') ||
                               pathname.startsWith('/events') ||
                               pathname.startsWith('/organizations') ||
-                              pathname.startsWith('/projects')
+                              pathname.startsWith('/projects') ||
+                              pathname.startsWith('/funding')
 
   const supabase = await createServerClient()
   
   // Get user for secure auth state (getUser() validates token with server)
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   
-  // Use null for session - AuthProvider handles user-only auth state
+  // Use null for session - Auth store handles user-only auth state
   const session = null
 
   // Try to get profile data if user exists and is authenticated
@@ -70,12 +70,6 @@ export default async function RootLayout({
       // Profile fetch error in RootLayout - silently handle
     }
   }
-
-  // Debug logs for SSR state (after profile fetch attempt)
-  // REMOVED: console.log statement for security
-  // REMOVED: console.log statement for security
-  // REMOVED: console.log statement
-  // REMOVED: console.log statement
 
   return (
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`} suppressHydrationWarning>
@@ -122,7 +116,7 @@ export default async function RootLayout({
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {
-                      console.log('[SW] Registration successful:', registration.scope);
+                      // Service Worker registration successful
                       
                       // Check for updates
                       registration.addEventListener('updatefound', function() {
@@ -132,10 +126,10 @@ export default async function RootLayout({
                             if (newWorker.state === 'installed') {
                               if (navigator.serviceWorker.controller) {
                                 // New content available, notify user
-                                console.log('[SW] New content available');
+                                // New content available - could show update notification
                               } else {
                                 // Content cached for first time
-                                console.log('[SW] Content cached for offline use');
+                                // Content cached for first time - app now works offline
                               }
                             }
                           });
@@ -143,7 +137,7 @@ export default async function RootLayout({
                       });
                     })
                     .catch(function(error) {
-                      console.log('[SW] Registration failed:', error);
+                      // Service Worker registration failed - app will work without offline features
                     });
                 });
               }
@@ -161,7 +155,7 @@ export default async function RootLayout({
               let installButton;
               
               window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('[PWA] Install prompt available');
+                // PWA install prompt available
                 e.preventDefault();
                 deferredPrompt = e;
                 
@@ -173,7 +167,7 @@ export default async function RootLayout({
                     if (deferredPrompt) {
                       deferredPrompt.prompt();
                       deferredPrompt.userChoice.then((choiceResult) => {
-                        console.log('[PWA] User choice:', choiceResult.outcome);
+                        // PWA install choice recorded
                         deferredPrompt = null;
                         installButton.style.display = 'none';
                       });
@@ -183,7 +177,7 @@ export default async function RootLayout({
               });
               
               window.addEventListener('appinstalled', (evt) => {
-                console.log('[PWA] App installed');
+                // PWA app installed successfully
                 if (installButton) {
                   installButton.style.display = 'none';
                 }
@@ -198,59 +192,57 @@ export default async function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              if (typeof globalThis === 'undefined') {
-                if (typeof global !== 'undefined') {
-                  global.globalThis = global;
-                } else if (typeof window !== 'undefined') {
-                  window.globalThis = window;
-                } else if (typeof self !== 'undefined') {
-                  self.globalThis = self;
-                }
+              if (typeof window !== 'undefined' && !window.global) {
+                window.global = window;
               }
             `,
           }}
         />
       </head>
-      <body className="min-h-screen bg-gradient-to-b from-tiffany-50 to-white safe-area-padding" suppressHydrationWarning>
-        <AuthProvider user={user} session={session} profile={profile}>
-          <GlobalAuthErrorBanner />
-          <ClientErrorBoundary>
-            <Suspense fallback={<Loading fullScreen />}>
-              {/* Global loading overlay based on auth store */}
-              <GlobalAuthLoader />
-              <div className="min-h-screen flex flex-col">
-                {/* Global consistent header - only for non-authenticated routes */}
-                {!isAuthenticatedRoute && (
-                  <Suspense fallback={<div className="h-16 sm:h-20 bg-white shadow-sm" />}>
-                    <DynamicUnifiedHeader showSearch={true} />
-                  </Suspense>
-                )}
-                <main className={`flex-grow ${!isAuthenticatedRoute ? 'pt-16 sm:pt-20' : ''}`}>
-                  {children}
-                </main>
-                <Suspense fallback={<div className="h-32 bg-gray-50" />}>
-                  <DynamicFooter />
-                </Suspense>
-              </div>
+
+      <body 
+        className="font-inter antialiased bg-white text-slate-900 overflow-x-hidden"
+        suppressHydrationWarning={true}
+      >
+        <ClientErrorBoundary>
+          <div className="relative min-h-screen flex flex-col">
+            {/* Global Error Banner */}
+            <GlobalAuthErrorBanner />
+            
+            {/* Global Auth Loader */}
+            <GlobalAuthLoader />
+            
+            {/* Header */}
+            <Suspense fallback={<Loading />}>
+              <DynamicUnifiedHeader />
             </Suspense>
-          </ClientErrorBoundary>
+            
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col">
+              {children}
+            </main>
+            
+            {/* Footer */}
+            <Suspense fallback={<div className="h-16" />}>
+              <DynamicFooter />
+            </Suspense>
+          </div>
+          
+          {/* Toast Notifications */}
           <Suspense fallback={null}>
-            <DynamicToaster 
-              position="top-right" 
-              toastOptions={{
-                style: {
-                  marginTop: '4rem',
-                },
-              }}
-            />
+            <DynamicToaster position="top-right" />
           </Suspense>
+          
+          {/* Analytics */}
           <Suspense fallback={null}>
             <DynamicAnalytics />
           </Suspense>
+          
+          {/* Speed Insights */}
           <Suspense fallback={null}>
             <DynamicSpeedInsights />
           </Suspense>
-        </AuthProvider>
+        </ClientErrorBoundary>
       </body>
     </html>
   )

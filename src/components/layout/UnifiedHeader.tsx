@@ -17,14 +17,12 @@ const getNavigation = (user: any) => {
   if (user) {
     return [
       { name: 'Dashboard', href: '/dashboard' },
-      { name: 'Discover', href: '/discover' },
-      { name: 'Create', href: '/create' }
+      { name: 'Discover', href: '/discover' }
     ]
   }
   
   return [
     { name: 'Discover', href: '/discover' },
-    { name: 'Create', href: '/create' },
     { name: 'About', href: '/about' },
     { name: 'Blog', href: '/blog' }
   ]

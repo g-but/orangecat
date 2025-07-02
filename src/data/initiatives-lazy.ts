@@ -11,6 +11,7 @@
 
 import { Initiative } from './initiatives'
 import { LucideIcon } from 'lucide-react'
+import { logger } from '@/utils/logger'
 
 // Type-only imports don't increase bundle size
 export type { Initiative, LucideIcon }
@@ -107,12 +108,12 @@ export function preloadInitiatives(): void {
     // Use requestIdleCallback for better performance
     if ('requestIdleCallback' in window) {
       window.requestIdleCallback(() => {
-        loadInitiatives().catch(console.error)
+        loadInitiatives().catch(error => logger.error('Failed to preload initiatives', { error: error?.message }, 'InitiativesLoader'))
       })
     } else {
       // Fallback for browsers without requestIdleCallback
       setTimeout(() => {
-        loadInitiatives().catch(console.error)
+        loadInitiatives().catch(error => logger.error('Failed to preload initiatives', { error: error?.message }, 'InitiativesLoader'))
       }, 100)
     }
   }

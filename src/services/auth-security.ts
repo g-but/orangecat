@@ -7,7 +7,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import { getSupabaseClient } from '@/services/supabase/client'
+import supabaseClient from '@/services/supabase/client'
 import { 
   AuthSecurity, 
   SecurityMonitor, 
@@ -25,7 +25,7 @@ interface AuthResult {
 }
 
 export class AuthSecurityService {
-  private supabase = getSupabaseClient()
+  private supabase = supabaseClient
 
   async secureLogin(
     email: string, 

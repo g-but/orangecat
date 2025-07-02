@@ -9,7 +9,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useDropdown } from '@/hooks/useDropdown'
 import { toast } from 'sonner'
 import DefaultAvatar from '@/components/ui/DefaultAvatar'
-import { SafeConsole } from '@/utils/console-cleanup'
+import { logger } from '@/utils/logger'
 
 export interface UserProfileDropdownProps {
   variant?: 'simple' | 'advanced'
@@ -83,6 +83,8 @@ export default function UserProfileDropdown({
     itemCount: menuItems.length
   })
 
+  const [avatarError, setAvatarError] = useState(false)
+
   const handleSignOut = async () => {
     close()
     
@@ -95,7 +97,7 @@ export default function UserProfileDropdown({
       if (error) {
         toast.dismiss(loadingToast)
         toast.error('Failed to sign out. Please try again.')
-        SafeConsole.dev('UserProfileDropdown: Sign out error:', error.message)
+        logger.error('UserProfileDropdown: Sign out error', { error: error.message }, 'UserProfileDropdown')
       } else {
         toast.dismiss(loadingToast)
         toast.success('Signed out successfully!')
@@ -132,7 +134,7 @@ export default function UserProfileDropdown({
   // ✅ FIXED: Now fetchProfile is available at component level
   useEffect(() => {
     if ((user || session) && !profile) {
-      SafeConsole.dev('UserProfileDropdown: User exists but no profile, fetching...');
+      logger.debug('User exists but no profile, fetching profile', { userId: user?.id || session?.user?.id }, 'UserProfileDropdown');
       fetchProfile().catch(error => {
       });
     }
@@ -224,13 +226,14 @@ export default function UserProfileDropdown({
       >
         {showAvatar && (
           <span className="relative">
-            {avatarUrl ? (
+            {avatarUrl && !avatarError ? (
               <Image
                 src={avatarUrl}
                 alt={displayName}
                 width={36}
                 height={36}
                 className="rounded-full object-cover ring-2 ring-orange-200 hover:ring-orange-300 transition-all duration-200"
+                onError={() => setAvatarError(true)}
               />
             ) : (
               <DefaultAvatar size={36} className="rounded-full ring-2 ring-orange-200 hover:ring-orange-300 transition-all duration-200" />
@@ -254,13 +257,14 @@ export default function UserProfileDropdown({
             <div className="p-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
               <div className="flex items-center space-x-4">
                 <div className="relative">
-                  {avatarUrl ? (
+                  {avatarUrl && !avatarError ? (
                     <Image
                       src={avatarUrl}
                       alt={displayName}
                       width={56}
                       height={56}
                       className="rounded-full object-cover ring-4 ring-orange-100"
+                      onError={() => setAvatarError(true)}
                     />
                   ) : (
                     <DefaultAvatar size={56} className="rounded-full ring-4 ring-orange-100" />

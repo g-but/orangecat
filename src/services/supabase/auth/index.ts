@@ -211,8 +211,8 @@ export async function signOut(): Promise<{ error: AuthError | null }> {
 /**
  * Reset password for a user by sending email with reset link
  * @param params - Password reset parameters
- * @param params.email - User's email address
- * @returns Promise<{error: AuthError | null}> - Success status or error
+ * @returns Promise with error status
+ * 
  * @example
  * ```typescript
  * const { error } = await resetPassword({ email: 'user@example.com' });
@@ -225,25 +225,27 @@ export async function resetPassword({ email }: PasswordResetRequest): Promise<{ 
   try {
     logAuth('Attempting password reset', { email })
     
+    // Use orangecat.ch as the primary domain, fallback to environment variable
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orangecat.ch'
+    const redirectUrl = `${siteUrl}/auth/reset-password`
+    
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/reset-password`
+      redirectTo: redirectUrl
     })
 
     if (error) {
       logAuth('Password reset failed', { email, error: error.message })
-      return { error: error as AuthError }
+      return { error }
     }
 
-    logAuth('Password reset email sent', { email })
+    logAuth('Password reset email sent', { email, redirectUrl })
     return { error: null }
   } catch (error) {
-    const authError = error as AuthError
-    logger.error('Unexpected error during password reset', { 
-      email, 
-      error: authError.message 
-    }, 'Auth')
-    
-    return { error: authError }
+    logger.error('Unexpected error during password reset', {
+      error: error instanceof Error ? error.message : String(error),
+      email
+    })
+    return { error: error as AuthError }
   }
 }
 

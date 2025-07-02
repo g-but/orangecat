@@ -25,7 +25,7 @@ const ALLOWED_ORIGINS = [
   'http://localhost:3003',
   'http://localhost:3004',
   'http://localhost:3005',
-  'https://orangecat-georgs-projects-babaf057.vercel.app'
+      'https://orangecat.ch'
 ];
 
 /**

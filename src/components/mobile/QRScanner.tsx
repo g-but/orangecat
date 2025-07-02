@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Camera, X, FlashOn, FlashOff, Upload, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { logger } from '@/utils/logger'
 
 interface QRScannerProps {
   onScan: (data: string) => void
@@ -81,7 +82,7 @@ export function QRScanner({
       }
       
     } catch (error) {
-      console.error('Camera initialization error:', error)
+      logger.error('Camera initialization failed', { error: error instanceof Error ? error.message : String(error) }, 'QRScanner')
       
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {

@@ -5,14 +5,13 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import type { User, Session } from '@supabase/supabase-js'
 import type { Profile, ProfileFormData } from '@/types/database'
 import { signIn, signUp, signOut } from '@/services/supabase/auth/index'
-import { getSupabaseClient } from '@/services/supabase/client'
+import supabase from '@/services/supabase/client'
 import { updateProfile as supabaseUpdateProfile } from '@/services/supabase/profiles'
 import { ProfileService } from '@/services/profileService'
 import { logger } from '@/utils/logger'
 import { getErrorMessage, type CatchError } from '@/types/common'
 
-// FIXED: Use singleton client to prevent session conflicts
-const supabase = getSupabaseClient()
+// Use imported supabase client
 
 interface AuthState {
   // data

@@ -1,24 +1,6 @@
 import { FundingPage, Transaction } from '@/types/funding'
 import { logger } from '@/utils/logger'
-
-// Create Supabase client only in browser environment
-let supabase: any = null
-
-const getSupabaseClient = async () => {
-  if (typeof window === 'undefined') {
-    throw new Error('Fundraising service can only be used in browser environment')
-  }
-  
-  if (!supabase) {
-    const { createBrowserClient } = await import('@supabase/ssr')
-    supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-  }
-  
-  return supabase
-}
+import supabase from '@/services/supabase/client'
 
 export interface FundraisingStats {
   totalCampaigns: number
@@ -41,7 +23,7 @@ export interface FundraisingActivity {
  */
 export async function getUserFundraisingStats(userId: string): Promise<FundraisingStats> {
   try {
-    const supabase = await getSupabaseClient()
+    // Use centralized supabase client
     // Get user's funding pages
     const { data: pages, error: pagesError } = await supabase
       .from('funding_pages')
@@ -94,7 +76,7 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
  */
 export async function getUserFundraisingActivity(userId: string, limit: number = 10): Promise<FundraisingActivity[]> {
   try {
-    const supabase = await getSupabaseClient()
+    // Use centralized supabase client
     const activities: FundraisingActivity[] = []
 
     // Get user's funding pages
@@ -167,7 +149,7 @@ export async function getUserFundraisingActivity(userId: string, limit: number =
  */
 export async function getUserFundingPages(userId: string): Promise<FundingPage[]> {
   try {
-    const supabase = await getSupabaseClient()
+    // Use centralized supabase client
     const { data, error } = await supabase
       .from('funding_pages')
       .select('*')
@@ -187,7 +169,7 @@ export async function getUserFundingPages(userId: string): Promise<FundingPage[]
  */
 export async function getFundingPage(pageId: string): Promise<FundingPage | null> {
   try {
-    const supabase = await getSupabaseClient()
+    // Use centralized supabase client
     const { data, error } = await supabase
       .from('funding_pages')
       .select('*')
@@ -213,7 +195,7 @@ export async function getFundingPage(pageId: string): Promise<FundingPage | null
  */
 export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
   try {
-    const supabase = await getSupabaseClient()
+    // Use centralized supabase client
     // Get all funding pages
     const { data: pages, error: pagesError } = await supabase
       .from('funding_pages')
@@ -257,7 +239,7 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
 
 export async function getRecentDonationsCount(userId: string): Promise<number> {
   try {
-    const supabase = await getSupabaseClient()
+    // Use centralized supabase client
 
     // Get start of current month
     const now = new Date()

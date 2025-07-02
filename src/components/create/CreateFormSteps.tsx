@@ -115,7 +115,7 @@ export function Step1({ formData, handleChange, handleCategoryToggle, nextStep, 
                     } ${!isSelected && formData.categories.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="flex items-center justify-center mb-1">
-                      <category.icon className="w-4 h-4" />
+                      <span className="text-lg">{category.icon}</span>
                     </div>
                     {category.label}
                   </button>

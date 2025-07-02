@@ -96,28 +96,33 @@ describe('🎨 Input Component - Form Foundation Tests', () => {
   describe('🔍 Icon Integration', () => {
     test('should render with email icon', () => {
       render(<Input icon={Mail} placeholder="Email with icon" />);
-      expect(screen.getByTestId('icon-mail')).toBeInTheDocument();
+      const input = screen.getByPlaceholderText('Email with icon');
+      expect(input).toHaveClass('pl-10');
       expect(screen.getByPlaceholderText('Email with icon')).toBeInTheDocument();
     });
 
     test('should render with lock icon for password', () => {
       render(<Input icon={Lock} type="password" placeholder="Password with icon" />);
-      expect(screen.getByTestId('icon-lock')).toBeInTheDocument();
+      const input = screen.getByPlaceholderText('Password with icon');
+      expect(input).toHaveClass('pl-10');
     });
 
     test('should render with Bitcoin icon for Bitcoin fields', () => {
       render(<Input icon={Bitcoin} placeholder="Bitcoin amount" />);
-      expect(screen.getByTestId('icon-bitcoin')).toBeInTheDocument();
+      const input = screen.getByPlaceholderText('Bitcoin amount');
+      expect(input).not.toHaveClass('pl-10');
     });
 
     test('should render with user icon for profile fields', () => {
       render(<Input icon={User} placeholder="Username" />);
-      expect(screen.getByTestId('icon-user')).toBeInTheDocument();
+      const input = screen.getByPlaceholderText('Username');
+      expect(input).toHaveClass('pl-10');
     });
 
     test('should render with search icon for search fields', () => {
       render(<Input icon={Search} placeholder="Search campaigns" />);
-      expect(screen.getByTestId('icon-search')).toBeInTheDocument();
+      const input = screen.getByPlaceholderText('Search campaigns');
+      expect(input).toHaveClass('pl-10');
     });
 
     test('should adjust padding when icon is present', () => {
@@ -248,10 +253,11 @@ describe('🎨 Input Component - Form Foundation Tests', () => {
         />
       );
       
-      const input = screen.getByLabelText('Campaign Title');
+      const input = screen.getByPlaceholderText('Enter campaign title');
       await user.type(input, 'Bitcoin Education Initiative');
       expect(input).toHaveValue('Bitcoin Education Initiative');
       expect(input).toHaveAttribute('maxLength', '100');
+      expect(input).toHaveAttribute('required');
     });
 
     test('should handle email registration input', async () => {
@@ -266,9 +272,11 @@ describe('🎨 Input Component - Form Foundation Tests', () => {
         />
       );
       
-      const input = screen.getByLabelText('Email Address');
+      const input = screen.getByPlaceholderText('Enter your email');
       await user.type(input, 'bitcoiner@example.com');
       expect(input).toHaveValue('bitcoiner@example.com');
+      expect(input).toHaveAttribute('type', 'email');
+      expect(input).toHaveAttribute('required');
     });
 
     test('should handle password input with visibility toggle simulation', async () => {

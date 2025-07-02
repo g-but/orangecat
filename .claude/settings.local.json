@@ -1,7 +1,27 @@
 {
   "permissions": {
     "allow": [
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(node:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(timeout 30s npm run lint)",
+      "Bash(grep:*)",
+      "Bash(timeout 60s npm run build)",
+      "Bash(mv:*)",
+      "Bash(timeout 30s npm run build)",
+      "Bash(timeout 30s npm run dev)",
+      "Bash(npm install:*)",
+      "Bash(git checkout:*)",
+      "Bash(cat:*)",
+      "Bash(pkill:*)",
+      "Bash(timeout 15s npm run dev)"
     ],
     "deny": []
   }

@@ -57,25 +57,13 @@ const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
 })
 
-// CRITICAL FIX: Ensure only one client instance across the entire app
-let clientInstance: typeof supabase | null = null
-
-export const getSupabaseClient = () => {
-  if (!clientInstance) {
-    clientInstance = supabase
-  }
-  return clientInstance
-}
-
-// Add connection test in development
+// Add connection test in development (non-blocking)
 if (process.env.NODE_ENV === 'development') {
-  // Test connection on initialization (non-blocking)
   const testConnection = async () => {
     try {
       const { error } = await supabase.from('profiles').select('count').limit(1);
       if (error) {
         logger.warn('Supabase connection test failed', { errorMessage: error.message }, 'Supabase');
-        logger.info('This might explain authentication timeouts. Check your credentials.', undefined, 'Supabase');
       } else {
         logger.info('Supabase connection test successful', undefined, 'Supabase');
       }
@@ -83,9 +71,39 @@ if (process.env.NODE_ENV === 'development') {
       // Silently fail connection test - don't block app startup
     }
   };
-  testConnection();
+  // Run test after a delay to avoid blocking initialization
+  setTimeout(testConnection, 1000);
 }
 
-// Export singleton instance
-export default getSupabaseClient()
-export { supabase } 
+// Export the client instance directly - createBrowserClient handles internal caching
+export default supabase
+
+// Provide a factory function for testing/mocking purposes
+export const createSupabaseClient = () => 
+  createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: 'pkce',
+      debug: process.env.NODE_ENV === 'development',
+    },
+    global: {
+      fetch: (url, options = {}) => {
+        return fetch(url, {
+          ...options,
+          signal: AbortSignal.timeout(20000),
+        });
+      },
+    },
+    db: {
+      schema: 'public',
+    },
+    realtime: {
+      params: {
+        eventsPerSecond: 2,
+      },
+    },
+  })
+
+export { supabase } // Legacy named export for backward compatibility 

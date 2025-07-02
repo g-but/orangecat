@@ -79,13 +79,14 @@ echo -e "${GREEN}✅ Deployment triggered successfully!${NC}"
 # Start monitoring
 echo -e "${BLUE}🔍 Starting deployment monitoring...${NC}"
 
-# Run the deployment monitor
+# Run the autonomous deployment agent
 if command -v node &> /dev/null; then
-    echo -e "${YELLOW}📊 Running deployment monitor...${NC}"
-    node scripts/deployment-monitor.js &
-    MONITOR_PID=$!
+    echo -e "${YELLOW}🤖 Starting AUTONOMOUS DEPLOYMENT AGENT...${NC}"
+    echo -e "${PURPLE}🧠 AI-powered issue detection and auto-fixing${NC}"
+    node scripts/auto-deploy-agent.js &
+    AGENT_PID=$!
     
-    # Wait a moment for monitor to start
+    # Wait a moment for agent to start
     sleep 2
     
     echo -e "${GREEN}"

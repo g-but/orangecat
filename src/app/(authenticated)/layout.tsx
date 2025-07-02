@@ -38,6 +38,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
   // State for hover expansion
   const [isHovered, setIsHovered] = useState(false)
+  const [avatarError, setAvatarError] = useState(false)
 
   // Wait for hydration before rendering sidebar content
   if (!hydrated) {
@@ -131,13 +132,14 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                 }}
               >
                 <div className="relative">
-                  {profile.avatar_url ? (
+                  {profile.avatar_url && !avatarError ? (
                     <Image
                       src={profile.avatar_url}
                       alt={profile.display_name || 'User Avatar'}
                       width={isExpanded ? 40 : 36}
                       height={isExpanded ? 40 : 36}
                       className="rounded-full object-cover transition-all duration-300 group-hover:ring-2 group-hover:ring-tiffany-200"
+                      onError={() => setAvatarError(true)}
                     />
                   ) : (
                     <DefaultAvatar 

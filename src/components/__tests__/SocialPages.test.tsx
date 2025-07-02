@@ -13,9 +13,11 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
-import PeoplePage from '@/app/people/page'
-import OrganizationsPage from '@/app/organizations/page'
-import ProjectsPage from '@/app/projects/page'
+import PeoplePage from '@/app/(authenticated)/people/page'
+import OrganizationsPage from '@/app/(authenticated)/organizations/page'
+import ProjectsPage from '@/app/(authenticated)/projects/page'
+import React from 'react'
+import '@testing-library/jest-dom'
 
 // Mock the auth context
 const mockAuthContext = {
@@ -857,5 +859,51 @@ describe('Performance Tests', () => {
     await user.type(searchInput, 'bitcoin developer lightning network')
     
     expect(searchInput).toHaveValue('bitcoin developer lightning network')
+  })
+})
+
+// Mock the auth store
+jest.mock('@/stores/auth', () => ({
+  useAuthStore: () => ({
+    user: { id: '1', email: 'test@example.com' },
+    profile: null
+  })
+}))
+
+describe('Social Pages', () => {
+  describe('OrganizationsPage', () => {
+    it('renders organizations page', () => {
+      render(<OrganizationsPage />)
+      expect(screen.getByText('Organizations')).toBeInTheDocument()
+    })
+
+    it('shows create organization button', () => {
+      render(<OrganizationsPage />)
+      expect(screen.getByText('Create Organization')).toBeInTheDocument()
+    })
+  })
+
+  describe('PeoplePage', () => {
+    it('renders people page', () => {
+      render(<PeoplePage />)
+      expect(screen.getByText('People')).toBeInTheDocument()
+    })
+
+    it('shows search functionality', () => {
+      render(<PeoplePage />)
+      expect(screen.getByPlaceholderText('Search people...')).toBeInTheDocument()
+    })
+  })
+
+  describe('ProjectsPage', () => {
+    it('renders projects page', () => {
+      render(<ProjectsPage />)
+      expect(screen.getByText('Projects')).toBeInTheDocument()
+    })
+
+    it('shows submit project button', () => {
+      render(<ProjectsPage />)
+      expect(screen.getByText('Submit Project')).toBeInTheDocument()
+    })
   })
 }) 

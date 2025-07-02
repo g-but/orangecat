@@ -116,7 +116,7 @@ additional_redirect_urls = [
   "http://localhost:3003",
   "http://localhost:3004",
   "http://localhost:3005",
-  "https://orangecat-georgs-projects-babaf057.vercel.app"
+  "https://orangecat.ch"
 ]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
