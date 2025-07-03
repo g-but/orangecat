@@ -23,17 +23,11 @@ export default function ProfilePage() {
   const [profileData, setProfileData] = useState({
     display_name: '',
     bio: '',
-    location: '',
     website: '',
-    twitter: '',
-    linkedin: '',
-    github: '',
     avatar_url: '',
     banner_url: '',
     bitcoin_address: '',
     lightning_address: '',
-    public_profile: true,
-    allow_donations: true,
   })
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const [dragActive, setDragActive] = useState(false)
@@ -43,6 +37,14 @@ export default function ProfilePage() {
   if (!hydrated || isLoading) {
     return <Loading fullScreen />
   }
+
+  // Trigger file input when uploadType changes
+  useEffect(() => {
+    if (uploadType) {
+      const fileInput = document.getElementById('file-upload') as HTMLInputElement
+      fileInput?.click()
+    }
+  }, [uploadType])
 
   // Handle redirect on client side only
   useEffect(() => {
@@ -61,41 +63,33 @@ export default function ProfilePage() {
       setProfileData({
         display_name: profile.display_name || '',
         bio: profile.bio || '',
-        location: profile.location || '',
         website: profile.website || '',
-        twitter: profile.twitter || '',
-        linkedin: profile.linkedin || '',
-        github: profile.github || '',
         avatar_url: profile.avatar_url || '',
         banner_url: profile.banner_url || '',
         bitcoin_address: profile.bitcoin_address || '',
         lightning_address: profile.lightning_address || '',
-        public_profile: profile.public_profile ?? true,
-        allow_donations: profile.allow_donations ?? true,
       })
     }
   }, [profile])
 
   // Calculate completion percentage
   useEffect(() => {
-    const fields = [
+    const requiredFields = [
       profileData.display_name,
       profileData.bio,
-      profileData.location,
       profileData.avatar_url,
       profileData.bitcoin_address,
     ]
     const optionalFields = [
       profileData.website,
-      profileData.twitter,
       profileData.banner_url,
       profileData.lightning_address,
     ]
     
-    const requiredCompleted = fields.filter(field => field && field.trim()).length
+    const requiredCompleted = requiredFields.filter(field => field && field.trim()).length
     const optionalCompleted = optionalFields.filter(field => field && field.trim()).length
     
-    const percentage = Math.round(((requiredCompleted * 2 + optionalCompleted) / (fields.length * 2 + optionalFields.length)) * 100)
+    const percentage = Math.round(((requiredCompleted * 2 + optionalCompleted) / (requiredFields.length * 2 + optionalFields.length)) * 100)
     setCompletionPercentage(Math.min(percentage, 100))
   }, [profileData])
 
@@ -184,32 +178,34 @@ export default function ProfilePage() {
     try {
       setIsSaving(true)
 
-      // Save profile data to database
+      // Save profile data to database - only send supported fields
       const result = await ProfileService.updateProfile(user.id, {
         display_name: profileData.display_name,
         bio: profileData.bio,
-        location: profileData.location,
         website: profileData.website,
-        twitter: profileData.twitter,
-        linkedin: profileData.linkedin,
-        github: profileData.github,
         avatar_url: profileData.avatar_url,
         banner_url: profileData.banner_url,
         bitcoin_address: profileData.bitcoin_address,
         lightning_address: profileData.lightning_address,
-        public_profile: profileData.public_profile,
-        allow_donations: profileData.allow_donations,
       })
 
       if (!result.success) {
+        console.error('Profile update failed:', result.error)
         toast.error(result.error || 'Failed to update profile')
         return
       }
 
+      console.log('Profile updated successfully:', result.data)
       toast.success('Profile updated successfully!')
       setIsEditing(false)
 
+      // Trigger a re-fetch of the profile data
+      if (typeof window !== 'undefined') {
+        window.location.reload()
+      }
+
     } catch (error) {
+      console.error('Profile update error:', error)
       toast.error('Failed to update profile')
     } finally {
       setIsSaving(false)
@@ -331,13 +327,6 @@ export default function ProfilePage() {
                   )}
                   
                   <p className="text-gray-600">{user.email}</p>
-                  
-                  {profileData.location && (
-                    <div className="flex items-center justify-center text-gray-500">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      <span className="text-sm">{profileData.location}</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -523,63 +512,28 @@ export default function ProfilePage() {
                     )
                   )}
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Location
-                  </label>
-                  {isEditing ? (
-                    <Input
-                      value={profileData.location}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, location: e.target.value }))}
-                      placeholder="City, Country"
-                    />
-                  ) : (
-                    <div className="text-gray-700">{profileData.location || 'Not specified'}</div>
-                  )}
-                </div>
               </div>
             </Card>
 
-            {/* Privacy Settings */}
+            {/* Info Card */}
             {isEditing && (
               <Card className="p-6 bg-white/95 backdrop-blur-sm shadow-lg border-0">
                 <h2 className="text-xl font-bold text-gray-900 flex items-center mb-4">
                   <Shield className="w-5 h-5 mr-2 text-orange-600" />
-                  Privacy Settings
+                  Profile Status
                 </h2>
                 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-gray-900">Public Profile</h3>
-                      <p className="text-sm text-gray-500">Allow others to find and view your profile</p>
+                  <div className="p-4 bg-gradient-to-r from-orange-50 to-tiffany-50 rounded-lg border border-orange-200">
+                    <div className="flex items-center">
+                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
+                      <span className="text-sm font-medium text-green-800">
+                        Your profile is public and ready to receive donations
+                      </span>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={profileData.public_profile}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, public_profile: e.target.checked }))}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
-                    </label>
-                  </div>
-                  
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-gray-900">Allow Donations</h3>
-                      <p className="text-sm text-gray-500">Enable Bitcoin donations to your profile</p>
-                    </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={profileData.allow_donations}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, allow_donations: e.target.checked }))}
-                        className="sr-only peer"
-                      />
-                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
-                    </label>
+                    <p className="text-xs text-gray-600 mt-1">
+                      Complete your Bitcoin address to start receiving donations
+                    </p>
                   </div>
                 </div>
               </Card>
@@ -602,13 +556,6 @@ export default function ProfilePage() {
           }
         }}
       />
-      
-      {/* Trigger file input when needed */}
-      {uploadType && (
-        <script>
-          {document.getElementById('file-upload')?.click()}
-        </script>
-      )}
     </div>
   )
 } 
