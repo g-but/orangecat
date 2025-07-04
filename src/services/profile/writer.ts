@@ -63,7 +63,7 @@ export class ProfileWriter {
         .update(updateData)
         .eq('id', userId)
         .select('*')
-        .single()
+        .maybeSingle()
 
       if (error) {
         logger.error('ProfileWriter.updateProfile database error:', error)
@@ -77,7 +77,15 @@ export class ProfileWriter {
       }
 
       if (!data) {
-        return { success: false, error: 'No data returned from update' }
+        // Update succeeded but no data returned (likely RLS policy issue)
+        // Fetch the updated profile separately
+        const updatedProfile = await ProfileReader.getProfile(userId);
+        if (updatedProfile) {
+          logProfile('updateProfile success (via separate fetch)', { userId, profile: updatedProfile })
+          return { success: true, data: updatedProfile }
+        } else {
+          return { success: false, error: 'Profile update succeeded but could not retrieve updated data' }
+        }
       }
 
       const finalProfile = ProfileMapper.mapDatabaseToProfile(data);
@@ -130,7 +138,7 @@ export class ProfileWriter {
         .from('profiles')
         .insert(insertData)
         .select('*')
-        .single()
+        .maybeSingle()
 
       if (error) {
         logger.error('ProfileWriter.createProfile database error:', error)

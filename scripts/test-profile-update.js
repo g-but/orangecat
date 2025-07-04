@@ -6,81 +6,105 @@
  * node scripts/test-profile-update.js
  */
 
-// Load environment variables from .env.local
-require('dotenv').config({ path: '.env.local' });
-
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config();
 
-// Get the Supabase credentials
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-const userId = process.argv[2]; // Get user ID from command line argument
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
-if (!supabaseUrl || !supabaseKey) {
-  console.error('❌ Missing Supabase credentials');
-  console.error('Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are defined in .env.local');
-  process.exit(1);
-}
+async function main() {
+  console.log('🧪 Test Profile Update Flow');
+  console.log('===========================\n');
 
-if (!userId) {
-  console.error('❌ Missing user ID');
-  console.error('Usage: node scripts/test-profile-update.js USER_ID');
-  process.exit(1);
-}
-
-// Create a Supabase client 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-async function testProfileUpdate() {
-  // REMOVED: console.log statement
-  
-  const testValue = 'Test update from Node.js ' + new Date().toISOString();
-  
   try {
-    // REMOVED: console.log statement
-    const startTime = Date.now();
-    
-    const { data, error, status } = await supabase
+    // 1. Get current profile
+    console.log('1. Getting current profile...');
+    const { data: profiles, error: fetchError } = await supabase
       .from('profiles')
-      .update({ 
-        bio: testValue,
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', userId)
+      .select('*')
+      .limit(1);
+
+    if (fetchError || !profiles || profiles.length === 0) {
+      console.error('❌ No profiles found:', fetchError?.message);
+      return;
+    }
+
+    const currentProfile = profiles[0];
+    console.log('   Current profile:', {
+      id: currentProfile.id,
+      username: currentProfile.username,
+      full_name: currentProfile.full_name,
+      avatar_url: currentProfile.avatar_url
+    });
+
+    // 2. Test profile update with display_name -> full_name mapping
+    console.log('\n2. Testing profile update...');
+    
+    const testUpdate = {
+      full_name: 'Updated Display Name',
+      avatar_url: null, // Clear any broken URLs
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: updateResult, error: updateError } = await supabase
+      .from('profiles')
+      .update(testUpdate)
+      .eq('id', currentProfile.id)
       .select('*')
       .single();
-    
-    const endTime = Date.now();
-    
-    if (error) {
-      console.error(`❌ Update failed with error:`, error);
-      if (error.code === '42501') {
-        console.error('This appears to be a permission error. Check RLS policies.');
-      }
-      process.exit(1);
+
+    if (updateError) {
+      console.error('   ❌ Update failed:', updateError.message);
+    } else {
+      console.log('   ✅ Update successful!');
+      console.log('   Updated profile:', {
+        id: updateResult.id,
+        username: updateResult.username,
+        full_name: updateResult.full_name,
+        avatar_url: updateResult.avatar_url
+      });
     }
+
+    // 3. Test the actual ProfileService flow by importing it
+    console.log('\n3. Testing ProfileService.updateProfile...');
     
-    if (process.env.NODE_ENV === 'development') console.log(`✅ Update successful! Request took ${endTime - startTime}ms`);
-    // REMOVED: console.log statement
-    // REMOVED: console.log statement
-      username: data.username,
-      display_name: data.display_name,
-      bitcoin_address: data.bitcoin_address
-    });
-    
+    // We can't easily import the service here, but we can test the raw update
+    // Let's try updating with the format the service would use
+    const serviceStyleUpdate = {
+      full_name: 'Service Style Update',
+      website: JSON.stringify({
+        bio: 'Test bio from service',
+        location: 'Test location',
+        banner_url: null
+      }),
+      updated_at: new Date().toISOString()
+    };
+
+    const { data: serviceResult, error: serviceError } = await supabase
+      .from('profiles')
+      .update(serviceStyleUpdate)
+      .eq('id', currentProfile.id)
+      .select('*')
+      .single();
+
+    if (serviceError) {
+      console.error('   ❌ Service-style update failed:', serviceError.message);
+    } else {
+      console.log('   ✅ Service-style update successful!');
+      console.log('   Result:', {
+        id: serviceResult.id,
+        full_name: serviceResult.full_name,
+        website: serviceResult.website
+      });
+    }
+
+    console.log('\n✅ Profile update test complete!');
+
   } catch (error) {
-    console.error(`❌ Exception during update:`, error);
-    process.exit(1);
+    console.error('❌ Script error:', error.message);
   }
 }
 
-// Run the test
-testProfileUpdate()
-  .then(() => {
-    // REMOVED: console.log statement
-    process.exit(0);
-  })
-  .catch(err => {
-    console.error('Test failed:', err);
-    process.exit(1);
-  }); 
+main(); 

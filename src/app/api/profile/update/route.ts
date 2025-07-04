@@ -7,6 +7,7 @@ import {
   isValidUsername, 
   isValidBio 
 } from '@/utils/validation'
+import { isValidUrl } from '@/utils/formValidation'
 import { logger } from '@/utils/logger'
 
 // Simple in-memory rate limiting (in production, use Redis or database)
@@ -65,7 +66,16 @@ async function handleProfileUpdate(request: AuthenticatedRequest) {
       )
     }
 
-    const { username, bio, bitcoin_address, lightning_address } = await request.json()
+    const { 
+      username, 
+      display_name, 
+      bio, 
+      website, 
+      avatar_url, 
+      banner_url, 
+      bitcoin_address, 
+      lightning_address 
+    } = await request.json()
 
     // Enhanced username validation
     if (username) {
@@ -126,12 +136,49 @@ async function handleProfileUpdate(request: AuthenticatedRequest) {
       }
     }
 
+    // Website URL validation
+    if (website) {
+      const websiteValidation = isValidUrl(website)
+      if (!websiteValidation.valid) {
+        return NextResponse.json(
+          { error: websiteValidation.error },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Avatar URL validation
+    if (avatar_url) {
+      const avatarValidation = isValidUrl(avatar_url)
+      if (!avatarValidation.valid) {
+        return NextResponse.json(
+          { error: 'Invalid avatar URL format' },
+          { status: 400 }
+        )
+      }
+    }
+
+    // Banner URL validation
+    if (banner_url) {
+      const bannerValidation = isValidUrl(banner_url)
+      if (!bannerValidation.valid) {
+        return NextResponse.json(
+          { error: 'Invalid banner URL format' },
+          { status: 400 }
+        )
+      }
+    }
+
     // Update the profile with validated data
     const { data, error } = await supabase
       .from('profiles')
       .update({
         username,
+        display_name,
         bio,
+        website,
+        avatar_url,
+        banner_url,
         bitcoin_address,
         lightning_address,
         updated_at: new Date().toISOString()
