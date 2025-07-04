@@ -24,9 +24,7 @@ import { toast } from 'sonner'
 import type { 
   OrganizationFormData, 
   OrganizationType, 
-  GovernanceModel,
-  ORGANIZATION_TYPES,
-  GOVERNANCE_MODELS
+  GovernanceModel
 } from '@/types/organization'
 
 interface CreateOrganizationModalProps {
