@@ -9,7 +9,25 @@ import {
   SearchFilters,
   SearchResponse 
 } from '@/services/search'
-import _ from 'lodash'
+
+// Custom debounce function to avoid lodash dependency
+function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  delay: number
+): ((...args: Parameters<T>) => void) & { cancel: () => void } {
+  let timeoutId: NodeJS.Timeout
+  
+  const debouncedFunc = (...args: Parameters<T>) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => func(...args), delay)
+  }
+  
+  debouncedFunc.cancel = () => {
+    clearTimeout(timeoutId)
+  }
+  
+  return debouncedFunc
+}
 
 interface UseSearchSuggestionsResult {
   suggestions: string[]
@@ -242,7 +260,7 @@ export function useSearchSuggestions(query: string, enabled: boolean = true): Us
   const [error, setError] = useState<string | null>(null)
 
   // Debounced search function
-  const debouncedSearch = _.debounce(async (searchQuery: string) => {
+  const debouncedSearch = debounce(async (searchQuery: string) => {
     if (!searchQuery.trim() || !enabled) {
       setSuggestions([])
       setLoading(false)
