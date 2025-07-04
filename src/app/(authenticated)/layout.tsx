@@ -21,6 +21,8 @@ import { NavigationShortcuts } from '@/components/navigation/NavigationShortcuts
 import { HeaderCreateButton } from '@/components/dashboard/SmartCreateButton'
 import UserProfileDropdown from '@/components/ui/UserProfileDropdown'
 import Logo from '@/components/layout/Logo'
+import EnhancedSearchBar from '@/components/search/EnhancedSearchBar'
+import MobileSearchModal from '@/components/search/MobileSearchModal'
 
 interface AuthenticatedLayoutProps {
   children: React.ReactNode
@@ -39,6 +41,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
   // State for hover expansion
   const [isHovered, setIsHovered] = useState(false)
   const [avatarError, setAvatarError] = useState(false)
+  const [showMobileSearch, setShowMobileSearch] = useState(false)
 
   // Wait for hydration before rendering sidebar content
   if (!hydrated) {
@@ -71,20 +74,25 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
             </div>
           </div>
 
-          {/* Center: Search */}
+          {/* Center: Enhanced Search */}
           <div className="hidden md:flex flex-1 max-w-md mx-6">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search campaigns, people..."
-                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm"
-              />
-            </div>
+            <EnhancedSearchBar 
+              placeholder="Search campaigns, people..."
+              className="w-full"
+            />
           </div>
 
           {/* Right: Actions */}
           <div className="flex items-center space-x-3">
+            {/* Mobile Search Button */}
+            <button 
+              onClick={() => setShowMobileSearch(true)}
+              className="md:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
             <HeaderCreateButton />
             
             <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
@@ -322,6 +330,12 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       {/* Development Tools */}
       <DevPerformanceMonitor />
       <NavigationShortcuts sections={navigationSections} />
+
+      {/* Mobile Search Modal */}
+      <MobileSearchModal 
+        isOpen={showMobileSearch}
+        onClose={() => setShowMobileSearch(false)}
+      />
     </div>
   );
 } 
