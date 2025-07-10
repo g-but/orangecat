@@ -47,7 +47,7 @@ export default function Home() {
           <p className="text-lg sm:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
             Just like the yellow pages had phone numbers, we have Bitcoin wallets. 
             Create wallets for yourself, your projects, organizations, or anyone you care about. 
-            Build circles of trust and support with the power of Bitcoin.
+            Build circles of trust and support with the power of Bitcoin - whether you're organizing a cat shelter, art exhibition, community party, or any cause that matters.
           </p>
         </div>
 
@@ -95,11 +95,12 @@ export default function Home() {
         <div className="text-center">
           <div className="bg-gradient-to-r from-tiffany-50 to-orange-50 rounded-2xl p-8 sm:p-12">
             <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-              Start Building Your Bitcoin Community
+              Start Building Your Community
             </h3>
             <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
               Join thousands creating wallets for their projects, organizations, and communities. 
-              Make supporting each other as easy as a phone call used to be.
+              From local charities to art collectives, from community events to creative projects - 
+              make supporting each other as easy as a phone call used to be.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button 

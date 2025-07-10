@@ -38,13 +38,13 @@ export async function getProfile(userId: string): Promise<{ data: Profile | null
     const profile: Profile = {
       id: data.id,
       username: data.username,
-      display_name: data.full_name, // Map full_name to display_name
-      bio: null, // Not available in current schema
+      display_name: data.display_name, // Use actual display_name column
+      bio: data.bio,
       avatar_url: data.avatar_url,
-      banner_url: null, // Not available in current schema
+      banner_url: data.banner_url,
       website: data.website,
-      bitcoin_address: null, // Not available in current schema
-      lightning_address: null, // Not available in current schema
+      bitcoin_address: data.bitcoin_address,
+      lightning_address: data.lightning_address,
       created_at: data.created_at,
       updated_at: data.updated_at
     };
@@ -87,9 +87,13 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
     const profileData = {
       id: userId,
       username: formData.username?.trim() || null,
-      full_name: formData.display_name?.trim() || null, // Map display_name to full_name
+      display_name: formData.display_name?.trim() || null, // Use actual display_name column
+      bio: formData.bio?.trim() || null,
       avatar_url: formData.avatar_url || null,
+      banner_url: formData.banner_url || null,
       website: formData.website?.trim() || null,
+      bitcoin_address: formData.bitcoin_address?.trim() || null,
+      lightning_address: formData.lightning_address?.trim() || null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -116,13 +120,13 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
     const profile: Profile = {
       id: result.data.id,
       username: result.data.username,
-      display_name: result.data.full_name, // Map full_name back to display_name
-      bio: null,
+      display_name: result.data.display_name,
+      bio: result.data.bio,
       avatar_url: result.data.avatar_url,
-      banner_url: null,
+      banner_url: result.data.banner_url,
       website: result.data.website,
-      bitcoin_address: null,
-      lightning_address: null,
+      bitcoin_address: result.data.bitcoin_address,
+      lightning_address: result.data.lightning_address,
       created_at: result.data.created_at,
       updated_at: result.data.updated_at
     };
@@ -171,20 +175,33 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
       profileData.username = formData.username?.trim() || null;
     }
 
-    // Map display_name to full_name
     if (formData.display_name !== undefined) {
-      profileData.full_name = formData.display_name?.trim() || null;
+      profileData.display_name = formData.display_name?.trim() || null;
+    }
+
+    if (formData.bio !== undefined) {
+      profileData.bio = formData.bio?.trim() || null;
     }
 
     if (formData.avatar_url !== undefined) {
       profileData.avatar_url = formData.avatar_url || null;
     }
 
+    if (formData.banner_url !== undefined) {
+      profileData.banner_url = formData.banner_url || null;
+    }
+
     if (formData.website !== undefined) {
       profileData.website = formData.website?.trim() || null;
     }
 
-    // Skip fields not in current schema: bio, banner_url, bitcoin_address, lightning_address
+    if (formData.bitcoin_address !== undefined) {
+      profileData.bitcoin_address = formData.bitcoin_address?.trim() || null;
+    }
+
+    if (formData.lightning_address !== undefined) {
+      profileData.lightning_address = formData.lightning_address?.trim() || null;
+    }
 
     logProfile('ProfileHelper: Prepared update data:', profileData);
 
@@ -209,9 +226,13 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
       const newProfileData = {
         id: userId,
         username: profileData.username,
-        full_name: profileData.full_name, // Use full_name instead of display_name
+        display_name: profileData.display_name,
+        bio: profileData.bio,
         avatar_url: profileData.avatar_url,
+        banner_url: profileData.banner_url,
         website: profileData.website,
+        bitcoin_address: profileData.bitcoin_address,
+        lightning_address: profileData.lightning_address,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
@@ -248,13 +269,13 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
     const profile: Profile = {
       id: result.data.id,
       username: result.data.username,
-      display_name: result.data.full_name, // Map full_name back to display_name
-      bio: null,
+      display_name: result.data.display_name,
+      bio: result.data.bio,
       avatar_url: result.data.avatar_url,
-      banner_url: null,
+      banner_url: result.data.banner_url,
       website: result.data.website,
-      bitcoin_address: null,
-      lightning_address: null,
+      bitcoin_address: result.data.bitcoin_address,
+      lightning_address: result.data.lightning_address,
       created_at: result.data.created_at,
       updated_at: result.data.updated_at
     };

@@ -17,7 +17,7 @@
  * Last Modified Summary: Integration test suite for real database validation
  */
 
-import { createClient } from '@supabase/supabase-js'
+import testClient from '@/services/supabase/client' // Use the mocked client
 import type { Profile, ProfileFormData } from '@/types/database'
 
 // =====================================================================
@@ -29,12 +29,12 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://test.supaba
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-service-role-key'
 
 // Create test client with service role for testing
-const testClient = createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-})
+// const testClient = createClient(supabaseUrl, supabaseKey, {
+//   auth: {
+//     autoRefreshToken: false,
+//     persistSession: false
+//   }
+// })
 
 // =====================================================================
 // 🧪 TEST DATA & UTILITIES
@@ -223,7 +223,7 @@ describe('🔗 ProfileService - Integration Testing', () => {
     
     it('should enforce Row Level Security policies', async () => {
       // Create anonymous client (no auth)
-      const anonClient = createClient(supabaseUrl, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key')
+      const anonClient = testClient // Use the mocked client directly
       
       // Act - Try to access profiles without authentication
       const { data, error } = await anonClient

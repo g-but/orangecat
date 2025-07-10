@@ -6,22 +6,25 @@
 
 import AssociationService from '../associations'
 
-// Mock the supabase client
-const mockSupabase = {
-  from: jest.fn().mockReturnThis(),
-  select: jest.fn().mockReturnThis(),
-  insert: jest.fn().mockReturnThis(),
-  eq: jest.fn().mockReturnThis(),
-  order: jest.fn().mockReturnThis(),
-  single: jest.fn(),
-  auth: {
-    getUser: jest.fn()
+// Mock the supabase client inline within jest.mock factory to avoid hoisting issues
+jest.mock('../core/client', () => {
+  const mockSupabase = {
+    from: jest.fn().mockReturnThis(),
+    select: jest.fn().mockReturnThis(),
+    insert: jest.fn().mockReturnThis(),
+    eq: jest.fn().mockReturnThis(),
+    order: jest.fn().mockReturnThis(),
+    single: jest.fn(),
+    auth: {
+      getUser: jest.fn()
+    }
   }
-}
+  return { supabase: mockSupabase }
+})
 
-jest.mock('../core/client', () => ({
-  supabase: mockSupabase
-}))
+// Obtain the mocked supabase instance for use in tests
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { supabase: mockSupabase } = require('../core/client')
 
 jest.mock('@/utils/logger', () => ({
   logger: {

@@ -11,39 +11,37 @@
 
 // Mock Supabase client first
 const mockSupabase = {
-  from: jest.fn(() => ({
-    select: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    update: jest.fn().mockReturnThis(),
-    delete: jest.fn().mockReturnThis(),
-    eq: jest.fn().mockReturnThis(),
-    or: jest.fn().mockReturnThis(),
-    ilike: jest.fn().mockReturnThis(),
-    limit: jest.fn().mockReturnThis(),
-    range: jest.fn().mockReturnThis(),
-    single: jest.fn().mockResolvedValue({ data: { website: '{}' }, error: null }),
-    then: jest.fn().mockResolvedValue({ data: [], error: null })
-  })),
+  from: jest.fn().mockReturnThis(),
+  select: jest.fn().mockReturnThis(),
+  insert: jest.fn().mockReturnThis(),
+  update: jest.fn().mockReturnThis(),
+  delete: jest.fn().mockReturnThis(),
+  eq: jest.fn().mockReturnThis(),
+  or: jest.fn().mockReturnThis(),
+  ilike: jest.fn().mockReturnThis(),
+  limit: jest.fn().mockReturnThis(),
+  range: jest.fn().mockReturnThis(),
+  single: jest.fn().mockResolvedValue({ data: { website: '{}' }, error: null }),
   auth: {
     getUser: jest.fn().mockResolvedValue({
       data: { user: { id: 'test-user-id', email: 'test@example.com' } },
       error: null
     })
   }
-}
+};
 
 jest.mock('@/services/supabase/client', () => ({
   supabase: mockSupabase
-}))
+}));
 
 import {
-  PeopleService,
-  OrganizationService,
   ProjectService,
   SearchService,
   SocialAnalyticsService,
   EmptyStateService
-} from '../socialService'
+} from '../socialService';
+import { PeopleService } from '../people';
+import { OrganizationService } from '../organizations';
 
 import type {
   ConnectionRequest,
@@ -247,15 +245,15 @@ describe('SearchService', () => {
 
   describe('universalSearch', () => {
     it('should handle search errors gracefully', async () => {
-      mockSupabase.from().select().or().limit().range.mockRejectedValue(
-        new Error('Search failed')
-      )
+      mockSupabase.from.mockImplementation(() => {
+        throw new Error('Search failed');
+      });
 
-      const result = await SearchService.universalSearch({ query: 'test' })
-      
-      expect(result).toEqual([])
-    })
-  })
+      const result = await SearchService.universalSearch({ query: 'test' });
+
+      expect(result).toEqual([]);
+    });
+  });
 })
 
 describe('SocialAnalyticsService', () => {
@@ -265,14 +263,13 @@ describe('SocialAnalyticsService', () => {
 
   describe('getUserAnalytics', () => {
     it('should return default analytics on error', async () => {
-      mockSupabase.from().select().eq().single.mockResolvedValue({
-        data: null,
-        error: new Error('User not found')
-      })
-
-      const result = await SocialAnalyticsService.getUserAnalytics('invalid-user')
+      mockSupabase.from.mockImplementation(() => {
+        throw new Error('Analytics failed');
+      });
       
-      expect(result).toHaveProperty('total_connections', 0)
+      const result = await SocialAnalyticsService.getUserAnalytics('invalid-user');
+
+      expect(result).toHaveProperty('total_connections', 0);
       expect(result).toHaveProperty('pending_requests', 0)
       expect(result).toHaveProperty('organizations_joined', 0)
       expect(result).toHaveProperty('projects_joined', 0)
@@ -319,11 +316,11 @@ describe('Social Collaboration Integration', () => {
 
   it('should handle error scenarios gracefully', async () => {
     // Test database connection failure
-    mockSupabase.from().select().or().limit().range.mockRejectedValue(
-      new Error('Database connection failed')
-    )
+    mockSupabase.from.mockImplementation(() => {
+      throw new Error('Database connection failed');
+    });
 
-    await expect(PeopleService.searchPeople()).rejects.toThrow('Database connection failed')
+    await expect(PeopleService.searchPeople()).rejects.toThrow('Database connection failed');
 
     // Test authentication failure
     mockSupabase.auth.getUser.mockResolvedValue({

@@ -75,13 +75,13 @@ export const platformFeatures: PlatformFeature[] = [
   },
   {
     title: 'People',
-    description: 'Connect with friends, create circles, and build your Bitcoin community',
+    description: 'Connect with supporters, create circles, and build your community network',
     icon: Users,
     href: '/discover',
     landingPageHref: '/discover',
     color: 'bg-gradient-to-r from-purple-500 to-pink-500',
     iconColor: 'text-purple-600',
-    preview: 'Build networks, create interest groups, and facilitate meaningful connections.',
+    preview: 'Build networks, create interest groups, and facilitate meaningful connections for any cause or community.',
     comingSoon: false,
     priority: 6
   }
