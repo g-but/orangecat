@@ -126,7 +126,7 @@ export default function TasksSection({ className }: TasksSectionProps) {
     tasks.push({
       id: 'explore-campaigns',
       title: 'Explore Other Campaigns',
-      description: 'Discover and support other Bitcoin projects',
+      description: 'Discover and support projects and initiatives in your community',
       completed: completedTasks.has('explore-campaigns'),
       priority: 'low',
       category: 'growth',

@@ -11,7 +11,7 @@ export default function AboutPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">About OrangeCat</h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Empowering creators and innovators with Bitcoin funding
+            Empowering creators, organizations, and communities worldwide with Bitcoin funding
           </p>
         </div>
 
@@ -26,13 +26,13 @@ export default function AboutPage() {
               </p>
               <h3 className="text-xl font-semibold text-gray-700 mb-3">Our Solution</h3>
               <p className="text-lg text-gray-600 mb-4">
-                OrangeCat provides a dedicated platform that directly connects creators, innovators, and organizations with a global community of Bitcoin supporters. We facilitate direct Bitcoin funding, empowering individuals and projects without unnecessary intermediaries.
+                OrangeCat provides a dedicated platform that directly connects creators, innovators, organizations, and communities with supporters worldwide through Bitcoin payments. Whether you're running a local cat shelter, organizing an art exhibition, planning a community event, or launching any project, we facilitate direct Bitcoin funding without unnecessary intermediaries.
               </p>
               <h3 className="text-xl font-semibold text-gray-700 mb-3">Who Benefits?</h3>
                <ul className="list-disc list-inside text-lg text-gray-600 space-y-1">
-                <li><span className="font-semibold">Creators & Innovators:</span> Access direct funding in Bitcoin for your projects, ideas, and causes.</li>
-                <li><span className="font-semibold">Bitcoin Supporters:</span> Discover and fund projects you believe in, fostering the Bitcoin ecosystem.</li>
-                <li><span className="font-semibold">The Open Source Community:</span> We champion transparency and collaborative development.</li>
+                <li><span className="font-semibold">Any Creator or Organization:</span> Access direct funding in Bitcoin for your projects, causes, and communities - from nonprofits to creative ventures.</li>
+                <li><span className="font-semibold">Global Supporters:</span> Discover and fund projects you believe in using the power of Bitcoin payments.</li>
+                <li><span className="font-semibold">The Open Source Community:</span> We champion transparency and collaborative development for everyone's benefit.</li>
               </ul>
             </Card>
           </div>
@@ -105,10 +105,10 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold mb-6">Our Team</h2>
             <Card className="p-8">
               <p className="text-lg text-gray-600 mb-4">
-                OrangeCat is built by a team of Bitcoin enthusiasts, developers, and entrepreneurs who are passionate about making Bitcoin funding accessible to everyone.
+                OrangeCat is built by a diverse team of developers, designers, and innovators who are passionate about making Bitcoin funding accessible to everyone, regardless of their background or cause.
               </p>
               <p className="text-lg text-gray-600">
-                We&apos;re committed to building the best platform for Bitcoin funding and supporting the growth of the Bitcoin ecosystem. We are a team of passionate developers, designers and Bitcoiners.
+                We're committed to building the best platform for Bitcoin-powered funding and supporting the growth of communities, organizations, and creative projects worldwide. Our team believes in the power of direct, peer-to-peer support through Bitcoin.
               </p>
             </Card>
           </div>
@@ -118,7 +118,7 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold mb-6 text-center">Ready to Dive In?</h2>
             <Card className="p-8">
               <p className="text-lg text-gray-600 mb-8 text-center">
-                Whether you&apos;re looking to fund your next big idea or support innovative projects, OrangeCat is your gateway.
+                Whether you're looking to fund your next project, support your local community, or discover innovative initiatives worldwide, OrangeCat is your gateway.
               </p>
               <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
                 <Button href="/profile" variant="primary" size="lg" className="w-full sm:w-auto">

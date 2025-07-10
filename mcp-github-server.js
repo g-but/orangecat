@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// DEPRECATED: All GitHub and Vercel MCP automation is now handled by mcp-servers/github-server.js. Do not use this file.
 
 /**
  * Enhanced GitHub + Vercel MCP Server

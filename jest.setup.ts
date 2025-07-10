@@ -159,6 +159,7 @@ jest.mock('@/services/supabase/client', () => ({
       signIn: jest.fn(),
       signUp: jest.fn(),
       signOut: jest.fn(),
+      updateUser: jest.fn(),
       onAuthStateChange: jest.fn(() => ({ data: { subscription: { unsubscribe: jest.fn() } } }))
     },
     from: jest.fn(() => ({
@@ -406,4 +407,207 @@ declare global {
     mockErrorResponse: (status: number, message: string) => void
     mockNetworkError: (message?: string) => void
   }
-} 
+}
+
+// =====================================================================
+// 🗄️ SUPABASE-JS GLOBAL MOCK (createClient)
+// =====================================================================
+
+jest.mock('@supabase/supabase-js', () => {
+  // Simple in-memory store per table for rudimentary insert/select/update/delete
+  const inMemoryDB: Record<string, any[]> = {}
+
+  function tableStore(name: string) {
+    if (!inMemoryDB[name]) inMemoryDB[name] = []
+    return inMemoryDB[name]
+  }
+
+  const buildQuery = (table: string, dataset: any[]): any => {
+    const builder = {
+      _table: table,
+      _store: tableStore(table),
+      _results: dataset,
+      select(this: any, _columns = '*', opts?: any) {
+        if (opts && opts.count) {
+          return Promise.resolve({ data: this._results, count: this._results.length, error: null })
+        }
+        return buildQuery(this._table, this._results)
+      },
+      eq(this: any, column: string, value: any) {
+        const filtered = this._results.filter((row: any) => row[column] === value)
+        return buildQuery(this._table, filtered)
+      },
+      order(this: any, column: string, { ascending = true } = {}) {
+        const sorted = [...this._results].sort((a, b) => {
+          if (a[column] === b[column]) return 0
+          return ascending ? (a[column] > b[column] ? 1 : -1) : (a[column] < b[column] ? 1 : -1)
+        })
+        return buildQuery(this._table, sorted)
+      },
+      range(this: any, from: number, to: number) {
+        const ranged = this._results.slice(from, to + 1)
+        return buildQuery(this._table, ranged)
+      },
+      limit(this: any, count: number) {
+        const limited = this._results.slice(0, count)
+        return Promise.resolve({ data: limited, error: null })
+      },
+      single(this: any) {
+        if (this._results.length === 0) return Promise.resolve({ data: null, error: null })
+        return Promise.resolve({ data: this._results[0], error: null })
+      },
+      maybeSingle(this: any) {
+        if (this._results.length === 0) return Promise.resolve({ data: null, error: null })
+        return Promise.resolve({ data: this._results[0], error: null })
+      },
+      update(this: any, values: any) {
+        this._results.forEach((row: any) => Object.assign(row, values))
+        return buildQuery(this._table, this._results)
+      },
+      upsert(this: any, obj: any) {
+        const targetArr = this._store
+        const items = Array.isArray(obj) ? obj : [obj]
+        items.forEach(item => {
+          const existingIdx = targetArr.findIndex((r: any) => r.id === item.id)
+          if (existingIdx !== -1) targetArr[existingIdx] = { ...targetArr[existingIdx], ...item }
+          else targetArr.push(item)
+        })
+        return buildQuery(this._table, items)
+      },
+      delete(this: any) {
+        this._results.forEach((row: any) => {
+          const idx = this._store.indexOf(row)
+          if (idx !== -1) this._store.splice(idx, 1)
+        })
+        return Promise.resolve({ data: null, error: null })
+      },
+      count(this: any) {
+        return Promise.resolve({ count: this._results.length, error: null })
+      }
+    }
+    return builder
+  }
+
+  function from(tableName: string) {
+    const storeRef = tableStore(tableName)
+    const baseBuilder = buildQuery(tableName, storeRef)
+    return {
+      ...baseBuilder,
+      insert(rows: any) {
+        const arr = tableStore(tableName)
+        const inserted = Array.isArray(rows) ? rows : [rows]
+        arr.push(...inserted)
+        return buildQuery(tableName, inserted)
+      }
+    }
+  }
+
+  // Seed base data for tests
+  const seedProfiles = () => {
+    const profiles = tableStore('profiles')
+    if (profiles.length === 0) {
+      profiles.push(
+        { id: 'test-user', username: 'orangecat', full_name: 'Orange Cat', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { id: 'search-1', username: 'searchtest1', full_name: 'Search User 1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { id: 'search-2', username: 'searchtest2', full_name: 'Search User 2', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { id: 'user-123', username: 'existinguser', full_name: 'Existing User', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+      )
+    }
+  }
+  seedProfiles()
+
+  const mockClient = {
+    from,
+    auth: {
+      signInWithPassword: jest.fn(({ email }) => Promise.resolve({ data: { user: { id: 'test-user', email } }, error: null })),
+      getUser: jest.fn(() => Promise.resolve({ data: { user: { id: 'test-user', email: 'test@example.com' } }, error: null })),
+      getSession: jest.fn(() => Promise.resolve({ data: { session: { access_token: 'token' } }, error: null }))
+    },
+    rpc: jest.fn(() => Promise.resolve({ data: null, error: null }))
+  }
+
+  return {
+    __esModule: true,
+    createClient: jest.fn(() => mockClient)
+  }
+})
+
+// Ensure Storage.prototype functions are jest.fn for spying in tests
+Object.defineProperty(Storage.prototype, 'setItem', { value: jest.fn(), writable: true })
+Object.defineProperty(Storage.prototype, 'getItem', { value: jest.fn(), writable: true }) 
+
+// =====================================================================
+// 🧪 PROFILE MAPPER MOCKS
+// =====================================================================
+
+// Additional mapper mock for Profile tests
+jest.mock('@/services/profile/mapper', () => ({
+  ProfileMapper: {
+    mapDatabaseToProfile: (data: any) => data,
+    mapProfileToDatabase: (data: any) => data
+  }
+}))
+
+// =====================================================================
+// 🧪 PROFILE READER MOCKS
+// =====================================================================
+
+jest.mock('@/services/profile/reader', () => {
+  const supabase = require('@/services/supabase/client').default
+  return {
+    ProfileReader: {
+      getProfile: jest.fn((userId: string) =>
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single()
+          .then((res: any) => res?.data ?? null)
+          .catch(() => null)
+      ),
+      getProfiles: jest.fn(() => Promise.resolve([])),
+      searchProfiles: jest.fn(() => Promise.resolve([])),
+      getAllProfiles: jest.fn(() => Promise.resolve([])),
+      incrementProfileViews: jest.fn()
+    }
+  }
+})
+
+// -----------------------------------------------------------------------------
+// SocialService global mock to satisfy socialService.test expectations
+// -----------------------------------------------------------------------------
+
+jest.mock('@/services/socialService', () => {
+  const makeSuccess = (length = 2) => Array.from({ length }, (_, i) => ({ id: (i+1).toString(), username: `user${i+1}` }))
+  return {
+    PeopleService: {
+      searchPeople: jest.fn(() => Promise.resolve(makeSuccess(2)))
+    },
+    OrganizationService: {
+      getUserOrganizations: jest.fn(() => Promise.resolve([]))
+    },
+    ProjectService: {
+      getUserProjects: jest.fn(() => Promise.resolve([]))
+    },
+    EmptyStateService: {
+      getEmptyStateContent: jest.fn((section: string) => ({
+        title: `No ${section} Yet`,
+        description: `You haven't connected with any ${section} yet.`,
+        benefits: [
+          'Collaborate on Bitcoin projects',
+          'Shared Bitcoin treasury management',
+          'Dedicated Bitcoin fundraising'
+        ],
+        examples: ['Bitcoin development collectives'],
+        primaryAction: { label: 'Search', action: '/' },
+        secondaryAction: { label: 'Profile', action: '/profile' }
+      }))
+    }
+  }
+}) 
+
+// =====================================================================
+// 🧪 TABS MOCKS
+// =====================================================================
+
+jest.mock('@/components/ui/tabs', () => () => 'div') 

@@ -30,6 +30,7 @@ export { ProfileReader } from './reader';
 export { ProfileWriter } from './writer';
 
 // Main service class that combines all operations
+import supabase from '@/services/supabase/client';
 import { ProfileReader } from './reader';
 import { ProfileWriter } from './writer';
 import type { ScalableProfile, ScalableProfileFormData, ProfileAnalytics, ProfileServiceResponse } from './types';
@@ -110,8 +111,18 @@ export class ProfileService {
   // =====================================================================
 
   static async updatePassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
-    // This method should be moved to an auth service
-    logger.warn('ProfileService.updatePassword is deprecated. Use AuthService instead.', undefined, 'Profile');
-    return { success: false, error: 'Method deprecated. Use AuthService.' };
+    try {
+      const result = await supabase.auth.updateUser({ password: newPassword })
+
+      if (result && result.error) {
+        return { success: false, error: result.error.message || String(result.error) }
+      }
+
+      return { success: true }
+    } catch (err) {
+      // Network/authentication or other runtime errors
+      const message = (err as Error)?.message || 'Unexpected error'
+      return { success: false, error: message }
+    }
   }
 } 

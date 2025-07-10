@@ -14,7 +14,7 @@ module.exports = {
     }],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@supabase/.*|@playwright/.*))'
+    'node_modules/(?!(@supabase/.*|@playwright/.*|isows/.*))'
   ],
   testTimeout: 30000,
   collectCoverageFrom: [
@@ -41,8 +41,16 @@ module.exports = {
   },
   // Mock Next.js modules that cause issues in Jest
   moduleNameMapper: {
+    // Merged and corrected mappers
+    '^@/components/ui/(.*)$': '<rootDir>/__mocks__/empty.js',
+    '^@/contexts/AuthContext$': '<rootDir>/__mocks__/contexts/AuthContext.js',
+    // Suspicious broad mock - commenting out to observe effect
+    // '^@/contexts/(.*)$': '<rootDir>/__mocks__/contexts/AuthContext.js', 
     '^@/(.*)$': '<rootDir>/src/$1',
     '^next/server$': '<rootDir>/__mocks__/next-server.js',
-    '^next/navigation$': '<rootDir>/__mocks__/next-navigation.js'
+    '^next/navigation$': '<rootDir>/__mocks__/next-navigation.js',
+    '^vitest$': '<rootDir>/__mocks__/vitest.js',
+    '^isows/(.*)$': '<rootDir>/__mocks__/isows.js',
+    '^react-router-dom$': '<rootDir>/__mocks__/react-router-dom.js',
   }
 }; 

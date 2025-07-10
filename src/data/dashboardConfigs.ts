@@ -59,7 +59,7 @@ export const assetsConfig: DashboardConfig = {
 // People Configuration
 export const peopleConfig: DashboardConfig = {
   title: "Your Network",
-  subtitle: "Connect with people in the Bitcoin community",
+  subtitle: "Connect with people in your community and beyond",
   featureBanner: {
     icon: Users,
     iconColor: "bg-purple-100",

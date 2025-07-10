@@ -7,6 +7,8 @@
  */
 
 import type { ScalableProfile } from '@/services/profileService'
+import { Profile } from './database'
+import { MembershipRole } from './organization'
 
 // =====================================================================
 // 👥 PEOPLE & CONNECTIONS
@@ -438,4 +440,184 @@ export interface ActivityFeed {
   // Metadata
   created_at: string
   visibility: 'public' | 'connections' | 'private'
+}
+
+// =====================================================================
+// ORGANIZATION APPLICATION TYPES (NEW)
+// =====================================================================
+
+export type ApplicationStatus = 'pending' | 'approved' | 'rejected' | 'withdrawn'
+
+export interface OrganizationApplication {
+  id: string
+  organization_id: string
+  applicant_id: string
+  application_data: Record<string, any>
+  status: ApplicationStatus
+  message?: string
+  responses: Record<string, any>
+  reviewed_by?: string
+  reviewed_at?: string
+  review_notes?: string
+  created_at: string
+  updated_at: string
+  expires_at: string
+}
+
+export interface ApplicationFormData {
+  message?: string
+  responses: Record<string, any>
+  bio?: string
+  motivation?: string
+  experience?: string
+  availability?: string
+}
+
+export interface ApplicationWithDetails extends OrganizationApplication {
+  organization: Organization
+  applicant: {
+    id: string
+    username?: string
+    display_name?: string
+    avatar_url?: string
+    bio?: string
+  }
+  reviewer?: {
+    id: string
+    username?: string
+    display_name?: string
+  }
+}
+
+// =====================================================================
+// ORGANIZATION INVITATION TYPES (NEW)
+// =====================================================================
+
+export type InvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired' | 'withdrawn'
+
+export interface OrganizationInvitation {
+  id: string
+  organization_id: string
+  inviter_id: string
+  invitee_id?: string
+  invitee_email?: string
+  role: MembershipRole
+  title?: string
+  message?: string
+  invitation_token: string
+  status: InvitationStatus
+  permissions: Record<string, any>
+  metadata: Record<string, any>
+  created_at: string
+  updated_at: string
+  expires_at: string
+  accepted_at?: string
+}
+
+export interface InvitationFormData {
+  invitee_id?: string
+  invitee_email?: string
+  role: MembershipRole
+  title?: string
+  message?: string
+  expires_in_days?: number
+  permissions?: Record<string, any>
+}
+
+export interface InvitationWithDetails extends OrganizationInvitation {
+  organization: Organization
+  inviter: {
+    id: string
+    username?: string
+    display_name?: string
+    avatar_url?: string
+  }
+  invitee?: {
+    id: string
+    username?: string
+    display_name?: string
+    avatar_url?: string
+  }
+}
+
+// =====================================================================
+// BITCOIN COLLABORATION TYPES (NEW)
+// =====================================================================
+
+export type CollaborationType = 'split_payment' | 'joint_funding' | 'shared_wallet' | 'payment_request'
+export type CollaborationStatus = 'pending' | 'active' | 'completed' | 'cancelled' | 'expired'
+export type PaymentStatus = 'pending' | 'confirmed' | 'failed' | 'refunded'
+
+export interface CollaborationParticipant {
+  user_id: string
+  username?: string
+  display_name?: string
+  avatar_url?: string
+  amount: number
+  percentage?: number
+  payment_address?: string
+  has_paid?: boolean
+  paid_amount?: number
+}
+
+export interface BitcoinCollaboration {
+  id: string
+  collaboration_type: CollaborationType
+  initiator_id: string
+  participants: CollaborationParticipant[]
+  title: string
+  description?: string
+  total_amount: number
+  currency: string
+  target_address?: string
+  funding_page_id?: string
+  status: CollaborationStatus
+  payment_deadline?: string
+  collaboration_data: Record<string, any>
+  created_at: string
+  updated_at: string
+  completed_at?: string
+}
+
+export interface CollaborationPayment {
+  id: string
+  collaboration_id: string
+  payer_id: string
+  amount: number
+  expected_amount: number
+  transaction_hash?: string
+  payment_address: string
+  status: PaymentStatus
+  created_at: string
+  confirmed_at?: string
+}
+
+export interface CollaborationFormData {
+  collaboration_type: CollaborationType
+  title: string
+  description?: string
+  total_amount: number
+  target_address?: string
+  funding_page_id?: string
+  payment_deadline?: string
+  participants: {
+    user_id: string
+    amount?: number
+    percentage?: number
+  }[]
+}
+
+export interface CollaborationWithDetails extends BitcoinCollaboration {
+  initiator: {
+    id: string
+    username?: string
+    display_name?: string
+    avatar_url?: string
+  }
+  payments: CollaborationPayment[]
+  funding_page?: {
+    id: string
+    title: string
+    slug?: string
+  }
 }

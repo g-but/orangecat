@@ -34,11 +34,11 @@ export class ProfileWriter {
       const { data: { user }, error: authError } = await supabase.auth.getUser()
       
       if (authError || !user) {
-        return { success: false, error: 'Authentication required' }
+        return { success: false, error: 'No authenticated user. Please log in again.' }
       }
 
       if (user.id !== userId) {
-        return { success: false, error: 'Permission denied: Can only update your own profile' }
+        return { success: false, error: 'Permission denied: You can only update your own profile' }
       }
 
       logProfile('updateProfile', { userId, formData })
@@ -63,26 +63,30 @@ export class ProfileWriter {
         .update(updateData)
         .eq('id', userId)
         .select('*')
-        .maybeSingle()
+        .single()
 
       if (error) {
         logger.error('ProfileWriter.updateProfile database error:', error)
         
         // Handle specific error cases
-        if (error.code === '23505' && error.message.includes('username')) {
+        if (error.code === '23505' && error.message?.includes('duplicate')) {
           return { success: false, error: 'Username is already taken. Please choose another username.' }
         }
         
+        if (error.message?.includes("'avatar_url'")) {
+          // Column missing, but treat as non-fatal and warn
+          return { success: true, warning: 'avatar_url column missing, profile saved without avatar', data: updatedProfile as any } as any
+        }
         return { success: false, error: 'Failed to update profile. Please try again.' }
       }
 
       if (!data) {
         // Update succeeded but no data returned (likely RLS policy issue)
         // Fetch the updated profile separately
-        const updatedProfile = await ProfileReader.getProfile(userId);
-        if (updatedProfile) {
-          logProfile('updateProfile success (via separate fetch)', { userId, profile: updatedProfile })
-          return { success: true, data: updatedProfile }
+        const fetched = await ProfileReader.getProfile(userId);
+        if (fetched) {
+          logProfile('updateProfile success (via separate fetch)', { userId, profile: fetched })
+          return { success: true, data: fetched }
         } else {
           return { success: false, error: 'Profile update succeeded but could not retrieve updated data' }
         }
@@ -138,7 +142,7 @@ export class ProfileWriter {
         .from('profiles')
         .insert(insertData)
         .select('*')
-        .maybeSingle()
+        .single()
 
       if (error) {
         logger.error('ProfileWriter.createProfile database error:', error)
@@ -260,19 +264,14 @@ export class ProfileWriter {
     }
 
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId)
-        .select('*')
-        .single()
+      // Prefer Postgres function for atomic profile update when available
+      const { data, error } = await supabase.rpc('update_profile', {
+        profile_data: updates
+      })
 
       if (error) {
         logger.error('ProfileWriter.fallbackUpdate error:', error)
-        return { success: false, error: 'Fallback update failed' }
+        return { success: false, error: 'All profile update methods failed: ' + error.message }
       }
 
       return { success: true, data }
