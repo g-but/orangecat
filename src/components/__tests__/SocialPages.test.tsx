@@ -9,7 +9,7 @@
  * Last Modified Summary: Complete UI test coverage for social collaboration pages
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, jest } from '@jest/globals'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
@@ -34,31 +34,31 @@ const mockAuthContext = {
   hydrated: true
 }
 
-vi.mock('@/contexts/AuthContext', () => ({
+jest.mock('@/contexts/AuthContext', () => ({
   useAuth: () => mockAuthContext
 }))
 
 // Mock the social services
 const mockPeopleService = {
-  searchPeople: vi.fn(() => Promise.resolve([])),
-  getConnections: vi.fn(() => Promise.resolve([])),
-  sendConnectionRequest: vi.fn(() => Promise.resolve({ id: 'conn-1', status: 'pending' }))
+  searchPeople: jest.fn(() => Promise.resolve([])),
+  getConnections: jest.fn(() => Promise.resolve([])),
+  sendConnectionRequest: jest.fn(() => Promise.resolve({ id: 'conn-1', status: 'pending' }))
 }
 
 const mockOrganizationService = {
-  getUserOrganizations: vi.fn(() => Promise.resolve([])),
-  searchOrganizations: vi.fn(() => Promise.resolve([])),
-  joinOrganization: vi.fn(() => Promise.resolve())
+  getUserOrganizations: jest.fn(() => Promise.resolve([])),
+  searchOrganizations: jest.fn(() => Promise.resolve([])),
+  joinOrganization: jest.fn(() => Promise.resolve())
 }
 
 const mockProjectService = {
-  getUserProjects: vi.fn(() => Promise.resolve([])),
-  searchProjects: vi.fn(() => Promise.resolve([])),
-  joinProject: vi.fn(() => Promise.resolve())
+  getUserProjects: jest.fn(() => Promise.resolve([])),
+  searchProjects: jest.fn(() => Promise.resolve([])),
+  joinProject: jest.fn(() => Promise.resolve())
 }
 
 const mockEmptyStateService = {
-  getEmptyStateContent: vi.fn((section) => ({
+  getEmptyStateContent: jest.fn((section: string) => ({
     title: `No ${section.charAt(0).toUpperCase() + section.slice(1)} Yet`,
     description: `You haven't connected with any ${section} yet.`,
     primaryAction: {
@@ -82,7 +82,7 @@ const mockEmptyStateService = {
   }))
 }
 
-vi.mock('@/services/socialService', () => ({
+jest.mock('@/services/socialService', () => ({
   PeopleService: mockPeopleService,
   OrganizationService: mockOrganizationService,
   ProjectService: mockProjectService,
@@ -97,7 +97,7 @@ interface MockButtonProps {
   [key: string]: any
 }
 
-vi.mock('@/components/ui/button', () => ({
+jest.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, className, ...props }: MockButtonProps) => (
     <button onClick={onClick} className={className} {...props}>
       {children}
@@ -105,7 +105,7 @@ vi.mock('@/components/ui/button', () => ({
   )
 }))
 
-vi.mock('@/components/ui/input', () => ({
+jest.mock('@/components/ui/input', () => ({
   Input: ({ value, onChange, placeholder, ...props }: any) => (
     <input 
       value={value} 
@@ -116,7 +116,7 @@ vi.mock('@/components/ui/input', () => ({
   )
 }))
 
-vi.mock('@/components/ui/card', () => ({
+jest.mock('@/components/ui/card', () => ({
   Card: ({ children, className }: any) => (
     <div className={className}>{children}</div>
   ),
@@ -127,13 +127,13 @@ vi.mock('@/components/ui/card', () => ({
   CardTitle: ({ children }: any) => <h3>{children}</h3>
 }))
 
-vi.mock('@/components/ui/badge', () => ({
+jest.mock('@/components/ui/badge', () => ({
   Badge: ({ children, variant, className }: any) => (
     <span className={`badge ${variant} ${className}`}>{children}</span>
   )
 }))
 
-vi.mock('@/components/ui/avatar', () => ({
+jest.mock('@/components/ui/avatar', () => ({
   Avatar: ({ children, className }: any) => (
     <div className={`avatar ${className}`}>{children}</div>
   ),
@@ -145,7 +145,7 @@ vi.mock('@/components/ui/avatar', () => ({
   )
 }))
 
-vi.mock('@/components/ui/tabs', () => ({
+jest.mock('@/components/ui/tabs', () => ({
   Tabs: ({ children, value, onValueChange }: any) => (
     <div data-testid="tabs" data-value={value}>
       {children}
@@ -164,7 +164,7 @@ vi.mock('@/components/ui/tabs', () => ({
   )
 }))
 
-vi.mock('@/components/ui/progress', () => ({
+jest.mock('@/components/ui/progress', () => ({
   Progress: ({ value, className }: any) => (
     <div className={`progress ${className}`} data-value={value}>
       <div style={{ width: `${value}%` }} />
@@ -173,7 +173,7 @@ vi.mock('@/components/ui/progress', () => ({
 }))
 
 // Mock Lucide React icons
-vi.mock('lucide-react', () => ({
+jest.mock('lucide-react', () => ({
   Search: () => <span data-testid="search-icon">🔍</span>,
   Users: () => <span data-testid="users-icon">👥</span>,
   UserPlus: () => <span data-testid="user-plus-icon">➕👤</span>,
@@ -187,7 +187,7 @@ vi.mock('lucide-react', () => ({
   Globe: () => <span data-testid="globe-icon">🌍</span>,
   Rocket: () => <span data-testid="rocket-icon">🚀</span>,
   Target: () => <span data-testid="target-icon">🎯</span>,
-  Calendar: () => <span data-testid="calendar-icon">��</span>,
+  Calendar: () => <span data-testid="calendar-icon">📅</span>,
   TrendingUp: () => <span data-testid="trending-up-icon">📈</span>
 }))
 
@@ -200,7 +200,7 @@ const TestWrapper = ({ children }: { children: React.ReactNode }) => (
 
 describe('PeoplePage', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should render page header correctly', async () => {
@@ -367,7 +367,7 @@ describe('PeoplePage', () => {
 
 describe('OrganizationsPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should render page header correctly', async () => {
@@ -481,7 +481,7 @@ describe('OrganizationsPage', () => {
 
 describe('ProjectsPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should render page header correctly', async () => {
@@ -575,7 +575,7 @@ describe('ProjectsPage', () => {
       expect(screen.getByText('+3')).toBeInTheDocument() // Shows only first 2 tags, then +count
     })
   })
-
+  
   it('should handle project join requests', async () => {
     const mockProjects = [
       {
@@ -657,7 +657,7 @@ describe('ProjectsPage', () => {
 // Integration Tests
 describe('Social Pages Integration', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should handle navigation between pages', async () => {
@@ -746,7 +746,7 @@ describe('Social Pages Integration', () => {
 // Accessibility Tests
 describe('Accessibility Tests', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should have proper heading structure', async () => {
@@ -809,7 +809,7 @@ describe('Accessibility Tests', () => {
 // Performance Tests
 describe('Performance Tests', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should render large lists efficiently', async () => {

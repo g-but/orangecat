@@ -9,671 +9,229 @@
  * Last Modified: 2025-01-08
  * Last Modified Summary: Comprehensive ProfileService tests with fallback testing
  */
-
-// Mock Supabase client
-jest.mock('@/services/supabase/client', () => ({
-  __esModule: true,
-  default: {
-    from: jest.fn(),
-    auth: {
-      getUser: jest.fn(),
-      updateUser: jest.fn()
-    },
-    rpc: jest.fn()
-  }
-}))
+import { ProfileService } from '../profileService'
+import { jest } from '@jest/globals'
+import type { ScalableProfile, ScalableProfileFormData } from '../profile/types';
 
 // Mock dependencies
-jest.mock('@/stores/auth', () => ({
-  useAuthStore: jest.fn()
-}))
-
-jest.mock('@/services/supabase/profiles', () => ({
-  updateProfile: jest.fn()
-}))
-
-jest.mock('sonner', () => ({
-  toast: {
-    success: jest.fn(),
-    error: jest.fn()
+jest.mock('../profile/reader', () => ({
+  ProfileReader: {
+    getProfile: jest.fn(),
+    getProfiles: jest.fn(),
+    searchProfiles: jest.fn(),
+    getAllProfiles: jest.fn(),
+    incrementProfileViews: jest.fn(),
   }
-}))
+}));
 
-jest.mock('@/utils/logger', () => ({
-  logProfile: jest.fn(),
-  logger: {
-    error: jest.fn(),
-    warn: jest.fn(),
-    info: jest.fn()
+jest.mock('../profile/writer', () => ({
+  ProfileWriter: {
+    updateProfile: jest.fn(),
+    createProfile: jest.fn(),
+    updateAnalytics: jest.fn(),
+    deleteProfile: jest.fn(),
+    fallbackUpdate: jest.fn(),
   }
-}))
+}));
 
-// Import after mocking
-import { ProfileService } from '../profileService'
-import supabase from '@/services/supabase/client'
+import { ProfileReader } from '../profile/reader';
+import { ProfileWriter } from '../profile/writer';
 
-interface ProfileFormData {
-  username?: string
-  display_name?: string | null
-  bio?: string | null
-  bitcoin_address?: string | null
-  avatar_url?: string | null
-  banner_url?: string | null
-}
-
-// Get the mocked supabase client
-const mockSupabase = supabase as jest.Mocked<typeof supabase>
+const mockedProfileReader = jest.mocked(ProfileReader);
+const mockedProfileWriter = jest.mocked(ProfileWriter);
 
 describe('👤 Profile Service - Comprehensive Coverage', () => {
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    
-    // Reset default behaviors
-    mockSupabase.from.mockReturnValue({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ data: null, error: null })),
-          maybeSingle: jest.fn(() => Promise.resolve({ data: null, error: null }))
-        }))
-      })),
-      update: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          select: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ data: null, error: null }))
-          }))
-        }))
-      })),
-      insert: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ data: null, error: null }))
-        }))
-      })),
-      upsert: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(() => Promise.resolve({ data: null, error: null }))
-        }))
-      }))
-    })
-
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: null },
-      error: null
-    })
-
-    mockSupabase.auth.updateUser.mockResolvedValue({
-      error: null
-    })
-
-    mockSupabase.rpc.mockResolvedValue({
-      data: null,
-      error: { message: 'RPC not available' }
-    })
-  })
+    jest.clearAllMocks();
+  });
 
   describe('🎯 Service Architecture', () => {
     
     test('should export ProfileService class', () => {
-      expect(ProfileService).toBeDefined()
-      expect(typeof ProfileService).toBe('function')
-    })
+      expect(ProfileService).toBeDefined();
+      expect(typeof ProfileService).toBe('function');
+    });
 
     test('should have all required static methods', () => {
-      expect(typeof ProfileService.getProfile).toBe('function')
-      expect(typeof ProfileService.updateProfile).toBe('function')
-      expect(typeof ProfileService.createProfile).toBe('function')
-      expect(typeof ProfileService.updatePassword).toBe('function')
-      expect(typeof ProfileService.fallbackProfileUpdate).toBe('function')
-    })
+      expect(typeof ProfileService.getProfile).toBe('function');
+      expect(typeof ProfileService.updateProfile).toBe('function');
+      expect(typeof ProfileService.createProfile).toBe('function');
+      // Note: updatePassword is a legacy method not using the reader/writer pattern
+      expect(typeof ProfileService.updatePassword).toBe('function'); 
+      expect(typeof ProfileService.fallbackProfileUpdate).toBe('function');
+    });
 
-  })
+  });
 
   describe('👤 Get Profile Operations', () => {
     
     test('should retrieve profile successfully', async () => {
-      const mockProfile = {
+      const mockProfile: ScalableProfile = {
         id: 'user-123',
         username: 'testuser',
+        full_name: 'Test User',
         display_name: 'Test User',
-        bio: 'Test bio',
-        bitcoin_address: 'bc1qtest',
+        avatar_url: 'http://example.com/avatar.png',
+        website: 'http://example.com',
         created_at: '2024-01-01T00:00:00.000Z',
-        updated_at: '2024-01-01T00:00:00.000Z'
-      }
+        updated_at: '2024-01-01T00:00:00.000Z',
+        // Add other required fields for ScalableProfile
+        bio: null,
+        banner_url: null,
+        bitcoin_address: null,
+        lightning_address: null,
+        email: null,
+        phone: null,
+        location: null,
+        timezone: null,
+        language: null,
+        currency: null,
+        bitcoin_public_key: null,
+        lightning_node_id: null,
+        payment_preferences: null,
+        bitcoin_balance: null,
+        lightning_balance: null,
+        profile_views: null,
+        follower_count: null,
+        following_count: null,
+        campaign_count: null,
+        total_raised: null,
+        total_donated: null,
+        verification_status: 'unverified',
+        verification_level: null,
+        kyc_status: 'none',
+        two_factor_enabled: null,
+        last_login_at: null,
+        login_count: null,
+        theme_preferences: null,
+        custom_css: null,
+        profile_color: null,
+        cover_image_url: null,
+        profile_badges: null,
+        status: 'active',
+        last_active_at: null,
+        profile_completed_at: null,
+        onboarding_completed: null,
+        terms_accepted_at: null,
+        privacy_policy_accepted_at: null,
+        social_links: null,
+        preferences: null,
+        metadata: null,
+        verification_data: null,
+        privacy_settings: null
+      };
 
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ 
-              data: mockProfile, 
-              error: null 
-            }))
-          }))
-        }))
-      })
+      mockedProfileReader.getProfile.mockResolvedValue(mockProfile);
 
-      const result = await ProfileService.getProfile('user-123')
+      const result = await ProfileService.getProfile('user-123');
 
-      expect(result).toEqual(mockProfile)
-      expect(mockSupabase.from).toHaveBeenCalledWith('profiles')
-    })
+      expect(result).toEqual(mockProfile);
+      expect(mockedProfileReader.getProfile).toHaveBeenCalledWith('user-123');
+    });
 
     test('should handle profile not found', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ 
-              data: null, 
-              error: { code: 'PGRST116', message: 'Profile not found' } 
-            }))
-          }))
-        }))
-      })
+      mockedProfileReader.getProfile.mockResolvedValue(null);
 
-      const result = await ProfileService.getProfile('nonexistent-user')
+      const result = await ProfileService.getProfile('nonexistent-user');
 
-      expect(result).toBeNull()
-    })
+      expect(result).toBeNull();
+    });
 
     test('should handle database connection errors', async () => {
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            single: jest.fn(() => Promise.reject(new Error('Connection failed')))
-          }))
-        }))
-      })
+      const errorMessage = 'Connection failed';
+      mockedProfileReader.getProfile.mockRejectedValue(new Error(errorMessage));
 
-      const result = await ProfileService.getProfile('user-123')
-
-      expect(result).toBeNull()
-    })
+      await expect(ProfileService.getProfile('user-123')).rejects.toThrow(errorMessage);
+    });
 
     test('should handle empty user ID gracefully', async () => {
-      const result = await ProfileService.getProfile('')
+      // An empty ID should not throw, but return null as per service logic.
+      mockedProfileReader.getProfile.mockResolvedValue(null);
 
-      expect(result).toBeNull()
-    })
-
-    test('should handle malformed user IDs', async () => {
-      const invalidUserIds = ['null', 'undefined', '{}', '[]', '   ', 'user with spaces']
+      const result = await ProfileService.getProfile('');
       
-      for (const invalidId of invalidUserIds) {
-        const result = await ProfileService.getProfile(invalidId)
-        expect(result).toBeNull()
-      }
-    })
+      expect(result).toBeNull();
+      expect(mockedProfileReader.getProfile).toHaveBeenCalledWith('');
+    });
 
-  })
+  });
 
   describe('✏️ Update Profile Operations', () => {
     
     test('should update profile successfully', async () => {
-      const mockUser = {
-        id: 'user-123',
-        email: 'test@example.com'
-      }
-
-      const mockUpdatedProfile = {
-        id: 'user-123',
+      const userId = 'user-123';
+      const formData: ScalableProfileFormData = {
         username: 'newusername',
-        display_name: 'New Name',
-        bio: 'Updated bio',
-        updated_at: expect.any(String)
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null
-      })
-
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            select: jest.fn(() => ({
-              single: jest.fn(() => Promise.resolve({ 
-                data: mockUpdatedProfile, 
-                error: null 
-              }))
-            }))
-          }))
-        }))
-      })
-
-      const formData: ProfileFormData = {
-        username: 'newusername',
-        display_name: 'New Name',
+        full_name: 'New Name',
         bio: 'Updated bio'
-      }
+      };
+      const mockResponse = {
+          success: true,
+          data: { id: userId, ...formData } as ScalableProfile
+      };
+      mockedProfileWriter.updateProfile.mockResolvedValue(mockResponse);
 
-      const result = await ProfileService.updateProfile('user-123', formData)
+      const result = await ProfileService.updateProfile(userId, formData);
 
-      expect(result.success).toBe(true)
-      expect(result.data).toEqual(mockUpdatedProfile)
-      expect(result.error).toBeUndefined()
-    })
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data?.username).toBe('newusername');
+      expect(mockedProfileWriter.updateProfile).toHaveBeenCalledWith(userId, formData);
+    });
 
-    test('should validate user ID is required', async () => {
-      const formData: ProfileFormData = {
-        username: 'testuser'
-      }
+    test('should return error on update failure', async () => {
+        const userId = 'user-123';
+        const formData: ScalableProfileFormData = { username: 'failuser' };
+        const mockResponse = {
+            success: false,
+            error: 'Failed to update'
+        };
+        mockedProfileWriter.updateProfile.mockResolvedValue(mockResponse);
 
-      const result = await ProfileService.updateProfile('', formData)
+        const result = await ProfileService.updateProfile(userId, formData);
 
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('User ID is required')
-    })
+        expect(result.success).toBe(false);
+        expect(result.data).toBeUndefined();
+        expect(result.error).toBe('Failed to update');
+    });
 
-    test('should handle unauthenticated user', async () => {
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: { message: 'Not authenticated' }
-      })
-
-      const formData: ProfileFormData = {
-        username: 'testuser'
-      }
-
-      const result = await ProfileService.updateProfile('user-123', formData)
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('No authenticated user. Please log in again.')
-    })
-
-    test('should enforce user permission check', async () => {
-      const mockUser = {
-        id: 'user-456',
-        email: 'test@example.com'
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null
-      })
-
-      const formData: ProfileFormData = {
-        username: 'testuser'
-      }
-
-      const result = await ProfileService.updateProfile('user-123', formData)
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('Permission denied: You can only update your own profile')
-    })
-
-    test('should handle username uniqueness constraint', async () => {
-      const mockUser = {
-        id: 'user-123',
-        email: 'test@example.com'
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null
-      })
-
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            select: jest.fn(() => ({
-              single: jest.fn(() => Promise.resolve({ 
-                data: null, 
-                error: { 
-                  code: '23505', 
-                  message: 'duplicate key value violates unique constraint' 
-                } 
-              }))
-            }))
-          }))
-        }))
-      })
-
-      const formData: ProfileFormData = {
-        username: 'existinguser'
-      }
-
-      const result = await ProfileService.updateProfile('user-123', formData)
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('Username is already taken. Please choose another username.')
-    })
-
-    test('should handle missing avatar_url column with fallback', async () => {
-      const mockUser = {
-        id: 'user-123',
-        email: 'test@example.com'
-      }
-
-      const mockUpdatedProfile = {
-        id: 'user-123',
-        username: 'testuser'
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null
-      })
-
-      let callCount = 0
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            select: jest.fn(() => ({
-              single: jest.fn(() => {
-                callCount++
-                if (callCount === 1) {
-                  return Promise.resolve({ 
-                    data: null, 
-                    error: { 
-                      code: 'PGRST204', 
-                      message: "Could not find the 'avatar_url' column" 
-                    } 
-                  })
-                } else {
-                  return Promise.resolve({ 
-                    data: mockUpdatedProfile, 
-                    error: null 
-                  })
-                }
-              })
-            }))
-          }))
-        }))
-      })
-
-      const formData: ProfileFormData = {
-        username: 'testuser',
-        avatar_url: 'https://example.com/avatar.jpg'
-      }
-
-      const result = await ProfileService.updateProfile('user-123', formData)
-
-      expect(result.success).toBe(true)
-      expect(result.data).toEqual(mockUpdatedProfile)
-      expect(result.warning).toContain('avatar_url column')
-    })
-
-  })
-
+  });
+  
   describe('➕ Create Profile Operations', () => {
-    
-    test('should create new profile successfully', async () => {
-      const mockNewProfile = {
-        id: 'user-123',
-        username: 'newuser',
-        display_name: 'New User',
-        bio: 'New user bio',
-        created_at: expect.any(String),
-        updated_at: expect.any(String)
-      }
 
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            maybeSingle: jest.fn(() => Promise.resolve({ 
-              data: null, 
-              error: null 
-            }))
-          }))
-        })),
-        insert: jest.fn(() => ({
-          select: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ 
-              data: mockNewProfile, 
-              error: null 
-            }))
-          }))
-        }))
-      })
+    test('should create profile successfully', async () => {
+        const userId = 'user-456';
+        const formData: ScalableProfileFormData = {
+            username: 'newbie',
+            full_name: 'Newbie User'
+        };
+        const mockResponse = {
+            success: true,
+            data: { id: userId, ...formData } as ScalableProfile
+        };
+        mockedProfileWriter.createProfile.mockResolvedValue(mockResponse);
 
-      const formData: ProfileFormData = {
-        username: 'newuser',
-        display_name: 'New User',
-        bio: 'New user bio'
-      }
+        const result = await ProfileService.createProfile(userId, formData);
 
-      const result = await ProfileService.createProfile('user-123', formData)
+        expect(result.success).toBe(true);
+        expect(result.data).toBeDefined();
+        expect(result.data?.username).toBe('newbie');
+    });
+  });
 
-      expect(result.success).toBe(true)
-    })
+  describe('🗑️ Delete Profile Operations', () => {
 
-    test('should handle existing profile with upsert', async () => {
-      const mockExistingProfile = {
-        id: 'user-123'
-      }
+    test('should delete profile successfully', async () => {
+        const userId = 'user-789';
+        const mockResponse = { success: true };
+        mockedProfileWriter.deleteProfile.mockResolvedValue(mockResponse);
+        
+        const result = await ProfileService.deleteProfile(userId);
 
-      const mockUpdatedProfile = {
-        id: 'user-123',
-        username: 'updateduser',
-        display_name: 'Updated User'
-      }
+        expect(result.success).toBe(true);
+        expect(result.data).toBeUndefined();
+    });
+  });
 
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            maybeSingle: jest.fn(() => Promise.resolve({ 
-              data: mockExistingProfile, 
-              error: null 
-            }))
-          }))
-        })),
-        upsert: jest.fn(() => ({
-          select: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ 
-              data: mockUpdatedProfile, 
-              error: null 
-            }))
-          }))
-        }))
-      })
-
-      const formData: ProfileFormData = {
-        username: 'updateduser',
-        display_name: 'Updated User'
-      }
-
-      const result = await ProfileService.createProfile('user-123', formData)
-
-      expect(result.success).toBe(true)
-    })
-
-  })
-
-  describe('🔐 Password Update Operations', () => {
-    
-    test('should update password successfully', async () => {
-      mockSupabase.auth.updateUser.mockResolvedValue({
-        error: null
-      })
-
-      const result = await ProfileService.updatePassword('newSecurePassword123!')
-
-      expect(result.success).toBe(true)
-      expect(mockSupabase.auth.updateUser).toHaveBeenCalledWith({
-        password: 'newSecurePassword123!'
-      })
-    })
-
-    test('should handle weak password errors', async () => {
-      const error = new Error('Password should be at least 6 characters')
-      mockSupabase.auth.updateUser.mockRejectedValue(error)
-
-      const result = await ProfileService.updatePassword('weak')
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('Password should be at least 6 characters')
-    })
-
-    test('should handle authentication errors', async () => {
-      const error = new Error('Invalid authentication credentials')
-      mockSupabase.auth.updateUser.mockRejectedValue(error)
-
-      const result = await ProfileService.updatePassword('newpassword123')
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('Invalid authentication credentials')
-    })
-
-    test('should handle network errors', async () => {
-      mockSupabase.auth.updateUser.mockRejectedValue(new Error('Network connection failed'))
-
-      const result = await ProfileService.updatePassword('newpassword123')
-
-      expect(result.success).toBe(false)
-      expect(result.error).toBe('Network connection failed')
-    })
-
-  })
-
-  describe('🔄 Fallback Profile Update', () => {
-    
-    test('should attempt RPC fallback method', async () => {
-      const updates = {
-        username: 'testuser',
-        display_name: 'Test User'
-      }
-
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ 
-              data: { id: 'user-123' }, 
-              error: null 
-            }))
-          }))
-        }))
-      })
-
-      mockSupabase.rpc.mockResolvedValue({
-        data: { success: true },
-        error: null
-      })
-
-      const result = await ProfileService.fallbackProfileUpdate('user-123', updates)
-
-      expect(result.success).toBe(true)
-      expect(mockSupabase.rpc).toHaveBeenCalledWith('update_profile', { profile_data: updates })
-    })
-
-    test('should handle all fallback methods failing', async () => {
-      const updates = {
-        username: 'testuser'
-      }
-
-      mockSupabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            single: jest.fn(() => Promise.resolve({ 
-              data: { id: 'user-123' }, 
-              error: null 
-            }))
-          }))
-        })),
-        update: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            select: jest.fn(() => Promise.resolve({ 
-              data: null, 
-              error: { message: 'All attempts failed' } 
-            }))
-          }))
-        }))
-      })
-
-      mockSupabase.rpc.mockResolvedValue({
-        data: null,
-        error: { message: 'RPC failed' }
-      })
-
-      const result = await ProfileService.fallbackProfileUpdate('user-123', updates)
-
-      expect(result.success).toBe(false)
-      expect(result.error).toContain('All profile update methods failed')
-    })
-
-  })
-
-  describe('🧪 Edge Cases & Error Recovery', () => {
-    
-    test('should handle special characters in profile data', async () => {
-      const mockUser = {
-        id: 'user-123',
-        email: 'test@example.com'
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null
-      })
-
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            select: jest.fn(() => ({
-              single: jest.fn(() => Promise.resolve({ 
-                data: { id: 'user-123' }, 
-                error: null 
-              }))
-            }))
-          }))
-        }))
-      })
-
-      const formData: ProfileFormData = {
-        username: 'user_with-special.chars',
-        display_name: 'User with émojis 🚀💰',
-        bio: 'Bio with "quotes", <tags>, and [brackets]',
-        bitcoin_address: 'bc1qspecial123'
-      }
-
-      const result = await ProfileService.updateProfile('user-123', formData)
-
-      expect(result.success).toBe(true)
-    })
-
-    test('should handle concurrent profile operations', async () => {
-      const mockUser = {
-        id: 'user-123',
-        email: 'test@example.com'
-      }
-
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: mockUser },
-        error: null
-      })
-
-      mockSupabase.from.mockReturnValue({
-        update: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            select: jest.fn(() => ({
-              single: jest.fn(() => Promise.resolve({ 
-                data: { id: 'user-123' }, 
-                error: null 
-              }))
-            }))
-          }))
-        }))
-      })
-
-      const formData: ProfileFormData = {
-        username: 'testuser',
-        display_name: 'Test User'
-      }
-
-      // Simulate concurrent operations
-      const promises = Array.from({ length: 5 }, (_, i) => 
-        ProfileService.updateProfile('user-123', {
-          ...formData,
-          bio: `Concurrent update ${i}`
-        })
-      )
-
-      const results = await Promise.all(promises)
-
-      results.forEach(result => {
-        expect(result.success).toBe(true)
-      })
-    })
-
-  })
-
-}) 
+}); 

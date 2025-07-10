@@ -156,7 +156,7 @@ export default function DemoPage({ initiative }: DemoPageProps) {
           {
             id: 'start-collaboration',
             title: 'Start Collaboration',
-            description: 'Begin working together on Bitcoin projects',
+            description: 'Begin working together on projects and initiatives',
             action: 'Starting collaboration...',
             mockData: { project: 'Lightning UX Research', collaborators: 3 }
           }
