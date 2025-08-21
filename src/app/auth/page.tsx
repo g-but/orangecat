@@ -14,6 +14,24 @@ import { useRedirectIfAuthenticated } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { resetPassword } from '@/services/supabase/auth'
 
+// Normalize unknown error values to a user-friendly string
+function getReadableError(error: unknown, fallback: string = 'An unexpected error occurred'): string {
+  if (!error) return fallback
+  if (typeof error === 'string') return error
+  if (error instanceof Error) return error.message || fallback
+  if (typeof error === 'object') {
+    const maybe = error as Record<string, unknown>
+    const message = maybe.message ?? maybe.error
+    if (typeof message === 'string' && message.length > 0) return message
+    try {
+      return JSON.stringify(error)
+    } catch {
+      return fallback
+    }
+  }
+  return String(error)
+}
+
 export default function AuthPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -103,7 +121,7 @@ export default function AuthPage() {
 
       if (result.error) {
         // Enhanced error handling
-        let errorMessage = result.error instanceof Error ? result.error.message : String(result.error);
+        let errorMessage = getReadableError(result.error)
         
         // Provide more user-friendly error messages
         if (errorMessage.includes('Invalid login credentials')) {
@@ -129,7 +147,7 @@ export default function AuthPage() {
       }
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      const errorMessage = getReadableError(error, 'An unexpected error occurred')
       setError(errorMessage);
       setRetryCount(prev => prev + 1);
     } finally {
@@ -151,14 +169,14 @@ export default function AuthPage() {
       const result = await resetPassword({ email: formData.email })
 
       if (result.error) {
-        throw new Error(result.error.message || 'Failed to send reset email')
+        throw new Error(getReadableError(result.error, 'Failed to send reset email'))
       }
 
       setSuccess('Password reset email sent! Check your inbox and follow the instructions.')
       
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to send password reset email';
-      setError(errorMessage);
+      const errorMessage = getReadableError(error, 'Failed to send password reset email')
+      setError(errorMessage)
     } finally {
       setLocalLoading(false);
     }
