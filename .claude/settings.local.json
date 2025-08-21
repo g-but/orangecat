@@ -33,7 +33,16 @@
       "Bash(NODE_OPTIONS=\"--max-old-space-size=1024\" npm run build)",
       "Bash(kill:*)",
       "Bash(npx next lint:*)",
-      "Bash(NODE_ENV=development npx next build --no-lint)"
+      "Bash(NODE_ENV=development npx next build --no-lint)",
+      "Bash(chmod:*)",
+      "Bash(npm run:*)",
+      "Bash(printenv)",
+      "mcp__puppeteer__puppeteer_navigate",
+      "mcp__puppeteer__puppeteer_screenshot",
+      "mcp__puppeteer__puppeteer_click",
+      "mcp__puppeteer__puppeteer_evaluate",
+      "mcp__puppeteer__puppeteer_fill",
+      "Bash(timeout 10s npx supabase status)"
     ],
     "deny": []
   }
