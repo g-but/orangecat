@@ -4,20 +4,21 @@ import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database'
 import { logger } from '@/utils/logger'
 
-// Environment variables with better validation
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+// Environment variables with fallbacks for production builds
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  // In development, provide more helpful error message
+// Log warning if using fallback values
+if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
   if (process.env.NODE_ENV === 'development') {
     logger.error('Supabase configuration error', {
-      supabaseUrl: supabaseUrl ? 'Set' : 'Missing',
-      supabaseAnonKey: supabaseAnonKey ? 'Set' : 'Missing',
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
+      supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Set' : 'Missing',
       message: 'Missing required environment variables. Check .env.local file.'
     }, 'Supabase')
+  } else {
+    logger.warn('Using fallback Supabase configuration. Authentication features may not work correctly.', undefined, 'Supabase')
   }
-  throw new Error('Missing Supabase environment variables. Please check your .env.local file.')
 }
 
 // Validate URL format
