@@ -42,7 +42,19 @@
       "mcp__puppeteer__puppeteer_click",
       "mcp__puppeteer__puppeteer_evaluate",
       "mcp__puppeteer__puppeteer_fill",
-      "Bash(timeout 10s npx supabase status)"
+      "Bash(timeout 10s npx supabase status)",
+      "Bash(git rm:*)",
+      "Bash(git push:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run watch:*)",
+      "Bash(gh run view:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel domains ls:*)",
+      "Bash(vercel alias:*)",
+      "Bash(vercel env add:*)",
+      "Bash(vercel env:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
