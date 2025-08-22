@@ -26,6 +26,7 @@ import type {
   OrganizationType, 
   GovernanceModel
 } from '@/types/organization'
+import { isValidBitcoinAddress, validateUrl } from '@/utils/validation'
 
 interface CreateOrganizationModalProps {
   isOpen: boolean
@@ -91,6 +92,24 @@ export default function CreateOrganizationModal({ isOpen, onClose, onSuccess }: 
     if (!formData.type) {
       toast.error('Organization type is required')
       return
+    }
+
+    // Optional URL normalization/validation
+    if (formData.website_url && formData.website_url.trim()) {
+      const { isValid, error } = validateUrl(formData.website_url)
+      if (!isValid) {
+        toast.error(error || 'Invalid website URL')
+        return
+      }
+    }
+
+    // Optional BTC address validation for treasury
+    if (formData.treasury_address && formData.treasury_address.trim()) {
+      const { valid, error } = isValidBitcoinAddress(formData.treasury_address.trim())
+      if (!valid) {
+        toast.error(error || 'Invalid Bitcoin address')
+        return
+      }
     }
 
     setLoading(true)
@@ -344,7 +363,8 @@ export default function CreateOrganizationModal({ isOpen, onClose, onSuccess }: 
                     onChange={(e) => setFormData(prev => ({ ...prev, treasury_address: e.target.value }))}
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    Members can send contributions to this Bitcoin address
+                    Members can send contributions to this Bitcoin address. No wallet yet?{' '}
+                    <a href="/wallets" className="text-orange-600 hover:text-orange-700 underline">Get a wallet</a>.
                   </p>
                 </div>
 

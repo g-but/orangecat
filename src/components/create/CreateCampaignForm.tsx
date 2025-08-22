@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth'
 import supabase from '@/services/supabase/client'
 import { toast } from 'sonner'
 import { CampaignStorageService } from '@/services/campaigns/campaignStorageService'
+import { isValidBitcoinAddress, isValidLightningAddress, validateUrl } from '@/utils/validation'
 
 export interface CampaignFormData {
   title: string
@@ -204,6 +205,28 @@ export default function CreateCampaignForm({
         throw new Error('Please provide at least one payment address (Bitcoin or Lightning)')
       }
 
+      // Validate payment addresses if provided
+      const btc = formData.bitcoin_address.trim()
+      const ln = formData.lightning_address.trim()
+
+      if (btc) {
+        const { valid, error } = isValidBitcoinAddress(btc)
+        if (!valid) throw new Error(error || 'Invalid Bitcoin address')
+      }
+
+      if (ln) {
+        const { valid, error } = isValidLightningAddress(ln)
+        if (!valid) throw new Error(error || 'Invalid Lightning address')
+      }
+
+      // Normalize and validate website URL (optional)
+      let websiteUrl: string | null = null
+      if (formData.website_url && formData.website_url.trim()) {
+        const { isValid, normalized, error } = validateUrl(formData.website_url)
+        if (!isValid) throw new Error(error || 'Invalid website URL')
+        websiteUrl = normalized
+      }
+
       // Create the funding page in the database
       const fundingPageData = {
         user_id: user.id,
@@ -211,8 +234,14 @@ export default function CreateCampaignForm({
         description: formData.description.trim() || null,
         bitcoin_address: formData.bitcoin_address.trim() || null,
         lightning_address: formData.lightning_address.trim() || null,
-        website_url: formData.website_url.trim() || null,
-        goal_amount: formData.goal_amount ? parseFloat(formData.goal_amount) : null,
+        website_url: websiteUrl,
+        goal_amount: formData.goal_amount ? (() => {
+          const parsed = parseFloat(formData.goal_amount)
+          if (Number.isNaN(parsed) || parsed < 0) {
+            throw new Error('Goal amount must be a positive number')
+          }
+          return parsed
+        })() : null,
         category: formData.categories.length > 0 ? formData.categories[0] : null,
         tags: formData.categories.length > 1 ? formData.categories.slice(1) : [],
         banner_url: formData.banner_url || null,
