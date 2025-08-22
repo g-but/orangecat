@@ -23,24 +23,26 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Check if we have the necessary tokens from the URL
-    const accessToken = searchParams.get('access_token')
-    const refreshToken = searchParams.get('refresh_token')
-    const type = searchParams.get('type')
+    // Supabase v2 may deliver tokens via hash fragment. Merge hash into search params if present.
+    const url = typeof window !== 'undefined' ? new URL(window.location.href) : null
+    const hashParams = new URLSearchParams(url?.hash.startsWith('#') ? url.hash.substring(1) : '')
+
+    const qp = searchParams
+    const accessToken = qp.get('access_token') || hashParams.get('access_token')
+    const refreshToken = qp.get('refresh_token') || hashParams.get('refresh_token')
+    const type = qp.get('type') || hashParams.get('type')
 
     if (type === 'recovery' && accessToken && refreshToken) {
-      // Set the session using the tokens from the URL
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      }).then(({ error }) => {
-        if (error) {
-          setStep('error')
-          setError('Invalid or expired reset link. Please request a new password reset.')
-        } else {
-          setStep('reset')
-        }
-      })
+      supabase.auth
+        .setSession({ access_token: accessToken, refresh_token: refreshToken })
+        .then(({ error }) => {
+          if (error) {
+            setStep('error')
+            setError('Invalid or expired reset link. Please request a new password reset.')
+          } else {
+            setStep('reset')
+          }
+        })
     } else {
       setStep('error')
       setError('Invalid reset link. Please request a new password reset from the login page.')
