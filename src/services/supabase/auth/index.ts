@@ -225,8 +225,8 @@ export async function resetPassword({ email }: PasswordResetRequest): Promise<{ 
   try {
     logAuth('Attempting password reset', { email })
     
-    // Use orangecat.ch as the primary domain, fallback to environment variable
-    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://orangecat.ch'
+    // Use canonical www domain to avoid losing hash/query tokens on redirect
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.orangecat.ch'
     const redirectUrl = `${siteUrl}/auth/reset-password`
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
