@@ -171,7 +171,8 @@ export function Step2({ formData, handleChange, nextStep, prevStep, canProceedTo
               className="w-full font-mono text-sm"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Your Bitcoin wallet address where funds will be sent
+              Your Bitcoin wallet address where funds will be sent. No wallet yet?{' '}
+              <a href="/wallets" className="text-orange-600 hover:text-orange-700 underline">Get a wallet</a>.
             </p>
           </div>
 
@@ -191,7 +192,8 @@ export function Step2({ formData, handleChange, nextStep, prevStep, canProceedTo
               className="w-full"
             />
             <p className="mt-1 text-xs text-gray-500">
-              Lightning address for instant micropayments (optional)
+              Lightning address for instant micropayments (optional).{' '}
+              <a href="/wallets" className="text-orange-600 hover:text-orange-700 underline">Learn about wallets</a>.
             </p>
           </div>
 

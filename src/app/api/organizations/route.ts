@@ -3,6 +3,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth'
 import { createServerClient } from '@/services/supabase/server'
 import { logger } from '@/utils/logger'
 import type { OrganizationFormData, OrganizationSearchParams } from '@/types/organization'
+import { isValidBitcoinAddress, validateUrl } from '@/utils/validation'
 
 // Simple in-memory rate limiting (in production, use Redis or database)
 const rateLimit = new Map<string, { count: number; resetTime: number }>()
@@ -263,6 +264,29 @@ async function handleCreateOrganization(request: AuthenticatedRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
+  }
+
+  // Normalize/validate optional website URL
+  if (formData.website_url && formData.website_url.trim()) {
+    const { isValid, normalized, error } = validateUrl(formData.website_url)
+    if (!isValid) {
+      return NextResponse.json(
+        { error: error || 'Invalid website URL' },
+        { status: 400 }
+      )
+    }
+    formData.website_url = normalized
+  }
+
+  // Validate optional BTC treasury address
+  if (formData.treasury_address && formData.treasury_address.trim()) {
+    const { valid, error } = isValidBitcoinAddress(formData.treasury_address.trim())
+    if (!valid) {
+      return NextResponse.json(
+        { error: error || 'Invalid Bitcoin treasury address' },
+        { status: 400 }
+      )
+    }
   }
 }
 
