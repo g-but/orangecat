@@ -438,14 +438,7 @@ export default function AuthPage() {
             </div>
           </div>
 
-          {/* Development status indicator */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-6 p-3 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-xs text-green-800">
-                <strong>✅ Authentication Fixed:</strong> Environment properly configured.
-              </p>
-            </div>
-          )}
+
         </div>
       </div>
     </div>
