@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 // List of public routes that don't require auth
-const publicRoutes = ['/', '/auth', '/login', '/register', '/privacy', '/terms', '/about', '/blog']
+const publicRoutes = ['/', '/auth', '/auth/reset-password', '/auth/forgot-password', '/login', '/register', '/privacy', '/terms', '/about', '/blog']
 
 // Routes that should redirect to /auth if user is not logged in
 const protectedRoutes = ['/dashboard', '/profile', '/settings']
@@ -16,6 +16,30 @@ export async function middleware(request: NextRequest) {
 
   // Add pathname to headers so layout can access it
   response.headers.set('x-pathname', request.nextUrl.pathname)
+
+  // Handle password reset flow - redirect from root with reset tokens or error params to reset page
+  const url = new URL(request.url)
+  const hasResetTokens = url.searchParams.has('access_token') || url.searchParams.has('refresh_token') || url.hash.includes('access_token')
+  const isRecoveryType = url.searchParams.get('type') === 'recovery' || url.hash.includes('type=recovery')
+  // Supabase may redirect with only error params when the link is expired/invalid
+  const hasAuthErrors = url.searchParams.has('error') || url.searchParams.has('error_code') || url.hash.includes('error=')
+  
+  if ((hasResetTokens && isRecoveryType || hasAuthErrors) && url.pathname === '/') {
+    // Redirect to reset password page while preserving all query params and hash
+    const resetUrl = new URL('/auth/reset-password', request.url)
+    
+    // Copy all query parameters
+    url.searchParams.forEach((value, key) => {
+      resetUrl.searchParams.set(key, value)
+    })
+    
+    // Also preserve hash if present (Supabase v2 may use hash for tokens)
+    if (url.hash) {
+      resetUrl.hash = url.hash
+    }
+    
+    return NextResponse.redirect(resetUrl)
+  }
 
   try {
     // Check for authentication by looking for Supabase auth cookies
