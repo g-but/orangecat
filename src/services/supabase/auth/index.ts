@@ -136,11 +136,13 @@ export async function signUp({ email, password, emailRedirectTo }: SignUpRequest
       setTimeout(() => reject(new Error('Registration request timed out')), 25000);
     });
 
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.orangecat.ch'
+
     const authPromise = supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: emailRedirectTo || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+        emailRedirectTo: emailRedirectTo || siteUrl
       }
     });
 
@@ -226,8 +228,11 @@ export async function resetPassword({ email }: PasswordResetRequest): Promise<{ 
     logAuth('Attempting password reset', { email })
     
     // Use canonical www domain to avoid losing hash/query tokens on redirect
+    // Important: This URL MUST match exactly what's configured in Supabase Dashboard
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.orangecat.ch'
     const redirectUrl = `${siteUrl}/auth/reset-password`
+    
+    logAuth('Using redirect URL for password reset', { redirectUrl })
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: redirectUrl
@@ -238,14 +243,15 @@ export async function resetPassword({ email }: PasswordResetRequest): Promise<{ 
       return { error }
     }
 
-    logAuth('Password reset email sent', { email, redirectUrl })
+    logAuth('Password reset email sent successfully', { email, redirectUrl })
     return { error: null }
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
     logger.error('Unexpected error during password reset', {
-      error: error instanceof Error ? error.message : String(error),
+      error: errorMessage,
       email
     })
-    return { error: error as AuthError }
+    return { error: { message: errorMessage, name: 'ResetError' } as AuthError }
   }
 }
 

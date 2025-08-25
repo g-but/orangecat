@@ -24,7 +24,7 @@ export async function middleware(request: NextRequest) {
   // Supabase may redirect with only error params when the link is expired/invalid
   const hasAuthErrors = url.searchParams.has('error') || url.searchParams.has('error_code') || url.hash.includes('error=')
   
-  if ((hasResetTokens && isRecoveryType || hasAuthErrors) && url.pathname === '/') {
+  if ((hasResetTokens && isRecoveryType || hasAuthErrors) && url.pathname !== '/auth/reset-password') {
     // Redirect to reset password page while preserving all query params and hash
     const resetUrl = new URL('/auth/reset-password', request.url)
     
