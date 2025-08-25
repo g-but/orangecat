@@ -113,6 +113,12 @@ self.addEventListener('fetch', (event) => {
     return
   }
   
+  // Only handle GET requests in the service worker
+  // Avoid caching POST/PUT/PATCH/DELETE to prevent Cache API errors
+  if (request.method !== 'GET') {
+    return
+  }
+  
   // Skip requests to different origins (unless API)
   if (url.origin !== self.location.origin && !url.pathname.startsWith('/api')) {
     return
@@ -159,7 +165,7 @@ async function networkFirst(request) {
     const response = await fetch(request)
     
     // Cache successful responses
-    if (response.status === 200) {
+    if (request.method === 'GET' && response.status === 200) {
       const cache = await caches.open(CACHE_NAME)
       cache.put(request, response.clone())
     }
@@ -185,7 +191,7 @@ async function cacheFirst(request) {
   // If not in cache, fetch and cache
   try {
     const response = await fetch(request)
-    if (response.status === 200) {
+    if (request.method === 'GET' && response.status === 200) {
       const cache = await caches.open(CACHE_NAME)
       cache.put(request, response.clone())
     }
@@ -201,7 +207,7 @@ async function staleWhileRevalidate(request) {
   
   // Always try to revalidate in background
   const fetchPromise = fetch(request).then(response => {
-    if (response.status === 200) {
+    if (request.method === 'GET' && response.status === 200) {
       const cache = caches.open(CACHE_NAME)
       cache.then(c => c.put(request, response.clone()))
     }
