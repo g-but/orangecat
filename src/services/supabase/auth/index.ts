@@ -142,7 +142,8 @@ export async function signUp({ email, password, emailRedirectTo }: SignUpRequest
       email,
       password,
       options: {
-        emailRedirectTo: emailRedirectTo || siteUrl
+        // After email confirmation, Supabase will redirect here with ?code= for session exchange
+        emailRedirectTo: emailRedirectTo || `${siteUrl}/auth/callback`
       }
     });
 
