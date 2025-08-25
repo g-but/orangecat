@@ -1,7 +1,7 @@
 ---
 created_date: 2025-06-05
-last_modified_date: 2025-06-05
-last_modified_summary: Added documentation standards including creation and modification dates
+last_modified_date: 2025-08-25
+last_modified_summary: Document password reset (recovery) flow and production redirect configuration
 ---
 
 # 🔐 Authentication System Detailed Guide
@@ -74,6 +74,33 @@ This document provides a comprehensive overview of the authentication and user p
     - The store is persisted to `localStorage`.
     - On app load, the `onAuthStateChange` listener (with `INITIAL_SESSION` event) and persisted state help rehydrate the auth status quickly.
     - `hydrated` and `isLoading` flags in the store are crucial for UI to prevent flicker and show appropriate loading states.
+
+### 2.5. Password Reset (Recovery) Flow
+
+- Initiation: `resetPassword({ email })` in `src/services/supabase/auth/index.ts` calls `supabase.auth.resetPasswordForEmail(email, { redirectTo })`.
+  - `redirectTo` must be a fully-qualified URL to the reset page, e.g., `https://www.orangecat.ch/auth/reset-password`.
+  - In production, `NEXT_PUBLIC_SITE_URL` must be set to the canonical domain used in Supabase (see configuration below). The service constructs `redirectTo` as `${NEXT_PUBLIC_SITE_URL}/auth/reset-password`.
+- Email: Supabase generates `{{ .ConfirmationURL }}` which includes the tokens (often in the URL hash fragment) and sends it using our template `supabase/templates/recovery.html`.
+- Redirect handling:
+  - For valid links, Supabase should redirect directly to `/auth/reset-password` on the same domain as `redirectTo`.
+  - For expired/invalid links, Supabase may fall back to the configured `site_url` root and append error query parameters (e.g., `?error=access_denied&error_code=otp_expired`).
+  - Middleware at `src/middleware.ts` now preserves such error parameters and redirects from `/` to `/auth/reset-password`, keeping both query and any client-side hash intact (when available in the browser).
+- Reset page: `src/app/auth/reset-password/page.tsx` merges tokens from both query string and hash fragment, then calls `supabase.auth.setSession({ access_token, refresh_token })` before allowing the password update.
+
+Configuration requirements (Production):
+
+- Supabase Project Settings → Authentication → URL Configuration:
+  - Set `site_url` to the canonical domain (choose one): `https://www.orangecat.ch` or `https://orangecat.ch`.
+  - Add ALL of the following to Additional Redirect URLs (exact match required):
+    - `https://www.orangecat.ch/auth/reset-password`
+    - `https://orangecat.ch/auth/reset-password`
+    - (Optional for dev): `http://localhost:3000/auth/reset-password`
+- Vercel (or hosting) Environment Variables:
+  - Set `NEXT_PUBLIC_SITE_URL` to the SAME canonical domain used for `site_url` above (e.g., `https://www.orangecat.ch`).
+  - This ensures the `redirectTo` generated server-side matches the allow-list in Supabase exactly.
+- Notes:
+  - If `redirectTo` is not exactly on the allow-list, Supabase will reject it and fall back to `site_url` with error parameters, causing a redirect to the homepage.
+  - Browsers do not send URL hash fragments to the server. Our client page reads both query and hash; middleware can only act on query params.
 
 ## 3. State Management (`src/store/auth.ts`)
 
