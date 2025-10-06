@@ -117,21 +117,33 @@ export interface ScalableProfileFormData extends ProfileFormData {
   timezone?: string
   language?: string
   currency?: string
-  
+
   // Bitcoin-native features
   bitcoin_public_key?: string
   lightning_node_id?: string
   payment_preferences?: Record<string, any>
-  
+
   // Customization
   profile_color?: string
   cover_image_url?: string
   theme_preferences?: Record<string, any>
-  
+
   // Extensibility
   social_links?: Record<string, any>
   preferences?: Record<string, any>
   privacy_settings?: Record<string, any>
+}
+
+export interface PasswordFormData {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
+}
+
+export interface SettingsFormData extends ProfileFormData {
+  currentPassword?: string
+  newPassword?: string
+  confirmPassword?: string
 }
 
 // =====================================================================

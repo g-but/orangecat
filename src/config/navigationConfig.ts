@@ -130,6 +130,8 @@ export const navigationEvents = {
 // Navigation accessibility labels
 export const navigationLabels = {
   SIDEBAR_TOGGLE: 'Toggle navigation sidebar',
+  SIDEBAR_EXPAND: 'Expand navigation sidebar',
+  SIDEBAR_COLLAPSE: 'Collapse navigation sidebar',
   SECTION_TOGGLE: 'Toggle navigation section',
   MAIN_NAVIGATION: 'Main navigation',
   BOTTOM_NAVIGATION: 'Account navigation',
