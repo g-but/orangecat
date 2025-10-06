@@ -1,10 +1,11 @@
 'use client'
 
-import supabase from './client'
+import getSupabaseClient from './client'
 import type { Profile, ProfileFormData } from '@/types/database'
 import { logProfile, logger } from '@/utils/logger'
 
 export async function getProfiles() {
+  const supabase = getSupabaseClient()
   return supabase
     .from('profiles')
     .select('*')
@@ -19,6 +20,7 @@ export async function getProfile(userId: string): Promise<{ data: Profile | null
       return { data: null, error: 'User ID is required' };
     }
 
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -38,6 +40,7 @@ export async function getProfile(userId: string): Promise<{ data: Profile | null
     const profile: Profile = {
       id: data.id,
       username: data.username,
+      full_name: data.full_name || null,
       display_name: data.display_name, // Use actual display_name column
       bio: data.bio,
       avatar_url: data.avatar_url,
@@ -71,6 +74,7 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
     }
 
     // Get current user to ensure they can only create their own profile
+    const supabase = getSupabaseClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
@@ -120,6 +124,7 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
     const profile: Profile = {
       id: result.data.id,
       username: result.data.username,
+      full_name: result.data.full_name || null,
       display_name: result.data.display_name,
       bio: result.data.bio,
       avatar_url: result.data.avatar_url,
@@ -153,6 +158,7 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
     }
 
     // Get current user to ensure they can only update their own profile
+    const supabase = getSupabaseClient()
     const { data: { user }, error: userError } = await supabase.auth.getUser();
     
     if (userError || !user) {
@@ -206,7 +212,8 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
     logProfile('ProfileHelper: Prepared update data:', profileData);
 
     // Check if profile exists first
-    const { data: existingProfile, error: fetchError } = await supabase
+    const checkClient = getSupabaseClient()
+    const { data: existingProfile, error: fetchError } = await checkClient
       .from('profiles')
       .select('*')
       .eq('id', userId)
@@ -269,6 +276,7 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
     const profile: Profile = {
       id: result.data.id,
       username: result.data.username,
+      full_name: result.data.full_name || null,
       display_name: result.data.display_name,
       bio: result.data.bio,
       avatar_url: result.data.avatar_url,
@@ -298,6 +306,7 @@ export async function isUsernameAvailable(username: string): Promise<{ available
       return { available: false, error: 'Username is required' };
     }
 
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('profiles')
       .select('username')
@@ -325,6 +334,7 @@ export async function getProfileByUsername(username: string): Promise<{ data: Pr
       return { data: null, error: 'Username is required' };
     }
 
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -357,6 +367,7 @@ export async function searchProfiles(query: string): Promise<{ data: Profile[]; 
 
     const searchTerm = `%${query.trim()}%`;
     
+    const supabase = getSupabaseClient()
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -434,6 +445,7 @@ export async function deleteProfile(userId: string): Promise<{ error: string | n
       return { error: 'User ID is required' };
     }
 
+    const supabase = getSupabaseClient()
     const { error } = await supabase
       .from('profiles')
       .delete()

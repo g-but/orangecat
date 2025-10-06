@@ -55,7 +55,7 @@ jobs:
       - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
 
       - name: 📦 Install Dependencies
@@ -71,6 +71,13 @@ jobs:
           npm run lint || echo "⚠️ Linting issues found"
           echo "✅ Code quality check complete"
 
+      - name: ✅ Type Check (tsc)
+        if: ${{ !github.event.inputs.skip_tests }}
+        run: |
+          echo "🔎 Running TypeScript type-check..."
+          npm run type-check
+          echo "✅ Type-check passed"
+
       - name: 🔍 TypeScript Check
         if: ${{ !github.event.inputs.skip_tests }}
         run: |
@@ -78,11 +85,11 @@ jobs:
           npm run build || (echo "❌ TypeScript build failed" && exit 1)
           echo "✅ TypeScript check passed"
 
-      - name: 🧪 Run Tests
+      - name: 🧪 Run Tests (blocking)
         if: ${{ !github.event.inputs.skip_tests }}
         run: |
-          echo "🧪 Running test suite..."
-          npm test -- --passWithNoTests || echo "⚠️ Some tests failed"
+          echo "🧪 Running test suite (CI + coverage)..."
+          npm run test:ci
           echo "✅ Test suite complete"
 
       - name: 🏗️ Build Application
@@ -115,13 +122,15 @@ jobs:
 
       - name: 🔍 Health Check
         id: health_check
+        # Only run health check on production deployments (preview deployments have auth protection)
+        if: github.event.inputs.environment == 'production' || github.ref_name == 'main'
         run: |
-          echo "🔍 Performing health check..."
-          HEALTH_URL="${{ steps.deploy.outputs.deployment_url }}/api/health"
-          
+          echo "🔍 Performing health check on production..."
+          HEALTH_URL="https://orangecat.ch/api/health"
+
           # Wait for deployment to be ready
           sleep 30
-          
+
           for i in {1..10}; do
             echo "Attempt $i: Checking $HEALTH_URL"
             if curl -f -s "$HEALTH_URL" > /dev/null; then
@@ -132,7 +141,7 @@ jobs:
               echo "⚠️ Health check failed, retrying in 10s..."
               sleep 10
             fi
-            
+
             if [ $i -eq 10 ]; then
               echo "❌ Health check failed after 10 attempts"
               echo "health_status=unhealthy" >> $GITHUB_OUTPUT
