@@ -30,8 +30,8 @@ env:
   VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
-  jobs:
-    deploy:
+jobs:
+  deploy:
     name: 🚀 Deploy to ${{ github.event.inputs.environment || 'production' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
