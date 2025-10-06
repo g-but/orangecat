@@ -19,12 +19,19 @@ export async function middleware(request: NextRequest) {
 
   // Handle password reset flow - redirect from root with reset tokens or error params to reset page
   const url = new URL(request.url)
+  
+  // Handle Supabase code exchange links (?code=...) by redirecting to /auth/callback
+  if (url.searchParams.has('code') && url.pathname === '/') {
+    const callbackUrl = new URL('/auth/callback', request.url)
+    url.searchParams.forEach((value, key) => callbackUrl.searchParams.set(key, value))
+    return NextResponse.redirect(callbackUrl)
+  }
   const hasResetTokens = url.searchParams.has('access_token') || url.searchParams.has('refresh_token') || url.hash.includes('access_token')
   const isRecoveryType = url.searchParams.get('type') === 'recovery' || url.hash.includes('type=recovery')
   // Supabase may redirect with only error params when the link is expired/invalid
   const hasAuthErrors = url.searchParams.has('error') || url.searchParams.has('error_code') || url.hash.includes('error=')
   
-  if ((hasResetTokens && isRecoveryType || hasAuthErrors) && url.pathname === '/') {
+  if ((hasResetTokens && isRecoveryType || hasAuthErrors) && url.pathname !== '/auth/reset-password') {
     // Redirect to reset password page while preserving all query params and hash
     const resetUrl = new URL('/auth/reset-password', request.url)
     
