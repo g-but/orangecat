@@ -1,0 +1,242 @@
+45781bed057495325cb68e464c8464ef
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_jc2bmw59c() {
+  var path = "/home/g/dev/orangecat/src/components/pages/UniquePropositionSection.tsx";
+  var hash = "64d50dbdc2440d6934a4c950257a959dbf66fa5e";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/components/pages/UniquePropositionSection.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 43
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 22
+        },
+        end: {
+          line: 5,
+          column: 50
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 23
+        },
+        end: {
+          line: 6,
+          column: 46
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 15
+        },
+        end: {
+          line: 7,
+          column: 46
+        }
+      },
+      "5": {
+        start: {
+          line: 9,
+          column: 4
+        },
+        end: {
+          line: 9,
+          column: 2631
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "UniquePropositionSection",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 33
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 153
+          },
+          end: {
+            line: 10,
+            column: 1
+          }
+        },
+        line: 8
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/components/pages/UniquePropositionSection.tsx",
+      mappings: "AAAA,YAAY,CAAA;;;AAgBZ,2CA6DC;;AA3ED,+CAA2D;AAC3D,+CAAgG;AAahG,SAAwB,wBAAwB,CAAC,EAC/C,KAAK,EACL,QAAQ,EACR,YAAY,EACZ,kBAAkB,EAClB,OAAO,EACP,aAAa,EACb,eAAe,EACf,qBAAqB,EACS;IAC9B,OAAO,CACL,wBAAC,WAAI,IAAC,SAAS,EAAC,qEAAqE,aACnF,wBAAC,iBAAU,IAAC,SAAS,EAAC,aAAa,aACjC,uBAAC,gBAAS,IAAC,SAAS,EAAC,uCAAuC,YAAE,KAAK,GAAa,EAChF,uBAAC,sBAAe,IAAC,SAAS,EAAC,uBAAuB,YAC/C,QAAQ,GACO,IACP,EACb,wBAAC,kBAAW,eACV,iCAAK,SAAS,EAAC,uCAAuC,aACpD,iCAAK,SAAS,EAAC,aAAa,aAC1B,gCAAK,SAAS,EAAC,gDAAgD,YAC7D,uBAAC,oBAAK,IAAC,SAAS,EAAC,yBAAyB,GAAG,GACzC,EACN,+BAAI,SAAS,EAAC,0CAA0C,YAAE,YAAY,GAAM,EAC5E,8BAAG,SAAS,EAAC,+BAA+B,YACzC,kBAAkB,GACjB,IACA,EAEN,iCAAK,SAAS,EAAC,aAAa,aAC1B,gCAAK,SAAS,EAAC,8CAA8C,YAC3D,uBAAC,oBAAK,IAAC,SAAS,EAAC,uBAAuB,GAAG,GACvC,EACN,+BAAI,SAAS,EAAC,0CAA0C,YAAE,OAAO,GAAM,EACvE,8BAAG,SAAS,EAAC,+BAA+B,YACzC,aAAa,GACZ,IACA,EAEN,iCAAK,SAAS,EAAC,aAAa,aAC1B,gCAAK,SAAS,EAAC,+CAA+C,YAC5D,uBAAC,mBAAI,IAAC,SAAS,EAAC,wBAAwB,GAAG,GACvC,EACN,+BAAI,SAAS,EAAC,0CAA0C,YAAE,eAAe,GAAM,EAC/E,8BAAG,SAAS,EAAC,+BAA+B,YACzC,qBAAqB,GACpB,IACA,IACF,EAEN,gCAAK,SAAS,EAAC,kBAAkB,YAC/B,iCAAK,SAAS,EAAC,qGAAqG,aAClH,uBAAC,uBAAQ,IAAC,SAAS,EAAC,yBAAyB,GAAG,EAChD,iCAAM,SAAS,EAAC,6BAA6B,kEAA+C,EAC5F,uBAAC,uBAAQ,IAAC,SAAS,EAAC,wBAAwB,GAAG,IAC3C,GACF,IACM,IACT,CACR,CAAA;AACH,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/components/pages/UniquePropositionSection.tsx"],
+      sourcesContent: ["'use client'\n\nimport { Sparkles, Coins, Brain, Code } from 'lucide-react'\nimport { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'\n\ninterface UniquePropositionSectionProps {\n  title: string\n  subtitle: string\n  bitcoinTitle: string\n  bitcoinDescription: string\n  aiTitle: string\n  aiDescription: string\n  openSourceTitle: string\n  openSourceDescription: string\n}\n\nexport default function UniquePropositionSection({\n  title,\n  subtitle,\n  bitcoinTitle,\n  bitcoinDescription,\n  aiTitle,\n  aiDescription,\n  openSourceTitle,\n  openSourceDescription\n}: UniquePropositionSectionProps) {\n  return (\n    <Card className=\"border-0 bg-gradient-to-br from-orange-50 via-yellow-50 to-green-50\">\n      <CardHeader className=\"text-center\">\n        <CardTitle className=\"text-3xl font-bold text-gray-900 mb-2\">{title}</CardTitle>\n        <CardDescription className=\"text-lg text-gray-700\">\n          {subtitle}\n        </CardDescription>\n      </CardHeader>\n      <CardContent>\n        <div className=\"grid grid-cols-1 md:grid-cols-3 gap-8\">\n          <div className=\"text-center\">\n            <div className=\"inline-flex p-4 bg-orange-100 rounded-2xl mb-4\">\n              <Coins className=\"w-8 h-8 text-orange-600\" />\n            </div>\n            <h3 className=\"text-xl font-semibold text-gray-900 mb-3\">{bitcoinTitle}</h3>\n            <p className=\"text-gray-600 leading-relaxed\">\n              {bitcoinDescription}\n            </p>\n          </div>\n          \n          <div className=\"text-center\">\n            <div className=\"inline-flex p-4 bg-blue-100 rounded-2xl mb-4\">\n              <Brain className=\"w-8 h-8 text-blue-600\" />\n            </div>\n            <h3 className=\"text-xl font-semibold text-gray-900 mb-3\">{aiTitle}</h3>\n            <p className=\"text-gray-600 leading-relaxed\">\n              {aiDescription}\n            </p>\n          </div>\n          \n          <div className=\"text-center\">\n            <div className=\"inline-flex p-4 bg-green-100 rounded-2xl mb-4\">\n              <Code className=\"w-8 h-8 text-green-600\" />\n            </div>\n            <h3 className=\"text-xl font-semibold text-gray-900 mb-3\">{openSourceTitle}</h3>\n            <p className=\"text-gray-600 leading-relaxed\">\n              {openSourceDescription}\n            </p>\n          </div>\n        </div>\n        \n        <div className=\"mt-8 text-center\">\n          <div className=\"inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-green-100 px-6 py-3 rounded-full\">\n            <Sparkles className=\"w-5 h-5 text-orange-600\" />\n            <span className=\"font-semibold text-gray-900\">Bitcoin \xD7 AI \xD7 Open Source = The Future</span>\n            <Sparkles className=\"w-5 h-5 text-green-600\" />\n          </div>\n        </div>\n      </CardContent>\n    </Card>\n  )\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "64d50dbdc2440d6934a4c950257a959dbf66fa5e"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_jc2bmw59c = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_jc2bmw59c();
+cov_jc2bmw59c().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_jc2bmw59c().s[1]++;
+exports.default = UniquePropositionSection;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_jc2bmw59c().s[2]++, require("react/jsx-runtime"));
+const lucide_react_1 =
+/* istanbul ignore next */
+(cov_jc2bmw59c().s[3]++, require("lucide-react"));
+const Card_1 =
+/* istanbul ignore next */
+(cov_jc2bmw59c().s[4]++, require("@/components/ui/Card"));
+function UniquePropositionSection({
+  title,
+  subtitle,
+  bitcoinTitle,
+  bitcoinDescription,
+  aiTitle,
+  aiDescription,
+  openSourceTitle,
+  openSourceDescription
+}) {
+  /* istanbul ignore next */
+  cov_jc2bmw59c().f[0]++;
+  cov_jc2bmw59c().s[5]++;
+  return (0, jsx_runtime_1.jsxs)(Card_1.Card, {
+    className: "border-0 bg-gradient-to-br from-orange-50 via-yellow-50 to-green-50",
+    children: [(0, jsx_runtime_1.jsxs)(Card_1.CardHeader, {
+      className: "text-center",
+      children: [(0, jsx_runtime_1.jsx)(Card_1.CardTitle, {
+        className: "text-3xl font-bold text-gray-900 mb-2",
+        children: title
+      }), (0, jsx_runtime_1.jsx)(Card_1.CardDescription, {
+        className: "text-lg text-gray-700",
+        children: subtitle
+      })]
+    }), (0, jsx_runtime_1.jsxs)(Card_1.CardContent, {
+      children: [(0, jsx_runtime_1.jsxs)("div", {
+        className: "grid grid-cols-1 md:grid-cols-3 gap-8",
+        children: [(0, jsx_runtime_1.jsxs)("div", {
+          className: "text-center",
+          children: [(0, jsx_runtime_1.jsx)("div", {
+            className: "inline-flex p-4 bg-orange-100 rounded-2xl mb-4",
+            children: (0, jsx_runtime_1.jsx)(lucide_react_1.Coins, {
+              className: "w-8 h-8 text-orange-600"
+            })
+          }), (0, jsx_runtime_1.jsx)("h3", {
+            className: "text-xl font-semibold text-gray-900 mb-3",
+            children: bitcoinTitle
+          }), (0, jsx_runtime_1.jsx)("p", {
+            className: "text-gray-600 leading-relaxed",
+            children: bitcoinDescription
+          })]
+        }), (0, jsx_runtime_1.jsxs)("div", {
+          className: "text-center",
+          children: [(0, jsx_runtime_1.jsx)("div", {
+            className: "inline-flex p-4 bg-blue-100 rounded-2xl mb-4",
+            children: (0, jsx_runtime_1.jsx)(lucide_react_1.Brain, {
+              className: "w-8 h-8 text-blue-600"
+            })
+          }), (0, jsx_runtime_1.jsx)("h3", {
+            className: "text-xl font-semibold text-gray-900 mb-3",
+            children: aiTitle
+          }), (0, jsx_runtime_1.jsx)("p", {
+            className: "text-gray-600 leading-relaxed",
+            children: aiDescription
+          })]
+        }), (0, jsx_runtime_1.jsxs)("div", {
+          className: "text-center",
+          children: [(0, jsx_runtime_1.jsx)("div", {
+            className: "inline-flex p-4 bg-green-100 rounded-2xl mb-4",
+            children: (0, jsx_runtime_1.jsx)(lucide_react_1.Code, {
+              className: "w-8 h-8 text-green-600"
+            })
+          }), (0, jsx_runtime_1.jsx)("h3", {
+            className: "text-xl font-semibold text-gray-900 mb-3",
+            children: openSourceTitle
+          }), (0, jsx_runtime_1.jsx)("p", {
+            className: "text-gray-600 leading-relaxed",
+            children: openSourceDescription
+          })]
+        })]
+      }), (0, jsx_runtime_1.jsx)("div", {
+        className: "mt-8 text-center",
+        children: (0, jsx_runtime_1.jsxs)("div", {
+          className: "inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-green-100 px-6 py-3 rounded-full",
+          children: [(0, jsx_runtime_1.jsx)(lucide_react_1.Sparkles, {
+            className: "w-5 h-5 text-orange-600"
+          }), (0, jsx_runtime_1.jsx)("span", {
+            className: "font-semibold text-gray-900",
+            children: "Bitcoin \u00D7 AI \u00D7 Open Source = The Future"
+          }), (0, jsx_runtime_1.jsx)(lucide_react_1.Sparkles, {
+            className: "w-5 h-5 text-green-600"
+          })]
+        })
+      })]
+    })]
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJleHBvcnRzIiwiZGVmYXVsdCIsIlVuaXF1ZVByb3Bvc2l0aW9uU2VjdGlvbiIsImx1Y2lkZV9yZWFjdF8xIiwiY292X2pjMmJtdzU5YyIsInMiLCJyZXF1aXJlIiwiQ2FyZF8xIiwidGl0bGUiLCJzdWJ0aXRsZSIsImJpdGNvaW5UaXRsZSIsImJpdGNvaW5EZXNjcmlwdGlvbiIsImFpVGl0bGUiLCJhaURlc2NyaXB0aW9uIiwib3BlblNvdXJjZVRpdGxlIiwib3BlblNvdXJjZURlc2NyaXB0aW9uIiwiZiIsImpzeF9ydW50aW1lXzEiLCJqc3hzIiwiQ2FyZCIsImNsYXNzTmFtZSIsImNoaWxkcmVuIiwiQ2FyZEhlYWRlciIsImpzeCIsIkNhcmRUaXRsZSIsIkNhcmREZXNjcmlwdGlvbiIsIkNhcmRDb250ZW50IiwiQ29pbnMiLCJCcmFpbiIsIkNvZGUiLCJTcGFya2xlcyJdLCJzb3VyY2VzIjpbIi9ob21lL2cvZGV2L29yYW5nZWNhdC9zcmMvY29tcG9uZW50cy9wYWdlcy9VbmlxdWVQcm9wb3NpdGlvblNlY3Rpb24udHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50J1xuXG5pbXBvcnQgeyBTcGFya2xlcywgQ29pbnMsIEJyYWluLCBDb2RlIH0gZnJvbSAnbHVjaWRlLXJlYWN0J1xuaW1wb3J0IHsgQ2FyZCwgQ2FyZENvbnRlbnQsIENhcmREZXNjcmlwdGlvbiwgQ2FyZEhlYWRlciwgQ2FyZFRpdGxlIH0gZnJvbSAnQC9jb21wb25lbnRzL3VpL0NhcmQnXG5cbmludGVyZmFjZSBVbmlxdWVQcm9wb3NpdGlvblNlY3Rpb25Qcm9wcyB7XG4gIHRpdGxlOiBzdHJpbmdcbiAgc3VidGl0bGU6IHN0cmluZ1xuICBiaXRjb2luVGl0bGU6IHN0cmluZ1xuICBiaXRjb2luRGVzY3JpcHRpb246IHN0cmluZ1xuICBhaVRpdGxlOiBzdHJpbmdcbiAgYWlEZXNjcmlwdGlvbjogc3RyaW5nXG4gIG9wZW5Tb3VyY2VUaXRsZTogc3RyaW5nXG4gIG9wZW5Tb3VyY2VEZXNjcmlwdGlvbjogc3RyaW5nXG59XG5cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIFVuaXF1ZVByb3Bvc2l0aW9uU2VjdGlvbih7XG4gIHRpdGxlLFxuICBzdWJ0aXRsZSxcbiAgYml0Y29pblRpdGxlLFxuICBiaXRjb2luRGVzY3JpcHRpb24sXG4gIGFpVGl0bGUsXG4gIGFpRGVzY3JpcHRpb24sXG4gIG9wZW5Tb3VyY2VUaXRsZSxcbiAgb3BlblNvdXJjZURlc2NyaXB0aW9uXG59OiBVbmlxdWVQcm9wb3NpdGlvblNlY3Rpb25Qcm9wcykge1xuICByZXR1cm4gKFxuICAgIDxDYXJkIGNsYXNzTmFtZT1cImJvcmRlci0wIGJnLWdyYWRpZW50LXRvLWJyIGZyb20tb3JhbmdlLTUwIHZpYS15ZWxsb3ctNTAgdG8tZ3JlZW4tNTBcIj5cbiAgICAgIDxDYXJkSGVhZGVyIGNsYXNzTmFtZT1cInRleHQtY2VudGVyXCI+XG4gICAgICAgIDxDYXJkVGl0bGUgY2xhc3NOYW1lPVwidGV4dC0zeGwgZm9udC1ib2xkIHRleHQtZ3JheS05MDAgbWItMlwiPnt0aXRsZX08L0NhcmRUaXRsZT5cbiAgICAgICAgPENhcmREZXNjcmlwdGlvbiBjbGFzc05hbWU9XCJ0ZXh0LWxnIHRleHQtZ3JheS03MDBcIj5cbiAgICAgICAgICB7c3VidGl0bGV9XG4gICAgICAgIDwvQ2FyZERlc2NyaXB0aW9uPlxuICAgICAgPC9DYXJkSGVhZGVyPlxuICAgICAgPENhcmRDb250ZW50PlxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTEgbWQ6Z3JpZC1jb2xzLTMgZ2FwLThcIj5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtY2VudGVyXCI+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImlubGluZS1mbGV4IHAtNCBiZy1vcmFuZ2UtMTAwIHJvdW5kZWQtMnhsIG1iLTRcIj5cbiAgICAgICAgICAgICAgPENvaW5zIGNsYXNzTmFtZT1cInctOCBoLTggdGV4dC1vcmFuZ2UtNjAwXCIgLz5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQteGwgZm9udC1zZW1pYm9sZCB0ZXh0LWdyYXktOTAwIG1iLTNcIj57Yml0Y29pblRpdGxlfTwvaDM+XG4gICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LWdyYXktNjAwIGxlYWRpbmctcmVsYXhlZFwiPlxuICAgICAgICAgICAgICB7Yml0Y29pbkRlc2NyaXB0aW9ufVxuICAgICAgICAgICAgPC9wPlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIFxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXJcIj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaW5saW5lLWZsZXggcC00IGJnLWJsdWUtMTAwIHJvdW5kZWQtMnhsIG1iLTRcIj5cbiAgICAgICAgICAgICAgPEJyYWluIGNsYXNzTmFtZT1cInctOCBoLTggdGV4dC1ibHVlLTYwMFwiIC8+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJ0ZXh0LXhsIGZvbnQtc2VtaWJvbGQgdGV4dC1ncmF5LTkwMCBtYi0zXCI+e2FpVGl0bGV9PC9oMz5cbiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtZ3JheS02MDAgbGVhZGluZy1yZWxheGVkXCI+XG4gICAgICAgICAgICAgIHthaURlc2NyaXB0aW9ufVxuICAgICAgICAgICAgPC9wPlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIFxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXJcIj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaW5saW5lLWZsZXggcC00IGJnLWdyZWVuLTEwMCByb3VuZGVkLTJ4bCBtYi00XCI+XG4gICAgICAgICAgICAgIDxDb2RlIGNsYXNzTmFtZT1cInctOCBoLTggdGV4dC1ncmVlbi02MDBcIiAvPlxuICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC14bCBmb250LXNlbWlib2xkIHRleHQtZ3JheS05MDAgbWItM1wiPntvcGVuU291cmNlVGl0bGV9PC9oMz5cbiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtZ3JheS02MDAgbGVhZGluZy1yZWxheGVkXCI+XG4gICAgICAgICAgICAgIHtvcGVuU291cmNlRGVzY3JpcHRpb259XG4gICAgICAgICAgICA8L3A+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuICAgICAgICBcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtdC04IHRleHQtY2VudGVyXCI+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgYmctZ3JhZGllbnQtdG8tciBmcm9tLW9yYW5nZS0xMDAgdG8tZ3JlZW4tMTAwIHB4LTYgcHktMyByb3VuZGVkLWZ1bGxcIj5cbiAgICAgICAgICAgIDxTcGFya2xlcyBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtb3JhbmdlLTYwMFwiIC8+XG4gICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtZ3JheS05MDBcIj5CaXRjb2luIMOXIEFJIMOXIE9wZW4gU291cmNlID0gVGhlIEZ1dHVyZTwvc3Bhbj5cbiAgICAgICAgICAgIDxTcGFya2xlcyBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtZ3JlZW4tNjAwXCIgLz5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgPC9kaXY+XG4gICAgICA8L0NhcmRDb250ZW50PlxuICAgIDwvQ2FyZD5cbiAgKVxufSAiXSwibWFwcGluZ3MiOiJBQUFBLFlBQVk7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7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

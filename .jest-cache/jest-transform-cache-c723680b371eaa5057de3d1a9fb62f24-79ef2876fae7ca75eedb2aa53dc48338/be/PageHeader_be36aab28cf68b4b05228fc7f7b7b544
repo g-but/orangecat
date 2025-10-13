@@ -1,0 +1,206 @@
+261756eefe6d419d2f6ec7b8ec5161f2
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_29zpwag5ry() {
+  var path = "/home/g/dev/orangecat/src/components/pages/PageHeader.tsx";
+  var hash = "80a05091f6151d96e231e9a9fac86e2b4c6d4f8b";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/components/pages/PageHeader.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 29
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 22
+        },
+        end: {
+          line: 5,
+          column: 50
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 23
+        },
+        end: {
+          line: 6,
+          column: 46
+        }
+      },
+      "4": {
+        start: {
+          line: 8,
+          column: 4
+        },
+        end: {
+          line: 8,
+          column: 905
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "PageHeader",
+        decl: {
+          start: {
+            line: 7,
+            column: 9
+          },
+          end: {
+            line: 7,
+            column: 19
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 96
+          },
+          end: {
+            line: 9,
+            column: 1
+          }
+        },
+        line: 7
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 7,
+            column: 66
+          },
+          end: {
+            line: 7,
+            column: 92
+          }
+        },
+        type: "default-arg",
+        locations: [{
+          start: {
+            line: 7,
+            column: 83
+          },
+          end: {
+            line: 7,
+            column: 92
+          }
+        }],
+        line: 7
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {
+      "0": [0]
+    },
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/components/pages/PageHeader.tsx",
+      mappings: "AAAA,YAAY,CAAA;;;AAYZ,6BA6BC;;AAvCD,+CAAgD;AAUhD,SAAwB,UAAU,CAAC,EACjC,IAAI,EAAE,IAAI,EACV,UAAU,EACV,KAAK,EACL,WAAW,EACX,cAAc,GAAG,SAAS,EACV;IAChB,OAAO,CACL,iCAAK,SAAS,EAAC,uBAAuB,aACpC,gCAAK,SAAS,EAAC,qBAAqB,YAClC,gCAAK,SAAS,EAAE,OAAO,UAAU,cAAc,YAC7C,uBAAC,IAAI,IAAC,SAAS,EAAC,WAAW,GAAG,GAC1B,GACF,EACN,4CACE,+BAAI,SAAS,EAAC,mDAAmD,YAC9D,KAAK,GACH,EACL,8BAAG,SAAS,EAAC,yDAAyD,YACnE,WAAW,GACV,IACA,EAEN,iCAAK,SAAS,EAAC,+HAA+H,aAC5I,uBAAC,oBAAK,IAAC,SAAS,EAAC,SAAS,GAAG,oBACd,cAAc,IACzB,IACF,CACP,CAAA;AACH,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/components/pages/PageHeader.tsx"],
+      sourcesContent: ["'use client'\n\nimport { Clock, LucideIcon } from 'lucide-react'\n\ninterface PageHeaderProps {\n  icon: LucideIcon\n  iconColors: string\n  title: string\n  description: string\n  comingSoonDate?: string\n}\n\nexport default function PageHeader({ \n  icon: Icon, \n  iconColors, \n  title, \n  description, \n  comingSoonDate = \"Q1 2025\" \n}: PageHeaderProps) {\n  return (\n    <div className=\"text-center space-y-6\">\n      <div className=\"flex justify-center\">\n        <div className={`p-4 ${iconColors} rounded-2xl`}>\n          <Icon className=\"w-12 h-12\" />\n        </div>\n      </div>\n      <div>\n        <h1 className=\"text-4xl md:text-5xl font-bold text-gray-900 mb-4\">\n          {title}\n        </h1>\n        <p className=\"text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed\">\n          {description}\n        </p>\n      </div>\n      \n      <div className=\"flex items-center justify-center gap-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-medium w-fit mx-auto\">\n        <Clock className=\"w-4 h-4\" />\n        Coming Soon - {comingSoonDate}\n      </div>\n    </div>\n  )\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "80a05091f6151d96e231e9a9fac86e2b4c6d4f8b"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_29zpwag5ry = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_29zpwag5ry();
+cov_29zpwag5ry().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_29zpwag5ry().s[1]++;
+exports.default = PageHeader;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_29zpwag5ry().s[2]++, require("react/jsx-runtime"));
+const lucide_react_1 =
+/* istanbul ignore next */
+(cov_29zpwag5ry().s[3]++, require("lucide-react"));
+function PageHeader({
+  icon: Icon,
+  iconColors,
+  title,
+  description,
+  comingSoonDate =
+  /* istanbul ignore next */
+  (cov_29zpwag5ry().b[0][0]++, "Q1 2025")
+}) {
+  /* istanbul ignore next */
+  cov_29zpwag5ry().f[0]++;
+  cov_29zpwag5ry().s[4]++;
+  return (0, jsx_runtime_1.jsxs)("div", {
+    className: "text-center space-y-6",
+    children: [(0, jsx_runtime_1.jsx)("div", {
+      className: "flex justify-center",
+      children: (0, jsx_runtime_1.jsx)("div", {
+        className: `p-4 ${iconColors} rounded-2xl`,
+        children: (0, jsx_runtime_1.jsx)(Icon, {
+          className: "w-12 h-12"
+        })
+      })
+    }), (0, jsx_runtime_1.jsxs)("div", {
+      children: [(0, jsx_runtime_1.jsx)("h1", {
+        className: "text-4xl md:text-5xl font-bold text-gray-900 mb-4",
+        children: title
+      }), (0, jsx_runtime_1.jsx)("p", {
+        className: "text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed",
+        children: description
+      })]
+    }), (0, jsx_runtime_1.jsxs)("div", {
+      className: "flex items-center justify-center gap-2 bg-orange-100 text-orange-700 px-4 py-2 rounded-full text-sm font-medium w-fit mx-auto",
+      children: [(0, jsx_runtime_1.jsx)(lucide_react_1.Clock, {
+        className: "w-4 h-4"
+      }), "Coming Soon - ", comingSoonDate]
+    })]
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJleHBvcnRzIiwiZGVmYXVsdCIsIlBhZ2VIZWFkZXIiLCJsdWNpZGVfcmVhY3RfMSIsImNvdl8yOXpwd2FnNXJ5IiwicyIsInJlcXVpcmUiLCJpY29uIiwiSWNvbiIsImljb25Db2xvcnMiLCJ0aXRsZSIsImRlc2NyaXB0aW9uIiwiY29taW5nU29vbkRhdGUiLCJiIiwiZiIsImpzeF9ydW50aW1lXzEiLCJqc3hzIiwiY2xhc3NOYW1lIiwiY2hpbGRyZW4iLCJqc3giLCJDbG9jayJdLCJzb3VyY2VzIjpbIi9ob21lL2cvZGV2L29yYW5nZWNhdC9zcmMvY29tcG9uZW50cy9wYWdlcy9QYWdlSGVhZGVyLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIndXNlIGNsaWVudCdcblxuaW1wb3J0IHsgQ2xvY2ssIEx1Y2lkZUljb24gfSBmcm9tICdsdWNpZGUtcmVhY3QnXG5cbmludGVyZmFjZSBQYWdlSGVhZGVyUHJvcHMge1xuICBpY29uOiBMdWNpZGVJY29uXG4gIGljb25Db2xvcnM6IHN0cmluZ1xuICB0aXRsZTogc3RyaW5nXG4gIGRlc2NyaXB0aW9uOiBzdHJpbmdcbiAgY29taW5nU29vbkRhdGU/OiBzdHJpbmdcbn1cblxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gUGFnZUhlYWRlcih7IFxuICBpY29uOiBJY29uLCBcbiAgaWNvbkNvbG9ycywgXG4gIHRpdGxlLCBcbiAgZGVzY3JpcHRpb24sIFxuICBjb21pbmdTb29uRGF0ZSA9IFwiUTEgMjAyNVwiIFxufTogUGFnZUhlYWRlclByb3BzKSB7XG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlciBzcGFjZS15LTZcIj5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWNlbnRlclwiPlxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT17YHAtNCAke2ljb25Db2xvcnN9IHJvdW5kZWQtMnhsYH0+XG4gICAgICAgICAgPEljb24gY2xhc3NOYW1lPVwidy0xMiBoLTEyXCIgLz5cbiAgICAgICAgPC9kaXY+XG4gICAgICA8L2Rpdj5cbiAgICAgIDxkaXY+XG4gICAgICAgIDxoMSBjbGFzc05hbWU9XCJ0ZXh0LTR4bCBtZDp0ZXh0LTV4bCBmb250LWJvbGQgdGV4dC1ncmF5LTkwMCBtYi00XCI+XG4gICAgICAgICAge3RpdGxlfVxuICAgICAgICA8L2gxPlxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhsIHRleHQtZ3JheS02MDAgbWF4LXctM3hsIG14LWF1dG8gbGVhZGluZy1yZWxheGVkXCI+XG4gICAgICAgICAge2Rlc2NyaXB0aW9ufVxuICAgICAgICA8L3A+XG4gICAgICA8L2Rpdj5cbiAgICAgIFxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBnYXAtMiBiZy1vcmFuZ2UtMTAwIHRleHQtb3JhbmdlLTcwMCBweC00IHB5LTIgcm91bmRlZC1mdWxsIHRleHQtc20gZm9udC1tZWRpdW0gdy1maXQgbXgtYXV0b1wiPlxuICAgICAgICA8Q2xvY2sgY2xhc3NOYW1lPVwidy00IGgtNFwiIC8+XG4gICAgICAgIENvbWluZyBTb29uIC0ge2NvbWluZ1Nvb25EYXRlfVxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gIClcbn0gIl0sIm1hcHBpbmdzIjoiQUFBQSxZQUFZOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFZWkEsT0FBQSxDQUFBQyxPQUFBLEdBQUFDLFVBQUE7Ozs7QUFWQSxNQUFBQyxjQUFBO0FBQUE7QUFBQSxDQUFBQyxjQUFBLEdBQUFDLENBQUEsT0FBQUMsT0FBQTtBQVVBLFNBQXdCSixVQUFVQSxDQUFDO0VBQ2pDSyxJQUFJLEVBQUVDLElBQUk7RUFDVkMsVUFBVTtFQUNWQyxLQUFLO0VBQ0xDLFdBQVc7RUFDWEMsY0FBYztFQUFBO0VBQUEsQ0FBQVIsY0FBQSxHQUFBUyxDQUFBLFVBQUcsU0FBUztBQUFBLENBQ1Y7RUFBQTtFQUFBVCxjQUFBLEdBQUFVLENBQUE7RUFBQVYsY0FBQSxHQUFBQyxDQUFBO0VBQ2hCLE9BQ0UsSUFBQVUsYUFBQSxDQUFBQyxJQUFBO0lBQUtDLFNBQVMsRUFBQyx1QkFBdUI7SUFBQUMsUUFBQSxHQUNwQyxJQUFBSCxhQUFBLENBQUFJLEdBQUE7TUFBS0YsU0FBUyxFQUFDLHFCQUFxQjtNQUFBQyxRQUFBLEVBQ2xDLElBQUFILGFBQUEsQ0FBQUksR0FBQTtRQUFLRixTQUFTLEVBQUUsT0FBT1IsVUFBVSxjQUFjO1FBQUFTLFFBQUEsRUFDN0MsSUFBQUgsYUFBQSxDQUFBSSxHQUFBLEVBQUNYLElBQUk7VUFBQ1MsU0FBUyxFQUFDO1FBQVc7TUFBRztJQUMxQixFQUNGLEVBQ04sSUFBQUYsYUFBQSxDQUFBQyxJQUFBO01BQUFFLFFBQUEsR0FDRSxJQUFBSCxhQUFBLENBQUFJLEdBQUE7UUFBSUYsU0FBUyxFQUFDLG1EQUFtRDtRQUFBQyxRQUFBLEVBQzlEUjtNQUFLLEVBQ0gsRUFDTCxJQUFBSyxhQUFBLENBQUFJLEdBQUE7UUFBR0YsU0FBUyxFQUFDLHlEQUF5RDtRQUFBQyxRQUFBLEVBQ25FUDtNQUFXLEVBQ1Y7SUFBQSxFQUNBLEVBRU4sSUFBQUksYUFBQSxDQUFBQyxJQUFBO01BQUtDLFNBQVMsRUFBQywrSEFBK0g7TUFBQUMsUUFBQSxHQUM1SSxJQUFBSCxhQUFBLENBQUFJLEdBQUEsRUFBQ2hCLGNBQUEsQ0FBQWlCLEtBQUs7UUFBQ0gsU0FBUyxFQUFDO01BQVMsRUFBRyxvQkFDZEwsY0FBYztJQUFBLEVBQ3pCO0VBQUEsRUFDRjtBQUVWIiwiaWdub3JlTGlzdCI6W119

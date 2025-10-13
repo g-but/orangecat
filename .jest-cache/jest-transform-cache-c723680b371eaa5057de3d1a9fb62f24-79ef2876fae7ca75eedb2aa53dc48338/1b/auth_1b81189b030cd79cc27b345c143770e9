@@ -1,0 +1,60 @@
+a7ebf98cd6c0583a58a3bc1b721f8c59
+"use strict";
+
+/* istanbul ignore next */
+function cov_xz3a3qx2p() {
+  var path = "/home/g/dev/orangecat/src/types/auth.ts";
+  var hash = "53ebb85d306188a4c97865f8243167a1f1b5dc9d";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/types/auth.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/types/auth.ts",
+      mappings: "",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/types/auth.ts"],
+      sourcesContent: ["import type { Profile } from '@/types/database';\n\nexport type UserRole = 'user' | 'admin' | 'moderator'\n\nexport interface AuthUser {\n  id: string\n  email: string\n  username?: string\n  role?: string\n  profile?: Profile\n}\n\nexport interface AuthState {\n  user: AuthUser | null\n  session: any | null\n  isLoading: boolean\n  error: string | null\n}\n\nexport interface AuthContextType extends AuthState {\n  signIn: (email: string, password: string) => Promise<void>\n  signUp: (email: string, password: string, username: string) => Promise<void>\n  signOut: () => Promise<void>\n  updateProfile: (data: Partial<Profile>) => Promise<void>\n  isAdmin: boolean\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "53ebb85d306188a4c97865f8243167a1f1b5dc9d"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_xz3a3qx2p = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_xz3a3qx2p();
+cov_xz3a3qx2p().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL2hvbWUvZy9kZXYvb3JhbmdlY2F0L3NyYy90eXBlcy9hdXRoLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB0eXBlIHsgUHJvZmlsZSB9IGZyb20gJ0AvdHlwZXMvZGF0YWJhc2UnO1xuXG5leHBvcnQgdHlwZSBVc2VyUm9sZSA9ICd1c2VyJyB8ICdhZG1pbicgfCAnbW9kZXJhdG9yJ1xuXG5leHBvcnQgaW50ZXJmYWNlIEF1dGhVc2VyIHtcbiAgaWQ6IHN0cmluZ1xuICBlbWFpbDogc3RyaW5nXG4gIHVzZXJuYW1lPzogc3RyaW5nXG4gIHJvbGU/OiBzdHJpbmdcbiAgcHJvZmlsZT86IFByb2ZpbGVcbn1cblxuZXhwb3J0IGludGVyZmFjZSBBdXRoU3RhdGUge1xuICB1c2VyOiBBdXRoVXNlciB8IG51bGxcbiAgc2Vzc2lvbjogYW55IHwgbnVsbFxuICBpc0xvYWRpbmc6IGJvb2xlYW5cbiAgZXJyb3I6IHN0cmluZyB8IG51bGxcbn1cblxuZXhwb3J0IGludGVyZmFjZSBBdXRoQ29udGV4dFR5cGUgZXh0ZW5kcyBBdXRoU3RhdGUge1xuICBzaWduSW46IChlbWFpbDogc3RyaW5nLCBwYXNzd29yZDogc3RyaW5nKSA9PiBQcm9taXNlPHZvaWQ+XG4gIHNpZ25VcDogKGVtYWlsOiBzdHJpbmcsIHBhc3N3b3JkOiBzdHJpbmcsIHVzZXJuYW1lOiBzdHJpbmcpID0+IFByb21pc2U8dm9pZD5cbiAgc2lnbk91dDogKCkgPT4gUHJvbWlzZTx2b2lkPlxuICB1cGRhdGVQcm9maWxlOiAoZGF0YTogUGFydGlhbDxQcm9maWxlPikgPT4gUHJvbWlzZTx2b2lkPlxuICBpc0FkbWluOiBib29sZWFuXG59ICJdLCJtYXBwaW5ncyI6IiIsImlnbm9yZUxpc3QiOltdfQ==

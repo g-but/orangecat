@@ -141,7 +141,6 @@ export default function CreateOrganizationModal({ isOpen, onClose, onSuccess }: 
       router.push(`/organizations/${data.data.slug}`)
       
     } catch (error: any) {
-      console.error('Error creating organization:', error)
       toast.error(error.message || 'Failed to create organization')
     } finally {
       setLoading(false)

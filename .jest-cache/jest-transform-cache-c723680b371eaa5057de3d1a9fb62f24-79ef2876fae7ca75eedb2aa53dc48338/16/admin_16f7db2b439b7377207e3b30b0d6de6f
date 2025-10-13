@@ -1,0 +1,306 @@
+a761ec0833b259b034a484c8911511de
+"use strict";
+
+/* istanbul ignore next */
+function cov_2px2w8czg4() {
+  var path = "/home/g/dev/orangecat/src/services/supabase/admin.ts";
+  var hash = "e8451e3f175dd3d529d94713597589830666b9f2";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/services/supabase/admin.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 22
+        },
+        end: {
+          line: 3,
+          column: 54
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 21
+        },
+        end: {
+          line: 4,
+          column: 57
+        }
+      },
+      "3": {
+        start: {
+          line: 5,
+          column: 34
+        },
+        end: {
+          line: 5,
+          column: 71
+        }
+      },
+      "4": {
+        start: {
+          line: 13,
+          column: 4
+        },
+        end: {
+          line: 17,
+          column: 7
+        }
+      },
+      "5": {
+        start: {
+          line: 15,
+          column: 12
+        },
+        end: {
+          line: 15,
+          column: 214
+        }
+      },
+      "6": {
+        start: {
+          line: 19,
+          column: 22
+        },
+        end: {
+          line: 26,
+          column: 25
+        }
+      },
+      "7": {
+        start: {
+          line: 27,
+          column: 0
+        },
+        end: {
+          line: 27,
+          column: 32
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "createDummyClient",
+        decl: {
+          start: {
+            line: 12,
+            column: 9
+          },
+          end: {
+            line: 12,
+            column: 26
+          }
+        },
+        loc: {
+          start: {
+            line: 12,
+            column: 29
+          },
+          end: {
+            line: 18,
+            column: 1
+          }
+        },
+        line: 12
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 14,
+            column: 8
+          },
+          end: {
+            line: 14,
+            column: 9
+          }
+        },
+        loc: {
+          start: {
+            line: 14,
+            column: 14
+          },
+          end: {
+            line: 16,
+            column: 9
+          }
+        },
+        line: 14
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 19,
+            column: 22
+          },
+          end: {
+            line: 26,
+            column: 25
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 20,
+            column: 6
+          },
+          end: {
+            line: 25,
+            column: 6
+          }
+        }, {
+          start: {
+            line: 26,
+            column: 6
+          },
+          end: {
+            line: 26,
+            column: 25
+          }
+        }],
+        line: 19
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 19,
+            column: 23
+          },
+          end: {
+            line: 19,
+            column: 64
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 19,
+            column: 23
+          },
+          end: {
+            line: 19,
+            column: 35
+          }
+        }, {
+          start: {
+            line: 19,
+            column: 39
+          },
+          end: {
+            line: 19,
+            column: 64
+          }
+        }],
+        line: 19
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {
+      "0": [0, 0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/services/supabase/admin.ts",
+      mappings: ";;AAAA,uDAAoD;AAEpD,MAAM,YAAY,GAAG,OAAO,CAAC,GAAG,CAAC,wBAAwB,CAAA;AACzD,MAAM,yBAAyB,GAAG,OAAO,CAAC,GAAG,CAAC,yBAAyB,CAAA;AAEvE,6EAA6E;AAC7E,4EAA4E;AAC5E,+EAA+E;AAC/E,2EAA2E;AAC3E,0EAA0E;AAC1E,cAAc;AAEd,SAAS,iBAAiB;IACxB,OAAO,IAAI,KAAK,CAAC,EAAE,EAAE;QACnB,GAAG;YACD,MAAM,IAAI,KAAK,CAAC,wLAAwL,CAAC,CAAA;QAC3M,CAAC;KACF,CAA+C,CAAA;AAClD,CAAC;AAED,MAAM,aAAa,GAAG,CAAC,YAAY,IAAI,yBAAyB,CAAC;IAC/D,CAAC,CAAC,IAAA,0BAAY,EAAC,YAAY,EAAE,yBAAyB,EAAE;QACpD,IAAI,EAAE;YACJ,gBAAgB,EAAE,KAAK;YACvB,cAAc,EAAE,KAAK;SACtB;KACF,CAAC;IACJ,CAAC,CAAC,iBAAiB,EAAE,CAAA;AAEvB,kBAAe,aAAa,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/services/supabase/admin.ts"],
+      sourcesContent: ["import { createClient } from '@supabase/supabase-js'\n\nconst SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL\nconst SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY\n\n// During static builds (e.g., Vercel build step) the service-role key may be\n// intentionally absent for security.  To prevent the build from crashing we\n// fall back to a dummy client that will throw **at runtime** if it is actually\n// used without the required credentials.  This keeps the build green while\n// still ensuring we do not accidentally operate without proper secrets in\n// production.\n\nfunction createDummyClient() {\n  return new Proxy({}, {\n    get() {\n      throw new Error('Supabase Admin client requested, but required environment variables are missing (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY). Configure these in your deployment environment.')\n    },\n  }) as unknown as ReturnType<typeof createClient>\n}\n\nconst supabaseAdmin = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)\n  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {\n      auth: {\n        autoRefreshToken: false,\n        persistSession: false,\n      },\n    })\n  : createDummyClient()\n\nexport default supabaseAdmin; "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "e8451e3f175dd3d529d94713597589830666b9f2"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2px2w8czg4 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2px2w8czg4();
+cov_2px2w8czg4().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+const supabase_js_1 =
+/* istanbul ignore next */
+(cov_2px2w8czg4().s[1]++, require("@supabase/supabase-js"));
+const SUPABASE_URL =
+/* istanbul ignore next */
+(cov_2px2w8czg4().s[2]++, process.env.NEXT_PUBLIC_SUPABASE_URL);
+const SUPABASE_SERVICE_ROLE_KEY =
+/* istanbul ignore next */
+(cov_2px2w8czg4().s[3]++, process.env.SUPABASE_SERVICE_ROLE_KEY);
+// During static builds (e.g., Vercel build step) the service-role key may be
+// intentionally absent for security.  To prevent the build from crashing we
+// fall back to a dummy client that will throw **at runtime** if it is actually
+// used without the required credentials.  This keeps the build green while
+// still ensuring we do not accidentally operate without proper secrets in
+// production.
+function createDummyClient() {
+  /* istanbul ignore next */
+  cov_2px2w8czg4().f[0]++;
+  cov_2px2w8czg4().s[4]++;
+  return new Proxy({}, {
+    get() {
+      /* istanbul ignore next */
+      cov_2px2w8czg4().f[1]++;
+      cov_2px2w8czg4().s[5]++;
+      throw new Error('Supabase Admin client requested, but required environment variables are missing (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY). Configure these in your deployment environment.');
+    }
+  });
+}
+const supabaseAdmin =
+/* istanbul ignore next */
+(cov_2px2w8czg4().s[6]++,
+/* istanbul ignore next */
+(cov_2px2w8czg4().b[1][0]++, SUPABASE_URL) &&
+/* istanbul ignore next */
+(cov_2px2w8czg4().b[1][1]++, SUPABASE_SERVICE_ROLE_KEY) ?
+/* istanbul ignore next */
+(cov_2px2w8czg4().b[0][0]++, (0, supabase_js_1.createClient)(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})) :
+/* istanbul ignore next */
+(cov_2px2w8czg4().b[0][1]++, createDummyClient()));
+/* istanbul ignore next */
+cov_2px2w8czg4().s[7]++;
+exports.default = supabaseAdmin;
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMnB4Mnc4Y3pnNCIsImFjdHVhbENvdmVyYWdlIiwicyIsInN1cGFiYXNlX2pzXzEiLCJyZXF1aXJlIiwiU1VQQUJBU0VfVVJMIiwicHJvY2VzcyIsImVudiIsIk5FWFRfUFVCTElDX1NVUEFCQVNFX1VSTCIsIlNVUEFCQVNFX1NFUlZJQ0VfUk9MRV9LRVkiLCJjcmVhdGVEdW1teUNsaWVudCIsImYiLCJQcm94eSIsImdldCIsIkVycm9yIiwic3VwYWJhc2VBZG1pbiIsImIiLCJjcmVhdGVDbGllbnQiLCJhdXRoIiwiYXV0b1JlZnJlc2hUb2tlbiIsInBlcnNpc3RTZXNzaW9uIiwiZXhwb3J0cyIsImRlZmF1bHQiXSwic291cmNlcyI6WyIvaG9tZS9nL2Rldi9vcmFuZ2VjYXQvc3JjL3NlcnZpY2VzL3N1cGFiYXNlL2FkbWluLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IGNyZWF0ZUNsaWVudCB9IGZyb20gJ0BzdXBhYmFzZS9zdXBhYmFzZS1qcydcblxuY29uc3QgU1VQQUJBU0VfVVJMID0gcHJvY2Vzcy5lbnYuTkVYVF9QVUJMSUNfU1VQQUJBU0VfVVJMXG5jb25zdCBTVVBBQkFTRV9TRVJWSUNFX1JPTEVfS0VZID0gcHJvY2Vzcy5lbnYuU1VQQUJBU0VfU0VSVklDRV9ST0xFX0tFWVxuXG4vLyBEdXJpbmcgc3RhdGljIGJ1aWxkcyAoZS5nLiwgVmVyY2VsIGJ1aWxkIHN0ZXApIHRoZSBzZXJ2aWNlLXJvbGUga2V5IG1heSBiZVxuLy8gaW50ZW50aW9uYWxseSBhYnNlbnQgZm9yIHNlY3VyaXR5LiAgVG8gcHJldmVudCB0aGUgYnVpbGQgZnJvbSBjcmFzaGluZyB3ZVxuLy8gZmFsbCBiYWNrIHRvIGEgZHVtbXkgY2xpZW50IHRoYXQgd2lsbCB0aHJvdyAqKmF0IHJ1bnRpbWUqKiBpZiBpdCBpcyBhY3R1YWxseVxuLy8gdXNlZCB3aXRob3V0IHRoZSByZXF1aXJlZCBjcmVkZW50aWFscy4gIFRoaXMga2VlcHMgdGhlIGJ1aWxkIGdyZWVuIHdoaWxlXG4vLyBzdGlsbCBlbnN1cmluZyB3ZSBkbyBub3QgYWNjaWRlbnRhbGx5IG9wZXJhdGUgd2l0aG91dCBwcm9wZXIgc2VjcmV0cyBpblxuLy8gcHJvZHVjdGlvbi5cblxuZnVuY3Rpb24gY3JlYXRlRHVtbXlDbGllbnQoKSB7XG4gIHJldHVybiBuZXcgUHJveHkoe30sIHtcbiAgICBnZXQoKSB7XG4gICAgICB0aHJvdyBuZXcgRXJyb3IoJ1N1cGFiYXNlIEFkbWluIGNsaWVudCByZXF1ZXN0ZWQsIGJ1dCByZXF1aXJlZCBlbnZpcm9ubWVudCB2YXJpYWJsZXMgYXJlIG1pc3NpbmcgKE5FWFRfUFVCTElDX1NVUEFCQVNFX1VSTCwgU1VQQUJBU0VfU0VSVklDRV9ST0xFX0tFWSkuIENvbmZpZ3VyZSB0aGVzZSBpbiB5b3VyIGRlcGxveW1lbnQgZW52aXJvbm1lbnQuJylcbiAgICB9LFxuICB9KSBhcyB1bmtub3duIGFzIFJldHVyblR5cGU8dHlwZW9mIGNyZWF0ZUNsaWVudD5cbn1cblxuY29uc3Qgc3VwYWJhc2VBZG1pbiA9IChTVVBBQkFTRV9VUkwgJiYgU1VQQUJBU0VfU0VSVklDRV9ST0xFX0tFWSlcbiAgPyBjcmVhdGVDbGllbnQoU1VQQUJBU0VfVVJMLCBTVVBBQkFTRV9TRVJWSUNFX1JPTEVfS0VZLCB7XG4gICAgICBhdXRoOiB7XG4gICAgICAgIGF1dG9SZWZyZXNoVG9rZW46IGZhbHNlLFxuICAgICAgICBwZXJzaXN0U2Vzc2lvbjogZmFsc2UsXG4gICAgICB9LFxuICAgIH0pXG4gIDogY3JlYXRlRHVtbXlDbGllbnQoKVxuXG5leHBvcnQgZGVmYXVsdCBzdXBhYmFzZUFkbWluOyAiXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0lBZ0JLO0lBQUFBLGNBQUEsWUFBQUEsQ0FBQTtNQUFBLE9BQUFDLGNBQUE7SUFBQTtFQUFBO0VBQUEsT0FBQUEsY0FBQTtBQUFBO0FBQUFELGNBQUE7QUFBQUEsY0FBQSxHQUFBRSxDQUFBOzs7O0FBaEJMLE1BQUFDLGFBQUE7QUFBQTtBQUFBLENBQUFILGNBQUEsR0FBQUUsQ0FBQSxPQUFBRSxPQUFBO0FBRUEsTUFBTUMsWUFBWTtBQUFBO0FBQUEsQ0FBQUwsY0FBQSxHQUFBRSxDQUFBLE9BQUdJLE9BQU8sQ0FBQ0MsR0FBRyxDQUFDQyx3QkFBd0I7QUFDekQsTUFBTUMseUJBQXlCO0FBQUE7QUFBQSxDQUFBVCxjQUFBLEdBQUFFLENBQUEsT0FBR0ksT0FBTyxDQUFDQyxHQUFHLENBQUNFLHlCQUF5QjtBQUV2RTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFFQSxTQUFTQyxpQkFBaUJBLENBQUE7RUFBQTtFQUFBVixjQUFBLEdBQUFXLENBQUE7RUFBQVgsY0FBQSxHQUFBRSxDQUFBO0VBQ3hCLE9BQU8sSUFBSVUsS0FBSyxDQUFDLEVBQUUsRUFBRTtJQUNuQkMsR0FBR0EsQ0FBQTtNQUFBO01BQUFiLGNBQUEsR0FBQVcsQ0FBQTtNQUFBWCxjQUFBLEdBQUFFLENBQUE7TUFDRCxNQUFNLElBQUlZLEtBQUssQ0FBQyx3TEFBd0wsQ0FBQztJQUMzTTtHQUNELENBQStDO0FBQ2xEO0FBRUEsTUFBTUMsYUFBYTtBQUFBO0FBQUEsQ0FBQWYsY0FBQSxHQUFBRSxDQUFBO0FBQUk7QUFBQSxDQUFBRixjQUFBLEdBQUFnQixDQUFBLFVBQUFYLFlBQVk7QUFBQTtBQUFBLENBQUFMLGNBQUEsR0FBQWdCLENBQUEsVUFBSVAseUJBQXlCO0FBQUE7QUFBQSxDQUFBVCxjQUFBLEdBQUFnQixDQUFBLFVBQzVELElBQUFiLGFBQUEsQ0FBQWMsWUFBWSxFQUFDWixZQUFZLEVBQUVJLHlCQUF5QixFQUFFO0VBQ3BEUyxJQUFJLEVBQUU7SUFDSkMsZ0JBQWdCLEVBQUUsS0FBSztJQUN2QkMsY0FBYyxFQUFFOztDQUVuQixDQUFDO0FBQUE7QUFBQSxDQUFBcEIsY0FBQSxHQUFBZ0IsQ0FBQSxVQUNGTixpQkFBaUIsRUFBRTtBQUFBO0FBQUFWLGNBQUEsR0FBQUUsQ0FBQTtBQUV2Qm1CLE9BQUEsQ0FBQUMsT0FBQSxHQUFlUCxhQUFhIiwiaWdub3JlTGlzdCI6W119

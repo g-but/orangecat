@@ -380,8 +380,8 @@ export const ProfileQueries = {
       async () => {
         return await supabase
           .from('profiles')
-          .select('id, username, full_name, avatar_url')
-          .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
+          .select('id, username, display_name, avatar_url')
+          .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
           .limit(20)
       },
       { ttl: 2 * 60 * 1000 } // 2 minutes
@@ -403,7 +403,7 @@ export const FundingQueries = {
             *,
             profiles!funding_pages_creator_id_fkey (
               username,
-              full_name,
+              display_name,
               avatar_url
             )
           `)

@@ -110,7 +110,7 @@ export class ProfileReader {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .or(`username.ilike.%${searchTerm}%,full_name.ilike.%${searchTerm}%`)
+        .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 

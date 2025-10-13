@@ -1,0 +1,188 @@
+80f779eccaa86571c3376b6180e8fd80
+"use strict";
+
+/* istanbul ignore next */
+function cov_1n5seur51r() {
+  var path = "/home/g/dev/orangecat/src/components/ui/EmptyState.tsx";
+  var hash = "161bca52356d9d7f2ebb88a68b9838c8d0faf004";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/components/ui/EmptyState.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 36
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 29
+        }
+      },
+      "3": {
+        start: {
+          line: 5,
+          column: 22
+        },
+        end: {
+          line: 5,
+          column: 50
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 4
+        },
+        end: {
+          line: 7,
+          column: 855
+        }
+      },
+      "5": {
+        start: {
+          line: 10,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 40
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "EmptyState",
+        decl: {
+          start: {
+            line: 6,
+            column: 9
+          },
+          end: {
+            line: 6,
+            column: 19
+          }
+        },
+        loc: {
+          start: {
+            line: 6,
+            column: 52
+          },
+          end: {
+            line: 8,
+            column: 1
+          }
+        },
+        line: 6
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/components/ui/EmptyState.tsx",
+      mappings: ";;;AAMA,6BAaC;;AAbD,SAAwB,UAAU,CAAC,EAAE,KAAK,EAAE,WAAW,EAAE,MAAM,EAAmB;IAChF,OAAO,CACL,iCAAK,SAAS,EAAC,6DAA6D,aAC1E,gCAAK,SAAS,EAAC,0EAA0E,YACvF,gCAAK,SAAS,EAAC,uBAAuB,EAAC,IAAI,EAAC,MAAM,EAAC,MAAM,EAAC,cAAc,EAAC,OAAO,EAAC,WAAW,YAC1F,iCAAM,aAAa,EAAC,OAAO,EAAC,cAAc,EAAC,OAAO,EAAC,WAAW,EAAE,CAAC,EAAE,CAAC,EAAC,kIAAkI,GAAG,GACtM,GACF,EACN,+BAAI,SAAS,EAAC,0CAA0C,YAAE,KAAK,GAAM,EACrE,8BAAG,SAAS,EAAC,6BAA6B,YAAE,WAAW,GAAK,EAC3D,MAAM,IACH,CACP,CAAA;AACH,CAAC;AAED,iCAAiC;AACpB,QAAA,kBAAkB,GAAG,UAAU,CAAA",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/components/ui/EmptyState.tsx"],
+      sourcesContent: ["interface EmptyStateProps {\n  title: string\n  description: string\n  action?: React.ReactNode\n}\n\nexport default function EmptyState({ title, description, action }: EmptyStateProps) {\n  return (\n    <div className=\"flex flex-col items-center justify-center py-12 text-center\">\n      <div className=\"w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4\">\n        <svg className=\"w-6 h-6 text-gray-400\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n          <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v4.01\" />\n        </svg>\n      </div>\n      <h3 className=\"text-lg font-semibold text-gray-900 mb-2\">{title}</h3>\n      <p className=\"text-gray-600 mb-6 max-w-md\">{description}</p>\n      {action}\n    </div>\n  )\n}\n\n// Named export for projects page\nexport const ProjectsEmptyState = EmptyState"],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "161bca52356d9d7f2ebb88a68b9838c8d0faf004"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1n5seur51r = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1n5seur51r();
+cov_1n5seur51r().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1n5seur51r().s[1]++;
+exports.ProjectsEmptyState = void 0;
+/* istanbul ignore next */
+cov_1n5seur51r().s[2]++;
+exports.default = EmptyState;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_1n5seur51r().s[3]++, require("react/jsx-runtime"));
+function EmptyState({
+  title,
+  description,
+  action
+}) {
+  /* istanbul ignore next */
+  cov_1n5seur51r().f[0]++;
+  cov_1n5seur51r().s[4]++;
+  return (0, jsx_runtime_1.jsxs)("div", {
+    className: "flex flex-col items-center justify-center py-12 text-center",
+    children: [(0, jsx_runtime_1.jsx)("div", {
+      className: "w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-4",
+      children: (0, jsx_runtime_1.jsx)("svg", {
+        className: "w-6 h-6 text-gray-400",
+        fill: "none",
+        stroke: "currentColor",
+        viewBox: "0 0 24 24",
+        children: (0, jsx_runtime_1.jsx)("path", {
+          strokeLinecap: "round",
+          strokeLinejoin: "round",
+          strokeWidth: 2,
+          d: "M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2m0 0V9a2 2 0 012-2h2a2 2 0 012 2v4.01"
+        })
+      })
+    }), (0, jsx_runtime_1.jsx)("h3", {
+      className: "text-lg font-semibold text-gray-900 mb-2",
+      children: title
+    }), (0, jsx_runtime_1.jsx)("p", {
+      className: "text-gray-600 mb-6 max-w-md",
+      children: description
+    }), action]
+  });
+}
+// Named export for projects page
+/* istanbul ignore next */
+cov_1n5seur51r().s[5]++;
+exports.ProjectsEmptyState = EmptyState;
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJleHBvcnRzIiwiZGVmYXVsdCIsIkVtcHR5U3RhdGUiLCJ0aXRsZSIsImRlc2NyaXB0aW9uIiwiYWN0aW9uIiwiY292XzFuNXNldXI1MXIiLCJmIiwicyIsImpzeF9ydW50aW1lXzEiLCJqc3hzIiwiY2xhc3NOYW1lIiwiY2hpbGRyZW4iLCJqc3giLCJmaWxsIiwic3Ryb2tlIiwidmlld0JveCIsInN0cm9rZUxpbmVjYXAiLCJzdHJva2VMaW5lam9pbiIsInN0cm9rZVdpZHRoIiwiZCIsIlByb2plY3RzRW1wdHlTdGF0ZSJdLCJzb3VyY2VzIjpbIi9ob21lL2cvZGV2L29yYW5nZWNhdC9zcmMvY29tcG9uZW50cy91aS9FbXB0eVN0YXRlLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbnRlcmZhY2UgRW1wdHlTdGF0ZVByb3BzIHtcbiAgdGl0bGU6IHN0cmluZ1xuICBkZXNjcmlwdGlvbjogc3RyaW5nXG4gIGFjdGlvbj86IFJlYWN0LlJlYWN0Tm9kZVxufVxuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBFbXB0eVN0YXRlKHsgdGl0bGUsIGRlc2NyaXB0aW9uLCBhY3Rpb24gfTogRW1wdHlTdGF0ZVByb3BzKSB7XG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBweS0xMiB0ZXh0LWNlbnRlclwiPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LTEyIGgtMTIgYmctZ3JheS0xMDAgcm91bmRlZC1mdWxsIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIG1iLTRcIj5cbiAgICAgICAgPHN2ZyBjbGFzc05hbWU9XCJ3LTYgaC02IHRleHQtZ3JheS00MDBcIiBmaWxsPVwibm9uZVwiIHN0cm9rZT1cImN1cnJlbnRDb2xvclwiIHZpZXdCb3g9XCIwIDAgMjQgMjRcIj5cbiAgICAgICAgICA8cGF0aCBzdHJva2VMaW5lY2FwPVwicm91bmRcIiBzdHJva2VMaW5lam9pbj1cInJvdW5kXCIgc3Ryb2tlV2lkdGg9ezJ9IGQ9XCJNMjAgMTNWNmEyIDIgMCAwMC0yLTJINmEyIDIgMCAwMC0yIDJ2N20xNiAwdjVhMiAyIDAgMDEtMiAySDZhMiAyIDAgMDEtMiAydi01bTE2IDBoLTJNNCAxM2gybTAgMFY5YTIgMiAwIDAxMi0yaDJhMiAyIDAgMDEyIDJ2NC4wMVwiIC8+XG4gICAgICAgIDwvc3ZnPlxuICAgICAgPC9kaXY+XG4gICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1sZyBmb250LXNlbWlib2xkIHRleHQtZ3JheS05MDAgbWItMlwiPnt0aXRsZX08L2gzPlxuICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1ncmF5LTYwMCBtYi02IG1heC13LW1kXCI+e2Rlc2NyaXB0aW9ufTwvcD5cbiAgICAgIHthY3Rpb259XG4gICAgPC9kaXY+XG4gIClcbn1cblxuLy8gTmFtZWQgZXhwb3J0IGZvciBwcm9qZWN0cyBwYWdlXG5leHBvcnQgY29uc3QgUHJvamVjdHNFbXB0eVN0YXRlID0gRW1wdHlTdGF0ZSJdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQU1BQSxPQUFBLENBQUFDLE9BQUEsR0FBQUMsVUFBQTs7OztBQUFBLFNBQXdCQSxVQUFVQSxDQUFDO0VBQUVDLEtBQUs7RUFBRUMsV0FBVztFQUFFQztBQUFNLENBQW1CO0VBQUE7RUFBQUMsY0FBQSxHQUFBQyxDQUFBO0VBQUFELGNBQUEsR0FBQUUsQ0FBQTtFQUNoRixPQUNFLElBQUFDLGFBQUEsQ0FBQUMsSUFBQTtJQUFLQyxTQUFTLEVBQUMsNkRBQTZEO0lBQUFDLFFBQUEsR0FDMUUsSUFBQUgsYUFBQSxDQUFBSSxHQUFBO01BQUtGLFNBQVMsRUFBQywwRUFBMEU7TUFBQUMsUUFBQSxFQUN2RixJQUFBSCxhQUFBLENBQUFJLEdBQUE7UUFBS0YsU0FBUyxFQUFDLHVCQUF1QjtRQUFDRyxJQUFJLEVBQUMsTUFBTTtRQUFDQyxNQUFNLEVBQUMsY0FBYztRQUFDQyxPQUFPLEVBQUMsV0FBVztRQUFBSixRQUFBLEVBQzFGLElBQUFILGFBQUEsQ0FBQUksR0FBQTtVQUFNSSxhQUFhLEVBQUMsT0FBTztVQUFDQyxjQUFjLEVBQUMsT0FBTztVQUFDQyxXQUFXLEVBQUUsQ0FBQztVQUFFQyxDQUFDLEVBQUM7UUFBa0k7TUFBRztJQUN0TSxFQUNGLEVBQ04sSUFBQVgsYUFBQSxDQUFBSSxHQUFBO01BQUlGLFNBQVMsRUFBQywwQ0FBMEM7TUFBQUMsUUFBQSxFQUFFVDtJQUFLLEVBQU0sRUFDckUsSUFBQU0sYUFBQSxDQUFBSSxHQUFBO01BQUdGLFNBQVMsRUFBQyw2QkFBNkI7TUFBQUMsUUFBQSxFQUFFUjtJQUFXLEVBQUssRUFDM0RDLE1BQU07RUFBQSxFQUNIO0FBRVY7QUFFQTtBQUFBO0FBQUFDLGNBQUEsR0FBQUUsQ0FBQTtBQUNhUixPQUFBLENBQUFxQixrQkFBa0IsR0FBR25CLFVBQVUiLCJpZ25vcmVMaXN0IjpbXX0=

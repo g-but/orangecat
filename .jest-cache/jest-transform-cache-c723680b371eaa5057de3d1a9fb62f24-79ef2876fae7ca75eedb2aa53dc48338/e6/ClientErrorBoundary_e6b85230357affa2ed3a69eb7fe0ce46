@@ -1,0 +1,334 @@
+febfbce5dc500748c4ef389f596104bb
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_1vkh4midz5() {
+  var path = "/home/g/dev/orangecat/src/components/ClientErrorBoundary.tsx";
+  var hash = "816b8866b226d022439b118db01de9bc9bc722a9";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/components/ClientErrorBoundary.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 22
+        },
+        end: {
+          line: 5,
+          column: 1
+        }
+      },
+      "1": {
+        start: {
+          line: 4,
+          column: 4
+        },
+        end: {
+          line: 4,
+          column: 62
+        }
+      },
+      "2": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 62
+        }
+      },
+      "3": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 38
+        }
+      },
+      "4": {
+        start: {
+          line: 8,
+          column: 22
+        },
+        end: {
+          line: 8,
+          column: 50
+        }
+      },
+      "5": {
+        start: {
+          line: 9,
+          column: 24
+        },
+        end: {
+          line: 9,
+          column: 67
+        }
+      },
+      "6": {
+        start: {
+          line: 11,
+          column: 4
+        },
+        end: {
+          line: 11,
+          column: 83
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 3,
+            column: 56
+          },
+          end: {
+            line: 3,
+            column: 57
+          }
+        },
+        loc: {
+          start: {
+            line: 3,
+            column: 71
+          },
+          end: {
+            line: 5,
+            column: 1
+          }
+        },
+        line: 3
+      },
+      "1": {
+        name: "ClientErrorBoundary",
+        decl: {
+          start: {
+            line: 10,
+            column: 9
+          },
+          end: {
+            line: 10,
+            column: 28
+          }
+        },
+        loc: {
+          start: {
+            line: 10,
+            column: 44
+          },
+          end: {
+            line: 12,
+            column: 1
+          }
+        },
+        line: 10
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 3,
+            column: 22
+          },
+          end: {
+            line: 5,
+            column: 1
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 23
+          },
+          end: {
+            line: 3,
+            column: 27
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 31
+          },
+          end: {
+            line: 3,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 56
+          },
+          end: {
+            line: 5,
+            column: 1
+          }
+        }],
+        line: 3
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 4,
+            column: 11
+          },
+          end: {
+            line: 4,
+            column: 61
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 4,
+            column: 37
+          },
+          end: {
+            line: 4,
+            column: 40
+          }
+        }, {
+          start: {
+            line: 4,
+            column: 43
+          },
+          end: {
+            line: 4,
+            column: 61
+          }
+        }],
+        line: 4
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 4,
+            column: 12
+          },
+          end: {
+            line: 4,
+            column: 33
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 4,
+            column: 12
+          },
+          end: {
+            line: 4,
+            column: 15
+          }
+        }, {
+          start: {
+            line: 4,
+            column: 19
+          },
+          end: {
+            line: 4,
+            column: 33
+          }
+        }],
+        line: 4
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {
+      "0": [0, 0, 0],
+      "1": [0, 0],
+      "2": [0, 0]
+    },
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/components/ClientErrorBoundary.tsx",
+      mappings: "AAAA,YAAY,CAAA;;;;;;AAIZ,sCAMC;;AARD,oEAA2C;AAE3C,SAAwB,mBAAmB,CAAC,EAC1C,QAAQ,GAGT;IACC,OAAO,uBAAC,uBAAa,cAAE,QAAQ,GAAiB,CAAA;AAClD,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/components/ClientErrorBoundary.tsx"],
+      sourcesContent: ["'use client'\n\nimport ErrorBoundary from './ErrorBoundary'\n\nexport default function ClientErrorBoundary({\n  children,\n}: {\n  children: React.ReactNode\n}) {\n  return <ErrorBoundary>{children}</ErrorBoundary>\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "816b8866b226d022439b118db01de9bc9bc722a9"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1vkh4midz5 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1vkh4midz5();
+var __importDefault =
+/* istanbul ignore next */
+(cov_1vkh4midz5().s[0]++,
+/* istanbul ignore next */
+(cov_1vkh4midz5().b[0][0]++, this) &&
+/* istanbul ignore next */
+(cov_1vkh4midz5().b[0][1]++, this.__importDefault) ||
+/* istanbul ignore next */
+(cov_1vkh4midz5().b[0][2]++, function (mod) {
+  /* istanbul ignore next */
+  cov_1vkh4midz5().f[0]++;
+  cov_1vkh4midz5().s[1]++;
+  return /* istanbul ignore next */(cov_1vkh4midz5().b[2][0]++, mod) &&
+  /* istanbul ignore next */
+  (cov_1vkh4midz5().b[2][1]++, mod.__esModule) ?
+  /* istanbul ignore next */
+  (cov_1vkh4midz5().b[1][0]++, mod) :
+  /* istanbul ignore next */
+  (cov_1vkh4midz5().b[1][1]++, {
+    "default": mod
+  });
+}));
+/* istanbul ignore next */
+cov_1vkh4midz5().s[2]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1vkh4midz5().s[3]++;
+exports.default = ClientErrorBoundary;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_1vkh4midz5().s[4]++, require("react/jsx-runtime"));
+const ErrorBoundary_1 =
+/* istanbul ignore next */
+(cov_1vkh4midz5().s[5]++, __importDefault(require("./ErrorBoundary")));
+function ClientErrorBoundary({
+  children
+}) {
+  /* istanbul ignore next */
+  cov_1vkh4midz5().f[1]++;
+  cov_1vkh4midz5().s[6]++;
+  return (0, jsx_runtime_1.jsx)(ErrorBoundary_1.default, {
+    children: children
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJleHBvcnRzIiwiZGVmYXVsdCIsIkNsaWVudEVycm9yQm91bmRhcnkiLCJFcnJvckJvdW5kYXJ5XzEiLCJjb3ZfMXZraDRtaWR6NSIsInMiLCJfX2ltcG9ydERlZmF1bHQiLCJyZXF1aXJlIiwiY2hpbGRyZW4iLCJmIiwianN4X3J1bnRpbWVfMSIsImpzeCJdLCJzb3VyY2VzIjpbIi9ob21lL2cvZGV2L29yYW5nZWNhdC9zcmMvY29tcG9uZW50cy9DbGllbnRFcnJvckJvdW5kYXJ5LnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIndXNlIGNsaWVudCdcblxuaW1wb3J0IEVycm9yQm91bmRhcnkgZnJvbSAnLi9FcnJvckJvdW5kYXJ5J1xuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBDbGllbnRFcnJvckJvdW5kYXJ5KHtcbiAgY2hpbGRyZW4sXG59OiB7XG4gIGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGVcbn0pIHtcbiAgcmV0dXJuIDxFcnJvckJvdW5kYXJ5PntjaGlsZHJlbn08L0Vycm9yQm91bmRhcnk+XG59ICJdLCJtYXBwaW5ncyI6IkFBQUEsWUFBWTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBSVpBLE9BQUEsQ0FBQUMsT0FBQSxHQUFBQyxtQkFBQTs7OztBQUZBLE1BQUFDLGVBQUE7QUFBQTtBQUFBLENBQUFDLGNBQUEsR0FBQUMsQ0FBQSxPQUFBQyxlQUFBLENBQUFDLE9BQUE7QUFFQSxTQUF3QkwsbUJBQW1CQSxDQUFDO0VBQzFDTTtBQUFRLENBR1Q7RUFBQTtFQUFBSixjQUFBLEdBQUFLLENBQUE7RUFBQUwsY0FBQSxHQUFBQyxDQUFBO0VBQ0MsT0FBTyxJQUFBSyxhQUFBLENBQUFDLEdBQUEsRUFBQ1IsZUFBQSxDQUFBRixPQUFhO0lBQUFPLFFBQUEsRUFBRUE7RUFBUSxFQUFpQjtBQUNsRCIsImlnbm9yZUxpc3QiOltdfQ==

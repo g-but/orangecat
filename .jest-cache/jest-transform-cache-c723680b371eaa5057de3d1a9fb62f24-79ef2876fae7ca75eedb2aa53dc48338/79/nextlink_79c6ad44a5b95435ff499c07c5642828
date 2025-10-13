@@ -1,0 +1,8 @@
+442102a98fb03daab4709dbe04bad24e
+const React = require('react');
+
+module.exports = ({ href, children, ...props }) => {
+  return React.createElement('a', { href, ...props }, children);
+};
+
+

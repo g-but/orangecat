@@ -241,7 +241,6 @@ export default function ProjectsPage() {
       
       setProjects(mockProjects)
     } catch (error) {
-      console.error('Error fetching projects:', error)
       toast.error('Failed to load projects')
     } finally {
       setLoading(false)
@@ -255,7 +254,6 @@ export default function ProjectsPage() {
       // Mock data for user's projects
       setMyProjects([])
     } catch (error) {
-      console.error('Error fetching my projects:', error)
       toast.error('Failed to load your projects')
     } finally {
       setLoading(false)
@@ -401,7 +399,7 @@ export default function ProjectsPage() {
                     label: cat === 'all' ? 'All Categories' : cat.charAt(0).toUpperCase() + cat.slice(1)
                   })),
                   value: filters.category,
-                  onChange: (value) => setFilters(prev => ({ ...prev, category: value }))
+                  onChange: (value) => setFilters(prev => ({ ...prev, category: value as string }))
                 },
                 {
                   key: 'status',
@@ -415,7 +413,7 @@ export default function ProjectsPage() {
                     { value: 'archived', label: 'Archived' }
                   ],
                   value: filters.status,
-                  onChange: (value) => setFilters(prev => ({ ...prev, status: value }))
+                  onChange: (value) => setFilters(prev => ({ ...prev, status: value as string }))
                 },
                 {
                   key: 'language',
@@ -426,7 +424,7 @@ export default function ProjectsPage() {
                     label: lang === 'all' ? 'All Languages' : lang
                   })),
                   value: filters.language,
-                  onChange: (value) => setFilters(prev => ({ ...prev, language: value }))
+                  onChange: (value) => setFilters(prev => ({ ...prev, language: value as string }))
                 },
                 {
                   key: 'difficulty',
@@ -437,7 +435,7 @@ export default function ProjectsPage() {
                     label: diff === 'all' ? 'All Levels' : diff.charAt(0).toUpperCase() + diff.slice(1)
                   })),
                   value: filters.difficulty,
-                  onChange: (value) => setFilters(prev => ({ ...prev, difficulty: value }))
+                  onChange: (value) => setFilters(prev => ({ ...prev, difficulty: value as string }))
                 },
                 {
                   key: 'sortBy',
@@ -450,7 +448,7 @@ export default function ProjectsPage() {
                     { value: 'contributors', label: 'Most Contributors' }
                   ],
                   value: filters.sortBy,
-                  onChange: (value) => setFilters(prev => ({ ...prev, sortBy: value }))
+                  onChange: (value) => setFilters(prev => ({ ...prev, sortBy: value as ProjectFilters['sortBy'] }))
                 }
               ]}
               onClearFilters={() => {

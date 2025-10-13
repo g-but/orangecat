@@ -24,21 +24,22 @@ The profile feature allows users to create and manage their profiles for accepti
 ```typescript
 interface Profile {
   id: string
-  user_id: string
-  full_name: string
+  username: string | null
+  display_name: string | null
   bio?: string
   avatar_url?: string
+  banner_url?: string
   website?: string
   bitcoin_address?: string
   lightning_address?: string
-  social_links?: Record<string, string>
   created_at: string
   updated_at: string
 }
 ```
 
 ### Validation Rules
-- Full Name: Required, non-empty
+- Display Name: Required, non-empty
+- Username: Optional, must be unique and valid format
 - Bitcoin Address: Optional, must be valid format
 - Lightning Address: Optional, must be valid email format
 - Website: Optional, must be valid URL
@@ -54,7 +55,8 @@ interface Profile {
 ```typescript
 const { createProfile } = useProfile()
 await createProfile({
-  full_name: 'John Doe',
+  username: 'johndoe',
+  display_name: 'John Doe',
   bitcoin_address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa'
 })
 ```

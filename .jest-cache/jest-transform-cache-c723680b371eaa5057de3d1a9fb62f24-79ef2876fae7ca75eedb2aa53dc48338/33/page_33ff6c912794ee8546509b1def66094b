@@ -1,0 +1,424 @@
+1049eb27c7b74057ae2c1e3b4a067d5f
+"use strict";
+
+/* istanbul ignore next */
+function cov_2aag8o29tk() {
+  var path = "/home/g/dev/orangecat/src/app/blog/page.tsx";
+  var hash = "53bf5d1310977104755e5d48ef2f4b79388966f1";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/app/blog/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 22
+        },
+        end: {
+          line: 4,
+          column: 1
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 4
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 62
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 27
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 22
+        },
+        end: {
+          line: 7,
+          column: 50
+        }
+      },
+      "5": {
+        start: {
+          line: 8,
+          column: 16
+        },
+        end: {
+          line: 8,
+          column: 32
+        }
+      },
+      "6": {
+        start: {
+          line: 9,
+          column: 15
+        },
+        end: {
+          line: 9,
+          column: 36
+        }
+      },
+      "7": {
+        start: {
+          line: 10,
+          column: 28
+        },
+        end: {
+          line: 10,
+          column: 91
+        }
+      },
+      "8": {
+        start: {
+          line: 12,
+          column: 21
+        },
+        end: {
+          line: 12,
+          column: 52
+        }
+      },
+      "9": {
+        start: {
+          line: 13,
+          column: 25
+        },
+        end: {
+          line: 13,
+          column: 54
+        }
+      },
+      "10": {
+        start: {
+          line: 14,
+          column: 20
+        },
+        end: {
+          line: 14,
+          column: 44
+        }
+      },
+      "11": {
+        start: {
+          line: 15,
+          column: 4
+        },
+        end: {
+          line: 15,
+          column: 783
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 2,
+            column: 57
+          }
+        },
+        loc: {
+          start: {
+            line: 2,
+            column: 71
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        line: 2
+      },
+      "1": {
+        name: "BlogPage",
+        decl: {
+          start: {
+            line: 11,
+            column: 9
+          },
+          end: {
+            line: 11,
+            column: 17
+          }
+        },
+        loc: {
+          start: {
+            line: 11,
+            column: 20
+          },
+          end: {
+            line: 16,
+            column: 1
+          }
+        },
+        line: 11
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 2,
+            column: 22
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 2,
+            column: 23
+          },
+          end: {
+            line: 2,
+            column: 27
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 31
+          },
+          end: {
+            line: 2,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        }],
+        line: 2
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 3,
+            column: 11
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 37
+          },
+          end: {
+            line: 3,
+            column: 40
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 43
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        }],
+        line: 3
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 15
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 19
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        }],
+        line: 3
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {
+      "0": [0, 0, 0],
+      "1": [0, 0],
+      "2": [0, 0]
+    },
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/app/blog/page.tsx",
+      mappings: ";;;;;AAOA,2BAyBC;;AAhCD,iCAAgC;AAIhC,qCAA2E;AAC3E,4FAAmE;AAEnE,SAAwB,QAAQ;IAC9B,MAAM,QAAQ,GAAG,IAAA,wBAAiB,GAAE,CAAA;IACpC,MAAM,YAAY,GAAG,IAAA,sBAAe,GAAE,CAAA;IACtC,MAAM,OAAO,GAAG,IAAA,iBAAU,GAAE,CAAA;IAE5B,OAAO,CACL,gCAAK,SAAS,EAAC,oBAAoB,YACjC,iCAAK,SAAS,EAAC,wBAAwB,aACrC,iCAAK,SAAS,EAAC,mBAAmB,aAChC,+BAAI,SAAS,EAAC,yBAAyB,+BAAoB,EAC3D,8BAAG,SAAS,EAAC,yCAAyC,2FAElD,IACA,EAEN,uBAAC,gBAAQ,IAAC,QAAQ,EAAE,oEAAgC,YAClD,uBAAC,2BAAiB,IAChB,KAAK,EAAE,QAAQ,EACf,YAAY,EAAE,YAAY,EAC1B,IAAI,EAAE,OAAO,GACb,GACO,IACP,GACF,CACP,CAAA;AACH,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/app/blog/page.tsx"],
+      sourcesContent: ["import { Suspense } from 'react'\nimport Card from '@/components/ui/Card'\nimport { Calendar, Clock, Tag } from 'lucide-react'\nimport Link from 'next/link'\nimport { getPublishedPosts, getFeaturedPost, getAllTags } from '@/lib/blog'\nimport BlogClientWrapper from '@/components/blog/BlogClientWrapper'\n\nexport default function BlogPage() {\n  const allPosts = getPublishedPosts()\n  const featuredPost = getFeaturedPost()\n  const allTags = getAllTags()\n\n  return (\n    <div className=\"min-h-screen pt-20\">\n      <div className=\"container mx-auto px-4\">\n        <div className=\"text-center mb-12\">\n          <h1 className=\"text-4xl font-bold mb-4\">OrangeCat Blog</h1>\n          <p className=\"text-xl text-gray-600 max-w-3xl mx-auto\">\n            Insights, guides, and stories about Bitcoin funding and community building\n          </p>\n        </div>\n\n        <Suspense fallback={<div>Loading blog posts...</div>}>\n          <BlogClientWrapper \n            posts={allPosts}\n            featuredPost={featuredPost}\n            tags={allTags}\n          />\n        </Suspense>\n      </div>\n    </div>\n  )\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "53bf5d1310977104755e5d48ef2f4b79388966f1"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2aag8o29tk = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2aag8o29tk();
+var __importDefault =
+/* istanbul ignore next */
+(cov_2aag8o29tk().s[0]++,
+/* istanbul ignore next */
+(cov_2aag8o29tk().b[0][0]++, this) &&
+/* istanbul ignore next */
+(cov_2aag8o29tk().b[0][1]++, this.__importDefault) ||
+/* istanbul ignore next */
+(cov_2aag8o29tk().b[0][2]++, function (mod) {
+  /* istanbul ignore next */
+  cov_2aag8o29tk().f[0]++;
+  cov_2aag8o29tk().s[1]++;
+  return /* istanbul ignore next */(cov_2aag8o29tk().b[2][0]++, mod) &&
+  /* istanbul ignore next */
+  (cov_2aag8o29tk().b[2][1]++, mod.__esModule) ?
+  /* istanbul ignore next */
+  (cov_2aag8o29tk().b[1][0]++, mod) :
+  /* istanbul ignore next */
+  (cov_2aag8o29tk().b[1][1]++, {
+    "default": mod
+  });
+}));
+/* istanbul ignore next */
+cov_2aag8o29tk().s[2]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_2aag8o29tk().s[3]++;
+exports.default = BlogPage;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_2aag8o29tk().s[4]++, require("react/jsx-runtime"));
+const react_1 =
+/* istanbul ignore next */
+(cov_2aag8o29tk().s[5]++, require("react"));
+const blog_1 =
+/* istanbul ignore next */
+(cov_2aag8o29tk().s[6]++, require("@/lib/blog"));
+const BlogClientWrapper_1 =
+/* istanbul ignore next */
+(cov_2aag8o29tk().s[7]++, __importDefault(require("@/components/blog/BlogClientWrapper")));
+function BlogPage() {
+  /* istanbul ignore next */
+  cov_2aag8o29tk().f[1]++;
+  const allPosts =
+  /* istanbul ignore next */
+  (cov_2aag8o29tk().s[8]++, (0, blog_1.getPublishedPosts)());
+  const featuredPost =
+  /* istanbul ignore next */
+  (cov_2aag8o29tk().s[9]++, (0, blog_1.getFeaturedPost)());
+  const allTags =
+  /* istanbul ignore next */
+  (cov_2aag8o29tk().s[10]++, (0, blog_1.getAllTags)());
+  /* istanbul ignore next */
+  cov_2aag8o29tk().s[11]++;
+  return (0, jsx_runtime_1.jsx)("div", {
+    className: "min-h-screen pt-20",
+    children: (0, jsx_runtime_1.jsxs)("div", {
+      className: "container mx-auto px-4",
+      children: [(0, jsx_runtime_1.jsxs)("div", {
+        className: "text-center mb-12",
+        children: [(0, jsx_runtime_1.jsx)("h1", {
+          className: "text-4xl font-bold mb-4",
+          children: "OrangeCat Blog"
+        }), (0, jsx_runtime_1.jsx)("p", {
+          className: "text-xl text-gray-600 max-w-3xl mx-auto",
+          children: "Insights, guides, and stories about Bitcoin funding and community building"
+        })]
+      }), (0, jsx_runtime_1.jsx)(react_1.Suspense, {
+        fallback: (0, jsx_runtime_1.jsx)("div", {
+          children: "Loading blog posts..."
+        }),
+        children: (0, jsx_runtime_1.jsx)(BlogClientWrapper_1.default, {
+          posts: allPosts,
+          featuredPost: featuredPost,
+          tags: allTags
+        })
+      })]
+    })
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMmFhZzhvMjl0ayIsImFjdHVhbENvdmVyYWdlIiwiZXhwb3J0cyIsImRlZmF1bHQiLCJCbG9nUGFnZSIsInJlYWN0XzEiLCJzIiwicmVxdWlyZSIsImJsb2dfMSIsIkJsb2dDbGllbnRXcmFwcGVyXzEiLCJfX2ltcG9ydERlZmF1bHQiLCJmIiwiYWxsUG9zdHMiLCJnZXRQdWJsaXNoZWRQb3N0cyIsImZlYXR1cmVkUG9zdCIsImdldEZlYXR1cmVkUG9zdCIsImFsbFRhZ3MiLCJnZXRBbGxUYWdzIiwianN4X3J1bnRpbWVfMSIsImpzeCIsImNsYXNzTmFtZSIsImNoaWxkcmVuIiwianN4cyIsIlN1c3BlbnNlIiwiZmFsbGJhY2siLCJwb3N0cyIsInRhZ3MiXSwic291cmNlcyI6WyIvaG9tZS9nL2Rldi9vcmFuZ2VjYXQvc3JjL2FwcC9ibG9nL3BhZ2UudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IFN1c3BlbnNlIH0gZnJvbSAncmVhY3QnXG5pbXBvcnQgQ2FyZCBmcm9tICdAL2NvbXBvbmVudHMvdWkvQ2FyZCdcbmltcG9ydCB7IENhbGVuZGFyLCBDbG9jaywgVGFnIH0gZnJvbSAnbHVjaWRlLXJlYWN0J1xuaW1wb3J0IExpbmsgZnJvbSAnbmV4dC9saW5rJ1xuaW1wb3J0IHsgZ2V0UHVibGlzaGVkUG9zdHMsIGdldEZlYXR1cmVkUG9zdCwgZ2V0QWxsVGFncyB9IGZyb20gJ0AvbGliL2Jsb2cnXG5pbXBvcnQgQmxvZ0NsaWVudFdyYXBwZXIgZnJvbSAnQC9jb21wb25lbnRzL2Jsb2cvQmxvZ0NsaWVudFdyYXBwZXInXG5cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIEJsb2dQYWdlKCkge1xuICBjb25zdCBhbGxQb3N0cyA9IGdldFB1Ymxpc2hlZFBvc3RzKClcbiAgY29uc3QgZmVhdHVyZWRQb3N0ID0gZ2V0RmVhdHVyZWRQb3N0KClcbiAgY29uc3QgYWxsVGFncyA9IGdldEFsbFRhZ3MoKVxuXG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9XCJtaW4taC1zY3JlZW4gcHQtMjBcIj5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiY29udGFpbmVyIG14LWF1dG8gcHgtNFwiPlxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtY2VudGVyIG1iLTEyXCI+XG4gICAgICAgICAgPGgxIGNsYXNzTmFtZT1cInRleHQtNHhsIGZvbnQtYm9sZCBtYi00XCI+T3JhbmdlQ2F0IEJsb2c8L2gxPlxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteGwgdGV4dC1ncmF5LTYwMCBtYXgtdy0zeGwgbXgtYXV0b1wiPlxuICAgICAgICAgICAgSW5zaWdodHMsIGd1aWRlcywgYW5kIHN0b3JpZXMgYWJvdXQgQml0Y29pbiBmdW5kaW5nIGFuZCBjb21tdW5pdHkgYnVpbGRpbmdcbiAgICAgICAgICA8L3A+XG4gICAgICAgIDwvZGl2PlxuXG4gICAgICAgIDxTdXNwZW5zZSBmYWxsYmFjaz17PGRpdj5Mb2FkaW5nIGJsb2cgcG9zdHMuLi48L2Rpdj59PlxuICAgICAgICAgIDxCbG9nQ2xpZW50V3JhcHBlciBcbiAgICAgICAgICAgIHBvc3RzPXthbGxQb3N0c31cbiAgICAgICAgICAgIGZlYXR1cmVkUG9zdD17ZmVhdHVyZWRQb3N0fVxuICAgICAgICAgICAgdGFncz17YWxsVGFnc31cbiAgICAgICAgICAvPlxuICAgICAgICA8L1N1c3BlbnNlPlxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gIClcbn0gIl0sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztJQWdDQztJQUFBQSxjQUFBLFlBQUFBLENBQUE7TUFBQSxPQUFBQyxjQUFBO0lBQUE7RUFBQTtFQUFBLE9BQUFBLGNBQUE7QUFBQTtBQUFBRCxjQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUF6QkRFLE9BQUEsQ0FBQUMsT0FBQSxHQUFBQyxRQUFBOzs7O0FBUEEsTUFBQUMsT0FBQTtBQUFBO0FBQUEsQ0FBQUwsY0FBQSxHQUFBTSxDQUFBLE9BQUFDLE9BQUE7QUFJQSxNQUFBQyxNQUFBO0FBQUE7QUFBQSxDQUFBUixjQUFBLEdBQUFNLENBQUEsT0FBQUMsT0FBQTtBQUNBLE1BQUFFLG1CQUFBO0FBQUE7QUFBQSxDQUFBVCxjQUFBLEdBQUFNLENBQUEsT0FBQUksZUFBQSxDQUFBSCxPQUFBO0FBRUEsU0FBd0JILFFBQVFBLENBQUE7RUFBQTtFQUFBSixjQUFBLEdBQUFXLENBQUE7RUFDOUIsTUFBTUMsUUFBUTtFQUFBO0VBQUEsQ0FBQVosY0FBQSxHQUFBTSxDQUFBLE9BQUcsSUFBQUUsTUFBQSxDQUFBSyxpQkFBaUIsR0FBRTtFQUNwQyxNQUFNQyxZQUFZO0VBQUE7RUFBQSxDQUFBZCxjQUFBLEdBQUFNLENBQUEsT0FBRyxJQUFBRSxNQUFBLENBQUFPLGVBQWUsR0FBRTtFQUN0QyxNQUFNQyxPQUFPO0VBQUE7RUFBQSxDQUFBaEIsY0FBQSxHQUFBTSxDQUFBLFFBQUcsSUFBQUUsTUFBQSxDQUFBUyxVQUFVLEdBQUU7RUFBQTtFQUFBakIsY0FBQSxHQUFBTSxDQUFBO0VBRTVCLE9BQ0UsSUFBQVksYUFBQSxDQUFBQyxHQUFBO0lBQUtDLFNBQVMsRUFBQyxvQkFBb0I7SUFBQUMsUUFBQSxFQUNqQyxJQUFBSCxhQUFBLENBQUFJLElBQUE7TUFBS0YsU0FBUyxFQUFDLHdCQUF3QjtNQUFBQyxRQUFBLEdBQ3JDLElBQUFILGFBQUEsQ0FBQUksSUFBQTtRQUFLRixTQUFTLEVBQUMsbUJBQW1CO1FBQUFDLFFBQUEsR0FDaEMsSUFBQUgsYUFBQSxDQUFBQyxHQUFBO1VBQUlDLFNBQVMsRUFBQyx5QkFBeUI7VUFBQUMsUUFBQTtRQUFBLEVBQW9CLEVBQzNELElBQUFILGFBQUEsQ0FBQUMsR0FBQTtVQUFHQyxTQUFTLEVBQUMseUNBQXlDO1VBQUFDLFFBQUE7UUFBQSxFQUVsRDtNQUFBLEVBQ0EsRUFFTixJQUFBSCxhQUFBLENBQUFDLEdBQUEsRUFBQ2QsT0FBQSxDQUFBa0IsUUFBUTtRQUFDQyxRQUFRLEVBQUUsSUFBQU4sYUFBQSxDQUFBQyxHQUFBO1VBQUFFLFFBQUE7UUFBQSxFQUFnQztRQUFBQSxRQUFBLEVBQ2xELElBQUFILGFBQUEsQ0FBQUMsR0FBQSxFQUFDVixtQkFBQSxDQUFBTixPQUFpQjtVQUNoQnNCLEtBQUssRUFBRWIsUUFBUTtVQUNmRSxZQUFZLEVBQUVBLFlBQVk7VUFDMUJZLElBQUksRUFBRVY7UUFBTztNQUNiLEVBQ087SUFBQTtFQUNQLEVBQ0Y7QUFFViIsImlnbm9yZUxpc3QiOltdfQ==

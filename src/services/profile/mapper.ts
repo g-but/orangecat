@@ -33,9 +33,6 @@ export class ProfileMapper {
       created_at: dbRow.created_at,
       updated_at: dbRow.updated_at,
       
-      // Legacy compatibility
-      full_name: dbRow.display_name || null,
-      
       // Extended fields with defaults
       email: null,
       phone: null,
@@ -98,7 +95,7 @@ export class ProfileMapper {
     // Core fields that go directly to database columns
     const coreFields: any = {
       username: profile.username || null,
-      display_name: profile.display_name || profile.full_name || null,
+      display_name: profile.display_name || null,
       avatar_url: profile.avatar_url || null,
       banner_url: profile.banner_url || null,
       bio: profile.bio || null,

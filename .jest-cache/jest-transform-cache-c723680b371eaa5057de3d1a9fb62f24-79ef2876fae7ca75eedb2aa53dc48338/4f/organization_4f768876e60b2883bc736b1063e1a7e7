@@ -1,0 +1,64 @@
+e937bd20ef5444033c54992ac0565ef8
+"use strict";
+
+/**
+ * Organization Types
+ * Shared type definitions for organization functionality
+ */
+/* istanbul ignore next */
+function cov_lxz0y88eo() {
+  var path = "/home/g/dev/orangecat/src/types/organization.ts";
+  var hash = "5e8b4527661357267892b8f3548860b79db5543e";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/types/organization.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 62
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/types/organization.ts",
+      mappings: ";AAAA;;;GAGG",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/types/organization.ts"],
+      sourcesContent: ["/**\n * Organization Types\n * Shared type definitions for organization functionality\n */\n\nexport type OrganizationType =\n  | 'dao'\n  | 'company'\n  | 'nonprofit'\n  | 'community'\n  | 'cooperative'\n  | 'foundation'\n  | 'collective'\n  | 'guild'\n  | 'syndicate';\n\nexport type GovernanceModel =\n  | 'hierarchical'\n  | 'flat'\n  | 'democratic'\n  | 'consensus'\n  | 'liquid_democracy'\n  | 'quadratic_voting'\n  | 'stake_weighted'\n  | 'reputation_based';\n\nexport interface Organization {\n  id: string;\n  profile_id: string;\n  name: string;\n  slug: string;\n  description?: string;\n  avatar_url?: string;\n  banner_url?: string;\n  website_url?: string;\n  type: OrganizationType;\n  category?: string;\n  tags: string[];\n  governance_model: GovernanceModel;\n  treasury_address?: string;\n  treasury_balance: number;\n  is_public: boolean;\n  requires_approval: boolean;\n  contact_info: Record<string, any>;\n  settings: Record<string, any>;\n  member_count: number;\n  campaign_count: number;\n  total_funding: number;\n  trust_score: number;\n  status: 'active' | 'inactive' | 'suspended' | 'dissolved';\n  founded_at?: string;\n  dissolved_at?: string;\n  created_at: string;\n  updated_at: string;\n}\n\nexport interface OrganizationFormData {\n  name: string;\n  description?: string;\n  website_url?: string;\n  avatar_url?: string;\n  banner_url?: string;\n  type: OrganizationType;\n  category?: string;\n  tags: string[];\n  governance_model: GovernanceModel;\n  treasury_address?: string;\n  is_public: boolean;\n  requires_approval: boolean;\n  contact_info?: Record<string, any>;\n  settings?: Record<string, any>;\n}\n\nexport interface OrganizationSearchParams {\n  q?: string;\n  type?: OrganizationType;\n  category?: string;\n  page?: number;\n  limit?: number;\n  sort?: 'name' | 'created_at' | 'trust_score';\n  order?: 'asc' | 'desc';\n}\n\nexport interface Membership {\n  id: string;\n  organization_id: string;\n  profile_id: string;\n  role: 'owner' | 'admin' | 'moderator' | 'member' | 'guest';\n  status: 'active' | 'inactive' | 'suspended' | 'banned';\n  title?: string;\n  bio?: string;\n  joined_at: string;\n  last_active_at: string;\n  permissions: Record<string, boolean>;\n  created_at: string;\n  updated_at: string;\n}\n\nexport interface OrganizationProposal {\n  id: string;\n  organization_id: string;\n  proposer_id: string;\n  title: string;\n  description: string;\n  proposal_type: 'governance' | 'funding' | 'membership' | 'policy' | 'other';\n  voting_method: 'simple_majority' | 'super_majority' | 'consensus' | 'quadratic';\n  voting_deadline?: string;\n  minimum_quorum: number;\n  status: 'pending' | 'active' | 'passed' | 'failed' | 'cancelled';\n  votes_for: number;\n  votes_against: number;\n  votes_abstain: number;\n  metadata: Record<string, any>;\n  created_at: string;\n  updated_at: string;\n}\n\nexport interface OrganizationVote {\n  id: string;\n  proposal_id: string;\n  voter_id: string;\n  vote_type: 'for' | 'against' | 'abstain';\n  voting_power: number;\n  vote_weight: number;\n  metadata: Record<string, any>;\n  created_at: string;\n  updated_at: string;\n}\n\nexport interface OrganizationAnalytics {\n  id: string;\n  organization_id: string;\n  metric_name: string;\n  metric_value: number;\n  metric_type: 'counter' | 'gauge' | 'histogram';\n  time_period: 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly';\n  period_start: string;\n  period_end: string;\n  metadata: Record<string, any>;\n  created_at: string;\n}"],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "5e8b4527661357267892b8f3548860b79db5543e"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_lxz0y88eo = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_lxz0y88eo();
+cov_lxz0y88eo().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfbHh6MHk4OGVvIiwicGF0aCIsImhhc2giLCJnbG9iYWwiLCJGdW5jdGlvbiIsImdjdiIsImNvdmVyYWdlRGF0YSIsInN0YXRlbWVudE1hcCIsInN0YXJ0IiwibGluZSIsImNvbHVtbiIsImVuZCIsImZuTWFwIiwiYnJhbmNoTWFwIiwicyIsImYiLCJiIiwiaW5wdXRTb3VyY2VNYXAiLCJmaWxlIiwibWFwcGluZ3MiLCJuYW1lcyIsInNvdXJjZXMiLCJzb3VyY2VzQ29udGVudCIsInZlcnNpb24iLCJfY292ZXJhZ2VTY2hlbWEiLCJjb3ZlcmFnZSIsImFjdHVhbENvdmVyYWdlIl0sInNvdXJjZXMiOlsiL2hvbWUvZy9kZXYvb3JhbmdlY2F0L3NyYy90eXBlcy9vcmdhbml6YXRpb24udHMiXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXG4gKiBPcmdhbml6YXRpb24gVHlwZXNcbiAqIFNoYXJlZCB0eXBlIGRlZmluaXRpb25zIGZvciBvcmdhbml6YXRpb24gZnVuY3Rpb25hbGl0eVxuICovXG5cbmV4cG9ydCB0eXBlIE9yZ2FuaXphdGlvblR5cGUgPVxuICB8ICdkYW8nXG4gIHwgJ2NvbXBhbnknXG4gIHwgJ25vbnByb2ZpdCdcbiAgfCAnY29tbXVuaXR5J1xuICB8ICdjb29wZXJhdGl2ZSdcbiAgfCAnZm91bmRhdGlvbidcbiAgfCAnY29sbGVjdGl2ZSdcbiAgfCAnZ3VpbGQnXG4gIHwgJ3N5bmRpY2F0ZSc7XG5cbmV4cG9ydCB0eXBlIEdvdmVybmFuY2VNb2RlbCA9XG4gIHwgJ2hpZXJhcmNoaWNhbCdcbiAgfCAnZmxhdCdcbiAgfCAnZGVtb2NyYXRpYydcbiAgfCAnY29uc2Vuc3VzJ1xuICB8ICdsaXF1aWRfZGVtb2NyYWN5J1xuICB8ICdxdWFkcmF0aWNfdm90aW5nJ1xuICB8ICdzdGFrZV93ZWlnaHRlZCdcbiAgfCAncmVwdXRhdGlvbl9iYXNlZCc7XG5cbmV4cG9ydCBpbnRlcmZhY2UgT3JnYW5pemF0aW9uIHtcbiAgaWQ6IHN0cmluZztcbiAgcHJvZmlsZV9pZDogc3RyaW5nO1xuICBuYW1lOiBzdHJpbmc7XG4gIHNsdWc6IHN0cmluZztcbiAgZGVzY3JpcHRpb24/OiBzdHJpbmc7XG4gIGF2YXRhcl91cmw/OiBzdHJpbmc7XG4gIGJhbm5lcl91cmw/OiBzdHJpbmc7XG4gIHdlYnNpdGVfdXJsPzogc3RyaW5nO1xuICB0eXBlOiBPcmdhbml6YXRpb25UeXBlO1xuICBjYXRlZ29yeT86IHN0cmluZztcbiAgdGFnczogc3RyaW5nW107XG4gIGdvdmVybmFuY2VfbW9kZWw6IEdvdmVybmFuY2VNb2RlbDtcbiAgdHJlYXN1cnlfYWRkcmVzcz86IHN0cmluZztcbiAgdHJlYXN1cnlfYmFsYW5jZTogbnVtYmVyO1xuICBpc19wdWJsaWM6IGJvb2xlYW47XG4gIHJlcXVpcmVzX2FwcHJvdmFsOiBib29sZWFuO1xuICBjb250YWN0X2luZm86IFJlY29yZDxzdHJpbmcsIGFueT47XG4gIHNldHRpbmdzOiBSZWNvcmQ8c3RyaW5nLCBhbnk+O1xuICBtZW1iZXJfY291bnQ6IG51bWJlcjtcbiAgY2FtcGFpZ25fY291bnQ6IG51bWJlcjtcbiAgdG90YWxfZnVuZGluZzogbnVtYmVyO1xuICB0cnVzdF9zY29yZTogbnVtYmVyO1xuICBzdGF0dXM6ICdhY3RpdmUnIHwgJ2luYWN0aXZlJyB8ICdzdXNwZW5kZWQnIHwgJ2Rpc3NvbHZlZCc7XG4gIGZvdW5kZWRfYXQ/OiBzdHJpbmc7XG4gIGRpc3NvbHZlZF9hdD86IHN0cmluZztcbiAgY3JlYXRlZF9hdDogc3RyaW5nO1xuICB1cGRhdGVkX2F0OiBzdHJpbmc7XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgT3JnYW5pemF0aW9uRm9ybURhdGEge1xuICBuYW1lOiBzdHJpbmc7XG4gIGRlc2NyaXB0aW9uPzogc3RyaW5nO1xuICB3ZWJzaXRlX3VybD86IHN0cmluZztcbiAgYXZhdGFyX3VybD86IHN0cmluZztcbiAgYmFubmVyX3VybD86IHN0cmluZztcbiAgdHlwZTogT3JnYW5pemF0aW9uVHlwZTtcbiAgY2F0ZWdvcnk/OiBzdHJpbmc7XG4gIHRhZ3M6IHN0cmluZ1tdO1xuICBnb3Zlcm5hbmNlX21vZGVsOiBHb3Zlcm5hbmNlTW9kZWw7XG4gIHRyZWFzdXJ5X2FkZHJlc3M/OiBzdHJpbmc7XG4gIGlzX3B1YmxpYzogYm9vbGVhbjtcbiAgcmVxdWlyZXNfYXBwcm92YWw6IGJvb2xlYW47XG4gIGNvbnRhY3RfaW5mbz86IFJlY29yZDxzdHJpbmcsIGFueT47XG4gIHNldHRpbmdzPzogUmVjb3JkPHN0cmluZywgYW55Pjtcbn1cblxuZXhwb3J0IGludGVyZmFjZSBPcmdhbml6YXRpb25TZWFyY2hQYXJhbXMge1xuICBxPzogc3RyaW5nO1xuICB0eXBlPzogT3JnYW5pemF0aW9uVHlwZTtcbiAgY2F0ZWdvcnk/OiBzdHJpbmc7XG4gIHBhZ2U/OiBudW1iZXI7XG4gIGxpbWl0PzogbnVtYmVyO1xuICBzb3J0PzogJ25hbWUnIHwgJ2NyZWF0ZWRfYXQnIHwgJ3RydXN0X3Njb3JlJztcbiAgb3JkZXI/OiAnYXNjJyB8ICdkZXNjJztcbn1cblxuZXhwb3J0IGludGVyZmFjZSBNZW1iZXJzaGlwIHtcbiAgaWQ6IHN0cmluZztcbiAgb3JnYW5pemF0aW9uX2lkOiBzdHJpbmc7XG4gIHByb2ZpbGVfaWQ6IHN0cmluZztcbiAgcm9sZTogJ293bmVyJyB8ICdhZG1pbicgfCAnbW9kZXJhdG9yJyB8ICdtZW1iZXInIHwgJ2d1ZXN0JztcbiAgc3RhdHVzOiAnYWN0aXZlJyB8ICdpbmFjdGl2ZScgfCAnc3VzcGVuZGVkJyB8ICdiYW5uZWQnO1xuICB0aXRsZT86IHN0cmluZztcbiAgYmlvPzogc3RyaW5nO1xuICBqb2luZWRfYXQ6IHN0cmluZztcbiAgbGFzdF9hY3RpdmVfYXQ6IHN0cmluZztcbiAgcGVybWlzc2lvbnM6IFJlY29yZDxzdHJpbmcsIGJvb2xlYW4+O1xuICBjcmVhdGVkX2F0OiBzdHJpbmc7XG4gIHVwZGF0ZWRfYXQ6IHN0cmluZztcbn1cblxuZXhwb3J0IGludGVyZmFjZSBPcmdhbml6YXRpb25Qcm9wb3NhbCB7XG4gIGlkOiBzdHJpbmc7XG4gIG9yZ2FuaXphdGlvbl9pZDogc3RyaW5nO1xuICBwcm9wb3Nlcl9pZDogc3RyaW5nO1xuICB0aXRsZTogc3RyaW5nO1xuICBkZXNjcmlwdGlvbjogc3RyaW5nO1xuICBwcm9wb3NhbF90eXBlOiAnZ292ZXJuYW5jZScgfCAnZnVuZGluZycgfCAnbWVtYmVyc2hpcCcgfCAncG9saWN5JyB8ICdvdGhlcic7XG4gIHZvdGluZ19tZXRob2Q6ICdzaW1wbGVfbWFqb3JpdHknIHwgJ3N1cGVyX21ham9yaXR5JyB8ICdjb25zZW5zdXMnIHwgJ3F1YWRyYXRpYyc7XG4gIHZvdGluZ19kZWFkbGluZT86IHN0cmluZztcbiAgbWluaW11bV9xdW9ydW06IG51bWJlcjtcbiAgc3RhdHVzOiAncGVuZGluZycgfCAnYWN0aXZlJyB8ICdwYXNzZWQnIHwgJ2ZhaWxlZCcgfCAnY2FuY2VsbGVkJztcbiAgdm90ZXNfZm9yOiBudW1iZXI7XG4gIHZvdGVzX2FnYWluc3Q6IG51bWJlcjtcbiAgdm90ZXNfYWJzdGFpbjogbnVtYmVyO1xuICBtZXRhZGF0YTogUmVjb3JkPHN0cmluZywgYW55PjtcbiAgY3JlYXRlZF9hdDogc3RyaW5nO1xuICB1cGRhdGVkX2F0OiBzdHJpbmc7XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgT3JnYW5pemF0aW9uVm90ZSB7XG4gIGlkOiBzdHJpbmc7XG4gIHByb3Bvc2FsX2lkOiBzdHJpbmc7XG4gIHZvdGVyX2lkOiBzdHJpbmc7XG4gIHZvdGVfdHlwZTogJ2ZvcicgfCAnYWdhaW5zdCcgfCAnYWJzdGFpbic7XG4gIHZvdGluZ19wb3dlcjogbnVtYmVyO1xuICB2b3RlX3dlaWdodDogbnVtYmVyO1xuICBtZXRhZGF0YTogUmVjb3JkPHN0cmluZywgYW55PjtcbiAgY3JlYXRlZF9hdDogc3RyaW5nO1xuICB1cGRhdGVkX2F0OiBzdHJpbmc7XG59XG5cbmV4cG9ydCBpbnRlcmZhY2UgT3JnYW5pemF0aW9uQW5hbHl0aWNzIHtcbiAgaWQ6IHN0cmluZztcbiAgb3JnYW5pemF0aW9uX2lkOiBzdHJpbmc7XG4gIG1ldHJpY19uYW1lOiBzdHJpbmc7XG4gIG1ldHJpY192YWx1ZTogbnVtYmVyO1xuICBtZXRyaWNfdHlwZTogJ2NvdW50ZXInIHwgJ2dhdWdlJyB8ICdoaXN0b2dyYW0nO1xuICB0aW1lX3BlcmlvZDogJ2hvdXJseScgfCAnZGFpbHknIHwgJ3dlZWtseScgfCAnbW9udGhseScgfCAneWVhcmx5JztcbiAgcGVyaW9kX3N0YXJ0OiBzdHJpbmc7XG4gIHBlcmlvZF9lbmQ6IHN0cmluZztcbiAgbWV0YWRhdGE6IFJlY29yZDxzdHJpbmcsIGFueT47XG4gIGNyZWF0ZWRfYXQ6IHN0cmluZztcbn0iXSwibWFwcGluZ3MiOiI7O0FBQUE7Ozs7QUFBQTtBQUFBLFNBQUFBLGNBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsSUFBQTtFQUFBLElBQUFDLE1BQUEsT0FBQUMsUUFBQTtFQUFBLElBQUFDLEdBQUE7RUFBQSxJQUFBQyxZQUFBO0lBQUFMLElBQUE7SUFBQU0sWUFBQTtNQUFBO1FBQUFDLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO0lBQUE7SUFBQUUsS0FBQTtJQUFBQyxTQUFBO0lBQUFDLENBQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7SUFBQUMsQ0FBQTtJQUFBQyxjQUFBO01BQUFDLElBQUE7TUFBQUMsUUFBQTtNQUFBQyxLQUFBO01BQUFDLE9BQUE7TUFBQUMsY0FBQTtNQUFBQyxPQUFBO0lBQUE7SUFBQUMsZUFBQTtJQUFBdEIsSUFBQTtFQUFBO0VBQUEsSUFBQXVCLFFBQUEsR0FBQXRCLE1BQUEsQ0FBQUUsR0FBQSxNQUFBRixNQUFBLENBQUFFLEdBQUE7RUFBQSxLQUFBb0IsUUFBQSxDQUFBeEIsSUFBQSxLQUFBd0IsUUFBQSxDQUFBeEIsSUFBQSxFQUFBQyxJQUFBLEtBQUFBLElBQUE7SUFBQXVCLFFBQUEsQ0FBQXhCLElBQUEsSUFBQUssWUFBQTtFQUFBO0VBQUEsSUFBQW9CLGNBQUEsR0FBQUQsUUFBQSxDQUFBeEIsSUFBQTtFQUFBIiwiaWdub3JlTGlzdCI6W119

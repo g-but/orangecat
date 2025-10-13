@@ -81,9 +81,10 @@ export default function AuthPage() {
         setLocalLoading(false);
         setError("Authentication request timed out. This usually means environment variables are not configured properly.");
       }, timeout);
-      
+
       return () => clearTimeout(timer);
     }
+    return () => {}; // Return empty cleanup function when not loading
   }, [localLoading, retryCount]);
 
   // Check if we already have a valid session and redirect
