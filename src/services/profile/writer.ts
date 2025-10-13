@@ -20,6 +20,7 @@ export class ProfileWriter {
   
   /**
    * Update profile with comprehensive field support
+   * Uses the secure API endpoint instead of direct database access
    */
   static async updateProfile(
     userId: string,
@@ -30,76 +31,47 @@ export class ProfileWriter {
     }
 
     try {
-      // Verify authentication
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      
-      if (authError || !user) {
-        return { success: false, error: 'No authenticated user. Please log in again.' }
-      }
-
-      if (user.id !== userId) {
-        return { success: false, error: 'Permission denied: You can only update your own profile' }
-      }
-
       logProfile('updateProfile', { userId, formData })
 
-      // Get current profile to merge with updates
-      const currentProfile = await ProfileReader.getProfile(userId);
-      
-      // Merge current profile with form data
-      const updatedProfile: Partial<ScalableProfile> = {
-        ...currentProfile,
-        ...formData,
-        updated_at: new Date().toISOString(),
-        last_active_at: new Date().toISOString(),
-      }
+      // Call the API endpoint instead of direct database access
+      const response = await fetch('/api/profile/me', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(formData),
+      })
 
-      // Map to database format
-      const updateData = ProfileMapper.mapProfileToDatabase(updatedProfile);
+      const result = await response.json()
 
-      // Perform the update
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updateData)
-        .eq('id', userId)
-        .select('*')
-        .single()
-
-      if (error) {
-        logger.error('ProfileWriter.updateProfile database error:', error)
-        
-        // Handle specific error cases
-        if (error.code === '23505' && error.message?.includes('duplicate')) {
-          return { success: false, error: 'Username is already taken. Please choose another username.' }
-        }
-        
-        if (error.message?.includes("'avatar_url'")) {
-          // Column missing, but treat as non-fatal and warn
-          return { success: true, warning: 'avatar_url column missing, profile saved without avatar', data: updatedProfile as any } as any
-        }
-        return { success: false, error: 'Failed to update profile. Please try again.' }
-      }
-
-      if (!data) {
-        // Update succeeded but no data returned (likely RLS policy issue)
-        // Fetch the updated profile separately
-        const fetched = await ProfileReader.getProfile(userId);
-        if (fetched) {
-          logProfile('updateProfile success (via separate fetch)', { userId, profile: fetched })
-          return { success: true, data: fetched }
-        } else {
-          return { success: false, error: 'Profile update succeeded but could not retrieve updated data' }
+      if (!response.ok) {
+        logger.error('ProfileWriter.updateProfile API error:', result)
+        return {
+          success: false,
+          error: result.error || 'Failed to update profile. Please try again.'
         }
       }
 
-      const finalProfile = ProfileMapper.mapDatabaseToProfile(data);
-      logProfile('updateProfile success', { userId, profile: finalProfile })
+      if (!result.success || !result.data) {
+        return {
+          success: false,
+          error: result.error || 'Profile update failed without specific error'
+        }
+      }
 
-      return { success: true, data: finalProfile }
+      // Map the returned data to ScalableProfile format
+      const updatedProfile = ProfileMapper.mapDatabaseToProfile(result.data)
+      logProfile('updateProfile success', { userId, profile: updatedProfile })
+
+      return { success: true, data: updatedProfile }
 
     } catch (err) {
       logger.error('ProfileWriter.updateProfile unexpected error:', err)
-      return { success: false, error: 'An unexpected error occurred while updating profile' }
+      return {
+        success: false,
+        error: 'An unexpected error occurred while updating profile. Please check your connection and try again.'
+      }
     }
   }
 
