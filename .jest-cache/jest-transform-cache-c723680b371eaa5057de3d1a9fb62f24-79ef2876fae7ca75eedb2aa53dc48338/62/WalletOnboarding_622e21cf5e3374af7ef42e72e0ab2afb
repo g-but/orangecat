@@ -1,0 +1,1832 @@
+05a41945a21d2b7de3414e768b595937
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_1n6grm071g() {
+  var path = "/home/g/dev/orangecat/src/components/wallet/WalletOnboarding.tsx";
+  var hash = "161467a5456f59e05241413a43551822512afcdd";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/components/wallet/WalletOnboarding.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 22
+        },
+        end: {
+          line: 5,
+          column: 1
+        }
+      },
+      "1": {
+        start: {
+          line: 4,
+          column: 4
+        },
+        end: {
+          line: 4,
+          column: 62
+        }
+      },
+      "2": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 62
+        }
+      },
+      "3": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 35
+        }
+      },
+      "4": {
+        start: {
+          line: 8,
+          column: 22
+        },
+        end: {
+          line: 8,
+          column: 50
+        }
+      },
+      "5": {
+        start: {
+          line: 9,
+          column: 16
+        },
+        end: {
+          line: 9,
+          column: 32
+        }
+      },
+      "6": {
+        start: {
+          line: 10,
+          column: 24
+        },
+        end: {
+          line: 10,
+          column: 48
+        }
+      },
+      "7": {
+        start: {
+          line: 11,
+          column: 23
+        },
+        end: {
+          line: 11,
+          column: 46
+        }
+      },
+      "8": {
+        start: {
+          line: 12,
+          column: 17
+        },
+        end: {
+          line: 12,
+          column: 67
+        }
+      },
+      "9": {
+        start: {
+          line: 13,
+          column: 15
+        },
+        end: {
+          line: 13,
+          column: 63
+        }
+      },
+      "10": {
+        start: {
+          line: 14,
+          column: 19
+        },
+        end: {
+          line: 14,
+          column: 54
+        }
+      },
+      "11": {
+        start: {
+          line: 16,
+          column: 42
+        },
+        end: {
+          line: 16,
+          column: 66
+        }
+      },
+      "12": {
+        start: {
+          line: 17,
+          column: 48
+        },
+        end: {
+          line: 17,
+          column: 75
+        }
+      },
+      "13": {
+        start: {
+          line: 18,
+          column: 46
+        },
+        end: {
+          line: 18,
+          column: 71
+        }
+      },
+      "14": {
+        start: {
+          line: 19,
+          column: 18
+        },
+        end: {
+          line: 62,
+          column: 5
+        }
+      },
+      "15": {
+        start: {
+          line: 32,
+          column: 400
+        },
+        end: {
+          line: 32,
+          column: 427
+        }
+      },
+      "16": {
+        start: {
+          line: 32,
+          column: 1481
+        },
+        end: {
+          line: 32,
+          column: 1509
+        }
+      },
+      "17": {
+        start: {
+          line: 32,
+          column: 2566
+        },
+        end: {
+          line: 32,
+          column: 2595
+        }
+      },
+      "18": {
+        start: {
+          line: 32,
+          column: 3662
+        },
+        end: {
+          line: 32,
+          column: 3690
+        }
+      },
+      "19": {
+        start: {
+          line: 58,
+          column: 20
+        },
+        end: {
+          line: 58,
+          column: 61
+        }
+      },
+      "20": {
+        start: {
+          line: 63,
+          column: 28
+        },
+        end: {
+          line: 63,
+          column: 46
+        }
+      },
+      "21": {
+        start: {
+          line: 64,
+          column: 21
+        },
+        end: {
+          line: 64,
+          column: 61
+        }
+      },
+      "22": {
+        start: {
+          line: 65,
+          column: 4
+        },
+        end: {
+          line: 65,
+          column: 3823
+        }
+      },
+      "23": {
+        start: {
+          line: 65,
+          column: 975
+        },
+        end: {
+          line: 65,
+          column: 996
+        }
+      },
+      "24": {
+        start: {
+          line: 65,
+          column: 2962
+        },
+        end: {
+          line: 65,
+          column: 3006
+        }
+      },
+      "25": {
+        start: {
+          line: 65,
+          column: 3513
+        },
+        end: {
+          line: 65,
+          column: 3572
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 3,
+            column: 56
+          },
+          end: {
+            line: 3,
+            column: 57
+          }
+        },
+        loc: {
+          start: {
+            line: 3,
+            column: 71
+          },
+          end: {
+            line: 5,
+            column: 1
+          }
+        },
+        line: 3
+      },
+      "1": {
+        name: "WalletOnboarding",
+        decl: {
+          start: {
+            line: 15,
+            column: 9
+          },
+          end: {
+            line: 15,
+            column: 25
+          }
+        },
+        loc: {
+          start: {
+            line: 15,
+            column: 28
+          },
+          end: {
+            line: 66,
+            column: 1
+          }
+        },
+        line: 15
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 32,
+            column: 394
+          },
+          end: {
+            line: 32,
+            column: 395
+          }
+        },
+        loc: {
+          start: {
+            line: 32,
+            column: 400
+          },
+          end: {
+            line: 32,
+            column: 427
+          }
+        },
+        line: 32
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 32,
+            column: 1475
+          },
+          end: {
+            line: 32,
+            column: 1476
+          }
+        },
+        loc: {
+          start: {
+            line: 32,
+            column: 1481
+          },
+          end: {
+            line: 32,
+            column: 1509
+          }
+        },
+        line: 32
+      },
+      "4": {
+        name: "(anonymous_4)",
+        decl: {
+          start: {
+            line: 32,
+            column: 2560
+          },
+          end: {
+            line: 32,
+            column: 2561
+          }
+        },
+        loc: {
+          start: {
+            line: 32,
+            column: 2566
+          },
+          end: {
+            line: 32,
+            column: 2595
+          }
+        },
+        line: 32
+      },
+      "5": {
+        name: "(anonymous_5)",
+        decl: {
+          start: {
+            line: 32,
+            column: 3656
+          },
+          end: {
+            line: 32,
+            column: 3657
+          }
+        },
+        loc: {
+          start: {
+            line: 32,
+            column: 3662
+          },
+          end: {
+            line: 32,
+            column: 3690
+          }
+        },
+        line: 32
+      },
+      "6": {
+        name: "(anonymous_6)",
+        decl: {
+          start: {
+            line: 56,
+            column: 25
+          },
+          end: {
+            line: 56,
+            column: 26
+          }
+        },
+        loc: {
+          start: {
+            line: 56,
+            column: 31
+          },
+          end: {
+            line: 59,
+            column: 17
+          }
+        },
+        line: 56
+      },
+      "7": {
+        name: "(anonymous_7)",
+        decl: {
+          start: {
+            line: 65,
+            column: 969
+          },
+          end: {
+            line: 65,
+            column: 970
+          }
+        },
+        loc: {
+          start: {
+            line: 65,
+            column: 975
+          },
+          end: {
+            line: 65,
+            column: 996
+          }
+        },
+        line: 65
+      },
+      "8": {
+        name: "(anonymous_8)",
+        decl: {
+          start: {
+            line: 65,
+            column: 2956
+          },
+          end: {
+            line: 65,
+            column: 2957
+          }
+        },
+        loc: {
+          start: {
+            line: 65,
+            column: 2962
+          },
+          end: {
+            line: 65,
+            column: 3006
+          }
+        },
+        line: 65
+      },
+      "9": {
+        name: "(anonymous_9)",
+        decl: {
+          start: {
+            line: 65,
+            column: 3507
+          },
+          end: {
+            line: 65,
+            column: 3508
+          }
+        },
+        loc: {
+          start: {
+            line: 65,
+            column: 3513
+          },
+          end: {
+            line: 65,
+            column: 3572
+          }
+        },
+        line: 65
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 3,
+            column: 22
+          },
+          end: {
+            line: 5,
+            column: 1
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 23
+          },
+          end: {
+            line: 3,
+            column: 27
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 31
+          },
+          end: {
+            line: 3,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 56
+          },
+          end: {
+            line: 5,
+            column: 1
+          }
+        }],
+        line: 3
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 4,
+            column: 11
+          },
+          end: {
+            line: 4,
+            column: 61
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 4,
+            column: 37
+          },
+          end: {
+            line: 4,
+            column: 40
+          }
+        }, {
+          start: {
+            line: 4,
+            column: 43
+          },
+          end: {
+            line: 4,
+            column: 61
+          }
+        }],
+        line: 4
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 4,
+            column: 12
+          },
+          end: {
+            line: 4,
+            column: 33
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 4,
+            column: 12
+          },
+          end: {
+            line: 4,
+            column: 15
+          }
+        }, {
+          start: {
+            line: 4,
+            column: 19
+          },
+          end: {
+            line: 4,
+            column: 33
+          }
+        }],
+        line: 4
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 32,
+            column: 298
+          },
+          end: {
+            line: 32,
+            column: 381
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 32,
+            column: 328
+          },
+          end: {
+            line: 32,
+            column: 376
+          }
+        }, {
+          start: {
+            line: 32,
+            column: 379
+          },
+          end: {
+            line: 32,
+            column: 381
+          }
+        }],
+        line: 32
+      },
+      "4": {
+        loc: {
+          start: {
+            line: 32,
+            column: 1378
+          },
+          end: {
+            line: 32,
+            column: 1462
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 32,
+            column: 1409
+          },
+          end: {
+            line: 32,
+            column: 1457
+          }
+        }, {
+          start: {
+            line: 32,
+            column: 1460
+          },
+          end: {
+            line: 32,
+            column: 1462
+          }
+        }],
+        line: 32
+      },
+      "5": {
+        loc: {
+          start: {
+            line: 32,
+            column: 2462
+          },
+          end: {
+            line: 32,
+            column: 2547
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 32,
+            column: 2494
+          },
+          end: {
+            line: 32,
+            column: 2542
+          }
+        }, {
+          start: {
+            line: 32,
+            column: 2545
+          },
+          end: {
+            line: 32,
+            column: 2547
+          }
+        }],
+        line: 32
+      },
+      "6": {
+        loc: {
+          start: {
+            line: 32,
+            column: 3559
+          },
+          end: {
+            line: 32,
+            column: 3643
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 32,
+            column: 3590
+          },
+          end: {
+            line: 32,
+            column: 3638
+          }
+        }, {
+          start: {
+            line: 32,
+            column: 3641
+          },
+          end: {
+            line: 32,
+            column: 3643
+          }
+        }],
+        line: 32
+      },
+      "7": {
+        loc: {
+          start: {
+            line: 39,
+            column: 90
+          },
+          end: {
+            line: 39,
+            column: 2527
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 39,
+            column: 90
+          },
+          end: {
+            line: 39,
+            column: 104
+          }
+        }, {
+          start: {
+            line: 39,
+            column: 109
+          },
+          end: {
+            line: 39,
+            column: 2526
+          }
+        }],
+        line: 39
+      },
+      "8": {
+        loc: {
+          start: {
+            line: 39,
+            column: 433
+          },
+          end: {
+            line: 39,
+            column: 558
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 39,
+            column: 433
+          },
+          end: {
+            line: 39,
+            column: 460
+          }
+        }, {
+          start: {
+            line: 39,
+            column: 464
+          },
+          end: {
+            line: 39,
+            column: 558
+          }
+        }],
+        line: 39
+      },
+      "9": {
+        loc: {
+          start: {
+            line: 39,
+            column: 560
+          },
+          end: {
+            line: 39,
+            column: 683
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 39,
+            column: 560
+          },
+          end: {
+            line: 39,
+            column: 588
+          }
+        }, {
+          start: {
+            line: 39,
+            column: 592
+          },
+          end: {
+            line: 39,
+            column: 683
+          }
+        }],
+        line: 39
+      },
+      "10": {
+        loc: {
+          start: {
+            line: 39,
+            column: 685
+          },
+          end: {
+            line: 39,
+            column: 806
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 39,
+            column: 685
+          },
+          end: {
+            line: 39,
+            column: 714
+          }
+        }, {
+          start: {
+            line: 39,
+            column: 718
+          },
+          end: {
+            line: 39,
+            column: 806
+          }
+        }],
+        line: 39
+      },
+      "11": {
+        loc: {
+          start: {
+            line: 39,
+            column: 808
+          },
+          end: {
+            line: 39,
+            column: 929
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 39,
+            column: 808
+          },
+          end: {
+            line: 39,
+            column: 836
+          }
+        }, {
+          start: {
+            line: 39,
+            column: 840
+          },
+          end: {
+            line: 39,
+            column: 929
+          }
+        }],
+        line: 39
+      },
+      "12": {
+        loc: {
+          start: {
+            line: 39,
+            column: 1179
+          },
+          end: {
+            line: 39,
+            column: 1245
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 39,
+            column: 1179
+          },
+          end: {
+            line: 39,
+            column: 1206
+          }
+        }, {
+          start: {
+            line: 39,
+            column: 1210
+          },
+          end: {
+            line: 39,
+            column: 1245
+          }
+        }],
+        line: 39
+      },
+      "13": {
+        loc: {
+          start: {
+            line: 39,
+            column: 1247
+          },
+          end: {
+            line: 39,
+            column: 1311
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 39,
+            column: 1247
+          },
+          end: {
+            line: 39,
+            column: 1275
+          }
+        }, {
+          start: {
+            line: 39,
+            column: 1279
+          },
+          end: {
+            line: 39,
+            column: 1311
+          }
+        }],
+        line: 39
+      },
+      "14": {
+        loc: {
+          start: {
+            line: 39,
+            column: 1313
+          },
+          end: {
+            line: 39,
+            column: 1381
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 39,
+            column: 1313
+          },
+          end: {
+            line: 39,
+            column: 1342
+          }
+        }, {
+          start: {
+            line: 39,
+            column: 1346
+          },
+          end: {
+            line: 39,
+            column: 1381
+          }
+        }],
+        line: 39
+      },
+      "15": {
+        loc: {
+          start: {
+            line: 39,
+            column: 1383
+          },
+          end: {
+            line: 39,
+            column: 1448
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 39,
+            column: 1383
+          },
+          end: {
+            line: 39,
+            column: 1411
+          }
+        }, {
+          start: {
+            line: 39,
+            column: 1415
+          },
+          end: {
+            line: 39,
+            column: 1448
+          }
+        }],
+        line: 39
+      },
+      "16": {
+        loc: {
+          start: {
+            line: 65,
+            column: 3145
+          },
+          end: {
+            line: 65,
+            column: 3790
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 65,
+            column: 3171
+          },
+          end: {
+            line: 65,
+            column: 3449
+          }
+        }, {
+          start: {
+            line: 65,
+            column: 3454
+          },
+          end: {
+            line: 65,
+            column: 3789
+          }
+        }],
+        line: 65
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    b: {
+      "0": [0, 0, 0],
+      "1": [0, 0],
+      "2": [0, 0],
+      "3": [0, 0],
+      "4": [0, 0],
+      "5": [0, 0],
+      "6": [0, 0],
+      "7": [0, 0],
+      "8": [0, 0],
+      "9": [0, 0],
+      "10": [0, 0],
+      "11": [0, 0],
+      "12": [0, 0],
+      "13": [0, 0],
+      "14": [0, 0],
+      "15": [0, 0],
+      "16": [0, 0]
+    },
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/components/wallet/WalletOnboarding.tsx",
+      mappings: "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",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/components/wallet/WalletOnboarding.tsx"],
+      sourcesContent: ["'use client'\n\nimport { useState, useEffect } from 'react'\nimport { motion, AnimatePresence } from 'framer-motion'\nimport {\n  Bitcoin,\n  Smartphone,\n  Monitor,\n  Globe,\n  Lock,\n  CheckCircle,\n  ArrowRight,\n  ArrowLeft,\n  Download,\n  ExternalLink,\n  Copy,\n  QrCode,\n  Shield,\n  AlertTriangle,\n  Lightbulb,\n  Target,\n  Zap\n} from 'lucide-react'\nimport Button from '@/components/ui/Button'\nimport Card from '@/components/ui/Card'\nimport { Badge } from '@/components/ui/Badge'\nimport { Progress } from '@/components/ui/Progress'\n\ninterface OnboardingStep {\n  id: string\n  title: string\n  description: string\n  icon: any\n  content: any\n  action?: {\n    label: string\n    onClick: () => void\n  }\n}\n\nexport default function WalletOnboarding() {\n  const [currentStep, setCurrentStep] = useState(0)\n  const [selectedWallet, setSelectedWallet] = useState<string | null>(null)\n  const [walletAddress, setWalletAddress] = useState('')\n\n  const steps: OnboardingStep[] = [\n    {\n      id: 'welcome',\n      title: 'Welcome to Bitcoin Wallets',\n      description: 'Let\\'s get you set up with a secure Bitcoin wallet',\n      icon: Bitcoin,\n      content: (\n        <div className=\"text-center space-y-6\">\n          <div className=\"w-20 h-20 bg-bitcoinOrange/10 rounded-full flex items-center justify-center mx-auto\">\n            <Bitcoin className=\"w-10 h-10 text-bitcoinOrange\" />\n          </div>\n          <div>\n            <h3 className=\"text-xl font-semibold mb-2\">Why do you need a Bitcoin wallet?</h3>\n            <p className=\"text-gray-600\">\n              A Bitcoin wallet lets you receive, store, and send Bitcoin. It's like a digital bank account\n              that you control completely - no bank can freeze your funds or charge you fees.\n            </p>\n          </div>\n          <div className=\"bg-blue-50 border border-blue-200 rounded-lg p-4\">\n            <div className=\"flex items-start gap-3\">\n              <Lightbulb className=\"w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0\" />\n              <div className=\"text-left\">\n                <h4 className=\"font-semibold text-blue-900 mb-1\">Pro Tip</h4>\n                <p className=\"text-blue-800 text-sm\">\n                  Your wallet is yours alone. Never share your recovery phrase with anyone, and always\n                  download wallets from official websites.\n                </p>\n              </div>\n            </div>\n          </div>\n        </div>\n      )\n    },\n    {\n      id: 'choose-type',\n      title: 'Choose Your Wallet Type',\n      description: 'Different wallets work better for different needs',\n      icon: Target,\n      content: (\n        <div className=\"space-y-4\">\n          <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">\n            <Card\n              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${\n                selectedWallet === 'mobile' ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange' : ''\n              }`}\n              onClick={() => setSelectedWallet('mobile')}\n            >\n              <Card.Content className=\"p-6\">\n                <div className=\"w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4\">\n                  <Smartphone className=\"w-6 h-6 text-blue-600\" />\n                </div>\n                <h3 className=\"font-semibold mb-2\">Mobile Wallet</h3>\n                <p className=\"text-sm text-gray-600 mb-3\">\n                  Perfect for everyday use, payments, and portability\n                </p>\n                <div className=\"flex items-center gap-2\">\n                  <CheckCircle className=\"w-4 h-4 text-green-500\" />\n                  <span className=\"text-sm text-green-600\">Great for beginners</span>\n                </div>\n              </Card.Content>\n            </Card>\n\n            <Card\n              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${\n                selectedWallet === 'desktop' ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange' : ''\n              }`}\n              onClick={() => setSelectedWallet('desktop')}\n            >\n              <Card.Content className=\"p-6\">\n                <div className=\"w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4\">\n                  <Monitor className=\"w-6 h-6 text-green-600\" />\n                </div>\n                <h3 className=\"font-semibold mb-2\">Desktop Wallet</h3>\n                <p className=\"text-sm text-gray-600 mb-3\">\n                  More features, better security, ideal for regular users\n                </p>\n                <div className=\"flex items-center gap-2\">\n                  <CheckCircle className=\"w-4 h-4 text-green-500\" />\n                  <span className=\"text-sm text-green-600\">Advanced features</span>\n                </div>\n              </Card.Content>\n            </Card>\n\n            <Card\n              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${\n                selectedWallet === 'hardware' ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange' : ''\n              }`}\n              onClick={() => setSelectedWallet('hardware')}\n            >\n              <Card.Content className=\"p-6\">\n                <div className=\"w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4\">\n                  <Lock className=\"w-6 h-6 text-purple-600\" />\n                </div>\n                <h3 className=\"font-semibold mb-2\">Hardware Wallet</h3>\n                <p className=\"text-sm text-gray-600 mb-3\">\n                  Maximum security for large amounts, requires physical device\n                </p>\n                <div className=\"flex items-center gap-2\">\n                  <CheckCircle className=\"w-4 h-4 text-green-500\" />\n                  <span className=\"text-sm text-green-600\">Military-grade security</span>\n                </div>\n              </Card.Content>\n            </Card>\n\n            <Card\n              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${\n                selectedWallet === 'browser' ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange' : ''\n              }`}\n              onClick={() => setSelectedWallet('browser')}\n            >\n              <Card.Content className=\"p-6\">\n                <div className=\"w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4\">\n                  <Globe className=\"w-6 h-6 text-orange-600\" />\n                </div>\n                <h3 className=\"font-semibold mb-2\">Browser Wallet</h3>\n                <p className=\"text-sm text-gray-600 mb-3\">\n                  Built into your browser, convenient for web3 applications\n                </p>\n                <div className=\"flex items-center gap-2\">\n                  <CheckCircle className=\"w-4 h-4 text-green-500\" />\n                  <span className=\"text-sm text-green-600\">Web3 ready</span>\n                </div>\n              </Card.Content>\n            </Card>\n          </div>\n        </div>\n      )\n    },\n    {\n      id: 'get-wallet',\n      title: 'Get Your Wallet',\n      description: 'Download and install your chosen wallet',\n      icon: Download,\n      content: (\n        <div className=\"space-y-6\">\n          {selectedWallet && (\n            <div className=\"bg-white rounded-lg border border-gray-200 p-6\">\n              <div className=\"flex items-center gap-4 mb-4\">\n                <div className=\"w-12 h-12 bg-bitcoinOrange/10 rounded-lg flex items-center justify-center\">\n                  {selectedWallet === 'mobile' && <Smartphone className=\"w-6 h-6 text-bitcoinOrange\" />}\n                  {selectedWallet === 'desktop' && <Monitor className=\"w-6 h-6 text-bitcoinOrange\" />}\n                  {selectedWallet === 'hardware' && <Lock className=\"w-6 h-6 text-bitcoinOrange\" />}\n                  {selectedWallet === 'browser' && <Globe className=\"w-6 h-6 text-bitcoinOrange\" />}\n                </div>\n                <div>\n                  <h3 className=\"font-semibold capitalize\">{selectedWallet} Wallet Selected</h3>\n                  <p className=\"text-sm text-gray-600\">\n                    {selectedWallet === 'mobile' && 'Perfect for on-the-go Bitcoin use'}\n                    {selectedWallet === 'desktop' && 'Great for regular computer use'}\n                    {selectedWallet === 'hardware' && 'Maximum security for your Bitcoin'}\n                    {selectedWallet === 'browser' && 'Convenient for web applications'}\n                  </p>\n                </div>\n              </div>\n\n              <div className=\"space-y-4\">\n                <div className=\"flex items-center gap-3 p-3 bg-green-50 rounded-lg\">\n                  <CheckCircle className=\"w-5 h-5 text-green-600\" />\n                  <span className=\"text-sm text-green-800\">\n                    Download from official website only\n                  </span>\n                </div>\n\n                <div className=\"flex items-center gap-3 p-3 bg-blue-50 rounded-lg\">\n                  <Shield className=\"w-5 h-5 text-blue-600\" />\n                  <span className=\"text-sm text-blue-800\">\n                    Verify the URL and check for HTTPS\n                  </span>\n                </div>\n\n                <div className=\"flex items-center gap-3 p-3 bg-yellow-50 rounded-lg\">\n                  <AlertTriangle className=\"w-5 h-5 text-yellow-600\" />\n                  <span className=\"text-sm text-yellow-800\">\n                    Never download wallets from third-party sites\n                  </span>\n                </div>\n              </div>\n            </div>\n          )}\n\n          <div className=\"text-center\">\n            <Button className=\"bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white\">\n              <Download className=\"w-4 h-4 mr-2\" />\n              Download Official Wallet\n              <ExternalLink className=\"w-4 h-4 ml-2\" />\n            </Button>\n          </div>\n        </div>\n      )\n    },\n    {\n      id: 'setup-wallet',\n      title: 'Set Up Your Wallet',\n      description: 'Create your wallet and save your recovery phrase',\n      icon: Shield,\n      content: (\n        <div className=\"space-y-6\">\n          <div className=\"bg-red-50 border border-red-200 rounded-lg p-6\">\n            <div className=\"flex items-start gap-3\">\n              <AlertTriangle className=\"w-5 h-5 text-red-600 mt-0.5 flex-shrink-0\" />\n              <div>\n                <h3 className=\"font-semibold text-red-900 mb-2\">\u26A0\uFE0F Critical Security Step</h3>\n                <p className=\"text-red-800 text-sm mb-3\">\n                  Your recovery phrase (seed phrase) is the master key to your Bitcoin.\n                  Write it down on paper and store it safely offline.\n                </p>\n                <div className=\"bg-red-100 border border-red-300 rounded p-3\">\n                  <p className=\"text-red-900 text-sm font-medium\">\n                    \uD83D\uDEA8 NEVER share your recovery phrase with anyone. Never store it digitally.\n                  </p>\n                </div>\n              </div>\n            </div>\n          </div>\n\n          <div className=\"grid grid-cols-1 md:grid-cols-3 gap-4\">\n            <Card className=\"text-center p-4\">\n              <div className=\"w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3\">\n                <Download className=\"w-6 h-6 text-blue-600\" />\n              </div>\n              <h4 className=\"font-semibold mb-2\">Download & Install</h4>\n              <p className=\"text-sm text-gray-600\">\n                Follow the official installation guide\n              </p>\n            </Card>\n\n            <Card className=\"text-center p-4\">\n              <div className=\"w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3\">\n                <Shield className=\"w-6 h-6 text-green-600\" />\n              </div>\n              <h4 className=\"font-semibold mb-2\">Create Wallet</h4>\n              <p className=\"text-sm text-gray-600\">\n                Generate your recovery phrase\n              </p>\n            </Card>\n\n            <Card className=\"text-center p-4\">\n              <div className=\"w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3\">\n                <CheckCircle className=\"w-6 h-6 text-purple-600\" />\n              </div>\n              <h4 className=\"font-semibold mb-2\">Verify Backup</h4>\n              <p className=\"text-sm text-gray-600\">\n                Confirm your recovery phrase\n              </p>\n            </Card>\n          </div>\n        </div>\n      )\n    },\n    {\n      id: 'get-address',\n      title: 'Get Your Bitcoin Address',\n      description: 'Copy your receiving address to use on OrangeCat',\n      icon: Copy,\n      content: (\n        <div className=\"space-y-6\">\n          <div className=\"text-center\">\n            <QrCode className=\"w-16 h-16 text-bitcoinOrange mx-auto mb-4\" />\n            <h3 className=\"text-xl font-semibold mb-2\">Your Bitcoin Address</h3>\n            <p className=\"text-gray-600 mb-6\">\n              This is your unique Bitcoin address. People can send Bitcoin to this address.\n            </p>\n          </div>\n\n          <div className=\"bg-gray-50 rounded-lg p-4\">\n            <div className=\"flex items-center gap-3\">\n              <code className=\"flex-1 font-mono text-sm bg-white p-3 rounded border\">\n                bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh\n              </code>\n              <Button variant=\"outline\" size=\"sm\">\n                <Copy className=\"w-4 h-4\" />\n              </Button>\n            </div>\n          </div>\n\n          <div className=\"grid grid-cols-1 md:grid-cols-2 gap-4\">\n            <div className=\"bg-blue-50 border border-blue-200 rounded-lg p-4\">\n              <div className=\"flex items-center gap-2 mb-2\">\n                <CheckCircle className=\"w-4 h-4 text-blue-600\" />\n                <span className=\"font-semibold text-blue-900\">Pro Tip</span>\n              </div>\n              <p className=\"text-blue-800 text-sm\">\n                You can generate a new address for each donation to improve privacy.\n              </p>\n            </div>\n\n            <div className=\"bg-green-50 border border-green-200 rounded-lg p-4\">\n              <div className=\"flex items-center gap-2 mb-2\">\n                <CheckCircle className=\"w-4 h-4 text-green-600\" />\n                <span className=\"font-semibold text-green-900\">Next Step</span>\n              </div>\n              <p className=\"text-green-800 text-sm\">\n                Add this address to your OrangeCat profile to start receiving donations.\n              </p>\n            </div>\n          </div>\n        </div>\n      ),\n      action: {\n        label: 'Add to OrangeCat Profile',\n        onClick: () => {\n          // This would navigate to profile setup\n          console.log('Navigate to profile setup')\n        }\n      }\n    }\n  ]\n\n  const currentStepData = steps[currentStep]\n  const progress = ((currentStep + 1) / steps.length) * 100\n\n  return (\n    <div className=\"min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50\">\n      {/* Header */}\n      <div className=\"bg-white border-b border-orange-100\">\n        <div className=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\">\n          <div className=\"flex items-center justify-between h-16\">\n            <div className=\"flex items-center gap-4\">\n              <Bitcoin className=\"w-8 h-8 text-bitcoinOrange\" />\n              <div>\n                <h1 className=\"text-xl font-bold text-gray-900\">Get Your Bitcoin Wallet</h1>\n                <p className=\"text-sm text-gray-600\">Step {currentStep + 1} of {steps.length}</p>\n              </div>\n            </div>\n            <Button variant=\"outline\" onClick={() => window.history.back()}>\n              Skip for Now\n            </Button>\n          </div>\n        </div>\n      </div>\n\n      {/* Progress Bar */}\n      <div className=\"bg-white border-b border-gray-200\">\n        <div className=\"max-w-7xl mx-auto px-4 sm:px-6 lg:px-8\">\n          <div className=\"py-4\">\n            <div className=\"flex items-center justify-between mb-2\">\n              <span className=\"text-sm font-medium text-gray-700\">\n                {currentStepData.title}\n              </span>\n              <span className=\"text-sm text-gray-500\">\n                {Math.round(progress)}% Complete\n              </span>\n            </div>\n            <Progress value={progress} className=\"h-2\" />\n          </div>\n        </div>\n      </div>\n\n      {/* Main Content */}\n      <div className=\"max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8\">\n        <AnimatePresence mode=\"wait\">\n          <motion.div\n            key={currentStep}\n            initial={{ opacity: 0, x: 20 }}\n            animate={{ opacity: 1, x: 0 }}\n            exit={{ opacity: 0, x: -20 }}\n            transition={{ duration: 0.3 }}\n            className=\"space-y-8\"\n          >\n            {/* Step Header */}\n            <div className=\"text-center\">\n              <div className=\"w-16 h-16 bg-bitcoinOrange/10 rounded-full flex items-center justify-center mx-auto mb-4\">\n                <currentStepData.icon className=\"w-8 h-8 text-bitcoinOrange\" />\n              </div>\n              <h2 className=\"text-2xl font-bold text-gray-900 mb-2\">\n                {currentStepData.title}\n              </h2>\n              <p className=\"text-gray-600 max-w-2xl mx-auto\">\n                {currentStepData.description}\n              </p>\n            </div>\n\n            {/* Step Content */}\n            <div className=\"min-h-[400px]\">\n              {currentStepData.content}\n            </div>\n\n            {/* Navigation */}\n            <div className=\"flex items-center justify-between pt-8 border-t border-gray-200\">\n              <Button\n                variant=\"outline\"\n                onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}\n                disabled={currentStep === 0}\n              >\n                <ArrowLeft className=\"w-4 h-4 mr-2\" />\n                Previous\n              </Button>\n\n              {currentStepData.action ? (\n                <Button\n                  onClick={currentStepData.action.onClick}\n                  className=\"bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white\"\n                >\n                  {currentStepData.action.label}\n                  <ArrowRight className=\"w-4 h-4 ml-2\" />\n                </Button>\n              ) : (\n                <Button\n                  onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}\n                  disabled={currentStep === steps.length - 1}\n                  className=\"bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white\"\n                >\n                  Next\n                  <ArrowRight className=\"w-4 h-4 ml-2\" />\n                </Button>\n              )}\n            </div>\n          </motion.div>\n        </AnimatePresence>\n      </div>\n    </div>\n  )\n}\n"],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "161467a5456f59e05241413a43551822512afcdd"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1n6grm071g = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1n6grm071g();
+var __importDefault =
+/* istanbul ignore next */
+(cov_1n6grm071g().s[0]++,
+/* istanbul ignore next */
+(cov_1n6grm071g().b[0][0]++, this) &&
+/* istanbul ignore next */
+(cov_1n6grm071g().b[0][1]++, this.__importDefault) ||
+/* istanbul ignore next */
+(cov_1n6grm071g().b[0][2]++, function (mod) {
+  /* istanbul ignore next */
+  cov_1n6grm071g().f[0]++;
+  cov_1n6grm071g().s[1]++;
+  return /* istanbul ignore next */(cov_1n6grm071g().b[2][0]++, mod) &&
+  /* istanbul ignore next */
+  (cov_1n6grm071g().b[2][1]++, mod.__esModule) ?
+  /* istanbul ignore next */
+  (cov_1n6grm071g().b[1][0]++, mod) :
+  /* istanbul ignore next */
+  (cov_1n6grm071g().b[1][1]++, {
+    "default": mod
+  });
+}));
+/* istanbul ignore next */
+cov_1n6grm071g().s[2]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1n6grm071g().s[3]++;
+exports.default = WalletOnboarding;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_1n6grm071g().s[4]++, require("react/jsx-runtime"));
+const react_1 =
+/* istanbul ignore next */
+(cov_1n6grm071g().s[5]++, require("react"));
+const framer_motion_1 =
+/* istanbul ignore next */
+(cov_1n6grm071g().s[6]++, require("framer-motion"));
+const lucide_react_1 =
+/* istanbul ignore next */
+(cov_1n6grm071g().s[7]++, require("lucide-react"));
+const Button_1 =
+/* istanbul ignore next */
+(cov_1n6grm071g().s[8]++, __importDefault(require("@/components/ui/Button")));
+const Card_1 =
+/* istanbul ignore next */
+(cov_1n6grm071g().s[9]++, __importDefault(require("@/components/ui/Card")));
+const Progress_1 =
+/* istanbul ignore next */
+(cov_1n6grm071g().s[10]++, require("@/components/ui/Progress"));
+function WalletOnboarding() {
+  /* istanbul ignore next */
+  cov_1n6grm071g().f[1]++;
+  const [currentStep, setCurrentStep] =
+  /* istanbul ignore next */
+  (cov_1n6grm071g().s[11]++, (0, react_1.useState)(0));
+  const [selectedWallet, setSelectedWallet] =
+  /* istanbul ignore next */
+  (cov_1n6grm071g().s[12]++, (0, react_1.useState)(null));
+  const [walletAddress, setWalletAddress] =
+  /* istanbul ignore next */
+  (cov_1n6grm071g().s[13]++, (0, react_1.useState)(''));
+  const steps =
+  /* istanbul ignore next */
+  (cov_1n6grm071g().s[14]++, [{
+    id: 'welcome',
+    title: 'Welcome to Bitcoin Wallets',
+    description: 'Let\'s get you set up with a secure Bitcoin wallet',
+    icon: lucide_react_1.Bitcoin,
+    content: (0, jsx_runtime_1.jsxs)("div", {
+      className: "text-center space-y-6",
+      children: [(0, jsx_runtime_1.jsx)("div", {
+        className: "w-20 h-20 bg-bitcoinOrange/10 rounded-full flex items-center justify-center mx-auto",
+        children: (0, jsx_runtime_1.jsx)(lucide_react_1.Bitcoin, {
+          className: "w-10 h-10 text-bitcoinOrange"
+        })
+      }), (0, jsx_runtime_1.jsxs)("div", {
+        children: [(0, jsx_runtime_1.jsx)("h3", {
+          className: "text-xl font-semibold mb-2",
+          children: "Why do you need a Bitcoin wallet?"
+        }), (0, jsx_runtime_1.jsx)("p", {
+          className: "text-gray-600",
+          children: "A Bitcoin wallet lets you receive, store, and send Bitcoin. It's like a digital bank account that you control completely - no bank can freeze your funds or charge you fees."
+        })]
+      }), (0, jsx_runtime_1.jsx)("div", {
+        className: "bg-blue-50 border border-blue-200 rounded-lg p-4",
+        children: (0, jsx_runtime_1.jsxs)("div", {
+          className: "flex items-start gap-3",
+          children: [(0, jsx_runtime_1.jsx)(lucide_react_1.Lightbulb, {
+            className: "w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0"
+          }), (0, jsx_runtime_1.jsxs)("div", {
+            className: "text-left",
+            children: [(0, jsx_runtime_1.jsx)("h4", {
+              className: "font-semibold text-blue-900 mb-1",
+              children: "Pro Tip"
+            }), (0, jsx_runtime_1.jsx)("p", {
+              className: "text-blue-800 text-sm",
+              children: "Your wallet is yours alone. Never share your recovery phrase with anyone, and always download wallets from official websites."
+            })]
+          })]
+        })
+      })]
+    })
+  }, {
+    id: 'choose-type',
+    title: 'Choose Your Wallet Type',
+    description: 'Different wallets work better for different needs',
+    icon: lucide_react_1.Target,
+    content: (0, jsx_runtime_1.jsx)("div", {
+      className: "space-y-4",
+      children: (0, jsx_runtime_1.jsxs)("div", {
+        className: "grid grid-cols-1 md:grid-cols-2 gap-4",
+        children: [(0, jsx_runtime_1.jsx)(Card_1.default, {
+          className: `cursor-pointer transition-all duration-200 hover:shadow-lg ${selectedWallet === 'mobile' ?
+          /* istanbul ignore next */
+          (cov_1n6grm071g().b[3][0]++, 'ring-2 ring-bitcoinOrange border-bitcoinOrange') :
+          /* istanbul ignore next */
+          (cov_1n6grm071g().b[3][1]++, '')}`,
+          onClick: () => {
+            /* istanbul ignore next */
+            cov_1n6grm071g().f[2]++;
+            cov_1n6grm071g().s[15]++;
+            return setSelectedWallet('mobile');
+          },
+          children: (0, jsx_runtime_1.jsxs)(Card_1.default.Content, {
+            className: "p-6",
+            children: [(0, jsx_runtime_1.jsx)("div", {
+              className: "w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4",
+              children: (0, jsx_runtime_1.jsx)(lucide_react_1.Smartphone, {
+                className: "w-6 h-6 text-blue-600"
+              })
+            }), (0, jsx_runtime_1.jsx)("h3", {
+              className: "font-semibold mb-2",
+              children: "Mobile Wallet"
+            }), (0, jsx_runtime_1.jsx)("p", {
+              className: "text-sm text-gray-600 mb-3",
+              children: "Perfect for everyday use, payments, and portability"
+            }), (0, jsx_runtime_1.jsxs)("div", {
+              className: "flex items-center gap-2",
+              children: [(0, jsx_runtime_1.jsx)(lucide_react_1.CheckCircle, {
+                className: "w-4 h-4 text-green-500"
+              }), (0, jsx_runtime_1.jsx)("span", {
+                className: "text-sm text-green-600",
+                children: "Great for beginners"
+              })]
+            })]
+          })
+        }), (0, jsx_runtime_1.jsx)(Card_1.default, {
+          className: `cursor-pointer transition-all duration-200 hover:shadow-lg ${selectedWallet === 'desktop' ?
+          /* istanbul ignore next */
+          (cov_1n6grm071g().b[4][0]++, 'ring-2 ring-bitcoinOrange border-bitcoinOrange') :
+          /* istanbul ignore next */
+          (cov_1n6grm071g().b[4][1]++, '')}`,
+          onClick: () => {
+            /* istanbul ignore next */
+            cov_1n6grm071g().f[3]++;
+            cov_1n6grm071g().s[16]++;
+            return setSelectedWallet('desktop');
+          },
+          children: (0, jsx_runtime_1.jsxs)(Card_1.default.Content, {
+            className: "p-6",
+            children: [(0, jsx_runtime_1.jsx)("div", {
+              className: "w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4",
+              children: (0, jsx_runtime_1.jsx)(lucide_react_1.Monitor, {
+                className: "w-6 h-6 text-green-600"
+              })
+            }), (0, jsx_runtime_1.jsx)("h3", {
+              className: "font-semibold mb-2",
+              children: "Desktop Wallet"
+            }), (0, jsx_runtime_1.jsx)("p", {
+              className: "text-sm text-gray-600 mb-3",
+              children: "More features, better security, ideal for regular users"
+            }), (0, jsx_runtime_1.jsxs)("div", {
+              className: "flex items-center gap-2",
+              children: [(0, jsx_runtime_1.jsx)(lucide_react_1.CheckCircle, {
+                className: "w-4 h-4 text-green-500"
+              }), (0, jsx_runtime_1.jsx)("span", {
+                className: "text-sm text-green-600",
+                children: "Advanced features"
+              })]
+            })]
+          })
+        }), (0, jsx_runtime_1.jsx)(Card_1.default, {
+          className: `cursor-pointer transition-all duration-200 hover:shadow-lg ${selectedWallet === 'hardware' ?
+          /* istanbul ignore next */
+          (cov_1n6grm071g().b[5][0]++, 'ring-2 ring-bitcoinOrange border-bitcoinOrange') :
+          /* istanbul ignore next */
+          (cov_1n6grm071g().b[5][1]++, '')}`,
+          onClick: () => {
+            /* istanbul ignore next */
+            cov_1n6grm071g().f[4]++;
+            cov_1n6grm071g().s[17]++;
+            return setSelectedWallet('hardware');
+          },
+          children: (0, jsx_runtime_1.jsxs)(Card_1.default.Content, {
+            className: "p-6",
+            children: [(0, jsx_runtime_1.jsx)("div", {
+              className: "w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4",
+              children: (0, jsx_runtime_1.jsx)(lucide_react_1.Lock, {
+                className: "w-6 h-6 text-purple-600"
+              })
+            }), (0, jsx_runtime_1.jsx)("h3", {
+              className: "font-semibold mb-2",
+              children: "Hardware Wallet"
+            }), (0, jsx_runtime_1.jsx)("p", {
+              className: "text-sm text-gray-600 mb-3",
+              children: "Maximum security for large amounts, requires physical device"
+            }), (0, jsx_runtime_1.jsxs)("div", {
+              className: "flex items-center gap-2",
+              children: [(0, jsx_runtime_1.jsx)(lucide_react_1.CheckCircle, {
+                className: "w-4 h-4 text-green-500"
+              }), (0, jsx_runtime_1.jsx)("span", {
+                className: "text-sm text-green-600",
+                children: "Military-grade security"
+              })]
+            })]
+          })
+        }), (0, jsx_runtime_1.jsx)(Card_1.default, {
+          className: `cursor-pointer transition-all duration-200 hover:shadow-lg ${selectedWallet === 'browser' ?
+          /* istanbul ignore next */
+          (cov_1n6grm071g().b[6][0]++, 'ring-2 ring-bitcoinOrange border-bitcoinOrange') :
+          /* istanbul ignore next */
+          (cov_1n6grm071g().b[6][1]++, '')}`,
+          onClick: () => {
+            /* istanbul ignore next */
+            cov_1n6grm071g().f[5]++;
+            cov_1n6grm071g().s[18]++;
+            return setSelectedWallet('browser');
+          },
+          children: (0, jsx_runtime_1.jsxs)(Card_1.default.Content, {
+            className: "p-6",
+            children: [(0, jsx_runtime_1.jsx)("div", {
+              className: "w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4",
+              children: (0, jsx_runtime_1.jsx)(lucide_react_1.Globe, {
+                className: "w-6 h-6 text-orange-600"
+              })
+            }), (0, jsx_runtime_1.jsx)("h3", {
+              className: "font-semibold mb-2",
+              children: "Browser Wallet"
+            }), (0, jsx_runtime_1.jsx)("p", {
+              className: "text-sm text-gray-600 mb-3",
+              children: "Built into your browser, convenient for web3 applications"
+            }), (0, jsx_runtime_1.jsxs)("div", {
+              className: "flex items-center gap-2",
+              children: [(0, jsx_runtime_1.jsx)(lucide_react_1.CheckCircle, {
+                className: "w-4 h-4 text-green-500"
+              }), (0, jsx_runtime_1.jsx)("span", {
+                className: "text-sm text-green-600",
+                children: "Web3 ready"
+              })]
+            })]
+          })
+        })]
+      })
+    })
+  }, {
+    id: 'get-wallet',
+    title: 'Get Your Wallet',
+    description: 'Download and install your chosen wallet',
+    icon: lucide_react_1.Download,
+    content: (0, jsx_runtime_1.jsxs)("div", {
+      className: "space-y-6",
+      children: [
+      /* istanbul ignore next */
+      (cov_1n6grm071g().b[7][0]++, selectedWallet) &&
+      /* istanbul ignore next */
+      (cov_1n6grm071g().b[7][1]++, (0, jsx_runtime_1.jsxs)("div", {
+        className: "bg-white rounded-lg border border-gray-200 p-6",
+        children: [(0, jsx_runtime_1.jsxs)("div", {
+          className: "flex items-center gap-4 mb-4",
+          children: [(0, jsx_runtime_1.jsxs)("div", {
+            className: "w-12 h-12 bg-bitcoinOrange/10 rounded-lg flex items-center justify-center",
+            children: [
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[8][0]++, selectedWallet === 'mobile') &&
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[8][1]++, (0, jsx_runtime_1.jsx)(lucide_react_1.Smartphone, {
+              className: "w-6 h-6 text-bitcoinOrange"
+            })),
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[9][0]++, selectedWallet === 'desktop') &&
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[9][1]++, (0, jsx_runtime_1.jsx)(lucide_react_1.Monitor, {
+              className: "w-6 h-6 text-bitcoinOrange"
+            })),
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[10][0]++, selectedWallet === 'hardware') &&
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[10][1]++, (0, jsx_runtime_1.jsx)(lucide_react_1.Lock, {
+              className: "w-6 h-6 text-bitcoinOrange"
+            })),
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[11][0]++, selectedWallet === 'browser') &&
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[11][1]++, (0, jsx_runtime_1.jsx)(lucide_react_1.Globe, {
+              className: "w-6 h-6 text-bitcoinOrange"
+            }))]
+          }), (0, jsx_runtime_1.jsxs)("div", {
+            children: [(0, jsx_runtime_1.jsxs)("h3", {
+              className: "font-semibold capitalize",
+              children: [selectedWallet, " Wallet Selected"]
+            }), (0, jsx_runtime_1.jsxs)("p", {
+              className: "text-sm text-gray-600",
+              children: [
+              /* istanbul ignore next */
+              (cov_1n6grm071g().b[12][0]++, selectedWallet === 'mobile') &&
+              /* istanbul ignore next */
+              (cov_1n6grm071g().b[12][1]++, 'Perfect for on-the-go Bitcoin use'),
+              /* istanbul ignore next */
+              (cov_1n6grm071g().b[13][0]++, selectedWallet === 'desktop') &&
+              /* istanbul ignore next */
+              (cov_1n6grm071g().b[13][1]++, 'Great for regular computer use'),
+              /* istanbul ignore next */
+              (cov_1n6grm071g().b[14][0]++, selectedWallet === 'hardware') &&
+              /* istanbul ignore next */
+              (cov_1n6grm071g().b[14][1]++, 'Maximum security for your Bitcoin'),
+              /* istanbul ignore next */
+              (cov_1n6grm071g().b[15][0]++, selectedWallet === 'browser') &&
+              /* istanbul ignore next */
+              (cov_1n6grm071g().b[15][1]++, 'Convenient for web applications')]
+            })]
+          })]
+        }), (0, jsx_runtime_1.jsxs)("div", {
+          className: "space-y-4",
+          children: [(0, jsx_runtime_1.jsxs)("div", {
+            className: "flex items-center gap-3 p-3 bg-green-50 rounded-lg",
+            children: [(0, jsx_runtime_1.jsx)(lucide_react_1.CheckCircle, {
+              className: "w-5 h-5 text-green-600"
+            }), (0, jsx_runtime_1.jsx)("span", {
+              className: "text-sm text-green-800",
+              children: "Download from official website only"
+            })]
+          }), (0, jsx_runtime_1.jsxs)("div", {
+            className: "flex items-center gap-3 p-3 bg-blue-50 rounded-lg",
+            children: [(0, jsx_runtime_1.jsx)(lucide_react_1.Shield, {
+              className: "w-5 h-5 text-blue-600"
+            }), (0, jsx_runtime_1.jsx)("span", {
+              className: "text-sm text-blue-800",
+              children: "Verify the URL and check for HTTPS"
+            })]
+          }), (0, jsx_runtime_1.jsxs)("div", {
+            className: "flex items-center gap-3 p-3 bg-yellow-50 rounded-lg",
+            children: [(0, jsx_runtime_1.jsx)(lucide_react_1.AlertTriangle, {
+              className: "w-5 h-5 text-yellow-600"
+            }), (0, jsx_runtime_1.jsx)("span", {
+              className: "text-sm text-yellow-800",
+              children: "Never download wallets from third-party sites"
+            })]
+          })]
+        })]
+      })), (0, jsx_runtime_1.jsx)("div", {
+        className: "text-center",
+        children: (0, jsx_runtime_1.jsxs)(Button_1.default, {
+          className: "bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white",
+          children: [(0, jsx_runtime_1.jsx)(lucide_react_1.Download, {
+            className: "w-4 h-4 mr-2"
+          }), "Download Official Wallet", (0, jsx_runtime_1.jsx)(lucide_react_1.ExternalLink, {
+            className: "w-4 h-4 ml-2"
+          })]
+        })
+      })]
+    })
+  }, {
+    id: 'setup-wallet',
+    title: 'Set Up Your Wallet',
+    description: 'Create your wallet and save your recovery phrase',
+    icon: lucide_react_1.Shield,
+    content: (0, jsx_runtime_1.jsxs)("div", {
+      className: "space-y-6",
+      children: [(0, jsx_runtime_1.jsx)("div", {
+        className: "bg-red-50 border border-red-200 rounded-lg p-6",
+        children: (0, jsx_runtime_1.jsxs)("div", {
+          className: "flex items-start gap-3",
+          children: [(0, jsx_runtime_1.jsx)(lucide_react_1.AlertTriangle, {
+            className: "w-5 h-5 text-red-600 mt-0.5 flex-shrink-0"
+          }), (0, jsx_runtime_1.jsxs)("div", {
+            children: [(0, jsx_runtime_1.jsx)("h3", {
+              className: "font-semibold text-red-900 mb-2",
+              children: "\u26A0\uFE0F Critical Security Step"
+            }), (0, jsx_runtime_1.jsx)("p", {
+              className: "text-red-800 text-sm mb-3",
+              children: "Your recovery phrase (seed phrase) is the master key to your Bitcoin. Write it down on paper and store it safely offline."
+            }), (0, jsx_runtime_1.jsx)("div", {
+              className: "bg-red-100 border border-red-300 rounded p-3",
+              children: (0, jsx_runtime_1.jsx)("p", {
+                className: "text-red-900 text-sm font-medium",
+                children: "\uD83D\uDEA8 NEVER share your recovery phrase with anyone. Never store it digitally."
+              })
+            })]
+          })]
+        })
+      }), (0, jsx_runtime_1.jsxs)("div", {
+        className: "grid grid-cols-1 md:grid-cols-3 gap-4",
+        children: [(0, jsx_runtime_1.jsxs)(Card_1.default, {
+          className: "text-center p-4",
+          children: [(0, jsx_runtime_1.jsx)("div", {
+            className: "w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3",
+            children: (0, jsx_runtime_1.jsx)(lucide_react_1.Download, {
+              className: "w-6 h-6 text-blue-600"
+            })
+          }), (0, jsx_runtime_1.jsx)("h4", {
+            className: "font-semibold mb-2",
+            children: "Download & Install"
+          }), (0, jsx_runtime_1.jsx)("p", {
+            className: "text-sm text-gray-600",
+            children: "Follow the official installation guide"
+          })]
+        }), (0, jsx_runtime_1.jsxs)(Card_1.default, {
+          className: "text-center p-4",
+          children: [(0, jsx_runtime_1.jsx)("div", {
+            className: "w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3",
+            children: (0, jsx_runtime_1.jsx)(lucide_react_1.Shield, {
+              className: "w-6 h-6 text-green-600"
+            })
+          }), (0, jsx_runtime_1.jsx)("h4", {
+            className: "font-semibold mb-2",
+            children: "Create Wallet"
+          }), (0, jsx_runtime_1.jsx)("p", {
+            className: "text-sm text-gray-600",
+            children: "Generate your recovery phrase"
+          })]
+        }), (0, jsx_runtime_1.jsxs)(Card_1.default, {
+          className: "text-center p-4",
+          children: [(0, jsx_runtime_1.jsx)("div", {
+            className: "w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3",
+            children: (0, jsx_runtime_1.jsx)(lucide_react_1.CheckCircle, {
+              className: "w-6 h-6 text-purple-600"
+            })
+          }), (0, jsx_runtime_1.jsx)("h4", {
+            className: "font-semibold mb-2",
+            children: "Verify Backup"
+          }), (0, jsx_runtime_1.jsx)("p", {
+            className: "text-sm text-gray-600",
+            children: "Confirm your recovery phrase"
+          })]
+        })]
+      })]
+    })
+  }, {
+    id: 'get-address',
+    title: 'Get Your Bitcoin Address',
+    description: 'Copy your receiving address to use on OrangeCat',
+    icon: lucide_react_1.Copy,
+    content: (0, jsx_runtime_1.jsxs)("div", {
+      className: "space-y-6",
+      children: [(0, jsx_runtime_1.jsxs)("div", {
+        className: "text-center",
+        children: [(0, jsx_runtime_1.jsx)(lucide_react_1.QrCode, {
+          className: "w-16 h-16 text-bitcoinOrange mx-auto mb-4"
+        }), (0, jsx_runtime_1.jsx)("h3", {
+          className: "text-xl font-semibold mb-2",
+          children: "Your Bitcoin Address"
+        }), (0, jsx_runtime_1.jsx)("p", {
+          className: "text-gray-600 mb-6",
+          children: "This is your unique Bitcoin address. People can send Bitcoin to this address."
+        })]
+      }), (0, jsx_runtime_1.jsx)("div", {
+        className: "bg-gray-50 rounded-lg p-4",
+        children: (0, jsx_runtime_1.jsxs)("div", {
+          className: "flex items-center gap-3",
+          children: [(0, jsx_runtime_1.jsx)("code", {
+            className: "flex-1 font-mono text-sm bg-white p-3 rounded border",
+            children: "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh"
+          }), (0, jsx_runtime_1.jsx)(Button_1.default, {
+            variant: "outline",
+            size: "sm",
+            children: (0, jsx_runtime_1.jsx)(lucide_react_1.Copy, {
+              className: "w-4 h-4"
+            })
+          })]
+        })
+      }), (0, jsx_runtime_1.jsxs)("div", {
+        className: "grid grid-cols-1 md:grid-cols-2 gap-4",
+        children: [(0, jsx_runtime_1.jsxs)("div", {
+          className: "bg-blue-50 border border-blue-200 rounded-lg p-4",
+          children: [(0, jsx_runtime_1.jsxs)("div", {
+            className: "flex items-center gap-2 mb-2",
+            children: [(0, jsx_runtime_1.jsx)(lucide_react_1.CheckCircle, {
+              className: "w-4 h-4 text-blue-600"
+            }), (0, jsx_runtime_1.jsx)("span", {
+              className: "font-semibold text-blue-900",
+              children: "Pro Tip"
+            })]
+          }), (0, jsx_runtime_1.jsx)("p", {
+            className: "text-blue-800 text-sm",
+            children: "You can generate a new address for each donation to improve privacy."
+          })]
+        }), (0, jsx_runtime_1.jsxs)("div", {
+          className: "bg-green-50 border border-green-200 rounded-lg p-4",
+          children: [(0, jsx_runtime_1.jsxs)("div", {
+            className: "flex items-center gap-2 mb-2",
+            children: [(0, jsx_runtime_1.jsx)(lucide_react_1.CheckCircle, {
+              className: "w-4 h-4 text-green-600"
+            }), (0, jsx_runtime_1.jsx)("span", {
+              className: "font-semibold text-green-900",
+              children: "Next Step"
+            })]
+          }), (0, jsx_runtime_1.jsx)("p", {
+            className: "text-green-800 text-sm",
+            children: "Add this address to your OrangeCat profile to start receiving donations."
+          })]
+        })]
+      })]
+    }),
+    action: {
+      label: 'Add to OrangeCat Profile',
+      onClick: () => {
+        /* istanbul ignore next */
+        cov_1n6grm071g().f[6]++;
+        cov_1n6grm071g().s[19]++;
+        // This would navigate to profile setup
+        console.log('Navigate to profile setup');
+      }
+    }
+  }]);
+  const currentStepData =
+  /* istanbul ignore next */
+  (cov_1n6grm071g().s[20]++, steps[currentStep]);
+  const progress =
+  /* istanbul ignore next */
+  (cov_1n6grm071g().s[21]++, (currentStep + 1) / steps.length * 100);
+  /* istanbul ignore next */
+  cov_1n6grm071g().s[22]++;
+  return (0, jsx_runtime_1.jsxs)("div", {
+    className: "min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50",
+    children: [(0, jsx_runtime_1.jsx)("div", {
+      className: "bg-white border-b border-orange-100",
+      children: (0, jsx_runtime_1.jsx)("div", {
+        className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+        children: (0, jsx_runtime_1.jsxs)("div", {
+          className: "flex items-center justify-between h-16",
+          children: [(0, jsx_runtime_1.jsxs)("div", {
+            className: "flex items-center gap-4",
+            children: [(0, jsx_runtime_1.jsx)(lucide_react_1.Bitcoin, {
+              className: "w-8 h-8 text-bitcoinOrange"
+            }), (0, jsx_runtime_1.jsxs)("div", {
+              children: [(0, jsx_runtime_1.jsx)("h1", {
+                className: "text-xl font-bold text-gray-900",
+                children: "Get Your Bitcoin Wallet"
+              }), (0, jsx_runtime_1.jsxs)("p", {
+                className: "text-sm text-gray-600",
+                children: ["Step ", currentStep + 1, " of ", steps.length]
+              })]
+            })]
+          }), (0, jsx_runtime_1.jsx)(Button_1.default, {
+            variant: "outline",
+            onClick: () => {
+              /* istanbul ignore next */
+              cov_1n6grm071g().f[7]++;
+              cov_1n6grm071g().s[23]++;
+              return window.history.back();
+            },
+            children: "Skip for Now"
+          })]
+        })
+      })
+    }), (0, jsx_runtime_1.jsx)("div", {
+      className: "bg-white border-b border-gray-200",
+      children: (0, jsx_runtime_1.jsx)("div", {
+        className: "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+        children: (0, jsx_runtime_1.jsxs)("div", {
+          className: "py-4",
+          children: [(0, jsx_runtime_1.jsxs)("div", {
+            className: "flex items-center justify-between mb-2",
+            children: [(0, jsx_runtime_1.jsx)("span", {
+              className: "text-sm font-medium text-gray-700",
+              children: currentStepData.title
+            }), (0, jsx_runtime_1.jsxs)("span", {
+              className: "text-sm text-gray-500",
+              children: [Math.round(progress), "% Complete"]
+            })]
+          }), (0, jsx_runtime_1.jsx)(Progress_1.Progress, {
+            value: progress,
+            className: "h-2"
+          })]
+        })
+      })
+    }), (0, jsx_runtime_1.jsx)("div", {
+      className: "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8",
+      children: (0, jsx_runtime_1.jsx)(framer_motion_1.AnimatePresence, {
+        mode: "wait",
+        children: (0, jsx_runtime_1.jsxs)(framer_motion_1.motion.div, {
+          initial: {
+            opacity: 0,
+            x: 20
+          },
+          animate: {
+            opacity: 1,
+            x: 0
+          },
+          exit: {
+            opacity: 0,
+            x: -20
+          },
+          transition: {
+            duration: 0.3
+          },
+          className: "space-y-8",
+          children: [(0, jsx_runtime_1.jsxs)("div", {
+            className: "text-center",
+            children: [(0, jsx_runtime_1.jsx)("div", {
+              className: "w-16 h-16 bg-bitcoinOrange/10 rounded-full flex items-center justify-center mx-auto mb-4",
+              children: (0, jsx_runtime_1.jsx)(currentStepData.icon, {
+                className: "w-8 h-8 text-bitcoinOrange"
+              })
+            }), (0, jsx_runtime_1.jsx)("h2", {
+              className: "text-2xl font-bold text-gray-900 mb-2",
+              children: currentStepData.title
+            }), (0, jsx_runtime_1.jsx)("p", {
+              className: "text-gray-600 max-w-2xl mx-auto",
+              children: currentStepData.description
+            })]
+          }), (0, jsx_runtime_1.jsx)("div", {
+            className: "min-h-[400px]",
+            children: currentStepData.content
+          }), (0, jsx_runtime_1.jsxs)("div", {
+            className: "flex items-center justify-between pt-8 border-t border-gray-200",
+            children: [(0, jsx_runtime_1.jsxs)(Button_1.default, {
+              variant: "outline",
+              onClick: () => {
+                /* istanbul ignore next */
+                cov_1n6grm071g().f[8]++;
+                cov_1n6grm071g().s[24]++;
+                return setCurrentStep(Math.max(0, currentStep - 1));
+              },
+              disabled: currentStep === 0,
+              children: [(0, jsx_runtime_1.jsx)(lucide_react_1.ArrowLeft, {
+                className: "w-4 h-4 mr-2"
+              }), "Previous"]
+            }), currentStepData.action ?
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[16][0]++, (0, jsx_runtime_1.jsxs)(Button_1.default, {
+              onClick: currentStepData.action.onClick,
+              className: "bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white",
+              children: [currentStepData.action.label, (0, jsx_runtime_1.jsx)(lucide_react_1.ArrowRight, {
+                className: "w-4 h-4 ml-2"
+              })]
+            })) :
+            /* istanbul ignore next */
+            (cov_1n6grm071g().b[16][1]++, (0, jsx_runtime_1.jsxs)(Button_1.default, {
+              onClick: () => {
+                /* istanbul ignore next */
+                cov_1n6grm071g().f[9]++;
+                cov_1n6grm071g().s[25]++;
+                return setCurrentStep(Math.min(steps.length - 1, currentStep + 1));
+              },
+              disabled: currentStep === steps.length - 1,
+              className: "bg-bitcoinOrange hover:bg-bitcoinOrange/90 text-white",
+              children: ["Next", (0, jsx_runtime_1.jsx)(lucide_react_1.ArrowRight, {
+                className: "w-4 h-4 ml-2"
+              })]
+            }))]
+          })]
+        }, currentStep)
+      })
+    })]
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMW42Z3JtMDcxZyIsImFjdHVhbENvdmVyYWdlIiwiZXhwb3J0cyIsImRlZmF1bHQiLCJXYWxsZXRPbmJvYXJkaW5nIiwicmVhY3RfMSIsInMiLCJyZXF1aXJlIiwiZnJhbWVyX21vdGlvbl8xIiwibHVjaWRlX3JlYWN0XzEiLCJCdXR0b25fMSIsIl9faW1wb3J0RGVmYXVsdCIsIkNhcmRfMSIsIlByb2dyZXNzXzEiLCJmIiwiY3VycmVudFN0ZXAiLCJzZXRDdXJyZW50U3RlcCIsInVzZVN0YXRlIiwic2VsZWN0ZWRXYWxsZXQiLCJzZXRTZWxlY3RlZFdhbGxldCIsIndhbGxldEFkZHJlc3MiLCJzZXRXYWxsZXRBZGRyZXNzIiwic3RlcHMiLCJpZCIsInRpdGxlIiwiZGVzY3JpcHRpb24iLCJpY29uIiwiQml0Y29pbiIsImNvbnRlbnQiLCJqc3hfcnVudGltZV8xIiwianN4cyIsImNsYXNzTmFtZSIsImNoaWxkcmVuIiwianN4IiwiTGlnaHRidWxiIiwiVGFyZ2V0IiwiYiIsIm9uQ2xpY2siLCJDb250ZW50IiwiU21hcnRwaG9uZSIsIkNoZWNrQ2lyY2xlIiwiTW9uaXRvciIsIkxvY2siLCJHbG9iZSIsIkRvd25sb2FkIiwiU2hpZWxkIiwiQWxlcnRUcmlhbmdsZSIsIkV4dGVybmFsTGluayIsIkNvcHkiLCJRckNvZGUiLCJ2YXJpYW50Iiwic2l6ZSIsImFjdGlvbiIsImxhYmVsIiwiY29uc29sZSIsImxvZyIsImN1cnJlbnRTdGVwRGF0YSIsInByb2dyZXNzIiwibGVuZ3RoIiwid2luZG93IiwiaGlzdG9yeSIsImJhY2siLCJNYXRoIiwicm91bmQiLCJQcm9ncmVzcyIsInZhbHVlIiwiQW5pbWF0ZVByZXNlbmNlIiwibW9kZSIsIm1vdGlvbiIsImRpdiIsImluaXRpYWwiLCJvcGFjaXR5IiwieCIsImFuaW1hdGUiLCJleGl0IiwidHJhbnNpdGlvbiIsImR1cmF0aW9uIiwibWF4IiwiZGlzYWJsZWQiLCJBcnJvd0xlZnQiLCJBcnJvd1JpZ2h0IiwibWluIl0sInNvdXJjZXMiOlsiL2hvbWUvZy9kZXYvb3JhbmdlY2F0L3NyYy9jb21wb25lbnRzL3dhbGxldC9XYWxsZXRPbmJvYXJkaW5nLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIndXNlIGNsaWVudCdcblxuaW1wb3J0IHsgdXNlU3RhdGUsIHVzZUVmZmVjdCB9IGZyb20gJ3JlYWN0J1xuaW1wb3J0IHsgbW90aW9uLCBBbmltYXRlUHJlc2VuY2UgfSBmcm9tICdmcmFtZXItbW90aW9uJ1xuaW1wb3J0IHtcbiAgQml0Y29pbixcbiAgU21hcnRwaG9uZSxcbiAgTW9uaXRvcixcbiAgR2xvYmUsXG4gIExvY2ssXG4gIENoZWNrQ2lyY2xlLFxuICBBcnJvd1JpZ2h0LFxuICBBcnJvd0xlZnQsXG4gIERvd25sb2FkLFxuICBFeHRlcm5hbExpbmssXG4gIENvcHksXG4gIFFyQ29kZSxcbiAgU2hpZWxkLFxuICBBbGVydFRyaWFuZ2xlLFxuICBMaWdodGJ1bGIsXG4gIFRhcmdldCxcbiAgWmFwXG59IGZyb20gJ2x1Y2lkZS1yZWFjdCdcbmltcG9ydCBCdXR0b24gZnJvbSAnQC9jb21wb25lbnRzL3VpL0J1dHRvbidcbmltcG9ydCBDYXJkIGZyb20gJ0AvY29tcG9uZW50cy91aS9DYXJkJ1xuaW1wb3J0IHsgQmFkZ2UgfSBmcm9tICdAL2NvbXBvbmVudHMvdWkvQmFkZ2UnXG5pbXBvcnQgeyBQcm9ncmVzcyB9IGZyb20gJ0AvY29tcG9uZW50cy91aS9Qcm9ncmVzcydcblxuaW50ZXJmYWNlIE9uYm9hcmRpbmdTdGVwIHtcbiAgaWQ6IHN0cmluZ1xuICB0aXRsZTogc3RyaW5nXG4gIGRlc2NyaXB0aW9uOiBzdHJpbmdcbiAgaWNvbjogYW55XG4gIGNvbnRlbnQ6IGFueVxuICBhY3Rpb24/OiB7XG4gICAgbGFiZWw6IHN0cmluZ1xuICAgIG9uQ2xpY2s6ICgpID0+IHZvaWRcbiAgfVxufVxuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBXYWxsZXRPbmJvYXJkaW5nKCkge1xuICBjb25zdCBbY3VycmVudFN0ZXAsIHNldEN1cnJlbnRTdGVwXSA9IHVzZVN0YXRlKDApXG4gIGNvbnN0IFtzZWxlY3RlZFdhbGxldCwgc2V0U2VsZWN0ZWRXYWxsZXRdID0gdXNlU3RhdGU8c3RyaW5nIHwgbnVsbD4obnVsbClcbiAgY29uc3QgW3dhbGxldEFkZHJlc3MsIHNldFdhbGxldEFkZHJlc3NdID0gdXNlU3RhdGUoJycpXG5cbiAgY29uc3Qgc3RlcHM6IE9uYm9hcmRpbmdTdGVwW10gPSBbXG4gICAge1xuICAgICAgaWQ6ICd3ZWxjb21lJyxcbiAgICAgIHRpdGxlOiAnV2VsY29tZSB0byBCaXRjb2luIFdhbGxldHMnLFxuICAgICAgZGVzY3JpcHRpb246ICdMZXRcXCdzIGdldCB5b3Ugc2V0IHVwIHdpdGggYSBzZWN1cmUgQml0Y29pbiB3YWxsZXQnLFxuICAgICAgaWNvbjogQml0Y29pbixcbiAgICAgIGNvbnRlbnQ6IChcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlciBzcGFjZS15LTZcIj5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInctMjAgaC0yMCBiZy1iaXRjb2luT3JhbmdlLzEwIHJvdW5kZWQtZnVsbCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBteC1hdXRvXCI+XG4gICAgICAgICAgICA8Qml0Y29pbiBjbGFzc05hbWU9XCJ3LTEwIGgtMTAgdGV4dC1iaXRjb2luT3JhbmdlXCIgLz5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICA8ZGl2PlxuICAgICAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQteGwgZm9udC1zZW1pYm9sZCBtYi0yXCI+V2h5IGRvIHlvdSBuZWVkIGEgQml0Y29pbiB3YWxsZXQ/PC9oMz5cbiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtZ3JheS02MDBcIj5cbiAgICAgICAgICAgICAgQSBCaXRjb2luIHdhbGxldCBsZXRzIHlvdSByZWNlaXZlLCBzdG9yZSwgYW5kIHNlbmQgQml0Y29pbi4gSXQncyBsaWtlIGEgZGlnaXRhbCBiYW5rIGFjY291bnRcbiAgICAgICAgICAgICAgdGhhdCB5b3UgY29udHJvbCBjb21wbGV0ZWx5IC0gbm8gYmFuayBjYW4gZnJlZXplIHlvdXIgZnVuZHMgb3IgY2hhcmdlIHlvdSBmZWVzLlxuICAgICAgICAgICAgPC9wPlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctYmx1ZS01MCBib3JkZXIgYm9yZGVyLWJsdWUtMjAwIHJvdW5kZWQtbGcgcC00XCI+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtc3RhcnQgZ2FwLTNcIj5cbiAgICAgICAgICAgICAgPExpZ2h0YnVsYiBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtYmx1ZS02MDAgbXQtMC41IGZsZXgtc2hyaW5rLTBcIiAvPlxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtbGVmdFwiPlxuICAgICAgICAgICAgICAgIDxoNCBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtYmx1ZS05MDAgbWItMVwiPlBybyBUaXA8L2g0PlxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtYmx1ZS04MDAgdGV4dC1zbVwiPlxuICAgICAgICAgICAgICAgICAgWW91ciB3YWxsZXQgaXMgeW91cnMgYWxvbmUuIE5ldmVyIHNoYXJlIHlvdXIgcmVjb3ZlcnkgcGhyYXNlIHdpdGggYW55b25lLCBhbmQgYWx3YXlzXG4gICAgICAgICAgICAgICAgICBkb3dubG9hZCB3YWxsZXRzIGZyb20gb2ZmaWNpYWwgd2Vic2l0ZXMuXG4gICAgICAgICAgICAgICAgPC9wPlxuICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICA8L2Rpdj5cbiAgICAgIClcbiAgICB9LFxuICAgIHtcbiAgICAgIGlkOiAnY2hvb3NlLXR5cGUnLFxuICAgICAgdGl0bGU6ICdDaG9vc2UgWW91ciBXYWxsZXQgVHlwZScsXG4gICAgICBkZXNjcmlwdGlvbjogJ0RpZmZlcmVudCB3YWxsZXRzIHdvcmsgYmV0dGVyIGZvciBkaWZmZXJlbnQgbmVlZHMnLFxuICAgICAgaWNvbjogVGFyZ2V0LFxuICAgICAgY29udGVudDogKFxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNFwiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMSBtZDpncmlkLWNvbHMtMiBnYXAtNFwiPlxuICAgICAgICAgICAgPENhcmRcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgY3Vyc29yLXBvaW50ZXIgdHJhbnNpdGlvbi1hbGwgZHVyYXRpb24tMjAwIGhvdmVyOnNoYWRvdy1sZyAke1xuICAgICAgICAgICAgICAgIHNlbGVjdGVkV2FsbGV0ID09PSAnbW9iaWxlJyA/ICdyaW5nLTIgcmluZy1iaXRjb2luT3JhbmdlIGJvcmRlci1iaXRjb2luT3JhbmdlJyA6ICcnXG4gICAgICAgICAgICAgIH1gfVxuICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBzZXRTZWxlY3RlZFdhbGxldCgnbW9iaWxlJyl9XG4gICAgICAgICAgICA+XG4gICAgICAgICAgICAgIDxDYXJkLkNvbnRlbnQgY2xhc3NOYW1lPVwicC02XCI+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LTEyIGgtMTIgYmctYmx1ZS0xMDAgcm91bmRlZC1sZyBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBtYi00XCI+XG4gICAgICAgICAgICAgICAgICA8U21hcnRwaG9uZSBjbGFzc05hbWU9XCJ3LTYgaC02IHRleHQtYmx1ZS02MDBcIiAvPlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIG1iLTJcIj5Nb2JpbGUgV2FsbGV0PC9oMz5cbiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtZ3JheS02MDAgbWItM1wiPlxuICAgICAgICAgICAgICAgICAgUGVyZmVjdCBmb3IgZXZlcnlkYXkgdXNlLCBwYXltZW50cywgYW5kIHBvcnRhYmlsaXR5XG4gICAgICAgICAgICAgICAgPC9wPlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cbiAgICAgICAgICAgICAgICAgIDxDaGVja0NpcmNsZSBjbGFzc05hbWU9XCJ3LTQgaC00IHRleHQtZ3JlZW4tNTAwXCIgLz5cbiAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1ncmVlbi02MDBcIj5HcmVhdCBmb3IgYmVnaW5uZXJzPC9zcGFuPlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICA8L0NhcmQuQ29udGVudD5cbiAgICAgICAgICAgIDwvQ2FyZD5cblxuICAgICAgICAgICAgPENhcmRcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgY3Vyc29yLXBvaW50ZXIgdHJhbnNpdGlvbi1hbGwgZHVyYXRpb24tMjAwIGhvdmVyOnNoYWRvdy1sZyAke1xuICAgICAgICAgICAgICAgIHNlbGVjdGVkV2FsbGV0ID09PSAnZGVza3RvcCcgPyAncmluZy0yIHJpbmctYml0Y29pbk9yYW5nZSBib3JkZXItYml0Y29pbk9yYW5nZScgOiAnJ1xuICAgICAgICAgICAgICB9YH1cbiAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0U2VsZWN0ZWRXYWxsZXQoJ2Rlc2t0b3AnKX1cbiAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgPENhcmQuQ29udGVudCBjbGFzc05hbWU9XCJwLTZcIj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInctMTIgaC0xMiBiZy1ncmVlbi0xMDAgcm91bmRlZC1sZyBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBtYi00XCI+XG4gICAgICAgICAgICAgICAgICA8TW9uaXRvciBjbGFzc05hbWU9XCJ3LTYgaC02IHRleHQtZ3JlZW4tNjAwXCIgLz5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZCBtYi0yXCI+RGVza3RvcCBXYWxsZXQ8L2gzPlxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1ncmF5LTYwMCBtYi0zXCI+XG4gICAgICAgICAgICAgICAgICBNb3JlIGZlYXR1cmVzLCBiZXR0ZXIgc2VjdXJpdHksIGlkZWFsIGZvciByZWd1bGFyIHVzZXJzXG4gICAgICAgICAgICAgICAgPC9wPlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cbiAgICAgICAgICAgICAgICAgIDxDaGVja0NpcmNsZSBjbGFzc05hbWU9XCJ3LTQgaC00IHRleHQtZ3JlZW4tNTAwXCIgLz5cbiAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1ncmVlbi02MDBcIj5BZHZhbmNlZCBmZWF0dXJlczwvc3Bhbj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPC9DYXJkLkNvbnRlbnQ+XG4gICAgICAgICAgICA8L0NhcmQ+XG5cbiAgICAgICAgICAgIDxDYXJkXG4gICAgICAgICAgICAgIGNsYXNzTmFtZT17YGN1cnNvci1wb2ludGVyIHRyYW5zaXRpb24tYWxsIGR1cmF0aW9uLTIwMCBob3ZlcjpzaGFkb3ctbGcgJHtcbiAgICAgICAgICAgICAgICBzZWxlY3RlZFdhbGxldCA9PT0gJ2hhcmR3YXJlJyA/ICdyaW5nLTIgcmluZy1iaXRjb2luT3JhbmdlIGJvcmRlci1iaXRjb2luT3JhbmdlJyA6ICcnXG4gICAgICAgICAgICAgIH1gfVxuICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBzZXRTZWxlY3RlZFdhbGxldCgnaGFyZHdhcmUnKX1cbiAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgPENhcmQuQ29udGVudCBjbGFzc05hbWU9XCJwLTZcIj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInctMTIgaC0xMiBiZy1wdXJwbGUtMTAwIHJvdW5kZWQtbGcgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgbWItNFwiPlxuICAgICAgICAgICAgICAgICAgPExvY2sgY2xhc3NOYW1lPVwidy02IGgtNiB0ZXh0LXB1cnBsZS02MDBcIiAvPlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIG1iLTJcIj5IYXJkd2FyZSBXYWxsZXQ8L2gzPlxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1ncmF5LTYwMCBtYi0zXCI+XG4gICAgICAgICAgICAgICAgICBNYXhpbXVtIHNlY3VyaXR5IGZvciBsYXJnZSBhbW91bnRzLCByZXF1aXJlcyBwaHlzaWNhbCBkZXZpY2VcbiAgICAgICAgICAgICAgICA8L3A+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxuICAgICAgICAgICAgICAgICAgPENoZWNrQ2lyY2xlIGNsYXNzTmFtZT1cInctNCBoLTQgdGV4dC1ncmVlbi01MDBcIiAvPlxuICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LWdyZWVuLTYwMFwiPk1pbGl0YXJ5LWdyYWRlIHNlY3VyaXR5PC9zcGFuPlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICA8L0NhcmQuQ29udGVudD5cbiAgICAgICAgICAgIDwvQ2FyZD5cblxuICAgICAgICAgICAgPENhcmRcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPXtgY3Vyc29yLXBvaW50ZXIgdHJhbnNpdGlvbi1hbGwgZHVyYXRpb24tMjAwIGhvdmVyOnNoYWRvdy1sZyAke1xuICAgICAgICAgICAgICAgIHNlbGVjdGVkV2FsbGV0ID09PSAnYnJvd3NlcicgPyAncmluZy0yIHJpbmctYml0Y29pbk9yYW5nZSBib3JkZXItYml0Y29pbk9yYW5nZScgOiAnJ1xuICAgICAgICAgICAgICB9YH1cbiAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0U2VsZWN0ZWRXYWxsZXQoJ2Jyb3dzZXInKX1cbiAgICAgICAgICAgID5cbiAgICAgICAgICAgICAgPENhcmQuQ29udGVudCBjbGFzc05hbWU9XCJwLTZcIj5cbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInctMTIgaC0xMiBiZy1vcmFuZ2UtMTAwIHJvdW5kZWQtbGcgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgbWItNFwiPlxuICAgICAgICAgICAgICAgICAgPEdsb2JlIGNsYXNzTmFtZT1cInctNiBoLTYgdGV4dC1vcmFuZ2UtNjAwXCIgLz5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZCBtYi0yXCI+QnJvd3NlciBXYWxsZXQ8L2gzPlxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1ncmF5LTYwMCBtYi0zXCI+XG4gICAgICAgICAgICAgICAgICBCdWlsdCBpbnRvIHlvdXIgYnJvd3NlciwgY29udmVuaWVudCBmb3Igd2ViMyBhcHBsaWNhdGlvbnNcbiAgICAgICAgICAgICAgICA8L3A+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxuICAgICAgICAgICAgICAgICAgPENoZWNrQ2lyY2xlIGNsYXNzTmFtZT1cInctNCBoLTQgdGV4dC1ncmVlbi01MDBcIiAvPlxuICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LWdyZWVuLTYwMFwiPldlYjMgcmVhZHk8L3NwYW4+XG4gICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgIDwvQ2FyZC5Db250ZW50PlxuICAgICAgICAgICAgPC9DYXJkPlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICA8L2Rpdj5cbiAgICAgIClcbiAgICB9LFxuICAgIHtcbiAgICAgIGlkOiAnZ2V0LXdhbGxldCcsXG4gICAgICB0aXRsZTogJ0dldCBZb3VyIFdhbGxldCcsXG4gICAgICBkZXNjcmlwdGlvbjogJ0Rvd25sb2FkIGFuZCBpbnN0YWxsIHlvdXIgY2hvc2VuIHdhbGxldCcsXG4gICAgICBpY29uOiBEb3dubG9hZCxcbiAgICAgIGNvbnRlbnQ6IChcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTZcIj5cbiAgICAgICAgICB7c2VsZWN0ZWRXYWxsZXQgJiYgKFxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy13aGl0ZSByb3VuZGVkLWxnIGJvcmRlciBib3JkZXItZ3JheS0yMDAgcC02XCI+XG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTQgbWItNFwiPlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidy0xMiBoLTEyIGJnLWJpdGNvaW5PcmFuZ2UvMTAgcm91bmRlZC1sZyBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlclwiPlxuICAgICAgICAgICAgICAgICAge3NlbGVjdGVkV2FsbGV0ID09PSAnbW9iaWxlJyAmJiA8U21hcnRwaG9uZSBjbGFzc05hbWU9XCJ3LTYgaC02IHRleHQtYml0Y29pbk9yYW5nZVwiIC8+fVxuICAgICAgICAgICAgICAgICAge3NlbGVjdGVkV2FsbGV0ID09PSAnZGVza3RvcCcgJiYgPE1vbml0b3IgY2xhc3NOYW1lPVwidy02IGgtNiB0ZXh0LWJpdGNvaW5PcmFuZ2VcIiAvPn1cbiAgICAgICAgICAgICAgICAgIHtzZWxlY3RlZFdhbGxldCA9PT0gJ2hhcmR3YXJlJyAmJiA8TG9jayBjbGFzc05hbWU9XCJ3LTYgaC02IHRleHQtYml0Y29pbk9yYW5nZVwiIC8+fVxuICAgICAgICAgICAgICAgICAge3NlbGVjdGVkV2FsbGV0ID09PSAnYnJvd3NlcicgJiYgPEdsb2JlIGNsYXNzTmFtZT1cInctNiBoLTYgdGV4dC1iaXRjb2luT3JhbmdlXCIgLz59XG4gICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgICAgPGRpdj5cbiAgICAgICAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIGNhcGl0YWxpemVcIj57c2VsZWN0ZWRXYWxsZXR9IFdhbGxldCBTZWxlY3RlZDwvaDM+XG4gICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtZ3JheS02MDBcIj5cbiAgICAgICAgICAgICAgICAgICAge3NlbGVjdGVkV2FsbGV0ID09PSAnbW9iaWxlJyAmJiAnUGVyZmVjdCBmb3Igb24tdGhlLWdvIEJpdGNvaW4gdXNlJ31cbiAgICAgICAgICAgICAgICAgICAge3NlbGVjdGVkV2FsbGV0ID09PSAnZGVza3RvcCcgJiYgJ0dyZWF0IGZvciByZWd1bGFyIGNvbXB1dGVyIHVzZSd9XG4gICAgICAgICAgICAgICAgICAgIHtzZWxlY3RlZFdhbGxldCA9PT0gJ2hhcmR3YXJlJyAmJiAnTWF4aW11bSBzZWN1cml0eSBmb3IgeW91ciBCaXRjb2luJ31cbiAgICAgICAgICAgICAgICAgICAge3NlbGVjdGVkV2FsbGV0ID09PSAnYnJvd3NlcicgJiYgJ0NvbnZlbmllbnQgZm9yIHdlYiBhcHBsaWNhdGlvbnMnfVxuICAgICAgICAgICAgICAgICAgPC9wPlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNFwiPlxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgcC0zIGJnLWdyZWVuLTUwIHJvdW5kZWQtbGdcIj5cbiAgICAgICAgICAgICAgICAgIDxDaGVja0NpcmNsZSBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtZ3JlZW4tNjAwXCIgLz5cbiAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1ncmVlbi04MDBcIj5cbiAgICAgICAgICAgICAgICAgICAgRG93bmxvYWQgZnJvbSBvZmZpY2lhbCB3ZWJzaXRlIG9ubHlcbiAgICAgICAgICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgcC0zIGJnLWJsdWUtNTAgcm91bmRlZC1sZ1wiPlxuICAgICAgICAgICAgICAgICAgPFNoaWVsZCBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtYmx1ZS02MDBcIiAvPlxuICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LWJsdWUtODAwXCI+XG4gICAgICAgICAgICAgICAgICAgIFZlcmlmeSB0aGUgVVJMIGFuZCBjaGVjayBmb3IgSFRUUFNcbiAgICAgICAgICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgcC0zIGJnLXllbGxvdy01MCByb3VuZGVkLWxnXCI+XG4gICAgICAgICAgICAgICAgICA8QWxlcnRUcmlhbmdsZSBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQteWVsbG93LTYwMFwiIC8+XG4gICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQteWVsbG93LTgwMFwiPlxuICAgICAgICAgICAgICAgICAgICBOZXZlciBkb3dubG9hZCB3YWxsZXRzIGZyb20gdGhpcmQtcGFydHkgc2l0ZXNcbiAgICAgICAgICAgICAgICAgIDwvc3Bhbj5cbiAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICApfVxuXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlclwiPlxuICAgICAgICAgICAgPEJ1dHRvbiBjbGFzc05hbWU9XCJiZy1iaXRjb2luT3JhbmdlIGhvdmVyOmJnLWJpdGNvaW5PcmFuZ2UvOTAgdGV4dC13aGl0ZVwiPlxuICAgICAgICAgICAgICA8RG93bmxvYWQgY2xhc3NOYW1lPVwidy00IGgtNCBtci0yXCIgLz5cbiAgICAgICAgICAgICAgRG93bmxvYWQgT2ZmaWNpYWwgV2FsbGV0XG4gICAgICAgICAgICAgIDxFeHRlcm5hbExpbmsgY2xhc3NOYW1lPVwidy00IGgtNCBtbC0yXCIgLz5cbiAgICAgICAgICAgIDwvQnV0dG9uPlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICA8L2Rpdj5cbiAgICAgIClcbiAgICB9LFxuICAgIHtcbiAgICAgIGlkOiAnc2V0dXAtd2FsbGV0JyxcbiAgICAgIHRpdGxlOiAnU2V0IFVwIFlvdXIgV2FsbGV0JyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnQ3JlYXRlIHlvdXIgd2FsbGV0IGFuZCBzYXZlIHlvdXIgcmVjb3ZlcnkgcGhyYXNlJyxcbiAgICAgIGljb246IFNoaWVsZCxcbiAgICAgIGNvbnRlbnQ6IChcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTZcIj5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImJnLXJlZC01MCBib3JkZXIgYm9yZGVyLXJlZC0yMDAgcm91bmRlZC1sZyBwLTZcIj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1zdGFydCBnYXAtM1wiPlxuICAgICAgICAgICAgICA8QWxlcnRUcmlhbmdsZSBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtcmVkLTYwMCBtdC0wLjUgZmxleC1zaHJpbmstMFwiIC8+XG4gICAgICAgICAgICAgIDxkaXY+XG4gICAgICAgICAgICAgICAgPGgzIGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC1yZWQtOTAwIG1iLTJcIj7imqDvuI8gQ3JpdGljYWwgU2VjdXJpdHkgU3RlcDwvaDM+XG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1yZWQtODAwIHRleHQtc20gbWItM1wiPlxuICAgICAgICAgICAgICAgICAgWW91ciByZWNvdmVyeSBwaHJhc2UgKHNlZWQgcGhyYXNlKSBpcyB0aGUgbWFzdGVyIGtleSB0byB5b3VyIEJpdGNvaW4uXG4gICAgICAgICAgICAgICAgICBXcml0ZSBpdCBkb3duIG9uIHBhcGVyIGFuZCBzdG9yZSBpdCBzYWZlbHkgb2ZmbGluZS5cbiAgICAgICAgICAgICAgICA8L3A+XG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJiZy1yZWQtMTAwIGJvcmRlciBib3JkZXItcmVkLTMwMCByb3VuZGVkIHAtM1wiPlxuICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1yZWQtOTAwIHRleHQtc20gZm9udC1tZWRpdW1cIj5cbiAgICAgICAgICAgICAgICAgICAg8J+aqCBORVZFUiBzaGFyZSB5b3VyIHJlY292ZXJ5IHBocmFzZSB3aXRoIGFueW9uZS4gTmV2ZXIgc3RvcmUgaXQgZGlnaXRhbGx5LlxuICAgICAgICAgICAgICAgICAgPC9wPlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0xIG1kOmdyaWQtY29scy0zIGdhcC00XCI+XG4gICAgICAgICAgICA8Q2FyZCBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlciBwLTRcIj5cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LTEyIGgtMTIgYmctYmx1ZS0xMDAgcm91bmRlZC1sZyBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBteC1hdXRvIG1iLTNcIj5cbiAgICAgICAgICAgICAgICA8RG93bmxvYWQgY2xhc3NOYW1lPVwidy02IGgtNiB0ZXh0LWJsdWUtNjAwXCIgLz5cbiAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgIDxoNCBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIG1iLTJcIj5Eb3dubG9hZCAmIEluc3RhbGw8L2g0PlxuICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtZ3JheS02MDBcIj5cbiAgICAgICAgICAgICAgICBGb2xsb3cgdGhlIG9mZmljaWFsIGluc3RhbGxhdGlvbiBndWlkZVxuICAgICAgICAgICAgICA8L3A+XG4gICAgICAgICAgICA8L0NhcmQ+XG5cbiAgICAgICAgICAgIDxDYXJkIGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHAtNFwiPlxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInctMTIgaC0xMiBiZy1ncmVlbi0xMDAgcm91bmRlZC1sZyBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBteC1hdXRvIG1iLTNcIj5cbiAgICAgICAgICAgICAgICA8U2hpZWxkIGNsYXNzTmFtZT1cInctNiBoLTYgdGV4dC1ncmVlbi02MDBcIiAvPlxuICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPGg0IGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgbWItMlwiPkNyZWF0ZSBXYWxsZXQ8L2g0PlxuICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtZ3JheS02MDBcIj5cbiAgICAgICAgICAgICAgICBHZW5lcmF0ZSB5b3VyIHJlY292ZXJ5IHBocmFzZVxuICAgICAgICAgICAgICA8L3A+XG4gICAgICAgICAgICA8L0NhcmQ+XG5cbiAgICAgICAgICAgIDxDYXJkIGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHAtNFwiPlxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInctMTIgaC0xMiBiZy1wdXJwbGUtMTAwIHJvdW5kZWQtbGcgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgbXgtYXV0byBtYi0zXCI+XG4gICAgICAgICAgICAgICAgPENoZWNrQ2lyY2xlIGNsYXNzTmFtZT1cInctNiBoLTYgdGV4dC1wdXJwbGUtNjAwXCIgLz5cbiAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgIDxoNCBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIG1iLTJcIj5WZXJpZnkgQmFja3VwPC9oND5cbiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LWdyYXktNjAwXCI+XG4gICAgICAgICAgICAgICAgQ29uZmlybSB5b3VyIHJlY292ZXJ5IHBocmFzZVxuICAgICAgICAgICAgICA8L3A+XG4gICAgICAgICAgICA8L0NhcmQ+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuICAgICAgKVxuICAgIH0sXG4gICAge1xuICAgICAgaWQ6ICdnZXQtYWRkcmVzcycsXG4gICAgICB0aXRsZTogJ0dldCBZb3VyIEJpdGNvaW4gQWRkcmVzcycsXG4gICAgICBkZXNjcmlwdGlvbjogJ0NvcHkgeW91ciByZWNlaXZpbmcgYWRkcmVzcyB0byB1c2Ugb24gT3JhbmdlQ2F0JyxcbiAgICAgIGljb246IENvcHksXG4gICAgICBjb250ZW50OiAoXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS02XCI+XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlclwiPlxuICAgICAgICAgICAgPFFyQ29kZSBjbGFzc05hbWU9XCJ3LTE2IGgtMTYgdGV4dC1iaXRjb2luT3JhbmdlIG14LWF1dG8gbWItNFwiIC8+XG4gICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC14bCBmb250LXNlbWlib2xkIG1iLTJcIj5Zb3VyIEJpdGNvaW4gQWRkcmVzczwvaDM+XG4gICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LWdyYXktNjAwIG1iLTZcIj5cbiAgICAgICAgICAgICAgVGhpcyBpcyB5b3VyIHVuaXF1ZSBCaXRjb2luIGFkZHJlc3MuIFBlb3BsZSBjYW4gc2VuZCBCaXRjb2luIHRvIHRoaXMgYWRkcmVzcy5cbiAgICAgICAgICAgIDwvcD5cbiAgICAgICAgICA8L2Rpdj5cblxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctZ3JheS01MCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtM1wiPlxuICAgICAgICAgICAgICA8Y29kZSBjbGFzc05hbWU9XCJmbGV4LTEgZm9udC1tb25vIHRleHQtc20gYmctd2hpdGUgcC0zIHJvdW5kZWQgYm9yZGVyXCI+XG4gICAgICAgICAgICAgICAgYmMxcXh5MmtnZHlnanJzcXR6cTJuMHlyZjI0OTNwODNra2ZqaHgwd2xoXG4gICAgICAgICAgICAgIDwvY29kZT5cbiAgICAgICAgICAgICAgPEJ1dHRvbiB2YXJpYW50PVwib3V0bGluZVwiIHNpemU9XCJzbVwiPlxuICAgICAgICAgICAgICAgIDxDb3B5IGNsYXNzTmFtZT1cInctNCBoLTRcIiAvPlxuICAgICAgICAgICAgICA8L0J1dHRvbj5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0xIG1kOmdyaWQtY29scy0yIGdhcC00XCI+XG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImJnLWJsdWUtNTAgYm9yZGVyIGJvcmRlci1ibHVlLTIwMCByb3VuZGVkLWxnIHAtNFwiPlxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIG1iLTJcIj5cbiAgICAgICAgICAgICAgICA8Q2hlY2tDaXJjbGUgY2xhc3NOYW1lPVwidy00IGgtNCB0ZXh0LWJsdWUtNjAwXCIgLz5cbiAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtYmx1ZS05MDBcIj5Qcm8gVGlwPC9zcGFuPlxuICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1ibHVlLTgwMCB0ZXh0LXNtXCI+XG4gICAgICAgICAgICAgICAgWW91IGNhbiBnZW5lcmF0ZSBhIG5ldyBhZGRyZXNzIGZvciBlYWNoIGRvbmF0aW9uIHRvIGltcHJvdmUgcHJpdmFjeS5cbiAgICAgICAgICAgICAgPC9wPlxuICAgICAgICAgICAgPC9kaXY+XG5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctZ3JlZW4tNTAgYm9yZGVyIGJvcmRlci1ncmVlbi0yMDAgcm91bmRlZC1sZyBwLTRcIj5cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBtYi0yXCI+XG4gICAgICAgICAgICAgICAgPENoZWNrQ2lyY2xlIGNsYXNzTmFtZT1cInctNCBoLTQgdGV4dC1ncmVlbi02MDBcIiAvPlxuICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC1ncmVlbi05MDBcIj5OZXh0IFN0ZXA8L3NwYW4+XG4gICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LWdyZWVuLTgwMCB0ZXh0LXNtXCI+XG4gICAgICAgICAgICAgICAgQWRkIHRoaXMgYWRkcmVzcyB0byB5b3VyIE9yYW5nZUNhdCBwcm9maWxlIHRvIHN0YXJ0IHJlY2VpdmluZyBkb25hdGlvbnMuXG4gICAgICAgICAgICAgIDwvcD5cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDwvZGl2PlxuICAgICAgICA8L2Rpdj5cbiAgICAgICksXG4gICAgICBhY3Rpb246IHtcbiAgICAgICAgbGFiZWw6ICdBZGQgdG8gT3JhbmdlQ2F0IFByb2ZpbGUnLFxuICAgICAgICBvbkNsaWNrOiAoKSA9PiB7XG4gICAgICAgICAgLy8gVGhpcyB3b3VsZCBuYXZpZ2F0ZSB0byBwcm9maWxlIHNldHVwXG4gICAgICAgICAgY29uc29sZS5sb2coJ05hdmlnYXRlIHRvIHByb2ZpbGUgc2V0dXAnKVxuICAgICAgICB9XG4gICAgICB9XG4gICAgfVxuICBdXG5cbiAgY29uc3QgY3VycmVudFN0ZXBEYXRhID0gc3RlcHNbY3VycmVudFN0ZXBdXG4gIGNvbnN0IHByb2dyZXNzID0gKChjdXJyZW50U3RlcCArIDEpIC8gc3RlcHMubGVuZ3RoKSAqIDEwMFxuXG4gIHJldHVybiAoXG4gICAgPGRpdiBjbGFzc05hbWU9XCJtaW4taC1zY3JlZW4gYmctZ3JhZGllbnQtdG8tYnIgZnJvbS1vcmFuZ2UtNTAgdmlhLXdoaXRlIHRvLW9yYW5nZS01MFwiPlxuICAgICAgey8qIEhlYWRlciAqL31cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctd2hpdGUgYm9yZGVyLWIgYm9yZGVyLW9yYW5nZS0xMDBcIj5cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtYXgtdy03eGwgbXgtYXV0byBweC00IHNtOnB4LTYgbGc6cHgtOFwiPlxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIGgtMTZcIj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTRcIj5cbiAgICAgICAgICAgICAgPEJpdGNvaW4gY2xhc3NOYW1lPVwidy04IGgtOCB0ZXh0LWJpdGNvaW5PcmFuZ2VcIiAvPlxuICAgICAgICAgICAgICA8ZGl2PlxuICAgICAgICAgICAgICAgIDxoMSBjbGFzc05hbWU9XCJ0ZXh0LXhsIGZvbnQtYm9sZCB0ZXh0LWdyYXktOTAwXCI+R2V0IFlvdXIgQml0Y29pbiBXYWxsZXQ8L2gxPlxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gdGV4dC1ncmF5LTYwMFwiPlN0ZXAge2N1cnJlbnRTdGVwICsgMX0gb2Yge3N0ZXBzLmxlbmd0aH08L3A+XG4gICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgb25DbGljaz17KCkgPT4gd2luZG93Lmhpc3RvcnkuYmFjaygpfT5cbiAgICAgICAgICAgICAgU2tpcCBmb3IgTm93XG4gICAgICAgICAgICA8L0J1dHRvbj5cbiAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgPC9kaXY+XG4gICAgICA8L2Rpdj5cblxuICAgICAgey8qIFByb2dyZXNzIEJhciAqL31cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYmctd2hpdGUgYm9yZGVyLWIgYm9yZGVyLWdyYXktMjAwXCI+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibWF4LXctN3hsIG14LWF1dG8gcHgtNCBzbTpweC02IGxnOnB4LThcIj5cbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInB5LTRcIj5cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIG1iLTJcIj5cbiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bSB0ZXh0LWdyYXktNzAwXCI+XG4gICAgICAgICAgICAgICAge2N1cnJlbnRTdGVwRGF0YS50aXRsZX1cbiAgICAgICAgICAgICAgPC9zcGFuPlxuICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtZ3JheS01MDBcIj5cbiAgICAgICAgICAgICAgICB7TWF0aC5yb3VuZChwcm9ncmVzcyl9JSBDb21wbGV0ZVxuICAgICAgICAgICAgICA8L3NwYW4+XG4gICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgIDxQcm9ncmVzcyB2YWx1ZT17cHJvZ3Jlc3N9IGNsYXNzTmFtZT1cImgtMlwiIC8+XG4gICAgICAgICAgPC9kaXY+XG4gICAgICAgIDwvZGl2PlxuICAgICAgPC9kaXY+XG5cbiAgICAgIHsvKiBNYWluIENvbnRlbnQgKi99XG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1heC13LTR4bCBteC1hdXRvIHB4LTQgc206cHgtNiBsZzpweC04IHB5LThcIj5cbiAgICAgICAgPEFuaW1hdGVQcmVzZW5jZSBtb2RlPVwid2FpdFwiPlxuICAgICAgICAgIDxtb3Rpb24uZGl2XG4gICAgICAgICAgICBrZXk9e2N1cnJlbnRTdGVwfVxuICAgICAgICAgICAgaW5pdGlhbD17eyBvcGFjaXR5OiAwLCB4OiAyMCB9fVxuICAgICAgICAgICAgYW5pbWF0ZT17eyBvcGFjaXR5OiAxLCB4OiAwIH19XG4gICAgICAgICAgICBleGl0PXt7IG9wYWNpdHk6IDAsIHg6IC0yMCB9fVxuICAgICAgICAgICAgdHJhbnNpdGlvbj17eyBkdXJhdGlvbjogMC4zIH19XG4gICAgICAgICAgICBjbGFzc05hbWU9XCJzcGFjZS15LThcIlxuICAgICAgICAgID5cbiAgICAgICAgICAgIHsvKiBTdGVwIEhlYWRlciAqL31cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXJcIj5cbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LTE2IGgtMTYgYmctYml0Y29pbk9yYW5nZS8xMCByb3VuZGVkLWZ1bGwgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgbXgtYXV0byBtYi00XCI+XG4gICAgICAgICAgICAgICAgPGN1cnJlbnRTdGVwRGF0YS5pY29uIGNsYXNzTmFtZT1cInctOCBoLTggdGV4dC1iaXRjb2luT3JhbmdlXCIgLz5cbiAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgIDxoMiBjbGFzc05hbWU9XCJ0ZXh0LTJ4bCBmb250LWJvbGQgdGV4dC1ncmF5LTkwMCBtYi0yXCI+XG4gICAgICAgICAgICAgICAge2N1cnJlbnRTdGVwRGF0YS50aXRsZX1cbiAgICAgICAgICAgICAgPC9oMj5cbiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1ncmF5LTYwMCBtYXgtdy0yeGwgbXgtYXV0b1wiPlxuICAgICAgICAgICAgICAgIHtjdXJyZW50U3RlcERhdGEuZGVzY3JpcHRpb259XG4gICAgICAgICAgICAgIDwvcD5cbiAgICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgICB7LyogU3RlcCBDb250ZW50ICovfVxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtaW4taC1bNDAwcHhdXCI+XG4gICAgICAgICAgICAgIHtjdXJyZW50U3RlcERhdGEuY29udGVudH1cbiAgICAgICAgICAgIDwvZGl2PlxuXG4gICAgICAgICAgICB7LyogTmF2aWdhdGlvbiAqL31cbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIHB0LTggYm9yZGVyLXQgYm9yZGVyLWdyYXktMjAwXCI+XG4gICAgICAgICAgICAgIDxCdXR0b25cbiAgICAgICAgICAgICAgICB2YXJpYW50PVwib3V0bGluZVwiXG4gICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0Q3VycmVudFN0ZXAoTWF0aC5tYXgoMCwgY3VycmVudFN0ZXAgLSAxKSl9XG4gICAgICAgICAgICAgICAgZGlzYWJsZWQ9e2N1cnJlbnRTdGVwID09PSAwfVxuICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAgPEFycm93TGVmdCBjbGFzc05hbWU9XCJ3LTQgaC00IG1yLTJcIiAvPlxuICAgICAgICAgICAgICAgIFByZXZpb3VzXG4gICAgICAgICAgICAgIDwvQnV0dG9uPlxuXG4gICAgICAgICAgICAgIHtjdXJyZW50U3RlcERhdGEuYWN0aW9uID8gKFxuICAgICAgICAgICAgICAgIDxCdXR0b25cbiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9e2N1cnJlbnRTdGVwRGF0YS5hY3Rpb24ub25DbGlja31cbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImJnLWJpdGNvaW5PcmFuZ2UgaG92ZXI6YmctYml0Y29pbk9yYW5nZS85MCB0ZXh0LXdoaXRlXCJcbiAgICAgICAgICAgICAgICA+XG4gICAgICAgICAgICAgICAgICB7Y3VycmVudFN0ZXBEYXRhLmFjdGlvbi5sYWJlbH1cbiAgICAgICAgICAgICAgICAgIDxBcnJvd1JpZ2h0IGNsYXNzTmFtZT1cInctNCBoLTQgbWwtMlwiIC8+XG4gICAgICAgICAgICAgICAgPC9CdXR0b24+XG4gICAgICAgICAgICAgICkgOiAoXG4gICAgICAgICAgICAgICAgPEJ1dHRvblxuICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0Q3VycmVudFN0ZXAoTWF0aC5taW4oc3RlcHMubGVuZ3RoIC0gMSwgY3VycmVudFN0ZXAgKyAxKSl9XG4gICAgICAgICAgICAgICAgICBkaXNhYmxlZD17Y3VycmVudFN0ZXAgPT09IHN0ZXBzLmxlbmd0aCAtIDF9XG4gICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJiZy1iaXRjb2luT3JhbmdlIGhvdmVyOmJnLWJpdGNvaW5PcmFuZ2UvOTAgdGV4dC13aGl0ZVwiXG4gICAgICAgICAgICAgICAgPlxuICAgICAgICAgICAgICAgICAgTmV4dFxuICAgICAgICAgICAgICAgICAgPEFycm93UmlnaHQgY2xhc3NOYW1lPVwidy00IGgtNCBtbC0yXCIgLz5cbiAgICAgICAgICAgICAgICA8L0J1dHRvbj5cbiAgICAgICAgICAgICAgKX1cbiAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgIDwvbW90aW9uLmRpdj5cbiAgICAgICAgPC9BbmltYXRlUHJlc2VuY2U+XG4gICAgICA8L2Rpdj5cbiAgICA8L2Rpdj5cbiAgKVxufVxuIl0sIm1hcHBpbmdzIjoiQUFBQSxZQUFZOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7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

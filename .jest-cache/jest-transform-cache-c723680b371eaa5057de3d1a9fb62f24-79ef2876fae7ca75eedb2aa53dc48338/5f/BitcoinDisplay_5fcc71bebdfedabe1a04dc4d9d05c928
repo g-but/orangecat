@@ -1,0 +1,355 @@
+3449a56b47bfdb8b8301038824d19178
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_1qe2r7dqeo() {
+  var path = "/home/g/dev/orangecat/src/components/ui/BitcoinDisplay.tsx";
+  var hash = "d25c662800265a3dd0dc40e5f6918c431c1064d1";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/components/ui/BitcoinDisplay.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 33
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 22
+        },
+        end: {
+          line: 5,
+          column: 50
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 16
+        },
+        end: {
+          line: 6,
+          column: 32
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 18
+        },
+        end: {
+          line: 7,
+          column: 44
+        }
+      },
+      "5": {
+        start: {
+          line: 9,
+          column: 42
+        },
+        end: {
+          line: 9,
+          column: 70
+        }
+      },
+      "6": {
+        start: {
+          line: 10,
+          column: 23
+        },
+        end: {
+          line: 10,
+          column: 68
+        }
+      },
+      "7": {
+        start: {
+          line: 11,
+          column: 4
+        },
+        end: {
+          line: 11,
+          column: 785
+        }
+      },
+      "8": {
+        start: {
+          line: 11,
+          column: 126
+        },
+        end: {
+          line: 11,
+          column: 146
+        }
+      },
+      "9": {
+        start: {
+          line: 11,
+          column: 168
+        },
+        end: {
+          line: 11,
+          column: 189
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "BitcoinDisplay",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 23
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 55
+          },
+          end: {
+            line: 12,
+            column: 1
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 11,
+            column: 120
+          },
+          end: {
+            line: 11,
+            column: 121
+          }
+        },
+        loc: {
+          start: {
+            line: 11,
+            column: 126
+          },
+          end: {
+            line: 11,
+            column: 146
+          }
+        },
+        line: 11
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 11,
+            column: 162
+          },
+          end: {
+            line: 11,
+            column: 163
+          }
+        },
+        loc: {
+          start: {
+            line: 11,
+            column: 168
+          },
+          end: {
+            line: 11,
+            column: 189
+          }
+        },
+        line: 11
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 8,
+            column: 37
+          },
+          end: {
+            line: 8,
+            column: 51
+          }
+        },
+        type: "default-arg",
+        locations: [{
+          start: {
+            line: 8,
+            column: 49
+          },
+          end: {
+            line: 8,
+            column: 51
+          }
+        }],
+        line: 8
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 11,
+            column: 325
+          },
+          end: {
+            line: 11,
+            column: 779
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 11,
+            column: 325
+          },
+          end: {
+            line: 11,
+            column: 336
+          }
+        }, {
+          start: {
+            line: 11,
+            column: 341
+          },
+          end: {
+            line: 11,
+            column: 778
+          }
+        }],
+        line: 11
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    b: {
+      "0": [0],
+      "1": [0, 0]
+    },
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/components/ui/BitcoinDisplay.tsx",
+      mappings: "AAAA,YAAY,CAAA;;;AAUZ,iCAsBC;;AA9BD,iCAAgC;AAChC,6CAAiG;AAOjG,SAAwB,cAAc,CAAC,EAAE,SAAS,EAAE,SAAS,GAAG,EAAE,EAAuB;IACvF,MAAM,CAAC,WAAW,EAAE,cAAc,CAAC,GAAG,IAAA,gBAAQ,EAAC,KAAK,CAAC,CAAA;IACrD,MAAM,UAAU,GAAG,IAAA,6BAAmB,EAAC,SAAS,CAAC,CAAA;IAEjD,OAAO,CACL,iCACE,SAAS,EAAE,qCAAqC,SAAS,EAAE,EAC3D,YAAY,EAAE,GAAG,EAAE,CAAC,cAAc,CAAC,IAAI,CAAC,EACxC,YAAY,EAAE,GAAG,EAAE,CAAC,cAAc,CAAC,KAAK,CAAC,aAEzC,iCAAM,SAAS,EAAC,eAAe,YAC5B,IAAA,8BAAoB,EAAC,UAAU,CAAC,GAC5B,EAEN,WAAW,IAAI,CACd,iCAAK,SAAS,EAAC,oJAAoJ,aAChK,IAAA,8BAAoB,EAAC,UAAU,CAAC,EACjC,gCAAK,SAAS,EAAC,qIAAqI,GAAO,IACvJ,CACP,IACG,CACP,CAAA;AACH,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/components/ui/BitcoinDisplay.tsx"],
+      sourcesContent: ["'use client'\n\nimport { useState } from 'react'\nimport { convertUSDToBitcoin, formatBitcoinDisplay, formatTooltipDisplay } from '@/utils/bitcoin'\n\ninterface BitcoinDisplayProps {\n  usdAmount: number\n  className?: string\n}\n\nexport default function BitcoinDisplay({ usdAmount, className = '' }: BitcoinDisplayProps) {\n  const [showTooltip, setShowTooltip] = useState(false)\n  const conversion = convertUSDToBitcoin(usdAmount)\n\n  return (\n    <div \n      className={`relative inline-block cursor-help ${className}`}\n      onMouseEnter={() => setShowTooltip(true)}\n      onMouseLeave={() => setShowTooltip(false)}\n    >\n      <span className=\"font-semibold\">\n        {formatBitcoinDisplay(conversion)}\n      </span>\n      \n      {showTooltip && (\n        <div className=\"absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-10\">\n          {formatTooltipDisplay(conversion)}\n          <div className=\"absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900\"></div>\n        </div>\n      )}\n    </div>\n  )\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "d25c662800265a3dd0dc40e5f6918c431c1064d1"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1qe2r7dqeo = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1qe2r7dqeo();
+cov_1qe2r7dqeo().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1qe2r7dqeo().s[1]++;
+exports.default = BitcoinDisplay;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_1qe2r7dqeo().s[2]++, require("react/jsx-runtime"));
+const react_1 =
+/* istanbul ignore next */
+(cov_1qe2r7dqeo().s[3]++, require("react"));
+const bitcoin_1 =
+/* istanbul ignore next */
+(cov_1qe2r7dqeo().s[4]++, require("@/utils/bitcoin"));
+function BitcoinDisplay({
+  usdAmount,
+  className =
+  /* istanbul ignore next */
+  (cov_1qe2r7dqeo().b[0][0]++, '')
+}) {
+  /* istanbul ignore next */
+  cov_1qe2r7dqeo().f[0]++;
+  const [showTooltip, setShowTooltip] =
+  /* istanbul ignore next */
+  (cov_1qe2r7dqeo().s[5]++, (0, react_1.useState)(false));
+  const conversion =
+  /* istanbul ignore next */
+  (cov_1qe2r7dqeo().s[6]++, (0, bitcoin_1.convertUSDToBitcoin)(usdAmount));
+  /* istanbul ignore next */
+  cov_1qe2r7dqeo().s[7]++;
+  return (0, jsx_runtime_1.jsxs)("div", {
+    className: `relative inline-block cursor-help ${className}`,
+    onMouseEnter: () => {
+      /* istanbul ignore next */
+      cov_1qe2r7dqeo().f[1]++;
+      cov_1qe2r7dqeo().s[8]++;
+      return setShowTooltip(true);
+    },
+    onMouseLeave: () => {
+      /* istanbul ignore next */
+      cov_1qe2r7dqeo().f[2]++;
+      cov_1qe2r7dqeo().s[9]++;
+      return setShowTooltip(false);
+    },
+    children: [(0, jsx_runtime_1.jsx)("span", {
+      className: "font-semibold",
+      children: (0, bitcoin_1.formatBitcoinDisplay)(conversion)
+    }),
+    /* istanbul ignore next */
+    (cov_1qe2r7dqeo().b[1][0]++, showTooltip) &&
+    /* istanbul ignore next */
+    (cov_1qe2r7dqeo().b[1][1]++, (0, jsx_runtime_1.jsxs)("div", {
+      className: "absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg whitespace-nowrap z-10",
+      children: [(0, bitcoin_1.formatTooltipDisplay)(conversion), (0, jsx_runtime_1.jsx)("div", {
+        className: "absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"
+      })]
+    }))]
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJleHBvcnRzIiwiZGVmYXVsdCIsIkJpdGNvaW5EaXNwbGF5IiwicmVhY3RfMSIsImNvdl8xcWUycjdkcWVvIiwicyIsInJlcXVpcmUiLCJiaXRjb2luXzEiLCJ1c2RBbW91bnQiLCJjbGFzc05hbWUiLCJiIiwiZiIsInNob3dUb29sdGlwIiwic2V0U2hvd1Rvb2x0aXAiLCJ1c2VTdGF0ZSIsImNvbnZlcnNpb24iLCJjb252ZXJ0VVNEVG9CaXRjb2luIiwianN4X3J1bnRpbWVfMSIsImpzeHMiLCJvbk1vdXNlRW50ZXIiLCJvbk1vdXNlTGVhdmUiLCJjaGlsZHJlbiIsImpzeCIsImZvcm1hdEJpdGNvaW5EaXNwbGF5IiwiZm9ybWF0VG9vbHRpcERpc3BsYXkiXSwic291cmNlcyI6WyIvaG9tZS9nL2Rldi9vcmFuZ2VjYXQvc3JjL2NvbXBvbmVudHMvdWkvQml0Y29pbkRpc3BsYXkudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50J1xuXG5pbXBvcnQgeyB1c2VTdGF0ZSB9IGZyb20gJ3JlYWN0J1xuaW1wb3J0IHsgY29udmVydFVTRFRvQml0Y29pbiwgZm9ybWF0Qml0Y29pbkRpc3BsYXksIGZvcm1hdFRvb2x0aXBEaXNwbGF5IH0gZnJvbSAnQC91dGlscy9iaXRjb2luJ1xuXG5pbnRlcmZhY2UgQml0Y29pbkRpc3BsYXlQcm9wcyB7XG4gIHVzZEFtb3VudDogbnVtYmVyXG4gIGNsYXNzTmFtZT86IHN0cmluZ1xufVxuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBCaXRjb2luRGlzcGxheSh7IHVzZEFtb3VudCwgY2xhc3NOYW1lID0gJycgfTogQml0Y29pbkRpc3BsYXlQcm9wcykge1xuICBjb25zdCBbc2hvd1Rvb2x0aXAsIHNldFNob3dUb29sdGlwXSA9IHVzZVN0YXRlKGZhbHNlKVxuICBjb25zdCBjb252ZXJzaW9uID0gY29udmVydFVTRFRvQml0Y29pbih1c2RBbW91bnQpXG5cbiAgcmV0dXJuIChcbiAgICA8ZGl2IFxuICAgICAgY2xhc3NOYW1lPXtgcmVsYXRpdmUgaW5saW5lLWJsb2NrIGN1cnNvci1oZWxwICR7Y2xhc3NOYW1lfWB9XG4gICAgICBvbk1vdXNlRW50ZXI9eygpID0+IHNldFNob3dUb29sdGlwKHRydWUpfVxuICAgICAgb25Nb3VzZUxlYXZlPXsoKSA9PiBzZXRTaG93VG9vbHRpcChmYWxzZSl9XG4gICAgPlxuICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZFwiPlxuICAgICAgICB7Zm9ybWF0Qml0Y29pbkRpc3BsYXkoY29udmVyc2lvbil9XG4gICAgICA8L3NwYW4+XG4gICAgICBcbiAgICAgIHtzaG93VG9vbHRpcCAmJiAoXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgYm90dG9tLWZ1bGwgbGVmdC0xLzIgdHJhbnNmb3JtIC10cmFuc2xhdGUteC0xLzIgbWItMiBweC0zIHB5LTIgYmctZ3JheS05MDAgdGV4dC13aGl0ZSB0ZXh0LXNtIHJvdW5kZWQtbGcgc2hhZG93LWxnIHdoaXRlc3BhY2Utbm93cmFwIHotMTBcIj5cbiAgICAgICAgICB7Zm9ybWF0VG9vbHRpcERpc3BsYXkoY29udmVyc2lvbil9XG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSB0b3AtZnVsbCBsZWZ0LTEvMiB0cmFuc2Zvcm0gLXRyYW5zbGF0ZS14LTEvMiB3LTAgaC0wIGJvcmRlci1sLTQgYm9yZGVyLXItNCBib3JkZXItdC00IGJvcmRlci10cmFuc3BhcmVudCBib3JkZXItdC1ncmF5LTkwMFwiPjwvZGl2PlxuICAgICAgICA8L2Rpdj5cbiAgICAgICl9XG4gICAgPC9kaXY+XG4gIClcbn0gIl0sIm1hcHBpbmdzIjoiQUFBQSxZQUFZOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBVVpBLE9BQUEsQ0FBQUMsT0FBQSxHQUFBQyxjQUFBOzs7O0FBUkEsTUFBQUMsT0FBQTtBQUFBO0FBQUEsQ0FBQUMsY0FBQSxHQUFBQyxDQUFBLE9BQUFDLE9BQUE7QUFDQSxNQUFBQyxTQUFBO0FBQUE7QUFBQSxDQUFBSCxjQUFBLEdBQUFDLENBQUEsT0FBQUMsT0FBQTtBQU9BLFNBQXdCSixjQUFjQSxDQUFDO0VBQUVNLFNBQVM7RUFBRUMsU0FBUztFQUFBO0VBQUEsQ0FBQUwsY0FBQSxHQUFBTSxDQUFBLFVBQUcsRUFBRTtBQUFBLENBQXVCO0VBQUE7RUFBQU4sY0FBQSxHQUFBTyxDQUFBO0VBQ3ZGLE1BQU0sQ0FBQ0MsV0FBVyxFQUFFQyxjQUFjLENBQUM7RUFBQTtFQUFBLENBQUFULGNBQUEsR0FBQUMsQ0FBQSxPQUFHLElBQUFGLE9BQUEsQ0FBQVcsUUFBUSxFQUFDLEtBQUssQ0FBQztFQUNyRCxNQUFNQyxVQUFVO0VBQUE7RUFBQSxDQUFBWCxjQUFBLEdBQUFDLENBQUEsT0FBRyxJQUFBRSxTQUFBLENBQUFTLG1CQUFtQixFQUFDUixTQUFTLENBQUM7RUFBQTtFQUFBSixjQUFBLEdBQUFDLENBQUE7RUFFakQsT0FDRSxJQUFBWSxhQUFBLENBQUFDLElBQUE7SUFDRVQsU0FBUyxFQUFFLHFDQUFxQ0EsU0FBUyxFQUFFO0lBQzNEVSxZQUFZLEVBQUVBLENBQUEsS0FBTTtNQUFBO01BQUFmLGNBQUEsR0FBQU8sQ0FBQTtNQUFBUCxjQUFBLEdBQUFDLENBQUE7TUFBQSxPQUFBUSxjQUFjLENBQUMsSUFBSSxDQUFDO0lBQUQsQ0FBQztJQUN4Q08sWUFBWSxFQUFFQSxDQUFBLEtBQU07TUFBQTtNQUFBaEIsY0FBQSxHQUFBTyxDQUFBO01BQUFQLGNBQUEsR0FBQUMsQ0FBQTtNQUFBLE9BQUFRLGNBQWMsQ0FBQyxLQUFLLENBQUM7SUFBRCxDQUFDO0lBQUFRLFFBQUEsR0FFekMsSUFBQUosYUFBQSxDQUFBSyxHQUFBO01BQU1iLFNBQVMsRUFBQyxlQUFlO01BQUFZLFFBQUEsRUFDNUIsSUFBQWQsU0FBQSxDQUFBZ0Isb0JBQW9CLEVBQUNSLFVBQVU7SUFBQyxFQUM1QjtJQUVOO0lBQUEsQ0FBQVgsY0FBQSxHQUFBTSxDQUFBLFVBQUFFLFdBQVc7SUFBQTtJQUFBLENBQUFSLGNBQUEsR0FBQU0sQ0FBQSxVQUNWLElBQUFPLGFBQUEsQ0FBQUMsSUFBQTtNQUFLVCxTQUFTLEVBQUMsb0pBQW9KO01BQUFZLFFBQUEsR0FDaEssSUFBQWQsU0FBQSxDQUFBaUIsb0JBQW9CLEVBQUNULFVBQVUsQ0FBQyxFQUNqQyxJQUFBRSxhQUFBLENBQUFLLEdBQUE7UUFBS2IsU0FBUyxFQUFDO01BQXFJLEVBQU87SUFBQSxFQUN2SixDQUNQO0VBQUEsRUFDRztBQUVWIiwiaWdub3JlTGlzdCI6W119

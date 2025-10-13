@@ -1,0 +1,159 @@
+6e453a79895647b04ee46adcd2588e11
+"use strict";
+
+// Utils index file for organizing utility exports
+// This provides a single point of entry for utility functions
+/* istanbul ignore next */
+function cov_buon55ayl() {
+  var path = "/home/g/dev/orangecat/src/utils/index.ts";
+  var hash = "c35c05d5fe0b6c61f819bdf4aa94b5408f940918";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/utils/index.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 20
+        }
+      },
+      "2": {
+        start: {
+          line: 7,
+          column: 14
+        },
+        end: {
+          line: 7,
+          column: 36
+        }
+      },
+      "3": {
+        start: {
+          line: 8,
+          column: 0
+        },
+        end: {
+          line: 8,
+          column: 100
+        }
+      },
+      "4": {
+        start: {
+          line: 8,
+          column: 76
+        },
+        end: {
+          line: 8,
+          column: 94
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 8,
+            column: 62
+          },
+          end: {
+            line: 8,
+            column: 63
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 74
+          },
+          end: {
+            line: 8,
+            column: 96
+          }
+        },
+        line: 8
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/utils/index.ts",
+      mappings: ";AAAA,kDAAkD;AAClD,8DAA8D;;;AAE9D,wDAAwD;AACxD,qCAAgC;AAAvB,2FAAA,EAAE,OAAA;AAEX,uDAAuD;AACvD,0DAA0D;AAC1D,qDAAqD;AACrD,2DAA2D;AAC3D,OAAO;AAEP,4DAA4D;AAC5D,iEAAiE;AAEjE,mEAAmE",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/utils/index.ts"],
+      sourcesContent: ["// Utils index file for organizing utility exports\n// This provides a single point of entry for utility functions\n\n// Re-export the consolidated cn function from lib/utils\nexport { cn } from '@/lib/utils'\n\n// Individual utility modules can be imported directly:\n// import { convertSatoshisToAll } from '@/utils/currency'\n// import { validateEmail } from '@/utils/validation'\n// import { generateBitcoinAddress } from '@/utils/bitcoin'\n// etc.\n\n// This index is primarily for the cn function consolidation\n// Other utilities should be imported directly to avoid conflicts\n\n// Note: functions.ts is reserved for additional general utilities "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "c35c05d5fe0b6c61f819bdf4aa94b5408f940918"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_buon55ayl = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_buon55ayl();
+cov_buon55ayl().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_buon55ayl().s[1]++;
+exports.cn = void 0;
+// Re-export the consolidated cn function from lib/utils
+var utils_1 =
+/* istanbul ignore next */
+(cov_buon55ayl().s[2]++, require("@/lib/utils"));
+/* istanbul ignore next */
+cov_buon55ayl().s[3]++;
+Object.defineProperty(exports, "cn", {
+  enumerable: true,
+  get: function () {
+    /* istanbul ignore next */
+    cov_buon55ayl().f[0]++;
+    cov_buon55ayl().s[4]++;
+    return utils_1.cn;
+  }
+});
+// Individual utility modules can be imported directly:
+// import { convertSatoshisToAll } from '@/utils/currency'
+// import { validateEmail } from '@/utils/validation'
+// import { generateBitcoinAddress } from '@/utils/bitcoin'
+// etc.
+// This index is primarily for the cn function consolidation
+// Other utilities should be imported directly to avoid conflicts
+// Note: functions.ts is reserved for additional general utilities
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfYnVvbjU1YXlsIiwicGF0aCIsImhhc2giLCJnbG9iYWwiLCJGdW5jdGlvbiIsImdjdiIsImNvdmVyYWdlRGF0YSIsInN0YXRlbWVudE1hcCIsInN0YXJ0IiwibGluZSIsImNvbHVtbiIsImVuZCIsImZuTWFwIiwibmFtZSIsImRlY2wiLCJsb2MiLCJicmFuY2hNYXAiLCJzIiwiZiIsImIiLCJpbnB1dFNvdXJjZU1hcCIsImZpbGUiLCJtYXBwaW5ncyIsIm5hbWVzIiwic291cmNlcyIsInNvdXJjZXNDb250ZW50IiwidmVyc2lvbiIsIl9jb3ZlcmFnZVNjaGVtYSIsImNvdmVyYWdlIiwiYWN0dWFsQ292ZXJhZ2UiLCJ1dGlsc18xIiwicmVxdWlyZSIsIk9iamVjdCIsImRlZmluZVByb3BlcnR5IiwiZXhwb3J0cyIsImVudW1lcmFibGUiLCJnZXQiLCJjbiJdLCJzb3VyY2VzIjpbIi9ob21lL2cvZGV2L29yYW5nZWNhdC9zcmMvdXRpbHMvaW5kZXgudHMiXSwic291cmNlc0NvbnRlbnQiOlsiLy8gVXRpbHMgaW5kZXggZmlsZSBmb3Igb3JnYW5pemluZyB1dGlsaXR5IGV4cG9ydHNcbi8vIFRoaXMgcHJvdmlkZXMgYSBzaW5nbGUgcG9pbnQgb2YgZW50cnkgZm9yIHV0aWxpdHkgZnVuY3Rpb25zXG5cbi8vIFJlLWV4cG9ydCB0aGUgY29uc29saWRhdGVkIGNuIGZ1bmN0aW9uIGZyb20gbGliL3V0aWxzXG5leHBvcnQgeyBjbiB9IGZyb20gJ0AvbGliL3V0aWxzJ1xuXG4vLyBJbmRpdmlkdWFsIHV0aWxpdHkgbW9kdWxlcyBjYW4gYmUgaW1wb3J0ZWQgZGlyZWN0bHk6XG4vLyBpbXBvcnQgeyBjb252ZXJ0U2F0b3NoaXNUb0FsbCB9IGZyb20gJ0AvdXRpbHMvY3VycmVuY3knXG4vLyBpbXBvcnQgeyB2YWxpZGF0ZUVtYWlsIH0gZnJvbSAnQC91dGlscy92YWxpZGF0aW9uJ1xuLy8gaW1wb3J0IHsgZ2VuZXJhdGVCaXRjb2luQWRkcmVzcyB9IGZyb20gJ0AvdXRpbHMvYml0Y29pbidcbi8vIGV0Yy5cblxuLy8gVGhpcyBpbmRleCBpcyBwcmltYXJpbHkgZm9yIHRoZSBjbiBmdW5jdGlvbiBjb25zb2xpZGF0aW9uXG4vLyBPdGhlciB1dGlsaXRpZXMgc2hvdWxkIGJlIGltcG9ydGVkIGRpcmVjdGx5IHRvIGF2b2lkIGNvbmZsaWN0c1xuXG4vLyBOb3RlOiBmdW5jdGlvbnMudHMgaXMgcmVzZXJ2ZWQgZm9yIGFkZGl0aW9uYWwgZ2VuZXJhbCB1dGlsaXRpZXMgIl0sIm1hcHBpbmdzIjoiOztBQUFBO0FBQ0E7QUFBQTtBQUFBLFNBQUFBLGNBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsSUFBQTtFQUFBLElBQUFDLE1BQUEsT0FBQUMsUUFBQTtFQUFBLElBQUFDLEdBQUE7RUFBQSxJQUFBQyxZQUFBO0lBQUFMLElBQUE7SUFBQU0sWUFBQTtNQUFBO1FBQUFDLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7TUFBQTtRQUFBRixLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7SUFBQTtJQUFBRSxLQUFBO01BQUE7UUFBQUMsSUFBQTtRQUFBQyxJQUFBO1VBQUFOLEtBQUE7WUFBQUMsSUFBQTtZQUFBQyxNQUFBO1VBQUE7VUFBQUMsR0FBQTtZQUFBRixJQUFBO1lBQUFDLE1BQUE7VUFBQTtRQUFBO1FBQUFLLEdBQUE7VUFBQVAsS0FBQTtZQUFBQyxJQUFBO1lBQUFDLE1BQUE7VUFBQTtVQUFBQyxHQUFBO1lBQUFGLElBQUE7WUFBQUMsTUFBQTtVQUFBO1FBQUE7UUFBQUQsSUFBQTtNQUFBO0lBQUE7SUFBQU8sU0FBQTtJQUFBQyxDQUFBO01BQUE7TUFBQTtNQUFBO01BQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7SUFBQUMsY0FBQTtNQUFBQyxJQUFBO01BQUFDLFFBQUE7TUFBQUMsS0FBQTtNQUFBQyxPQUFBO01BQUFDLGNBQUE7TUFBQUMsT0FBQTtJQUFBO0lBQUFDLGVBQUE7SUFBQXpCLElBQUE7RUFBQTtFQUFBLElBQUEwQixRQUFBLEdBQUF6QixNQUFBLENBQUFFLEdBQUEsTUFBQUYsTUFBQSxDQUFBRSxHQUFBO0VBQUEsS0FBQXVCLFFBQUEsQ0FBQTNCLElBQUEsS0FBQTJCLFFBQUEsQ0FBQTNCLElBQUEsRUFBQUMsSUFBQSxLQUFBQSxJQUFBO0lBQUEwQixRQUFBLENBQUEzQixJQUFBLElBQUFLLFlBQUE7RUFBQTtFQUFBLElBQUF1QixjQUFBLEdBQUFELFFBQUEsQ0FBQTNCLElBQUE7RUFBQTtJQWNBO0lBQUFELGFBQUEsWUFBQUEsQ0FBQTtNQUFBLE9BQUE2QixjQUFBO0lBQUE7RUFBQTtFQUFBLE9BQUFBLGNBQUE7QUFBQTtBQUFBN0IsYUFBQTtBQUFBQSxhQUFBLEdBQUFpQixDQUFBOzs7Ozs7O0FBWkE7QUFDQSxJQUFBYSxPQUFBO0FBQUE7QUFBQSxDQUFBOUIsYUFBQSxHQUFBaUIsQ0FBQSxPQUFBYyxPQUFBO0FBQWdDO0FBQUEvQixhQUFBLEdBQUFpQixDQUFBO0FBQXZCZSxNQUFBLENBQUFDLGNBQUEsQ0FBQUMsT0FBQTtFQUFBQyxVQUFBO0VBQUFDLEdBQUEsV0FBQUEsQ0FBQTtJQUFBO0lBQUFwQyxhQUFBLEdBQUFrQixDQUFBO0lBQUFsQixhQUFBLEdBQUFpQixDQUFBO0lBQUEsT0FBQWEsT0FBQSxDQUFBTyxFQUFFO0VBQUE7QUFBQTtBQUVYO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFFQTtBQUNBO0FBRUEiLCJpZ25vcmVMaXN0IjpbXX0=

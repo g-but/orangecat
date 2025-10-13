@@ -17,7 +17,6 @@ export interface Profile {
   // Core identity fields
   id: string
   username: string | null
-  full_name: string | null
   display_name: string | null
   bio: string | null
   avatar_url: string | null
@@ -97,7 +96,6 @@ export interface ScalableProfile extends Profile {
 export interface ProfileFormData {
   // Core fields
   username?: string
-  full_name?: string
   display_name?: string
   bio?: string
   avatar_url?: string

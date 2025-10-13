@@ -66,7 +66,6 @@ export function PWAInstallButton({
 
     // Listen for install prompt
     const handleBeforeInstallPrompt = (e: BeforeInstallPromptEvent) => {
-      console.log('[PWA] Install prompt available')
       e.preventDefault()
       setDeferredPrompt(e)
       setCanInstall(true)
@@ -85,7 +84,6 @@ export function PWAInstallButton({
 
     // Listen for app installed
     const handleAppInstalled = () => {
-      console.log('[PWA] App installed')
       setIsInstalled(true)
       setCanInstall(false)
       setDeferredPrompt(null)
@@ -110,7 +108,6 @@ export function PWAInstallButton({
       await deferredPrompt.prompt()
       const choiceResult = await deferredPrompt.userChoice
       
-      console.log('[PWA] User choice:', choiceResult.outcome)
       
       if (choiceResult.outcome === 'accepted') {
         logger.info('PWA install prompt accepted by user', undefined, 'PWA')

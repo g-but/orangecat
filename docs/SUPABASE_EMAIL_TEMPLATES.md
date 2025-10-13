@@ -1,0 +1,157 @@
+# Supabase Email Templates Configuration
+
+## Password Reset Email Template
+
+To fix the reset password email, you need to update the email template in your Supabase dashboard:
+
+1. Go to Supabase Dashboard → Authentication → Email Templates
+2. Select "Reset Password" template
+3. Replace the content with the template below:
+
+### Subject Line:
+```
+🔐 Reset Your OrangeCat Password - Secure Link Inside
+```
+
+### Email Body (HTML):
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reset Your OrangeCat Password</title>
+</head>
+<body style="margin: 0; padding: 0; background: #f7f8fa; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    
+    <!-- Email Container -->
+    <div style="max-width: 600px; margin: 40px auto; background: linear-gradient(135deg, #F7931A 0%, #FF8C42 30%, #40E0D0 100%); border-radius: 16px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.15);">
+        
+        <!-- Main Content Card -->
+        <div style="background: white; margin: 4px; border-radius: 12px; padding: 0; overflow: hidden;">
+            
+            <!-- Header with Logo -->
+            <div style="background: linear-gradient(135deg, #F7931A 0%, #FF8C42 100%); padding: 40px 30px; text-align: center;">
+                <div style="background: white; border-radius: 50%; width: 80px; height: 80px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 25px rgba(0,0,0,0.2);">
+                    <span style="font-size: 36px; color: #F7931A;">🧡</span>
+                </div>
+                <h1 style="color: white; font-size: 28px; font-weight: 700; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.2);">OrangeCat</h1>
+                <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 16px; font-weight: 500;">Bitcoin Innovation Platform</p>
+            </div>
+
+            <!-- Main Message -->
+            <div style="padding: 40px 30px;">
+                
+                <h2 style="color: #1a1a1a; font-size: 26px; font-weight: 600; margin: 0 0 24px; text-align: center; line-height: 1.3;">
+                    🔐 Secure Password Reset
+                </h2>
+                
+                <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 24px;">
+                    <strong>Hello Bitcoin Builder!</strong> 👋
+                </p>
+                
+                <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 32px;">
+                    We received a request to reset your OrangeCat password. You're just one click away from getting back to building amazing Bitcoin projects and connecting with the community.
+                </p>
+
+                <!-- Primary CTA Button -->
+                <div style="text-align: center; margin: 40px 0;">
+                    <a href="{{ .ConfirmationURL }}" 
+                       style="background: linear-gradient(135deg, #F7931A 0%, #FF8C42 100%); 
+                              color: white; 
+                              text-decoration: none; 
+                              padding: 18px 36px; 
+                              border-radius: 12px; 
+                              font-weight: 600; 
+                              font-size: 17px; 
+                              display: inline-block;
+                              box-shadow: 0 6px 20px rgba(247, 147, 26, 0.4);
+                              text-transform: uppercase;
+                              letter-spacing: 0.5px;">
+                        🚀 Reset My Password
+                    </a>
+                </div>
+
+                <!-- Security Information -->
+                <div style="background: linear-gradient(135deg, #f8f9ff 0%, #f0f8ff 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; margin: 32px 0;">
+                    <h3 style="color: #2d3748; font-size: 16px; font-weight: 600; margin: 0 0 8px;">🛡️ Enterprise-Grade Security</h3>
+                    <p style="color: #718096; font-size: 14px; margin: 0; line-height: 1.5;">
+                        This secure link expires in <strong>1 hour</strong> for your protection. If you didn't request this reset, simply ignore this email—your account remains completely secure.
+                    </p>
+                </div>
+
+                <!-- Alternative Action -->
+                <div style="text-align: center; margin: 32px 0;">
+                    <p style="color: #718096; font-size: 14px; margin: 0 0 16px;">
+                        Can't click the button? Copy and paste this secure link:
+                    </p>
+                    <div style="background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; word-break: break-all;">
+                        <a href="{{ .ConfirmationURL }}" style="color: #F7931A; text-decoration: none; font-size: 13px; font-family: monospace;">{{ .ConfirmationURL }}</a>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div style="background: #f8f9fa; padding: 30px; border-top: 1px solid #e2e8f0; text-align: center;">
+                <div style="margin-bottom: 20px;">
+                    <a href="https://orangecat.ch" style="color: #F7931A; text-decoration: none; font-weight: 600; font-size: 15px;">Visit OrangeCat Platform →</a>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <p style="color: #718096; font-size: 14px; margin: 0;">
+                        Questions? We're here to help! 
+                        <a href="mailto:support@orangecat.ch" style="color: #40E0D0; text-decoration: none; font-weight: 500;">support@orangecat.ch</a>
+                    </p>
+                </div>
+                
+                <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 20px;">
+                    <p style="color: #a0aec0; font-size: 12px; margin: 0; line-height: 1.4;">
+                        © 2025 OrangeCat • Building the Future of Bitcoin Innovation<br>
+                        This email was sent to {{ .Email }} because you have an OrangeCat account.
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>
+```
+
+## Important Configuration Steps:
+
+### 1. Update Supabase Email Template:
+- Go to your Supabase project dashboard
+- Navigate to Authentication → Email Templates  
+- Select "Reset password" template
+- Replace the default template with the HTML above
+- Save the changes
+
+### 2. CRITICAL: Fix Site URL Configuration:
+In your Supabase dashboard, go to Authentication → URL Configuration:
+
+**Site URL:** `https://www.orangecat.ch`
+
+**Redirect URLs:** Add these EXACT URLs (case sensitive):
+- `https://www.orangecat.ch/auth/reset-password`
+- `https://orangecat.ch/auth/reset-password`
+- `https://www.orangecat.ch/**` (wildcard for all www subdirectories)
+
+⚠️ **IMPORTANT**: The redirect URL in the email MUST exactly match one of these redirect URLs, or Supabase will redirect to the homepage with error parameters instead of your reset page.
+
+### 3. Environment Variables:
+Make sure your production environment has:
+```bash
+NEXT_PUBLIC_SITE_URL=https://www.orangecat.ch
+```
+
+## Testing:
+1. Update the Supabase email template
+2. Go to your app and request a password reset
+3. Check the email - it should now use the beautiful template
+4. Click the link - it should take you to `/auth/reset-password` with proper tokens
+5. Reset your password successfully
+
+The current code already handles the reset flow correctly - the issue was just the email template configuration in Supabase.

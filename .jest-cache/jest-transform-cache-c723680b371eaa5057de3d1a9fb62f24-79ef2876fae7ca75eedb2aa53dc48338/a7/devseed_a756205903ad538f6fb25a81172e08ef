@@ -1,0 +1,692 @@
+d0827b91cb7417209f8416407de4c692
+"use strict";
+
+/* istanbul ignore next */
+function cov_10948mqt5t() {
+  var path = "/home/g/dev/orangecat/src/utils/dev-seed.ts";
+  var hash = "03efd3cc38aa6d8a6713aab24c7d5e89ebb368b3";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/utils/dev-seed.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 22
+        },
+        end: {
+          line: 4,
+          column: 1
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 4
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 0
+        },
+        end: {
+          line: 5,
+          column: 62
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 58
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 50
+        }
+      },
+      "5": {
+        start: {
+          line: 8,
+          column: 17
+        },
+        end: {
+          line: 8,
+          column: 71
+        }
+      },
+      "6": {
+        start: {
+          line: 10,
+          column: 23
+        },
+        end: {
+          line: 41,
+          column: 1
+        }
+      },
+      "7": {
+        start: {
+          line: 42,
+          column: 0
+        },
+        end: {
+          line: 42,
+          column: 40
+        }
+      },
+      "8": {
+        start: {
+          line: 43,
+          column: 24
+        },
+        end: {
+          line: 104,
+          column: 1
+        }
+      },
+      "9": {
+        start: {
+          line: 105,
+          column: 0
+        },
+        end: {
+          line: 105,
+          column: 42
+        }
+      },
+      "10": {
+        start: {
+          line: 107,
+          column: 4
+        },
+        end: {
+          line: 129,
+          column: 5
+        }
+      },
+      "11": {
+        start: {
+          line: 109,
+          column: 8
+        },
+        end: {
+          line: 111,
+          column: 9
+        }
+      },
+      "12": {
+        start: {
+          line: 110,
+          column: 12
+        },
+        end: {
+          line: 110,
+          column: 19
+        }
+      },
+      "13": {
+        start: {
+          line: 113,
+          column: 43
+        },
+        end: {
+          line: 116,
+          column: 21
+        }
+      },
+      "14": {
+        start: {
+          line: 117,
+          column: 8
+        },
+        end: {
+          line: 119,
+          column: 9
+        }
+      },
+      "15": {
+        start: {
+          line: 118,
+          column: 12
+        },
+        end: {
+          line: 118,
+          column: 19
+        }
+      },
+      "16": {
+        start: {
+          line: 122,
+          column: 8
+        },
+        end: {
+          line: 125,
+          column: 10
+        }
+      },
+      "17": {
+        start: {
+          line: 128,
+          column: 8
+        },
+        end: {
+          line: 128,
+          column: 20
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 2,
+            column: 57
+          }
+        },
+        loc: {
+          start: {
+            line: 2,
+            column: 71
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        line: 2
+      },
+      "1": {
+        name: "seedDevelopmentData",
+        decl: {
+          start: {
+            line: 106,
+            column: 15
+          },
+          end: {
+            line: 106,
+            column: 34
+          }
+        },
+        loc: {
+          start: {
+            line: 106,
+            column: 37
+          },
+          end: {
+            line: 130,
+            column: 1
+          }
+        },
+        line: 106
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 2,
+            column: 22
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 2,
+            column: 23
+          },
+          end: {
+            line: 2,
+            column: 27
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 31
+          },
+          end: {
+            line: 2,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 2,
+            column: 56
+          },
+          end: {
+            line: 4,
+            column: 1
+          }
+        }],
+        line: 2
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 3,
+            column: 11
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 37
+          },
+          end: {
+            line: 3,
+            column: 40
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 43
+          },
+          end: {
+            line: 3,
+            column: 61
+          }
+        }],
+        line: 3
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 12
+          },
+          end: {
+            line: 3,
+            column: 15
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 19
+          },
+          end: {
+            line: 3,
+            column: 33
+          }
+        }],
+        line: 3
+      },
+      "3": {
+        loc: {
+          start: {
+            line: 109,
+            column: 8
+          },
+          end: {
+            line: 111,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 109,
+            column: 8
+          },
+          end: {
+            line: 111,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 109
+      },
+      "4": {
+        loc: {
+          start: {
+            line: 117,
+            column: 8
+          },
+          end: {
+            line: 119,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 117,
+            column: 8
+          },
+          end: {
+            line: 119,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 117
+      },
+      "5": {
+        loc: {
+          start: {
+            line: 117,
+            column: 12
+          },
+          end: {
+            line: 117,
+            column: 59
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 117,
+            column: 12
+          },
+          end: {
+            line: 117,
+            column: 28
+          }
+        }, {
+          start: {
+            line: 117,
+            column: 32
+          },
+          end: {
+            line: 117,
+            column: 59
+          }
+        }],
+        line: 117
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {
+      "0": [0, 0, 0],
+      "1": [0, 0],
+      "2": [0, 0],
+      "3": [0, 0],
+      "4": [0, 0],
+      "5": [0, 0]
+    },
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/utils/dev-seed.ts",
+      mappings: "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",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/utils/dev-seed.ts"],
+      sourcesContent: ["import supabase from '@/services/supabase/client'\n\n// Sample data for testing\nconst sampleProfiles = [\n  {\n    username: 'alice_creator',\n    display_name: 'Alice Johnson',\n    bio: 'Creative entrepreneur passionate about sustainable technology and community building.',\n    avatar_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'\n  },\n  {\n    username: 'bob_developer',\n    display_name: 'Bob Smith',\n    bio: 'Full-stack developer building the future of decentralized applications.',\n    avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'\n  },\n  {\n    username: 'charlie_artist',\n    display_name: 'Charlie Brown',\n    bio: 'Digital artist creating NFTs and exploring the intersection of art and technology.',\n    avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'\n  },\n  {\n    username: 'diana_educator',\n    display_name: 'Diana Wilson',\n    bio: 'Educator and advocate for accessible technology education in underserved communities.',\n    avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'\n  },\n  {\n    username: 'evan_musician',\n    display_name: 'Evan Davis',\n    bio: 'Independent musician and producer creating experimental electronic music.',\n    avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face'\n  }\n]\n\nconst sampleCampaigns = [\n  {\n    title: 'Solar-Powered Community Garden',\n    description: 'Building a sustainable community garden powered entirely by solar energy. This project will provide fresh produce to local families while demonstrating renewable energy solutions.',\n    category: 'community',\n    tags: ['sustainability', 'solar', 'community', 'garden'],\n    goal_amount: 50000,\n    total_funding: 12500,\n    contributor_count: 25,\n    is_active: true,\n    is_public: true,\n    featured_image_url: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=400&fit=crop'\n  },\n  {\n    title: 'Open Source Learning Platform',\n    description: 'Developing a free, open-source platform for online education that works offline and on low-bandwidth connections.',\n    category: 'education',\n    tags: ['education', 'open-source', 'technology', 'accessibility'],\n    goal_amount: 75000,\n    total_funding: 45000,\n    contributor_count: 89,\n    is_active: true,\n    is_public: true,\n    featured_image_url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=400&fit=crop'\n  },\n  {\n    title: 'Digital Art Exhibition Space',\n    description: 'Creating a virtual reality gallery space for emerging digital artists to showcase their work and connect with collectors.',\n    category: 'creative',\n    tags: ['art', 'vr', 'digital', 'gallery'],\n    goal_amount: 30000,\n    total_funding: 18750,\n    contributor_count: 42,\n    is_active: true,\n    is_public: true,\n    featured_image_url: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=400&fit=crop'\n  },\n  {\n    title: 'Blockchain Music Distribution',\n    description: 'Building a decentralized platform for musicians to distribute their music directly to fans without intermediaries.',\n    category: 'technology',\n    tags: ['blockchain', 'music', 'decentralized', 'distribution'],\n    goal_amount: 100000,\n    total_funding: 67500,\n    contributor_count: 156,\n    is_active: true,\n    is_public: true,\n    featured_image_url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=400&fit=crop'\n  },\n  {\n    title: 'Clean Water Initiative',\n    description: 'Installing water purification systems in rural communities to provide access to clean, safe drinking water.',\n    category: 'charity',\n    tags: ['water', 'charity', 'health', 'community'],\n    goal_amount: 80000,\n    total_funding: 32000,\n    contributor_count: 78,\n    is_active: true,\n    is_public: true,\n    featured_image_url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=400&fit=crop'\n  }\n]\n\nexport async function seedDevelopmentData() {\n  try {\n    \n    // Check if we're in development\n    if (process.env.NODE_ENV !== 'development') {\n      return\n    }\n    \n    // Check if data already exists\n    const { data: existingProfiles } = await supabase\n      .from('profiles')\n      .select('id')\n      .limit(1)\n    \n    if (existingProfiles && existingProfiles.length > 0) {\n      return\n    }\n    \n    \n    // Create profiles (this will require authentication, so this is more of a template)\n    // In a real scenario, you'd need to create users first through Supabase Auth\n    \n    \n    return {\n      profiles: sampleProfiles,\n      campaigns: sampleCampaigns\n    }\n    \n  } catch (error) {\n    throw error\n  }\n}\n\n// Export sample data for manual seeding\nexport { sampleProfiles, sampleCampaigns } "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "03efd3cc38aa6d8a6713aab24c7d5e89ebb368b3"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_10948mqt5t = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_10948mqt5t();
+var __importDefault =
+/* istanbul ignore next */
+(cov_10948mqt5t().s[0]++,
+/* istanbul ignore next */
+(cov_10948mqt5t().b[0][0]++, this) &&
+/* istanbul ignore next */
+(cov_10948mqt5t().b[0][1]++, this.__importDefault) ||
+/* istanbul ignore next */
+(cov_10948mqt5t().b[0][2]++, function (mod) {
+  /* istanbul ignore next */
+  cov_10948mqt5t().f[0]++;
+  cov_10948mqt5t().s[1]++;
+  return /* istanbul ignore next */(cov_10948mqt5t().b[2][0]++, mod) &&
+  /* istanbul ignore next */
+  (cov_10948mqt5t().b[2][1]++, mod.__esModule) ?
+  /* istanbul ignore next */
+  (cov_10948mqt5t().b[1][0]++, mod) :
+  /* istanbul ignore next */
+  (cov_10948mqt5t().b[1][1]++, {
+    "default": mod
+  });
+}));
+/* istanbul ignore next */
+cov_10948mqt5t().s[2]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_10948mqt5t().s[3]++;
+exports.sampleCampaigns = exports.sampleProfiles = void 0;
+/* istanbul ignore next */
+cov_10948mqt5t().s[4]++;
+exports.seedDevelopmentData = seedDevelopmentData;
+const client_1 =
+/* istanbul ignore next */
+(cov_10948mqt5t().s[5]++, __importDefault(require("@/services/supabase/client")));
+// Sample data for testing
+const sampleProfiles =
+/* istanbul ignore next */
+(cov_10948mqt5t().s[6]++, [{
+  username: 'alice_creator',
+  display_name: 'Alice Johnson',
+  bio: 'Creative entrepreneur passionate about sustainable technology and community building.',
+  avatar_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
+}, {
+  username: 'bob_developer',
+  display_name: 'Bob Smith',
+  bio: 'Full-stack developer building the future of decentralized applications.',
+  avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
+}, {
+  username: 'charlie_artist',
+  display_name: 'Charlie Brown',
+  bio: 'Digital artist creating NFTs and exploring the intersection of art and technology.',
+  avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
+}, {
+  username: 'diana_educator',
+  display_name: 'Diana Wilson',
+  bio: 'Educator and advocate for accessible technology education in underserved communities.',
+  avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
+}, {
+  username: 'evan_musician',
+  display_name: 'Evan Davis',
+  bio: 'Independent musician and producer creating experimental electronic music.',
+  avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face'
+}]);
+/* istanbul ignore next */
+cov_10948mqt5t().s[7]++;
+exports.sampleProfiles = sampleProfiles;
+const sampleCampaigns =
+/* istanbul ignore next */
+(cov_10948mqt5t().s[8]++, [{
+  title: 'Solar-Powered Community Garden',
+  description: 'Building a sustainable community garden powered entirely by solar energy. This project will provide fresh produce to local families while demonstrating renewable energy solutions.',
+  category: 'community',
+  tags: ['sustainability', 'solar', 'community', 'garden'],
+  goal_amount: 50000,
+  total_funding: 12500,
+  contributor_count: 25,
+  is_active: true,
+  is_public: true,
+  featured_image_url: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=800&h=400&fit=crop'
+}, {
+  title: 'Open Source Learning Platform',
+  description: 'Developing a free, open-source platform for online education that works offline and on low-bandwidth connections.',
+  category: 'education',
+  tags: ['education', 'open-source', 'technology', 'accessibility'],
+  goal_amount: 75000,
+  total_funding: 45000,
+  contributor_count: 89,
+  is_active: true,
+  is_public: true,
+  featured_image_url: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&h=400&fit=crop'
+}, {
+  title: 'Digital Art Exhibition Space',
+  description: 'Creating a virtual reality gallery space for emerging digital artists to showcase their work and connect with collectors.',
+  category: 'creative',
+  tags: ['art', 'vr', 'digital', 'gallery'],
+  goal_amount: 30000,
+  total_funding: 18750,
+  contributor_count: 42,
+  is_active: true,
+  is_public: true,
+  featured_image_url: 'https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=800&h=400&fit=crop'
+}, {
+  title: 'Blockchain Music Distribution',
+  description: 'Building a decentralized platform for musicians to distribute their music directly to fans without intermediaries.',
+  category: 'technology',
+  tags: ['blockchain', 'music', 'decentralized', 'distribution'],
+  goal_amount: 100000,
+  total_funding: 67500,
+  contributor_count: 156,
+  is_active: true,
+  is_public: true,
+  featured_image_url: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=400&fit=crop'
+}, {
+  title: 'Clean Water Initiative',
+  description: 'Installing water purification systems in rural communities to provide access to clean, safe drinking water.',
+  category: 'charity',
+  tags: ['water', 'charity', 'health', 'community'],
+  goal_amount: 80000,
+  total_funding: 32000,
+  contributor_count: 78,
+  is_active: true,
+  is_public: true,
+  featured_image_url: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800&h=400&fit=crop'
+}]);
+/* istanbul ignore next */
+cov_10948mqt5t().s[9]++;
+exports.sampleCampaigns = sampleCampaigns;
+async function seedDevelopmentData() {
+  /* istanbul ignore next */
+  cov_10948mqt5t().f[1]++;
+  cov_10948mqt5t().s[10]++;
+  try {
+    /* istanbul ignore next */
+    cov_10948mqt5t().s[11]++;
+    // Check if we're in development
+    if (process.env.NODE_ENV !== 'development') {
+      /* istanbul ignore next */
+      cov_10948mqt5t().b[3][0]++;
+      cov_10948mqt5t().s[12]++;
+      return;
+    } else
+    /* istanbul ignore next */
+    {
+      cov_10948mqt5t().b[3][1]++;
+    }
+    // Check if data already exists
+    const {
+      data: existingProfiles
+    } =
+    /* istanbul ignore next */
+    (cov_10948mqt5t().s[13]++, await client_1.default.from('profiles').select('id').limit(1));
+    /* istanbul ignore next */
+    cov_10948mqt5t().s[14]++;
+    if (
+    /* istanbul ignore next */
+    (cov_10948mqt5t().b[5][0]++, existingProfiles) &&
+    /* istanbul ignore next */
+    (cov_10948mqt5t().b[5][1]++, existingProfiles.length > 0)) {
+      /* istanbul ignore next */
+      cov_10948mqt5t().b[4][0]++;
+      cov_10948mqt5t().s[15]++;
+      return;
+    } else
+    /* istanbul ignore next */
+    {
+      cov_10948mqt5t().b[4][1]++;
+    }
+    // Create profiles (this will require authentication, so this is more of a template)
+    // In a real scenario, you'd need to create users first through Supabase Auth
+    cov_10948mqt5t().s[16]++;
+    return {
+      profiles: sampleProfiles,
+      campaigns: sampleCampaigns
+    };
+  } catch (error) {
+    /* istanbul ignore next */
+    cov_10948mqt5t().s[17]++;
+    throw error;
+  }
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMTA5NDhtcXQ1dCIsImFjdHVhbENvdmVyYWdlIiwiZXhwb3J0cyIsInNlZWREZXZlbG9wbWVudERhdGEiLCJjbGllbnRfMSIsInMiLCJfX2ltcG9ydERlZmF1bHQiLCJyZXF1aXJlIiwic2FtcGxlUHJvZmlsZXMiLCJ1c2VybmFtZSIsImRpc3BsYXlfbmFtZSIsImJpbyIsImF2YXRhcl91cmwiLCJzYW1wbGVDYW1wYWlnbnMiLCJ0aXRsZSIsImRlc2NyaXB0aW9uIiwiY2F0ZWdvcnkiLCJ0YWdzIiwiZ29hbF9hbW91bnQiLCJ0b3RhbF9mdW5kaW5nIiwiY29udHJpYnV0b3JfY291bnQiLCJpc19hY3RpdmUiLCJpc19wdWJsaWMiLCJmZWF0dXJlZF9pbWFnZV91cmwiLCJmIiwicHJvY2VzcyIsImVudiIsIk5PREVfRU5WIiwiYiIsImRhdGEiLCJleGlzdGluZ1Byb2ZpbGVzIiwiZGVmYXVsdCIsImZyb20iLCJzZWxlY3QiLCJsaW1pdCIsImxlbmd0aCIsInByb2ZpbGVzIiwiY2FtcGFpZ25zIiwiZXJyb3IiXSwic291cmNlcyI6WyIvaG9tZS9nL2Rldi9vcmFuZ2VjYXQvc3JjL3V0aWxzL2Rldi1zZWVkLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCBzdXBhYmFzZSBmcm9tICdAL3NlcnZpY2VzL3N1cGFiYXNlL2NsaWVudCdcblxuLy8gU2FtcGxlIGRhdGEgZm9yIHRlc3RpbmdcbmNvbnN0IHNhbXBsZVByb2ZpbGVzID0gW1xuICB7XG4gICAgdXNlcm5hbWU6ICdhbGljZV9jcmVhdG9yJyxcbiAgICBkaXNwbGF5X25hbWU6ICdBbGljZSBKb2huc29uJyxcbiAgICBiaW86ICdDcmVhdGl2ZSBlbnRyZXByZW5ldXIgcGFzc2lvbmF0ZSBhYm91dCBzdXN0YWluYWJsZSB0ZWNobm9sb2d5IGFuZCBjb21tdW5pdHkgYnVpbGRpbmcuJyxcbiAgICBhdmF0YXJfdXJsOiAnaHR0cHM6Ly9pbWFnZXMudW5zcGxhc2guY29tL3Bob3RvLTE0OTQ3OTAxMDg3NTUtMjYxNmI2MTJiNzg2P3c9MTUwJmg9MTUwJmZpdD1jcm9wJmNyb3A9ZmFjZSdcbiAgfSxcbiAge1xuICAgIHVzZXJuYW1lOiAnYm9iX2RldmVsb3BlcicsXG4gICAgZGlzcGxheV9uYW1lOiAnQm9iIFNtaXRoJyxcbiAgICBiaW86ICdGdWxsLXN0YWNrIGRldmVsb3BlciBidWlsZGluZyB0aGUgZnV0dXJlIG9mIGRlY2VudHJhbGl6ZWQgYXBwbGljYXRpb25zLicsXG4gICAgYXZhdGFyX3VybDogJ2h0dHBzOi8vaW1hZ2VzLnVuc3BsYXNoLmNvbS9waG90by0xNTA3MDAzMjExMTY5LTBhMWRkNzIyOGYyZD93PTE1MCZoPTE1MCZmaXQ9Y3JvcCZjcm9wPWZhY2UnXG4gIH0sXG4gIHtcbiAgICB1c2VybmFtZTogJ2NoYXJsaWVfYXJ0aXN0JyxcbiAgICBkaXNwbGF5X25hbWU6ICdDaGFybGllIEJyb3duJyxcbiAgICBiaW86ICdEaWdpdGFsIGFydGlzdCBjcmVhdGluZyBORlRzIGFuZCBleHBsb3JpbmcgdGhlIGludGVyc2VjdGlvbiBvZiBhcnQgYW5kIHRlY2hub2xvZ3kuJyxcbiAgICBhdmF0YXJfdXJsOiAnaHR0cHM6Ly9pbWFnZXMudW5zcGxhc2guY29tL3Bob3RvLTE0NzIwOTk2NDU3ODUtNTY1OGFiZjRmZjRlP3c9MTUwJmg9MTUwJmZpdD1jcm9wJmNyb3A9ZmFjZSdcbiAgfSxcbiAge1xuICAgIHVzZXJuYW1lOiAnZGlhbmFfZWR1Y2F0b3InLFxuICAgIGRpc3BsYXlfbmFtZTogJ0RpYW5hIFdpbHNvbicsXG4gICAgYmlvOiAnRWR1Y2F0b3IgYW5kIGFkdm9jYXRlIGZvciBhY2Nlc3NpYmxlIHRlY2hub2xvZ3kgZWR1Y2F0aW9uIGluIHVuZGVyc2VydmVkIGNvbW11bml0aWVzLicsXG4gICAgYXZhdGFyX3VybDogJ2h0dHBzOi8vaW1hZ2VzLnVuc3BsYXNoLmNvbS9waG90by0xNDM4NzYxNjgxMDMzLTY0NjFmZmFkOGQ4MD93PTE1MCZoPTE1MCZmaXQ9Y3JvcCZjcm9wPWZhY2UnXG4gIH0sXG4gIHtcbiAgICB1c2VybmFtZTogJ2V2YW5fbXVzaWNpYW4nLFxuICAgIGRpc3BsYXlfbmFtZTogJ0V2YW4gRGF2aXMnLFxuICAgIGJpbzogJ0luZGVwZW5kZW50IG11c2ljaWFuIGFuZCBwcm9kdWNlciBjcmVhdGluZyBleHBlcmltZW50YWwgZWxlY3Ryb25pYyBtdXNpYy4nLFxuICAgIGF2YXRhcl91cmw6ICdodHRwczovL2ltYWdlcy51bnNwbGFzaC5jb20vcGhvdG8tMTUwMDY0ODc2Nzc5MS0wMGRjYzk5NGE0M2U/dz0xNTAmaD0xNTAmZml0PWNyb3AmY3JvcD1mYWNlJ1xuICB9XG5dXG5cbmNvbnN0IHNhbXBsZUNhbXBhaWducyA9IFtcbiAge1xuICAgIHRpdGxlOiAnU29sYXItUG93ZXJlZCBDb21tdW5pdHkgR2FyZGVuJyxcbiAgICBkZXNjcmlwdGlvbjogJ0J1aWxkaW5nIGEgc3VzdGFpbmFibGUgY29tbXVuaXR5IGdhcmRlbiBwb3dlcmVkIGVudGlyZWx5IGJ5IHNvbGFyIGVuZXJneS4gVGhpcyBwcm9qZWN0IHdpbGwgcHJvdmlkZSBmcmVzaCBwcm9kdWNlIHRvIGxvY2FsIGZhbWlsaWVzIHdoaWxlIGRlbW9uc3RyYXRpbmcgcmVuZXdhYmxlIGVuZXJneSBzb2x1dGlvbnMuJyxcbiAgICBjYXRlZ29yeTogJ2NvbW11bml0eScsXG4gICAgdGFnczogWydzdXN0YWluYWJpbGl0eScsICdzb2xhcicsICdjb21tdW5pdHknLCAnZ2FyZGVuJ10sXG4gICAgZ29hbF9hbW91bnQ6IDUwMDAwLFxuICAgIHRvdGFsX2Z1bmRpbmc6IDEyNTAwLFxuICAgIGNvbnRyaWJ1dG9yX2NvdW50OiAyNSxcbiAgICBpc19hY3RpdmU6IHRydWUsXG4gICAgaXNfcHVibGljOiB0cnVlLFxuICAgIGZlYXR1cmVkX2ltYWdlX3VybDogJ2h0dHBzOi8vaW1hZ2VzLnVuc3BsYXNoLmNvbS9waG90by0xNDE2ODc5NTk1ODgyLTMzNzNhMDQ4MGI1Yj93PTgwMCZoPTQwMCZmaXQ9Y3JvcCdcbiAgfSxcbiAge1xuICAgIHRpdGxlOiAnT3BlbiBTb3VyY2UgTGVhcm5pbmcgUGxhdGZvcm0nLFxuICAgIGRlc2NyaXB0aW9uOiAnRGV2ZWxvcGluZyBhIGZyZWUsIG9wZW4tc291cmNlIHBsYXRmb3JtIGZvciBvbmxpbmUgZWR1Y2F0aW9uIHRoYXQgd29ya3Mgb2ZmbGluZSBhbmQgb24gbG93LWJhbmR3aWR0aCBjb25uZWN0aW9ucy4nLFxuICAgIGNhdGVnb3J5OiAnZWR1Y2F0aW9uJyxcbiAgICB0YWdzOiBbJ2VkdWNhdGlvbicsICdvcGVuLXNvdXJjZScsICd0ZWNobm9sb2d5JywgJ2FjY2Vzc2liaWxpdHknXSxcbiAgICBnb2FsX2Ftb3VudDogNzUwMDAsXG4gICAgdG90YWxfZnVuZGluZzogNDUwMDAsXG4gICAgY29udHJpYnV0b3JfY291bnQ6IDg5LFxuICAgIGlzX2FjdGl2ZTogdHJ1ZSxcbiAgICBpc19wdWJsaWM6IHRydWUsXG4gICAgZmVhdHVyZWRfaW1hZ2VfdXJsOiAnaHR0cHM6Ly9pbWFnZXMudW5zcGxhc2guY29tL3Bob3RvLTE1MjIyMDIxNzY5ODgtNjYyNzNjMmZkNTVmP3c9ODAwJmg9NDAwJmZpdD1jcm9wJ1xuICB9LFxuICB7XG4gICAgdGl0bGU6ICdEaWdpdGFsIEFydCBFeGhpYml0aW9uIFNwYWNlJyxcbiAgICBkZXNjcmlwdGlvbjogJ0NyZWF0aW5nIGEgdmlydHVhbCByZWFsaXR5IGdhbGxlcnkgc3BhY2UgZm9yIGVtZXJnaW5nIGRpZ2l0YWwgYXJ0aXN0cyB0byBzaG93Y2FzZSB0aGVpciB3b3JrIGFuZCBjb25uZWN0IHdpdGggY29sbGVjdG9ycy4nLFxuICAgIGNhdGVnb3J5OiAnY3JlYXRpdmUnLFxuICAgIHRhZ3M6IFsnYXJ0JywgJ3ZyJywgJ2RpZ2l0YWwnLCAnZ2FsbGVyeSddLFxuICAgIGdvYWxfYW1vdW50OiAzMDAwMCxcbiAgICB0b3RhbF9mdW5kaW5nOiAxODc1MCxcbiAgICBjb250cmlidXRvcl9jb3VudDogNDIsXG4gICAgaXNfYWN0aXZlOiB0cnVlLFxuICAgIGlzX3B1YmxpYzogdHJ1ZSxcbiAgICBmZWF0dXJlZF9pbWFnZV91cmw6ICdodHRwczovL2ltYWdlcy51bnNwbGFzaC5jb20vcGhvdG8tMTU0MTk2MTAxNzc3NC0yMjM0OWU0YTEyNjI/dz04MDAmaD00MDAmZml0PWNyb3AnXG4gIH0sXG4gIHtcbiAgICB0aXRsZTogJ0Jsb2NrY2hhaW4gTXVzaWMgRGlzdHJpYnV0aW9uJyxcbiAgICBkZXNjcmlwdGlvbjogJ0J1aWxkaW5nIGEgZGVjZW50cmFsaXplZCBwbGF0Zm9ybSBmb3IgbXVzaWNpYW5zIHRvIGRpc3RyaWJ1dGUgdGhlaXIgbXVzaWMgZGlyZWN0bHkgdG8gZmFucyB3aXRob3V0IGludGVybWVkaWFyaWVzLicsXG4gICAgY2F0ZWdvcnk6ICd0ZWNobm9sb2d5JyxcbiAgICB0YWdzOiBbJ2Jsb2NrY2hhaW4nLCAnbXVzaWMnLCAnZGVjZW50cmFsaXplZCcsICdkaXN0cmlidXRpb24nXSxcbiAgICBnb2FsX2Ftb3VudDogMTAwMDAwLFxuICAgIHRvdGFsX2Z1bmRpbmc6IDY3NTAwLFxuICAgIGNvbnRyaWJ1dG9yX2NvdW50OiAxNTYsXG4gICAgaXNfYWN0aXZlOiB0cnVlLFxuICAgIGlzX3B1YmxpYzogdHJ1ZSxcbiAgICBmZWF0dXJlZF9pbWFnZV91cmw6ICdodHRwczovL2ltYWdlcy51bnNwbGFzaC5jb20vcGhvdG8tMTQ5MzIyNTQ1NzEyNC1hM2ViMTYxZmZhNWY/dz04MDAmaD00MDAmZml0PWNyb3AnXG4gIH0sXG4gIHtcbiAgICB0aXRsZTogJ0NsZWFuIFdhdGVyIEluaXRpYXRpdmUnLFxuICAgIGRlc2NyaXB0aW9uOiAnSW5zdGFsbGluZyB3YXRlciBwdXJpZmljYXRpb24gc3lzdGVtcyBpbiBydXJhbCBjb21tdW5pdGllcyB0byBwcm92aWRlIGFjY2VzcyB0byBjbGVhbiwgc2FmZSBkcmlua2luZyB3YXRlci4nLFxuICAgIGNhdGVnb3J5OiAnY2hhcml0eScsXG4gICAgdGFnczogWyd3YXRlcicsICdjaGFyaXR5JywgJ2hlYWx0aCcsICdjb21tdW5pdHknXSxcbiAgICBnb2FsX2Ftb3VudDogODAwMDAsXG4gICAgdG90YWxfZnVuZGluZzogMzIwMDAsXG4gICAgY29udHJpYnV0b3JfY291bnQ6IDc4LFxuICAgIGlzX2FjdGl2ZTogdHJ1ZSxcbiAgICBpc19wdWJsaWM6IHRydWUsXG4gICAgZmVhdHVyZWRfaW1hZ2VfdXJsOiAnaHR0cHM6Ly9pbWFnZXMudW5zcGxhc2guY29tL3Bob3RvLTE1NTk4MjcyNjAtZGM2NmQ1MmJlZjE5P3c9ODAwJmg9NDAwJmZpdD1jcm9wJ1xuICB9XG5dXG5cbmV4cG9ydCBhc3luYyBmdW5jdGlvbiBzZWVkRGV2ZWxvcG1lbnREYXRhKCkge1xuICB0cnkge1xuICAgIFxuICAgIC8vIENoZWNrIGlmIHdlJ3JlIGluIGRldmVsb3BtZW50XG4gICAgaWYgKHByb2Nlc3MuZW52Lk5PREVfRU5WICE9PSAnZGV2ZWxvcG1lbnQnKSB7XG4gICAgICByZXR1cm5cbiAgICB9XG4gICAgXG4gICAgLy8gQ2hlY2sgaWYgZGF0YSBhbHJlYWR5IGV4aXN0c1xuICAgIGNvbnN0IHsgZGF0YTogZXhpc3RpbmdQcm9maWxlcyB9ID0gYXdhaXQgc3VwYWJhc2VcbiAgICAgIC5mcm9tKCdwcm9maWxlcycpXG4gICAgICAuc2VsZWN0KCdpZCcpXG4gICAgICAubGltaXQoMSlcbiAgICBcbiAgICBpZiAoZXhpc3RpbmdQcm9maWxlcyAmJiBleGlzdGluZ1Byb2ZpbGVzLmxlbmd0aCA+IDApIHtcbiAgICAgIHJldHVyblxuICAgIH1cbiAgICBcbiAgICBcbiAgICAvLyBDcmVhdGUgcHJvZmlsZXMgKHRoaXMgd2lsbCByZXF1aXJlIGF1dGhlbnRpY2F0aW9uLCBzbyB0aGlzIGlzIG1vcmUgb2YgYSB0ZW1wbGF0ZSlcbiAgICAvLyBJbiBhIHJlYWwgc2NlbmFyaW8sIHlvdSdkIG5lZWQgdG8gY3JlYXRlIHVzZXJzIGZpcnN0IHRocm91Z2ggU3VwYWJhc2UgQXV0aFxuICAgIFxuICAgIFxuICAgIHJldHVybiB7XG4gICAgICBwcm9maWxlczogc2FtcGxlUHJvZmlsZXMsXG4gICAgICBjYW1wYWlnbnM6IHNhbXBsZUNhbXBhaWduc1xuICAgIH1cbiAgICBcbiAgfSBjYXRjaCAoZXJyb3IpIHtcbiAgICB0aHJvdyBlcnJvclxuICB9XG59XG5cbi8vIEV4cG9ydCBzYW1wbGUgZGF0YSBmb3IgbWFudWFsIHNlZWRpbmdcbmV4cG9ydCB7IHNhbXBsZVByb2ZpbGVzLCBzYW1wbGVDYW1wYWlnbnMgfSAiXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0lBU0c7SUFBQUEsY0FBQSxZQUFBQSxDQUFBO01BQUEsT0FBQUMsY0FBQTtJQUFBO0VBQUE7RUFBQSxPQUFBQSxjQUFBO0FBQUE7QUFBQUQsY0FBQTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBMEZIRSxPQUFBLENBQUFDLG1CQUFBLEdBQUFBLG1CQUFBO0FBbkdBLE1BQUFDLFFBQUE7QUFBQTtBQUFBLENBQUFKLGNBQUEsR0FBQUssQ0FBQSxP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

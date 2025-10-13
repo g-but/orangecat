@@ -1,0 +1,115 @@
+2715a51f0785fdcb48fb5d696e09d2f3
+"use strict";
+
+/* istanbul ignore next */
+function cov_slumspx26() {
+  var path = "/home/g/dev/orangecat/src/config/bitcoin.ts";
+  var hash = "1ff969119de92f4e4e1b25c69cc3d8d89683148f";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/config/bitcoin.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 32
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 31,
+          column: 2
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/config/bitcoin.ts",
+      mappings: ";;;AAAa,QAAA,cAAc,GAAG;IAC5B,+CAA+C;IAC/C,gBAAgB,EAAE,4CAA4C;IAE9D,iCAAiC;IACjC,OAAO,EAAE,SAAS;IAElB,mDAAmD;IACnD,YAAY,EAAE,KAAK;IAEnB,8CAA8C;IAC9C,YAAY,EAAE,SAAS;IAEvB,kDAAkD;IAClD,gBAAgB,EAAE,MAAM;IAExB,mBAAmB;IACnB,OAAO,EAAE;QACP,iBAAiB;QACjB,IAAI,EAAE,GAAG;QACT,sCAAsC;QACtC,gBAAgB,EAAE,GAAG;QACrB,0BAA0B;QAC1B,YAAY,EAAE,IAAI;KACnB;IAED,uBAAuB;IACvB,WAAW,EAAE;QACX,mCAAmC;QACnC,sBAAsB,EAAE,CAAC;QACzB,iCAAiC;QACjC,eAAe,EAAE,EAAE;KACpB;CACO,CAAA",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/config/bitcoin.ts"],
+      sourcesContent: ["export const BITCOIN_CONFIG = {\n  // Main Bitcoin address for receiving donations\n  DONATION_ADDRESS: 'bc1qgsup75ajy4rln08j0te9wpdgrf46ctx6w94xzq',\n  \n  // Network type (mainnet/testnet)\n  NETWORK: 'mainnet',\n  \n  // Minimum donation amount in satoshis (0.0001 BTC)\n  MIN_DONATION: 10000,\n  \n  // Maximum donation amount in satoshis (1 BTC)\n  MAX_DONATION: 100000000,\n  \n  // Default donation amount in satoshis (0.001 BTC)\n  DEFAULT_DONATION: 100000,\n  \n  // QR code settings\n  QR_CODE: {\n    // Size in pixels\n    SIZE: 256,\n    // Error correction level (L, M, Q, H)\n    ERROR_CORRECTION: 'M',\n    // Include logo in QR code\n    INCLUDE_LOGO: true,\n  },\n  \n  // Transaction settings\n  TRANSACTION: {\n    // Number of confirmations required\n    REQUIRED_CONFIRMATIONS: 1,\n    // Transaction timeout in minutes\n    TIMEOUT_MINUTES: 30,\n  }\n} as const "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "1ff969119de92f4e4e1b25c69cc3d8d89683148f"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_slumspx26 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_slumspx26();
+cov_slumspx26().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_slumspx26().s[1]++;
+exports.BITCOIN_CONFIG = void 0;
+/* istanbul ignore next */
+cov_slumspx26().s[2]++;
+exports.BITCOIN_CONFIG = {
+  // Main Bitcoin address for receiving donations
+  DONATION_ADDRESS: 'bc1qgsup75ajy4rln08j0te9wpdgrf46ctx6w94xzq',
+  // Network type (mainnet/testnet)
+  NETWORK: 'mainnet',
+  // Minimum donation amount in satoshis (0.0001 BTC)
+  MIN_DONATION: 10000,
+  // Maximum donation amount in satoshis (1 BTC)
+  MAX_DONATION: 100000000,
+  // Default donation amount in satoshis (0.001 BTC)
+  DEFAULT_DONATION: 100000,
+  // QR code settings
+  QR_CODE: {
+    // Size in pixels
+    SIZE: 256,
+    // Error correction level (L, M, Q, H)
+    ERROR_CORRECTION: 'M',
+    // Include logo in QR code
+    INCLUDE_LOGO: true
+  },
+  // Transaction settings
+  TRANSACTION: {
+    // Number of confirmations required
+    REQUIRED_CONFIRMATIONS: 1,
+    // Transaction timeout in minutes
+    TIMEOUT_MINUTES: 30
+  }
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3Zfc2x1bXNweDI2IiwiYWN0dWFsQ292ZXJhZ2UiLCJzIiwiZXhwb3J0cyIsIkJJVENPSU5fQ09ORklHIiwiRE9OQVRJT05fQUREUkVTUyIsIk5FVFdPUksiLCJNSU5fRE9OQVRJT04iLCJNQVhfRE9OQVRJT04iLCJERUZBVUxUX0RPTkFUSU9OIiwiUVJfQ09ERSIsIlNJWkUiLCJFUlJPUl9DT1JSRUNUSU9OIiwiSU5DTFVERV9MT0dPIiwiVFJBTlNBQ1RJT04iLCJSRVFVSVJFRF9DT05GSVJNQVRJT05TIiwiVElNRU9VVF9NSU5VVEVTIl0sInNvdXJjZXMiOlsiL2hvbWUvZy9kZXYvb3JhbmdlY2F0L3NyYy9jb25maWcvYml0Y29pbi50cyJdLCJzb3VyY2VzQ29udGVudCI6WyJleHBvcnQgY29uc3QgQklUQ09JTl9DT05GSUcgPSB7XG4gIC8vIE1haW4gQml0Y29pbiBhZGRyZXNzIGZvciByZWNlaXZpbmcgZG9uYXRpb25zXG4gIERPTkFUSU9OX0FERFJFU1M6ICdiYzFxZ3N1cDc1YWp5NHJsbjA4ajB0ZTl3cGRncmY0NmN0eDZ3OTR4enEnLFxuICBcbiAgLy8gTmV0d29yayB0eXBlIChtYWlubmV0L3Rlc3RuZXQpXG4gIE5FVFdPUks6ICdtYWlubmV0JyxcbiAgXG4gIC8vIE1pbmltdW0gZG9uYXRpb24gYW1vdW50IGluIHNhdG9zaGlzICgwLjAwMDEgQlRDKVxuICBNSU5fRE9OQVRJT046IDEwMDAwLFxuICBcbiAgLy8gTWF4aW11bSBkb25hdGlvbiBhbW91bnQgaW4gc2F0b3NoaXMgKDEgQlRDKVxuICBNQVhfRE9OQVRJT046IDEwMDAwMDAwMCxcbiAgXG4gIC8vIERlZmF1bHQgZG9uYXRpb24gYW1vdW50IGluIHNhdG9zaGlzICgwLjAwMSBCVEMpXG4gIERFRkFVTFRfRE9OQVRJT046IDEwMDAwMCxcbiAgXG4gIC8vIFFSIGNvZGUgc2V0dGluZ3NcbiAgUVJfQ09ERToge1xuICAgIC8vIFNpemUgaW4gcGl4ZWxzXG4gICAgU0laRTogMjU2LFxuICAgIC8vIEVycm9yIGNvcnJlY3Rpb24gbGV2ZWwgKEwsIE0sIFEsIEgpXG4gICAgRVJST1JfQ09SUkVDVElPTjogJ00nLFxuICAgIC8vIEluY2x1ZGUgbG9nbyBpbiBRUiBjb2RlXG4gICAgSU5DTFVERV9MT0dPOiB0cnVlLFxuICB9LFxuICBcbiAgLy8gVHJhbnNhY3Rpb24gc2V0dGluZ3NcbiAgVFJBTlNBQ1RJT046IHtcbiAgICAvLyBOdW1iZXIgb2YgY29uZmlybWF0aW9ucyByZXF1aXJlZFxuICAgIFJFUVVJUkVEX0NPTkZJUk1BVElPTlM6IDEsXG4gICAgLy8gVHJhbnNhY3Rpb24gdGltZW91dCBpbiBtaW51dGVzXG4gICAgVElNRU9VVF9NSU5VVEVTOiAzMCxcbiAgfVxufSBhcyBjb25zdCAiXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0lBaUJTO0lBQUFBLGFBQUEsWUFBQUEsQ0FBQTtNQUFBLE9BQUFDLGNBQUE7SUFBQTtFQUFBO0VBQUEsT0FBQUEsY0FBQTtBQUFBO0FBQUFELGFBQUE7QUFBQUEsYUFBQSxHQUFBRSxDQUFBOzs7Ozs7Ozs7QUFqQklDLE9BQUEsQ0FBQUMsY0FBYyxHQUFHO0VBQzVCO0VBQ0FDLGdCQUFnQixFQUFFLDRDQUE0QztFQUU5RDtFQUNBQyxPQUFPLEVBQUUsU0FBUztFQUVsQjtFQUNBQyxZQUFZLEVBQUUsS0FBSztFQUVuQjtFQUNBQyxZQUFZLEVBQUUsU0FBUztFQUV2QjtFQUNBQyxnQkFBZ0IsRUFBRSxNQUFNO0VBRXhCO0VBQ0FDLE9BQU8sRUFBRTtJQUNQO0lBQ0FDLElBQUksRUFBRSxHQUFHO0lBQ1Q7SUFDQUMsZ0JBQWdCLEVBQUUsR0FBRztJQUNyQjtJQUNBQyxZQUFZLEVBQUU7R0FDZjtFQUVEO0VBQ0FDLFdBQVcsRUFBRTtJQUNYO0lBQ0FDLHNCQUFzQixFQUFFLENBQUM7SUFDekI7SUFDQUMsZUFBZSxFQUFFOztDQUVYIiwiaWdub3JlTGlzdCI6W119

@@ -1,0 +1,204 @@
+772cbb42758adf85c240e890cde475a0
+"use strict";
+
+/**
+ * EVENTS INITIATIVE MODULE
+ *
+ * Created: 2025-01-09
+ * Last Modified: 2025-01-09
+ * Last Modified Summary: Extracted from main initiatives.ts (901 lines) for modular architecture
+ */
+/* istanbul ignore next */
+function cov_19q4ojod1k() {
+  var path = "/home/g/dev/orangecat/src/data/initiatives/events.ts";
+  var hash = "a8c3da419cd7474850b4de05491842c5c8463047";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/data/initiatives/events.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 9,
+          column: 0
+        },
+        end: {
+          line: 9,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 10,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 24
+        }
+      },
+      "2": {
+        start: {
+          line: 11,
+          column: 0
+        },
+        end: {
+          line: 154,
+          column: 2
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/data/initiatives/events.ts",
+      mappings: "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",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/data/initiatives/events.ts"],
+      sourcesContent: ["/**\n * EVENTS INITIATIVE MODULE\n * \n * Created: 2025-01-09\n * Last Modified: 2025-01-09\n * Last Modified Summary: Extracted from main initiatives.ts (901 lines) for modular architecture\n */\n\nimport type { Initiative } from '@/types/initiative';\n\nexport const events: Initiative = {\n  id: 'events',\n  name: 'Events',\n  icon: 'Calendar',\n  color: {\n    primary: 'blue-600',\n    gradient: 'from-blue-500 to-teal-500',\n    bg: 'blue-100',\n    text: 'blue-600',\n    border: 'blue-200'\n  },\n  description: 'Organize and fundraise for conferences, parties, and community gatherings with Bitcoin-powered ticketing and coordination tools.',\n  longDescription: 'Plan events, sell tickets with Bitcoin, manage attendee communications, coordinate logistics, and create memorable experiences for your Bitcoin community.',\n  status: 'coming-soon',\n  timeline: 'Q2 2026',\n  routes: {\n    landing: '/events',\n    demo: '/demo/events',\n    comingSoon: '/coming-soon?feature=events'\n  },\n  features: [\n    {\n      icon: 'Calendar',\n      title: 'Event Creation',\n      description: 'Create and manage events from intimate gatherings to large conferences with ease.',\n      color: 'text-blue-600 bg-blue-100'\n    },\n    {\n      icon: 'Ticket',\n      title: 'Bitcoin Ticketing',\n      description: 'Sell tickets with Bitcoin payments, eliminating payment processor fees and chargebacks.',\n      color: 'text-orange-600 bg-orange-100'\n    },\n    {\n      icon: 'Users',\n      title: 'Attendee Management',\n      description: 'Track RSVPs, manage guest lists, and communicate with attendees seamlessly.',\n      color: 'text-purple-600 bg-purple-100'\n    },\n    {\n      icon: 'MapPin',\n      title: 'Venue Coordination',\n      description: 'Manage venues, logistics, and coordinate with local service providers.',\n      color: 'text-green-600 bg-green-100'\n    },\n    {\n      icon: 'Clock',\n      title: 'Real-time Updates',\n      description: 'Send instant updates to attendees about schedule changes or important announcements.',\n      color: 'text-red-600 bg-red-100'\n    },\n    {\n      icon: 'Target',\n      title: 'Event Analytics',\n      description: 'Track attendance, engagement metrics, and gather feedback for future events.',\n      color: 'text-teal-600 bg-teal-100'\n    }\n  ],\n  types: [\n    { \n      name: 'Conferences', \n      icon: 'Users',\n      description: 'Professional conferences and seminars',\n      example: 'Bitcoin Conference Zurich',\n      color: 'bg-blue-100 text-blue-700 border-blue-200'\n    },\n    { \n      name: 'Meetups', \n      icon: 'Coffee',\n      description: 'Casual community gatherings',\n      example: 'Local Bitcoin meetup',\n      color: 'bg-green-100 text-green-700 border-green-200'\n    },\n    { \n      name: 'Workshops', \n      icon: 'Users',\n      description: 'Educational and skill-building sessions',\n      example: 'Lightning Network workshop',\n      color: 'bg-purple-100 text-purple-700 border-purple-200'\n    },\n    { \n      name: 'Social Events', \n      icon: 'Heart',\n      description: 'Parties and social gatherings',\n      example: 'Community celebration',\n      color: 'bg-pink-100 text-pink-700 border-pink-200'\n    },\n    { \n      name: 'Concerts', \n      icon: 'Music',\n      description: 'Musical performances and festivals',\n      example: 'Bitcoin music festival',\n      color: 'bg-orange-100 text-orange-700 border-orange-200'\n    },\n    { \n      name: 'Gaming Events', \n      icon: 'Target',\n      description: 'Gaming tournaments and competitions',\n      example: 'Esports tournament',\n      color: 'bg-indigo-100 text-indigo-700 border-indigo-200'\n    }\n  ],\n  capabilities: [\n    'Event creation and management',\n    'Bitcoin ticket sales',\n    'Attendee management',\n    'Event fundraising campaigns',\n    'Real-time communication',\n    'Post-event analytics',\n    'Venue coordination',\n    'Speaker management',\n    'Sponsorship tracking',\n    'Social media integration'\n  ],\n  useCases: [\n    'Bitcoin conferences and meetups',\n    'Community gatherings',\n    'Educational workshops',\n    'Social events and parties'\n  ],\n  marketTools: [\n    {\n      name: 'Eventbrite',\n      description: 'Event management and ticketing',\n      url: 'https://eventbrite.com',\n      icon: 'Calendar',\n      color: 'bg-orange-100 text-orange-600'\n    },\n    {\n      name: 'Meetup',\n      description: 'Community meetup organization',\n      url: 'https://meetup.com',\n      icon: 'Coffee',\n      color: 'bg-red-100 text-red-600'\n    },\n    {\n      name: 'Zoom Events',\n      description: 'Virtual event platform',\n      url: 'https://zoom.us',\n      icon: 'Users',\n      color: 'bg-blue-100 text-blue-600'\n    }\n  ]\n}; "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "a8c3da419cd7474850b4de05491842c5c8463047"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_19q4ojod1k = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_19q4ojod1k();
+cov_19q4ojod1k().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_19q4ojod1k().s[1]++;
+exports.events = void 0;
+/* istanbul ignore next */
+cov_19q4ojod1k().s[2]++;
+exports.events = {
+  id: 'events',
+  name: 'Events',
+  icon: 'Calendar',
+  color: {
+    primary: 'blue-600',
+    gradient: 'from-blue-500 to-teal-500',
+    bg: 'blue-100',
+    text: 'blue-600',
+    border: 'blue-200'
+  },
+  description: 'Organize and fundraise for conferences, parties, and community gatherings with Bitcoin-powered ticketing and coordination tools.',
+  longDescription: 'Plan events, sell tickets with Bitcoin, manage attendee communications, coordinate logistics, and create memorable experiences for your Bitcoin community.',
+  status: 'coming-soon',
+  timeline: 'Q2 2026',
+  routes: {
+    landing: '/events',
+    demo: '/demo/events',
+    comingSoon: '/coming-soon?feature=events'
+  },
+  features: [{
+    icon: 'Calendar',
+    title: 'Event Creation',
+    description: 'Create and manage events from intimate gatherings to large conferences with ease.',
+    color: 'text-blue-600 bg-blue-100'
+  }, {
+    icon: 'Ticket',
+    title: 'Bitcoin Ticketing',
+    description: 'Sell tickets with Bitcoin payments, eliminating payment processor fees and chargebacks.',
+    color: 'text-orange-600 bg-orange-100'
+  }, {
+    icon: 'Users',
+    title: 'Attendee Management',
+    description: 'Track RSVPs, manage guest lists, and communicate with attendees seamlessly.',
+    color: 'text-purple-600 bg-purple-100'
+  }, {
+    icon: 'MapPin',
+    title: 'Venue Coordination',
+    description: 'Manage venues, logistics, and coordinate with local service providers.',
+    color: 'text-green-600 bg-green-100'
+  }, {
+    icon: 'Clock',
+    title: 'Real-time Updates',
+    description: 'Send instant updates to attendees about schedule changes or important announcements.',
+    color: 'text-red-600 bg-red-100'
+  }, {
+    icon: 'Target',
+    title: 'Event Analytics',
+    description: 'Track attendance, engagement metrics, and gather feedback for future events.',
+    color: 'text-teal-600 bg-teal-100'
+  }],
+  types: [{
+    name: 'Conferences',
+    icon: 'Users',
+    description: 'Professional conferences and seminars',
+    example: 'Bitcoin Conference Zurich',
+    color: 'bg-blue-100 text-blue-700 border-blue-200'
+  }, {
+    name: 'Meetups',
+    icon: 'Coffee',
+    description: 'Casual community gatherings',
+    example: 'Local Bitcoin meetup',
+    color: 'bg-green-100 text-green-700 border-green-200'
+  }, {
+    name: 'Workshops',
+    icon: 'Users',
+    description: 'Educational and skill-building sessions',
+    example: 'Lightning Network workshop',
+    color: 'bg-purple-100 text-purple-700 border-purple-200'
+  }, {
+    name: 'Social Events',
+    icon: 'Heart',
+    description: 'Parties and social gatherings',
+    example: 'Community celebration',
+    color: 'bg-pink-100 text-pink-700 border-pink-200'
+  }, {
+    name: 'Concerts',
+    icon: 'Music',
+    description: 'Musical performances and festivals',
+    example: 'Bitcoin music festival',
+    color: 'bg-orange-100 text-orange-700 border-orange-200'
+  }, {
+    name: 'Gaming Events',
+    icon: 'Target',
+    description: 'Gaming tournaments and competitions',
+    example: 'Esports tournament',
+    color: 'bg-indigo-100 text-indigo-700 border-indigo-200'
+  }],
+  capabilities: ['Event creation and management', 'Bitcoin ticket sales', 'Attendee management', 'Event fundraising campaigns', 'Real-time communication', 'Post-event analytics', 'Venue coordination', 'Speaker management', 'Sponsorship tracking', 'Social media integration'],
+  useCases: ['Bitcoin conferences and meetups', 'Community gatherings', 'Educational workshops', 'Social events and parties'],
+  marketTools: [{
+    name: 'Eventbrite',
+    description: 'Event management and ticketing',
+    url: 'https://eventbrite.com',
+    icon: 'Calendar',
+    color: 'bg-orange-100 text-orange-600'
+  }, {
+    name: 'Meetup',
+    description: 'Community meetup organization',
+    url: 'https://meetup.com',
+    icon: 'Coffee',
+    color: 'bg-red-100 text-red-600'
+  }, {
+    name: 'Zoom Events',
+    description: 'Virtual event platform',
+    url: 'https://zoom.us',
+    icon: 'Users',
+    color: 'bg-blue-100 text-blue-600'
+  }]
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMTlxNG9qb2QxayIsInBhdGgiLCJoYXNoIiwiZ2xvYmFsIiwiRnVuY3Rpb24iLCJnY3YiLCJjb3ZlcmFnZURhdGEiLCJzdGF0ZW1lbnRNYXAiLCJzdGFydCIsImxpbmUiLCJjb2x1bW4iLCJlbmQiLCJmbk1hcCIsImJyYW5jaE1hcCIsInMiLCJmIiwiYiIsImlucHV0U291cmNlTWFwIiwiZmlsZSIsIm1hcHBpbmdzIiwibmFtZXMiLCJzb3VyY2VzIiwic291cmNlc0NvbnRlbnQiLCJ2ZXJzaW9uIiwiX2NvdmVyYWdlU2NoZW1hIiwiY292ZXJhZ2UiLCJhY3R1YWxDb3ZlcmFnZSIsImV4cG9ydHMiLCJldmVudHMiLCJpZCIsIm5hbWUiLCJpY29uIiwiY29sb3IiLCJwcmltYXJ5IiwiZ3JhZGllbnQiLCJiZyIsInRleHQiLCJib3JkZXIiLCJkZXNjcmlwdGlvbiIsImxvbmdEZXNjcmlwdGlvbiIsInN0YXR1cyIsInRpbWVsaW5lIiwicm91dGVzIiwibGFuZGluZyIsImRlbW8iLCJjb21pbmdTb29uIiwiZmVhdHVyZXMiLCJ0aXRsZSIsInR5cGVzIiwiZXhhbXBsZSIsImNhcGFiaWxpdGllcyIsInVzZUNhc2VzIiwibWFya2V0VG9vbHMiLCJ1cmwiXSwic291cmNlcyI6WyIvaG9tZS9nL2Rldi9vcmFuZ2VjYXQvc3JjL2RhdGEvaW5pdGlhdGl2ZXMvZXZlbnRzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogRVZFTlRTIElOSVRJQVRJVkUgTU9EVUxFXG4gKiBcbiAqIENyZWF0ZWQ6IDIwMjUtMDEtMDlcbiAqIExhc3QgTW9kaWZpZWQ6IDIwMjUtMDEtMDlcbiAqIExhc3QgTW9kaWZpZWQgU3VtbWFyeTogRXh0cmFjdGVkIGZyb20gbWFpbiBpbml0aWF0aXZlcy50cyAoOTAxIGxpbmVzKSBmb3IgbW9kdWxhciBhcmNoaXRlY3R1cmVcbiAqL1xuXG5pbXBvcnQgdHlwZSB7IEluaXRpYXRpdmUgfSBmcm9tICdAL3R5cGVzL2luaXRpYXRpdmUnO1xuXG5leHBvcnQgY29uc3QgZXZlbnRzOiBJbml0aWF0aXZlID0ge1xuICBpZDogJ2V2ZW50cycsXG4gIG5hbWU6ICdFdmVudHMnLFxuICBpY29uOiAnQ2FsZW5kYXInLFxuICBjb2xvcjoge1xuICAgIHByaW1hcnk6ICdibHVlLTYwMCcsXG4gICAgZ3JhZGllbnQ6ICdmcm9tLWJsdWUtNTAwIHRvLXRlYWwtNTAwJyxcbiAgICBiZzogJ2JsdWUtMTAwJyxcbiAgICB0ZXh0OiAnYmx1ZS02MDAnLFxuICAgIGJvcmRlcjogJ2JsdWUtMjAwJ1xuICB9LFxuICBkZXNjcmlwdGlvbjogJ09yZ2FuaXplIGFuZCBmdW5kcmFpc2UgZm9yIGNvbmZlcmVuY2VzLCBwYXJ0aWVzLCBhbmQgY29tbXVuaXR5IGdhdGhlcmluZ3Mgd2l0aCBCaXRjb2luLXBvd2VyZWQgdGlja2V0aW5nIGFuZCBjb29yZGluYXRpb24gdG9vbHMuJyxcbiAgbG9uZ0Rlc2NyaXB0aW9uOiAnUGxhbiBldmVudHMsIHNlbGwgdGlja2V0cyB3aXRoIEJpdGNvaW4sIG1hbmFnZSBhdHRlbmRlZSBjb21tdW5pY2F0aW9ucywgY29vcmRpbmF0ZSBsb2dpc3RpY3MsIGFuZCBjcmVhdGUgbWVtb3JhYmxlIGV4cGVyaWVuY2VzIGZvciB5b3VyIEJpdGNvaW4gY29tbXVuaXR5LicsXG4gIHN0YXR1czogJ2NvbWluZy1zb29uJyxcbiAgdGltZWxpbmU6ICdRMiAyMDI2JyxcbiAgcm91dGVzOiB7XG4gICAgbGFuZGluZzogJy9ldmVudHMnLFxuICAgIGRlbW86ICcvZGVtby9ldmVudHMnLFxuICAgIGNvbWluZ1Nvb246ICcvY29taW5nLXNvb24/ZmVhdHVyZT1ldmVudHMnXG4gIH0sXG4gIGZlYXR1cmVzOiBbXG4gICAge1xuICAgICAgaWNvbjogJ0NhbGVuZGFyJyxcbiAgICAgIHRpdGxlOiAnRXZlbnQgQ3JlYXRpb24nLFxuICAgICAgZGVzY3JpcHRpb246ICdDcmVhdGUgYW5kIG1hbmFnZSBldmVudHMgZnJvbSBpbnRpbWF0ZSBnYXRoZXJpbmdzIHRvIGxhcmdlIGNvbmZlcmVuY2VzIHdpdGggZWFzZS4nLFxuICAgICAgY29sb3I6ICd0ZXh0LWJsdWUtNjAwIGJnLWJsdWUtMTAwJ1xuICAgIH0sXG4gICAge1xuICAgICAgaWNvbjogJ1RpY2tldCcsXG4gICAgICB0aXRsZTogJ0JpdGNvaW4gVGlja2V0aW5nJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnU2VsbCB0aWNrZXRzIHdpdGggQml0Y29pbiBwYXltZW50cywgZWxpbWluYXRpbmcgcGF5bWVudCBwcm9jZXNzb3IgZmVlcyBhbmQgY2hhcmdlYmFja3MuJyxcbiAgICAgIGNvbG9yOiAndGV4dC1vcmFuZ2UtNjAwIGJnLW9yYW5nZS0xMDAnXG4gICAgfSxcbiAgICB7XG4gICAgICBpY29uOiAnVXNlcnMnLFxuICAgICAgdGl0bGU6ICdBdHRlbmRlZSBNYW5hZ2VtZW50JyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnVHJhY2sgUlNWUHMsIG1hbmFnZSBndWVzdCBsaXN0cywgYW5kIGNvbW11bmljYXRlIHdpdGggYXR0ZW5kZWVzIHNlYW1sZXNzbHkuJyxcbiAgICAgIGNvbG9yOiAndGV4dC1wdXJwbGUtNjAwIGJnLXB1cnBsZS0xMDAnXG4gICAgfSxcbiAgICB7XG4gICAgICBpY29uOiAnTWFwUGluJyxcbiAgICAgIHRpdGxlOiAnVmVudWUgQ29vcmRpbmF0aW9uJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnTWFuYWdlIHZlbnVlcywgbG9naXN0aWNzLCBhbmQgY29vcmRpbmF0ZSB3aXRoIGxvY2FsIHNlcnZpY2UgcHJvdmlkZXJzLicsXG4gICAgICBjb2xvcjogJ3RleHQtZ3JlZW4tNjAwIGJnLWdyZWVuLTEwMCdcbiAgICB9LFxuICAgIHtcbiAgICAgIGljb246ICdDbG9jaycsXG4gICAgICB0aXRsZTogJ1JlYWwtdGltZSBVcGRhdGVzJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnU2VuZCBpbnN0YW50IHVwZGF0ZXMgdG8gYXR0ZW5kZWVzIGFib3V0IHNjaGVkdWxlIGNoYW5nZXMgb3IgaW1wb3J0YW50IGFubm91bmNlbWVudHMuJyxcbiAgICAgIGNvbG9yOiAndGV4dC1yZWQtNjAwIGJnLXJlZC0xMDAnXG4gICAgfSxcbiAgICB7XG4gICAgICBpY29uOiAnVGFyZ2V0JyxcbiAgICAgIHRpdGxlOiAnRXZlbnQgQW5hbHl0aWNzJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnVHJhY2sgYXR0ZW5kYW5jZSwgZW5nYWdlbWVudCBtZXRyaWNzLCBhbmQgZ2F0aGVyIGZlZWRiYWNrIGZvciBmdXR1cmUgZXZlbnRzLicsXG4gICAgICBjb2xvcjogJ3RleHQtdGVhbC02MDAgYmctdGVhbC0xMDAnXG4gICAgfVxuICBdLFxuICB0eXBlczogW1xuICAgIHsgXG4gICAgICBuYW1lOiAnQ29uZmVyZW5jZXMnLCBcbiAgICAgIGljb246ICdVc2VycycsXG4gICAgICBkZXNjcmlwdGlvbjogJ1Byb2Zlc3Npb25hbCBjb25mZXJlbmNlcyBhbmQgc2VtaW5hcnMnLFxuICAgICAgZXhhbXBsZTogJ0JpdGNvaW4gQ29uZmVyZW5jZSBadXJpY2gnLFxuICAgICAgY29sb3I6ICdiZy1ibHVlLTEwMCB0ZXh0LWJsdWUtNzAwIGJvcmRlci1ibHVlLTIwMCdcbiAgICB9LFxuICAgIHsgXG4gICAgICBuYW1lOiAnTWVldHVwcycsIFxuICAgICAgaWNvbjogJ0NvZmZlZScsXG4gICAgICBkZXNjcmlwdGlvbjogJ0Nhc3VhbCBjb21tdW5pdHkgZ2F0aGVyaW5ncycsXG4gICAgICBleGFtcGxlOiAnTG9jYWwgQml0Y29pbiBtZWV0dXAnLFxuICAgICAgY29sb3I6ICdiZy1ncmVlbi0xMDAgdGV4dC1ncmVlbi03MDAgYm9yZGVyLWdyZWVuLTIwMCdcbiAgICB9LFxuICAgIHsgXG4gICAgICBuYW1lOiAnV29ya3Nob3BzJywgXG4gICAgICBpY29uOiAnVXNlcnMnLFxuICAgICAgZGVzY3JpcHRpb246ICdFZHVjYXRpb25hbCBhbmQgc2tpbGwtYnVpbGRpbmcgc2Vzc2lvbnMnLFxuICAgICAgZXhhbXBsZTogJ0xpZ2h0bmluZyBOZXR3b3JrIHdvcmtzaG9wJyxcbiAgICAgIGNvbG9yOiAnYmctcHVycGxlLTEwMCB0ZXh0LXB1cnBsZS03MDAgYm9yZGVyLXB1cnBsZS0yMDAnXG4gICAgfSxcbiAgICB7IFxuICAgICAgbmFtZTogJ1NvY2lhbCBFdmVudHMnLCBcbiAgICAgIGljb246ICdIZWFydCcsXG4gICAgICBkZXNjcmlwdGlvbjogJ1BhcnRpZXMgYW5kIHNvY2lhbCBnYXRoZXJpbmdzJyxcbiAgICAgIGV4YW1wbGU6ICdDb21tdW5pdHkgY2VsZWJyYXRpb24nLFxuICAgICAgY29sb3I6ICdiZy1waW5rLTEwMCB0ZXh0LXBpbmstNzAwIGJvcmRlci1waW5rLTIwMCdcbiAgICB9LFxuICAgIHsgXG4gICAgICBuYW1lOiAnQ29uY2VydHMnLCBcbiAgICAgIGljb246ICdNdXNpYycsXG4gICAgICBkZXNjcmlwdGlvbjogJ011c2ljYWwgcGVyZm9ybWFuY2VzIGFuZCBmZXN0aXZhbHMnLFxuICAgICAgZXhhbXBsZTogJ0JpdGNvaW4gbXVzaWMgZmVzdGl2YWwnLFxuICAgICAgY29sb3I6ICdiZy1vcmFuZ2UtMTAwIHRleHQtb3JhbmdlLTcwMCBib3JkZXItb3JhbmdlLTIwMCdcbiAgICB9LFxuICAgIHsgXG4gICAgICBuYW1lOiAnR2FtaW5nIEV2ZW50cycsIFxuICAgICAgaWNvbjogJ1RhcmdldCcsXG4gICAgICBkZXNjcmlwdGlvbjogJ0dhbWluZyB0b3VybmFtZW50cyBhbmQgY29tcGV0aXRpb25zJyxcbiAgICAgIGV4YW1wbGU6ICdFc3BvcnRzIHRvdXJuYW1lbnQnLFxuICAgICAgY29sb3I6ICdiZy1pbmRpZ28tMTAwIHRleHQtaW5kaWdvLTcwMCBib3JkZXItaW5kaWdvLTIwMCdcbiAgICB9XG4gIF0sXG4gIGNhcGFiaWxpdGllczogW1xuICAgICdFdmVudCBjcmVhdGlvbiBhbmQgbWFuYWdlbWVudCcsXG4gICAgJ0JpdGNvaW4gdGlja2V0IHNhbGVzJyxcbiAgICAnQXR0ZW5kZWUgbWFuYWdlbWVudCcsXG4gICAgJ0V2ZW50IGZ1bmRyYWlzaW5nIGNhbXBhaWducycsXG4gICAgJ1JlYWwtdGltZSBjb21tdW5pY2F0aW9uJyxcbiAgICAnUG9zdC1ldmVudCBhbmFseXRpY3MnLFxuICAgICdWZW51ZSBjb29yZGluYXRpb24nLFxuICAgICdTcGVha2VyIG1hbmFnZW1lbnQnLFxuICAgICdTcG9uc29yc2hpcCB0cmFja2luZycsXG4gICAgJ1NvY2lhbCBtZWRpYSBpbnRlZ3JhdGlvbidcbiAgXSxcbiAgdXNlQ2FzZXM6IFtcbiAgICAnQml0Y29pbiBjb25mZXJlbmNlcyBhbmQgbWVldHVwcycsXG4gICAgJ0NvbW11bml0eSBnYXRoZXJpbmdzJyxcbiAgICAnRWR1Y2F0aW9uYWwgd29ya3Nob3BzJyxcbiAgICAnU29jaWFsIGV2ZW50cyBhbmQgcGFydGllcydcbiAgXSxcbiAgbWFya2V0VG9vbHM6IFtcbiAgICB7XG4gICAgICBuYW1lOiAnRXZlbnRicml0ZScsXG4gICAgICBkZXNjcmlwdGlvbjogJ0V2ZW50IG1hbmFnZW1lbnQgYW5kIHRpY2tldGluZycsXG4gICAgICB1cmw6ICdodHRwczovL2V2ZW50YnJpdGUuY29tJyxcbiAgICAgIGljb246ICdDYWxlbmRhcicsXG4gICAgICBjb2xvcjogJ2JnLW9yYW5nZS0xMDAgdGV4dC1vcmFuZ2UtNjAwJ1xuICAgIH0sXG4gICAge1xuICAgICAgbmFtZTogJ01lZXR1cCcsXG4gICAgICBkZXNjcmlwdGlvbjogJ0NvbW11bml0eSBtZWV0dXAgb3JnYW5pemF0aW9uJyxcbiAgICAgIHVybDogJ2h0dHBzOi8vbWVldHVwLmNvbScsXG4gICAgICBpY29uOiAnQ29mZmVlJyxcbiAgICAgIGNvbG9yOiAnYmctcmVkLTEwMCB0ZXh0LXJlZC02MDAnXG4gICAgfSxcbiAgICB7XG4gICAgICBuYW1lOiAnWm9vbSBFdmVudHMnLFxuICAgICAgZGVzY3JpcHRpb246ICdWaXJ0dWFsIGV2ZW50IHBsYXRmb3JtJyxcbiAgICAgIHVybDogJ2h0dHBzOi8vem9vbS51cycsXG4gICAgICBpY29uOiAnVXNlcnMnLFxuICAgICAgY29s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

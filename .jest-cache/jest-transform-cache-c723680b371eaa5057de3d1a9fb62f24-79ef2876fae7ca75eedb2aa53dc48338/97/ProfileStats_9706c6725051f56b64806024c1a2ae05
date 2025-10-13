@@ -1,0 +1,179 @@
+1b87746a4ee54d5508c2fe57f11853b2
+"use strict";
+
+/* istanbul ignore next */
+function cov_2qnf06pznd() {
+  var path = "/home/g/dev/orangecat/src/components/profile/ProfileStats.tsx";
+  var hash = "53c248064387c907b3a9beecccc1b1eed2396e62";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/components/profile/ProfileStats.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 36
+        }
+      },
+      "2": {
+        start: {
+          line: 4,
+          column: 22
+        },
+        end: {
+          line: 4,
+          column: 50
+        }
+      },
+      "3": {
+        start: {
+          line: 5,
+          column: 24
+        },
+        end: {
+          line: 5,
+          column: 48
+        }
+      },
+      "4": {
+        start: {
+          line: 6,
+          column: 28
+        },
+        end: {
+          line: 6,
+          column: 58
+        }
+      },
+      "5": {
+        start: {
+          line: 8,
+          column: 4
+        },
+        end: {
+          line: 8,
+          column: 293
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "ProfileStats",
+        decl: {
+          start: {
+            line: 7,
+            column: 9
+          },
+          end: {
+            line: 7,
+            column: 21
+          }
+        },
+        loc: {
+          start: {
+            line: 7,
+            column: 35
+          },
+          end: {
+            line: 9,
+            column: 1
+          }
+        },
+        line: 7
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/components/profile/ProfileStats.tsx",
+      mappings: ";;AAQA,oCAWC;;AAnBD,iDAAsC;AACtC,2DAAuD;AAOvD,SAAgB,YAAY,CAAC,EAAE,OAAO,EAAqB;IACzD,OAAO,CACL,uBAAC,sBAAM,CAAC,GAAG,IACT,OAAO,EAAE,EAAE,OAAO,EAAE,CAAC,EAAE,CAAC,EAAE,EAAE,EAAE,EAC9B,OAAO,EAAE,EAAE,OAAO,EAAE,CAAC,EAAE,CAAC,EAAE,CAAC,EAAE,EAC7B,UAAU,EAAE,EAAE,QAAQ,EAAE,GAAG,EAAE,KAAK,EAAE,GAAG,EAAE,EACzC,SAAS,EAAC,WAAW,YAErB,uBAAC,qCAAiB,IAAC,OAAO,EAAE,OAAO,GAAI,GAC5B,CACd,CAAA;AACH,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/components/profile/ProfileStats.tsx"],
+      sourcesContent: ["import { motion } from 'framer-motion'\nimport { TransparencyScore } from './TransparencyScore'\nimport { Profile } from '@/types/database'\n\ninterface ProfileStatsProps {\n  profile: Profile\n}\n\nexport function ProfileStats({ profile }: ProfileStatsProps) {\n  return (\n    <motion.div\n      initial={{ opacity: 0, y: 20 }}\n      animate={{ opacity: 1, y: 0 }}\n      transition={{ duration: 0.5, delay: 0.2 }}\n      className=\"card mb-8\"\n    >\n      <TransparencyScore profile={profile} />\n    </motion.div>\n  )\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "53c248064387c907b3a9beecccc1b1eed2396e62"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2qnf06pznd = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2qnf06pznd();
+cov_2qnf06pznd().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_2qnf06pznd().s[1]++;
+exports.ProfileStats = ProfileStats;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_2qnf06pznd().s[2]++, require("react/jsx-runtime"));
+const framer_motion_1 =
+/* istanbul ignore next */
+(cov_2qnf06pznd().s[3]++, require("framer-motion"));
+const TransparencyScore_1 =
+/* istanbul ignore next */
+(cov_2qnf06pznd().s[4]++, require("./TransparencyScore"));
+function ProfileStats({
+  profile
+}) {
+  /* istanbul ignore next */
+  cov_2qnf06pznd().f[0]++;
+  cov_2qnf06pznd().s[5]++;
+  return (0, jsx_runtime_1.jsx)(framer_motion_1.motion.div, {
+    initial: {
+      opacity: 0,
+      y: 20
+    },
+    animate: {
+      opacity: 1,
+      y: 0
+    },
+    transition: {
+      duration: 0.5,
+      delay: 0.2
+    },
+    className: "card mb-8",
+    children: (0, jsx_runtime_1.jsx)(TransparencyScore_1.TransparencyScore, {
+      profile: profile
+    })
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJleHBvcnRzIiwiUHJvZmlsZVN0YXRzIiwiZnJhbWVyX21vdGlvbl8xIiwiY292XzJxbmYwNnB6bmQiLCJzIiwicmVxdWlyZSIsIlRyYW5zcGFyZW5jeVNjb3JlXzEiLCJwcm9maWxlIiwiZiIsImpzeF9ydW50aW1lXzEiLCJqc3giLCJtb3Rpb24iLCJkaXYiLCJpbml0aWFsIiwib3BhY2l0eSIsInkiLCJhbmltYXRlIiwidHJhbnNpdGlvbiIsImR1cmF0aW9uIiwiZGVsYXkiLCJjbGFzc05hbWUiLCJjaGlsZHJlbiIsIlRyYW5zcGFyZW5jeVNjb3JlIl0sInNvdXJjZXMiOlsiL2hvbWUvZy9kZXYvb3JhbmdlY2F0L3NyYy9jb21wb25lbnRzL3Byb2ZpbGUvUHJvZmlsZVN0YXRzLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBtb3Rpb24gfSBmcm9tICdmcmFtZXItbW90aW9uJ1xuaW1wb3J0IHsgVHJhbnNwYXJlbmN5U2NvcmUgfSBmcm9tICcuL1RyYW5zcGFyZW5jeVNjb3JlJ1xuaW1wb3J0IHsgUHJvZmlsZSB9IGZyb20gJ0AvdHlwZXMvZGF0YWJhc2UnXG5cbmludGVyZmFjZSBQcm9maWxlU3RhdHNQcm9wcyB7XG4gIHByb2ZpbGU6IFByb2ZpbGVcbn1cblxuZXhwb3J0IGZ1bmN0aW9uIFByb2ZpbGVTdGF0cyh7IHByb2ZpbGUgfTogUHJvZmlsZVN0YXRzUHJvcHMpIHtcbiAgcmV0dXJuIChcbiAgICA8bW90aW9uLmRpdlxuICAgICAgaW5pdGlhbD17eyBvcGFjaXR5OiAwLCB5OiAyMCB9fVxuICAgICAgYW5pbWF0ZT17eyBvcGFjaXR5OiAxLCB5OiAwIH19XG4gICAgICB0cmFuc2l0aW9uPXt7IGR1cmF0aW9uOiAwLjUsIGRlbGF5OiAwLjIgfX1cbiAgICAgIGNsYXNzTmFtZT1cImNhcmQgbWItOFwiXG4gICAgPlxuICAgICAgPFRyYW5zcGFyZW5jeVNjb3JlIHByb2ZpbGU9e3Byb2ZpbGV9IC8+XG4gICAgPC9tb3Rpb24uZGl2PlxuICApXG59ICJdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQVFBQSxPQUFBLENBQUFDLFlBQUEsR0FBQUEsWUFBQTs7OztBQVJBLE1BQUFDLGVBQUE7QUFBQTtBQUFBLENBQUFDLGNBQUEsR0FBQUMsQ0FBQSxPQUFBQyxPQUFBO0FBQ0EsTUFBQUMsbUJBQUE7QUFBQTtBQUFBLENBQUFILGNBQUEsR0FBQUMsQ0FBQSxPQUFBQyxPQUFBO0FBT0EsU0FBZ0JKLFlBQVlBLENBQUM7RUFBRU07QUFBTyxDQUFxQjtFQUFBO0VBQUFKLGNBQUEsR0FBQUssQ0FBQTtFQUFBTCxjQUFBLEdBQUFDLENBQUE7RUFDekQsT0FDRSxJQUFBSyxhQUFBLENBQUFDLEdBQUEsRUFBQ1IsZUFBQSxDQUFBUyxNQUFNLENBQUNDLEdBQUc7SUFDVEMsT0FBTyxFQUFFO01BQUVDLE9BQU8sRUFBRSxDQUFDO01BQUVDLENBQUMsRUFBRTtJQUFFLENBQUU7SUFDOUJDLE9BQU8sRUFBRTtNQUFFRixPQUFPLEVBQUUsQ0FBQztNQUFFQyxDQUFDLEVBQUU7SUFBQyxDQUFFO0lBQzdCRSxVQUFVLEVBQUU7TUFBRUMsUUFBUSxFQUFFLEdBQUc7TUFBRUMsS0FBSyxFQUFFO0lBQUcsQ0FBRTtJQUN6Q0MsU0FBUyxFQUFDLFdBQVc7SUFBQUMsUUFBQSxFQUVyQixJQUFBWixhQUFBLENBQUFDLEdBQUEsRUFBQ0osbUJBQUEsQ0FBQWdCLGlCQUFpQjtNQUFDZixPQUFPLEVBQUVBO0lBQU87RUFBSSxFQUM1QjtBQUVqQiIsImlnbm9yZUxpc3QiOltdfQ==

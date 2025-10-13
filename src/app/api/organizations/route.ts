@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth'
 import { createServerClient } from '@/services/supabase/server'
 import { logger } from '@/utils/logger'
-import type { OrganizationFormData, OrganizationSearchParams } from '@/types/organization'
+import type { OrganizationFormData, OrganizationSearchParams, OrganizationType } from '@/types/organization'
 import { isValidBitcoinAddress, validateUrl } from '@/utils/validation'
 
 // Simple in-memory rate limiting (in production, use Redis or database)
@@ -48,15 +48,28 @@ async function handleGetOrganizations(request: AuthenticatedRequest) {
     const { searchParams } = new URL(request.url)
 
     // Parse search parameters
-    const params: OrganizationSearchParams = {
-      q: searchParams.get('q') || undefined,
-      type: searchParams.get('type') as any || undefined,
-      category: searchParams.get('category') || undefined,
-      page: parseInt(searchParams.get('page') || '1'),
-      limit: Math.min(parseInt(searchParams.get('limit') || '20'), 100), // Cap at 100
-      sort: searchParams.get('sort') as any || 'created_at',
-      order: searchParams.get('order') as any || 'desc'
-    }
+    const params: OrganizationSearchParams = {} as OrganizationSearchParams
+
+    const q = searchParams.get('q')
+    if (q) params.q = q
+
+    const type = searchParams.get('type') as OrganizationType
+    if (type) params.type = type
+
+    const category = searchParams.get('category')
+    if (category) params.category = category
+
+    const pageStr = searchParams.get('page')
+    if (pageStr) params.page = parseInt(pageStr)
+
+    const limitStr = searchParams.get('limit')
+    if (limitStr) params.limit = Math.min(parseInt(limitStr), 100)
+
+    const sort = searchParams.get('sort') as OrganizationSearchParams['sort']
+    if (sort) params.sort = sort
+
+    const order = searchParams.get('order') as OrganizationSearchParams['order']
+    if (order) params.order = order
 
     // Rate limiting
     const rateLimitId = `orgs_get:${user.id}`
@@ -93,11 +106,11 @@ async function handleGetOrganizations(request: AuthenticatedRequest) {
     query = query.or(`is_public.eq.true,memberships.profile_id.eq.${user.id}`)
 
     // Sorting
-    const validSortFields = ['name', 'created_at', 'trust_score']
-    const sortField = validSortFields.includes(params.sort || '') ? params.sort : 'created_at'
+    const validSortFields = ['name', 'created_at', 'trust_score'] as const
+    const sortField = validSortFields.includes(params.sort || '' as any) ? params.sort : 'created_at'
     const sortOrder = params.order === 'asc' ? 'asc' : 'desc'
-    
-    query = query.order(sortField, { ascending: sortOrder === 'asc' })
+
+    query = query.order(sortField as any, { ascending: sortOrder === 'asc' })
 
     // Pagination
     const offset = ((params.page || 1) - 1) * (params.limit || 20)
@@ -158,6 +171,29 @@ async function handleCreateOrganization(request: AuthenticatedRequest) {
         { error: 'Name and type are required' },
         { status: 400 }
       )
+    }
+
+    // Normalize/validate optional website URL
+    if (formData.website_url && formData.website_url.trim()) {
+      const { isValid, normalized, error } = validateUrl(formData.website_url)
+      if (!isValid) {
+        return NextResponse.json(
+          { error: error || 'Invalid website URL' },
+          { status: 400 }
+        )
+      }
+      formData.website_url = normalized
+    }
+
+    // Validate optional BTC treasury address
+    if (formData.treasury_address && formData.treasury_address.trim()) {
+      const { valid, error } = isValidBitcoinAddress(formData.treasury_address.trim())
+      if (!valid) {
+        return NextResponse.json(
+          { error: error || 'Invalid Bitcoin treasury address' },
+          { status: 400 }
+        )
+      }
     }
 
     // Generate slug from name
@@ -264,29 +300,6 @@ async function handleCreateOrganization(request: AuthenticatedRequest) {
       { error: 'Internal server error' },
       { status: 500 }
     )
-  }
-
-  // Normalize/validate optional website URL
-  if (formData.website_url && formData.website_url.trim()) {
-    const { isValid, normalized, error } = validateUrl(formData.website_url)
-    if (!isValid) {
-      return NextResponse.json(
-        { error: error || 'Invalid website URL' },
-        { status: 400 }
-      )
-    }
-    formData.website_url = normalized
-  }
-
-  // Validate optional BTC treasury address
-  if (formData.treasury_address && formData.treasury_address.trim()) {
-    const { valid, error } = isValidBitcoinAddress(formData.treasury_address.trim())
-    if (!valid) {
-      return NextResponse.json(
-        { error: error || 'Invalid Bitcoin treasury address' },
-        { status: 400 }
-      )
-    }
   }
 }
 

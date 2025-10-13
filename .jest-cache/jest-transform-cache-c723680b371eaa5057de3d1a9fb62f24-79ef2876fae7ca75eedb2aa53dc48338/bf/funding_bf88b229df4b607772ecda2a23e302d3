@@ -1,0 +1,60 @@
+81e1c2583f644bb304523b4ba268f94c
+"use strict";
+
+/* istanbul ignore next */
+function cov_2mmni6xhld() {
+  var path = "/home/g/dev/orangecat/src/types/funding.ts";
+  var hash = "087fe13400dbc795077102a8c6cee8ca984d8246";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/types/funding.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 2,
+          column: 0
+        },
+        end: {
+          line: 2,
+          column: 62
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/types/funding.ts",
+      mappings: "",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/types/funding.ts"],
+      sourcesContent: ["import { CategoryValue } from '@/config/categories'\n\nexport interface FundingPage {\n  id: string\n  user_id: string\n  title: string\n  description?: string\n  bitcoin_address?: string\n  lightning_address?: string\n  website_url?: string\n  goal_amount?: number\n  current_amount?: number\n  total_funding: number\n  contributor_count: number\n  is_active: boolean\n  is_public: boolean\n  is_featured?: boolean\n  slug?: string\n  category?: CategoryValue\n  tags?: string[]\n  featured_image_url?: string\n  end_date?: string\n  currency?: 'BTC' | 'SATS'\n  created_at: string\n  updated_at: string\n}\n\nexport interface FundingPageFormData {\n  title: string\n  description?: string\n  bitcoin_address?: string\n  lightning_address?: string\n  website_url?: string\n  goal_amount?: number\n  categories?: string[] // Changed from single category to array\n  tags?: string[]\n  currency?: 'BTC' | 'SATS'\n  end_date?: string\n}\n\nexport interface PublicFundingPage extends FundingPage {\n  username?: string\n  display_name?: string\n  avatar_url?: string\n}\n\nexport interface Transaction {\n  id: string\n  funding_page_id: string\n  amount: number\n  transaction_hash: string\n  status: 'pending' | 'confirmed' | 'failed'\n  created_at: string\n  updated_at: string\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "087fe13400dbc795077102a8c6cee8ca984d8246"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_2mmni6xhld = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_2mmni6xhld();
+cov_2mmni6xhld().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6W10sInNvdXJjZXMiOlsiL2hvbWUvZy9kZXYvb3JhbmdlY2F0L3NyYy90eXBlcy9mdW5kaW5nLnRzIl0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IENhdGVnb3J5VmFsdWUgfSBmcm9tICdAL2NvbmZpZy9jYXRlZ29yaWVzJ1xuXG5leHBvcnQgaW50ZXJmYWNlIEZ1bmRpbmdQYWdlIHtcbiAgaWQ6IHN0cmluZ1xuICB1c2VyX2lkOiBzdHJpbmdcbiAgdGl0bGU6IHN0cmluZ1xuICBkZXNjcmlwdGlvbj86IHN0cmluZ1xuICBiaXRjb2luX2FkZHJlc3M/OiBzdHJpbmdcbiAgbGlnaHRuaW5nX2FkZHJlc3M/OiBzdHJpbmdcbiAgd2Vic2l0ZV91cmw/OiBzdHJpbmdcbiAgZ29hbF9hbW91bnQ/OiBudW1iZXJcbiAgY3VycmVudF9hbW91bnQ/OiBudW1iZXJcbiAgdG90YWxfZnVuZGluZzogbnVtYmVyXG4gIGNvbnRyaWJ1dG9yX2NvdW50OiBudW1iZXJcbiAgaXNfYWN0aXZlOiBib29sZWFuXG4gIGlzX3B1YmxpYzogYm9vbGVhblxuICBpc19mZWF0dXJlZD86IGJvb2xlYW5cbiAgc2x1Zz86IHN0cmluZ1xuICBjYXRlZ29yeT86IENhdGVnb3J5VmFsdWVcbiAgdGFncz86IHN0cmluZ1tdXG4gIGZlYXR1cmVkX2ltYWdlX3VybD86IHN0cmluZ1xuICBlbmRfZGF0ZT86IHN0cmluZ1xuICBjdXJyZW5jeT86ICdCVEMnIHwgJ1NBVFMnXG4gIGNyZWF0ZWRfYXQ6IHN0cmluZ1xuICB1cGRhdGVkX2F0OiBzdHJpbmdcbn1cblxuZXhwb3J0IGludGVyZmFjZSBGdW5kaW5nUGFnZUZvcm1EYXRhIHtcbiAgdGl0bGU6IHN0cmluZ1xuICBkZXNjcmlwdGlvbj86IHN0cmluZ1xuICBiaXRjb2luX2FkZHJlc3M/OiBzdHJpbmdcbiAgbGlnaHRuaW5nX2FkZHJlc3M/OiBzdHJpbmdcbiAgd2Vic2l0ZV91cmw/OiBzdHJpbmdcbiAgZ29hbF9hbW91bnQ/OiBudW1iZXJcbiAgY2F0ZWdvcmllcz86IHN0cmluZ1tdIC8vIENoYW5nZWQgZnJvbSBzaW5nbGUgY2F0ZWdvcnkgdG8gYXJyYXlcbiAgdGFncz86IHN0cmluZ1tdXG4gIGN1cnJlbmN5PzogJ0JUQycgfCAnU0FUUydcbiAgZW5kX2RhdGU/OiBzdHJpbmdcbn1cblxuZXhwb3J0IGludGVyZmFjZSBQdWJsaWNGdW5kaW5nUGFnZSBleHRlbmRzIEZ1bmRpbmdQYWdlIHtcbiAgdXNlcm5hbWU/OiBzdHJpbmdcbiAgZGlzcGxheV9uYW1lPzogc3RyaW5nXG4gIGF2YXRhcl91cmw/OiBzdHJpbmdcbn1cblxuZXhwb3J0IGludGVyZmFjZSBUcmFuc2FjdGlvbiB7XG4gIGlkOiBzdHJpbmdcbiAgZnVuZGluZ19wYWdlX2lkOiBzdHJpbmdcbiAgYW1vdW50OiBudW1iZXJcbiAgdHJhbnNhY3Rpb25faGFzaDogc3RyaW5nXG4gIHN0YXR1czogJ3BlbmRpbmcnIHwgJ2NvbmZpcm1lZCcgfCAnZmFpbGVkJ1xuICBjcmVhdGVkX2F0OiBzdHJpbmdcbiAgdXBkYXRlZF9hdDogc3RyaW5nXG59ICJdLCJtYXBwaW5ncyI6IiIsImlnbm9yZUxpc3QiOltdfQ==

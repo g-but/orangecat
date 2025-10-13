@@ -91,7 +91,6 @@ export default function OrganizationsPage() {
       const data = await response.json()
       setOrganizations(data.data || [])
     } catch (error) {
-      console.error('Error fetching organizations:', error)
       toast.error('Failed to load organizations')
     } finally {
       setLoading(false)

@@ -37,7 +37,6 @@ This is our custom table that extends user information beyond what Supabase Auth
 | `bitcoin_address` | text | ✅ | Bitcoin address for receiving donations |
 | `lightning_address` | text | ✅ | Lightning address for instant payments |
 | `website` | text | ✅ | User's website URL |
-| `full_name` | text | ✅ | User's full name (legacy column) |
 | `created_at` | timestamp | ❌ | When profile was created |
 | `updated_at` | timestamp | ❌ | Last profile update |
 
