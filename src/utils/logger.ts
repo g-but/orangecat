@@ -89,16 +89,12 @@ class Logger {
     
     switch (level) {
       case 'debug':
-        console.debug(`🔍 ${prefix}${sourceInfo}:`, message, data || '')
         break
       case 'info':
-        console.info(`ℹ️  ${prefix}${sourceInfo}:`, message, data || '')
         break
       case 'warn':
-        console.warn(`⚠️  ${prefix}${sourceInfo}:`, message, data || '')
         break
       case 'error':
-        console.error(`❌ ${prefix}${sourceInfo}:`, message, data || '')
         break
     }
   }

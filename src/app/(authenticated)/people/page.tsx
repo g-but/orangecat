@@ -91,7 +91,6 @@ export default function PeoplePage() {
       const data = await response.json()
       setPeople(data.data || [])
     } catch (error) {
-      console.error('Error fetching people:', error)
       toast.error('Failed to load people')
     } finally {
       setLoading(false)
@@ -117,7 +116,6 @@ export default function PeoplePage() {
       const data = await response.json()
       setPeople(data.data || [])
     } catch (error) {
-      console.error('Error searching people:', error)
       toast.error('Failed to search people')
     } finally {
       setSearchLoading(false)

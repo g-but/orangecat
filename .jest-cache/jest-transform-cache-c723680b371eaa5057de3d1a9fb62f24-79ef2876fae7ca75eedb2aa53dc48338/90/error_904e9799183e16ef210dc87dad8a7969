@@ -1,0 +1,243 @@
+edff75bfaaf61bdb9496cc810cf07858
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_1dcxsqfcah() {
+  var path = "/home/g/dev/orangecat/src/app/error.tsx";
+  var hash = "020fe115c68339a81c889cff4205d38347f7114c";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/app/error.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 24
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 22
+        },
+        end: {
+          line: 5,
+          column: 50
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 16
+        },
+        end: {
+          line: 6,
+          column: 32
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 21
+        },
+        end: {
+          line: 7,
+          column: 47
+        }
+      },
+      "5": {
+        start: {
+          line: 9,
+          column: 19
+        },
+        end: {
+          line: 9,
+          column: 48
+        }
+      },
+      "6": {
+        start: {
+          line: 10,
+          column: 4
+        },
+        end: {
+          line: 12,
+          column: 16
+        }
+      },
+      "7": {
+        start: {
+          line: 13,
+          column: 4
+        },
+        end: {
+          line: 13,
+          column: 940
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "Error",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 14
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 34
+          },
+          end: {
+            line: 14,
+            column: 1
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 10,
+            column: 27
+          },
+          end: {
+            line: 10,
+            column: 28
+          }
+        },
+        loc: {
+          start: {
+            line: 10,
+            column: 33
+          },
+          end: {
+            line: 12,
+            column: 5
+          }
+        },
+        line: 10
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/app/error.tsx",
+      mappings: "AAAA,YAAY,CAAA;;;AAKZ,wBAmCC;;AAtCD,iCAAiC;AACjC,gDAA2C;AAE3C,SAAwB,KAAK,CAAC,EAC5B,KAAK,EACL,KAAK,GAIN;IACC,MAAM,MAAM,GAAG,IAAA,sBAAS,GAAE,CAAA;IAE1B,IAAA,iBAAS,EAAC,GAAG,EAAE;QACb,2CAA2C;IAC7C,CAAC,EAAE,CAAC,KAAK,CAAC,CAAC,CAAA;IAEX,OAAO,CACL,gCAAK,SAAS,EAAC,0DAA0D,YACvE,iCAAK,SAAS,EAAC,6DAA6D,aAC1E,4CACE,+BAAI,SAAS,EAAC,wDAAwD,sCAEjE,EACL,8BAAG,SAAS,EAAC,wCAAwC,YAClD,KAAK,CAAC,OAAO,GACZ,IACA,EACN,gCAAK,SAAS,EAAC,gBAAgB,YAC7B,mCACE,OAAO,EAAE,KAAK,EACd,SAAS,EAAC,qOAAqO,0BAGxO,GACL,IACF,GACF,CACP,CAAA;AACH,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/app/error.tsx"],
+      sourcesContent: ["'use client'\n\nimport { useEffect } from 'react'\nimport { useRouter } from 'next/navigation'\n\nexport default function Error({\n  error,\n  reset,\n}: {\n  error: Error & { digest?: string }\n  reset: () => void\n}) {\n  const router = useRouter()\n\n  useEffect(() => {\n    // Log the error to Vercel's error tracking\n  }, [error])\n\n  return (\n    <div className=\"min-h-screen flex items-center justify-center bg-gray-50\">\n      <div className=\"max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg\">\n        <div>\n          <h2 className=\"mt-6 text-center text-3xl font-extrabold text-gray-900\">\n            Something went wrong!\n          </h2>\n          <p className=\"mt-2 text-center text-sm text-gray-600\">\n            {error.message}\n          </p>\n        </div>\n        <div className=\"mt-8 space-y-6\">\n          <button\n            onClick={reset}\n            className=\"group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500\"\n          >\n            Try again\n          </button>\n        </div>\n      </div>\n    </div>\n  )\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "020fe115c68339a81c889cff4205d38347f7114c"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1dcxsqfcah = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1dcxsqfcah();
+cov_1dcxsqfcah().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1dcxsqfcah().s[1]++;
+exports.default = Error;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_1dcxsqfcah().s[2]++, require("react/jsx-runtime"));
+const react_1 =
+/* istanbul ignore next */
+(cov_1dcxsqfcah().s[3]++, require("react"));
+const navigation_1 =
+/* istanbul ignore next */
+(cov_1dcxsqfcah().s[4]++, require("next/navigation"));
+function Error({
+  error,
+  reset
+}) {
+  /* istanbul ignore next */
+  cov_1dcxsqfcah().f[0]++;
+  const router =
+  /* istanbul ignore next */
+  (cov_1dcxsqfcah().s[5]++, (0, navigation_1.useRouter)());
+  /* istanbul ignore next */
+  cov_1dcxsqfcah().s[6]++;
+  (0, react_1.useEffect)(() => {
+    /* istanbul ignore next */
+    cov_1dcxsqfcah().f[1]++;
+  } // Log the error to Vercel's error tracking
+  , [error]);
+  /* istanbul ignore next */
+  cov_1dcxsqfcah().s[7]++;
+  return (0, jsx_runtime_1.jsx)("div", {
+    className: "min-h-screen flex items-center justify-center bg-gray-50",
+    children: (0, jsx_runtime_1.jsxs)("div", {
+      className: "max-w-md w-full space-y-8 p-8 bg-white rounded-lg shadow-lg",
+      children: [(0, jsx_runtime_1.jsxs)("div", {
+        children: [(0, jsx_runtime_1.jsx)("h2", {
+          className: "mt-6 text-center text-3xl font-extrabold text-gray-900",
+          children: "Something went wrong!"
+        }), (0, jsx_runtime_1.jsx)("p", {
+          className: "mt-2 text-center text-sm text-gray-600",
+          children: error.message
+        })]
+      }), (0, jsx_runtime_1.jsx)("div", {
+        className: "mt-8 space-y-6",
+        children: (0, jsx_runtime_1.jsx)("button", {
+          onClick: reset,
+          className: "group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500",
+          children: "Try again"
+        })
+      })]
+    })
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJleHBvcnRzIiwiZGVmYXVsdCIsIkVycm9yIiwicmVhY3RfMSIsImNvdl8xZGN4c3FmY2FoIiwicyIsInJlcXVpcmUiLCJuYXZpZ2F0aW9uXzEiLCJlcnJvciIsInJlc2V0IiwiZiIsInJvdXRlciIsInVzZVJvdXRlciIsInVzZUVmZmVjdCIsImpzeF9ydW50aW1lXzEiLCJqc3giLCJjbGFzc05hbWUiLCJjaGlsZHJlbiIsImpzeHMiLCJtZXNzYWdlIiwib25DbGljayJdLCJzb3VyY2VzIjpbIi9ob21lL2cvZGV2L29yYW5nZWNhdC9zcmMvYXBwL2Vycm9yLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIndXNlIGNsaWVudCdcblxuaW1wb3J0IHsgdXNlRWZmZWN0IH0gZnJvbSAncmVhY3QnXG5pbXBvcnQgeyB1c2VSb3V0ZXIgfSBmcm9tICduZXh0L25hdmlnYXRpb24nXG5cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIEVycm9yKHtcbiAgZXJyb3IsXG4gIHJlc2V0LFxufToge1xuICBlcnJvcjogRXJyb3IgJiB7IGRpZ2VzdD86IHN0cmluZyB9XG4gIHJlc2V0OiAoKSA9PiB2b2lkXG59KSB7XG4gIGNvbnN0IHJvdXRlciA9IHVzZVJvdXRlcigpXG5cbiAgdXNlRWZmZWN0KCgpID0+IHtcbiAgICAvLyBMb2cgdGhlIGVycm9yIHRvIFZlcmNlbCdzIGVycm9yIHRyYWNraW5nXG4gIH0sIFtlcnJvcl0pXG5cbiAgcmV0dXJuIChcbiAgICA8ZGl2IGNsYXNzTmFtZT1cIm1pbi1oLXNjcmVlbiBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBiZy1ncmF5LTUwXCI+XG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1heC13LW1kIHctZnVsbCBzcGFjZS15LTggcC04IGJnLXdoaXRlIHJvdW5kZWQtbGcgc2hhZG93LWxnXCI+XG4gICAgICAgIDxkaXY+XG4gICAgICAgICAgPGgyIGNsYXNzTmFtZT1cIm10LTYgdGV4dC1jZW50ZXIgdGV4dC0zeGwgZm9udC1leHRyYWJvbGQgdGV4dC1ncmF5LTkwMFwiPlxuICAgICAgICAgICAgU29tZXRoaW5nIHdlbnQgd3JvbmchXG4gICAgICAgICAgPC9oMj5cbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJtdC0yIHRleHQtY2VudGVyIHRleHQtc20gdGV4dC1ncmF5LTYwMFwiPlxuICAgICAgICAgICAge2Vycm9yLm1lc3NhZ2V9XG4gICAgICAgICAgPC9wPlxuICAgICAgICA8L2Rpdj5cbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtdC04IHNwYWNlLXktNlwiPlxuICAgICAgICAgIDxidXR0b25cbiAgICAgICAgICAgIG9uQ2xpY2s9e3Jlc2V0fVxuICAgICAgICAgICAgY2xhc3NOYW1lPVwiZ3JvdXAgcmVsYXRpdmUgdy1mdWxsIGZsZXgganVzdGlmeS1jZW50ZXIgcHktMiBweC00IGJvcmRlciBib3JkZXItdHJhbnNwYXJlbnQgdGV4dC1zbSBmb250LW1lZGl1bSByb3VuZGVkLW1kIHRleHQtd2hpdGUgYmctb3JhbmdlLTYwMCBob3ZlcjpiZy1vcmFuZ2UtNzAwIGZvY3VzOm91dGxpbmUtbm9uZSBmb2N1czpyaW5nLTIgZm9jdXM6cmluZy1vZmZzZXQtMiBmb2N1czpyaW5nLW9yYW5nZS01MDBcIlxuICAgICAgICAgID5cbiAgICAgICAgICAgIFRyeSBhZ2FpblxuICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICA8L2Rpdj5cbiAgICAgIDwvZGl2PlxuICAgIDwvZGl2PlxuICApXG59ICJdLCJtYXBwaW5ncyI6IkFBQUEsWUFBWTs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQUtaQSxPQUFBLENBQUFDLE9BQUEsR0FBQUMsS0FBQTs7OztBQUhBLE1BQUFDLE9BQUE7QUFBQTtBQUFBLENBQUFDLGNBQUEsR0FBQUMsQ0FBQSxPQUFBQyxPQUFBO0FBQ0EsTUFBQUMsWUFBQTtBQUFBO0FBQUEsQ0FBQUgsY0FBQSxHQUFBQyxDQUFBLE9BQUFDLE9BQUE7QUFFQSxTQUF3QkosS0FBS0EsQ0FBQztFQUM1Qk0sS0FBSztFQUNMQztBQUFLLENBSU47RUFBQTtFQUFBTCxjQUFBLEdBQUFNLENBQUE7RUFDQyxNQUFNQyxNQUFNO0VBQUE7RUFBQSxDQUFBUCxjQUFBLEdBQUFDLENBQUEsT0FBRyxJQUFBRSxZQUFBLENBQUFLLFNBQVMsR0FBRTtFQUFBO0VBQUFSLGNBQUEsR0FBQUMsQ0FBQTtFQUUxQixJQUFBRixPQUFBLENBQUFVLFNBQVMsRUFBQyxNQUFLO0lBQUE7SUFBQVQsY0FBQSxHQUFBTSxDQUFBO0VBRWYsQ0FBQyxDQURDO0VBQ0QsRUFBRSxDQUFDRixLQUFLLENBQUMsQ0FBQztFQUFBO0VBQUFKLGNBQUEsR0FBQUMsQ0FBQTtFQUVYLE9BQ0UsSUFBQVMsYUFBQSxDQUFBQyxHQUFBO0lBQUtDLFNBQVMsRUFBQywwREFBMEQ7SUFBQUMsUUFBQSxFQUN2RSxJQUFBSCxhQUFBLENBQUFJLElBQUE7TUFBS0YsU0FBUyxFQUFDLDZEQUE2RDtNQUFBQyxRQUFBLEdBQzFFLElBQUFILGFBQUEsQ0FBQUksSUFBQTtRQUFBRCxRQUFBLEdBQ0UsSUFBQUgsYUFBQSxDQUFBQyxHQUFBO1VBQUlDLFNBQVMsRUFBQyx3REFBd0Q7VUFBQUMsUUFBQTtRQUFBLEVBRWpFLEVBQ0wsSUFBQUgsYUFBQSxDQUFBQyxHQUFBO1VBQUdDLFNBQVMsRUFBQyx3Q0FBd0M7VUFBQUMsUUFBQSxFQUNsRFQsS0FBSyxDQUFDVztRQUFPLEVBQ1o7TUFBQSxFQUNBLEVBQ04sSUFBQUwsYUFBQSxDQUFBQyxHQUFBO1FBQUtDLFNBQVMsRUFBQyxnQkFBZ0I7UUFBQUMsUUFBQSxFQUM3QixJQUFBSCxhQUFBLENBQUFDLEdBQUE7VUFDRUssT0FBTyxFQUFFWCxLQUFLO1VBQ2RPLFNBQVMsRUFBQyxxT0FBcU87VUFBQUMsUUFBQTtRQUFBO01BR3hPLEVBQ0w7SUFBQTtFQUNGLEVBQ0Y7QUFFViIsImlnbm9yZUxpc3QiOltdfQ==

@@ -148,7 +148,6 @@ export function QRScanner({
         }
       }
     } catch (error) {
-      console.warn('QR scan error:', error)
     }
   }
 
@@ -163,7 +162,6 @@ export function QRScanner({
       })
       setFlashEnabled(!flashEnabled)
     } catch (error) {
-      console.warn('Flash toggle error:', error)
     }
   }
 

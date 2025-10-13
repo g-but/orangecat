@@ -1,0 +1,145 @@
+93827cae13a52f5502c68ffd911f9364
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_1q9ndpsl0w() {
+  var path = "/home/g/dev/orangecat/src/app/privacy/page.tsx";
+  var hash = "02c3825b8c6227776cdebe536d0ce95e45c68267";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/app/privacy/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 30
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 22
+        },
+        end: {
+          line: 5,
+          column: 50
+        }
+      },
+      "3": {
+        start: {
+          line: 7,
+          column: 4
+        },
+        end: {
+          line: 7,
+          column: 454
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "PrivacyPage",
+        decl: {
+          start: {
+            line: 6,
+            column: 9
+          },
+          end: {
+            line: 6,
+            column: 20
+          }
+        },
+        loc: {
+          start: {
+            line: 6,
+            column: 23
+          },
+          end: {
+            line: 8,
+            column: 1
+          }
+        },
+        line: 6
+      }
+    },
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    f: {
+      "0": 0
+    },
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/app/privacy/page.tsx",
+      mappings: "AAAA,YAAY,CAAA;;;AAEZ,8BASC;;AATD,SAAwB,WAAW;IACjC,OAAO,CACL,gCAAK,SAAS,EAAC,uBAAuB,YACpC,iCAAK,SAAS,EAAC,8BAA8B,aAC3C,+BAAI,SAAS,EAAC,uCAAuC,+BAAoB,EACzE,8BAAG,SAAS,EAAC,oBAAoB,6FAAiF,IAC9G,GACF,CACP,CAAA;AACH,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/app/privacy/page.tsx"],
+      sourcesContent: ["'use client'\n\nexport default function PrivacyPage() {\n  return (\n    <div className=\"min-h-screen bg-white\">\n      <div className=\"max-w-3xl mx-auto px-4 py-12\">\n        <h1 className=\"text-3xl font-bold text-gray-900 mb-4\">Privacy Policy</h1>\n        <p className=\"text-gray-600 mb-6\">We respect your privacy. This page will be updated with our detailed policy.</p>\n      </div>\n    </div>\n  )\n}\n\n\n\n\n"],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "02c3825b8c6227776cdebe536d0ce95e45c68267"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1q9ndpsl0w = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1q9ndpsl0w();
+cov_1q9ndpsl0w().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1q9ndpsl0w().s[1]++;
+exports.default = PrivacyPage;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_1q9ndpsl0w().s[2]++, require("react/jsx-runtime"));
+function PrivacyPage() {
+  /* istanbul ignore next */
+  cov_1q9ndpsl0w().f[0]++;
+  cov_1q9ndpsl0w().s[3]++;
+  return (0, jsx_runtime_1.jsx)("div", {
+    className: "min-h-screen bg-white",
+    children: (0, jsx_runtime_1.jsxs)("div", {
+      className: "max-w-3xl mx-auto px-4 py-12",
+      children: [(0, jsx_runtime_1.jsx)("h1", {
+        className: "text-3xl font-bold text-gray-900 mb-4",
+        children: "Privacy Policy"
+      }), (0, jsx_runtime_1.jsx)("p", {
+        className: "text-gray-600 mb-6",
+        children: "We respect your privacy. This page will be updated with our detailed policy."
+      })]
+    })
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJleHBvcnRzIiwiZGVmYXVsdCIsIlByaXZhY3lQYWdlIiwiY292XzFxOW5kcHNsMHciLCJmIiwicyIsImpzeF9ydW50aW1lXzEiLCJqc3giLCJjbGFzc05hbWUiLCJjaGlsZHJlbiIsImpzeHMiXSwic291cmNlcyI6WyIvaG9tZS9nL2Rldi9vcmFuZ2VjYXQvc3JjL2FwcC9wcml2YWN5L3BhZ2UudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50J1xuXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBQcml2YWN5UGFnZSgpIHtcbiAgcmV0dXJuIChcbiAgICA8ZGl2IGNsYXNzTmFtZT1cIm1pbi1oLXNjcmVlbiBiZy13aGl0ZVwiPlxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJtYXgtdy0zeGwgbXgtYXV0byBweC00IHB5LTEyXCI+XG4gICAgICAgIDxoMSBjbGFzc05hbWU9XCJ0ZXh0LTN4bCBmb250LWJvbGQgdGV4dC1ncmF5LTkwMCBtYi00XCI+UHJpdmFjeSBQb2xpY3k8L2gxPlxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LWdyYXktNjAwIG1iLTZcIj5XZSByZXNwZWN0IHlvdXIgcHJpdmFjeS4gVGhpcyBwYWdlIHdpbGwgYmUgdXBkYXRlZCB3aXRoIG91ciBkZXRhaWxlZCBwb2xpY3kuPC9wPlxuICAgICAgPC9kaXY+XG4gICAgPC9kaXY+XG4gIClcbn1cblxuXG5cblxuIl0sIm1hcHBpbmdzIjoiQUFBQSxZQUFZOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBRVpBLE9BQUEsQ0FBQUMsT0FBQSxHQUFBQyxXQUFBOzs7O0FBQUEsU0FBd0JBLFdBQVdBLENBQUE7RUFBQTtFQUFBQyxjQUFBLEdBQUFDLENBQUE7RUFBQUQsY0FBQSxHQUFBRSxDQUFBO0VBQ2pDLE9BQ0UsSUFBQUMsYUFBQSxDQUFBQyxHQUFBO0lBQUtDLFNBQVMsRUFBQyx1QkFBdUI7SUFBQUMsUUFBQSxFQUNwQyxJQUFBSCxhQUFBLENBQUFJLElBQUE7TUFBS0YsU0FBUyxFQUFDLDhCQUE4QjtNQUFBQyxRQUFBLEdBQzNDLElBQUFILGFBQUEsQ0FBQUMsR0FBQTtRQUFJQyxTQUFTLEVBQUMsdUNBQXVDO1FBQUFDLFFBQUE7TUFBQSxFQUFvQixFQUN6RSxJQUFBSCxhQUFBLENBQUFDLEdBQUE7UUFBR0MsU0FBUyxFQUFDLG9CQUFvQjtRQUFBQyxRQUFBO01BQUEsRUFBaUY7SUFBQTtFQUM5RyxFQUNGO0FBRVYiLCJpZ25vcmVMaXN0IjpbXX0=

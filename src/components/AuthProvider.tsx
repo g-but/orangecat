@@ -47,6 +47,7 @@ export function AuthProvider({ user, session, profile, children }: AuthProviderP
 
       return () => clearTimeout(timeout);
     }
+    return () => {}; // Return empty cleanup function when hydrated
   }, [storeHydrated, user, session, profile]);
 
   // Show loading only briefly, not indefinitely

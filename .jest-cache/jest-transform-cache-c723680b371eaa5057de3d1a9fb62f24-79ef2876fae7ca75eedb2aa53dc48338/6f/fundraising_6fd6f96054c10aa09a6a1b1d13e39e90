@@ -1,0 +1,204 @@
+19ff4325f3dbaa55121a5914217a0ab4
+"use strict";
+
+/**
+ * FUNDRAISING INITIATIVE MODULE
+ *
+ * Created: 2025-01-09
+ * Last Modified: 2025-01-09
+ * Last Modified Summary: Extracted from main initiatives.ts for modular architecture
+ */
+/* istanbul ignore next */
+function cov_s6k2ae3r6() {
+  var path = "/home/g/dev/orangecat/src/data/initiatives/fundraising.ts";
+  var hash = "e9ade355f99671e5ff8bc26bd9611ff0837bede2";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/data/initiatives/fundraising.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 9,
+          column: 0
+        },
+        end: {
+          line: 9,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 10,
+          column: 0
+        },
+        end: {
+          line: 10,
+          column: 29
+        }
+      },
+      "2": {
+        start: {
+          line: 11,
+          column: 0
+        },
+        end: {
+          line: 154,
+          column: 2
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/data/initiatives/fundraising.ts",
+      mappings: "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",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/data/initiatives/fundraising.ts"],
+      sourcesContent: ["/**\n * FUNDRAISING INITIATIVE MODULE\n * \n * Created: 2025-01-09\n * Last Modified: 2025-01-09\n * Last Modified Summary: Extracted from main initiatives.ts for modular architecture\n */\n\nimport type { Initiative } from '@/types/initiative';\n\nexport const fundraising: Initiative = {\n  id: 'fundraising',\n  name: 'Fundraising',\n  icon: 'Target',\n  color: {\n    primary: 'red-600',\n    gradient: 'from-red-500 to-pink-500',\n    bg: 'red-100',\n    text: 'red-600',\n    border: 'red-200'\n  },\n  description: 'Launch fundraising campaigns for causes, startups, and creative projects with Bitcoin-powered transparency.',\n  longDescription: 'Create compelling campaigns, accept Bitcoin donations, track progress transparently, and build trust with your supporters through immutable donation records.',\n  status: 'available',\n  timeline: 'Available Now',\n  routes: {\n    landing: '/fundraising',\n    demo: '/demo/fundraising',\n    comingSoon: '/fundraising'\n  },\n  features: [\n    {\n      icon: 'Target',\n      title: 'Campaign Creation',\n      description: 'Create compelling fundraising campaigns with rich media and transparent goals.',\n      color: 'text-blue-600 bg-blue-100'\n    },\n    {\n      icon: 'Wallet',\n      title: 'Bitcoin Donations',\n      description: 'Accept Bitcoin and Lightning donations with automatic conversion options.',\n      color: 'text-orange-600 bg-orange-100'\n    },\n    {\n      icon: 'BarChart',\n      title: 'Progress Tracking',\n      description: 'Real-time progress tracking with transparent donation records on the blockchain.',\n      color: 'text-green-600 bg-green-100'\n    },\n    {\n      icon: 'Shield',\n      title: 'Trust & Transparency',\n      description: 'All donations are recorded immutably, ensuring complete transparency for supporters.',\n      color: 'text-purple-600 bg-purple-100'\n    },\n    {\n      icon: 'Users',\n      title: 'Social Sharing',\n      description: 'Built-in social sharing tools to amplify your campaign reach and engagement.',\n      color: 'text-pink-600 bg-pink-100'\n    },\n    {\n      icon: 'Bell',\n      title: 'Smart Notifications',\n      description: 'Automated updates to supporters about campaign milestones and progress.',\n      color: 'text-yellow-600 bg-yellow-100'\n    }\n  ],\n  types: [\n    { \n      name: 'Charity Fundraising', \n      icon: 'Heart',\n      description: 'Non-profit and charitable causes',\n      example: 'Disaster relief fund',\n      color: 'bg-red-100 text-red-700 border-red-200'\n    },\n    { \n      name: 'Startup Fundraising', \n      icon: 'Rocket',\n      description: 'Business and startup capital',\n      example: 'Bitcoin startup seed round',\n      color: 'bg-blue-100 text-blue-700 border-blue-200'\n    },\n    { \n      name: 'Creative Projects', \n      icon: 'Palette',\n      description: 'Art, music, and creative endeavors',\n      example: 'Independent film project',\n      color: 'bg-purple-100 text-purple-700 border-purple-200'\n    },\n    { \n      name: 'Community Initiatives', \n      icon: 'Users',\n      description: 'Local community projects',\n      example: 'Bitcoin meetup funding',\n      color: 'bg-green-100 text-green-700 border-green-200'\n    },\n    { \n      name: 'Educational Campaigns', \n      icon: 'GraduationCap',\n      description: 'Education and awareness projects',\n      example: 'Bitcoin education program',\n      color: 'bg-orange-100 text-orange-700 border-orange-200'\n    },\n    { \n      name: 'Emergency Relief', \n      icon: 'AlertTriangle',\n      description: 'Crisis response and emergency aid',\n      example: 'Natural disaster relief',\n      color: 'bg-pink-100 text-pink-700 border-pink-200'\n    }\n  ],\n  capabilities: [\n    'Campaign management',\n    'Bitcoin payment processing',\n    'Goal tracking and milestones',\n    'Donor communication',\n    'Social media integration',\n    'Transparent fund allocation',\n    'Multi-currency support',\n    'Automated refunds',\n    'Tax receipt generation',\n    'Campaign analytics'\n  ],\n  useCases: [\n    'Raise funds for charitable causes',\n    'Launch startup funding campaigns',\n    'Support creative and artistic projects',\n    'Fund community development initiatives'\n  ],\n  marketTools: [\n    {\n      name: 'GoFundMe',\n      description: 'Popular crowdfunding platform',\n      url: 'https://gofundme.com',\n      icon: 'Heart',\n      color: 'bg-green-100 text-green-600'\n    },\n    {\n      name: 'Kickstarter',\n      description: 'Creative project funding',\n      url: 'https://kickstarter.com',\n      icon: 'Rocket',\n      color: 'bg-blue-100 text-blue-600'\n    },\n    {\n      name: 'Indiegogo',\n      description: 'Flexible funding campaigns',\n      url: 'https://indiegogo.com',\n      icon: 'Target',\n      color: 'bg-pink-100 text-pink-600'\n    }\n  ]\n}; "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "e9ade355f99671e5ff8bc26bd9611ff0837bede2"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_s6k2ae3r6 = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_s6k2ae3r6();
+cov_s6k2ae3r6().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_s6k2ae3r6().s[1]++;
+exports.fundraising = void 0;
+/* istanbul ignore next */
+cov_s6k2ae3r6().s[2]++;
+exports.fundraising = {
+  id: 'fundraising',
+  name: 'Fundraising',
+  icon: 'Target',
+  color: {
+    primary: 'red-600',
+    gradient: 'from-red-500 to-pink-500',
+    bg: 'red-100',
+    text: 'red-600',
+    border: 'red-200'
+  },
+  description: 'Launch fundraising campaigns for causes, startups, and creative projects with Bitcoin-powered transparency.',
+  longDescription: 'Create compelling campaigns, accept Bitcoin donations, track progress transparently, and build trust with your supporters through immutable donation records.',
+  status: 'available',
+  timeline: 'Available Now',
+  routes: {
+    landing: '/fundraising',
+    demo: '/demo/fundraising',
+    comingSoon: '/fundraising'
+  },
+  features: [{
+    icon: 'Target',
+    title: 'Campaign Creation',
+    description: 'Create compelling fundraising campaigns with rich media and transparent goals.',
+    color: 'text-blue-600 bg-blue-100'
+  }, {
+    icon: 'Wallet',
+    title: 'Bitcoin Donations',
+    description: 'Accept Bitcoin and Lightning donations with automatic conversion options.',
+    color: 'text-orange-600 bg-orange-100'
+  }, {
+    icon: 'BarChart',
+    title: 'Progress Tracking',
+    description: 'Real-time progress tracking with transparent donation records on the blockchain.',
+    color: 'text-green-600 bg-green-100'
+  }, {
+    icon: 'Shield',
+    title: 'Trust & Transparency',
+    description: 'All donations are recorded immutably, ensuring complete transparency for supporters.',
+    color: 'text-purple-600 bg-purple-100'
+  }, {
+    icon: 'Users',
+    title: 'Social Sharing',
+    description: 'Built-in social sharing tools to amplify your campaign reach and engagement.',
+    color: 'text-pink-600 bg-pink-100'
+  }, {
+    icon: 'Bell',
+    title: 'Smart Notifications',
+    description: 'Automated updates to supporters about campaign milestones and progress.',
+    color: 'text-yellow-600 bg-yellow-100'
+  }],
+  types: [{
+    name: 'Charity Fundraising',
+    icon: 'Heart',
+    description: 'Non-profit and charitable causes',
+    example: 'Disaster relief fund',
+    color: 'bg-red-100 text-red-700 border-red-200'
+  }, {
+    name: 'Startup Fundraising',
+    icon: 'Rocket',
+    description: 'Business and startup capital',
+    example: 'Bitcoin startup seed round',
+    color: 'bg-blue-100 text-blue-700 border-blue-200'
+  }, {
+    name: 'Creative Projects',
+    icon: 'Palette',
+    description: 'Art, music, and creative endeavors',
+    example: 'Independent film project',
+    color: 'bg-purple-100 text-purple-700 border-purple-200'
+  }, {
+    name: 'Community Initiatives',
+    icon: 'Users',
+    description: 'Local community projects',
+    example: 'Bitcoin meetup funding',
+    color: 'bg-green-100 text-green-700 border-green-200'
+  }, {
+    name: 'Educational Campaigns',
+    icon: 'GraduationCap',
+    description: 'Education and awareness projects',
+    example: 'Bitcoin education program',
+    color: 'bg-orange-100 text-orange-700 border-orange-200'
+  }, {
+    name: 'Emergency Relief',
+    icon: 'AlertTriangle',
+    description: 'Crisis response and emergency aid',
+    example: 'Natural disaster relief',
+    color: 'bg-pink-100 text-pink-700 border-pink-200'
+  }],
+  capabilities: ['Campaign management', 'Bitcoin payment processing', 'Goal tracking and milestones', 'Donor communication', 'Social media integration', 'Transparent fund allocation', 'Multi-currency support', 'Automated refunds', 'Tax receipt generation', 'Campaign analytics'],
+  useCases: ['Raise funds for charitable causes', 'Launch startup funding campaigns', 'Support creative and artistic projects', 'Fund community development initiatives'],
+  marketTools: [{
+    name: 'GoFundMe',
+    description: 'Popular crowdfunding platform',
+    url: 'https://gofundme.com',
+    icon: 'Heart',
+    color: 'bg-green-100 text-green-600'
+  }, {
+    name: 'Kickstarter',
+    description: 'Creative project funding',
+    url: 'https://kickstarter.com',
+    icon: 'Rocket',
+    color: 'bg-blue-100 text-blue-600'
+  }, {
+    name: 'Indiegogo',
+    description: 'Flexible funding campaigns',
+    url: 'https://indiegogo.com',
+    icon: 'Target',
+    color: 'bg-pink-100 text-pink-600'
+  }]
+};
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfczZrMmFlM3I2IiwicGF0aCIsImhhc2giLCJnbG9iYWwiLCJGdW5jdGlvbiIsImdjdiIsImNvdmVyYWdlRGF0YSIsInN0YXRlbWVudE1hcCIsInN0YXJ0IiwibGluZSIsImNvbHVtbiIsImVuZCIsImZuTWFwIiwiYnJhbmNoTWFwIiwicyIsImYiLCJiIiwiaW5wdXRTb3VyY2VNYXAiLCJmaWxlIiwibWFwcGluZ3MiLCJuYW1lcyIsInNvdXJjZXMiLCJzb3VyY2VzQ29udGVudCIsInZlcnNpb24iLCJfY292ZXJhZ2VTY2hlbWEiLCJjb3ZlcmFnZSIsImFjdHVhbENvdmVyYWdlIiwiZXhwb3J0cyIsImZ1bmRyYWlzaW5nIiwiaWQiLCJuYW1lIiwiaWNvbiIsImNvbG9yIiwicHJpbWFyeSIsImdyYWRpZW50IiwiYmciLCJ0ZXh0IiwiYm9yZGVyIiwiZGVzY3JpcHRpb24iLCJsb25nRGVzY3JpcHRpb24iLCJzdGF0dXMiLCJ0aW1lbGluZSIsInJvdXRlcyIsImxhbmRpbmciLCJkZW1vIiwiY29taW5nU29vbiIsImZlYXR1cmVzIiwidGl0bGUiLCJ0eXBlcyIsImV4YW1wbGUiLCJjYXBhYmlsaXRpZXMiLCJ1c2VDYXNlcyIsIm1hcmtldFRvb2xzIiwidXJsIl0sInNvdXJjZXMiOlsiL2hvbWUvZy9kZXYvb3JhbmdlY2F0L3NyYy9kYXRhL2luaXRpYXRpdmVzL2Z1bmRyYWlzaW5nLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxuICogRlVORFJBSVNJTkcgSU5JVElBVElWRSBNT0RVTEVcbiAqIFxuICogQ3JlYXRlZDogMjAyNS0wMS0wOVxuICogTGFzdCBNb2RpZmllZDogMjAyNS0wMS0wOVxuICogTGFzdCBNb2RpZmllZCBTdW1tYXJ5OiBFeHRyYWN0ZWQgZnJvbSBtYWluIGluaXRpYXRpdmVzLnRzIGZvciBtb2R1bGFyIGFyY2hpdGVjdHVyZVxuICovXG5cbmltcG9ydCB0eXBlIHsgSW5pdGlhdGl2ZSB9IGZyb20gJ0AvdHlwZXMvaW5pdGlhdGl2ZSc7XG5cbmV4cG9ydCBjb25zdCBmdW5kcmFpc2luZzogSW5pdGlhdGl2ZSA9IHtcbiAgaWQ6ICdmdW5kcmFpc2luZycsXG4gIG5hbWU6ICdGdW5kcmFpc2luZycsXG4gIGljb246ICdUYXJnZXQnLFxuICBjb2xvcjoge1xuICAgIHByaW1hcnk6ICdyZWQtNjAwJyxcbiAgICBncmFkaWVudDogJ2Zyb20tcmVkLTUwMCB0by1waW5rLTUwMCcsXG4gICAgYmc6ICdyZWQtMTAwJyxcbiAgICB0ZXh0OiAncmVkLTYwMCcsXG4gICAgYm9yZGVyOiAncmVkLTIwMCdcbiAgfSxcbiAgZGVzY3JpcHRpb246ICdMYXVuY2ggZnVuZHJhaXNpbmcgY2FtcGFpZ25zIGZvciBjYXVzZXMsIHN0YXJ0dXBzLCBhbmQgY3JlYXRpdmUgcHJvamVjdHMgd2l0aCBCaXRjb2luLXBvd2VyZWQgdHJhbnNwYXJlbmN5LicsXG4gIGxvbmdEZXNjcmlwdGlvbjogJ0NyZWF0ZSBjb21wZWxsaW5nIGNhbXBhaWducywgYWNjZXB0IEJpdGNvaW4gZG9uYXRpb25zLCB0cmFjayBwcm9ncmVzcyB0cmFuc3BhcmVudGx5LCBhbmQgYnVpbGQgdHJ1c3Qgd2l0aCB5b3VyIHN1cHBvcnRlcnMgdGhyb3VnaCBpbW11dGFibGUgZG9uYXRpb24gcmVjb3Jkcy4nLFxuICBzdGF0dXM6ICdhdmFpbGFibGUnLFxuICB0aW1lbGluZTogJ0F2YWlsYWJsZSBOb3cnLFxuICByb3V0ZXM6IHtcbiAgICBsYW5kaW5nOiAnL2Z1bmRyYWlzaW5nJyxcbiAgICBkZW1vOiAnL2RlbW8vZnVuZHJhaXNpbmcnLFxuICAgIGNvbWluZ1Nvb246ICcvZnVuZHJhaXNpbmcnXG4gIH0sXG4gIGZlYXR1cmVzOiBbXG4gICAge1xuICAgICAgaWNvbjogJ1RhcmdldCcsXG4gICAgICB0aXRsZTogJ0NhbXBhaWduIENyZWF0aW9uJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnQ3JlYXRlIGNvbXBlbGxpbmcgZnVuZHJhaXNpbmcgY2FtcGFpZ25zIHdpdGggcmljaCBtZWRpYSBhbmQgdHJhbnNwYXJlbnQgZ29hbHMuJyxcbiAgICAgIGNvbG9yOiAndGV4dC1ibHVlLTYwMCBiZy1ibHVlLTEwMCdcbiAgICB9LFxuICAgIHtcbiAgICAgIGljb246ICdXYWxsZXQnLFxuICAgICAgdGl0bGU6ICdCaXRjb2luIERvbmF0aW9ucycsXG4gICAgICBkZXNjcmlwdGlvbjogJ0FjY2VwdCBCaXRjb2luIGFuZCBMaWdodG5pbmcgZG9uYXRpb25zIHdpdGggYXV0b21hdGljIGNvbnZlcnNpb24gb3B0aW9ucy4nLFxuICAgICAgY29sb3I6ICd0ZXh0LW9yYW5nZS02MDAgYmctb3JhbmdlLTEwMCdcbiAgICB9LFxuICAgIHtcbiAgICAgIGljb246ICdCYXJDaGFydCcsXG4gICAgICB0aXRsZTogJ1Byb2dyZXNzIFRyYWNraW5nJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnUmVhbC10aW1lIHByb2dyZXNzIHRyYWNraW5nIHdpdGggdHJhbnNwYXJlbnQgZG9uYXRpb24gcmVjb3JkcyBvbiB0aGUgYmxvY2tjaGFpbi4nLFxuICAgICAgY29sb3I6ICd0ZXh0LWdyZWVuLTYwMCBiZy1ncmVlbi0xMDAnXG4gICAgfSxcbiAgICB7XG4gICAgICBpY29uOiAnU2hpZWxkJyxcbiAgICAgIHRpdGxlOiAnVHJ1c3QgJiBUcmFuc3BhcmVuY3knLFxuICAgICAgZGVzY3JpcHRpb246ICdBbGwgZG9uYXRpb25zIGFyZSByZWNvcmRlZCBpbW11dGFibHksIGVuc3VyaW5nIGNvbXBsZXRlIHRyYW5zcGFyZW5jeSBmb3Igc3VwcG9ydGVycy4nLFxuICAgICAgY29sb3I6ICd0ZXh0LXB1cnBsZS02MDAgYmctcHVycGxlLTEwMCdcbiAgICB9LFxuICAgIHtcbiAgICAgIGljb246ICdVc2VycycsXG4gICAgICB0aXRsZTogJ1NvY2lhbCBTaGFyaW5nJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnQnVpbHQtaW4gc29jaWFsIHNoYXJpbmcgdG9vbHMgdG8gYW1wbGlmeSB5b3VyIGNhbXBhaWduIHJlYWNoIGFuZCBlbmdhZ2VtZW50LicsXG4gICAgICBjb2xvcjogJ3RleHQtcGluay02MDAgYmctcGluay0xMDAnXG4gICAgfSxcbiAgICB7XG4gICAgICBpY29uOiAnQmVsbCcsXG4gICAgICB0aXRsZTogJ1NtYXJ0IE5vdGlmaWNhdGlvbnMnLFxuICAgICAgZGVzY3JpcHRpb246ICdBdXRvbWF0ZWQgdXBkYXRlcyB0byBzdXBwb3J0ZXJzIGFib3V0IGNhbXBhaWduIG1pbGVzdG9uZXMgYW5kIHByb2dyZXNzLicsXG4gICAgICBjb2xvcjogJ3RleHQteWVsbG93LTYwMCBiZy15ZWxsb3ctMTAwJ1xuICAgIH1cbiAgXSxcbiAgdHlwZXM6IFtcbiAgICB7IFxuICAgICAgbmFtZTogJ0NoYXJpdHkgRnVuZHJhaXNpbmcnLCBcbiAgICAgIGljb246ICdIZWFydCcsXG4gICAgICBkZXNjcmlwdGlvbjogJ05vbi1wcm9maXQgYW5kIGNoYXJpdGFibGUgY2F1c2VzJyxcbiAgICAgIGV4YW1wbGU6ICdEaXNhc3RlciByZWxpZWYgZnVuZCcsXG4gICAgICBjb2xvcjogJ2JnLXJlZC0xMDAgdGV4dC1yZWQtNzAwIGJvcmRlci1yZWQtMjAwJ1xuICAgIH0sXG4gICAgeyBcbiAgICAgIG5hbWU6ICdTdGFydHVwIEZ1bmRyYWlzaW5nJywgXG4gICAgICBpY29uOiAnUm9ja2V0JyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnQnVzaW5lc3MgYW5kIHN0YXJ0dXAgY2FwaXRhbCcsXG4gICAgICBleGFtcGxlOiAnQml0Y29pbiBzdGFydHVwIHNlZWQgcm91bmQnLFxuICAgICAgY29sb3I6ICdiZy1ibHVlLTEwMCB0ZXh0LWJsdWUtNzAwIGJvcmRlci1ibHVlLTIwMCdcbiAgICB9LFxuICAgIHsgXG4gICAgICBuYW1lOiAnQ3JlYXRpdmUgUHJvamVjdHMnLCBcbiAgICAgIGljb246ICdQYWxldHRlJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnQXJ0LCBtdXNpYywgYW5kIGNyZWF0aXZlIGVuZGVhdm9ycycsXG4gICAgICBleGFtcGxlOiAnSW5kZXBlbmRlbnQgZmlsbSBwcm9qZWN0JyxcbiAgICAgIGNvbG9yOiAnYmctcHVycGxlLTEwMCB0ZXh0LXB1cnBsZS03MDAgYm9yZGVyLXB1cnBsZS0yMDAnXG4gICAgfSxcbiAgICB7IFxuICAgICAgbmFtZTogJ0NvbW11bml0eSBJbml0aWF0aXZlcycsIFxuICAgICAgaWNvbjogJ1VzZXJzJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnTG9jYWwgY29tbXVuaXR5IHByb2plY3RzJyxcbiAgICAgIGV4YW1wbGU6ICdCaXRjb2luIG1lZXR1cCBmdW5kaW5nJyxcbiAgICAgIGNvbG9yOiAnYmctZ3JlZW4tMTAwIHRleHQtZ3JlZW4tNzAwIGJvcmRlci1ncmVlbi0yMDAnXG4gICAgfSxcbiAgICB7IFxuICAgICAgbmFtZTogJ0VkdWNhdGlvbmFsIENhbXBhaWducycsIFxuICAgICAgaWNvbjogJ0dyYWR1YXRpb25DYXAnLFxuICAgICAgZGVzY3JpcHRpb246ICdFZHVjYXRpb24gYW5kIGF3YXJlbmVzcyBwcm9qZWN0cycsXG4gICAgICBleGFtcGxlOiAnQml0Y29pbiBlZHVjYXRpb24gcHJvZ3JhbScsXG4gICAgICBjb2xvcjogJ2JnLW9yYW5nZS0xMDAgdGV4dC1vcmFuZ2UtNzAwIGJvcmRlci1vcmFuZ2UtMjAwJ1xuICAgIH0sXG4gICAgeyBcbiAgICAgIG5hbWU6ICdFbWVyZ2VuY3kgUmVsaWVmJywgXG4gICAgICBpY29uOiAnQWxlcnRUcmlhbmdsZScsXG4gICAgICBkZXNjcmlwdGlvbjogJ0NyaXNpcyByZXNwb25zZSBhbmQgZW1lcmdlbmN5IGFpZCcsXG4gICAgICBleGFtcGxlOiAnTmF0dXJhbCBkaXNhc3RlciByZWxpZWYnLFxuICAgICAgY29sb3I6ICdiZy1waW5rLTEwMCB0ZXh0LXBpbmstNzAwIGJvcmRlci1waW5rLTIwMCdcbiAgICB9XG4gIF0sXG4gIGNhcGFiaWxpdGllczogW1xuICAgICdDYW1wYWlnbiBtYW5hZ2VtZW50JyxcbiAgICAnQml0Y29pbiBwYXltZW50IHByb2Nlc3NpbmcnLFxuICAgICdHb2FsIHRyYWNraW5nIGFuZCBtaWxlc3RvbmVzJyxcbiAgICAnRG9ub3IgY29tbXVuaWNhdGlvbicsXG4gICAgJ1NvY2lhbCBtZWRpYSBpbnRlZ3JhdGlvbicsXG4gICAgJ1RyYW5zcGFyZW50IGZ1bmQgYWxsb2NhdGlvbicsXG4gICAgJ011bHRpLWN1cnJlbmN5IHN1cHBvcnQnLFxuICAgICdBdXRvbWF0ZWQgcmVmdW5kcycsXG4gICAgJ1RheCByZWNlaXB0IGdlbmVyYXRpb24nLFxuICAgICdDYW1wYWlnbiBhbmFseXRpY3MnXG4gIF0sXG4gIHVzZUNhc2VzOiBbXG4gICAgJ1JhaXNlIGZ1bmRzIGZvciBjaGFyaXRhYmxlIGNhdXNlcycsXG4gICAgJ0xhdW5jaCBzdGFydHVwIGZ1bmRpbmcgY2FtcGFpZ25zJyxcbiAgICAnU3VwcG9ydCBjcmVhdGl2ZSBhbmQgYXJ0aXN0aWMgcHJvamVjdHMnLFxuICAgICdGdW5kIGNvbW11bml0eSBkZXZlbG9wbWVudCBpbml0aWF0aXZlcydcbiAgXSxcbiAgbWFya2V0VG9vbHM6IFtcbiAgICB7XG4gICAgICBuYW1lOiAnR29GdW5kTWUnLFxuICAgICAgZGVzY3JpcHRpb246ICdQb3B1bGFyIGNyb3dkZnVuZGluZyBwbGF0Zm9ybScsXG4gICAgICB1cmw6ICdodHRwczovL2dvZnVuZG1lLmNvbScsXG4gICAgICBpY29uOiAnSGVhcnQnLFxuICAgICAgY29sb3I6ICdiZy1ncmVlbi0xMDAgdGV4dC1ncmVlbi02MDAnXG4gICAgfSxcbiAgICB7XG4gICAgICBuYW1lOiAnS2lja3N0YXJ0ZXInLFxuICAgICAgZGVzY3JpcHRpb246ICdDcmVhdGl2ZSBwcm9qZWN0IGZ1bmRpbmcnLFxuICAgICAgdXJsOiAnaHR0cHM6Ly9raWNrc3RhcnRlci5jb20nLFxuICAgICAgaWNvbjogJ1JvY2tldCcsXG4gICAgICBjb2xvcjogJ2JnLWJsdWUtMTAwIHRleHQtYmx1ZS02MDAnXG4gICAgfSxcbiAgICB7XG4gICAgICBuYW1lOiAnSW5kaWVnb2dvJyxcbiAgICAgIGRlc2NyaXB0aW9uOiAnRmxleGlibGUgZnVuZGluZyBjYW1wYWlnbnMnLFxuICAgICAgdXJsOiAnaHR0cHM6Ly9pbmRpZWdvZ28uY29tJyxcbiAgICAgIGljb246ICdUYXJnZXQnLFxuICAgICAgY29sb3I6ICdiZy1waW5rLTEwMCB0ZXh0LXBpbmstNjAwJ1xuICAgIH1cbiAgXVxufTsgIl0sIm1hcHBpbmdzIjoiOztBQUFBOzs7Ozs7O0FBQUE7QUFBQSxTQUFBQSxjQUFBO0VBQUEsSUFBQUMsSUFBQTtFQUFBLElBQUFDLElBQUE7RUFBQSxJQUFBQyxNQUFBLE9BQUFDLFFBQUE7RUFBQSxJQUFBQyxHQUFBO0VBQUEsSUFBQUMsWUFBQTtJQUFBTCxJQUFBO0lBQUFNLFlBQUE7TUFBQTtRQUFBQyxLQUFBO1VBQUFDLElBQUE7VUFBQUMsTUFBQTtRQUFBO1FBQUFDLEdBQUE7VUFBQUYsSUFBQTtVQUFBQyxNQUFBO1FBQUE7TUFBQTtNQUFBO1FBQUFGLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO01BQUE7UUFBQUYsS0FBQTtVQUFBQyxJQUFBO1VBQUFDLE1BQUE7UUFBQTtRQUFBQyxHQUFBO1VBQUFGLElBQUE7VUFBQUMsTUFBQTtRQUFBO01BQUE7SUFBQTtJQUFBRSxLQUFBO0lBQUFDLFNBQUE7SUFBQUMsQ0FBQTtNQUFBO01BQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7SUFBQUMsQ0FBQTtJQUFBQyxjQUFBO01BQUFDLElBQUE7TUFBQUMsUUFBQTtNQUFBQyxLQUFBO01BQUFDLE9BQUE7TUFBQUMsY0FBQTtNQUFBQyxPQUFBO0lBQUE7SUFBQUMsZUFBQTtJQUFBdEIsSUFBQTtFQUFBO0VBQUEsSUFBQXVCLFFBQUEsR0FBQXRCLE1BQUEsQ0FBQUUsR0FBQSxNQUFBRixNQUFBLENBQUFFLEdBQUE7RUFBQSxLQUFBb0IsUUFBQSxDQUFBeEIsSUFBQSxLQUFBd0IsUUFBQSxDQUFBeEIsSUFBQSxFQUFBQyxJQUFBLEtBQUFBLElBQUE7SUFBQXVCLFFBQUEs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

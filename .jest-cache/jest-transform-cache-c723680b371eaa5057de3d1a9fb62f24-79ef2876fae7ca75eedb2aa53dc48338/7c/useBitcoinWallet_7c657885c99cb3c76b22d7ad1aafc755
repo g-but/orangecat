@@ -1,0 +1,573 @@
+05cae7140ff19a090e015cb4dcc05f01
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_11r69ashke() {
+  var path = "/home/g/dev/orangecat/src/hooks/useBitcoinWallet.ts";
+  var hash = "08cbd689f4f3dad90e7f0e562d321b84646d0245";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/hooks/useBitcoinWallet.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 0
+        },
+        end: {
+          line: 3,
+          column: 62
+        }
+      },
+      "1": {
+        start: {
+          line: 4,
+          column: 0
+        },
+        end: {
+          line: 4,
+          column: 44
+        }
+      },
+      "2": {
+        start: {
+          line: 5,
+          column: 16
+        },
+        end: {
+          line: 5,
+          column: 32
+        }
+      },
+      "3": {
+        start: {
+          line: 6,
+          column: 18
+        },
+        end: {
+          line: 6,
+          column: 47
+        }
+      },
+      "4": {
+        start: {
+          line: 7,
+          column: 17
+        },
+        end: {
+          line: 7,
+          column: 42
+        }
+      },
+      "5": {
+        start: {
+          line: 9,
+          column: 40
+        },
+        end: {
+          line: 9,
+          column: 67
+        }
+      },
+      "6": {
+        start: {
+          line: 10,
+          column: 38
+        },
+        end: {
+          line: 10,
+          column: 65
+        }
+      },
+      "7": {
+        start: {
+          line: 11,
+          column: 30
+        },
+        end: {
+          line: 11,
+          column: 57
+        }
+      },
+      "8": {
+        start: {
+          line: 12,
+          column: 22
+        },
+        end: {
+          line: 30,
+          column: 23
+        }
+      },
+      "9": {
+        start: {
+          line: 13,
+          column: 8
+        },
+        end: {
+          line: 16,
+          column: 9
+        }
+      },
+      "10": {
+        start: {
+          line: 14,
+          column: 12
+        },
+        end: {
+          line: 14,
+          column: 32
+        }
+      },
+      "11": {
+        start: {
+          line: 15,
+          column: 12
+        },
+        end: {
+          line: 15,
+          column: 19
+        }
+      },
+      "12": {
+        start: {
+          line: 17,
+          column: 8
+        },
+        end: {
+          line: 29,
+          column: 9
+        }
+      },
+      "13": {
+        start: {
+          line: 18,
+          column: 12
+        },
+        end: {
+          line: 18,
+          column: 31
+        }
+      },
+      "14": {
+        start: {
+          line: 19,
+          column: 12
+        },
+        end: {
+          line: 19,
+          column: 27
+        }
+      },
+      "15": {
+        start: {
+          line: 20,
+          column: 25
+        },
+        end: {
+          line: 20,
+          column: 83
+        }
+      },
+      "16": {
+        start: {
+          line: 21,
+          column: 12
+        },
+        end: {
+          line: 21,
+          column: 32
+        }
+      },
+      "17": {
+        start: {
+          line: 24,
+          column: 12
+        },
+        end: {
+          line: 24,
+          column: 81
+        }
+      },
+      "18": {
+        start: {
+          line: 25,
+          column: 12
+        },
+        end: {
+          line: 25,
+          column: 77
+        }
+      },
+      "19": {
+        start: {
+          line: 28,
+          column: 12
+        },
+        end: {
+          line: 28,
+          column: 32
+        }
+      },
+      "20": {
+        start: {
+          line: 31,
+          column: 4
+        },
+        end: {
+          line: 36,
+          column: 20
+        }
+      },
+      "21": {
+        start: {
+          line: 32,
+          column: 8
+        },
+        end: {
+          line: 32,
+          column: 20
+        }
+      },
+      "22": {
+        start: {
+          line: 34,
+          column: 27
+        },
+        end: {
+          line: 34,
+          column: 64
+        }
+      },
+      "23": {
+        start: {
+          line: 35,
+          column: 8
+        },
+        end: {
+          line: 35,
+          column: 47
+        }
+      },
+      "24": {
+        start: {
+          line: 35,
+          column: 21
+        },
+        end: {
+          line: 35,
+          column: 46
+        }
+      },
+      "25": {
+        start: {
+          line: 37,
+          column: 4
+        },
+        end: {
+          line: 37,
+          column: 64
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "useBitcoinWallet",
+        decl: {
+          start: {
+            line: 8,
+            column: 9
+          },
+          end: {
+            line: 8,
+            column: 25
+          }
+        },
+        loc: {
+          start: {
+            line: 8,
+            column: 41
+          },
+          end: {
+            line: 38,
+            column: 1
+          }
+        },
+        line: 8
+      },
+      "1": {
+        name: "(anonymous_1)",
+        decl: {
+          start: {
+            line: 12,
+            column: 47
+          },
+          end: {
+            line: 12,
+            column: 48
+          }
+        },
+        loc: {
+          start: {
+            line: 12,
+            column: 59
+          },
+          end: {
+            line: 30,
+            column: 5
+          }
+        },
+        line: 12
+      },
+      "2": {
+        name: "(anonymous_2)",
+        decl: {
+          start: {
+            line: 31,
+            column: 27
+          },
+          end: {
+            line: 31,
+            column: 28
+          }
+        },
+        loc: {
+          start: {
+            line: 31,
+            column: 33
+          },
+          end: {
+            line: 36,
+            column: 5
+          }
+        },
+        line: 31
+      },
+      "3": {
+        name: "(anonymous_3)",
+        decl: {
+          start: {
+            line: 35,
+            column: 15
+          },
+          end: {
+            line: 35,
+            column: 16
+          }
+        },
+        loc: {
+          start: {
+            line: 35,
+            column: 21
+          },
+          end: {
+            line: 35,
+            column: 46
+          }
+        },
+        line: 35
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 13,
+            column: 8
+          },
+          end: {
+            line: 16,
+            column: 9
+          }
+        },
+        type: "if",
+        locations: [{
+          start: {
+            line: 13,
+            column: 8
+          },
+          end: {
+            line: 16,
+            column: 9
+          }
+        }, {
+          start: {
+            line: undefined,
+            column: undefined
+          },
+          end: {
+            line: undefined,
+            column: undefined
+          }
+        }],
+        line: 13
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0,
+      "19": 0,
+      "20": 0,
+      "21": 0,
+      "22": 0,
+      "23": 0,
+      "24": 0,
+      "25": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0
+    },
+    b: {
+      "0": [0, 0]
+    },
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/hooks/useBitcoinWallet.ts",
+      mappings: "AAAA,YAAY,CAAA;;;AAOZ,4CAkCC;AAvCD,iCAAyD;AACzD,gDAA4D;AAE5D,2CAAwC;AAExC,SAAgB,gBAAgB,CAAC,aAAqB;IACpD,MAAM,CAAC,UAAU,EAAE,aAAa,CAAC,GAAG,IAAA,gBAAQ,EAA2B,IAAI,CAAC,CAAC;IAC7E,MAAM,CAAC,SAAS,EAAE,YAAY,CAAC,GAAG,IAAA,gBAAQ,EAAU,IAAI,CAAC,CAAC;IAC1D,MAAM,CAAC,KAAK,EAAE,QAAQ,CAAC,GAAG,IAAA,gBAAQ,EAAgB,IAAI,CAAC,CAAC;IAExD,MAAM,SAAS,GAAG,IAAA,mBAAW,EAAC,KAAK,IAAI,EAAE;QACvC,IAAI,CAAC,aAAa,EAAE,CAAC;YACnB,YAAY,CAAC,KAAK,CAAC,CAAC;YACpB,OAAO;QACT,CAAC;QAED,IAAI,CAAC;YACH,YAAY,CAAC,IAAI,CAAC,CAAC;YACnB,QAAQ,CAAC,IAAI,CAAC,CAAC;YACf,MAAM,IAAI,GAAG,MAAM,IAAA,gCAAsB,EAAC,aAAa,CAAC,CAAC;YACzD,aAAa,CAAC,IAAI,CAAC,CAAC;QACtB,CAAC;QAAC,OAAO,GAAG,EAAE,CAAC;YACb,eAAM,CAAC,KAAK,CAAC,6BAA6B,EAAE,GAAG,EAAE,SAAS,CAAC,CAAC;YAC5D,QAAQ,CAAC,sDAAsD,CAAC,CAAC;QACnE,CAAC;gBAAS,CAAC;YACT,YAAY,CAAC,KAAK,CAAC,CAAC;QACtB,CAAC;IACH,CAAC,EAAE,CAAC,aAAa,CAAC,CAAC,CAAC;IAEpB,IAAA,iBAAS,EAAC,GAAG,EAAE;QACb,SAAS,EAAE,CAAC;QAEZ,sCAAsC;QACtC,MAAM,UAAU,GAAG,WAAW,CAAC,SAAS,EAAE,CAAC,GAAG,EAAE,GAAG,IAAI,CAAC,CAAC;QAEzD,OAAO,GAAG,EAAE,CAAC,aAAa,CAAC,UAAU,CAAC,CAAC;IACzC,CAAC,EAAE,CAAC,SAAS,CAAC,CAAC,CAAC;IAEhB,OAAO,EAAE,UAAU,EAAE,SAAS,EAAE,KAAK,EAAE,OAAO,EAAE,SAAS,EAAE,CAAC;AAC9D,CAAC",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/hooks/useBitcoinWallet.ts"],
+      sourcesContent: ["'use client'\n\nimport { useState, useEffect, useCallback } from 'react';\nimport { fetchBitcoinWalletData } from '@/services/bitcoin';\nimport { BitcoinWalletData } from '@/types/bitcoin/index';\nimport { logger } from '@/utils/logger';\n\nexport function useBitcoinWallet(walletAddress: string) {\n  const [walletData, setWalletData] = useState<BitcoinWalletData | null>(null);\n  const [isLoading, setIsLoading] = useState<boolean>(true);\n  const [error, setError] = useState<string | null>(null);\n\n  const fetchData = useCallback(async () => {\n    if (!walletAddress) {\n      setIsLoading(false);\n      return;\n    }\n\n    try {\n      setIsLoading(true);\n      setError(null);\n      const data = await fetchBitcoinWalletData(walletAddress);\n      setWalletData(data);\n    } catch (err) {\n      logger.error('Error fetching wallet data:', err, 'Bitcoin');\n      setError('Failed to fetch wallet data. Please try again later.');\n    } finally {\n      setIsLoading(false);\n    }\n  }, [walletAddress]);\n\n  useEffect(() => {\n    fetchData();\n\n    // Refresh wallet data every 5 minutes\n    const intervalId = setInterval(fetchData, 5 * 60 * 1000);\n\n    return () => clearInterval(intervalId);\n  }, [fetchData]);\n\n  return { walletData, isLoading, error, refresh: fetchData };\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "08cbd689f4f3dad90e7f0e562d321b84646d0245"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_11r69ashke = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_11r69ashke();
+cov_11r69ashke().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_11r69ashke().s[1]++;
+exports.useBitcoinWallet = useBitcoinWallet;
+const react_1 =
+/* istanbul ignore next */
+(cov_11r69ashke().s[2]++, require("react"));
+const bitcoin_1 =
+/* istanbul ignore next */
+(cov_11r69ashke().s[3]++, require("@/services/bitcoin"));
+const logger_1 =
+/* istanbul ignore next */
+(cov_11r69ashke().s[4]++, require("@/utils/logger"));
+function useBitcoinWallet(walletAddress) {
+  /* istanbul ignore next */
+  cov_11r69ashke().f[0]++;
+  const [walletData, setWalletData] =
+  /* istanbul ignore next */
+  (cov_11r69ashke().s[5]++, (0, react_1.useState)(null));
+  const [isLoading, setIsLoading] =
+  /* istanbul ignore next */
+  (cov_11r69ashke().s[6]++, (0, react_1.useState)(true));
+  const [error, setError] =
+  /* istanbul ignore next */
+  (cov_11r69ashke().s[7]++, (0, react_1.useState)(null));
+  const fetchData =
+  /* istanbul ignore next */
+  (cov_11r69ashke().s[8]++, (0, react_1.useCallback)(async () => {
+    /* istanbul ignore next */
+    cov_11r69ashke().f[1]++;
+    cov_11r69ashke().s[9]++;
+    if (!walletAddress) {
+      /* istanbul ignore next */
+      cov_11r69ashke().b[0][0]++;
+      cov_11r69ashke().s[10]++;
+      setIsLoading(false);
+      /* istanbul ignore next */
+      cov_11r69ashke().s[11]++;
+      return;
+    } else
+    /* istanbul ignore next */
+    {
+      cov_11r69ashke().b[0][1]++;
+    }
+    cov_11r69ashke().s[12]++;
+    try {
+      /* istanbul ignore next */
+      cov_11r69ashke().s[13]++;
+      setIsLoading(true);
+      /* istanbul ignore next */
+      cov_11r69ashke().s[14]++;
+      setError(null);
+      const data =
+      /* istanbul ignore next */
+      (cov_11r69ashke().s[15]++, await (0, bitcoin_1.fetchBitcoinWalletData)(walletAddress));
+      /* istanbul ignore next */
+      cov_11r69ashke().s[16]++;
+      setWalletData(data);
+    } catch (err) {
+      /* istanbul ignore next */
+      cov_11r69ashke().s[17]++;
+      logger_1.logger.error('Error fetching wallet data:', err, 'Bitcoin');
+      /* istanbul ignore next */
+      cov_11r69ashke().s[18]++;
+      setError('Failed to fetch wallet data. Please try again later.');
+    } finally {
+      /* istanbul ignore next */
+      cov_11r69ashke().s[19]++;
+      setIsLoading(false);
+    }
+  }, [walletAddress]));
+  /* istanbul ignore next */
+  cov_11r69ashke().s[20]++;
+  (0, react_1.useEffect)(() => {
+    /* istanbul ignore next */
+    cov_11r69ashke().f[2]++;
+    cov_11r69ashke().s[21]++;
+    fetchData();
+    // Refresh wallet data every 5 minutes
+    const intervalId =
+    /* istanbul ignore next */
+    (cov_11r69ashke().s[22]++, setInterval(fetchData, 5 * 60 * 1000));
+    /* istanbul ignore next */
+    cov_11r69ashke().s[23]++;
+    return () => {
+      /* istanbul ignore next */
+      cov_11r69ashke().f[3]++;
+      cov_11r69ashke().s[24]++;
+      return clearInterval(intervalId);
+    };
+  }, [fetchData]);
+  /* istanbul ignore next */
+  cov_11r69ashke().s[25]++;
+  return {
+    walletData,
+    isLoading,
+    error,
+    refresh: fetchData
+  };
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMTFyNjlhc2hrZSIsImFjdHVhbENvdmVyYWdlIiwicyIsImV4cG9ydHMiLCJ1c2VCaXRjb2luV2FsbGV0IiwicmVhY3RfMSIsInJlcXVpcmUiLCJiaXRjb2luXzEiLCJsb2dnZXJfMSIsIndhbGxldEFkZHJlc3MiLCJmIiwid2FsbGV0RGF0YSIsInNldFdhbGxldERhdGEiLCJ1c2VTdGF0ZSIsImlzTG9hZGluZyIsInNldElzTG9hZGluZyIsImVycm9yIiwic2V0RXJyb3IiLCJmZXRjaERhdGEiLCJ1c2VDYWxsYmFjayIsImIiLCJkYXRhIiwiZmV0Y2hCaXRjb2luV2FsbGV0RGF0YSIsImVyciIsImxvZ2dlciIsInVzZUVmZmVjdCIsImludGVydmFsSWQiLCJzZXRJbnRlcnZhbCIsImNsZWFySW50ZXJ2YWwiLCJyZWZyZXNoIl0sInNvdXJjZXMiOlsiL2hvbWUvZy9kZXYvb3JhbmdlY2F0L3NyYy9ob29rcy91c2VCaXRjb2luV2FsbGV0LnRzIl0sInNvdXJjZXNDb250ZW50IjpbIid1c2UgY2xpZW50J1xuXG5pbXBvcnQgeyB1c2VTdGF0ZSwgdXNlRWZmZWN0LCB1c2VDYWxsYmFjayB9IGZyb20gJ3JlYWN0JztcbmltcG9ydCB7IGZldGNoQml0Y29pbldhbGxldERhdGEgfSBmcm9tICdAL3NlcnZpY2VzL2JpdGNvaW4nO1xuaW1wb3J0IHsgQml0Y29pbldhbGxldERhdGEgfSBmcm9tICdAL3R5cGVzL2JpdGNvaW4vaW5kZXgnO1xuaW1wb3J0IHsgbG9nZ2VyIH0gZnJvbSAnQC91dGlscy9sb2dnZXInO1xuXG5leHBvcnQgZnVuY3Rpb24gdXNlQml0Y29pbldhbGxldCh3YWxsZXRBZGRyZXNzOiBzdHJpbmcpIHtcbiAgY29uc3QgW3dhbGxldERhdGEsIHNldFdhbGxldERhdGFdID0gdXNlU3RhdGU8Qml0Y29pbldhbGxldERhdGEgfCBudWxsPihudWxsKTtcbiAgY29uc3QgW2lzTG9hZGluZywgc2V0SXNMb2FkaW5nXSA9IHVzZVN0YXRlPGJvb2xlYW4+KHRydWUpO1xuICBjb25zdCBbZXJyb3IsIHNldEVycm9yXSA9IHVzZVN0YXRlPHN0cmluZyB8IG51bGw+KG51bGwpO1xuXG4gIGNvbnN0IGZldGNoRGF0YSA9IHVzZUNhbGxiYWNrKGFzeW5jICgpID0+IHtcbiAgICBpZiAoIXdhbGxldEFkZHJlc3MpIHtcbiAgICAgIHNldElzTG9hZGluZyhmYWxzZSk7XG4gICAgICByZXR1cm47XG4gICAgfVxuXG4gICAgdHJ5IHtcbiAgICAgIHNldElzTG9hZGluZyh0cnVlKTtcbiAgICAgIHNldEVycm9yKG51bGwpO1xuICAgICAgY29uc3QgZGF0YSA9IGF3YWl0IGZldGNoQml0Y29pbldhbGxldERhdGEod2FsbGV0QWRkcmVzcyk7XG4gICAgICBzZXRXYWxsZXREYXRhKGRhdGEpO1xuICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgbG9nZ2VyLmVycm9yKCdFcnJvciBmZXRjaGluZyB3YWxsZXQgZGF0YTonLCBlcnIsICdCaXRjb2luJyk7XG4gICAgICBzZXRFcnJvcignRmFpbGVkIHRvIGZldGNoIHdhbGxldCBkYXRhLiBQbGVhc2UgdHJ5IGFnYWluIGxhdGVyLicpO1xuICAgIH0gZmluYWxseSB7XG4gICAgICBzZXRJc0xvYWRpbmcoZmFsc2UpO1xuICAgIH1cbiAgfSwgW3dhbGxldEFkZHJlc3NdKTtcblxuICB1c2VFZmZlY3QoKCkgPT4ge1xuICAgIGZldGNoRGF0YSgpO1xuXG4gICAgLy8gUmVmcmVzaCB3YWxsZXQgZGF0YSBldmVyeSA1IG1pbnV0ZXNcbiAgICBjb25zdCBpbnRlcnZhbElkID0gc2V0SW50ZXJ2YWwoZmV0Y2hEYXRhLCA1ICogNjAgKiAxMDAwKTtcblxuICAgIHJldHVybiAoKSA9PiBjbGVhckludGVydmFsKGludGVydmFsSWQpO1xuICB9LCBbZmV0Y2hEYXRhXSk7XG5cbiAgcmV0dXJuIHsgd2FsbGV0RGF0YSwgaXNMb2FkaW5nLCBlcnJvciwgcmVmcmVzaDogZmV0Y2hEYXRhIH07XG59ICJdLCJtYXBwaW5ncyI6IkFBQUEsWUFBWTs7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

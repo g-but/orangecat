@@ -54,7 +54,11 @@
       "Bash(vercel alias:*)",
       "Bash(vercel env add:*)",
       "Bash(vercel env:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(test:*)",
+      "mcp__context7__resolve-library-id",
+      "mcp__puppeteer-enhanced__puppeteer_connect_active_tab",
+      "Bash(git describe:*)"
     ],
     "deny": []
   }

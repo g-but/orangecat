@@ -9,8 +9,8 @@ export async function GET(
     const { dimensions } = await params;
     
     // Parse dimensions (e.g., ['400', '250'] from /api/placeholder/400/250)
-    const width = parseInt(dimensions[0]) || 400;
-    const height = parseInt(dimensions[1]) || 250;
+    const width = dimensions && dimensions[0] ? parseInt(dimensions[0]) : 400;
+    const height = dimensions && dimensions[1] ? parseInt(dimensions[1]) : 250;
     
     // Validate dimensions
     if (width > 2000 || height > 2000 || width < 10 || height < 10) {

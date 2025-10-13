@@ -1,0 +1,645 @@
+2785ccd54ddaafc1710a013a553df61a
+'use client';
+"use strict";
+
+/* istanbul ignore next */
+function cov_1ycxgyjn0l() {
+  var path = "/home/g/dev/orangecat/src/app/(authenticated)/funding/page.tsx";
+  var hash = "3dafa98464849704884ef4548f1b8d459f4ca52a";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/app/(authenticated)/funding/page.tsx",
+    statementMap: {
+      "0": {
+        start: {
+          line: 3,
+          column: 22
+        },
+        end: {
+          line: 5,
+          column: 1
+        }
+      },
+      "1": {
+        start: {
+          line: 4,
+          column: 4
+        },
+        end: {
+          line: 4,
+          column: 62
+        }
+      },
+      "2": {
+        start: {
+          line: 6,
+          column: 0
+        },
+        end: {
+          line: 6,
+          column: 62
+        }
+      },
+      "3": {
+        start: {
+          line: 7,
+          column: 0
+        },
+        end: {
+          line: 7,
+          column: 30
+        }
+      },
+      "4": {
+        start: {
+          line: 8,
+          column: 22
+        },
+        end: {
+          line: 8,
+          column: 50
+        }
+      },
+      "5": {
+        start: {
+          line: 9,
+          column: 23
+        },
+        end: {
+          line: 9,
+          column: 46
+        }
+      },
+      "6": {
+        start: {
+          line: 11,
+          column: 21
+        },
+        end: {
+          line: 11,
+          column: 78
+        }
+      },
+      "7": {
+        start: {
+          line: 12,
+          column: 31
+        },
+        end: {
+          line: 12,
+          column: 98
+        }
+      },
+      "8": {
+        start: {
+          line: 13,
+          column: 23
+        },
+        end: {
+          line: 13,
+          column: 82
+        }
+      },
+      "9": {
+        start: {
+          line: 14,
+          column: 20
+        },
+        end: {
+          line: 14,
+          column: 76
+        }
+      },
+      "10": {
+        start: {
+          line: 15,
+          column: 27
+        },
+        end: {
+          line: 15,
+          column: 90
+        }
+      },
+      "11": {
+        start: {
+          line: 16,
+          column: 29
+        },
+        end: {
+          line: 16,
+          column: 94
+        }
+      },
+      "12": {
+        start: {
+          line: 17,
+          column: 35
+        },
+        end: {
+          line: 17,
+          column: 106
+        }
+      },
+      "13": {
+        start: {
+          line: 18,
+          column: 27
+        },
+        end: {
+          line: 18,
+          column: 90
+        }
+      },
+      "14": {
+        start: {
+          line: 20,
+          column: 22
+        },
+        end: {
+          line: 20,
+          column: 51
+        }
+      },
+      "15": {
+        start: {
+          line: 21,
+          column: 17
+        },
+        end: {
+          line: 58,
+          column: 1
+        }
+      },
+      "16": {
+        start: {
+          line: 59,
+          column: 21
+        },
+        end: {
+          line: 102,
+          column: 1
+        }
+      },
+      "17": {
+        start: {
+          line: 103,
+          column: 21
+        },
+        end: {
+          line: 114,
+          column: 1
+        }
+      },
+      "18": {
+        start: {
+          line: 116,
+          column: 4
+        },
+        end: {
+          line: 129,
+          column: 2356
+        }
+      }
+    },
+    fnMap: {
+      "0": {
+        name: "(anonymous_0)",
+        decl: {
+          start: {
+            line: 3,
+            column: 56
+          },
+          end: {
+            line: 3,
+            column: 57
+          }
+        },
+        loc: {
+          start: {
+            line: 3,
+            column: 71
+          },
+          end: {
+            line: 5,
+            column: 1
+          }
+        },
+        line: 3
+      },
+      "1": {
+        name: "FundingPage",
+        decl: {
+          start: {
+            line: 115,
+            column: 9
+          },
+          end: {
+            line: 115,
+            column: 20
+          }
+        },
+        loc: {
+          start: {
+            line: 115,
+            column: 23
+          },
+          end: {
+            line: 130,
+            column: 1
+          }
+        },
+        line: 115
+      }
+    },
+    branchMap: {
+      "0": {
+        loc: {
+          start: {
+            line: 3,
+            column: 22
+          },
+          end: {
+            line: 5,
+            column: 1
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 3,
+            column: 23
+          },
+          end: {
+            line: 3,
+            column: 27
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 31
+          },
+          end: {
+            line: 3,
+            column: 51
+          }
+        }, {
+          start: {
+            line: 3,
+            column: 56
+          },
+          end: {
+            line: 5,
+            column: 1
+          }
+        }],
+        line: 3
+      },
+      "1": {
+        loc: {
+          start: {
+            line: 4,
+            column: 11
+          },
+          end: {
+            line: 4,
+            column: 61
+          }
+        },
+        type: "cond-expr",
+        locations: [{
+          start: {
+            line: 4,
+            column: 37
+          },
+          end: {
+            line: 4,
+            column: 40
+          }
+        }, {
+          start: {
+            line: 4,
+            column: 43
+          },
+          end: {
+            line: 4,
+            column: 61
+          }
+        }],
+        line: 4
+      },
+      "2": {
+        loc: {
+          start: {
+            line: 4,
+            column: 12
+          },
+          end: {
+            line: 4,
+            column: 33
+          }
+        },
+        type: "binary-expr",
+        locations: [{
+          start: {
+            line: 4,
+            column: 12
+          },
+          end: {
+            line: 4,
+            column: 15
+          }
+        }, {
+          start: {
+            line: 4,
+            column: 19
+          },
+          end: {
+            line: 4,
+            column: 33
+          }
+        }],
+        line: 4
+      }
+    },
+    s: {
+      "0": 0,
+      "1": 0,
+      "2": 0,
+      "3": 0,
+      "4": 0,
+      "5": 0,
+      "6": 0,
+      "7": 0,
+      "8": 0,
+      "9": 0,
+      "10": 0,
+      "11": 0,
+      "12": 0,
+      "13": 0,
+      "14": 0,
+      "15": 0,
+      "16": 0,
+      "17": 0,
+      "18": 0
+    },
+    f: {
+      "0": 0,
+      "1": 0
+    },
+    b: {
+      "0": [0, 0, 0],
+      "1": [0, 0],
+      "2": [0, 0]
+    },
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/app/(authenticated)/funding/page.tsx",
+      mappings: "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",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/app/(authenticated)/funding/page.tsx"],
+      sourcesContent: ["'use client'\n\nimport { \n  Coins, \n  Target, \n  Heart, \n  Users, \n  Zap, \n  GitBranch,\n  TrendingUp,\n  Globe,\n  Award,\n  Lightbulb,\n  Handshake,\n  Rocket\n} from 'lucide-react'\n\n// Reusable components\nimport PageHeader from '@/components/pages/PageHeader'\nimport ValuePropositionCard from '@/components/pages/ValuePropositionCard'\nimport FeaturesGrid from '@/components/pages/FeaturesGrid'\nimport TypesGrid from '@/components/pages/TypesGrid'\nimport CapabilitiesList from '@/components/pages/CapabilitiesList'\nimport MarketToolsSection from '@/components/pages/MarketToolsSection'\nimport UniquePropositionSection from '@/components/pages/UniquePropositionSection'\nimport CallToActionCard from '@/components/pages/CallToActionCard'\n\n// Data\nimport { fundingTools, getRegionalToolsTitle, getRegionalToolsDescription } from '@/data/marketTools'\n\nconst features = [\n  {\n    icon: Target,\n    title: 'Project Funding',\n    description: 'Raise Bitcoin for creative projects, startups, and innovative ideas with global reach.',\n    color: 'text-green-600 bg-green-100'\n  },\n  {\n    icon: Heart,\n    title: 'Donation Campaigns',\n    description: 'Create fundraising campaigns for causes, charities, and community initiatives.',\n    color: 'text-red-600 bg-red-100'\n  },\n  {\n    icon: Users,\n    title: 'Recurring Support',\n    description: 'Build sustainable funding through recurring Bitcoin donations and subscriptions.',\n    color: 'text-purple-600 bg-purple-100'\n  },\n  {\n    icon: Globe,\n    title: 'Global Accessibility',\n    description: 'Accept funding from supporters worldwide without traditional banking barriers.',\n    color: 'text-blue-600 bg-blue-100'\n  },\n  {\n    icon: Zap,\n    title: 'Instant Payments',\n    description: 'Receive Bitcoin donations instantly with Lightning Network integration.',\n    color: 'text-yellow-600 bg-yellow-100'\n  },\n  {\n    icon: TrendingUp,\n    title: 'Transparent Analytics',\n    description: 'Track funding progress, donor engagement, and campaign performance in real-time.',\n    color: 'text-teal-600 bg-teal-100'\n  }\n]\n\nconst fundingTypes = [\n  { \n    name: 'Creative Projects', \n    icon: Lightbulb, \n    description: 'Art, music, writing, and creative endeavors',\n    example: 'Documentary film, music album',\n    color: 'bg-purple-100 text-purple-700 border-purple-200'\n  },\n  { \n    name: 'Tech Startups', \n    icon: Rocket, \n    description: 'Early-stage technology ventures',\n    example: 'Bitcoin app, fintech startup',\n    color: 'bg-blue-100 text-blue-700 border-blue-200'\n  },\n  { \n    name: 'Open Source', \n    icon: GitBranch, \n    description: 'Community-driven software development',\n    example: 'Bitcoin tools, developer libraries',\n    color: 'bg-gray-100 text-gray-700 border-gray-200'\n  },\n  { \n    name: 'Social Causes', \n    icon: Heart, \n    description: 'Charitable initiatives and community support',\n    example: 'Education program, disaster relief',\n    color: 'bg-red-100 text-red-700 border-red-200'\n  },\n  { \n    name: 'Content Creation', \n    icon: Award, \n    description: 'Ongoing content and educational material',\n    example: 'Podcast, educational courses',\n    color: 'bg-orange-100 text-orange-700 border-orange-200'\n  },\n  { \n    name: 'Community Projects', \n    icon: Handshake, \n    description: 'Local initiatives and community building',\n    example: 'Maker space, community garden',\n    color: 'bg-green-100 text-green-700 border-green-200'\n  }\n]\n\nconst capabilities = [\n  'Customizable funding campaign pages',\n  'Bitcoin and Lightning Network payments',\n  'Recurring donation subscriptions',\n  'Goal tracking and milestone rewards',\n  'Donor management and communication',\n  'Social sharing and promotion tools',\n  'Real-time analytics and reporting',\n  'Multi-currency display (BTC/CHF)',\n  'Global accessibility without barriers',\n  'Transparent fund distribution'\n]\n\nexport default function FundingPage() {\n  return (\n    <div className=\"max-w-6xl mx-auto space-y-12\">\n      \n      <PageHeader\n        icon={Coins}\n        iconColors=\"bg-gradient-to-r from-green-100 to-emerald-100\"\n        title=\"Funding\"\n        description=\"Raise Bitcoin for your projects, causes, and creative endeavors with global reach and zero traditional banking barriers.\"\n      />\n\n      <ValuePropositionCard\n        title=\"Fund Anything, From Anywhere\"\n        description=\"Whether you're launching a startup, creating art, or supporting a cause, our Bitcoin-native funding platform connects you with supporters worldwide. No payment processors, no geographic restrictions, just pure peer-to-peer funding.\"\n        bulletPoints={[\n          { text: \"Zero payment processor fees with Bitcoin\", color: \"bg-green-500\" },\n          { text: \"Global funding without banking barriers\", color: \"bg-green-500\" },\n          { text: \"Instant payments via Lightning Network\", color: \"bg-green-500\" },\n          { text: \"Transparent and accountable fund management\", color: \"bg-green-500\" }\n        ]}\n        cardTitle=\"Your Funding Campaign\"\n        cardIcon={Coins}\n        cardIconColors=\"bg-green-100 text-green-600\"\n        demoFields={[\n          { label: \"Funding Goal\", value: 50000, type: \"bitcoin\" },\n          { label: \"Raised So Far\", value: 32500, type: \"bitcoin\" },\n          { label: \"Supporters\", value: \"127\" }\n        ]}\n        statusIndicator={{\n          icon: TrendingUp,\n          text: \"65% funded\",\n          colors: \"bg-green-50 text-green-700\"\n        }}\n      />\n\n      <FeaturesGrid\n        title=\"Funding Platform Features\"\n        subtitle=\"Everything you need to run successful funding campaigns\"\n        features={features}\n      />\n\n      <TypesGrid\n        title=\"Any Type of Funding\"\n        subtitle=\"From creative projects to tech startups, social causes to open source\"\n        types={fundingTypes}\n      />\n\n      <CapabilitiesList\n        title=\"Complete Funding Suite\"\n        description=\"Bitcoin-native fundraising with global reach and transparent operations\"\n        capabilities={capabilities}\n        accentColor=\"green\"\n      />\n\n      <MarketToolsSection\n        title={getRegionalToolsTitle('funding')}\n        description={getRegionalToolsDescription('funding')}\n        tools={fundingTools}\n        footerMessage=\"Huge respect to these funding pioneers! We're building on their foundation with native Bitcoin integration, Lightning payments, and true global accessibility \uD83D\uDE80\"\n      />\n\n      <UniquePropositionSection\n        title=\"Our Unique DNA\"\n        subtitle=\"While others facilitate funding, we're pioneering the future of decentralized fundraising\"\n        bitcoinTitle=\"Bitcoin-Native\"\n        bitcoinDescription=\"True Bitcoin integration from the ground up. Lightning Network for instant micropayments, global accessibility without traditional banking, and sound money for sustainable funding.\"\n        aiTitle=\"AI-Powered\"\n        aiDescription=\"Smart campaign optimization, intelligent donor matching, automated progress tracking, and AI-driven insights to maximize funding success and engagement.\"\n        openSourceTitle=\"Open Source\"\n        openSourceDescription=\"Transparent fundraising with community governance. Audit our algorithms, contribute features, and help build the future of decentralized peer-to-peer funding.\"\n      />\n\n      <CallToActionCard\n        title=\"Ready to Fund Your Dream?\"\n        description=\"Start your funding campaign today and connect with Bitcoin supporters worldwide who believe in your vision and want to help make it reality.\"\n        primaryButtonText=\"Start Funding Campaign\"\n        primaryButtonIcon={Coins}\n        gradientColors=\"bg-gradient-to-r from-green-600 to-emerald-600\"\n        textColors=\"text-green-100\"\n        buttonColors=\"bg-white text-green-700 hover:bg-gray-100\"\n      />\n\n    </div>\n  )\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "3dafa98464849704884ef4548f1b8d459f4ca52a"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1ycxgyjn0l = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1ycxgyjn0l();
+var __importDefault =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[0]++,
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().b[0][0]++, this) &&
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().b[0][1]++, this.__importDefault) ||
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().b[0][2]++, function (mod) {
+  /* istanbul ignore next */
+  cov_1ycxgyjn0l().f[0]++;
+  cov_1ycxgyjn0l().s[1]++;
+  return /* istanbul ignore next */(cov_1ycxgyjn0l().b[2][0]++, mod) &&
+  /* istanbul ignore next */
+  (cov_1ycxgyjn0l().b[2][1]++, mod.__esModule) ?
+  /* istanbul ignore next */
+  (cov_1ycxgyjn0l().b[1][0]++, mod) :
+  /* istanbul ignore next */
+  (cov_1ycxgyjn0l().b[1][1]++, {
+    "default": mod
+  });
+}));
+/* istanbul ignore next */
+cov_1ycxgyjn0l().s[2]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+/* istanbul ignore next */
+cov_1ycxgyjn0l().s[3]++;
+exports.default = FundingPage;
+const jsx_runtime_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[4]++, require("react/jsx-runtime"));
+const lucide_react_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[5]++, require("lucide-react"));
+// Reusable components
+const PageHeader_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[6]++, __importDefault(require("@/components/pages/PageHeader")));
+const ValuePropositionCard_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[7]++, __importDefault(require("@/components/pages/ValuePropositionCard")));
+const FeaturesGrid_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[8]++, __importDefault(require("@/components/pages/FeaturesGrid")));
+const TypesGrid_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[9]++, __importDefault(require("@/components/pages/TypesGrid")));
+const CapabilitiesList_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[10]++, __importDefault(require("@/components/pages/CapabilitiesList")));
+const MarketToolsSection_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[11]++, __importDefault(require("@/components/pages/MarketToolsSection")));
+const UniquePropositionSection_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[12]++, __importDefault(require("@/components/pages/UniquePropositionSection")));
+const CallToActionCard_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[13]++, __importDefault(require("@/components/pages/CallToActionCard")));
+// Data
+const marketTools_1 =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[14]++, require("@/data/marketTools"));
+const features =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[15]++, [{
+  icon: lucide_react_1.Target,
+  title: 'Project Funding',
+  description: 'Raise Bitcoin for creative projects, startups, and innovative ideas with global reach.',
+  color: 'text-green-600 bg-green-100'
+}, {
+  icon: lucide_react_1.Heart,
+  title: 'Donation Campaigns',
+  description: 'Create fundraising campaigns for causes, charities, and community initiatives.',
+  color: 'text-red-600 bg-red-100'
+}, {
+  icon: lucide_react_1.Users,
+  title: 'Recurring Support',
+  description: 'Build sustainable funding through recurring Bitcoin donations and subscriptions.',
+  color: 'text-purple-600 bg-purple-100'
+}, {
+  icon: lucide_react_1.Globe,
+  title: 'Global Accessibility',
+  description: 'Accept funding from supporters worldwide without traditional banking barriers.',
+  color: 'text-blue-600 bg-blue-100'
+}, {
+  icon: lucide_react_1.Zap,
+  title: 'Instant Payments',
+  description: 'Receive Bitcoin donations instantly with Lightning Network integration.',
+  color: 'text-yellow-600 bg-yellow-100'
+}, {
+  icon: lucide_react_1.TrendingUp,
+  title: 'Transparent Analytics',
+  description: 'Track funding progress, donor engagement, and campaign performance in real-time.',
+  color: 'text-teal-600 bg-teal-100'
+}]);
+const fundingTypes =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[16]++, [{
+  name: 'Creative Projects',
+  icon: lucide_react_1.Lightbulb,
+  description: 'Art, music, writing, and creative endeavors',
+  example: 'Documentary film, music album',
+  color: 'bg-purple-100 text-purple-700 border-purple-200'
+}, {
+  name: 'Tech Startups',
+  icon: lucide_react_1.Rocket,
+  description: 'Early-stage technology ventures',
+  example: 'Bitcoin app, fintech startup',
+  color: 'bg-blue-100 text-blue-700 border-blue-200'
+}, {
+  name: 'Open Source',
+  icon: lucide_react_1.GitBranch,
+  description: 'Community-driven software development',
+  example: 'Bitcoin tools, developer libraries',
+  color: 'bg-gray-100 text-gray-700 border-gray-200'
+}, {
+  name: 'Social Causes',
+  icon: lucide_react_1.Heart,
+  description: 'Charitable initiatives and community support',
+  example: 'Education program, disaster relief',
+  color: 'bg-red-100 text-red-700 border-red-200'
+}, {
+  name: 'Content Creation',
+  icon: lucide_react_1.Award,
+  description: 'Ongoing content and educational material',
+  example: 'Podcast, educational courses',
+  color: 'bg-orange-100 text-orange-700 border-orange-200'
+}, {
+  name: 'Community Projects',
+  icon: lucide_react_1.Handshake,
+  description: 'Local initiatives and community building',
+  example: 'Maker space, community garden',
+  color: 'bg-green-100 text-green-700 border-green-200'
+}]);
+const capabilities =
+/* istanbul ignore next */
+(cov_1ycxgyjn0l().s[17]++, ['Customizable funding campaign pages', 'Bitcoin and Lightning Network payments', 'Recurring donation subscriptions', 'Goal tracking and milestone rewards', 'Donor management and communication', 'Social sharing and promotion tools', 'Real-time analytics and reporting', 'Multi-currency display (BTC/CHF)', 'Global accessibility without barriers', 'Transparent fund distribution']);
+function FundingPage() {
+  /* istanbul ignore next */
+  cov_1ycxgyjn0l().f[1]++;
+  cov_1ycxgyjn0l().s[18]++;
+  return (0, jsx_runtime_1.jsxs)("div", {
+    className: "max-w-6xl mx-auto space-y-12",
+    children: [(0, jsx_runtime_1.jsx)(PageHeader_1.default, {
+      icon: lucide_react_1.Coins,
+      iconColors: "bg-gradient-to-r from-green-100 to-emerald-100",
+      title: "Funding",
+      description: "Raise Bitcoin for your projects, causes, and creative endeavors with global reach and zero traditional banking barriers."
+    }), (0, jsx_runtime_1.jsx)(ValuePropositionCard_1.default, {
+      title: "Fund Anything, From Anywhere",
+      description: "Whether you're launching a startup, creating art, or supporting a cause, our Bitcoin-native funding platform connects you with supporters worldwide. No payment processors, no geographic restrictions, just pure peer-to-peer funding.",
+      bulletPoints: [{
+        text: "Zero payment processor fees with Bitcoin",
+        color: "bg-green-500"
+      }, {
+        text: "Global funding without banking barriers",
+        color: "bg-green-500"
+      }, {
+        text: "Instant payments via Lightning Network",
+        color: "bg-green-500"
+      }, {
+        text: "Transparent and accountable fund management",
+        color: "bg-green-500"
+      }],
+      cardTitle: "Your Funding Campaign",
+      cardIcon: lucide_react_1.Coins,
+      cardIconColors: "bg-green-100 text-green-600",
+      demoFields: [{
+        label: "Funding Goal",
+        value: 50000,
+        type: "bitcoin"
+      }, {
+        label: "Raised So Far",
+        value: 32500,
+        type: "bitcoin"
+      }, {
+        label: "Supporters",
+        value: "127"
+      }],
+      statusIndicator: {
+        icon: lucide_react_1.TrendingUp,
+        text: "65% funded",
+        colors: "bg-green-50 text-green-700"
+      }
+    }), (0, jsx_runtime_1.jsx)(FeaturesGrid_1.default, {
+      title: "Funding Platform Features",
+      subtitle: "Everything you need to run successful funding campaigns",
+      features: features
+    }), (0, jsx_runtime_1.jsx)(TypesGrid_1.default, {
+      title: "Any Type of Funding",
+      subtitle: "From creative projects to tech startups, social causes to open source",
+      types: fundingTypes
+    }), (0, jsx_runtime_1.jsx)(CapabilitiesList_1.default, {
+      title: "Complete Funding Suite",
+      description: "Bitcoin-native fundraising with global reach and transparent operations",
+      capabilities: capabilities,
+      accentColor: "green"
+    }), (0, jsx_runtime_1.jsx)(MarketToolsSection_1.default, {
+      title: (0, marketTools_1.getRegionalToolsTitle)('funding'),
+      description: (0, marketTools_1.getRegionalToolsDescription)('funding'),
+      tools: marketTools_1.fundingTools,
+      footerMessage: "Huge respect to these funding pioneers! We're building on their foundation with native Bitcoin integration, Lightning payments, and true global accessibility \uD83D\uDE80"
+    }), (0, jsx_runtime_1.jsx)(UniquePropositionSection_1.default, {
+      title: "Our Unique DNA",
+      subtitle: "While others facilitate funding, we're pioneering the future of decentralized fundraising",
+      bitcoinTitle: "Bitcoin-Native",
+      bitcoinDescription: "True Bitcoin integration from the ground up. Lightning Network for instant micropayments, global accessibility without traditional banking, and sound money for sustainable funding.",
+      aiTitle: "AI-Powered",
+      aiDescription: "Smart campaign optimization, intelligent donor matching, automated progress tracking, and AI-driven insights to maximize funding success and engagement.",
+      openSourceTitle: "Open Source",
+      openSourceDescription: "Transparent fundraising with community governance. Audit our algorithms, contribute features, and help build the future of decentralized peer-to-peer funding."
+    }), (0, jsx_runtime_1.jsx)(CallToActionCard_1.default, {
+      title: "Ready to Fund Your Dream?",
+      description: "Start your funding campaign today and connect with Bitcoin supporters worldwide who believe in your vision and want to help make it reality.",
+      primaryButtonText: "Start Funding Campaign",
+      primaryButtonIcon: lucide_react_1.Coins,
+      gradientColors: "bg-gradient-to-r from-green-600 to-emerald-600",
+      textColors: "text-green-100",
+      buttonColors: "bg-white text-green-700 hover:bg-gray-100"
+    })]
+  });
+}
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMXljeGd5am4wbCIsImFjdHVhbENvdmVyYWdlIiwiZXhwb3J0cyIsImRlZmF1bHQiLCJGdW5kaW5nUGFnZSIsImx1Y2lkZV9yZWFjdF8xIiwicyIsInJlcXVpcmUiLCJQYWdlSGVhZGVyXzEiLCJfX2ltcG9ydERlZmF1bHQiLCJWYWx1ZVByb3Bvc2l0aW9uQ2FyZF8xIiwiRmVhdHVyZXNHcmlkXzEiLCJUeXBlc0dyaWRfMSIsIkNhcGFiaWxpdGllc0xpc3RfMSIsIk1hcmtldFRvb2xzU2VjdGlvbl8xIiwiVW5pcXVlUHJvcG9zaXRpb25TZWN0aW9uXzEiLCJDYWxsVG9BY3Rpb25DYXJkXzEiLCJtYXJrZXRUb29sc18xIiwiZmVhdHVyZXMiLCJpY29uIiwiVGFyZ2V0IiwidGl0bGUiLCJkZXNjcmlwdGlvbiIsImNvbG9yIiwiSGVhcnQiLCJVc2VycyIsIkdsb2JlIiwiWmFwIiwiVHJlbmRpbmdVcCIsImZ1bmRpbmdUeXBlcyIsIm5hbWUiLCJMaWdodGJ1bGIiLCJleGFtcGxlIiwiUm9ja2V0IiwiR2l0QnJhbmNoIiwiQXdhcmQiLCJIYW5kc2hha2UiLCJjYXBhYmlsaXRpZXMiLCJmIiwianN4X3J1bnRpbWVfMSIsImpzeHMiLCJjbGFzc05hbWUiLCJjaGlsZHJlbiIsImpzeCIsIkNvaW5zIiwiaWNvbkNvbG9ycyIsImJ1bGxldFBvaW50cyIsInRleHQiLCJjYXJkVGl0bGUiLCJjYXJkSWNvbiIsImNhcmRJY29uQ29sb3JzIiwiZGVtb0ZpZWxkcyIsImxhYmVsIiwidmFsdWUiLCJ0eXBlIiwic3RhdHVzSW5kaWNhdG9yIiwiY29sb3JzIiwic3VidGl0bGUiLCJ0eXBlcyIsImFjY2VudENvbG9yIiwiZ2V0UmVnaW9uYWxUb29sc1RpdGxlIiwiZ2V0UmVnaW9uYWxUb29sc0Rlc2NyaXB0aW9uIiwidG9vbHMiLCJmdW5kaW5nVG9vbHMiLCJmb290ZXJNZXNzYWdlIiwiYml0Y29pblRpdGxlIiwiYml0Y29pbkRlc2NyaXB0aW9uIiwiYWlUaXRsZSIsImFpRGVzY3JpcHRpb24iLCJvcGVuU291cmNlVGl0bGUiLCJvcGVuU291cmNlRGVzY3JpcHRpb24iLCJwcmltYXJ5QnV0dG9uVGV4dCIsInByaW1hcnlCdXR0b25JY29uIiwiZ3JhZGllbnRDb2xvcnMiLCJ0ZXh0Q29sb3JzIiwiYnV0dG9uQ29sb3JzIl0sInNvdXJjZXMiOlsiL2hvbWUvZy9kZXYvb3JhbmdlY2F0L3NyYy9hcHAvKGF1dGhlbnRpY2F0ZWQpL2Z1bmRpbmcvcGFnZS50c3giXSwic291cmNlc0NvbnRlbnQiOlsiJ3VzZSBjbGllbnQnXG5cbmltcG9ydCB7IFxuICBDb2lucywgXG4gIFRhcmdldCwgXG4gIEhlYXJ0LCBcbiAgVXNlcnMsIFxuICBaYXAsIFxuICBHaXRCcmFuY2gsXG4gIFRyZW5kaW5nVXAsXG4gIEdsb2JlLFxuICBBd2FyZCxcbiAgTGlnaHRidWxiLFxuICBIYW5kc2hha2UsXG4gIFJvY2tldFxufSBmcm9tICdsdWNpZGUtcmVhY3QnXG5cbi8vIFJldXNhYmxlIGNvbXBvbmVudHNcbmltcG9ydCBQYWdlSGVhZGVyIGZyb20gJ0AvY29tcG9uZW50cy9wYWdlcy9QYWdlSGVhZGVyJ1xuaW1wb3J0IFZhbHVlUHJvcG9zaXRpb25DYXJkIGZyb20gJ0AvY29tcG9uZW50cy9wYWdlcy9WYWx1ZVByb3Bvc2l0aW9uQ2FyZCdcbmltcG9ydCBGZWF0dXJlc0dyaWQgZnJvbSAnQC9jb21wb25lbnRzL3BhZ2VzL0ZlYXR1cmVzR3JpZCdcbmltcG9ydCBUeXBlc0dyaWQgZnJvbSAnQC9jb21wb25lbnRzL3BhZ2VzL1R5cGVzR3JpZCdcbmltcG9ydCBDYXBhYmlsaXRpZXNMaXN0IGZyb20gJ0AvY29tcG9uZW50cy9wYWdlcy9DYXBhYmlsaXRpZXNMaXN0J1xuaW1wb3J0IE1hcmtldFRvb2xzU2VjdGlvbiBmcm9tICdAL2NvbXBvbmVudHMvcGFnZXMvTWFya2V0VG9vbHNTZWN0aW9uJ1xuaW1wb3J0IFVuaXF1ZVByb3Bvc2l0aW9uU2VjdGlvbiBmcm9tICdAL2NvbXBvbmVudHMvcGFnZXMvVW5pcXVlUHJvcG9zaXRpb25TZWN0aW9uJ1xuaW1wb3J0IENhbGxUb0FjdGlvbkNhcmQgZnJvbSAnQC9jb21wb25lbnRzL3BhZ2VzL0NhbGxUb0FjdGlvbkNhcmQnXG5cbi8vIERhdGFcbmltcG9ydCB7IGZ1bmRpbmdUb29scywgZ2V0UmVnaW9uYWxUb29sc1RpdGxlLCBnZXRSZWdpb25hbFRvb2xzRGVzY3JpcHRpb24gfSBmcm9tICdAL2RhdGEvbWFya2V0VG9vbHMnXG5cbmNvbnN0IGZlYXR1cmVzID0gW1xuICB7XG4gICAgaWNvbjogVGFyZ2V0LFxuICAgIHRpdGxlOiAnUHJvamVjdCBGdW5kaW5nJyxcbiAgICBkZXNjcmlwdGlvbjogJ1JhaXNlIEJpdGNvaW4gZm9yIGNyZWF0aXZlIHByb2plY3RzLCBzdGFydHVwcywgYW5kIGlubm92YXRpdmUgaWRlYXMgd2l0aCBnbG9iYWwgcmVhY2guJyxcbiAgICBjb2xvcjogJ3RleHQtZ3JlZW4tNjAwIGJnLWdyZWVuLTEwMCdcbiAgfSxcbiAge1xuICAgIGljb246IEhlYXJ0LFxuICAgIHRpdGxlOiAnRG9uYXRpb24gQ2FtcGFpZ25zJyxcbiAgICBkZXNjcmlwdGlvbjogJ0NyZWF0ZSBmdW5kcmFpc2luZyBjYW1wYWlnbnMgZm9yIGNhdXNlcywgY2hhcml0aWVzLCBhbmQgY29tbXVuaXR5IGluaXRpYXRpdmVzLicsXG4gICAgY29sb3I6ICd0ZXh0LXJlZC02MDAgYmctcmVkLTEwMCdcbiAgfSxcbiAge1xuICAgIGljb246IFVzZXJzLFxuICAgIHRpdGxlOiAnUmVjdXJyaW5nIFN1cHBvcnQnLFxuICAgIGRlc2NyaXB0aW9uOiAnQnVpbGQgc3VzdGFpbmFibGUgZnVuZGluZyB0aHJvdWdoIHJlY3VycmluZyBCaXRjb2luIGRvbmF0aW9ucyBhbmQgc3Vic2NyaXB0aW9ucy4nLFxuICAgIGNvbG9yOiAndGV4dC1wdXJwbGUtNjAwIGJnLXB1cnBsZS0xMDAnXG4gIH0sXG4gIHtcbiAgICBpY29uOiBHbG9iZSxcbiAgICB0aXRsZTogJ0dsb2JhbCBBY2Nlc3NpYmlsaXR5JyxcbiAgICBkZXNjcmlwdGlvbjogJ0FjY2VwdCBmdW5kaW5nIGZyb20gc3VwcG9ydGVycyB3b3JsZHdpZGUgd2l0aG91dCB0cmFkaXRpb25hbCBiYW5raW5nIGJhcnJpZXJzLicsXG4gICAgY29sb3I6ICd0ZXh0LWJsdWUtNjAwIGJnLWJsdWUtMTAwJ1xuICB9LFxuICB7XG4gICAgaWNvbjogWmFwLFxuICAgIHRpdGxlOiAnSW5zdGFudCBQYXltZW50cycsXG4gICAgZGVzY3JpcHRpb246ICdSZWNlaXZlIEJpdGNvaW4gZG9uYXRpb25zIGluc3RhbnRseSB3aXRoIExpZ2h0bmluZyBOZXR3b3JrIGludGVncmF0aW9uLicsXG4gICAgY29sb3I6ICd0ZXh0LXllbGxvdy02MDAgYmcteWVsbG93LTEwMCdcbiAgfSxcbiAge1xuICAgIGljb246IFRyZW5kaW5nVXAsXG4gICAgdGl0bGU6ICdUcmFuc3BhcmVudCBBbmFseXRpY3MnLFxuICAgIGRlc2NyaXB0aW9uOiAnVHJhY2sgZnVuZGluZyBwcm9ncmVzcywgZG9ub3IgZW5nYWdlbWVudCwgYW5kIGNhbXBhaWduIHBlcmZvcm1hbmNlIGluIHJlYWwtdGltZS4nLFxuICAgIGNvbG9yOiAndGV4dC10ZWFsLTYwMCBiZy10ZWFsLTEwMCdcbiAgfVxuXVxuXG5jb25zdCBmdW5kaW5nVHlwZXMgPSBbXG4gIHsgXG4gICAgbmFtZTogJ0NyZWF0aXZlIFByb2plY3RzJywgXG4gICAgaWNvbjogTGlnaHRidWxiLCBcbiAgICBkZXNjcmlwdGlvbjogJ0FydCwgbXVzaWMsIHdyaXRpbmcsIGFuZCBjcmVhdGl2ZSBlbmRlYXZvcnMnLFxuICAgIGV4YW1wbGU6ICdEb2N1bWVudGFyeSBmaWxtLCBtdXNpYyBhbGJ1bScsXG4gICAgY29sb3I6ICdiZy1wdXJwbGUtMTAwIHRleHQtcHVycGxlLTcwMCBib3JkZXItcHVycGxlLTIwMCdcbiAgfSxcbiAgeyBcbiAgICBuYW1lOiAnVGVjaCBTdGFydHVwcycsIFxuICAgIGljb246IFJvY2tldCwgXG4gICAgZGVzY3JpcHRpb246ICdFYXJseS1zdGFnZSB0ZWNobm9sb2d5IHZlbnR1cmVzJyxcbiAgICBleGFtcGxlOiAnQml0Y29pbiBhcHAsIGZpbnRlY2ggc3RhcnR1cCcsXG4gICAgY29sb3I6ICdiZy1ibHVlLTEwMCB0ZXh0LWJsdWUtNzAwIGJvcmRlci1ibHVlLTIwMCdcbiAgfSxcbiAgeyBcbiAgICBuYW1lOiAnT3BlbiBTb3VyY2UnLCBcbiAgICBpY29uOiBHaXRCcmFuY2gsIFxuICAgIGRlc2NyaXB0aW9uOiAnQ29tbXVuaXR5LWRyaXZlbiBzb2Z0d2FyZSBkZXZlbG9wbWVudCcsXG4gICAgZXhhbXBsZTogJ0JpdGNvaW4gdG9vbHMsIGRldmVsb3BlciBsaWJyYXJpZXMnLFxuICAgIGNvbG9yOiAnYmctZ3JheS0xMDAgdGV4dC1ncmF5LTcwMCBib3JkZXItZ3JheS0yMDAnXG4gIH0sXG4gIHsgXG4gICAgbmFtZTogJ1NvY2lhbCBDYXVzZXMnLCBcbiAgICBpY29uOiBIZWFydCwgXG4gICAgZGVzY3JpcHRpb246ICdDaGFyaXRhYmxlIGluaXRpYXRpdmVzIGFuZCBjb21tdW5pdHkgc3VwcG9ydCcsXG4gICAgZXhhbXBsZTogJ0VkdWNhdGlvbiBwcm9ncmFtLCBkaXNhc3RlciByZWxpZWYnLFxuICAgIGNvbG9yOiAnYmctcmVkLTEwMCB0ZXh0LXJlZC03MDAgYm9yZGVyLXJlZC0yMDAnXG4gIH0sXG4gIHsgXG4gICAgbmFtZTogJ0NvbnRlbnQgQ3JlYXRpb24nLCBcbiAgICBpY29uOiBBd2FyZCwgXG4gICAgZGVzY3JpcHRpb246ICdPbmdvaW5nIGNvbnRlbnQgYW5kIGVkdWNhdGlvbmFsIG1hdGVyaWFsJyxcbiAgICBleGFtcGxlOiAnUG9kY2FzdCwgZWR1Y2F0aW9uYWwgY291cnNlcycsXG4gICAgY29sb3I6ICdiZy1vcmFuZ2UtMTAwIHRleHQtb3JhbmdlLTcwMCBib3JkZXItb3JhbmdlLTIwMCdcbiAgfSxcbiAgeyBcbiAgICBuYW1lOiAnQ29tbXVuaXR5IFByb2plY3RzJywgXG4gICAgaWNvbjogSGFuZHNoYWtlLCBcbiAgICBkZXNjcmlwdGlvbjogJ0xvY2FsIGluaXRpYXRpdmVzIGFuZCBjb21tdW5pdHkgYnVpbGRpbmcnLFxuICAgIGV4YW1wbGU6ICdNYWtlciBzcGFjZSwgY29tbXVuaXR5IGdhcmRlbicsXG4gICAgY29sb3I6ICdiZy1ncmVlbi0xMDAgdGV4dC1ncmVlbi03MDAgYm9yZGVyLWdyZWVuLTIwMCdcbiAgfVxuXVxuXG5jb25zdCBjYXBhYmlsaXRpZXMgPSBbXG4gICdDdXN0b21pemFibGUgZnVuZGluZyBjYW1wYWlnbiBwYWdlcycsXG4gICdCaXRjb2luIGFuZCBMaWdodG5pbmcgTmV0d29yayBwYXltZW50cycsXG4gICdSZWN1cnJpbmcgZG9uYXRpb24gc3Vic2NyaXB0aW9ucycsXG4gICdHb2FsIHRyYWNraW5nIGFuZCBtaWxlc3RvbmUgcmV3YXJkcycsXG4gICdEb25vciBtYW5hZ2VtZW50IGFuZCBjb21tdW5pY2F0aW9uJyxcbiAgJ1NvY2lhbCBzaGFyaW5nIGFuZCBwcm9tb3Rpb24gdG9vbHMnLFxuICAnUmVhbC10aW1lIGFuYWx5dGljcyBhbmQgcmVwb3J0aW5nJyxcbiAgJ011bHRpLWN1cnJlbmN5IGRpc3BsYXkgKEJUQy9DSEYpJyxcbiAgJ0dsb2JhbCBhY2Nlc3NpYmlsaXR5IHdpdGhvdXQgYmFycmllcnMnLFxuICAnVHJhbnNwYXJlbnQgZnVuZCBkaXN0cmlidXRpb24nXG5dXG5cbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIEZ1bmRpbmdQYWdlKCkge1xuICByZXR1cm4gKFxuICAgIDxkaXYgY2xhc3NOYW1lPVwibWF4LXctNnhsIG14LWF1dG8gc3BhY2UteS0xMlwiPlxuICAgICAgXG4gICAgICA8UGFnZUhlYWRlclxuICAgICAgICBpY29uPXtDb2luc31cbiAgICAgICAgaWNvbkNvbG9ycz1cImJnLWdyYWRpZW50LXRvLXIgZnJvbS1ncmVlbi0xMDAgdG8tZW1lcmFsZC0xMDBcIlxuICAgICAgICB0aXRsZT1cIkZ1bmRpbmdcIlxuICAgICAgICBkZXNjcmlwdGlvbj1cIlJhaXNlIEJpdGNvaW4gZm9yIHlvdXIgcHJvamVjdHMsIGNhdXNlcywgYW5kIGNyZWF0aXZlIGVuZGVhdm9ycyB3aXRoIGdsb2JhbCByZWFjaCBhbmQgemVybyB0cmFkaXRpb25hbCBiYW5raW5nIGJhcnJpZXJzLlwiXG4gICAgICAvPlxuXG4gICAgICA8VmFsdWVQcm9wb3NpdGlvbkNhcmRcbiAgICAgICAgdGl0bGU9XCJGdW5kIEFueXRoaW5nLCBGcm9tIEFueXdoZXJlXCJcbiAgICAgICAgZGVzY3JpcHRpb249XCJXaGV0aGVyIHlvdSdyZSBsYXVuY2hpbmcgYSBzdGFydHVwLCBjcmVhdGluZyBhcnQsIG9yIHN1cHBvcnRpbmcgYSBjYXVzZSwgb3VyIEJpdGNvaW4tbmF0aXZlIGZ1bmRpbmcgcGxhdGZvcm0gY29ubmVjdHMgeW91IHdpdGggc3VwcG9ydGVycyB3b3JsZHdpZGUuIE5vIHBheW1lbnQgcHJvY2Vzc29ycywgbm8gZ2VvZ3JhcGhpYyByZXN0cmljdGlvbnMsIGp1c3QgcHVyZSBwZWVyLXRvLXBlZXIgZnVuZGluZy5cIlxuICAgICAgICBidWxsZXRQb2ludHM9e1tcbiAgICAgICAgICB7IHRleHQ6IFwiWmVybyBwYXltZW50IHByb2Nlc3NvciBmZWVzIHdpdGggQml0Y29pblwiLCBjb2xvcjogXCJiZy1ncmVlbi01MDBcIiB9LFxuICAgICAgICAgIHsgdGV4dDogXCJHbG9iYWwgZnVuZGluZyB3aXRob3V0IGJhbmtpbmcgYmFycmllcnNcIiwgY29sb3I6IFwiYmctZ3JlZW4tNTAwXCIgfSxcbiAgICAgICAgICB7IHRleHQ6IFwiSW5zdGFudCBwYXltZW50cyB2aWEgTGlnaHRuaW5nIE5ldHdvcmtcIiwgY29sb3I6IFwiYmctZ3JlZW4tNTAwXCIgfSxcbiAgICAgICAgICB7IHRleHQ6IFwiVHJhbnNwYXJlbnQgYW5kIGFjY291bnRhYmxlIGZ1bmQgbWFuYWdlbWVudFwiLCBjb2xvcjogXCJiZy1ncmVlbi01MDBcIiB9XG4gICAgICAgIF19XG4gICAgICAgIGNhcmRUaXRsZT1cIllvdXIgRnVuZGluZyBDYW1wYWlnblwiXG4gICAgICAgIGNhcmRJY29uPXtDb2luc31cbiAgICAgICAgY2FyZEljb25Db2xvcnM9XCJiZy1ncmVlbi0xMDAgdGV4dC1ncmVlbi02MDBcIlxuICAgICAgICBkZW1vRmllbGRzPXtbXG4gICAgICAgICAgeyBsYWJlbDogXCJGdW5kaW5nIEdvYWxcIiwgdmFsdWU6IDUwMDAwLCB0eXBlOiBcImJpdGNvaW5cIiB9LFxuICAgICAgICAgIHsgbGFiZWw6IFwiUmFpc2VkIFNvIEZhclwiLCB2YWx1ZTogMzI1MDAsIHR5cGU6IFwiYml0Y29pblwiIH0sXG4gICAgICAgICAgeyBsYWJlbDogXCJTdXBwb3J0ZXJzXCIsIHZhbHVlOiBcIjEyN1wiIH1cbiAgICAgICAgXX1cbiAgICAgICAgc3RhdHVzSW5kaWNhdG9yPXt7XG4gICAgICAgICAgaWNvbjogVHJlbmRpbmdVcCxcbiAgICAgICAgICB0ZXh0OiBcIjY1JSBmdW5kZWRcIixcbiAgICAgICAgICBjb2xvcnM6IFwiYmctZ3JlZW4tNTAgdGV4dC1ncmVlbi03MDBcIlxuICAgICAgICB9fVxuICAgICAgLz5cblxuICAgICAgPEZlYXR1cmVzR3JpZFxuICAgICAgICB0aXRsZT1cIkZ1bmRpbmcgUGxhdGZvcm0gRmVhdHVyZXNcIlxuICAgICAgICBzdWJ0aXRsZT1cIkV2ZXJ5dGhpbmcgeW91IG5lZWQgdG8gcnVuIHN1Y2Nlc3NmdWwgZnVuZGluZyBjYW1wYWlnbnNcIlxuICAgICAgICBmZWF0dXJlcz17ZmVhdHVyZXN9XG4gICAgICAvPlxuXG4gICAgICA8VHlwZXNHcmlkXG4gICAgICAgIHRpdGxlPVwiQW55IFR5cGUgb2YgRnVuZGluZ1wiXG4gICAgICAgIHN1YnRpdGxlPVwiRnJvbSBjcmVhdGl2ZSBwcm9qZWN0cyB0byB0ZWNoIHN0YXJ0dXBzLCBzb2NpYWwgY2F1c2VzIHRvIG9wZW4gc291cmNlXCJcbiAgICAgICAgdHlwZXM9e2Z1bmRpbmdUeXBlc31cbiAgICAgIC8+XG5cbiAgICAgIDxDYXBhYmlsaXRpZXNMaXN0XG4gICAgICAgIHRpdGxlPVwiQ29tcGxldGUgRnVuZGluZyBTdWl0ZVwiXG4gICAgICAgIGRlc2NyaXB0aW9uPVwiQml0Y29pbi1uYXRpdmUgZnVuZHJhaXNpbmcgd2l0aCBnbG9iYWwgcmVhY2ggYW5kIHRyYW5zcGFyZW50IG9wZXJhdGlvbnNcIlxuICAgICAgICBjYXBhYmlsaXRpZXM9e2NhcGFiaWxpdGllc31cbiAgICAgICAgYWNjZW50Q29sb3I9XCJncmVlblwiXG4gICAgICAvPlxuXG4gICAgICA8TWFya2V0VG9vbHNTZWN0aW9uXG4gICAgICAgIHRpdGxlPXtnZXRSZWdpb25hbFRvb2xzVGl0bGUoJ2Z1bmRpbmcnKX1cbiAgICAgICAgZGVzY3JpcHRpb249e2dldFJlZ2lvbmFsVG9vbHNEZXNjcmlwdGlvbignZnVuZGluZycpfVxuICAgICAgICB0b29scz17ZnVuZGluZ1Rvb2xzfVxuICAgICAgICBmb290ZXJNZXNzYWdlPVwiSHVnZSByZXNwZWN0IHRvIHRoZXNlIGZ1bmRpbmcgcGlvbmVlcnMhIFdlJ3JlIGJ1aWxkaW5nIG9uIHRoZWlyIGZvdW5kYXRpb24gd2l0aCBuYXRpdmUgQml0Y29pbiBpbnRlZ3JhdGlvbiwgTGlnaHRuaW5nIHBheW1lbnRzLCBhbmQgdHJ1ZSBnbG9iYWwgYWNjZXNzaWJpbGl0eSDwn5qAXCJcbiAgICAgIC8+XG5cbiAgICAgIDxVbmlxdWVQcm9wb3NpdGlvblNlY3Rpb25cbiAgICAgICAgdGl0bGU9XCJPdXIgVW5pcXVlIEROQVwiXG4gICAgICAgIHN1YnRpdGxlPVwiV2hpbGUgb3RoZXJzIGZhY2lsaXRhdGUgZnVuZGluZywgd2UncmUgcGlvbmVlcmluZyB0aGUgZnV0dXJlIG9mIGRlY2VudHJhbGl6ZWQgZnVuZHJhaXNpbmdcIlxuICAgICAgICBiaXRjb2luVGl0bGU9XCJCaXRjb2luLU5hdGl2ZVwiXG4gICAgICAgIGJpdGNvaW5EZXNjcmlwdGlvbj1cIlRydWUgQml0Y29pbiBpbnRlZ3JhdGlvbiBmcm9tIHRoZSBncm91bmQgdXAuIExpZ2h0bmluZyBOZXR3b3JrIGZvciBpbnN0YW50IG1pY3JvcGF5bWVudHMsIGdsb2JhbCBhY2Nlc3NpYmlsaXR5IHdpdGhvdXQgdHJhZGl0aW9uYWwgYmFua2luZywgYW5kIHNvdW5kIG1vbmV5IGZvciBzdXN0YWluYWJsZSBmdW5kaW5nLlwiXG4gICAgICAgIGFpVGl0bGU9XCJBSS1Qb3dlcmVkXCJcbiAgICAgICAgYWlEZXNjcmlwdGlvbj1cIlNtYXJ0IGNhbXBhaWduIG9wdGltaXphdGlvbiwgaW50ZWxsaWdlbnQgZG9ub3IgbWF0Y2hpbmcsIGF1dG9tYXRlZCBwcm9ncmVzcyB0cmFja2luZywgYW5kIEFJLWRyaXZlbiBpbnNpZ2h0cyB0byBtYXhpbWl6ZSBmdW5kaW5nIHN1Y2Nlc3MgYW5kIGVuZ2FnZW1lbnQuXCJcbiAgICAgICAgb3BlblNvdXJjZVRpdGxlPVwiT3BlbiBTb3VyY2VcIlxuICAgICAgICBvcGVuU291cmNlRGVzY3JpcHRpb249XCJUcmFuc3BhcmVudCBmdW5kcmFpc2luZyB3aXRoIGNvbW11bml0eSBnb3Zlcm5hbmNlLiBBdWRpdCBvdXIgYWxnb3JpdGhtcywgY29udHJpYnV0ZSBmZWF0dXJlcywgYW5kIGhlbHAgYnVpbGQgdGhlIGZ1dHVyZSBvZiBkZWNlbnRyYWxpemVkIHBlZXItdG8tcGVlciBmdW5kaW5nLlwiXG4gICAgICAvPlxuXG4gICAgICA8Q2FsbFRvQWN0aW9uQ2FyZFxuICAgICAgICB0aXRsZT1cIlJlYWR5IHRvIEZ1bmQgWW91ciBEcmVhbT9cIlxuICAgICAgICBkZXNjcmlwdGlvbj1cIlN0YXJ0IHlvdXIgZnVuZGluZyBjYW1wYWlnbiB0b2RheSBhbmQgY29ubmVjdCB3aXRoIEJpdGNvaW4gc3VwcG9ydGVycyB3b3JsZHdpZGUgd2hvIGJlbGlldmUgaW4geW91ciB2aXNpb24gYW5kIHdhbnQgdG8gaGVscCBtYWtlIGl0IHJlYWxpdHkuXCJcbiAgICAgICAgcHJpbWFyeUJ1dHRvblRleHQ9XCJTdGFydCBGdW5kaW5nIENhbXBhaWduXCJcbiAgICAgICAgcHJpbWFyeUJ1dHRvbkljb249e0NvaW5zfVxuICAgICAgICBncmFkaWVudENvbG9ycz1cImJnLWdyYWRpZW50LXRvLXIgZnJvbS1ncmVlbi02MDAgdG8tZW1lcmFsZC02MDBcIlxuICAgICAgICB0ZXh0Q29sb3JzPVwidGV4dC1ncmVlbi0xMDBcIlxuICAgICAgICBidXR0b25Db2xvcnM9XCJiZy13aGl0ZSB0ZXh0LWdyZWVuLTcwMCBob3ZlcjpiZy1ncmF5LTEwMFwiXG4gICAgICAvPlxuXG4gICAgPC9kaXY+XG4gIClcbn0gIl0sIm1hcHBpbmdzIjoiQUFBQSxZQUFZOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztJQXVCWjtJQUFBQSxjQUFBLFlBQUFBLENBQUE7TUFBQSxPQUFBQyxjQUFBO0lBQUE7RUFBQTtFQUFBLE9BQUFBLGNBQUE7QUFBQTtBQUFBRCxjQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUF3R0FFLE9BQUEsQ0FBQUMsT0FBQSxHQUFBQyxXQUFBOzs7O0FBN0hBLE1BQUFDLGNBQUE7QUFBQTtBQUFBLENBQUFMLGNBQUEsR0FBQU0sQ0FBQSxPQUFBQyxPQUFBO0FBZUE7QUFDQSxNQUFBQyxZQUFBO0FBQUE7QUFBQSxDQUFBUixjQUFB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

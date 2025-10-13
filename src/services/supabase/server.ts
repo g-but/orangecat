@@ -9,7 +9,6 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOi
 
 // Warn if using fallback values in production
 if ((!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) && process.env.NODE_ENV === 'production') {
-  console.warn('⚠️ Missing Supabase environment variables in production. Using fallback values. Some features may not work correctly.')
 }
 
 // Create a server-side Supabase client

@@ -1,0 +1,66 @@
+9a0d0b79b38874a435bf821e72a8e0b9
+"use strict";
+
+/**
+ * Initiative type definition shared across OrangeCat.
+ * created_date: 2025-06-12
+ * last_modified_date: 2025-06-12
+ * last_modified_summary: Initial extraction of Initiative interface from data/initiatives.ts into a dedicated shared types file for reusability and maintainability.
+ */
+/* istanbul ignore next */
+function cov_1whwmoc3gw() {
+  var path = "/home/g/dev/orangecat/src/types/initiative.ts";
+  var hash = "f390c5ad886f5d433ee67aff5a8f602568141463";
+  var global = new Function("return this")();
+  var gcv = "__coverage__";
+  var coverageData = {
+    path: "/home/g/dev/orangecat/src/types/initiative.ts",
+    statementMap: {
+      "0": {
+        start: {
+          line: 8,
+          column: 0
+        },
+        end: {
+          line: 8,
+          column: 62
+        }
+      }
+    },
+    fnMap: {},
+    branchMap: {},
+    s: {
+      "0": 0
+    },
+    f: {},
+    b: {},
+    inputSourceMap: {
+      file: "/home/g/dev/orangecat/src/types/initiative.ts",
+      mappings: ";AAAA;;;;;GAKG",
+      names: [],
+      sources: ["/home/g/dev/orangecat/src/types/initiative.ts"],
+      sourcesContent: ["/**\n * Initiative type definition shared across OrangeCat.\n * created_date: 2025-06-12\n * last_modified_date: 2025-06-12\n * last_modified_summary: Initial extraction of Initiative interface from data/initiatives.ts into a dedicated shared types file for reusability and maintainability.\n */\n\nexport interface Initiative {\n  id: string;\n  name: string;\n  icon: string;\n  color: {\n    primary: string;\n    gradient: string;\n    bg: string;\n    text: string;\n    border: string;\n  };\n  description: string;\n  longDescription: string;\n  status: 'available' | 'coming-soon';\n  timeline?: string;\n  routes: {\n    landing: string;\n    demo?: string;\n    comingSoon: string;\n    create?: string;\n  };\n  features: Array<{\n    icon: string;\n    title: string;\n    description: string;\n    color: string;\n  }>;\n  types: Array<{\n    name: string;\n    icon: string;\n    description: string;\n    example: string;\n    color: string;\n  }>;\n  capabilities: string[];\n  useCases: string[];\n  marketTools: Array<{\n    name: string;\n    description: string;\n    url: string;\n    icon: string;\n    color: string;\n  }>;\n} "],
+      version: 3
+    },
+    _coverageSchema: "1a1c01bbd47fc00a2c39e90264f33305004495a9",
+    hash: "f390c5ad886f5d433ee67aff5a8f602568141463"
+  };
+  var coverage = global[gcv] || (global[gcv] = {});
+  if (!coverage[path] || coverage[path].hash !== hash) {
+    coverage[path] = coverageData;
+  }
+  var actualCoverage = coverage[path];
+  {
+    // @ts-ignore
+    cov_1whwmoc3gw = function () {
+      return actualCoverage;
+    };
+  }
+  return actualCoverage;
+}
+cov_1whwmoc3gw();
+cov_1whwmoc3gw().s[0]++;
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJjb3ZfMXdod21vYzNndyIsInBhdGgiLCJoYXNoIiwiZ2xvYmFsIiwiRnVuY3Rpb24iLCJnY3YiLCJjb3ZlcmFnZURhdGEiLCJzdGF0ZW1lbnRNYXAiLCJzdGFydCIsImxpbmUiLCJjb2x1bW4iLCJlbmQiLCJmbk1hcCIsImJyYW5jaE1hcCIsInMiLCJmIiwiYiIsImlucHV0U291cmNlTWFwIiwiZmlsZSIsIm1hcHBpbmdzIiwibmFtZXMiLCJzb3VyY2VzIiwic291cmNlc0NvbnRlbnQiLCJ2ZXJzaW9uIiwiX2NvdmVyYWdlU2NoZW1hIiwiY292ZXJhZ2UiLCJhY3R1YWxDb3ZlcmFnZSJdLCJzb3VyY2VzIjpbIi9ob21lL2cvZGV2L29yYW5nZWNhdC9zcmMvdHlwZXMvaW5pdGlhdGl2ZS50cyJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcbiAqIEluaXRpYXRpdmUgdHlwZSBkZWZpbml0aW9uIHNoYXJlZCBhY3Jvc3MgT3JhbmdlQ2F0LlxuICogY3JlYXRlZF9kYXRlOiAyMDI1LTA2LTEyXG4gKiBsYXN0X21vZGlmaWVkX2RhdGU6IDIwMjUtMDYtMTJcbiAqIGxhc3RfbW9kaWZpZWRfc3VtbWFyeTogSW5pdGlhbCBleHRyYWN0aW9uIG9mIEluaXRpYXRpdmUgaW50ZXJmYWNlIGZyb20gZGF0YS9pbml0aWF0aXZlcy50cyBpbnRvIGEgZGVkaWNhdGVkIHNoYXJlZCB0eXBlcyBmaWxlIGZvciByZXVzYWJpbGl0eSBhbmQgbWFpbnRhaW5hYmlsaXR5LlxuICovXG5cbmV4cG9ydCBpbnRlcmZhY2UgSW5pdGlhdGl2ZSB7XG4gIGlkOiBzdHJpbmc7XG4gIG5hbWU6IHN0cmluZztcbiAgaWNvbjogc3RyaW5nO1xuICBjb2xvcjoge1xuICAgIHByaW1hcnk6IHN0cmluZztcbiAgICBncmFkaWVudDogc3RyaW5nO1xuICAgIGJnOiBzdHJpbmc7XG4gICAgdGV4dDogc3RyaW5nO1xuICAgIGJvcmRlcjogc3RyaW5nO1xuICB9O1xuICBkZXNjcmlwdGlvbjogc3RyaW5nO1xuICBsb25nRGVzY3JpcHRpb246IHN0cmluZztcbiAgc3RhdHVzOiAnYXZhaWxhYmxlJyB8ICdjb21pbmctc29vbic7XG4gIHRpbWVsaW5lPzogc3RyaW5nO1xuICByb3V0ZXM6IHtcbiAgICBsYW5kaW5nOiBzdHJpbmc7XG4gICAgZGVtbz86IHN0cmluZztcbiAgICBjb21pbmdTb29uOiBzdHJpbmc7XG4gICAgY3JlYXRlPzogc3RyaW5nO1xuICB9O1xuICBmZWF0dXJlczogQXJyYXk8e1xuICAgIGljb246IHN0cmluZztcbiAgICB0aXRsZTogc3RyaW5nO1xuICAgIGRlc2NyaXB0aW9uOiBzdHJpbmc7XG4gICAgY29sb3I6IHN0cmluZztcbiAgfT47XG4gIHR5cGVzOiBBcnJheTx7XG4gICAgbmFtZTogc3RyaW5nO1xuICAgIGljb246IHN0cmluZztcbiAgICBkZXNjcmlwdGlvbjogc3RyaW5nO1xuICAgIGV4YW1wbGU6IHN0cmluZztcbiAgICBjb2xvcjogc3RyaW5nO1xuICB9PjtcbiAgY2FwYWJpbGl0aWVzOiBzdHJpbmdbXTtcbiAgdXNlQ2FzZXM6IHN0cmluZ1tdO1xuICBtYXJrZXRUb29sczogQXJyYXk8e1xuICAgIG5hbWU6IHN0cmluZztcbiAgICBkZXNjcmlwdGlvbjogc3RyaW5nO1xuICAgIHVybDogc3RyaW5nO1xuICAgIGljb246IHN0cmluZztcbiAgICBjb2xvcjogc3RyaW5nO1xuICB9Pjtcbn0gIl0sIm1hcHBpbmdzIjoiOztBQUFBOzs7Ozs7QUFBQTtBQUFBLFNBQUFBLGVBQUE7RUFBQSxJQUFBQyxJQUFBO0VBQUEsSUFBQUMsSUFBQTtFQUFBLElBQUFDLE1BQUEsT0FBQUMsUUFBQTtFQUFBLElBQUFDLEdBQUE7RUFBQSxJQUFBQyxZQUFBO0lBQUFMLElBQUE7SUFBQU0sWUFBQTtNQUFBO1FBQUFDLEtBQUE7VUFBQUMsSUFBQTtVQUFBQyxNQUFBO1FBQUE7UUFBQUMsR0FBQTtVQUFBRixJQUFBO1VBQUFDLE1BQUE7UUFBQTtNQUFBO0lBQUE7SUFBQUUsS0FBQTtJQUFBQyxTQUFBO0lBQUFDLENBQUE7TUFBQTtJQUFBO0lBQUFDLENBQUE7SUFBQUMsQ0FBQTtJQUFBQyxjQUFBO01BQUFDLElBQUE7TUFBQUMsUUFBQTtNQUFBQyxLQUFBO01BQUFDLE9BQUE7TUFBQUMsY0FBQTtNQUFBQyxPQUFBO0lBQUE7SUFBQUMsZUFBQTtJQUFBdEIsSUFBQTtFQUFBO0VBQUEsSUFBQXVCLFFBQUEsR0FBQXRCLE1BQUEsQ0FBQUUsR0FBQSxNQUFBRixNQUFBLENBQUFFLEdBQUE7RUFBQSxLQUFBb0IsUUFBQSxDQUFBeEIsSUFBQSxLQUFBd0IsUUFBQSxDQUFBeEIsSUFBQSxFQUFBQyxJQUFBLEtBQUFBLElBQUE7SUFBQXVCLFFBQUEsQ0FBQXhCLElBQUEsSUFBQUssWUFBQTtFQUFBO0VBQUEsSUFBQW9CLGNBQUEsR0FBQUQsUUFBQSxDQUFBeEIsSUFBQTtFQUFBIiwiaWdub3JlTGlzdCI6W119

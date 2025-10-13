@@ -16,14 +16,13 @@ export interface ScalableProfile extends Profile {
   // Core fields (existing in database)
   id: string
   username: string | null
-  full_name: string | null  // Maps to display_name
+  display_name: string | null
   avatar_url: string | null
   website: string | null
   created_at: string
   updated_at: string
   
-  // Virtual fields (computed from JSON or other sources)
-  display_name: string | null  // Mapped from full_name
+  // Profile fields
   bio: string | null
   banner_url: string | null
   bitcoin_address: string | null
