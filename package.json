@@ -57,7 +57,7 @@
     "postdeploy": "npm run test:e2e:production",
     "postinstall": "npm install --include=optional sharp || echo 'Sharp optional install failed'",
     "precommit": "npm run lint:check && npm run type-check && npm run test:unit && npm run test:e2e:node",
-    "prepare": "husky",
+    "prepare": "husky || true",
     "health:check": "curl -f $PRODUCTION_URL/api/health || echo 'Health check failed'",
     "monitor:logs": "vercel logs --follow",
     "monitor:metrics": "node scripts/monitor-metrics.js",
