@@ -25,7 +25,7 @@ export default function BalanceSummary({
   }
 
   const getPercentageChange = (current: number, previous: number) => {
-    if (previous === 0) return 100
+    if (previous === 0) {return 100}
     return ((current - previous) / previous) * 100
   }
 

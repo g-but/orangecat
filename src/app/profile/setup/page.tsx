@@ -13,6 +13,9 @@ import { ArrowLeft, CheckCircle, Sparkles } from 'lucide-react'
 export default function ProfileSetupPage() {
   const router = useRouter()
   const { user, isLoading: authLoading } = useAuthStore()
+
+  // Get user email for default username
+  const userEmail = user?.email
   
   const {
     profile,

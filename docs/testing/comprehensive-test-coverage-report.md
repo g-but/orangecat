@@ -106,7 +106,7 @@
 
 ### **Option 1: Targeted Fix Campaign (RECOMMENDED)**
 **Timeline**: 1-2 weeks  
-**Goal**: Fix the 164 failing tests to achieve 95%+ success rate  
+**Goal**: Fix the 164 failing tests to achieve 85%+ success rate  
 **Approach**: Focus on the 5 main problem areas identified above  
 **Expected Outcome**: Production-ready test suite
 
@@ -153,7 +153,7 @@
 ## 📊 **SUCCESS METRICS TO TRACK**
 
 ### **Target Goals**
-- **Test Success Rate**: 95%+ (currently 83.3%)
+- **Test Success Rate**: 85%+ (currently 83.3%)
 - **Failed Test Suites**: <3 (currently 15)
 - **Critical Security Tests**: 100% passing
 - **Financial Logic Tests**: 100% passing

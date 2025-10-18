@@ -54,7 +54,7 @@ export function useDropdown(options: UseDropdownOptions = {}) {
 
   // Keyboard navigation
   useEffect(() => {
-    if (!keyboardNavigation || !isOpen) return
+    if (!keyboardNavigation || !isOpen) {return}
 
     const handleKeyDown = (event: KeyboardEvent) => {
       switch (event.key) {

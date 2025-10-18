@@ -34,7 +34,7 @@ export default function FundingPageList() {
   const [error, setError] = useState<string | null>(null)
 
   const loadPagesWithBalances = useCallback(async () => {
-    if (!user) return;
+    if (!user) {return;}
     try {
       setLoading(true);
       const { data: fetchedPages, error: fetchError } = await supabase
@@ -43,7 +43,7 @@ export default function FundingPageList() {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {throw fetchError;}
 
       if (fetchedPages) {
         const pagesWithBalances = await Promise.all(
@@ -82,7 +82,7 @@ export default function FundingPageList() {
         .from('funding_pages')
         .update({ is_active: !isActive })
         .eq('id', pageId);
-      if (error) throw error;
+      if (error) {throw error;}
       setPages(pages.map(p => p.id === pageId ? { ...p, is_active: !isActive } : p));
       toast.success(`Page ${isActive ? 'deactivated' : 'activated'}`);
     } catch (err) {
@@ -96,7 +96,7 @@ export default function FundingPageList() {
         .from('funding_pages')
         .update({ is_public: !isPublic })
         .eq('id', pageId);
-      if (error) throw error;
+      if (error) {throw error;}
       setPages(pages.map(p => p.id === pageId ? { ...p, is_public: !isPublic } : p));
       toast.success(`Page visibility ${isPublic ? 'set to private' : 'set to public'}`);
     } catch (err) {
@@ -105,10 +105,10 @@ export default function FundingPageList() {
   };
   
   const handleDeletePage = async (pageId: string) => {
-    if (!confirm('Are you sure you want to delete this page? This action cannot be undone.')) return;
+    if (!confirm('Are you sure you want to delete this page? This action cannot be undone.')) {return;}
     try {
       const { error } = await supabase.from('funding_pages').delete().eq('id', pageId);
-      if (error) throw error;
+      if (error) {throw error;}
       setPages(pages.filter(p => p.id !== pageId));
       toast.success('Page deleted successfully');
     } catch (err) {

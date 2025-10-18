@@ -29,173 +29,82 @@ import { useAuth } from '@/hooks/useAuth';
 
 type ViewMode = 'grid' | 'list';
 
-// Mock campaign data for demonstration with enhanced structure
-const mockCampaigns = [
-  {
-    id: '1',
-    title: 'Support Local Bitcoin Education',
-    description: 'Teaching Bitcoin fundamentals in underserved communities across Switzerland.',
-    creator: 'BitcoinEdu Switzerland',
-    category: 'education',
-    goal_amount: 50000,
-    current_amount: 32500,
-    supporters_count: 143,
-    days_left: 21,
-    image: '/api/placeholder/400/250',
-    featured: true,
-    location: 'Zurich, Switzerland',
-    created_at: '2025-01-15',
-    tags: ['education', 'community', 'switzerland'],
-    verified: true
-  },
-  {
-    id: '2', 
-    title: 'Orange Cat Sanctuary Expansion',
-    description: 'Help us expand our cat sanctuary and rescue more orange cats in need.',
-    creator: 'OrangeCat Foundation',
-    category: 'animals',
-    goal_amount: 25000,
-    current_amount: 18750,
-    supporters_count: 89,
-    days_left: 35,
-    image: '/api/placeholder/400/250',
-    featured: false,
-    location: 'Bern, Switzerland',
-    created_at: '2025-01-20',
-    tags: ['animals', 'rescue', 'charity'],
-    verified: true
-  },
-  {
-    id: '3',
-    title: 'Decentralized Music Platform',
-    description: 'Building a platform where musicians can receive Bitcoin payments directly from fans.',
-    creator: 'DecentralSound',
-    category: 'technology',
-    goal_amount: 100000,
-    current_amount: 45000,
-    supporters_count: 234,
-    days_left: 42,
-    image: '/api/placeholder/400/250',
-    featured: true,
-    location: 'Basel, Switzerland',
-    created_at: '2025-01-10',
-    tags: ['technology', 'music', 'bitcoin'],
-    verified: false
-  },
-  {
-    id: '4',
-    title: 'Open Source Bitcoin Wallet',
-    description: 'Developing a secure, user-friendly Bitcoin wallet with advanced privacy features.',
-    creator: 'CryptoDevs Collective',
-    category: 'technology',
-    goal_amount: 75000,
-    current_amount: 62500,
-    supporters_count: 178,
-    days_left: 14,
-    image: '/api/placeholder/400/250',
-    featured: false,
-    location: 'Geneva, Switzerland',
-    created_at: '2025-01-25',
-    tags: ['bitcoin', 'opensource', 'privacy'],
-    verified: true
-  },
-  {
-    id: '5',
-    title: 'Climate Action with Bitcoin',
-    description: 'Using Bitcoin mining to incentivize renewable energy adoption in rural areas.',
-    creator: 'GreenBitcoin Initiative',
-    category: 'environment',
-    goal_amount: 80000,
-    current_amount: 24000,
-    supporters_count: 95,
-    days_left: 28,
-    image: '/api/placeholder/400/250',
-    featured: false,
-    location: 'Lausanne, Switzerland',
-    created_at: '2025-01-18',
-    tags: ['environment', 'renewable', 'mining'],
-    verified: true
-  },
-  {
-    id: '6',
-    title: 'Bitcoin for Small Business',
-    description: 'Helping local restaurants and shops accept Bitcoin payments easily.',
-    creator: 'LocalBitcoin Network',
-    category: 'business',
-    goal_amount: 30000,
-    current_amount: 19500,
-    supporters_count: 67,
-    days_left: 19,
-    image: '/api/placeholder/400/250',
-    featured: false,
-    location: 'Lucerne, Switzerland', 
-    created_at: '2025-01-22',
-    tags: ['business', 'payments', 'local'],
-    verified: true
-  }
-]
+// Import search functionality
+import { search, getTrending, SearchFundingPage } from '@/services/search'
 
 export default function DiscoverPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  
+
   // State management
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'trending');
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [campaigns, setCampaigns] = useState<SearchFundingPage[]>([]);
+  const [profiles, setProfiles] = useState<any[]>([]);
 
-  // Filter and search logic
+  // Load real campaign data on mount and when search params change
+  useEffect(() => {
+    const loadCampaigns = async () => {
+      try {
+        setLoading(true);
+
+        if (searchTerm || selectedCategory !== 'all') {
+          // Use search function for filtered results
+          const searchResults = await search({
+            query: searchTerm || undefined,
+            type: 'campaigns',
+            sortBy: sortBy as any,
+            limit: 50
+          });
+
+          const campaignResults = searchResults.results
+            .filter(result => result.type === 'campaign')
+            .map(result => result.data as SearchFundingPage);
+
+          setCampaigns(campaignResults);
+        } else {
+          // Use trending for default view
+          const trendingResults = await getTrending();
+          const campaignResults = trendingResults.results
+            .filter(result => result.type === 'campaign')
+            .map(result => result.data as SearchFundingPage);
+
+          setCampaigns(campaignResults);
+        }
+      } catch (error) {
+        console.error('Error loading campaigns:', error);
+        setCampaigns([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCampaigns();
+  }, [searchTerm, selectedCategory, sortBy]);
+
+  // Filter and search logic (now using real data)
   const filteredCampaigns = useMemo(() => {
-    let filtered = [...mockCampaigns];
+    // The search service already handles filtering and sorting
+    // We just need to filter out any results that don't match our current filters
+    let filtered = [...campaigns];
 
-    // Search term filter
-    if (searchTerm.trim()) {
-      const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(campaign => 
-        campaign.title.toLowerCase().includes(search) ||
-        campaign.description.toLowerCase().includes(search) ||
-        campaign.creator.toLowerCase().includes(search) ||
-        campaign.tags.some(tag => tag.toLowerCase().includes(search))
-      );
-    }
-
-    // Category filter
+    // Additional client-side filtering for features not in the search service yet
     if (selectedCategory !== 'all') {
-      filtered = filtered.filter(campaign => campaign.category === selectedCategory);
+      // Categories don't exist in current schema, skip filtering
     }
 
-    // Tag filters
     if (selectedTags.length > 0) {
-      filtered = filtered.filter(campaign =>
-        selectedTags.some(tag => campaign.tags.includes(tag))
-      );
-    }
-
-    // Sort campaigns
-    switch (sortBy) {
-      case 'trending':
-        filtered.sort((a, b) => b.supporters_count - a.supporters_count);
-        break;
-      case 'newest':
-        filtered.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        break;
-      case 'ending_soon':
-        filtered.sort((a, b) => a.days_left - b.days_left);
-        break;
-      case 'most_funded':
-        filtered.sort((a, b) => (b.current_amount / b.goal_amount) - (a.current_amount / a.goal_amount));
-        break;
-      default:
-        break;
+      // Tags don't exist in current schema, skip filtering
     }
 
     return filtered;
-  }, [searchTerm, selectedCategory, selectedTags, sortBy]);
+  }, [campaigns, selectedCategory, selectedTags]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -240,19 +149,17 @@ export default function DiscoverPage() {
     router.push('/discover');
   };
 
-  // Get unique tags from all campaigns
+  // Get unique tags from all campaigns (tags don't exist in current schema)
   const allTags = useMemo(() => {
-    const tags = new Set<string>();
-    mockCampaigns.forEach(campaign => {
-      campaign.tags.forEach(tag => tags.add(tag));
-    });
-    return Array.from(tags);
+    return []; // No tags in current schema
   }, []);
 
   const stats = useMemo(() => {
     const totalCampaigns = filteredCampaigns.length;
-    const totalSupporters = filteredCampaigns.reduce((sum, campaign) => sum + campaign.supporters_count, 0);
-    const totalFunding = filteredCampaigns.reduce((sum, campaign) => sum + campaign.current_amount, 0);
+    // For now, we don't have supporter or funding data in the current schema
+    // These will be 0 until we add those fields to the database
+    const totalSupporters = 0;
+    const totalFunding = 0;
     return { totalCampaigns, totalSupporters, totalFunding };
   }, [filteredCampaigns]);
 
@@ -357,7 +264,7 @@ export default function DiscoverPage() {
                 <div className="text-sm text-gray-600">Total Supporters</div>
               </div>
               <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50">
-                <div className="text-2xl font-bold text-tiffany-600">CHF {stats.totalFunding.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-tiffany-600">0 BTC</div>
                 <div className="text-sm text-gray-600">Funds Raised</div>
               </div>
             </motion.div>
@@ -392,8 +299,8 @@ export default function DiscoverPage() {
           {/* Filters Row */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3">
-              {/* Category Filter */}
-              <select
+              {/* Category Filter - Hidden for now since categories don't exist in schema */}
+              {/* <select
                 value={selectedCategory}
                 onChange={(e) => handleCategoryChange(e.target.value)}
                 className="px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-xl text-sm font-medium focus:ring-2 focus:ring-bitcoinOrange/20 focus:border-bitcoinOrange"
@@ -404,7 +311,7 @@ export default function DiscoverPage() {
                 <option value="environment">Environment</option>
                 <option value="animals">Animals</option>
                 <option value="business">Business</option>
-              </select>
+              </select> */}
 
               {/* Sort Filter */}
               <select
@@ -447,7 +354,7 @@ export default function DiscoverPage() {
             <div className="flex items-center gap-2">
               <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/80 p-1">
                 <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  variant={viewMode === 'grid' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('grid')}
                   className="h-8 w-8 p-0"
@@ -455,7 +362,7 @@ export default function DiscoverPage() {
                   <Grid3X3 className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant={viewMode === 'list' ? 'default' : 'ghost'}
+                  variant={viewMode === 'list' ? 'primary' : 'ghost'}
                   size="sm"
                   onClick={() => setViewMode('list')}
                   className="h-8 w-8 p-0"
@@ -510,13 +417,120 @@ export default function DiscoverPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1.3 }}
         >
+          {/* Campaign Creation CTA (when no campaigns exist) */}
+          {filteredCampaigns.length === 0 && !searchTerm && selectedCategory === 'all' && selectedTags.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 1.5 }}
+              className="mb-8"
+            >
+              <div className="bg-gradient-to-r from-orange-50 via-tiffany-50 to-orange-50 rounded-2xl border border-orange-200 p-8 text-center">
+                <div className="max-w-2xl mx-auto">
+                  <div className="w-16 h-16 bg-gradient-to-r from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Target className="w-8 h-8 text-orange-600" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                    Start the Bitcoin Revolution! 🚀
+                  </h3>
+                  <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                    No campaigns yet? Be the pioneer! Create the first Bitcoin fundraising campaign and show the world how easy it is to fund dreams with Bitcoin.
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div className="p-4 bg-white/60 rounded-lg">
+                      <div className="text-2xl font-bold text-orange-600 mb-1">1</div>
+                      <div className="text-sm font-medium">Sign up</div>
+                      <div className="text-xs text-gray-600">Create your account</div>
+                    </div>
+                    <div className="p-4 bg-white/60 rounded-lg">
+                      <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
+                      <div className="text-sm font-medium">Create</div>
+                      <div className="text-xs text-gray-600">Set up your campaign</div>
+                    </div>
+                    <div className="p-4 bg-white/60 rounded-lg">
+                      <div className="text-2xl font-bold text-green-600 mb-1">3</div>
+                      <div className="text-sm font-medium">Fund</div>
+                      <div className="text-xs text-gray-600">Receive Bitcoin donations</div>
+                    </div>
+                  </div>
+
+                  <Button
+                    href="/create"
+                    size="lg"
+                    className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                  >
+                    🎯 Create the First Campaign
+                  </Button>
+
+                  <p className="text-sm text-gray-500 mt-4">
+                    Already have an account? <a href="/auth" className="text-orange-600 hover:underline font-medium">Sign in</a> to get started.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
           {filteredCampaigns.length === 0 ? (
             <div className="text-center py-16">
-              <Target className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No campaigns found</h3>
-              <p className="text-gray-600 mb-6">Try adjusting your search criteria or browse all campaigns.</p>
-              <Button onClick={clearFilters}>Clear Filters</Button>
+              <div className="max-w-md mx-auto">
+                <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {searchTerm || selectedCategory !== 'all' || selectedTags.length > 0
+                    ? 'No campaigns match your criteria'
+                    : 'Be the first to create a Bitcoin campaign!'
+                  }
+                </h3>
+                <p className="text-gray-600 mb-8">
+                  {searchTerm || selectedCategory !== 'all' || selectedTags.length > 0
+                    ? 'Try adjusting your search criteria or browse all campaigns.'
+                    : 'Start a Bitcoin fundraising campaign and be part of the revolution. It takes just a few minutes!'
+                  }
+                </p>
+
+                <div className="space-y-3">
+                  <Button
+                    href="/create"
+                    className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    🚀 Create Your First Campaign
+                  </Button>
+
+                  {searchTerm || selectedCategory !== 'all' || selectedTags.length > 0 ? (
+                    <Button
+                      onClick={clearFilters}
+                      variant="outline"
+                      className="px-6 py-2"
+                    >
+                      Clear Filters
+                    </Button>
+                  ) : (
+                    <div className="text-sm text-gray-500">
+                      <p>Need inspiration? Check out our <a href="/blog" className="text-orange-600 hover:underline">blog</a> for campaign ideas.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Quick Start Guide */}
+                <div className="mt-8 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <h4 className="font-semibold text-orange-800 mb-2">Quick Start:</h4>
+                  <ol className="text-sm text-orange-700 space-y-1 text-left">
+                    <li>1. Sign up (or sign in)</li>
+                    <li>2. Click "Create Campaign" above</li>
+                    <li>3. Add your Bitcoin address</li>
+                    <li>4. Share your campaign link</li>
+                  </ol>
+                </div>
+              </div>
             </div>
+          ) : filteredCampaigns.length === 0 && (searchTerm || selectedCategory !== 'all' || selectedTags.length > 0) ? (
+            <>
+              {/* Filtered Results Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  No campaigns match your criteria
+                </h2>
+              </div>
+            </>
           ) : (
             <>
               {/* Results Header */}

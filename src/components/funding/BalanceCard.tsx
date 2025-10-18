@@ -12,7 +12,7 @@ interface BalanceCardProps {
 export function BalanceCard({ balance, isLoading, onRefresh }: BalanceCardProps) {
   // Format balance in a reader-friendly way
   const formatBalance = (btc: number) => {
-    if (btc === 0) return '0.00000000 BTC'
+    if (btc === 0) {return '0.00000000 BTC'}
     
     // If balance is less than 0.01 BTC, show 8 decimal places
     if (btc < 0.01) {

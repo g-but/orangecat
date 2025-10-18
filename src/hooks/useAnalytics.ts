@@ -59,7 +59,7 @@ export function useAnalytics(options: UseAnalyticsOptions = {}): UseAnalyticsRet
 
   // Auto-refresh interval
   useEffect(() => {
-    if (!enabled || !refreshInterval) return
+    if (!enabled || !refreshInterval) {return}
 
     const interval = setInterval(fetchMetrics, refreshInterval)
     return () => clearInterval(interval)

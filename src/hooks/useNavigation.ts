@@ -65,7 +65,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
 
   // Initialize navigation state from localStorage and defaults
   useEffect(() => {
-    if (!hydrated) return
+    if (!hydrated) {return}
 
     try {
       // Load sidebar state from localStorage
@@ -113,7 +113,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
 
   // Update active section and item based on pathname
   useEffect(() => {
-    if (!pathname) return
+    if (!pathname) {return}
 
     let activeSection: string | null = null
     let activeItem: string | null = null
@@ -126,7 +126,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
           break
         }
       }
-      if (activeSection) break
+      if (activeSection) {break}
     }
 
     setNavigationState(prev => ({
@@ -167,7 +167,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
   // Set sidebar open state
   const setSidebarOpen = useCallback((open: boolean) => {
     setNavigationState(prev => {
-      if (prev.isSidebarOpen === open) return prev
+      if (prev.isSidebarOpen === open) {return prev}
       persistSidebarState(open)
       return {
         ...prev,
@@ -200,16 +200,16 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
 
   // Filter sections based on auth state and requirements
   const getFilteredSections = useCallback(() => {
-    if (!hydrated) return []
+    if (!hydrated) {return []}
 
     return sections.filter(section => {
       // Check section-level auth requirements
-      if (section.requiresAuth && !user) return false
+      if (section.requiresAuth && !user) {return false}
 
       // Filter items within the section
       const filteredItems = section.items.filter(item => {
-        if (item.requiresAuth && !user) return false
-        if (item.requiresProfile && !profile) return false
+        if (item.requiresAuth && !user) {return false}
+        if (item.requiresProfile && !profile) {return false}
         return true
       })
 
@@ -218,8 +218,8 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
     }).map(section => ({
       ...section,
       items: section.items.filter(item => {
-        if (item.requiresAuth && !user) return false
-        if (item.requiresProfile && !profile) return false
+        if (item.requiresAuth && !user) {return false}
+        if (item.requiresProfile && !profile) {return false}
         return true
       })
     })).sort((a, b) => a.priority - b.priority)

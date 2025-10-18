@@ -41,8 +41,8 @@ export function PerformanceMonitor({ className = '' }: PerformanceMonitorProps) 
   }
 
   const getHealthStatus = () => {
-    if (error) return { status: 'error', color: 'text-red-600', icon: AlertTriangle }
-    if (isLoading) return { status: 'loading', color: 'text-yellow-600', icon: RefreshCw }
+    if (error) {return { status: 'error', color: 'text-red-600', icon: AlertTriangle }}
+    if (isLoading) {return { status: 'loading', color: 'text-yellow-600', icon: RefreshCw }}
     return { status: 'healthy', color: 'text-green-600', icon: CheckCircle }
   }
 
@@ -50,18 +50,18 @@ export function PerformanceMonitor({ className = '' }: PerformanceMonitorProps) 
   const HealthIcon = health.icon
 
   const getDataFreshness = () => {
-    if (!lastUpdated) return 'Never'
+    if (!lastUpdated) {return 'Never'}
     const now = Date.now()
     const diff = now - lastUpdated.getTime()
     const minutes = Math.floor(diff / 60000)
     const seconds = Math.floor((diff % 60000) / 1000)
     
-    if (minutes > 0) return `${minutes}m ${seconds}s ago`
+    if (minutes > 0) {return `${minutes}m ${seconds}s ago`}
     return `${seconds}s ago`
   }
 
   const getMetricsBreakdown = () => {
-    if (!metrics) return { real: 0, demo: 0, total: 0 }
+    if (!metrics) {return { real: 0, demo: 0, total: 0 }}
     
     let real = 0
     let demo = 0

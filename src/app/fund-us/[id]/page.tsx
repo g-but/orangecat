@@ -25,7 +25,7 @@ export default function FundingPage() {
   const fundingId = Array.isArray(params.id) ? params.id[0] : params.id || ''
 
   const loadPage = useCallback(async () => {
-    if (authLoading) return; // Don't load page data until auth is ready
+    if (authLoading) {return;} // Don't load page data until auth is ready
     
     try {
       const supabase = createBrowserClient(
@@ -38,7 +38,7 @@ export default function FundingPage() {
         .eq('id', fundingId)
         .single()
 
-      if (error) throw error
+      if (error) {throw error}
       setPage(data)
     } catch (err) {
       toast.error('Failed to load funding page')

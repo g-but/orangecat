@@ -84,7 +84,7 @@ function validateEnvironment(): EnvironmentConfig {
 // Safe storage helpers that work on both server and client
 const safeStorage = {
   getItem: (key: string) => {
-    if (!isBrowser) return null
+    if (!isBrowser) {return null}
     
     try {
       // Try localStorage first, then sessionStorage
@@ -112,7 +112,7 @@ const safeStorage = {
   },
   
   setItem: (key: string, value: any) => {
-    if (!isBrowser) return
+    if (!isBrowser) {return}
     
     try {
       const jsonValue = JSON.stringify(value)
@@ -143,7 +143,7 @@ const safeStorage = {
   },
   
   removeItem: (key: string) => {
-    if (!isBrowser) return
+    if (!isBrowser) {return}
     
     try {
       // Clean up from both storages

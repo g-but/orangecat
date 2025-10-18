@@ -12,8 +12,7 @@
  * Last Modified Summary: Performance optimization utilities for Option B implementation
  */
 
-import { lazy, ComponentType, Suspense, ReactNode } from 'react'
-import React from 'react'
+import React, { lazy, ComponentType, Suspense, ReactNode , useCallback, useEffect, useRef, useState } from 'react'
 import { logger } from './logger'
 
 // ==================== LAZY LOADING UTILITIES ====================
@@ -92,7 +91,7 @@ export class PerformanceCache<T = any> {
   get(key: string): T | null {
     const entry = this.cache.get(key)
     
-    if (!entry) return null
+    if (!entry) {return null}
     
     // Check if expired
     if (Date.now() - entry.timestamp > this.ttl) {
@@ -245,7 +244,7 @@ export class PerformanceMonitor {
 
   getStats(name: string) {
     const values = this.metrics.get(name) || []
-    if (values.length === 0) return null
+    if (values.length === 0) {return null}
 
     const sorted = [...values].sort((a, b) => a - b)
     return {
@@ -284,15 +283,15 @@ export function debounce<T extends (...args: any[]) => any>(
   return ((...args: Parameters<T>) => {
     const later = () => {
       timeout = null
-      if (!immediate) func(...args)
+      if (!immediate) {func(...args)}
     }
     
     const callNow = immediate && !timeout
     
-    if (timeout) clearTimeout(timeout)
+    if (timeout) {clearTimeout(timeout)}
     timeout = setTimeout(later, wait)
     
-    if (callNow) func(...args)
+    if (callNow) {func(...args)}
   }) as T
 }
 
@@ -343,7 +342,7 @@ export async function importWithFallback<T>(
  * Prefetch resources on interaction
  */
 export function prefetchOnInteraction(urls: string[]) {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {return}
 
   const prefetch = () => {
     urls.forEach(url => {
@@ -402,7 +401,6 @@ export const performanceMonitor = new PerformanceMonitor()
 
 // ==================== REACT HOOKS ====================
 
-import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Hook for debounced values
@@ -455,7 +453,7 @@ export function usePerformanceCache<T>(
   const cached = globalCache.get(key)
   
   return useCallback(() => {
-    if (cached) return cached
+    if (cached) {return cached}
     
     const value = factory()
     globalCache.set(key, value)
@@ -470,10 +468,10 @@ export function usePerformanceCache<T>(
  * Check if device has slow network connection
  */
 export function isSlowConnection(): boolean {
-  if (typeof navigator === 'undefined') return false
+  if (typeof navigator === 'undefined') {return false}
   
   const connection = (navigator as any).connection
-  if (!connection) return false
+  if (!connection) {return false}
   
   return connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g'
 }
@@ -482,7 +480,7 @@ export function isSlowConnection(): boolean {
  * Check if device is low-end
  */
 export function isLowEndDevice(): boolean {
-  if (typeof navigator === 'undefined') return false
+  if (typeof navigator === 'undefined') {return false}
   
   const memory = (navigator as any).deviceMemory
   return memory && memory < 4 // Less than 4GB RAM
@@ -492,8 +490,8 @@ export function isLowEndDevice(): boolean {
  * Get optimal image quality based on device capabilities
  */
 export function getOptimalImageQuality(): 'low' | 'medium' | 'high' {
-  if (isLowEndDevice() || isSlowConnection()) return 'low'
-  if (isSlowConnection()) return 'medium'
+  if (isLowEndDevice() || isSlowConnection()) {return 'low'}
+  if (isSlowConnection()) {return 'medium'}
   return 'high'
 }
 
@@ -507,7 +505,7 @@ export function createOptimizedEventHandler<T extends (...args: any[]) => void>(
   let rafId: number | null = null
   
   return ((...args: Parameters<T>) => {
-    if (rafId) cancelAnimationFrame(rafId)
+    if (rafId) {cancelAnimationFrame(rafId)}
     
     rafId = requestAnimationFrame(() => {
       handler(...args)

@@ -49,26 +49,26 @@ export default function PersonCard({
   const router = useRouter()
   
   const getPersonTypeIcon = (person: Person) => {
-    if (person.bitcoin_address || person.lightning_address) return Bitcoin
-    if (person.bio?.toLowerCase().includes('developer')) return Code
-    if (person.bio?.toLowerCase().includes('educator')) return GraduationCap
-    if (person.bio?.toLowerCase().includes('advocate')) return Megaphone
+    if (person.bitcoin_address || person.lightning_address) {return Bitcoin}
+    if (person.bio?.toLowerCase().includes('developer')) {return Code}
+    if (person.bio?.toLowerCase().includes('educator')) {return GraduationCap}
+    if (person.bio?.toLowerCase().includes('advocate')) {return Megaphone}
     return Users
   }
 
   const getPersonTypeColor = (person: Person) => {
-    if (person.bitcoin_address || person.lightning_address) return 'text-orange-600 bg-orange-100'
-    if (person.bio?.toLowerCase().includes('developer')) return 'text-blue-600 bg-blue-100'
-    if (person.bio?.toLowerCase().includes('educator')) return 'text-green-600 bg-green-100'
-    if (person.bio?.toLowerCase().includes('advocate')) return 'text-purple-600 bg-purple-100'
+    if (person.bitcoin_address || person.lightning_address) {return 'text-orange-600 bg-orange-100'}
+    if (person.bio?.toLowerCase().includes('developer')) {return 'text-blue-600 bg-blue-100'}
+    if (person.bio?.toLowerCase().includes('educator')) {return 'text-green-600 bg-green-100'}
+    if (person.bio?.toLowerCase().includes('advocate')) {return 'text-purple-600 bg-purple-100'}
     return 'text-gray-600 bg-gray-100'
   }
 
   const getPersonTypeLabel = (person: Person) => {
-    if (person.bitcoin_address || person.lightning_address) return 'Bitcoin Enabled'
-    if (person.bio?.toLowerCase().includes('developer')) return 'Developer'
-    if (person.bio?.toLowerCase().includes('educator')) return 'Educator'
-    if (person.bio?.toLowerCase().includes('advocate')) return 'Advocate'
+    if (person.bitcoin_address || person.lightning_address) {return 'Bitcoin Enabled'}
+    if (person.bio?.toLowerCase().includes('developer')) {return 'Developer'}
+    if (person.bio?.toLowerCase().includes('educator')) {return 'Educator'}
+    if (person.bio?.toLowerCase().includes('advocate')) {return 'Advocate'}
     return 'Member'
   }
 

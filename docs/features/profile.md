@@ -38,11 +38,15 @@ interface Profile {
 ```
 
 ### Validation Rules
-- Display Name: Required, non-empty
-- Username: Optional, must be unique and valid format
-- Bitcoin Address: Optional, must be valid format
-- Lightning Address: Optional, must be valid email format
-- Website: Optional, must be valid URL
+- **Username**: Required, 3-30 characters, alphanumeric with underscores/hyphens only. Must be unique.
+- **Name (display_name)**: Optional, max 100 characters. Displayed on profile. Auto-populated from username if not provided.
+- **Bio**: Optional, max 500 characters
+- **Location**: Optional, max 100 characters
+- **Bitcoin Address**: Optional, must be valid format
+- **Lightning Address**: Optional, must be valid email format
+- **Website**: Optional, must be valid URL
+- **Avatar URL**: Optional, must be valid URL
+- **Banner URL**: Optional, must be valid URL
 
 ### Security Considerations
 - All profile operations require authentication

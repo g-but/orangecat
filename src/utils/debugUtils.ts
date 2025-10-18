@@ -59,7 +59,7 @@ export function safeLog(...args: EventHandlerArgs) {
 
 // Function to check if console has been overridden
 export function isConsoleOverridden(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   
   // Check if console.log has been replaced with something else
   return console.log.toString().includes('overrideMethod') || 

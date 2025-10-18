@@ -100,22 +100,22 @@ class Logger {
   }
 
   debug(message: string, data?: any, source?: string): void {
-    if (!this.shouldLog('debug')) return
+    if (!this.shouldLog('debug')) {return}
     this.output(this.formatLogEntry('debug', message, data, source))
   }
 
   info(message: string, data?: any, source?: string): void {
-    if (!this.shouldLog('info')) return
+    if (!this.shouldLog('info')) {return}
     this.output(this.formatLogEntry('info', message, data, source))
   }
 
   warn(message: string, data?: any, source?: string): void {
-    if (!this.shouldLog('warn')) return
+    if (!this.shouldLog('warn')) {return}
     this.output(this.formatLogEntry('warn', message, data, source))
   }
 
   error(message: string, data?: any, source?: string): void {
-    if (!this.shouldLog('error')) return
+    if (!this.shouldLog('error')) {return}
     this.output(this.formatLogEntry('error', message, data, source))
   }
 

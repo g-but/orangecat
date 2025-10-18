@@ -11,7 +11,7 @@ interface CampaignDetailsModalProps {
 }
 
 export default function CampaignDetailsModal({ campaign, isOpen, onClose }: CampaignDetailsModalProps) {
-  if (!isOpen || !campaign) return null
+  if (!isOpen || !campaign) {return null}
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">

@@ -1,12 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { ArrowLeft, Play, Pause, RotateCcw, ExternalLink, Building } from 'lucide-react'
+import { ArrowLeft, Play, Pause, RotateCcw, ExternalLink, Building , LucideIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Initiative, loadIconComponent } from '@/data/initiatives-lazy'
 import Button from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { LucideIcon } from 'lucide-react'
 
 interface DemoPageProps {
   initiative: Initiative

@@ -35,9 +35,10 @@ import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Textarea from '@/components/ui/Textarea'
 import DefaultAvatar from '@/components/ui/DefaultAvatar'
+import TransparencyScore from '@/components/ui/TransparencyScore'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
-import { ProfileStorageService } from '@/services/profile/profileStorageService'
+import { ProfileStorageService } from '@/services/profile/storage'
 
 interface UnifiedProfileLayoutProps {
   profile: ScalableProfile
@@ -176,7 +177,7 @@ export default function UnifiedProfileLayout({
 
   // Handle save
   const handleSave = async () => {
-    if (!onSave) return
+    if (!onSave) {return}
     
     setIsSaving(true)
     try {
@@ -198,8 +199,8 @@ export default function UnifiedProfileLayout({
 
   // Get completion color
   const getCompletionColor = () => {
-    if (completionPercentage >= 80) return 'from-green-500 to-emerald-500'
-    if (completionPercentage >= 60) return 'from-yellow-500 to-orange-500'
+    if (completionPercentage >= 80) {return 'from-green-500 to-emerald-500'}
+    if (completionPercentage >= 60) {return 'from-yellow-500 to-orange-500'}
     return 'from-red-500 to-pink-500'
   }
 
@@ -232,7 +233,7 @@ export default function UnifiedProfileLayout({
             {/* Banner Upload (Edit Mode) */}
             {mode === 'edit' && (
               <>
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/20">
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/20">
                   <Button
                     variant="outline"
                     size="sm"
@@ -289,7 +290,7 @@ export default function UnifiedProfileLayout({
               {/* Avatar Upload (Edit Mode) */}
               {mode === 'edit' && (
                 <>
-                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/40 rounded-2xl">
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-black/40 rounded-2xl">
                     <Button
                       variant="outline"
                       size="sm"
@@ -377,7 +378,7 @@ export default function UnifiedProfileLayout({
                 </div>
                 <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
                   <div 
-                    className={`h-full bg-gradient-to-r ${getCompletionColor()} transition-all duration-500`}
+                    className={`h-full bg-gradient-to-r ${getCompletionColor()} transition-all duration-300`}
                     style={{ width: `${completionPercentage}%` }}
                   />
                 </div>

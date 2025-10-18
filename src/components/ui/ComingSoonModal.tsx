@@ -38,7 +38,7 @@ export default function ComingSoonModal({
     }
   }, [isOpen])
 
-  if (!mounted || !isOpen) return null
+  if (!mounted || !isOpen) {return null}
 
   return (
     <div className="fixed inset-0 z-modal flex items-center justify-center">

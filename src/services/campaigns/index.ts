@@ -79,7 +79,7 @@ export class CampaignService {
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {throw error}
 
       // 2. Convert database campaigns to unified format
       const unifiedDbCampaigns: UnifiedCampaign[] = (dbCampaigns || []).map((campaign: any) => ({
@@ -188,7 +188,7 @@ export class CampaignService {
 
       // Helper function to safely parse numbers
       const safeParseFloat = (value: any): number | null => {
-        if (!value) return null
+        if (!value) {return null}
         const parsed = parseFloat(value)
         return isNaN(parsed) ? null : parsed
       }
@@ -225,7 +225,7 @@ export class CampaignService {
           .select()
           .single()
         
-        if (error) throw error
+        if (error) {throw error}
         resultId = data.id
       } else {
         // Create new draft
@@ -235,7 +235,7 @@ export class CampaignService {
           .select()
           .single()
         
-        if (error) throw error
+        if (error) {throw error}
         resultId = data.id
         
         // Update localStorage with new draft ID
@@ -273,7 +273,7 @@ export class CampaignService {
 
       // Helper function to safely parse numbers
       const safeParseFloat = (value: any): number | null => {
-        if (!value) return null
+        if (!value) {return null}
         const parsed = parseFloat(value)
         return isNaN(parsed) ? null : parsed
       }
@@ -300,7 +300,7 @@ export class CampaignService {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {throw error}
 
       // Clear local draft after successful publish
       this.clearLocalDraft(userId)
@@ -325,12 +325,12 @@ export class CampaignService {
   getLocalDraft(userId: string): LocalDraft | null {
     try {
       const saved = localStorage.getItem(this.localStorageKey(userId))
-      if (!saved) return null
+      if (!saved) {return null}
 
       const data = JSON.parse(saved)
       const title = data.formData?.title?.trim()
       
-      if (!title) return null
+      if (!title) {return null}
 
       return {
         id: `local-${userId}`,

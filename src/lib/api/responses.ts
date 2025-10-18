@@ -72,8 +72,8 @@ export function createErrorResponse(
     timestamp: new Date().toISOString()
   }
 
-  if (type) responseData.type = type
-  if (details) responseData.details = details
+  if (type) {responseData.type = type}
+  if (details) {responseData.details = details}
 
   return NextResponse.json(responseData, { status })
 }
@@ -92,9 +92,9 @@ export function createSuccessResponse(
     timestamp: new Date().toISOString()
   }
 
-  if (data !== undefined) responseData.data = data
-  if (message) responseData.message = message
-  if (meta) responseData.meta = meta
+  if (data !== undefined) {responseData.data = data}
+  if (message) {responseData.message = message}
+  if (meta) {responseData.meta = meta}
 
   return NextResponse.json(responseData, { status })
 }

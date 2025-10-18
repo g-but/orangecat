@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { Download, X, Smartphone } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logger } from '@/utils/logger'
@@ -100,7 +100,7 @@ export function PWAInstallButton({
   }, [showBanner])
 
   const handleInstallClick = async () => {
-    if (!deferredPrompt) return
+    if (!deferredPrompt) {return}
 
     setIsInstalling(true)
     
@@ -137,7 +137,7 @@ export function PWAInstallButton({
   // Banner variant
   if (variant === 'banner' && showInstallBanner) {
     return (
-      <div className="fixed top-16 left-4 right-4 z-50 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-lg p-4 md:max-w-md md:left-auto">
+      <div className="fixed top-16 left-4 right-4 z-50 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg shadow-lg p-4 md:max-w-md md:left-auto animate-fade-in-up">
         <div className="flex items-start space-x-3">
           <div className="flex-shrink-0">
             <Smartphone className="w-6 h-6" />
@@ -203,7 +203,7 @@ export function PWAInstallButton({
       onClick={handleInstallClick}
       disabled={isInstalling}
       className={cn(
-        'transition-all duration-200',
+        'transition-all duration-150',
         sizeClasses[size],
         className
       )}

@@ -1,13 +1,12 @@
 'use client'
 
-import { useParams } from 'next/navigation'
+import { useParams , useRouter } from 'next/navigation'
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile'
 import UnifiedProfileLayout from '@/components/profile/UnifiedProfileLayout'
 import Loading from '@/components/Loading'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { ArrowLeft } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 
 export default function PublicProfilePage() {
   const params = useParams()

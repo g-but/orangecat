@@ -6,10 +6,8 @@
  * Last Modified Summary: Extracted from profileService.ts for modular architecture - handles write operations
  */
 
-import supabase from '@/services/supabase/client'
 import { logger, logProfile } from '@/utils/logger'
-import { ProfileMapper } from './mapper'
-import { ProfileReader } from './reader'
+import { ClientProfileService, type ClientProfileUpdateData } from './clientProfileService'
 import type { ScalableProfile, ScalableProfileFormData, ProfileAnalytics, ProfileServiceResponse } from './types'
 
 // =====================================================================
@@ -20,7 +18,7 @@ export class ProfileWriter {
   
   /**
    * Update profile with comprehensive field support
-   * Uses the secure API endpoint instead of direct database access
+   * Uses the unified profile service for clean, consistent operations
    */
   static async updateProfile(
     userId: string,
@@ -33,37 +31,54 @@ export class ProfileWriter {
     try {
       logProfile('updateProfile', { userId, formData })
 
-      // Call the API endpoint instead of direct database access
-      const response = await fetch('/api/profile/me', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify(formData),
-      })
+      // Convert ScalableProfileFormData to ClientProfileUpdateData
+      const updateData: ClientProfileUpdateData = {
+        display_name: formData.display_name,
+        bio: formData.bio,
+        avatar_url: formData.avatar_url,
+        banner_url: formData.banner_url,
+        website: formData.website,
+        bitcoin_address: formData.bitcoin_address,
+        lightning_address: formData.lightning_address
+      }
 
-      const result = await response.json()
+      // Use the client service
+      const result = await ClientProfileService.updateProfile(userId, updateData)
 
-      if (!response.ok) {
-        logger.error('ProfileWriter.updateProfile API error:', result)
+      if (!result.success) {
+        logger.error('ProfileWriter.updateProfile error:', result.error)
         return {
           success: false,
           error: result.error || 'Failed to update profile. Please try again.'
         }
       }
 
-      if (!result.success || !result.data) {
-        return {
-          success: false,
-          error: result.error || 'Profile update failed without specific error'
-        }
+      // Convert Profile to ScalableProfile format
+      const updatedProfile: ScalableProfile = {
+        id: result.data!.id,
+        username: result.data!.username,
+        display_name: result.data!.display_name,
+        bio: result.data!.bio,
+        avatar_url: result.data!.avatar_url,
+        banner_url: result.data!.banner_url,
+        website: result.data!.website,
+        bitcoin_address: result.data!.bitcoin_address,
+        lightning_address: result.data!.lightning_address,
+        created_at: result.data!.created_at,
+        updated_at: result.data!.updated_at,
+        // Default values for ScalableProfile fields
+        last_active_at: result.data!.updated_at,
+        status: 'active',
+        onboarding_completed: true,
+        profile_views: 0,
+        follower_count: 0,
+        following_count: 0,
+        campaign_count: 0,
+        total_raised: 0,
+        total_donated: 0
       }
 
-      // Map the returned data to ScalableProfile format
-      const updatedProfile = ProfileMapper.mapDatabaseToProfile(result.data)
       logProfile('updateProfile success', { userId, profile: updatedProfile })
-
       return { success: true, data: updatedProfile }
 
     } catch (err) {

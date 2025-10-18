@@ -1,49 +1,44 @@
-/**
- * HEALTH CHECK API ENDPOINT - Production Monitoring
- * 
- * Created: 2025-06-08
- * Last Modified: 2025-06-08
- * Last Modified Summary: Production health check endpoint for Option D deployment
- */
+import { NextRequest } from 'next/server'
+import { createServerClient } from '@/lib/db'
 
-import { NextResponse } from 'next/server'
-
-export async function GET() {
+// GET /api/health - Health check endpoint
+export async function GET(request: NextRequest) {
   try {
-    const memoryUsage = process.memoryUsage()
-    const usedMB = Math.round(memoryUsage.heapUsed / 1024 / 1024)
-    const totalMB = Math.round(memoryUsage.heapTotal / 1024 / 1024)
-    const usagePercent = (usedMB / totalMB) * 100
+    const supabase = await createServerClient()
+    
+    // Test database connection
+    const { error } = await supabase
+      .from('profiles')
+      .select('id')
+      .limit(1)
 
-    const status = usagePercent > 90 ? 'unhealthy' : usagePercent > 75 ? 'degraded' : 'healthy'
-
-    const response = {
-      status,
-      timestamp: new Date().toISOString(),
-      version: '1.0.0',
-      uptime: process.uptime(),
-      memory: {
-        used: usedMB,
-        total: totalMB,
-        usage: usagePercent.toFixed(1)
-      },
-      nodejs: process.version,
-      platform: process.platform
+    if (error) {
+      return Response.json(
+        { 
+          status: 'unhealthy', 
+          error: 'Database connection failed',
+          timestamp: new Date().toISOString()
+        },
+        { status: 503 }
+      )
     }
 
-    const statusCode = status === 'healthy' ? 200 : status === 'degraded' ? 200 : 503
-
-    return NextResponse.json(response, { status: statusCode })
+    return Response.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      services: {
+        database: 'healthy',
+        api: 'healthy'
+      }
+    })
   } catch (error) {
-    return NextResponse.json(
-      {
-        status: 'unhealthy',
-        timestamp: new Date().toISOString(),
-        error: 'Health check failed'
+    return Response.json(
+      { 
+        status: 'unhealthy', 
+        error: 'Health check failed',
+        timestamp: new Date().toISOString()
       },
       { status: 503 }
     )
   }
 }
-
- 

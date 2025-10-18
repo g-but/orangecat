@@ -52,15 +52,15 @@ export function MetricCard({
   }
 
   const getBorderColor = () => {
-    if (metric.isDemo) return 'border-orange-200 bg-orange-50/50'
-    if (metric.confidence === 'low') return 'border-red-200 bg-red-50/50'
+    if (metric.isDemo) {return 'border-orange-200 bg-orange-50/50'}
+    if (metric.confidence === 'low') {return 'border-red-200 bg-red-50/50'}
     return 'border-gray-200 bg-white'
   }
 
   return (
-    <Card 
-      className={`${getBorderColor()} transition-all duration-200 hover:shadow-md ${
-        onClick ? 'cursor-pointer hover:scale-105 touch-manipulation' : ''
+    <Card
+      className={`${getBorderColor()} transition-all duration-150 hover:shadow-md ${
+        onClick ? 'cursor-pointer touch-manipulation' : ''
       } ${className}`}
       onClick={onClick}
     >

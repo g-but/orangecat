@@ -1,8 +1,10 @@
 /** @type {import('next').NextConfig} */
 
-const { getOptimizedWebpackConfig } = require('./scripts/webpack-bundle-optimizer');
-
 const nextConfig = {
+  // Output configuration
+  output: 'standalone',
+  outputFileTracingRoot: '/home/g/dev/orangecat',
+  
   // Externalize Supabase packages for server-side rendering
   serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
   
@@ -104,9 +106,6 @@ const nextConfig = {
       },
     },
   }),
-
-  // Output configuration
-  output: 'standalone',
   
   // TypeScript optimization - completely skip TypeScript validation
   typescript: {
@@ -130,11 +129,6 @@ const nextConfig = {
   // Advanced webpack optimizations for bundle size
   webpack: (config, options) => {
     const { dev, isServer, webpack } = options;
-    
-    // Apply comprehensive bundle optimizations
-    if (!dev) {
-      config = getOptimizedWebpackConfig(config, options);
-    }
 
     // Exclude Supabase packages from server-side bundling
     if (isServer) {
@@ -167,11 +161,13 @@ const nextConfig = {
         path: false,
       };
       
-      // Simple global polyfills
+      // Simple global polyfills and environment variables
       config.plugins.push(
         new webpack.DefinePlugin({
           'global': 'globalThis',
           'self': 'globalThis',
+          'process.env.NEXT_PUBLIC_SUPABASE_URL': JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_URL),
+          'process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY': JSON.stringify(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
         })
       );
     }
@@ -179,30 +175,6 @@ const nextConfig = {
     return config
   },
 
-  // Bundle analyzer (only when requested)
-  ...(process.env.ANALYZE === 'true' && {
-    webpack: (config, { isServer, webpack, dev }) => {
-      // Apply all optimizations first
-      if (!dev) {
-        config = getOptimizedWebpackConfig(config, { dev, isServer, webpack });
-      }
-      
-      // Add bundle analyzer
-      if (!isServer) {
-        const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-        config.plugins.push(
-          new BundleAnalyzerPlugin({
-            analyzerMode: 'static',
-            openAnalyzer: false,
-            generateStatsFile: true,
-            reportFilename: '../bundle-analyzer-report.html',
-            statsFilename: '../webpack-stats.json',
-          })
-        );
-      }
-      return config;
-    },
-  }),
 }
 
 module.exports = nextConfig

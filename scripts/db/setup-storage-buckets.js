@@ -6,7 +6,7 @@
  */
 
 const { createClient } = require('@supabase/supabase-js')
-require('dotenv').config()
+require('dotenv').config({ path: '.env.local' })
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -55,17 +55,19 @@ async function setupStorageBuckets() {
     // Set up bucket policies
     console.log('Setting up bucket policies...')
 
-    // Avatars bucket policy
-    const { error: avatarsPolicyError } = await supabase.rpc('create_policy', {
+    // Avatars bucket policy - Allow INSERT and UPDATE for own folder
+    const { error: avatarsInsertPolicyError } = await supabase.rpc('create_policy', {
       table_name: 'objects',
-      policy_name: 'Users can upload their own avatars',
+      policy_name: 'Users can upload/update their own avatars',
       definition: `
         (bucket_id = 'avatars'::text) AND 
+        (auth.role() = 'authenticated') AND
         (auth.uid()::text = (storage.foldername(name))[1])
       `,
-      action: 'INSERT'
+      action: 'INSERT,UPDATE'
     })
 
+    // Public read access for avatars
     const { error: avatarsSelectPolicyError } = await supabase.rpc('create_policy', {
       table_name: 'objects',
       policy_name: 'Avatar images are publicly accessible',
@@ -74,14 +76,15 @@ async function setupStorageBuckets() {
     })
 
     // Banners bucket policy
-    const { error: bannersPolicyError } = await supabase.rpc('create_policy', {
+    const { error: bannersInsertPolicyError } = await supabase.rpc('create_policy', {
       table_name: 'objects',
-      policy_name: 'Users can upload their own banners',
+      policy_name: 'Users can upload/update their own banners',
       definition: `
         (bucket_id = 'banners'::text) AND 
+        (auth.role() = 'authenticated') AND
         (auth.uid()::text = (storage.foldername(name))[1])
       `,
-      action: 'INSERT'
+      action: 'INSERT,UPDATE'
     })
 
     const { error: bannersSelectPolicyError } = await supabase.rpc('create_policy', {

@@ -18,7 +18,7 @@ export default function Footer() {
     pathname.startsWith('/events') ||
     pathname.startsWith('/organizations') ||
     pathname.startsWith('/projects') ||
-    pathname.startsWith('/fundraising')
+    pathname.startsWith('/create')
   )
 
   const scrollToTop = () => {
@@ -157,6 +157,14 @@ export default function Footer() {
               >
                 Documentation
               </Link>
+              <a
+                href="https://github.com/g-but/orangecat"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
+              >
+                Source Code
+              </a>
               <Link
                 href="/api"
                 className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"

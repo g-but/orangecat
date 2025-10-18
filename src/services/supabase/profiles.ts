@@ -123,7 +123,6 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
     const profile: Profile = {
       id: result.data.id,
       username: result.data.username,
-      display_name: result.data.display_name || null,
       display_name: result.data.display_name,
       bio: result.data.bio,
       avatar_url: result.data.avatar_url,
@@ -275,7 +274,6 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
     const profile: Profile = {
       id: result.data.id,
       username: result.data.username,
-      display_name: result.data.display_name || null,
       display_name: result.data.display_name,
       bio: result.data.bio,
       avatar_url: result.data.avatar_url,

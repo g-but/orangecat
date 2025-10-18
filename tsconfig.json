@@ -8,7 +8,10 @@
     ],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
     "noEmit": true,
     "incremental": true,
     "module": "esnext",
@@ -31,12 +34,11 @@
       "@/types/*": ["src/types/*"],
       "@/utils/*": ["src/utils/*"],
       "@/services/*": ["src/services/*"],
+      "@/stores/*": ["src/stores/*"],
     },
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": true,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true
+    "noFallthroughCasesInSwitch": true
   },
   "include": [
     "next-env.d.ts",

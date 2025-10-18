@@ -51,25 +51,25 @@ async function handleGetOrganizations(request: AuthenticatedRequest) {
     const params: OrganizationSearchParams = {} as OrganizationSearchParams
 
     const q = searchParams.get('q')
-    if (q) params.q = q
+    if (q) {params.q = q}
 
     const type = searchParams.get('type') as OrganizationType
-    if (type) params.type = type
+    if (type) {params.type = type}
 
     const category = searchParams.get('category')
-    if (category) params.category = category
+    if (category) {params.category = category}
 
     const pageStr = searchParams.get('page')
-    if (pageStr) params.page = parseInt(pageStr)
+    if (pageStr) {params.page = parseInt(pageStr)}
 
     const limitStr = searchParams.get('limit')
-    if (limitStr) params.limit = Math.min(parseInt(limitStr), 100)
+    if (limitStr) {params.limit = Math.min(parseInt(limitStr), 100)}
 
     const sort = searchParams.get('sort') as OrganizationSearchParams['sort']
-    if (sort) params.sort = sort
+    if (sort) {params.sort = sort}
 
     const order = searchParams.get('order') as OrganizationSearchParams['order']
-    if (order) params.order = order
+    if (order) {params.order = order}
 
     // Rate limiting
     const rateLimitId = `orgs_get:${user.id}`
@@ -306,3 +306,9 @@ async function handleCreateOrganization(request: AuthenticatedRequest) {
 // Export the wrapped handlers
 export const GET = withAuth(handleGetOrganizations)
 export const POST = withAuth(handleCreateOrganization)
+
+
+
+
+
+

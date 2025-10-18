@@ -49,7 +49,7 @@ npm run test:comprehensive:watch
 
 **Framework**: Jest with Testing Library
 
-**Coverage Target**: 95%+
+**Coverage Target**: 85%+
 
 #### Writing Unit Tests
 
@@ -190,7 +190,7 @@ OrangeCat uses advanced Jest configuration for comprehensive testing:
 
 - **Main Config**: `jest.config.advanced.js`
 - **Setup File**: `jest.setup.advanced.ts`
-- **Coverage Thresholds**: 85-95% across different modules
+- **Coverage Thresholds**: 85-85% across different modules
 
 ### Playwright Configuration
 

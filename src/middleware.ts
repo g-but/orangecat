@@ -8,7 +8,7 @@ const publicRoutes = ['/', '/auth', '/auth/reset-password', '/auth/forgot-passwo
 const protectedRoutes = ['/dashboard', '/profile', '/settings']
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+  const response = NextResponse.next({
     request: {
       headers: request.headers,
     },

@@ -79,7 +79,7 @@ export default function SettingsPage() {
     
     try {
       const { error } = await supabase.auth.updateUser({ email: formData.email })
-      if (error) throw error
+      if (error) {throw error}
       toast.success('Confirmation email sent! Please check your inbox.')
     } catch (error: any) {
       toast.error(error.message || 'Failed to update email.')
@@ -130,7 +130,7 @@ export default function SettingsPage() {
     const confirmed = window.confirm(
       'Are you absolutely sure you want to delete your account? This action cannot be undone.'
     )
-    if (!confirmed) return
+    if (!confirmed) {return}
 
     setIsDeleting(true)
     try {

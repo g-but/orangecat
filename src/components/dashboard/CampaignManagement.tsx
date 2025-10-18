@@ -61,7 +61,7 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
   }
 
   const handleSave = async () => {
-    if (!user?.id) return
+    if (!user?.id) {return}
     
     setIsSaving(true)
     try {
@@ -80,7 +80,7 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
   }
 
   const handleDelete = async () => {
-    if (!user?.id) return
+    if (!user?.id) {return}
     
     try {
       await deleteCampaign(campaign.id)
@@ -102,7 +102,7 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
   }
 
   const getProgress = () => {
-    if (!campaign.goal_amount) return 0
+    if (!campaign.goal_amount) {return 0}
     return Math.min(((campaign.total_funding || 0) / campaign.goal_amount) * 100, 100)
   }
 

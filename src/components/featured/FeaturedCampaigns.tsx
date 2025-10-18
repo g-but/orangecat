@@ -55,21 +55,21 @@ export default function FeaturedCampaigns({
   }
 
   const formatProgress = (campaign: FeaturedCampaign) => {
-    if (!campaign.goal_amount) return 0
+    if (!campaign.goal_amount) {return 0}
     return Math.min((campaign.total_funding / campaign.goal_amount) * 100, 100)
   }
 
   const formatTimeLeft = (endDate?: string) => {
-    if (!endDate) return null
+    if (!endDate) {return null}
     
     const now = new Date()
     const end = new Date(endDate)
     const diffTime = end.getTime() - now.getTime()
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     
-    if (diffDays <= 0) return 'Ended'
-    if (diffDays === 1) return '1 day left'
-    if (diffDays <= 30) return `${diffDays} days left`
+    if (diffDays <= 0) {return 'Ended'}
+    if (diffDays === 1) {return '1 day left'}
+    if (diffDays <= 30) {return `${diffDays} days left`}
     
     const diffMonths = Math.ceil(diffDays / 30)
     return `${diffMonths} month${diffMonths > 1 ? 's' : ''} left`
