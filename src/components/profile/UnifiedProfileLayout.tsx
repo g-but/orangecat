@@ -6,8 +6,6 @@ import Image from 'next/image'
 import Link from 'next/link'
 import {
   Edit,
-  Eye,
-  EyeOff,
   Bitcoin,
   Globe,
   Users,
@@ -16,7 +14,9 @@ import {
   Settings,
   Shield,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Zap,
+  QrCode
 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { ScalableProfile, ProfileFormData } from '@/types/database'
@@ -24,6 +24,8 @@ import Button from '@/components/ui/Button'
 import DefaultAvatar from '@/components/ui/DefaultAvatar'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { QRCodeSVG } from 'qrcode.react'
+import BitcoinWalletStats from '@/components/bitcoin/BitcoinWalletStats'
 
 interface UnifiedProfileLayoutProps {
   profile: ScalableProfile
@@ -45,8 +47,8 @@ export default function UnifiedProfileLayout({
   const router = useRouter()
   const { user } = useAuth()
 
-  // UI states (removed form/upload states as editing is handled by modal)
-  const [showBitcoinDetails, setShowBitcoinDetails] = useState(false)
+  // UI states
+  const [showQR, setShowQR] = useState<'bitcoin' | 'lightning' | null>(null)
 
   // Calculate profile completion
   const calculateCompletion = () => {
@@ -177,78 +179,127 @@ export default function UnifiedProfileLayout({
             </div>
 
             {/* Bitcoin & Payment Details */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                  <Bitcoin className="w-5 h-5 text-orange-500" />
-                  Bitcoin & Payment Details
-                </h3>
-                {(profile.bitcoin_address || profile.lightning_address) && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowBitcoinDetails(!showBitcoinDetails)}
-                  >
-                    {showBitcoinDetails ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </Button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {profile.bitcoin_address && (
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 mb-2">Bitcoin Address</div>
-                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                      <code className="text-sm font-mono flex-1 truncate">
-                        {showBitcoinDetails ? profile.bitcoin_address : '••••••••••••••••'}
-                      </code>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(profile.bitcoin_address!, 'Bitcoin address')}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
+            {(profile.bitcoin_address || profile.lightning_address) ? (
+              <div className="space-y-6">
+                {/* Donation Section */}
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl shadow-xl border-2 border-orange-200 p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                      <Bitcoin className="w-6 h-6 text-orange-500" />
+                      Accept Donations
+                    </h3>
                   </div>
-                )}
 
-                {profile.lightning_address && (
-                  <div>
-                    <div className="text-sm font-medium text-gray-700 mb-2">Lightning Address</div>
-                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
-                      <code className="text-sm font-mono flex-1 truncate">
-                        {showBitcoinDetails ? profile.lightning_address : '••••••••••••••••'}
-                      </code>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyToClipboard(profile.lightning_address!, 'Lightning address')}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Bitcoin Address */}
+                    {profile.bitcoin_address && (
+                      <div className="bg-white rounded-xl p-5 shadow-md border border-orange-100">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Bitcoin className="w-5 h-5 text-orange-500" />
+                          <h4 className="font-semibold text-gray-900">Bitcoin</h4>
+                        </div>
 
-                {!profile.bitcoin_address && !profile.lightning_address && (
-                  <div className="col-span-2 text-center text-gray-500 py-8">
-                    <Bitcoin className="w-8 h-8 mx-auto mb-2 text-gray-300" />
-                    <p>No payment details added yet</p>
-                    {isOwnProfile && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onModeChange?.('edit')}
-                        className="mt-2"
-                      >
-                        Add Payment Details
-                      </Button>
+                        {/* QR Code */}
+                        <div className="flex justify-center mb-4">
+                          <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
+                            <QRCodeSVG
+                              value={`bitcoin:${profile.bitcoin_address}`}
+                              size={160}
+                              level="H"
+                              includeMargin={false}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Address */}
+                        <div className="mb-3">
+                          <div className="text-xs text-gray-500 mb-1">Address</div>
+                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <code className="text-xs font-mono text-gray-900 break-all">
+                              {profile.bitcoin_address}
+                            </code>
+                          </div>
+                        </div>
+
+                        {/* Copy Button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(profile.bitcoin_address!, 'Bitcoin address')}
+                          className="w-full"
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy Address
+                        </Button>
+                      </div>
+                    )}
+
+                    {/* Lightning Address */}
+                    {profile.lightning_address && (
+                      <div className="bg-white rounded-xl p-5 shadow-md border border-yellow-100">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Zap className="w-5 h-5 text-yellow-500" />
+                          <h4 className="font-semibold text-gray-900">Lightning</h4>
+                        </div>
+
+                        {/* QR Code */}
+                        <div className="flex justify-center mb-4">
+                          <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
+                            <QRCodeSVG
+                              value={profile.lightning_address}
+                              size={160}
+                              level="H"
+                              includeMargin={false}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Address */}
+                        <div className="mb-3">
+                          <div className="text-xs text-gray-500 mb-1">Address</div>
+                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                            <code className="text-xs font-mono text-gray-900 break-all">
+                              {profile.lightning_address}
+                            </code>
+                          </div>
+                        </div>
+
+                        {/* Copy Button */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => copyToClipboard(profile.lightning_address!, 'Lightning address')}
+                          className="w-full"
+                        >
+                          <Copy className="w-4 h-4 mr-2" />
+                          Copy Address
+                        </Button>
+                      </div>
                     )}
                   </div>
+                </div>
+
+                {/* Bitcoin Wallet Stats - Only show if Bitcoin address exists */}
+                {profile.bitcoin_address && (
+                  <BitcoinWalletStats address={profile.bitcoin_address} />
                 )}
               </div>
-            </div>
+            ) : isOwnProfile && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
+                <div className="text-center text-gray-500 py-8">
+                  <Bitcoin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Accept Bitcoin Donations</h3>
+                  <p className="text-sm mb-4">Add your Bitcoin or Lightning address to start receiving donations</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => onModeChange?.('edit')}
+                  >
+                    <Bitcoin className="w-4 h-4 mr-2" />
+                    Add Payment Details
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right Column - Stats & Actions */}
