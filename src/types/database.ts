@@ -350,6 +350,7 @@ export type ProfileFormData = {
   username?: string | null
   display_name?: string | null
   bio?: string | null
+  location?: string | null
   avatar_url?: string | null
   banner_url?: string | null
   website?: string | null
