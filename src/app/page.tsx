@@ -120,7 +120,7 @@ export default function Home() {
                 🚀 Smart Setup Guide
               </Button>
               <Button
-                href="/create"
+                href="/wizard/campaign"
                 variant="outline"
                 size="lg"
                 className="px-8 py-4"

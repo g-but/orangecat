@@ -165,7 +165,7 @@ export default function CreateOrganizationModal({
             onClick={(e) => e.stopPropagation()}
             className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
-            {/* Header */}
+          {/* Header */}
             <div className="sticky top-0 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 p-6 flex items-center justify-between z-10">
               <h2 className="text-2xl font-bold text-gray-900">Create Organization</h2>
               <button
@@ -188,7 +188,7 @@ export default function CreateOrganizationModal({
                   <div>
                     <p className="font-semibold text-green-800">Organization created successfully!</p>
                     <p className="text-sm text-green-700">Redirecting to your new organization...</p>
-                  </div>
+          </div>
                 </motion.div>
               )}
 
@@ -202,7 +202,7 @@ export default function CreateOrganizationModal({
                   <div>
                     <p className="font-semibold text-red-800">Error</p>
                     <p className="text-sm text-red-700">{error}</p>
-                  </div>
+          </div>
                 </motion.div>
               )}
 
@@ -242,7 +242,7 @@ export default function CreateOrganizationModal({
                       />
                     </div>
                     <Button
-                      type="button"
+                          type="button"
                       variant="outline"
                       onClick={() => generateSlug(formData.name)}
                       disabled={!formData.name}
@@ -324,16 +324,16 @@ export default function CreateOrganizationModal({
 
                 {/* Visibility */}
                 <div className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
+                    <input
+                      type="checkbox"
                     name="is_public"
-                    checked={formData.is_public}
+                      checked={formData.is_public}
                     onChange={handleInputChange}
                     className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
                   <label className="text-sm font-medium text-gray-700">
                     Make this organization public
-                  </label>
+                    </label>
                 </div>
 
                 {/* Buttons */}
@@ -366,8 +366,8 @@ export default function CreateOrganizationModal({
                     )}
                   </Button>
                 </div>
-              </form>
-            </div>
+          </form>
+        </div>
           </motion.div>
         </motion.div>
       )}

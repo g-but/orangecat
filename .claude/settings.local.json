@@ -86,7 +86,8 @@
       "Bash(env)",
       "Bash(unset:*)",
       "Bash(NEXT_PUBLIC_SUPABASE_URL=\"https://ohkueislstxomdjavyhs.supabase.co\":*)",
-      "Bash(SUPABASE_SERVICE_ROLE_KEY=\"REDACTED_SERVICE_KEY\":*)"
+      "Bash(SUPABASE_SERVICE_ROLE_KEY=\"REDACTED_SERVICE_KEY\":*)",
+      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql:*)"
     ],
     "deny": []
   },
