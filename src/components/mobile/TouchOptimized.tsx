@@ -140,7 +140,7 @@ export function TouchOptimized({
 
   // Handle touch start
   const handleTouchStart = useCallback((event: React.TouchEvent) => {
-    if (disabled) return
+    if (disabled) {return}
     
     setIsPressed(true)
     const touch = event.touches[0]
@@ -149,7 +149,7 @@ export function TouchOptimized({
     // Start long press timer
     if (onLongPress) {
       const timer = setTimeout(() => {
-        if (haptic) hapticFeedback('medium')
+        if (haptic) {hapticFeedback('medium')}
         onLongPress(event)
         setLongPressTimer(null)
       }, longPressDelay)
@@ -159,7 +159,7 @@ export function TouchOptimized({
 
   // Handle touch end
   const handleTouchEnd = useCallback((event: React.TouchEvent) => {
-    if (disabled) return
+    if (disabled) {return}
     
     setIsPressed(false)
     
@@ -179,19 +179,19 @@ export function TouchOptimized({
         if (Math.abs(deltaX) > Math.abs(deltaY)) {
           // Horizontal swipe
           if (deltaX > 0 && onSwipeRight) {
-            if (haptic) hapticFeedback('light')
+            if (haptic) {hapticFeedback('light')}
             onSwipeRight()
           } else if (deltaX < 0 && onSwipeLeft) {
-            if (haptic) hapticFeedback('light')
+            if (haptic) {hapticFeedback('light')}
             onSwipeLeft()
           }
         } else {
           // Vertical swipe
           if (deltaY > 0 && onSwipeDown) {
-            if (haptic) hapticFeedback('light')
+            if (haptic) {hapticFeedback('light')}
             onSwipeDown()
           } else if (deltaY < 0 && onSwipeUp) {
-            if (haptic) hapticFeedback('light')
+            if (haptic) {hapticFeedback('light')}
             onSwipeUp()
           }
         }
@@ -206,12 +206,12 @@ export function TouchOptimized({
     
     if (timeDiff < 300 && onDoubleTap) {
       // Double tap
-      if (haptic) hapticFeedback('medium')
+      if (haptic) {hapticFeedback('medium')}
       onDoubleTap(event)
       setLastTap(0)
     } else if (onTap) {
       // Single tap
-      if (haptic) hapticFeedback('light')
+      if (haptic) {hapticFeedback('light')}
       if (ripple && elementRef.current) {
         createRipple(elementRef.current, event)
       }
@@ -224,12 +224,12 @@ export function TouchOptimized({
 
   // Handle mouse events for desktop
   const handleMouseDown = useCallback((event: React.MouseEvent) => {
-    if (disabled || isTouchDevice()) return
+    if (disabled || isTouchDevice()) {return}
     setIsPressed(true)
   }, [disabled])
 
   const handleMouseUp = useCallback((event: React.MouseEvent) => {
-    if (disabled || isTouchDevice()) return
+    if (disabled || isTouchDevice()) {return}
     setIsPressed(false)
     
     if (onTap) {
@@ -314,7 +314,7 @@ export function PullToRefresh({
   }, [])
 
   const handleTouchMove = useCallback((event: React.TouchEvent) => {
-    if (startY === null || isRefreshing) return
+    if (startY === null || isRefreshing) {return}
     
     const currentY = event.touches[0].clientY
     const distance = currentY - startY

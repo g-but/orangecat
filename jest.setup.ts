@@ -507,10 +507,10 @@ jest.mock('@supabase/supabase-js', () => {
     const profiles = tableStore('profiles')
     if (profiles.length === 0) {
       profiles.push(
-        { id: 'test-user', username: 'orangecat', full_name: 'Orange Cat', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-        { id: 'search-1', username: 'searchtest1', full_name: 'Search User 1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-        { id: 'search-2', username: 'searchtest2', full_name: 'Search User 2', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
-        { id: 'user-123', username: 'existinguser', full_name: 'Existing User', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+        { id: 'test-user', username: 'orangecat', display_name: 'Orange Cat', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { id: 'search-1', username: 'searchtest1', display_name: 'Search User 1', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { id: 'search-2', username: 'searchtest2', display_name: 'Search User 2', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+        { id: 'user-123', username: 'existinguser', display_name: 'Existing User', created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
       )
     }
   }

@@ -169,7 +169,7 @@ When a protected username is attempted, users receive:
 ### Protection Coverage
 
 ✅ **99.9% Celebrity Name Coverage**: Major Bitcoin and tech figures protected  
-✅ **95% Lookalike Detection**: Unicode and substitution attacks blocked  
+✅ **85% Lookalike Detection**: Unicode and substitution attacks blocked  
 ✅ **100% Verification Spoofing Prevention**: Badge claims detected  
 ✅ **90% Authority Claim Detection**: Organization impersonation blocked  
 

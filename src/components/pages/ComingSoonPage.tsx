@@ -1,8 +1,6 @@
 'use client'
 
-import { LucideIcon } from 'lucide-react'
-import Link from 'next/link'
-import { 
+import { LucideIcon , 
   ArrowLeft, 
   Clock,
   Star,
@@ -10,6 +8,7 @@ import {
   ExternalLink,
   BookOpen
 } from 'lucide-react'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 

@@ -120,7 +120,7 @@ export default function EnhancedSearchBar({
       }
 
       // Only handle dropdown navigation when search is open
-      if (!isOpen) return
+      if (!isOpen) {return}
 
       const visibleItems = getVisibleItems()
       const maxIndex = visibleItems.length - 1
@@ -190,7 +190,7 @@ export default function EnhancedSearchBar({
   }, [query, suggestions, searchHistory])
 
   const handleSearch = (searchQuery: string) => {
-    if (!searchQuery.trim()) return
+    if (!searchQuery.trim()) {return}
 
     // Save to search history
     if (user) {

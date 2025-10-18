@@ -9,6 +9,11 @@
             "date": 1760340411281,
             "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-10-13.log",
             "hash": "900661138f4d29ce0770499847a8fbda0614a38e27d1b8d1c64dd683bcd9946d"
+        },
+        {
+            "date": 1760695569791,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-10-17.log",
+            "hash": "717306704c69fb32e84dccd5ced2bee990764a8c1f82cca4db835d68cf4e7e41"
         }
     ],
     "hashType": "sha256"

@@ -10,14 +10,14 @@
 
 This section contains development-specific documentation including testing, debugging, and development workflows.
 
-**Current State**: All major security vulnerabilities have been fixed, but test coverage is critically low at 4.9% (Target: 80%).
+**Current State**: All major security vulnerabilities have been fixed, but test coverage is critically low at 4.9% (Target: 85%).
 
 ---
 
 ## 🚨 CRITICAL PRIORITY: Test Coverage
 
 ### **📊 Current Test Status**
-- **Coverage**: 4.9% (Target: 80%) - **CRITICAL GAP**
+- **Coverage**: 4.9% (Target: 85%) - **CRITICAL GAP**
 - **Security Tests**: Excellent (77 tests) ✅
 - **Component Tests**: Minimal coverage ⚠️
 - **Integration Tests**: None ❌
@@ -64,7 +64,7 @@ This section contains development-specific documentation including testing, debu
 
 ### **🧪 Testing (CRITICAL PRIORITY)**
 - [Testing Guide](../TESTING.md) - Testing strategies and setup
-- **Current Coverage**: 4.9% (Need 80% for production)
+- **Current Coverage**: 4.9% (Need 85% for production)
 - **Priority**: Component and integration testing
 - **Commands**: 
   - `npm test` - Run all tests
@@ -105,7 +105,7 @@ This section contains development-specific documentation including testing, debu
 3. **Run Tests** - `npm test` before committing (CRITICAL)
 4. **Write Tests** - All new code must include tests
 5. **Code Quality** - `npm run lint` and `npm run type-check`
-6. **Submit PR** - Must include tests and maintain >80% coverage
+6. **Submit PR** - Must include tests and maintain >85% coverage
 
 ---
 
@@ -132,7 +132,7 @@ This section contains development-specific documentation including testing, debu
 ## 📊 Code Quality Standards
 
 ### **🎯 Quality Metrics**
-- **Test Coverage**: > 80% (Currently 4.9% - CRITICAL)
+- **Test Coverage**: > 85% (Currently 4.9% - CRITICAL)
 - **TypeScript**: Strict mode enabled (200+ `any` types need fixing)
 - **ESLint**: Zero warnings/errors
 - **Performance**: Lighthouse score > 90
@@ -155,7 +155,7 @@ This section contains development-specific documentation including testing, debu
 - **Documentation**: [Port Management](../operations/port-management.md)
 
 ### **🧪 Test Coverage Too Low**
-- **Current Issue**: 4.9% coverage (Need 80%)
+- **Current Issue**: 4.9% coverage (Need 85%)
 - **Solution**: Write component and integration tests
 - **Priority**: CRITICAL for production deployment
 
@@ -173,7 +173,7 @@ This section contains development-specific documentation including testing, debu
 ## 🚀 Development Priorities (Updated June 2025)
 
 ### **🚨 IMMEDIATE (Next 2-3 weeks)**
-1. **Test Coverage** - Increase from 4.9% to 80%
+1. **Test Coverage** - Increase from 4.9% to 85%
    - Component testing for UI elements
    - Integration testing for user journeys
    - Service layer testing for business logic

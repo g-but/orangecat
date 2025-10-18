@@ -6,23 +6,28 @@ import { useAuth } from '@/hooks/useAuth'
 import CreateCampaignForm from '@/components/create/CreateCampaignForm'
 import CreateProgressSidebar from '@/components/create/CreateProgressSidebar'
 import { Step1, Step2, Step3, Step4 } from '@/components/create/CreateFormSteps'
-import { 
+import InlineAuthStep from '@/components/create/InlineAuthStep'
+import {
   Sparkles,
   Eye
 } from 'lucide-react'
+import { toast } from 'sonner'
 
 export default function CreatePage() {
   const router = useRouter()
   const { user } = useAuth()
+
+  // Ensure non-authenticated users can access the create page
+  // No redirects - let users explore the full creation process
   const [currentStep, setCurrentStep] = useState(1)
   const [showPreview, setShowPreview] = useState(false)
+  const [isGuestMode, setIsGuestMode] = useState(false)
+  const [needsAuth, setNeedsAuth] = useState(false)
 
-  // Handle redirect on client side only
+  // Check if user is authenticated on mount
   useEffect(() => {
-    if (!user) {
-      router.push('/auth?mode=login')
-    }
-  }, [user, router])
+    setIsGuestMode(!user)
+  }, [user])
 
   // Get campaign form functionality
   const campaignForm = CreateCampaignForm({
@@ -32,8 +37,41 @@ export default function CreatePage() {
     showPreview
   })
 
-  if (!user) {
-    return null
+  // Handle publishing - check auth before final submit
+  const handlePublishAttempt = async () => {
+    if (!user && !needsAuth) {
+      // User reached the end without auth - show inline auth step
+      setNeedsAuth(true)
+      setCurrentStep(5) // Step 5 is the auth step
+      toast.info('Just one more step!', {
+        description: 'Sign in or create an account to publish your campaign',
+      })
+      return false
+    }
+    return true
+  }
+
+  // Override the handlePublish to check auth
+  const originalHandlePublish = campaignForm.handlePublish
+  campaignForm.handlePublish = async (e: any) => {
+    const canProceed = await handlePublishAttempt()
+    if (canProceed) {
+      return originalHandlePublish(e)
+    }
+  }
+
+  // Handle successful authentication
+  const handleAuthSuccess = async (userId: string) => {
+    // User is now authenticated, publish the campaign
+    try {
+      await campaignForm.handlePublish({} as any)
+      toast.success('Campaign published successfully! 🎉')
+      router.push('/dashboard')
+    } catch (error) {
+      toast.error('Failed to publish campaign', {
+        description: 'Please try again',
+      })
+    }
   }
 
   const renderCurrentStep = () => {
@@ -41,6 +79,20 @@ export default function CreatePage() {
       ...campaignForm,
       currentStep,
       setCurrentStep
+    }
+
+    // Show auth step if needed
+    if (currentStep === 5 && needsAuth) {
+      return (
+        <InlineAuthStep
+          campaignData={campaignForm.formData}
+          onSuccess={handleAuthSuccess}
+          onBack={() => {
+            setCurrentStep(4)
+            setNeedsAuth(false)
+          }}
+        />
+      )
     }
 
     switch (currentStep) {
@@ -68,7 +120,12 @@ export default function CreatePage() {
                 <div className="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
-                <h1 className="text-xl font-semibold text-gray-900">Create Campaign</h1>
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">Create Campaign</h1>
+                  {!user && (
+                    <p className="text-xs text-gray-500">Guest mode - sign in when ready to publish</p>
+                  )}
+                </div>
               </div>
               <div className="hidden sm:flex items-center text-sm text-gray-500">
                 <span>Step {currentStep} of 4</span>

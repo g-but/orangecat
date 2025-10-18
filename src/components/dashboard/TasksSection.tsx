@@ -51,7 +51,7 @@ export default function TasksSection({ className }: TasksSectionProps) {
   
   const hasDrafts = drafts.length > 0
 
-  if (!user || !profile) return null
+  if (!user || !profile) {return null}
 
   // Generate dynamic tasks based on user state
   const generateTasks = (): Task[] => {

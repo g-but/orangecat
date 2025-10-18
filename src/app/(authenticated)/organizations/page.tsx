@@ -78,9 +78,9 @@ export default function OrganizationsPage() {
         limit: '20'
       })
 
-      if (filters.type) params.append('type', filters.type)
-      if (filters.category) params.append('category', filters.category)
-      if (filters.search) params.append('q', filters.search)
+      if (filters.type) {params.append('type', filters.type)}
+      if (filters.category) {params.append('category', filters.category)}
+      if (filters.search) {params.append('q', filters.search)}
 
       const response = await fetch(`/api/organizations?${params}`)
       

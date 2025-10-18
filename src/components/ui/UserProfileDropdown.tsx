@@ -85,6 +85,15 @@ export default function UserProfileDropdown({
 
   const [avatarError, setAvatarError] = useState(false)
 
+  // ✅ FIXED: Move useEffect before any conditional returns to follow Rules of Hooks
+  useEffect(() => {
+    if ((user || session) && !profile) {
+      logger.debug('User exists but no profile, fetching profile', { userId: user?.id || session?.user?.id }, 'UserProfileDropdown');
+      fetchProfile().catch(error => {
+      });
+    }
+  }, [user, session, profile, fetchProfile])
+
   const handleSignOut = async () => {
     close()
     
@@ -130,15 +139,6 @@ export default function UserProfileDropdown({
   if (!user && !session) {
     return null
   }
-  
-  // ✅ FIXED: Now fetchProfile is available at component level
-  useEffect(() => {
-    if ((user || session) && !profile) {
-      logger.debug('User exists but no profile, fetching profile', { userId: user?.id || session?.user?.id }, 'UserProfileDropdown');
-      fetchProfile().catch(error => {
-      });
-    }
-  }, [user, session, profile, fetchProfile])
 
   // User display logic - prioritize profile data
   const avatarUrl = profile?.avatar_url

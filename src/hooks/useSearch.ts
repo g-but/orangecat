@@ -168,7 +168,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
 
   // Load more results
   const loadMore = useCallback(async () => {
-    if (!hasMore || loading) return
+    if (!hasMore || loading) {return}
     await executeSearch(currentOffset, true)
   }, [hasMore, loading, currentOffset, executeSearch])
 
@@ -367,7 +367,7 @@ export function useRecentSearches(userId?: string) {
   }, [userId])
 
   const addToHistory = (query: string) => {
-    if (!userId || !query.trim()) return
+    if (!userId || !query.trim()) {return}
 
     const newHistory = [query, ...recentSearches.filter(q => q !== query)].slice(0, 10)
     setRecentSearches(newHistory)
@@ -375,7 +375,7 @@ export function useRecentSearches(userId?: string) {
   }
 
   const clearHistory = () => {
-    if (!userId) return
+    if (!userId) {return}
     setRecentSearches([])
     localStorage.removeItem(`search-history-${userId}`)
   }

@@ -35,13 +35,13 @@ export default function DraftContinueDialog({
   const hasAnyDraft = drafts.length > 0
   const primaryDraft = hasAnyDraft ? drafts[0] : null
   
-  if (!isOpen || !hasAnyDraft || !primaryDraft) return null
+  if (!isOpen || !hasAnyDraft || !primaryDraft) {return null}
 
   const isLocalDraft = primaryDraft.syncStatus === 'pending'
   const totalDrafts = drafts.length
 
   const formatLastUpdated = (date: Date | null) => {
-    if (!date) return 'recently'
+    if (!date) {return 'recently'}
     try {
       return formatDistanceToNow(date, { addSuffix: true })
     } catch {
@@ -54,12 +54,12 @@ export default function DraftContinueDialog({
     let completed = 0
     const total = 6
     
-    if (primaryDraft.title) completed++
-    if (primaryDraft.description) completed++
-    if (primaryDraft.goal_amount) completed++
-    if (primaryDraft.category) completed++
-    if (primaryDraft.bitcoin_address) completed++
-    if (primaryDraft.website_url) completed++
+    if (primaryDraft.title) {completed++}
+    if (primaryDraft.description) {completed++}
+    if (primaryDraft.goal_amount) {completed++}
+    if (primaryDraft.category) {completed++}
+    if (primaryDraft.bitcoin_address) {completed++}
+    if (primaryDraft.website_url) {completed++}
     
     return Math.round((completed / total) * 100)
   }

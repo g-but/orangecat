@@ -107,7 +107,7 @@ export class DraftEngine {
     debounceMs = 500
   ): Promise<void> {
     const draft = this.drafts.get(draftId)
-    if (!draft) throw new Error(`Draft ${draftId} not found`)
+    if (!draft) {throw new Error(`Draft ${draftId} not found`)}
 
     // Optimistic update
     const updatedDraft = {
@@ -148,7 +148,7 @@ export class DraftEngine {
    */
   async syncDraft(draftId: string): Promise<SyncResult> {
     const draft = this.drafts.get(draftId)
-    if (!draft) throw new Error(`Draft ${draftId} not found`)
+    if (!draft) {throw new Error(`Draft ${draftId} not found`)}
 
     try {
       const supabaseClient = this.supabase
@@ -195,7 +195,7 @@ export class DraftEngine {
         .from('campaign_drafts')
         .upsert(syncData)
 
-      if (syncError) throw syncError
+      if (syncError) {throw syncError}
 
       // Update local state
       const syncedDraft = {
@@ -404,7 +404,7 @@ export class DraftEngine {
   }
 
   private startAutoSync(draftId: string): void {
-    if (this.syncTimer) return
+    if (this.syncTimer) {return}
     
     this.syncTimer = setInterval(() => {
       const draft = this.drafts.get(draftId)
@@ -457,8 +457,8 @@ export class DraftEngine {
 
   private detectDeviceType(): 'desktop' | 'mobile' | 'tablet' {
     const width = window.innerWidth
-    if (width < 768) return 'mobile'
-    if (width < 1024) return 'tablet'
+    if (width < 768) {return 'mobile'}
+    if (width < 1024) {return 'tablet'}
     return 'desktop'
   }
 

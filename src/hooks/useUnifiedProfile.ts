@@ -3,25 +3,24 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import { ProfileService } from '@/services/profile'
-import { ScalableProfile, ProfileFormData } from '@/types/database'
+import { Profile } from '@/types/database'
+import { ProfileData } from '@/lib/validation'
 import { toast } from 'sonner'
-import { logger } from '@/utils/logger'
 
 export interface UseUnifiedProfileProps {
   username?: string
-  initialProfile?: ScalableProfile
+  initialProfile?: Profile
   autoFetch?: boolean
 }
 
 export interface UseUnifiedProfileReturn {
-  profile: ScalableProfile | null
+  profile: Profile | null
   isLoading: boolean
   error: string | null
   isOwnProfile: boolean
   mode: 'view' | 'edit'
   setMode: (mode: 'view' | 'edit') => void
-  handleSave: (data: ProfileFormData) => Promise<void>
+  handleSave: (data: ProfileData) => Promise<void>
   refetch: () => Promise<void>
 }
 
@@ -34,7 +33,7 @@ export function useUnifiedProfile({
   const { user, profile: currentUserProfile } = useAuth()
   
   // State
-  const [profile, setProfile] = useState<ScalableProfile | null>(initialProfile || null)
+  const [profile, setProfile] = useState<Profile | null>(initialProfile || null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [mode, setMode] = useState<'view' | 'edit'>('view')
@@ -44,77 +43,60 @@ export function useUnifiedProfile({
 
   // Fetch profile data
   const fetchProfile = useCallback(async () => {
-    if (!user) return
+    if (!user) {return}
 
     setIsLoading(true)
     setError(null)
 
     try {
-      let profileData: ScalableProfile | null = null
-
-      if (username === 'me' || !username) {
-        // Loading current user's profile
-        if (currentUserProfile) {
-          // Cast the basic Profile to ScalableProfile since ScalableProfile extends Profile
-          profileData = currentUserProfile as ScalableProfile
-        } else {
-          profileData = await ProfileService.getProfile(user.id)
-        }
+      // For now, just use the current user profile from auth store
+      // In the future, we can add username-based profile fetching
+      if (currentUserProfile) {
+        setProfile(currentUserProfile)
       } else {
-        // Loading specific user's profile by username
-        const profiles = await ProfileService.searchProfiles(username, 1, 0)
-        if (profiles.length > 0) {
-          profileData = profiles[0]
-        }
-      }
-
-      if (!profileData) {
         setError('Profile not found')
-        return
       }
-
-      setProfile(profileData)
-      
-      // Increment profile views (only for other users' profiles)
-      if (profileData.id !== user?.id) {
-        await ProfileService.incrementProfileViews(profileData.id)
-      }
-
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load profile'
       setError(errorMessage)
-      logger.error('Profile fetch failed', err, 'useUnifiedProfile')
     } finally {
       setIsLoading(false)
     }
-  }, [username, user, currentUserProfile])
+  }, [user, currentUserProfile])
 
   // Handle profile save
-  const handleSave = useCallback(async (data: ProfileFormData) => {
-    if (!user?.id || !profile) {
+  const handleSave = useCallback(async (data: ProfileData) => {
+    if (!user?.id) {
       throw new Error('User not authenticated')
     }
 
     try {
-      const result = await ProfileService.updateProfile(user.id, data)
-      
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to update profile')
+      }
+
       if (result.success && result.data) {
         setProfile(result.data)
         toast.success('Profile updated successfully!')
-        
-        // Refresh current user profile in auth store if updating own profile
-        if (isOwnProfile) {
-          // TODO: Trigger auth store profile refresh
-        }
       } else {
         throw new Error(result.error || 'Failed to update profile')
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save profile'
-      logger.error('Profile save failed', err, 'useUnifiedProfile')
+      toast.error(errorMessage)
       throw new Error(errorMessage)
     }
-  }, [user, profile, isOwnProfile])
+  }, [user])
 
   // Refetch profile data
   const refetch = useCallback(async () => {
@@ -147,4 +129,4 @@ export function useUnifiedProfile({
     handleSave,
     refetch
   }
-} 
+}

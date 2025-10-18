@@ -2,12 +2,11 @@ import { Inter, Playfair_Display } from 'next/font/google'
 import './globals.css'
 import ClientErrorBoundary from '@/components/ClientErrorBoundary'
 import { Suspense, lazy } from 'react'
-import Loading from '@/components/Loading'
+import Loading, { GlobalAuthLoader } from '@/components/Loading'
 import { createServerClient } from '@/services/supabase/server'
 import { headers } from 'next/headers'
 import Script from 'next/script'
 
-import { GlobalAuthLoader } from '@/components/Loading'
 
 // Dynamic imports for non-critical components
 const DynamicToaster = lazy(() => import('sonner').then(module => ({ default: module.Toaster })))
@@ -204,10 +203,11 @@ export default async function RootLayout({
         className="font-inter antialiased bg-white text-slate-900 overflow-x-hidden"
         suppressHydrationWarning={true}
       >
-        <ClientErrorBoundary>
-          <div className="relative min-h-screen flex flex-col">
-            {/* Global Auth Loader */}
-            <GlobalAuthLoader />
+        <div id="__next">
+          <ClientErrorBoundary>
+            <div className="relative min-h-screen flex flex-col">
+            {/* Global Auth Loader - temporarily disabled for debugging */}
+            {/* <GlobalAuthLoader /> */}
             
             {/* Header */}
             <Suspense fallback={<Loading />}>
@@ -239,7 +239,8 @@ export default async function RootLayout({
           <Suspense fallback={null}>
             <DynamicSpeedInsights />
           </Suspense>
-        </ClientErrorBoundary>
+          </ClientErrorBoundary>
+        </div>
       </body>
     </html>
   )

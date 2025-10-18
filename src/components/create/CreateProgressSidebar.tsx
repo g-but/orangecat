@@ -43,25 +43,25 @@ export default function CreateProgressSidebar({
   ]
 
   const getStepStatus = (stepNumber: number) => {
-    if (stepNumber < currentStep) return 'completed'
-    if (stepNumber === currentStep) return 'current'
+    if (stepNumber < currentStep) {return 'completed'}
+    if (stepNumber === currentStep) {return 'current'}
     return 'upcoming'
   }
 
   const getStepCompletion = (stepNumber: number) => {
     if (stepNumber === 1) {
       let completed = 0
-      let total = 3
-      if (formData.title?.trim()) completed++
-      if (formData.description?.trim()) completed++
-      if (formData.categories?.length > 0) completed++
+      const total = 3
+      if (formData.title?.trim()) {completed++}
+      if (formData.description?.trim()) {completed++}
+      if (formData.categories?.length > 0) {completed++}
       return (completed / total) * 100
     }
     if (stepNumber === 2) {
       let completed = 0
-      let total = 3
-      if (formData.bitcoin_address?.trim() || formData.lightning_address?.trim()) completed++
-      if (formData.goal_amount?.trim()) completed++
+      const total = 3
+      if (formData.bitcoin_address?.trim() || formData.lightning_address?.trim()) {completed++}
+      if (formData.goal_amount?.trim()) {completed++}
       completed++ // Payment setup is always considered partially complete if user reached step 2
       return (completed / total) * 100
     }
@@ -70,9 +70,9 @@ export default function CreateProgressSidebar({
     }
     if (stepNumber === 4) {
       let completed = 0
-      let total = 2
-      if (formData.banner_url) completed++
-      if (formData.gallery_images?.length > 0) completed++
+      const total = 2
+      if (formData.banner_url) {completed++}
+      if (formData.gallery_images?.length > 0) {completed++}
       return completed > 0 ? (completed / total) * 100 : 50 // Optional fields
     }
     return 0

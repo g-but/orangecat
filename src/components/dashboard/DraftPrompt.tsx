@@ -38,7 +38,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
   }
 
   const formatLastUpdated = (date: Date | null) => {
-    if (!date) return 'recently'
+    if (!date) {return 'recently'}
     try {
       return formatDistanceToNow(date, { addSuffix: true })
     } catch {
@@ -50,10 +50,10 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
     let completed = 0
     const total = 6 // title, description, goal, category, bitcoin_address, website
     
-    if (draft.title) completed++
-    if (draft.description) completed++
-    if (draft.goal_amount) completed++
-    if (draft.category) completed++
+    if (draft.title) {completed++}
+    if (draft.description) {completed++}
+    if (draft.goal_amount) {completed++}
+    if (draft.category) {completed++}
     // Add more fields as needed
     
     return Math.round((completed / total) * 100)

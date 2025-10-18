@@ -8,7 +8,7 @@ export async function getMetricsRegistry() {
   if (process.env.METRICS_ENABLED !== 'true') {
     return { prom: null, registry: null }
   }
-  if (initialized && registry) return { prom: promClient, registry }
+  if (initialized && registry) {return { prom: promClient, registry }}
   try {
     // Dynamic import via variable to avoid static resolution at build time
     const moduleName = 'prom-client'
@@ -45,7 +45,7 @@ export async function getMetricsRegistry() {
 }
 
 export async function recordHttpMetrics(params: { method: string; route: string; status: number; durationMs: number }) {
-  if (!(globalThis as any).__oc_metrics) return
+  if (!(globalThis as any).__oc_metrics) {return}
   const { httpRequestsTotal, httpRequestDuration } = (globalThis as any).__oc_metrics
   const labels = { method: params.method, route: params.route, status: String(params.status) }
   try {

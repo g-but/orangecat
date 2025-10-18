@@ -1,6 +1,5 @@
-import { LucideIcon } from 'lucide-react'
+import { LucideIcon , ArrowRight, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
-import { ArrowRight, ExternalLink } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
 

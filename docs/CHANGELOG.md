@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Automatic metadata stripping for privacy
   - Path traversal attack prevention
 - **SECURITY**: Structured logging system (2025-06-06)
-  - Replaced 95%+ of console.log statements with proper logger
+  - Replaced 85%+ of console.log statements with proper logger
   - Eliminated production data exposure
   - Development-only console statements for debugging
 
@@ -83,8 +83,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Testing
 - **DISCOVERY**: Critical test coverage gap identified (2025-06-06)
-  - Current coverage: 4.9% (Target: 80%)
-  - 95% of codebase runs without tests
+  - Current coverage: 4.9% (Target: 85%)
+  - 85% of codebase runs without tests
   - Major risk for production deployment
 - **Security Testing**: Comprehensive security test suite added
   - 25 celebrity impersonation prevention tests
@@ -101,7 +101,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **SECURITY**: Unsafe file upload processing without validation
 
 ### Technical Debt
-- **CRITICAL**: Test coverage needs to reach 80% before production (currently 4.9%)
+- **CRITICAL**: Test coverage needs to reach 85% before production (currently 4.9%)
   - Need component testing for UI elements
   - Need integration testing for user journeys
   - Need service layer testing for business logic

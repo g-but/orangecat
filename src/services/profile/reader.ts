@@ -154,12 +154,12 @@ export class ProfileReader {
    * Increment profile views (read-adjacent operation)
    */
   static async incrementProfileViews(userId: string): Promise<void> {
-    if (!userId?.trim()) return
+    if (!userId?.trim()) {return}
 
     try {
       // Get current view count
       const profile = await this.getProfile(userId)
-      if (!profile) return
+      if (!profile) {return}
 
       const currentViews = profile.profile_views || 0
       

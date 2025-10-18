@@ -148,7 +148,7 @@ function generateRateLimitKey(
  * Clean up expired rate limit keys
  */
 async function cleanupExpiredKeys(pattern: string): Promise<void> {
-  if (!redis) return
+  if (!redis) {return}
 
   try {
     // This is a simplified cleanup - in production you'd want more sophisticated cleanup
@@ -378,7 +378,7 @@ export async function resetRateLimits(
     }
 
     const keys = await redis.keys(pattern)
-    if (keys.length === 0) return 0
+    if (keys.length === 0) {return 0}
 
     await redis.del(...keys)
 

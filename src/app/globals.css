@@ -2,19 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Smooth navigation transitions */
+/* Professional navigation transitions - reduced duration */
 html {
   scroll-behavior: smooth;
 }
 
-/* Enhanced sidebar transitions */
+/* Enhanced sidebar transitions - faster, more professional */
 .sidebar-transition {
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Smooth page transitions */
+/* Professional page transitions - subtle and fast */
 .page-transition {
-  transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
 }
 
 /* Z-Index System */
@@ -66,20 +66,14 @@ html {
   }
 }
 
-@keyframes bounce-in {
-  0% { 
-    transform: scale(0.3); 
-    opacity: 0; 
+@keyframes professional-fade-in {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
   }
-  50% { 
-    transform: scale(1.05); 
-  }
-  70% { 
-    transform: scale(0.9); 
-  }
-  100% { 
-    transform: scale(1); 
-    opacity: 1; 
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -94,14 +88,7 @@ html {
   }
 }
 
-@keyframes pulse-orange {
-  0%, 100% { 
-    box-shadow: 0 0 0 0 rgba(247, 147, 26, 0.7); 
-  }
-  70% { 
-    box-shadow: 0 0 0 10px rgba(247, 147, 26, 0); 
-  }
-}
+/* Removed pulse-orange - too attention-grabbing for professional UI */
 
 @layer base {
   html {
@@ -217,6 +204,59 @@ html {
     /* Prevent overscroll on mobile */
     overscroll-behavior: contain;
   }
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 3.9%;
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --accent: 0 0% 96.1%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 89.8%;
+    --input: 0 0% 89.8%;
+    --ring: 0 0% 3.9%;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+    --radius: 0.5rem;
+  }
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 0 0% 83.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+  }
 }
 
 @layer components {
@@ -224,35 +264,38 @@ html {
     @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
   }
 
-  /* Enhanced Mobile Navigation */
+  /* Professional Mobile Navigation - faster, more subtle */
   .mobile-menu-slide-in {
-    animation: slideInFromRight 0.4s ease-out;
+    animation: slideInFromRight 0.2s ease-out;
   }
 
   .mobile-menu-fade-in {
-    animation: fadeInUp 0.3s ease-out;
+    animation: fadeInUp 0.2s ease-out;
   }
 
   .mobile-menu-scale-in {
-    animation: scaleIn 0.2s ease-out;
+    animation: scaleIn 0.15s ease-out;
   }
 
-  /* PWA-specific animations */
-  .pwa-bounce-in {
-    animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  /* Professional fade-in animation for notifications */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.2s ease-out;
+  }
+
+  /* Professional PWA animations - removed bouncy effects */
+  .pwa-fade-in {
+    animation: professional-fade-in 0.3s ease-out;
   }
 
   .pwa-slide-up {
-    animation: slide-up 0.4s ease-out;
+    animation: slide-up 0.2s ease-out;
   }
 
-  .pwa-pulse {
-    animation: pulse-orange 2s infinite;
-  }
+  /* Removed pwa-pulse - too attention-grabbing */
 
-  /* Button Base with mobile-first approach */
+  /* Professional Button Base - faster, more subtle */
   .btn {
-    @apply px-4 py-3 rounded-md font-medium transition-all duration-200;
+    @apply px-4 py-3 rounded-md font-medium transition-all duration-150;
     @apply min-h-[44px] flex items-center justify-center;
     @apply active:scale-95 transform;
     /* Better touch feedback */
@@ -290,10 +333,10 @@ html {
     @apply active:bg-orange-700;
   }
 
-  /* Cards and Containers */
+  /* Professional Cards and Containers - subtle transitions */
   .card {
     @apply bg-white rounded-lg shadow-md p-4 sm:p-6 border border-gray-200;
-    @apply hover:shadow-lg transition-shadow duration-200;
+    @apply hover:shadow-lg transition-shadow duration-150;
     /* Better scrolling on mobile */
     overscroll-behavior: contain;
   }
@@ -315,9 +358,9 @@ html {
     @apply py-12 sm:py-16 lg:py-20;
   }
 
-  /* Navigation with touch-friendly targets */
+  /* Professional Navigation - fast, subtle transitions */
   .nav-link {
-    @apply px-3 py-2 rounded-full text-slate-800 hover:text-tiffany-500 transition-colors duration-200;
+    @apply px-3 py-2 rounded-full text-slate-800 hover:text-tiffany-500 transition-colors duration-150;
     @apply min-h-[44px] flex items-center justify-center;
     @apply active:scale-95 transform;
     /* Better touch feedback */
@@ -328,7 +371,7 @@ html {
     @apply bg-tiffany-50 text-tiffany-500;
   }
 
-  /* Form Elements with better mobile experience */
+  /* Professional Form Elements - fast, subtle transitions */
   .input {
     @apply w-full px-3 sm:px-4 py-3 border border-gray-300 rounded-md;
     @apply focus:outline-none focus:ring-2 focus:ring-tiffany-500 focus:border-transparent;
@@ -340,14 +383,14 @@ html {
     -webkit-text-size-adjust: 100%;
   }
 
-  /* Enhanced mobile input */
+  /* Professional mobile input - subtle feedback */
   .input-mobile {
     @apply input;
     /* Larger touch target */
     @apply min-h-[48px] py-4;
-    /* Better visual feedback */
-    @apply transition-all duration-200;
-    @apply focus:shadow-md focus:scale-[1.02];
+    /* Fast, subtle visual feedback */
+    @apply transition-all duration-150;
+    @apply focus:shadow-md focus:scale-[1.01];
   }
 
   /* Textarea styling */
@@ -374,16 +417,16 @@ html {
   }
 
   .progress-bar-fill {
-    @apply h-full bg-gradient-to-r from-tiffany-400 to-tiffany-600 transition-all duration-500;
+    @apply h-full bg-gradient-to-r from-tiffany-400 to-tiffany-600 transition-all duration-300;
   }
 
-  /* Trust Score Styling */
+  /* Professional Trust Score Styling - faster transitions */
   .trust-score {
     @apply h-3 rounded-full bg-gray-100 overflow-hidden;
   }
 
   .trust-score-fill {
-    @apply h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-500;
+    @apply h-full bg-gradient-to-r from-green-400 to-green-600 transition-all duration-300;
   }
 
   /* Bitcoin-themed elements */
@@ -405,16 +448,16 @@ html {
   }
 
   .kpi-progress-fill {
-    @apply h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-500;
+    @apply h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all duration-300;
   }
 
-  /* Transparency Score */
+  /* Professional Transparency Score - faster transitions */
   .transparency-score {
     @apply h-3 rounded-full bg-gray-100 overflow-hidden;
   }
 
   .transparency-score-fill {
-    @apply h-full bg-gradient-to-r from-purple-400 to-purple-600 transition-all duration-500;
+    @apply h-full bg-gradient-to-r from-purple-400 to-purple-600 transition-all duration-300;
   }
 
   /* Labels */
@@ -514,12 +557,12 @@ html {
     user-select: none !important;
   }
 
-  /* PWA Install Banner */
+  /* Professional PWA Install Banner - faster transitions */
   .pwa-install-banner {
     @apply fixed top-16 left-4 right-4 z-50;
     @apply bg-gradient-to-r from-orange-500 to-orange-600;
     @apply text-white rounded-lg shadow-lg p-4;
-    @apply transform transition-all duration-300;
+    @apply transform transition-all duration-200;
     /* Mobile-first positioning */
     @apply md:max-w-md md:left-auto md:right-4;
   }
@@ -547,15 +590,15 @@ html {
   .touch-list-item {
     @apply px-4 py-4 hover:bg-gray-50 active:bg-gray-100;
     @apply min-h-[60px] flex items-center;
-    @apply transition-colors duration-150;
+    @apply transition-colors duration-100;
     /* Touch feedback */
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Swipe indicators */
+  /* Professional Swipe indicators - faster transitions */
   .swipe-indicator {
     @apply absolute top-1/2 transform -translate-y-1/2;
-    @apply opacity-0 transition-opacity duration-200;
+    @apply opacity-0 transition-opacity duration-150;
     @apply pointer-events-none;
   }
 
@@ -575,17 +618,18 @@ html {
     @apply transition-all duration-300;
   }
 
-  /* Mobile-optimized alerts and toasts */
+  /* Professional mobile toasts - faster transitions */
   .toast-mobile {
     @apply fixed bottom-4 left-4 right-4 z-50;
     @apply bg-white border border-gray-200 rounded-lg shadow-lg p-4;
-    @apply transform transition-all duration-300;
+    @apply transform transition-all duration-200;
     @apply sm:bottom-auto sm:top-20 sm:right-4 sm:left-auto sm:max-w-sm;
   }
 
-  /* Haptic feedback visual indicator */
+  /* Professional haptic feedback - subtle indicator */
   .haptic-feedback {
-    @apply animate-pulse;
+    @apply opacity-75;
+    /* Removed animate-pulse - too attention-grabbing for professional UI */
   }
 
   /* Better mobile typography */
@@ -672,5 +716,14 @@ html {
   .android-fix {
     /* Android Chrome address bar fix */
     min-height: calc(100vh - 56px);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 } 

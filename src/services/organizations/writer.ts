@@ -16,7 +16,7 @@ export class OrganizationWriter {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {throw error}
       return data
     } catch (error) {
       return null
@@ -36,7 +36,7 @@ export class OrganizationWriter {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {throw error}
       return data
     } catch (error) {
       return null
@@ -51,7 +51,7 @@ export class OrganizationWriter {
         .delete()
         .eq('id', id)
 
-      if (error) throw error
+      if (error) {throw error}
       return true
     } catch (error) {
       return false
@@ -71,7 +71,7 @@ export class OrganizationWriter {
         .select()
         .single()
 
-      if (error) throw error
+      if (error) {throw error}
       return data
     } catch (error) {
       return null

@@ -205,7 +205,7 @@ export class BitcoinService {
 
   // Clean Bitcoin address from URI if needed
   cleanBitcoinAddress(address: string): string {
-    if (!address) return '';
+    if (!address) {return '';}
     return address.startsWith('bitcoin:') 
       ? address.split('?')[0].replace('bitcoin:', '')
       : address;

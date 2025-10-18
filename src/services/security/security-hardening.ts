@@ -45,7 +45,7 @@ export class XSSPrevention {
    * @returns Sanitized string safe for HTML display
    */
   static sanitizeHTML(input: string): string {
-    if (!input || typeof input !== 'string') return ''
+    if (!input || typeof input !== 'string') {return ''}
     
     return input.replace(/[&<>"'`=\/]/g, (match) => {
       return this.HTML_ENTITIES[match] || match
@@ -58,7 +58,7 @@ export class XSSPrevention {
    * @returns Sanitized string safe for HTML attributes
    */
   static sanitizeForAttribute(input: string): string {
-    if (!input || typeof input !== 'string') return ''
+    if (!input || typeof input !== 'string') {return ''}
     
     // More aggressive sanitization for HTML attributes
     return input
@@ -77,7 +77,7 @@ export class XSSPrevention {
    * @returns Sanitized text safe for display (max 1000 chars)
    */
   static sanitizeText(input: string): string {
-    if (!input || typeof input !== 'string') return ''
+    if (!input || typeof input !== 'string') {return ''}
     
     return input
       .replace(/[<>]/g, (match) => this.HTML_ENTITIES[match])
@@ -291,7 +291,7 @@ export class AuthenticationSecurity {
    */
   static isAccountLocked(identifier: string): boolean {
     const lockTime = this.lockedAccounts.get(identifier)
-    if (!lockTime) return false
+    if (!lockTime) {return false}
     
     if (Date.now() > lockTime) {
       this.lockedAccounts.delete(identifier)
@@ -331,12 +331,12 @@ export class AuthenticationSecurity {
   static validatePasswordStrength(password: string): { valid: boolean; errors: string[] } {
     const errors: string[] = []
     
-    if (password.length < 8) errors.push('Password must be at least 8 characters')
-    if (password.length > 128) errors.push('Password too long')
-    if (!/[A-Z]/.test(password)) errors.push('Password must contain uppercase letter')
-    if (!/[a-z]/.test(password)) errors.push('Password must contain lowercase letter')
-    if (!/[0-9]/.test(password)) errors.push('Password must contain number')
-    if (!/[^A-Za-z0-9]/.test(password)) errors.push('Password must contain special character')
+    if (password.length < 8) {errors.push('Password must be at least 8 characters')}
+    if (password.length > 128) {errors.push('Password too long')}
+    if (!/[A-Z]/.test(password)) {errors.push('Password must contain uppercase letter')}
+    if (!/[a-z]/.test(password)) {errors.push('Password must contain lowercase letter')}
+    if (!/[0-9]/.test(password)) {errors.push('Password must contain number')}
+    if (!/[^A-Za-z0-9]/.test(password)) {errors.push('Password must contain special character')}
     
     // Check for common weak passwords
     const commonPasswords = [

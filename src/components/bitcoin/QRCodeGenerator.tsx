@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef , useState } from 'react'
 import { Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { toast } from 'sonner'
-import { useState } from 'react'
 
 interface QRCodeGeneratorProps {
   value: string
@@ -88,7 +87,7 @@ export default function QRCodeGenerator({
 // Simple QR Code generation function
 function generateQRCode(text: string, canvas: HTMLCanvasElement, size: number) {
   const ctx = canvas.getContext('2d')
-  if (!ctx) return
+  if (!ctx) {return}
 
   // Clear canvas
   ctx.fillStyle = 'white'
@@ -112,7 +111,7 @@ function generateQRCode(text: string, canvas: HTMLCanvasElement, size: number) {
   for (let row = 0; row < modules; row++) {
     for (let col = 0; col < modules; col++) {
       // Skip finder patterns
-      if (isFinderPattern(row, col, modules)) continue
+      if (isFinderPattern(row, col, modules)) {continue}
       
       // Generate module based on position and hash
       const moduleIndex = row * modules + col

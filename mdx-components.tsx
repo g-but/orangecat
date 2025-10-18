@@ -105,6 +105,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         <p className="text-gray-700">{description}</p>
       </div>
     ),
+
     ...components,
   }
 } 

@@ -1,0 +1,87 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Vercel MCP Adapter",
+    "version": "0.1.0"
+  },
+  "servers": [
+    { "url": "https://api.vercel.com" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Deployment": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "url": { "type": "string" },
+          "readyState": { "type": "string" },
+          "createdAt": { "type": "integer" }
+        }
+      },
+      "EnvVar": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "key": { "type": "string" },
+          "type": { "type": "string" },
+          "target": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  },
+  "security": [ { "bearerAuth": [] } ],
+  "paths": {
+    "/v13/deployments": {
+      "get": {
+        "summary": "List deployments for a project",
+        "parameters": [
+          { "name": "projectId", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deployments",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": { "deployments": { "type": "array", "items": { "$ref": "#/components/schemas/Deployment" } } }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v13/deployments/{id}": {
+      "get": {
+        "summary": "Get deployment details",
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "responses": {
+          "200": { "description": "Deployment", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Deployment" } } } }
+        }
+      }
+    },
+    "/v9/projects/{id}/env": {
+      "get": {
+        "summary": "List project environment variables",
+        "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } } ],
+        "responses": {
+          "200": {
+            "description": "Env vars",
+            "content": { "application/json": { "schema": { "type": "object", "properties": { "envs": { "type": "array", "items": { "$ref": "#/components/schemas/EnvVar" } } } } } }
+          }
+        }
+      }
+    }
+  }
+}
+

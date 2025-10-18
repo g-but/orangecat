@@ -32,7 +32,7 @@ export default function EditFundingPage() {
         .eq('id', fundingId)
         .single()
 
-      if (error) throw error
+      if (error) {throw error}
       setPage(data)
     } catch (err) {
       toast.error('Failed to load funding page')
@@ -65,7 +65,7 @@ export default function EditFundingPage() {
         })
         .eq('id', fundingId)
 
-      if (error) throw error
+      if (error) {throw error}
       toast.success('Funding page updated successfully')
       router.push(`/fund-us/${fundingId}`)
     } catch (err) {

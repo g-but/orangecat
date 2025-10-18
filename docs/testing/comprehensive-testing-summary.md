@@ -19,7 +19,7 @@ I have successfully implemented a comprehensive testing infrastructure for Orang
 - **Features**:
   - TypeScript support with ts-jest
   - Advanced path mapping for module resolution
-  - Comprehensive coverage thresholds (85-95%)
+  - Comprehensive coverage thresholds (85-85%)
   - Custom reporters and test result processing
   - Global setup and teardown for test environment
   - Custom matchers for Bitcoin-specific validations
@@ -85,7 +85,7 @@ I have successfully implemented a comprehensive testing infrastructure for Orang
 - **Security vulnerability testing** with attack vector libraries
 
 ### 📊 **Quality Metrics**
-- **Coverage Thresholds**: 85-95% across different modules
+- **Coverage Thresholds**: 85-85% across different modules
 - **Performance Benchmarks**: Core Web Vitals monitoring
 - **Security Standards**: OWASP compliance testing
 - **Test Reliability**: Comprehensive mocking and isolation
@@ -117,7 +117,7 @@ npm run test:comprehensive:coverage
 
 ### 🔄 **Implementation Tasks Remaining**
 1. **Fix Failing Tests** - Resolve duplicate test IDs and mocking issues
-2. **Expand Unit Tests** - Achieve 95% coverage target for all services
+2. **Expand Unit Tests** - Achieve 85% coverage target for all services
 3. **Implement Integration Tests** - Add comprehensive service integration tests
 4. **Build E2E Test Suite** - Create complete user journey coverage
 5. **Set Up CI/CD Pipeline** - GitHub Actions integration

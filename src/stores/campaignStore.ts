@@ -119,7 +119,7 @@ export const useCampaignStore = create<CampaignState>()(
             .eq('user_id', userId)
             .order('updated_at', { ascending: false })
           
-          if (error) throw error
+          if (error) {throw error}
           
           const campaigns: Campaign[] = (data || []).map(campaign => ({
             ...campaign,
@@ -183,7 +183,7 @@ export const useCampaignStore = create<CampaignState>()(
               .select()
               .single()
             
-            if (error) throw error
+            if (error) {throw error}
             savedCampaign = updated
           } else {
             // Create new draft
@@ -193,7 +193,7 @@ export const useCampaignStore = create<CampaignState>()(
               .select()
               .single()
             
-            if (error) throw error
+            if (error) {throw error}
             savedCampaign = created
             draftId = created.id
           }
@@ -271,7 +271,7 @@ export const useCampaignStore = create<CampaignState>()(
             .select()
             .single()
           
-          if (error) throw error
+          if (error) {throw error}
           
           // Update local state
           set(state => ({
@@ -313,7 +313,7 @@ export const useCampaignStore = create<CampaignState>()(
             .delete()
             .eq('id', campaignId)
           
-          if (error) throw error
+          if (error) {throw error}
           
           set(state => ({
             campaigns: state.campaigns.filter(c => c.id !== campaignId),
@@ -350,7 +350,7 @@ export const useCampaignStore = create<CampaignState>()(
             .select()
             .single()
           
-          if (error) throw error
+          if (error) {throw error}
           
           // Update local state
           set(state => ({
@@ -399,7 +399,7 @@ export const useCampaignStore = create<CampaignState>()(
             .select()
             .single()
           
-          if (error) throw error
+          if (error) {throw error}
           
           // Update local state
           set(state => ({
@@ -481,7 +481,7 @@ export const useCampaignStore = create<CampaignState>()(
             .select()
             .single()
           
-          if (error) throw error
+          if (error) {throw error}
           
           // Update local state
           set(state => ({

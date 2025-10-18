@@ -279,7 +279,7 @@ export const isValidBio = (bio: string): { valid: boolean; error?: string } => {
 
 // Client-side sanitization for bio display (additional security layer)
 export const sanitizeBioForDisplay = (bio: string): string => {
-  if (!bio) return '';
+  if (!bio) {return '';}
   
   return bio
     .replace(/</g, '&lt;')
@@ -303,7 +303,7 @@ export const isValidLightningAddressLegacy = (address: string): boolean => {
 // URL validation utilities for seamless user experience
 
 export function normalizeUrl(url: string): string {
-  if (!url.trim()) return ''
+  if (!url.trim()) {return ''}
   
   let normalized = url.trim()
   

@@ -56,7 +56,7 @@ export default function LightningPayment({
 
   // Timer for invoice expiry
   useEffect(() => {
-    if (!invoice) return
+    if (!invoice) {return}
 
     const updateTimer = () => {
       const now = new Date()
@@ -119,7 +119,7 @@ export default function LightningPayment({
   }
 
   const copyInvoice = async () => {
-    if (!invoice) return
+    if (!invoice) {return}
     
     try {
       await navigator.clipboard.writeText(invoice.bolt11)

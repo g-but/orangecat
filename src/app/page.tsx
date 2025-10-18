@@ -12,31 +12,42 @@ export default function Home() {
   const { user, isLoading, hydrated } = useAuth()
   const router = useRouter()
 
-  // Redirect logged-in users to dashboard - MUST be before any conditional returns
-  useEffect(() => {
-    if (user) {
-      router.push('/dashboard')
-    }
-  }, [user, router])
-
-  // Wait for hydration before rendering
-  if (!hydrated) {
-    return <Loading fullScreen message="Loading..." />
+  // Wait for hydration and auth check to complete
+  if (!hydrated || isLoading) {
+    return <Loading fullScreen message={isLoading ? "Checking authentication..." : "Loading..."} />
   }
 
-  // Show loading state only briefly while checking auth
-  if (isLoading) {
-    return <Loading fullScreen message="Checking authentication..." />
-  }
-
-  // For logged-in users, show loading while redirecting
+  // Redirect logged-in users to dashboard
   if (user) {
+    // Check if user is new (has no campaigns) - for now, always redirect to dashboard
+    // TODO: Add logic to detect if user has campaigns and redirect to onboarding if not
+    router.push('/dashboard')
     return <Loading fullScreen message="Redirecting to dashboard..." />
   }
 
   // Show landing page for non-logged-in users
   return (
     <>
+      {/* Experimental Version Notice */}
+      <div className="bg-gradient-to-r from-orange-100 to-tiffany-100 border-b border-orange-200">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <span className="text-orange-600 font-medium">🚧 Experimental Version</span>
+            <span className="text-gray-600">•</span>
+            <span className="text-gray-600">This is a development preview - features may not work as expected</span>
+            <span className="text-gray-600">•</span>
+            <a
+              href="https://github.com/g-but/orangecat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-600 hover:text-orange-700 font-medium underline"
+            >
+              View Source
+            </a>
+          </div>
+        </div>
+      </div>
+
       <Hero />
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
         {/* Introduction Section */}
@@ -95,28 +106,54 @@ export default function Home() {
         <div className="text-center">
           <div className="bg-gradient-to-r from-tiffany-50 to-orange-50 rounded-2xl p-8 sm:p-12">
             <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-              Start Building Your Community
+              Ready to Fund Your Dreams with Bitcoin? 🚀
             </h3>
             <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              Join thousands creating wallets for their projects, organizations, and communities. 
-              From local charities to art collectives, from community events to creative projects - 
-              make supporting each other as easy as a phone call used to be.
+              Create a Bitcoin fundraising campaign in minutes. Whether you're organizing a cat shelter, art exhibition, community event, or any cause that matters - get funded directly in Bitcoin.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
-                href="/auth?mode=register"
+              <Button
+                href="/onboarding"
                 size="lg"
-                className="bg-gradient-to-r from-tiffany-500 to-tiffany-600 hover:from-tiffany-600 hover:to-tiffany-700"
+                className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
-                Get Started Free
+                🚀 Smart Setup Guide
               </Button>
-              <Button 
-                href="/blog/bitcoin-yellow-pages"
+              <Button
+                href="/create"
                 variant="outline"
                 size="lg"
+                className="px-8 py-4"
+                onClick={(e) => {
+                  // Track analytics
+                  if (typeof window !== 'undefined' && (window as any).gtag) {
+                    (window as any).gtag('event', 'campaign_creation_start', {
+                      event_category: 'engagement',
+                      event_label: 'homepage_cta'
+                    })
+                  }
+                }}
               >
-                Learn More
+                Create Campaign Now
               </Button>
+              <Button
+                href="/discover"
+                variant="ghost"
+                size="lg"
+                className="px-8 py-4"
+              >
+                Browse Campaigns
+              </Button>
+            </div>
+
+            <div className="mt-6 text-sm text-gray-600 space-y-2">
+              <p className="font-medium">✨ No account needed to start!</p>
+              <p>Explore the full campaign creation process as a guest. We'll ask you to sign in or create an account only when you're ready to publish your campaign.</p>
+              <div className="mt-4 space-y-1">
+                <p><strong>Not sure which setup is right for you?</strong></p>
+                <p>Use our <a href="/onboarding" className="text-orange-600 hover:underline font-medium">Smart Setup Guide</a> to describe your project and get personalized recommendations.</p>
+                <p className="text-xs text-gray-500">Or <a href="/auth?mode=register" className="text-orange-600 hover:underline font-medium">create an account</a> if you prefer to sign up first.</p>
+              </div>
             </div>
           </div>
         </div>

@@ -28,6 +28,7 @@ export const navigation: NavigationConfig = {
     { name: 'Fund Us', href: '/fund-us' },
     { name: 'About', href: '/about' },
     { name: 'Blog', href: '/blog' },
+    { name: 'GitHub', href: 'https://github.com/g-but/orangecat' },
   ],
   footer: {
     product: [

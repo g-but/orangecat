@@ -385,7 +385,7 @@ export class DataLoadingMonitor {
 
   getStats(key: string) {
     const measurements = this.metrics.get(key) || []
-    if (measurements.length === 0) return null
+    if (measurements.length === 0) {return null}
 
     const loadTimes = measurements.map(m => m.loadTime)
     const avgLoadTime = loadTimes.reduce((sum, time) => sum + time, 0) / loadTimes.length
