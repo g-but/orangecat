@@ -42,24 +42,26 @@ interface StepProps {
 }
 
 // Step 1: Project Details
-export function Step1({ formData, handleChange, handleCategoryToggle, nextStep, canProceedToStep2 }: StepProps) {
+export function Step1({ formData, handleChange, handleCategoryToggle, nextStep, canProceedToStep2, isAuthenticated }: StepProps & { isAuthenticated?: boolean }) {
   return (
     <div className="space-y-6">
-      {/* Guest mode welcome message */}
-      <div className="bg-gradient-to-r from-orange-50 to-tiffany-50 border border-orange-200 rounded-lg p-4 mb-6">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-            <Target className="w-4 h-4 text-orange-600" />
-          </div>
-          <div>
-            <h3 className="font-semibold text-orange-900 mb-1">Welcome! 👋</h3>
-            <p className="text-sm text-orange-700">
-              You're in guest mode. Feel free to explore the full campaign creation process.
-              We'll ask you to sign in or create an account only when you're ready to publish your campaign.
-            </p>
+      {/* Guest mode welcome message - only show for non-authenticated users */}
+      {!isAuthenticated && (
+        <div className="bg-gradient-to-r from-orange-50 to-tiffany-50 border border-orange-200 rounded-lg p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Target className="w-4 h-4 text-orange-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-orange-900 mb-1">Welcome! 👋</h3>
+              <p className="text-sm text-orange-700">
+                You're in guest mode. Feel free to explore the full campaign creation process.
+                We'll ask you to sign in or create an account only when you're ready to publish your campaign.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Tell us about your project</h2>
@@ -126,7 +128,7 @@ export function Step1({ formData, handleChange, handleCategoryToggle, nextStep, 
                     disabled={!isSelected && formData.categories.length >= 3}
                     className={`p-3 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${
                       isSelected
-                        ? `${getColorClasses.bitcoin} border-orange-500 text-white shadow-lg transform scale-105`
+                        ? `${getColorClasses.bitcoin} border-orange-500 text-white shadow-lg`
                         : 'border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-orange-50'
                     } ${!isSelected && formData.categories.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
