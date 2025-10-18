@@ -77,27 +77,27 @@ export default function ProfilePage() {
     )
   }
 
-  // Use new modern editor in edit mode
-  if (mode === 'edit' && isOwnProfile && user?.id) {
-    return (
-      <ModernProfileEditor
-        profile={profile}
-        userId={user.id}
-        userEmail={user.email}
-        onSave={handleSave}
-        onCancel={() => setMode('view')}
-      />
-    )
-  }
-
-  // Use original layout for view mode
   return (
-    <UnifiedProfileLayout
-      profile={profile}
-      isOwnProfile={isOwnProfile}
-      mode={mode}
-      onSave={handleSave}
-      onModeChange={setMode}
-    />
+    <>
+      {/* Main profile view - always visible */}
+      <UnifiedProfileLayout
+        profile={profile}
+        isOwnProfile={isOwnProfile}
+        mode="view"
+        onSave={handleSave}
+        onModeChange={setMode}
+      />
+
+      {/* Edit modal - shows as overlay when editing */}
+      {mode === 'edit' && isOwnProfile && user?.id && (
+        <ModernProfileEditor
+          profile={profile}
+          userId={user.id}
+          userEmail={user.email}
+          onSave={handleSave}
+          onCancel={() => setMode('view')}
+        />
+      )}
+    </>
   )
 } 
