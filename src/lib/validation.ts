@@ -14,8 +14,14 @@ export const profileSchema = z.object({
   avatar_url: z.string().url().optional().or(z.literal('')),
   banner_url: z.string().url().optional().or(z.literal('')),
   website: z.string().max(200).optional(),
-  bitcoin_address: z.string().optional(),
-  lightning_address: z.string().optional(),
+  bitcoin_address: z.string()
+    .regex(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/, "Invalid Bitcoin address format")
+    .optional()
+    .or(z.literal('')),
+  lightning_address: z.string()
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid Lightning address format (must be like user@domain.com)")
+    .optional()
+    .or(z.literal('')),
 })
 
 // Campaign validation
@@ -57,6 +63,14 @@ export function normalizeProfileData(data: any): ProfileData {
   // If display_name is empty or not provided, use username
   if (!normalized.display_name || normalized.display_name.trim() === '') {
     normalized.display_name = normalized.username
+  }
+
+  // Auto-add https:// to website if protocol is missing
+  if (normalized.website && typeof normalized.website === 'string') {
+    const website = normalized.website.trim()
+    if (website && !website.match(/^https?:\/\//i)) {
+      normalized.website = `https://${website}`
+    }
   }
 
   // Normalize empty strings to undefined for optional fields

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/db'
+import { createServerClient } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createServerClient()
     const { id: orgId } = params
 
     const { data: projects, error } = await supabase
@@ -59,7 +59,7 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createServerClient()
     const { id: orgId } = params
 
     // Check authentication
