@@ -203,9 +203,9 @@ export function hasMessage(error: unknown): error is { message: string } {
  * Replaces: error instanceof Error ? error.message : 'Unknown error'
  */
 export function getErrorMessage(error: unknown): string {
-  if (isError(error)) return error.message
-  if (isString(error)) return error
-  if (hasMessage(error)) return error.message
+  if (isError(error)) {return error.message}
+  if (isString(error)) {return error}
+  if (hasMessage(error)) {return error.message}
   return 'Unknown error occurred'
 }
 

@@ -129,9 +129,9 @@ export default function NotificationCenter({
   }
 
   const filteredNotifications = notifications.filter(notification => {
-    if (filter === 'unread') return !notification.read
-    if (filter === 'payments') return ['payment', 'lightning'].includes(notification.type)
-    if (filter === 'campaigns') return notification.type === 'campaign'
+    if (filter === 'unread') {return !notification.read}
+    if (filter === 'payments') {return ['payment', 'lightning'].includes(notification.type)}
+    if (filter === 'campaigns') {return notification.type === 'campaign'}
     return true
   })
 
@@ -170,7 +170,7 @@ export default function NotificationCenter({
     }
   }
 
-  if (!isOpen) return null
+  if (!isOpen) {return null}
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-20">

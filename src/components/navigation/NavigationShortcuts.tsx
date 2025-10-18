@@ -17,7 +17,7 @@ export function NavigationShortcuts({ sections }: NavigationShortcutsProps) {
       // Check if cmd/ctrl is pressed
       const isModifierPressed = event.metaKey || event.ctrlKey
 
-      if (!isModifierPressed) return
+      if (!isModifierPressed) {return}
 
       // Prevent default browser shortcuts
       const shortcuts: Record<string, () => void> = {

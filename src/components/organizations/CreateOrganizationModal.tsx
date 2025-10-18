@@ -1,422 +1,376 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { 
-  X, 
-  Building, 
-  Upload, 
-  Bitcoin, 
-  Globe, 
-  Users,
-  Vote,
-  Briefcase,
-  Award,
-  Network,
-  Shield,
-  Loader2
-} from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
-import Textarea from '@/components/ui/Textarea'
-import { toast } from 'sonner'
-import type { 
-  OrganizationFormData, 
-  OrganizationType, 
-  GovernanceModel
-} from '@/types/organization'
-import { isValidBitcoinAddress, validateUrl } from '@/utils/validation'
+import Input from '@/components/ui/Input'
+import { Textarea } from '@/components/ui/Textarea'
+import { useAuth } from '@/hooks/useAuth'
 
 interface CreateOrganizationModalProps {
   isOpen: boolean
   onClose: () => void
-  onSuccess?: (organization: any) => void
+  onSuccess: (organization: any) => void
 }
 
-const ORGANIZATION_TYPES_CONFIG = [
-  { value: 'dao' as OrganizationType, label: 'DAO', description: 'Decentralized Autonomous Organization', icon: Vote },
-  { value: 'company' as OrganizationType, label: 'Company', description: 'Business organization', icon: Briefcase },
-  { value: 'nonprofit' as OrganizationType, label: 'Non-Profit', description: 'Non-profit organization', icon: Award },
-  { value: 'community' as OrganizationType, label: 'Community', description: 'Community group', icon: Users },
-  { value: 'cooperative' as OrganizationType, label: 'Cooperative', description: 'Member-owned cooperative', icon: Network },
-  { value: 'foundation' as OrganizationType, label: 'Foundation', description: 'Charitable foundation', icon: Shield },
-  { value: 'collective' as OrganizationType, label: 'Collective', description: 'Informal collective', icon: Users },
-  { value: 'guild' as OrganizationType, label: 'Guild', description: 'Professional guild', icon: Award },
-  { value: 'syndicate' as OrganizationType, label: 'Syndicate', description: 'Investment syndicate', icon: Briefcase }
-]
-
-const GOVERNANCE_MODELS_CONFIG = [
-  { value: 'hierarchical' as GovernanceModel, label: 'Hierarchical', description: 'Traditional top-down structure' },
-  { value: 'flat' as GovernanceModel, label: 'Flat', description: 'Flat organizational structure' },
-  { value: 'democratic' as GovernanceModel, label: 'Democratic', description: 'One person, one vote' },
-  { value: 'consensus' as GovernanceModel, label: 'Consensus', description: 'Consensus-based decisions' },
-  { value: 'liquid_democracy' as GovernanceModel, label: 'Liquid Democracy', description: 'Delegatable voting' },
-  { value: 'quadratic_voting' as GovernanceModel, label: 'Quadratic Voting', description: 'Quadratic voting system' },
-  { value: 'stake_weighted' as GovernanceModel, label: 'Stake Weighted', description: 'Voting power based on stake' },
-  { value: 'reputation_based' as GovernanceModel, label: 'Reputation Based', description: 'Voting based on reputation' }
-]
-
-export default function CreateOrganizationModal({ isOpen, onClose, onSuccess }: CreateOrganizationModalProps) {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState(1) // Multi-step form: 1=Basic, 2=Details, 3=Settings
-  const [formData, setFormData] = useState<OrganizationFormData>({
+export default function CreateOrganizationModal({
+  isOpen,
+  onClose,
+  onSuccess
+}: CreateOrganizationModalProps) {
+  const { user } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
+  
+  const [formData, setFormData] = useState({
     name: '',
+    slug: '',
     description: '',
-    website_url: '',
-    avatar_url: '',
-    banner_url: '',
     type: 'community',
-    category: '',
-    tags: [],
     governance_model: 'hierarchical',
+    website_url: '',
     treasury_address: '',
-    is_public: true,
-    requires_approval: true,
-    contact_info: {},
-    settings: {}
+    is_public: true
   })
-  const [tagInput, setTagInput] = useState('')
 
-  if (!isOpen) return null
+  const organizationTypes = [
+    { value: 'dao', label: 'DAO - Decentralized Autonomous Organization' },
+    { value: 'company', label: 'Company - For-profit business' },
+    { value: 'nonprofit', label: 'Non-profit - Charitable organization' },
+    { value: 'community', label: 'Community - Community group' },
+    { value: 'cooperative', label: 'Cooperative - Co-owned organization' },
+    { value: 'foundation', label: 'Foundation - Educational foundation' },
+    { value: 'collective', label: 'Collective - Member-owned collective' },
+    { value: 'guild', label: 'Guild - Professional association' },
+    { value: 'syndicate', label: 'Syndicate - Investment syndicate' }
+  ]
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!formData.name.trim()) {
-      toast.error('Organization name is required')
-      return
-    }
-
-    if (!formData.type) {
-      toast.error('Organization type is required')
-      return
-    }
-
-    // Optional URL normalization/validation
-    if (formData.website_url && formData.website_url.trim()) {
-      const { isValid, error } = validateUrl(formData.website_url)
-      if (!isValid) {
-        toast.error(error || 'Invalid website URL')
-        return
-      }
-    }
-
-    // Optional BTC address validation for treasury
-    if (formData.treasury_address && formData.treasury_address.trim()) {
-      const { valid, error } = isValidBitcoinAddress(formData.treasury_address.trim())
-      if (!valid) {
-        toast.error(error || 'Invalid Bitcoin address')
-        return
-      }
-    }
-
-    setLoading(true)
-
-    try {
-      const response = await fetch('/api/organizations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error || 'Failed to create organization')
-      }
-
-      const data = await response.json()
-      toast.success('Organization created successfully!')
-      
-      if (onSuccess) {
-        onSuccess(data.data)
-      }
-      
-      onClose()
-      
-      // Navigate to the new organization page
-      router.push(`/organizations/${data.data.slug}`)
-      
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create organization')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const addTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      setFormData(prev => ({
-        ...prev,
-        tags: [...prev.tags, tagInput.trim()]
-      }))
-      setTagInput('')
-    }
-  }
-
-  const removeTag = (tagToRemove: string) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target
     setFormData(prev => ({
       ...prev,
-      tags: prev.tags.filter(tag => tag !== tagToRemove)
+      [name]: type === 'checkbox' ? (e.target as HTMLInputElement).checked : value
     }))
   }
 
-  const nextStep = () => setStep(step + 1)
-  const prevStep = () => setStep(step - 1)
+  const generateSlug = (name: string) => {
+    const slug = name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+    setFormData(prev => ({ ...prev, slug }))
+  }
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value
+    setFormData(prev => ({ ...prev, name: value }))
+    if (!formData.slug || formData.slug === '') {
+      generateSlug(value)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      // Validate form data
+      if (!formData.name.trim() || !formData.slug.trim() || !formData.type) {
+        setError('Please fill in all required fields')
+        setIsLoading(false)
+        return
+      }
+
+      // Get auth token from user session
+      const { data: { session } } = await (window as any).__supabaseClient?.auth?.getSession?.() || {}
+      
+      if (!session?.access_token) {
+        setError('No authentication token available')
+        setIsLoading(false)
+        return
+      }
+
+      // Call the API to create organization
+      const response = await fetch('/api/organizations/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          name: formData.name,
+          slug: formData.slug,
+          description: formData.description,
+          type: formData.type,
+          governance_model: formData.governance_model,
+          website_url: formData.website_url || undefined,
+          treasury_address: formData.treasury_address || undefined,
+          is_public: formData.is_public
+        })
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to create organization')
+        setIsLoading(false)
+        return
+      }
+
+      // Show success state
+      setSuccess(true)
+      setFormData({
+        name: '',
+        slug: '',
+        description: '',
+        type: 'community',
+        governance_model: 'hierarchical',
+        website_url: '',
+        treasury_address: '',
+        is_public: true
+      })
+
+      // Call success callback after a delay
+      setTimeout(() => {
+        onSuccess(data)
+        setSuccess(false)
+      }, 1500)
+
+    } catch (err) {
+      console.error('Error creating organization:', err)
+      setError(err instanceof Error ? err.message : 'Failed to create organization')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center">
-                <Building className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Create Organization</h2>
-                <p className="text-sm text-gray-600">Step {step} of 3</p>
-              </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={onClose}
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        >
+          <motion.div
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.95, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            {/* Header */}
+            <div className="sticky top-0 bg-gradient-to-r from-blue-50 to-blue-100 border-b border-blue-200 p-6 flex items-center justify-between z-10">
+              <h2 className="text-2xl font-bold text-gray-900">Create Organization</h2>
+              <button
+                onClick={onClose}
+                className="p-2 hover:bg-blue-200 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
             </div>
-            <Button variant="outline" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
 
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-6">
-            <div 
-              className="bg-gradient-to-r from-green-500 to-emerald-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${(step / 3) * 100}%` }}
-            />
-          </div>
+            {/* Content */}
+            <div className="p-6">
+              {success && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3"
+                >
+                  <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-green-800">Organization created successfully!</p>
+                    <p className="text-sm text-green-700">Redirecting to your new organization...</p>
+                  </div>
+                </motion.div>
+              )}
 
-          <form onSubmit={handleSubmit}>
-            {/* Step 1: Basic Information */}
-            {step === 1 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Information</h3>
-                
+              {error && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3"
+                >
+                  <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0" />
+                  <div>
+                    <p className="font-semibold text-red-800">Error</p>
+                    <p className="text-sm text-red-700">{error}</p>
+                  </div>
+                </motion.div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Organization Name <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Organization Name *
                   </label>
                   <Input
-                    placeholder="Enter organization name..."
+                    type="text"
+                    name="name"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={handleNameChange}
+                    placeholder="e.g., Bitcoin Education Foundation"
                     required
+                    className="w-full"
                   />
+                  <p className="text-xs text-gray-500 mt-1">The official name of your organization</p>
                 </div>
 
+                {/* Slug */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Organization Type <span className="text-red-500">*</span>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Organization URL (Slug) *
                   </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {ORGANIZATION_TYPES_CONFIG.map((type) => {
-                      const Icon = type.icon
-                      return (
-                        <button
-                          key={type.value}
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, type: type.value }))}
-                          className={`p-3 rounded-lg border-2 transition-all ${
-                            formData.type === type.value
-                              ? 'border-green-500 bg-green-50 text-green-700'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <Icon className="w-5 h-5 mx-auto mb-1" />
-                          <div className="text-xs font-medium">{type.label}</div>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                  <Textarea
-                    placeholder="Describe your organization's mission and goals..."
-                    value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                    rows={3}
-                  />
-                </div>
-
-                <div className="flex justify-end">
-                  <Button type="button" onClick={nextStep}>
-                    Next: Details
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 2: Details */}
-            {step === 2 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Organization Details</h3>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Website URL</label>
-                  <Input
-                    type="url"
-                    placeholder="https://yourorganization.com"
-                    value={formData.website_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, website_url: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                  <Input
-                    placeholder="e.g., Technology, Education, Finance..."
-                    value={formData.category}
-                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Tags</label>
-                  <div className="flex flex-wrap gap-2 mb-2">
-                    {formData.tags.map((tag, index) => (
-                      <span 
-                        key={index}
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-green-100 text-green-700"
-                      >
-                        {tag}
-                        <button
-                          type="button"
-                          onClick={() => removeTag(tag)}
-                          className="ml-1 text-green-600 hover:text-green-800"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex space-x-2">
-                    <Input
-                      placeholder="Add a tag..."
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                    />
-                    <Button type="button" variant="outline" onClick={addTag}>
-                      Add
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Input
+                        type="text"
+                        name="slug"
+                        value={formData.slug}
+                        onChange={handleInputChange}
+                        placeholder="bitcoin-education"
+                        required
+                        className="w-full"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => generateSlug(formData.name)}
+                      disabled={!formData.name}
+                    >
+                      Auto-generate
                     </Button>
                   </div>
+                  <p className="text-xs text-gray-500 mt-1">URL-friendly identifier (lowercase, hyphens only)</p>
                 </div>
 
+                {/* Type */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Avatar URL</label>
-                  <Input
-                    type="url"
-                    placeholder="https://example.com/avatar.jpg"
-                    value={formData.avatar_url}
-                    onChange={(e) => setFormData(prev => ({ ...prev, avatar_url: e.target.value }))}
-                  />
-                </div>
-
-                <div className="flex justify-between">
-                  <Button type="button" variant="outline" onClick={prevStep}>
-                    Back
-                  </Button>
-                  <Button type="button" onClick={nextStep}>
-                    Next: Settings
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3: Settings */}
-            {step === 3 && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Organization Settings</h3>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Governance Model</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Organization Type *
+                  </label>
                   <select
-                    value={formData.governance_model}
-                    onChange={(e) => setFormData(prev => ({ ...prev, governance_model: e.target.value as GovernanceModel }))}
-                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    name="type"
+                    value={formData.type}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
-                    {GOVERNANCE_MODELS_CONFIG.map((model) => (
-                      <option key={model.value} value={model.value}>
-                        {model.label} - {model.description}
+                    {organizationTypes.map(type => (
+                      <option key={type.value} value={type.value}>
+                        {type.label}
                       </option>
                     ))}
                   </select>
+                  <p className="text-xs text-gray-500 mt-1">Choose the type that best describes your organization</p>
                 </div>
 
+                {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Bitcoin Treasury Address</label>
-                  <Input
-                    placeholder="bc1q... (optional)"
-                    value={formData.treasury_address}
-                    onChange={(e) => setFormData(prev => ({ ...prev, treasury_address: e.target.value }))}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Description
+                  </label>
+                  <Textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Tell us about your organization, its mission, and goals..."
+                    rows={4}
+                    className="w-full resize-none"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Members can send contributions to this Bitcoin address. No wallet yet?{' '}
-                    <a href="/wallets" className="text-orange-600 hover:text-orange-700 underline">Get a wallet</a>.
-                  </p>
+                  <p className="text-xs text-gray-500 mt-1">Helps supporters understand your organization</p>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      id="is_public"
-                      checked={formData.is_public}
-                      onChange={(e) => setFormData(prev => ({ ...prev, is_public: e.target.checked }))}
-                      className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                    />
-                    <label htmlFor="is_public" className="flex items-center text-sm text-gray-700">
-                      <Globe className="w-4 h-4 mr-2 text-gray-400" />
-                      Make organization publicly visible
-                    </label>
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      id="requires_approval"
-                      checked={formData.requires_approval}
-                      onChange={(e) => setFormData(prev => ({ ...prev, requires_approval: e.target.checked }))}
-                      className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                    />
-                    <label htmlFor="requires_approval" className="flex items-center text-sm text-gray-700">
-                      <Shield className="w-4 h-4 mr-2 text-gray-400" />
-                      Require approval for new members
-                    </label>
-                  </div>
+                {/* Website URL */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Website URL
+                  </label>
+                  <Input
+                    type="url"
+                    name="website_url"
+                    value={formData.website_url}
+                    onChange={handleInputChange}
+                    placeholder="https://example.com"
+                    className="w-full"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Your organization's website</p>
                 </div>
 
-                <div className="flex justify-between">
-                  <Button type="button" variant="outline" onClick={prevStep}>
-                    Back
+                {/* Treasury Address */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Bitcoin Treasury Address
+                  </label>
+                  <Input
+                    type="text"
+                    name="treasury_address"
+                    value={formData.treasury_address}
+                    onChange={handleInputChange}
+                    placeholder="bc1q..."
+                    className="w-full"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Where Bitcoin donations will be received</p>
+                </div>
+
+                {/* Visibility */}
+                <div className="flex items-center gap-3">
+                  <input
+                    type="checkbox"
+                    name="is_public"
+                    checked={formData.is_public}
+                    onChange={handleInputChange}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <label className="text-sm font-medium text-gray-700">
+                    Make this organization public
+                  </label>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex gap-3 justify-end pt-4 border-t">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={onClose}
+                    disabled={isLoading}
+                  >
+                    Cancel
                   </Button>
-                  <Button type="submit" disabled={loading}>
-                    {loading ? (
+                  <Button
+                    type="submit"
+                    disabled={isLoading || success}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                  >
+                    {isLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Creating...
+                      </>
+                    ) : success ? (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Created!
                       </>
                     ) : (
                       'Create Organization'
                     )}
                   </Button>
                 </div>
-              </div>
-            )}
-          </form>
-        </div>
-      </Card>
-    </div>
+              </form>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }

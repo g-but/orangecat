@@ -34,7 +34,7 @@ export default function TransactionTracker({ fundingPageId, isOwner, onBalanceUp
         .eq('funding_page_id', fundingPageId)
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {throw error}
 
       setTransactions(data || [])
       

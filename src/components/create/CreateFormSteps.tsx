@@ -45,6 +45,22 @@ interface StepProps {
 export function Step1({ formData, handleChange, handleCategoryToggle, nextStep, canProceedToStep2 }: StepProps) {
   return (
     <div className="space-y-6">
+      {/* Guest mode welcome message */}
+      <div className="bg-gradient-to-r from-orange-50 to-tiffany-50 border border-orange-200 rounded-lg p-4 mb-6">
+        <div className="flex items-start gap-3">
+          <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+            <Target className="w-4 h-4 text-orange-600" />
+          </div>
+          <div>
+            <h3 className="font-semibold text-orange-900 mb-1">Welcome! 👋</h3>
+            <p className="text-sm text-orange-700">
+              You're in guest mode. Feel free to explore the full campaign creation process.
+              We'll ask you to sign in or create an account only when you're ready to publish your campaign.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Tell us about your project</h2>
         <p className="text-gray-600">Share what you're building and why it matters</p>
@@ -415,7 +431,7 @@ export function Step4({
                 accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
-                  if (file) handleFileUpload(file, 'banner')
+                  if (file) {handleFileUpload(file, 'banner')}
                 }}
                 className="hidden"
               />

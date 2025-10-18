@@ -58,8 +58,40 @@
       "Bash(test:*)",
       "mcp__context7__resolve-library-id",
       "mcp__puppeteer-enhanced__puppeteer_connect_active_tab",
-      "Bash(git describe:*)"
+      "Bash(git describe:*)",
+      "Bash(git tag:*)",
+      "Bash(vercel inspect:*)",
+      "Bash(npx shadcn@latest init:*)",
+      "Bash(npm search:*)",
+      "WebSearch",
+      "Read(//home/g/.config/**)",
+      "Bash(shadcn-mcp:*)",
+      "Bash(npm bin:*)",
+      "Read(//home/g/.npm-global/bin/**)",
+      "Bash(npm prefix:*)",
+      "Read(//home/g/.npm-global/lib/node_modules/shadcn-mcp/**)",
+      "Bash(shadcn-mcp-server:*)",
+      "Bash(npx shadcn@latest add:*)",
+      "Bash(timeout 30s npx tsc:*)",
+      "Read(//tmp/**)",
+      "Bash(lsof:*)",
+      "Bash('https://ohkueislstxomdjavyhs.supabase.co/rest/v1/profiles?select=count&limit=1' )",
+      "mcp__xcode__screenshot",
+      "Bash(npx playwright install:*)",
+      "Bash(python3:*)",
+      "Bash(export SUPABASE_ACCESS_TOKEN:*)",
+      "Bash(set -a)",
+      "Bash(source .env.local)",
+      "Bash(set +a)",
+      "Bash(env)",
+      "Bash(unset:*)",
+      "Bash(NEXT_PUBLIC_SUPABASE_URL=\"https://ohkueislstxomdjavyhs.supabase.co\":*)",
+      "Bash(SUPABASE_SERVICE_ROLE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oa3VlaXNsc3R4b21kamF2eWhzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDU0Nzk1MCwiZXhwIjoyMDYwMTIzOTUwfQ.2a3ACqjfx_ja_ShHySmh8NuVHlF7gD5k3VXNml9CNbM\":*)"
     ],
     "deny": []
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ]
 }

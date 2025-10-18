@@ -2,15 +2,19 @@
 
 import { useUnifiedProfile } from '@/hooks/useUnifiedProfile'
 import UnifiedProfileLayout from '@/components/profile/UnifiedProfileLayout'
+import ModernProfileEditor from '@/components/profile/ModernProfileEditor'
+import TransparencyScore from '@/components/ui/TransparencyScore'
 import Loading from '@/components/Loading'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/hooks/useAuth'
 
 export default function ProfilePage() {
   const router = useRouter()
-  
+  const { user } = useAuth()
+
   const {
     profile,
     isLoading,
@@ -73,6 +77,20 @@ export default function ProfilePage() {
     )
   }
 
+  // Use new modern editor in edit mode
+  if (mode === 'edit' && isOwnProfile && user?.id) {
+    return (
+      <ModernProfileEditor
+        profile={profile}
+        userId={user.id}
+        userEmail={user.email}
+        onSave={handleSave}
+        onCancel={() => setMode('view')}
+      />
+    )
+  }
+
+  // Use original layout for view mode
   return (
     <UnifiedProfileLayout
       profile={profile}

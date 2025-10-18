@@ -43,10 +43,10 @@ const productCategories = [
     title: 'Active Products',
     items: [
       {
-        name: 'Fundraising',
-        href: '/fundraising',
-        description: 'Bitcoin-powered fundraising campaigns',
-        icon: Zap,
+        name: 'Campaigns',
+        href: '/create',
+        description: 'Create and manage Bitcoin fundraising campaigns',
+        icon: Target,
         status: 'live',
         badge: 'Live'
       }
@@ -158,12 +158,12 @@ export default function Header() {
   }
 
   const isActive = (href: string) => {
-    if (href === '/') return pathname === '/'
+    if (href === '/') {return pathname === '/'}
     return pathname.startsWith(href)
   }
 
   // Context-aware links - different for logged in vs logged out users
-  const getFundraisingLink = () => {
+  const getCampaignsLink = () => {
     return '/create'
   }
 

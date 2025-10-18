@@ -48,7 +48,7 @@ export async function getFeaturedCampaigns(limit: number = 6): Promise<FeaturedC
       .order('total_funding', { ascending: false })
       .limit(limit)
 
-    if (error) throw error
+    if (error) {throw error}
 
     // Transform to featured campaigns with simulated featured types
     const featuredCampaigns: FeaturedCampaign[] = (campaigns || []).map((campaign, index) => {
@@ -98,7 +98,7 @@ export async function getTrendingCampaigns(limit: number = 3): Promise<FeaturedC
       .order('contributor_count', { ascending: false })
       .limit(limit)
 
-    if (error) throw error
+    if (error) {throw error}
 
     return (campaigns || []).map((campaign, index) => ({
       ...campaign,
@@ -130,7 +130,7 @@ export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign
       .order('created_at', { ascending: false })
       .limit(limit)
 
-    if (error) throw error
+    if (error) {throw error}
 
     return (campaigns || []).map((campaign, index) => ({
       ...campaign,
@@ -160,7 +160,7 @@ export async function getNearlyFundedCampaigns(limit: number = 3): Promise<Featu
       .order('total_funding', { ascending: false })
       .limit(20) // Get more to filter
 
-    if (error) throw error
+    if (error) {throw error}
 
     // Filter for campaigns that are 70%+ funded
     const nearlyFunded = (campaigns || [])
@@ -200,7 +200,7 @@ export async function getNewAndNoteworthy(limit: number = 3): Promise<FeaturedCa
       .order('created_at', { ascending: false })
       .limit(limit)
 
-    if (error) throw error
+    if (error) {throw error}
 
     return (campaigns || []).map((campaign, index) => ({
       ...campaign,

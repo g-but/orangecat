@@ -46,7 +46,7 @@ export function useRequireAuth() {
   // Then handle redirection based on auth state
   useEffect(() => {
     // Wait until hydration and initial loading completes
-    if (!hydrated || isLoading) return;
+    if (!hydrated || isLoading) {return;}
     
     // More lenient authentication check - focus on user presence
     const isAuthenticated = !!user;
@@ -97,12 +97,14 @@ export function useRedirectIfAuthenticated() {
 
   useEffect(() => {
     // Wait for hydration and initial load
-    if (!hydrated || isLoading) return;
+    if (!hydrated || isLoading) {return;}
     
     // More lenient authentication check - focus on user presence
     const isAuthenticated = !!user;
     
-    if (isAuthenticated && pathname !== '/dashboard' && pathname !== '/') {
+    // Don't redirect authenticated users away from valid authenticated pages
+    const authenticatedPaths = ['/dashboard', '/profile', '/settings', '/organizations', '/create', '/discover', '/people', '/projects', '/fundraising', '/onboarding'];
+    if (isAuthenticated && pathname !== '/' && !authenticatedPaths.some(path => pathname.startsWith(path))) {
       router.push('/dashboard');
     }
   }, [user, session, isLoading, hydrated, router, pathname, profile]);

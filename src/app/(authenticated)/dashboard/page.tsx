@@ -57,7 +57,7 @@ export default function DashboardPage() {
 
   // FIXED: Handle authentication redirect with proper client-side check
   useEffect(() => {
-    if (typeof window === 'undefined') return; // Don't run on server
+    if (typeof window === 'undefined') {return;} // Don't run on server
     
     if (hydrated && !isLoading && !user && !hasRedirected) {
       setHasRedirected(true);
@@ -160,9 +160,9 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className="text-lg text-gray-600 leading-relaxed">
-              {totalCampaigns > 0 
+              {totalCampaigns > 0
                 ? `Managing ${totalCampaigns} campaign${totalCampaigns !== 1 ? 's' : ''} • ${activeCampaignsCount} active`
-                : "Ready to create your first Bitcoin campaign?"
+                : "Welcome! Let's create your first Bitcoin fundraising campaign."
               }
             </p>
           </div>
@@ -380,18 +380,23 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/create')}>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <Zap className="w-8 h-8 text-orange-600" />
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
+            <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 hover:shadow-lg transition-all cursor-pointer" onClick={() => router.push('/create')}>
+              <CardContent className="p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="p-3 bg-orange-100 rounded-full">
+                    <Zap className="w-8 h-8 text-orange-600" />
+                  </div>
+                  <ArrowRight className="w-5 h-5 text-orange-500" />
                 </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Get Started</h3>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div className="font-medium text-lg text-gray-900">Create</div>
-                  <div>Your first campaign</div>
-                  <div className="text-orange-600 font-medium">Start now</div>
+                <h3 className="font-bold text-gray-900 mb-3 text-xl">Create Your First Campaign</h3>
+                <div className="space-y-2 text-sm text-gray-600 mb-6">
+                  <div className="font-semibold text-lg text-gray-900">🚀 Ready to launch?</div>
+                  <div>Your Bitcoin fundraising page is just a few clicks away</div>
+                  <div className="text-orange-600 font-medium">Get funded in minutes</div>
                 </div>
+                <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800">
+                  Start Creating Now
+                </Button>
               </CardContent>
             </Card>
           )}

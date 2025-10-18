@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🧹 Running pre-commit checks..."
+
+# Run lint-staged if configured, otherwise run basic checks
+if command -v lint-staged >/dev/null 2>&1; then
+  npx lint-staged
+else
+  echo "⚡ Running ESLint..."
+  npm run lint
+  echo "✅ ESLint passed"
+
+  echo "🔍 Running TypeScript check..."
+  npm run type-check
+  echo "✅ TypeScript check passed"
+
+  echo "🧪 Running tests..."
+  npm run test:unit
+  echo "✅ Tests passed"
+fi
+
+echo "🎉 All pre-commit checks passed!"

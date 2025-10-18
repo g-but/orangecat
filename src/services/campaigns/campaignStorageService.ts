@@ -95,7 +95,7 @@ export class CampaignStorageService {
               total: file.size,
               percentage: Math.min(progress, 90)
             })
-            if (progress >= 90) clearInterval(interval)
+            if (progress >= 90) {clearInterval(interval)}
           }, 100)
         }
         simulateProgress()

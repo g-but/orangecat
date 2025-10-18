@@ -6,7 +6,7 @@ This document outlines the comprehensive testing strategy for OrangeCat, a Bitco
 
 ## Test Coverage Goals
 
-- **Unit Tests**: 95%+ coverage of all business logic
+- **Unit Tests**: 85%+ coverage of all business logic
 - **Integration Tests**: 90%+ coverage of critical user flows
 - **E2E Tests**: 100% coverage of all user journeys
 - **Performance Tests**: All critical paths under performance thresholds
@@ -19,7 +19,7 @@ This document outlines the comprehensive testing strategy for OrangeCat, a Bitco
 #### 1. Unit Tests (Jest + Testing Library)
 - **Purpose**: Test individual functions, components, and services in isolation
 - **Tools**: Jest, @testing-library/react, @testing-library/jest-dom
-- **Coverage**: 95%+ of all source code
+- **Coverage**: 85%+ of all source code
 - **Execution**: Fast, run in parallel, part of CI/CD pipeline
 
 #### 2. Integration Tests (Jest)
@@ -431,7 +431,7 @@ This comprehensive testing strategy ensures OrangeCat maintains high quality, se
 
 ## Next Steps
 
-1. Implement unit tests for all services (95% coverage target)
+1. Implement unit tests for all services (85% coverage target)
 2. Add integration tests for critical user flows
 3. Expand E2E test coverage to 100% of user journeys
 4. Implement performance testing for all critical paths

@@ -71,7 +71,7 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
   }
 
   const getProgress = (campaign: any) => {
-    if (!campaign.goal_amount) return 0
+    if (!campaign.goal_amount) {return 0}
     return Math.min(((campaign.total_funding || 0) / campaign.goal_amount) * 100, 100)
   }
 
@@ -85,7 +85,7 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
   const primaryDraft = drafts.length > 0 ? drafts[0] : null
 
   const handlePauseCampaign = async (campaignId: string) => {
-    if (!user?.id) return
+    if (!user?.id) {return}
     try {
       await pauseCampaign(user.id, campaignId)
       toast.success('Campaign paused successfully')
@@ -95,7 +95,7 @@ export default function CampaignDashboard({ className = '' }: CampaignDashboardP
   }
 
   const handleResumeCampaign = async (campaignId: string) => {
-    if (!user?.id) return
+    if (!user?.id) {return}
     try {
       await resumeCampaign(user.id, campaignId)
       toast.success('Campaign resumed successfully')

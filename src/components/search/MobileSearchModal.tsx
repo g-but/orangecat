@@ -51,7 +51,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
   }, [isOpen])
 
   const handleSearch = (searchQuery: string) => {
-    if (!searchQuery.trim()) return
+    if (!searchQuery.trim()) {return}
 
     // Save to search history
     if (user) {
@@ -112,7 +112,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
     'Environmental Campaigns'
   ]
 
-  if (!isOpen) return null
+  if (!isOpen) {return null}
 
   return (
     <div className="fixed inset-0 z-50 bg-white">

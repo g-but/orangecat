@@ -167,7 +167,7 @@ export function isProtectedUsername(username: string): CelebrityProtectionResult
  */
 function isLookalikeName(candidate: string, protectedName: string): boolean {
   // Exact match
-  if (candidate === protectedName) return true;
+  if (candidate === protectedName) {return true;}
   
   // Common character substitutions
   const substitutions: Record<string, string[]> = {
@@ -323,7 +323,7 @@ export function validateVerificationRequest(
  * Anti-impersonation bio content validation
  */
 export function validateBioForImpersonation(bio: string): { valid: boolean; error?: string } {
-  if (!bio) return { valid: true };
+  if (!bio) {return { valid: true };}
   
   const lowerBio = bio.toLowerCase();
   

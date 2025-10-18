@@ -187,7 +187,7 @@ export const satsToBTC = satoshisToBitcoin;
 // -------------------------
 
 export function parseBTCAmount(input: string): number {
-  if (!input) return 0;
+  if (!input) {return 0;}
   const cleaned = input.replace(/btc/i, '').trim();
   const value = parseFloat(cleaned);
   return safeNumber(value);
@@ -195,8 +195,8 @@ export function parseBTCAmount(input: string): number {
 
 // Validate BTC amount (0 ≤ amount ≤ 21M, max 8 decimal places)
 export function validateBTCAmount(amount: number): boolean {
-  if (typeof amount !== 'number' || !isFinite(amount)) return false;
-  if (amount < 0 || amount > 21000000) return false;
+  if (typeof amount !== 'number' || !isFinite(amount)) {return false;}
+  if (amount < 0 || amount > 21000000) {return false;}
   // Ensure no more than 8 decimal places
   const decimals = (amount.toString().split('.')[1] || '').length;
   return decimals <= 8;
@@ -222,13 +222,13 @@ export function convertCurrency(
   to: CurrencyCode,
   exchangeRates: Rates = DEFAULT_RATES,
 ): number {
-  if (!isFinite(amount)) return 0;
+  if (!isFinite(amount)) {return 0;}
 
   const fromUpper = from.toUpperCase();
   const toUpper = to.toUpperCase();
 
   // Same currency, nothing to do.
-  if (fromUpper === toUpper) return amount;
+  if (fromUpper === toUpper) {return amount;}
 
   // Handle BTC / SATS directly without exchangeRates
   if (fromUpper === 'BTC' && toUpper === 'SATS') {

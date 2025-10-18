@@ -28,7 +28,7 @@ export class InputSanitizer {
    * Sanitize HTML to prevent XSS
    */
   static sanitizeHtml(input: string): string {
-    if (!input || typeof input !== 'string') return ''
+    if (!input || typeof input !== 'string') {return ''}
     
     return input
       .replace(/&/g, '&amp;')
@@ -43,7 +43,7 @@ export class InputSanitizer {
    * Sanitize text input
    */
   static sanitizeText(input: string, maxLength: number = 1000): string {
-    if (!input || typeof input !== 'string') return ''
+    if (!input || typeof input !== 'string') {return ''}
     
     return input
       .replace(/<[^>]*>/g, '')
@@ -56,7 +56,7 @@ export class InputSanitizer {
    * Sanitize Bitcoin address
    */
   static sanitizeBitcoinAddress(address: string): string {
-    if (!address || typeof address !== 'string') return ''
+    if (!address || typeof address !== 'string') {return ''}
     // Remove HTML tags first, then only allow valid Bitcoin address characters
     const cleaned = address.replace(/<[^>]*>/g, '').replace(/[^a-zA-Z0-9]/g, '')
     return cleaned.slice(0, 62)
@@ -66,7 +66,7 @@ export class InputSanitizer {
    * Sanitize username
    */
   static sanitizeUsername(username: string): string {
-    if (!username || typeof username !== 'string') return ''
+    if (!username || typeof username !== 'string') {return ''}
     // Remove HTML tags first, then sanitize for username
     const cleaned = username.replace(/<[^>]*>/g, '').toLowerCase().replace(/[^a-z0-9_-]/g, '')
     return cleaned.slice(0, 30)
@@ -76,7 +76,7 @@ export class InputSanitizer {
    * Sanitize email address
    */
   static sanitizeEmail(email: string): string {
-    if (!email || typeof email !== 'string') return ''
+    if (!email || typeof email !== 'string') {return ''}
     // Remove HTML tags first, then normalize email
     const cleaned = email.replace(/<[^>]*>/g, '').toLowerCase().trim()
     return cleaned.slice(0, 254)
@@ -86,7 +86,7 @@ export class InputSanitizer {
    * Sanitize URL
    */
   static sanitizeUrl(url: string): string {
-    if (!url || typeof url !== 'string') return ''
+    if (!url || typeof url !== 'string') {return ''}
     
     try {
       const parsed = new URL(url)
@@ -287,7 +287,7 @@ export class AuthSecurity {
    */
   static isAccountLocked(identifier: string): boolean {
     const attempts = this.loginAttempts.get(identifier)
-    if (!attempts) return false
+    if (!attempts) {return false}
 
     const timeSinceLastAttempt = Date.now() - attempts.lastAttempt
     if (timeSinceLastAttempt > this.LOCKOUT_DURATION) {
@@ -321,7 +321,7 @@ export class AuthSecurity {
    */
   static getRemainingAttempts(identifier: string): number {
     const attempts = this.loginAttempts.get(identifier)
-    if (!attempts) return this.MAX_ATTEMPTS
+    if (!attempts) {return this.MAX_ATTEMPTS}
 
     const timeSinceLastAttempt = Date.now() - attempts.lastAttempt
     if (timeSinceLastAttempt > this.LOCKOUT_DURATION) {
@@ -352,23 +352,23 @@ export class AuthSecurity {
     const feedback: string[] = []
     let score = 0
 
-    if (password.length >= 8) score += 1
-    else feedback.push('Use at least 8 characters')
+    if (password.length >= 8) {score += 1}
+    else {feedback.push('Use at least 8 characters')}
 
-    if (password.length >= 12) score += 1
-    else feedback.push('Consider using 12+ characters for better security')
+    if (password.length >= 12) {score += 1}
+    else {feedback.push('Consider using 12+ characters for better security')}
 
-    if (/[A-Z]/.test(password)) score += 1
-    else feedback.push('Include uppercase letters')
+    if (/[A-Z]/.test(password)) {score += 1}
+    else {feedback.push('Include uppercase letters')}
 
-    if (/[a-z]/.test(password)) score += 1
-    else feedback.push('Include lowercase letters')
+    if (/[a-z]/.test(password)) {score += 1}
+    else {feedback.push('Include lowercase letters')}
 
-    if (/[0-9]/.test(password)) score += 1
-    else feedback.push('Include numbers')
+    if (/[0-9]/.test(password)) {score += 1}
+    else {feedback.push('Include numbers')}
 
-    if (/[^A-Za-z0-9]/.test(password)) score += 1
-    else feedback.push('Include special characters')
+    if (/[^A-Za-z0-9]/.test(password)) {score += 1}
+    else {feedback.push('Include special characters')}
 
     // Check for common patterns
     const commonPatterns = [
@@ -413,7 +413,7 @@ export class SecureErrorHandler {
    * Sanitize error message for client display
    */
   static sanitizeErrorMessage(error: any): string {
-    if (!error) return 'An error occurred'
+    if (!error) {return 'An error occurred'}
 
     let message = typeof error === 'string' ? error : error.message || 'An error occurred'
 

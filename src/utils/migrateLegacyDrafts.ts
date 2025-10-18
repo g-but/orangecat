@@ -40,7 +40,7 @@ export async function migrateLegacyDrafts(userId: string): Promise<{
     for (const key of legacyKeys) {
       try {
         const rawData = localStorage.getItem(key)
-        if (!rawData) continue
+        if (!rawData) {continue}
 
         const legacyDraft: LegacyLocalStorageDraft = JSON.parse(rawData)
         const title = legacyDraft.formData?.title?.trim()
@@ -125,7 +125,7 @@ export function getLegacyDraftPreview(): Array<{
     if (key.includes('funding-draft') || key.includes('draft-')) {
       try {
         const rawData = localStorage.getItem(key)
-        if (!rawData) return
+        if (!rawData) {return}
 
         const data = JSON.parse(rawData)
         const title = data.formData?.title || 'Untitled'
@@ -167,7 +167,7 @@ export async function recoverSpecificDraft(
     const { saveDraft } = useCampaignStore.getState()
     const newDraftId = await saveDraft(userId, legacyDraft.formData)
 
-            if (process.env.NODE_ENV === 'development') logger.info(`Recovered draft "${legacyDraft.formData.title}" -> ${newDraftId}`)
+            if (process.env.NODE_ENV === 'development') {logger.info(`Recovered draft "${legacyDraft.formData.title}" -> ${newDraftId}`)}
     return newDraftId
 
   } catch (error) {

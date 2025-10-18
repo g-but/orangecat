@@ -160,7 +160,7 @@ export default function WalletVault() {
   }
 
   const formatAddress = (address: string) => {
-    if (address.length <= 20) return address
+    if (address.length <= 20) {return address}
     return `${address.slice(0, 10)}...${address.slice(-8)}`
   }
 

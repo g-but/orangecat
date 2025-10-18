@@ -11,7 +11,7 @@ export class OrganizationReader {
         .eq('id', id)
         .single()
 
-      if (error) throw error
+      if (error) {throw error}
       return data
     } catch (error) {
       return null
@@ -40,7 +40,7 @@ export class OrganizationReader {
 
       const { data, error } = await query
 
-      if (error) throw error
+      if (error) {throw error}
       return data || []
     } catch (error) {
       return []
@@ -79,7 +79,7 @@ export class OrganizationReader {
 
       const { data, error } = await query
 
-      if (error) throw error
+      if (error) {throw error}
       return data || []
     } catch (error) {
       return []

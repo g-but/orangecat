@@ -55,7 +55,7 @@ export default function CreateCampaignForm({
 
   // Auto-save draft
   useEffect(() => {
-    if (!user || !formData.title.trim()) return
+    if (!user || !formData.title.trim()) {return}
     
     const saveTimer = setTimeout(() => {
       const draftData = { formData, currentStep }
@@ -67,7 +67,7 @@ export default function CreateCampaignForm({
 
   // Load draft on mount
   useEffect(() => {
-    if (!user) return
+    if (!user) {return}
     
     const savedDraft = localStorage.getItem(`campaign-draft-${user.id}`)
     if (savedDraft) {
@@ -211,19 +211,19 @@ export default function CreateCampaignForm({
 
       if (btc) {
         const { valid, error } = isValidBitcoinAddress(btc)
-        if (!valid) throw new Error(error || 'Invalid Bitcoin address')
+        if (!valid) {throw new Error(error || 'Invalid Bitcoin address')}
       }
 
       if (ln) {
         const { valid, error } = isValidLightningAddress(ln)
-        if (!valid) throw new Error(error || 'Invalid Lightning address')
+        if (!valid) {throw new Error(error || 'Invalid Lightning address')}
       }
 
       // Normalize and validate website URL (optional)
       let websiteUrl: string | null = null
       if (formData.website_url && formData.website_url.trim()) {
         const { isValid, normalized, error } = validateUrl(formData.website_url)
-        if (!isValid) throw new Error(error || 'Invalid website URL')
+        if (!isValid) {throw new Error(error || 'Invalid website URL')}
         websiteUrl = normalized
       }
 
@@ -281,14 +281,14 @@ export default function CreateCampaignForm({
     let completed = 0
     const total = 8
 
-    if (formData.title.trim()) completed++
-    if (formData.description.trim()) completed++
-    if (formData.categories.length > 0) completed++
-    if (formData.bitcoin_address.trim() || formData.lightning_address.trim()) completed++
-    if (formData.website_url.trim()) completed++
-    if (formData.goal_amount.trim()) completed++
-    if (formData.banner_url) completed++
-    if (formData.gallery_images.length > 0) completed++
+    if (formData.title.trim()) {completed++}
+    if (formData.description.trim()) {completed++}
+    if (formData.categories.length > 0) {completed++}
+    if (formData.bitcoin_address.trim() || formData.lightning_address.trim()) {completed++}
+    if (formData.website_url.trim()) {completed++}
+    if (formData.goal_amount.trim()) {completed++}
+    if (formData.banner_url) {completed++}
+    if (formData.gallery_images.length > 0) {completed++}
 
     return Math.round((completed / total) * 100)
   }

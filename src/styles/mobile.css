@@ -14,20 +14,14 @@
   }
 }
 
-@keyframes bounce-in {
-  0% { 
-    transform: scale(0.3); 
-    opacity: 0; 
+@keyframes professional-fade-in {
+  0% {
+    transform: scale(0.95);
+    opacity: 0;
   }
-  50% { 
-    transform: scale(1.05); 
-  }
-  70% { 
-    transform: scale(0.9); 
-  }
-  100% { 
-    transform: scale(1); 
-    opacity: 1; 
+  100% {
+    transform: scale(1);
+    opacity: 1;
   }
 }
 
@@ -152,9 +146,9 @@
   overflow: hidden;
 }
 
-/* PWA-specific animations */
-.pwa-bounce-in {
-  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+/* Professional PWA animations */
+.pwa-fade-in {
+  animation: professional-fade-in 0.3s ease-out;
 }
 
 .pwa-slide-up {

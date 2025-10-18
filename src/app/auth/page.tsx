@@ -9,20 +9,19 @@ import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
 import Loading from '@/components/Loading'
 import AuthRecovery from '@/components/AuthRecovery'
-import { useAuth } from '@/hooks/useAuth'
-import { useRedirectIfAuthenticated } from '@/hooks/useAuth'
+import { useAuth , useRedirectIfAuthenticated } from '@/hooks/useAuth'
 import { toast } from 'sonner'
 import { resetPassword } from '@/services/supabase/auth'
 
 // Normalize unknown error values to a user-friendly string
 function getReadableError(error: unknown, fallback: string = 'An unexpected error occurred'): string {
-  if (!error) return fallback
-  if (typeof error === 'string') return error
-  if (error instanceof Error) return error.message || fallback
+  if (!error) {return fallback}
+  if (typeof error === 'string') {return error}
+  if (error instanceof Error) {return error.message || fallback}
   if (typeof error === 'object') {
     const maybe = error as Record<string, unknown>
     const message = maybe.message ?? maybe.error
-    if (typeof message === 'string' && message.length > 0) return message
+    if (typeof message === 'string' && message.length > 0) {return message}
     try {
       return JSON.stringify(error)
     } catch {
@@ -91,7 +90,7 @@ export default function AuthPage() {
   useEffect(() => {
     // If we have a session after hydration, redirect immediately
     if (session?.user && hydrated) {
-      const redirectUrl = searchParams.get('from') || '/dashboard';
+      const redirectUrl = searchParams.get('from') || '/onboarding';
       router.replace(redirectUrl); // Use replace to avoid back button issues
     }
   }, [session, hydrated, router, searchParams]);

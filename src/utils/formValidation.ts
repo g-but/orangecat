@@ -92,9 +92,9 @@ export function isValidUsername(username: string | undefined | null): Validation
     pattern: /^[a-zA-Z0-9_-]+$/,
     customValidator: (value) => {
       // No consecutive special characters
-      if (/[_-]{2,}/.test(value)) return false
+      if (/[_-]{2,}/.test(value)) {return false}
       // Must start and end with alphanumeric
-      if (!/^[a-zA-Z0-9].*[a-zA-Z0-9]$/.test(value)) return false
+      if (!/^[a-zA-Z0-9].*[a-zA-Z0-9]$/.test(value)) {return false}
       return true
     }
   })
@@ -122,10 +122,10 @@ export function isValidEmail(email: string | undefined | null): ValidationResult
     pattern: emailPattern,
     customValidator: (value) => {
       // Additional email validation
-      if (value.length > 254) return false
+      if (value.length > 254) {return false}
       const [localPart, domain] = value.split('@')
-      if (localPart.length > 64) return false
-      if (domain.length > 253) return false
+      if (localPart.length > 64) {return false}
+      if (domain.length > 253) {return false}
       return true
     }
   })
@@ -156,7 +156,7 @@ export function isValidBio(bio: string | undefined | null): ValidationResult {
     maxLength: 500,
     customValidator: (value) => {
       // Check for excessive line breaks
-      if (/\n{4,}/.test(value)) return false
+      if (/\n{4,}/.test(value)) {return false}
       return true
     }
   })

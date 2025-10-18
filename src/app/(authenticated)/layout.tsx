@@ -316,10 +316,30 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
         </div>
       </aside>
 
+      {/* Experimental Notice */}
+      <div className="bg-gradient-to-r from-orange-100 to-tiffany-100 border-b border-orange-200">
+        <div className={`px-4 py-2 ${navigationState.isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'} transition-all duration-300`}>
+          <div className="flex items-center justify-center gap-2 text-sm">
+            <span className="text-orange-600 font-medium">🚧 Experimental</span>
+            <span className="text-gray-600">•</span>
+            <span className="text-gray-600">Development preview - features may not work as expected</span>
+            <span className="text-gray-600">•</span>
+            <a
+              href="https://github.com/g-but/orangecat"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-orange-600 hover:text-orange-700 font-medium underline"
+            >
+              Source
+            </a>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className={`flex-1 transition-all duration-300 ease-in-out pt-16 ${
-        navigationState.isSidebarOpen 
-          ? 'lg:ml-64' 
+        navigationState.isSidebarOpen
+          ? 'lg:ml-64'
           : 'lg:ml-20'
       }`}>
         <main className="h-full">

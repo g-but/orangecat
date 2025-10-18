@@ -73,13 +73,13 @@ export default function UnifiedHeader({
   }, [isMobileMenuOpen])
 
   const isActive = (href: string) => {
-    if (href === '/') return pathname === '/'
+    if (href === '/') {return pathname === '/'}
     return pathname.startsWith(href)
   }
 
   // Build header classes
   const headerClasses = [
-    'fixed top-0 left-0 right-0 z-header transition-all duration-200',
+    'fixed top-0 left-0 right-0 z-header transition-all duration-150',
     isScrolled 
       ? 'bg-white/95 backdrop-blur-lg shadow-sm border-b border-gray-200' 
       : 'bg-white/90 backdrop-blur-md',
@@ -114,7 +114,7 @@ export default function UnifiedHeader({
               <div className="hidden lg:flex items-center space-x-1 mr-4">
                 {navigation.map((item) => {
                   const linkClasses = [
-                    'px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative',
+                    'px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-150 relative',
                     isActive(item.href)
                       ? 'text-orange-600 bg-orange-50 shadow-sm' 
                       : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
@@ -139,7 +139,7 @@ export default function UnifiedHeader({
               {showSearch && (
                 <button
                   onClick={() => setShowMobileSearch(true)}
-                  className="md:hidden p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                  className="md:hidden p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors duration-150"
                   aria-label="Search"
                 >
                   <Search className="w-5 h-5" />
@@ -153,9 +153,9 @@ export default function UnifiedHeader({
                   <HeaderCreateButton />
                   
                   {/* Notifications */}
-                  <button className="relative p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-200">
+                  <button className="relative p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-all duration-150">
                     <Bell className="w-5 h-5" />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full"></span>
                   </button>
                   
                   {/* User Menu */}
@@ -173,7 +173,7 @@ export default function UnifiedHeader({
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="lg:hidden p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors ml-2"
+                className="lg:hidden p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors duration-150 ml-2"
                 aria-label="Toggle mobile menu"
               >
                 {isMobileMenuOpen ? (

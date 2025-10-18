@@ -91,9 +91,9 @@ export default function WalletRecommendation() {
   const getRecommendations = (): WalletRecommendation[] => {
     return wallets.map(wallet => {
       let score = 0
-      let reasons: string[] = []
-      let pros: string[] = []
-      let cons: string[] = []
+      const reasons: string[] = []
+      const pros: string[] = []
+      const cons: string[] = []
 
       // Experience level scoring
       if (preferences.experience === 'beginner' && wallet.difficulty === 'beginner') {

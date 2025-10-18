@@ -3,15 +3,8 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { User, Session } from '@supabase/supabase-js'
-import type { Profile, ProfileFormData } from '@/types/database'
-import { signIn, signUp, signOut } from '@/services/supabase/auth/index'
-import supabase from '@/services/supabase/client'
-import { updateProfile as supabaseUpdateProfile } from '@/services/supabase/profiles'
-import { ProfileService } from '@/services/profileService'
-import { logger } from '@/utils/logger'
-import { getErrorMessage, type CatchError } from '@/types/common'
-
-// Use imported supabase client
+import type { Profile } from '@/types/database'
+import { supabase } from '@/lib/db'
 
 interface AuthState {
   // data
@@ -24,17 +17,12 @@ interface AuthState {
   hydrated: boolean
   authError: string | null
   // actions
-  /** Called exactly once in AuthProvider with the *server* values.  */
   setInitialAuthState: (user: User | null, session: Session | null, profile: Profile | null) => void
-  /** Wipe local state + storage (used by signOut and invalid sessions). */
   clear: () => void
-  /** Explicit sign-out button. */
   signOut: () => Promise<{ error: Error | null }>
   signIn: (email: string, password: string) => Promise<{ data: { user: User | null, session: Session | null } | null, error: Error | null }>
   signUp: (email: string, password: string) => Promise<{ data: { user: User | null, session: Session | null } | null, error: Error | null }>
-  /** Update user profile */
   updateProfile: (profileData: Partial<Profile>) => Promise<{ error: string | null }>
-  /** Set error state */
   setError: (error: string | null) => void
   setAuthError: (error: string | null) => void
   fetchProfile: () => Promise<{ error: string | null }>
@@ -51,14 +39,12 @@ export const useAuthStore = create<AuthState>()(
       profile: null,
       isLoading: false,
       error: null,
-      hydrated: true, // FIXED: Start hydrated to prevent infinite loading
+      hydrated: true,
       authError: null,
 
       // ==================== ACTIONS ====================
       setInitialAuthState: (user: User | null, session: Session | null, profile: Profile | null) => {
-        // FIXED: Simplified state setting without complex validation
         set({ user, session, profile, hydrated: true, isLoading: false })
-        logger.debug('Auth state initialized', { hasUser: !!user, hasSession: !!session, hasProfile: !!profile }, 'Auth')
       },
 
       clear: () => {
@@ -70,7 +56,6 @@ export const useAuthStore = create<AuthState>()(
           authError: null,
           isLoading: false
         })
-        logger.debug('Auth state cleared', undefined, 'Auth')
       },
 
       setError: (error: string | null) => set({ error }),
@@ -83,146 +68,128 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
-          const profile = await ProfileService.getProfile(currentState.user.id)
-          if (profile) {
-            set({ profile })
+          const response = await fetch('/api/profile')
+          const result = await response.json()
+
+          if (!response.ok) {
+            return { error: result.error || 'Failed to fetch profile' }
+          }
+
+          if (result.success && result.data) {
+            set({ profile: result.data })
             return { error: null }
           } else {
-            logger.warn('No profile found for user', { userId: currentState.user.id }, 'Auth')
             return { error: 'Profile not found' }
           }
-        } catch (error: CatchError) {
-          const errorMessage = getErrorMessage(error)
-          logger.error('Failed to fetch profile', { error: errorMessage }, 'Auth')
-          return { error: errorMessage }
+        } catch (error) {
+          console.error('Failed to fetch profile:', error)
+          return { error: 'Failed to fetch profile' }
         }
       },
 
       signOut: async () => {
         set({ isLoading: true, authError: null })
         try {
-          // Clear state first
+          const { error } = await supabase.auth.signOut()
+          
+          if (error) {
+            set({ authError: error.message, isLoading: false })
+            return { error }
+          }
+          
           get().clear()
-          
-          // Clear browser storage
-          if (typeof window !== 'undefined') {
-            // Clear Supabase cookies
-            document.cookie.split(';').forEach(cookie => {
-              const trimmedCookie = cookie.trim()
-              if (trimmedCookie.startsWith('sb-')) {
-                const name = trimmedCookie.split('=')[0]
-                document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-              }
-            })
-            
-            // Clear localStorage items
-            Object.keys(localStorage).forEach(key => {
-              if (key.startsWith('sb-') || key.includes('supabase') || key.includes('auth')) {
-                localStorage.removeItem(key)
-              }
-            })
-            sessionStorage.removeItem(STORAGE_KEY)
-          }
-          
-          // Sign out from Supabase
-          const { error: supabaseError } = await signOut()
-          
-          if (supabaseError) {
-            set({ authError: supabaseError.message, isLoading: false })
-            return { error: supabaseError }
-          }
-          
           set({ isLoading: false, authError: null })
           return { error: null }
-        } catch (e: CatchError) {
-          const errMsg = getErrorMessage(e)
+        } catch (e) {
+          const errMsg = e instanceof Error ? e.message : 'Sign out failed'
           set({ authError: errMsg, isLoading: false })
           return { error: new Error(errMsg) }
         }
       },
 
-      // FIXED: Simplified signIn without complex validation layers
       signIn: async (email, password) => {
         const currentState = get()
         if (currentState.isLoading) {
-          logger.warn("Sign in already in progress, ignoring duplicate request", undefined, 'Auth')
           return { data: null, error: new Error("Sign in already in progress") }
         }
 
         set({ isLoading: true, authError: null, error: null })
-        logger.debug('Starting simplified sign-in process', { email }, 'Auth')
         
         try {
-          // FIXED: Use direct signIn service call without additional security layers
-          const result = await signIn({ email, password })
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          })
           
-          if (result.error) {
-            logger.error("Sign in error:", result.error.message, 'Auth')
-            set({ authError: result.error.message, isLoading: false })
-            return { data: null, error: result.error }
+          if (error) {
+            set({ authError: error.message, isLoading: false })
+            return { data: null, error }
           }
 
-          // FIXED: Set auth state immediately on success
-          if (result.data?.user && result.data?.session) {
+          if (data?.user && data?.session) {
             set({ 
-              user: result.data.user, 
-              session: result.data.session, 
+              user: data.user, 
+              session: data.session, 
               isLoading: false, 
               authError: null,
               error: null
             })
             
             // Fetch profile after successful auth
-            const profileResult = await get().fetchProfile()
-            if (profileResult.error) {
-              logger.warn('Profile fetch failed after sign in', { error: profileResult.error }, 'Auth')
-            }
+            await get().fetchProfile()
             
-            logger.info('Sign in successful', { userId: result.data.user.id }, 'Auth')
-            return { data: result.data, error: null }
+            return { data, error: null }
           } else {
             set({ authError: 'No user data received', isLoading: false })
             return { data: null, error: new Error('No user data received') }
           }
-        } catch (e: CatchError) {
-          const errMsg = getErrorMessage(e)
-          logger.error('Unexpected sign in error', { error: errMsg }, 'Auth')
+        } catch (e) {
+          const errMsg = e instanceof Error ? e.message : 'Sign in failed'
           set({ authError: errMsg, isLoading: false })
           return { data: null, error: new Error(errMsg) }
         }
       },
 
-      // FIXED: Simplified signUp
       signUp: async (email, password) => {
         const currentState = get()
         if (currentState.isLoading) {
-          logger.warn("Sign up already in progress, ignoring duplicate request", undefined, 'Auth')
           return { data: null, error: new Error("Sign up already in progress") }
         }
 
         set({ isLoading: true, authError: null, error: null })
-        logger.debug('Starting sign-up process', { email }, 'Auth')
         
         try {
-          const result = await signUp({ email, password })
+          const { data, error } = await supabase.auth.signUp({
+            email,
+            password,
+          })
           
-          if (result.error) {
-            logger.error("Sign up error:", result.error.message, 'Auth')
-            set({ authError: result.error.message, isLoading: false })
-            return { data: null, error: result.error }
+          if (error) {
+            set({ authError: error.message, isLoading: false })
+            return { data: null, error }
           }
 
-          // Handle sign-up success (may require email confirmation)
-          set({ isLoading: false, authError: null, error: null })
-          logger.info('Sign up successful', { 
-            userId: result.data?.user?.id,
-            requiresConfirmation: !result.data?.session 
-          }, 'Auth')
-          
-          return { data: result.data, error: null }
-        } catch (e: CatchError) {
-          const errMsg = getErrorMessage(e)
-          logger.error('Unexpected sign up error', { error: errMsg }, 'Auth')
+          // Handle successful sign up - check if we have a session
+          if (data?.user && data?.session) {
+            set({ 
+              user: data.user, 
+              session: data.session, 
+              isLoading: false, 
+              authError: null,
+              error: null
+            })
+            
+            // Fetch profile after successful auth
+            await get().fetchProfile()
+            
+            return { data, error: null }
+          } else {
+            // Sign up successful but no immediate session (email confirmation required)
+            set({ isLoading: false, authError: null, error: null })
+            return { data, error: null }
+          }
+        } catch (e) {
+          const errMsg = e instanceof Error ? e.message : 'Sign up failed'
           set({ authError: errMsg, isLoading: false })
           return { data: null, error: new Error(errMsg) }
         }
@@ -237,11 +204,19 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true })
           
-          const { error } = await supabaseUpdateProfile(currentState.user.id, profileData as ProfileFormData)
-          
-                     if (error) {
-             set({ isLoading: false })
-             return { error: String(error) }
+          const response = await fetch('/api/profile', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(profileData),
+          })
+
+          const result = await response.json()
+
+          if (!response.ok) {
+            set({ isLoading: false })
+            return { error: result.error || 'Failed to update profile' }
           }
 
           // Refetch profile to get updated data
@@ -249,8 +224,8 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: false })
           
           return fetchResult
-        } catch (e: CatchError) {
-          const errMsg = getErrorMessage(e)
+        } catch (e) {
+          const errMsg = e instanceof Error ? e.message : 'Update profile failed'
           set({ isLoading: false })
           return { error: errMsg }
         }

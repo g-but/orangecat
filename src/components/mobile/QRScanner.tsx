@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useRef, useEffect, useState, useCallback } from 'react'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/Button'
 import { Camera, X, FlashOn, FlashOff, Upload, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logger } from '@/utils/logger'
@@ -99,7 +99,7 @@ export function QRScanner({
   }
 
   const startScanning = useCallback(() => {
-    if (!isScanning || scanning) return
+    if (!isScanning || scanning) {return}
     
     setScanning(true)
     scanIntervalRef.current = setInterval(() => {
@@ -116,13 +116,13 @@ export function QRScanner({
   }, [])
 
   const scanQRCode = async () => {
-    if (!videoRef.current || !canvasRef.current) return
+    if (!videoRef.current || !canvasRef.current) {return}
 
     const video = videoRef.current
     const canvas = canvasRef.current
     const context = canvas.getContext('2d')
 
-    if (!context || video.videoWidth === 0 || video.videoHeight === 0) return
+    if (!context || video.videoWidth === 0 || video.videoHeight === 0) {return}
 
     // Set canvas size to match video
     canvas.width = video.videoWidth
@@ -153,7 +153,7 @@ export function QRScanner({
 
   // Toggle flash
   const toggleFlash = async () => {
-    if (!streamRef.current || !hasFlash) return
+    if (!streamRef.current || !hasFlash) {return}
 
     try {
       const track = streamRef.current.getVideoTracks()[0]
@@ -168,7 +168,7 @@ export function QRScanner({
   // Handle file upload for QR scanning
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (!file) return
+    if (!file) {return}
 
     const reader = new FileReader()
     reader.onload = async (e) => {

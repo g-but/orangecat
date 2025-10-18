@@ -125,7 +125,7 @@ export class SecurityMiddleware {
    */
   private static shouldEnforceHttps(request: NextRequest): boolean {
     // Don't enforce HTTPS in development
-    if (process.env.NODE_ENV === 'development') return false
+    if (process.env.NODE_ENV === 'development') {return false}
     
     // Check if request is already HTTPS
     const protocol = request.headers.get('x-forwarded-proto') || request.nextUrl.protocol
@@ -136,7 +136,7 @@ export class SecurityMiddleware {
    * Check if origin is allowed
    */
   private static isOriginAllowed(origin?: string): boolean {
-    if (!origin) return true // Allow requests without origin (Postman, etc.)
+    if (!origin) {return true} // Allow requests without origin (Postman, etc.)
 
     const allowedOrigins = [
       process.env.NEXT_PUBLIC_SITE_URL,
@@ -146,7 +146,7 @@ export class SecurityMiddleware {
     ].filter(Boolean)
 
     return allowedOrigins.some(allowed => {
-      if (!allowed) return false
+      if (!allowed) {return false}
       try {
         const allowedUrl = new URL(allowed)
         const originUrl = new URL(origin)
@@ -333,7 +333,7 @@ export function withSecurityProtection(
 export function getSecurityContext(request: NextRequest): SecurityContext | null {
   try {
     const contextHeader = request.headers.get('x-security-context')
-    if (!contextHeader) return null
+    if (!contextHeader) {return null}
     
     return JSON.parse(contextHeader) as SecurityContext
   } catch {

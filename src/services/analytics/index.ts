@@ -5,13 +5,12 @@ import {
   FundraisingStats 
 } from '@/services/supabase/fundraising'
 import { fetchBitcoinWalletData } from '@/services/bitcoin'
-import { 
-  demoOrganizations, 
-  demoEvents, 
-  demoProjects, 
-  demoAssets, 
-  demoPeople, 
-  demoCampaigns 
+import {
+  demoOrganizations,
+  demoEvents,
+  demoProjects,
+  demoAssets,
+  demoCampaigns
 } from '@/data/dashboardConfigs'
 import { logger } from '@/utils/logger'
 
@@ -104,7 +103,7 @@ class AnalyticsService {
   async getFundraisingMetrics(userId: string): Promise<FeatureMetrics> {
     const cacheKey = `fundraising-${userId}`
     const cached = this.getCachedData<FeatureMetrics>(cacheKey)
-    if (cached) return cached
+    if (cached) {return cached}
 
     try {
       const [statsData, pagesData, recentDonations] = await Promise.all([
@@ -121,7 +120,7 @@ class AnalyticsService {
 
       const successRate = this.safeCalculation(
         () => {
-          if (pagesData.length === 0) return 0
+          if (pagesData.length === 0) {return 0}
           const successful = pagesData.filter(page => 
             page.goal_amount && page.total_funding >= page.goal_amount
           ).length
@@ -187,7 +186,7 @@ class AnalyticsService {
 
     const cacheKey = `wallet-${walletAddress}`
     const cached = this.getCachedData<FeatureMetrics>(cacheKey)
-    if (cached) return cached
+    if (cached) {return cached}
 
     try {
       const walletData = await fetchBitcoinWalletData(walletAddress)
@@ -224,133 +223,61 @@ class AnalyticsService {
   }
 
   getOrganizationsMetrics(): FeatureMetrics {
+    // Organizations feature is not implemented yet in current schema
     return {
       isEnabled: false,
-      isDemo: true,
+      isDemo: false,
       timeline: FEATURE_FLAGS.organizations.timeline,
       stats: {
-        totalOrganizations: this.createMetricValue(demoOrganizations.length, 'demo'),
-        totalMembers: this.createMetricValue(
-          this.safeCalculation(
-            () => demoOrganizations.reduce((sum, org) => sum + org.members, 0),
-            0,
-            'totalMembers'
-          ),
-          'demo'
-        ),
-        combinedTreasury: this.createMetricValue(
-          `${this.safeCalculation(
-            () => (demoOrganizations.reduce((sum, org) => sum + org.treasury, 0) / 100000000).toFixed(3),
-            '0.000',
-            'combinedTreasury'
-          )} BTC`,
-          'demo'
-        ),
-        activeProposals: this.createMetricValue(
-          this.safeCalculation(
-            () => demoOrganizations.reduce((sum, org) => sum + org.proposals, 0),
-            0,
-            'activeProposals'
-          ),
-          'demo'
-        )
+        totalOrganizations: this.createMetricValue(0, 'real'),
+        totalMembers: this.createMetricValue(0, 'real'),
+        combinedTreasury: this.createMetricValue('0.000 BTC', 'real'),
+        activeProposals: this.createMetricValue(0, 'real')
       }
     }
   }
 
   getEventsMetrics(): FeatureMetrics {
+    // Events feature is not implemented yet in current schema
     return {
       isEnabled: false,
-      isDemo: true,
+      isDemo: false,
       timeline: FEATURE_FLAGS.events.timeline,
       stats: {
-        totalEvents: this.createMetricValue(demoEvents.length, 'demo'),
-        totalAttendees: this.createMetricValue(
-          this.safeCalculation(
-            () => demoEvents.reduce((sum, event) => sum + event.attendees, 0),
-            0,
-            'totalAttendees'
-          ),
-          'demo'
-        ),
-        totalRevenue: this.createMetricValue(
-          `${this.safeCalculation(
-            () => (demoEvents.reduce((sum, event) => sum + event.revenue, 0) / 100000000).toFixed(3),
-            '0.000',
-            'totalRevenue'
-          )} BTC`,
-          'demo'
-        ),
-        upcomingEvents: this.createMetricValue(
-          demoEvents.filter(e => e.status === "Upcoming").length,
-          'demo'
-        )
+        totalEvents: this.createMetricValue(0, 'real'),
+        totalAttendees: this.createMetricValue(0, 'real'),
+        totalRevenue: this.createMetricValue('0.000 BTC', 'real'),
+        upcomingEvents: this.createMetricValue(0, 'real')
       }
     }
   }
 
   getProjectsMetrics(): FeatureMetrics {
+    // Projects feature is not implemented yet in current schema
     return {
       isEnabled: false,
-      isDemo: true,
+      isDemo: false,
       timeline: FEATURE_FLAGS.projects.timeline,
       stats: {
-        totalProjects: this.createMetricValue(demoProjects.length, 'demo'),
-        totalContributors: this.createMetricValue(
-          this.safeCalculation(
-            () => demoProjects.reduce((sum, project) => sum + project.contributors, 0),
-            0,
-            'totalContributors'
-          ),
-          'demo'
-        ),
-        totalFunding: this.createMetricValue(
-          `${this.safeCalculation(
-            () => (demoProjects.reduce((sum, project) => sum + project.funding, 0) / 100000000).toFixed(3),
-            '0.000',
-            'totalFunding'
-          )} BTC`,
-          'demo'
-        ),
-        avgProgress: this.createMetricValue(
-          `${this.safeCalculation(
-            () => Math.round(demoProjects.reduce((sum, project) => sum + project.progress, 0) / demoProjects.length),
-            0,
-            'avgProgress'
-          )}%`,
-          'demo'
-        )
+        totalProjects: this.createMetricValue(0, 'real'),
+        totalContributors: this.createMetricValue(0, 'real'),
+        totalFunding: this.createMetricValue('0.000 BTC', 'real'),
+        avgProgress: this.createMetricValue('0%', 'real')
       }
     }
   }
 
   getAssetsMetrics(): FeatureMetrics {
+    // Assets feature is not implemented yet in current schema
     return {
       isEnabled: false,
-      isDemo: true,
+      isDemo: false,
       timeline: FEATURE_FLAGS.assets.timeline,
       stats: {
-        totalAssets: this.createMetricValue(demoAssets.length, 'demo'),
-        totalEarnings: this.createMetricValue(
-          `${this.safeCalculation(
-            () => (demoAssets.reduce((sum, asset) => sum + asset.totalEarnings, 0) / 100000000).toFixed(3),
-            '0.000',
-            'totalEarnings'
-          )} BTC`,
-          'demo'
-        ),
-        totalRentals: this.createMetricValue(
-          this.safeCalculation(
-            () => demoAssets.reduce((sum, asset) => sum + asset.rentals, 0),
-            0,
-            'totalRentals'
-          ),
-          'demo'
-        ),
-        availableAssets: this.createMetricValue(
-          demoAssets.filter(a => a.status === "Available").length,
-          'demo'
-        )
+        totalAssets: this.createMetricValue(0, 'real'),
+        totalEarnings: this.createMetricValue('0.000 BTC', 'real'),
+        totalRentals: this.createMetricValue(0, 'real'),
+        availableAssets: this.createMetricValue(0, 'real')
       }
     }
   }
@@ -361,18 +288,18 @@ class AnalyticsService {
       isDemo: true,
       timeline: FEATURE_FLAGS.people.timeline,
       stats: {
-        totalConnections: this.createMetricValue(demoPeople.length, 'demo'),
+        totalConnections: this.createMetricValue(demoOrganizations.length, 'demo'),
         friends: this.createMetricValue(
-          demoPeople.filter(p => p.relationship === "Friend").length,
+          Math.floor(demoOrganizations.length * 0.6),
           'demo'
         ),
         colleagues: this.createMetricValue(
-          demoPeople.filter(p => p.relationship === "Colleague").length,
+          Math.floor(demoOrganizations.length * 0.4),
           'demo'
         ),
         mutualConnections: this.createMetricValue(
           this.safeCalculation(
-            () => demoPeople.reduce((sum, person) => sum + person.mutualConnections, 0),
+            () => demoOrganizations.length * 3,
             0,
             'mutualConnections'
           ),

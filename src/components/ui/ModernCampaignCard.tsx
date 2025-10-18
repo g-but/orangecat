@@ -87,10 +87,10 @@ export default function ModernCampaignCard({
   }
 
   const formatDaysLeft = (days: number) => {
-    if (days <= 0) return 'Ended'
-    if (days === 1) return '1 day left'
-    if (days <= 7) return `${days} days left`
-    if (days <= 30) return `${Math.ceil(days / 7)} weeks left`
+    if (days <= 0) {return 'Ended'}
+    if (days === 1) {return '1 day left'}
+    if (days <= 7) {return `${days} days left`}
+    if (days <= 30) {return `${Math.ceil(days / 7)} weeks left`}
     return `${Math.ceil(days / 30)} months left`
   }
 

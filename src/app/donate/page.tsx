@@ -37,7 +37,7 @@ export default function DonatePage() {
           }
         ])
 
-      if (error) throw error
+      if (error) {throw error}
       
       // Redirect to payment processing
       router.push('/payment')
