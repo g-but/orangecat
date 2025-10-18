@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
-import { Save, X, MapPin, Link as LinkIcon, User, Camera } from 'lucide-react'
+import { Save, X, MapPin, Link as LinkIcon, User, Camera, Bitcoin, Zap } from 'lucide-react'
 
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -137,6 +137,8 @@ export default function ModernProfileEditor({
       avatar_url: profile.avatar_url || '',
       banner_url: profile.banner_url || '',
       website: profile.website || '',
+      bitcoin_address: profile.bitcoin_address || '',
+      lightning_address: profile.lightning_address || '',
     },
   })
 
@@ -149,6 +151,18 @@ export default function ModernProfileEditor({
       form.setValue('display_name', watchedUsername)
     }
   }, [watchedUsername, watchedDisplayName, form])
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSaving) {
+        onCancel()
+      }
+    }
+
+    window.addEventListener('keydown', handleEscape)
+    return () => window.removeEventListener('keydown', handleEscape)
+  }, [onCancel, isSaving])
 
   // Handle file upload
   const handleFileUpload = async (file: File, type: 'avatar' | 'banner') => {
@@ -194,6 +208,9 @@ export default function ModernProfileEditor({
 
       await onSave(formData)
       // Success toast is shown by useUnifiedProfile hook
+
+      // Close modal after successful save
+      onCancel()
     } catch (error) {
       toast.error('Failed to save profile', {
         description: error instanceof Error ? error.message : 'Please try again',
@@ -204,8 +221,14 @@ export default function ModernProfileEditor({
   }
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -297,9 +320,6 @@ export default function ModernProfileEditor({
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription className="text-xs text-gray-500">
-                        Your location (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -321,9 +341,6 @@ export default function ModernProfileEditor({
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription className="text-xs text-gray-500">
-                        Your personal website (optional)
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -335,7 +352,9 @@ export default function ModernProfileEditor({
                   name="username"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Username</FormLabel>
+                      <FormLabel className="text-sm font-medium text-gray-700">
+                        Username <span className="text-red-500">*</span>
+                      </FormLabel>
                       <FormControl>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">@</span>
@@ -346,13 +365,66 @@ export default function ModernProfileEditor({
                           />
                         </div>
                       </FormControl>
-                      <FormDescription className="text-xs text-gray-500">
-                        Your unique @username - like on Twitter. 3-30 characters.
-                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {/* Payment Details Section */}
+                <div className="pt-4 border-t border-gray-200">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Bitcoin className="w-4 h-4 text-orange-500" />
+                    Payment Details
+                  </h3>
+
+                  {/* Bitcoin Address */}
+                  <FormField
+                    control={form.control}
+                    name="bitcoin_address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <Bitcoin className="w-4 h-4" />
+                          Bitcoin Address
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="bc1q... or 1... or 3..."
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Your Bitcoin address for receiving payments
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Lightning Address */}
+                  <FormField
+                    control={form.control}
+                    name="lightning_address"
+                    render={({ field }) => (
+                      <FormItem className="mt-4">
+                        <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-2">
+                          <Zap className="w-4 h-4" />
+                          Lightning Address
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="you@getalby.com"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Your Lightning address for instant payments
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
               </div>
 

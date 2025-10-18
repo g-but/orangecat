@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/db'
+import { createServerClient } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { userId: string } }
 ) {
   try {
-    const supabase = createClient()
+    const supabase = await createServerClient()
     const { userId } = params
 
     // Get organizations user is founder of

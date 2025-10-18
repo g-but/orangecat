@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/db'
+import { createServerClient } from '@/lib/db'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface CreateOrganizationRequest {
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create Supabase client
-    const supabase = createClient()
+    const supabase = await createServerClient()
     
     // Get current user
     const { data: { user }, error: userError } = await supabase.auth.getUser()
