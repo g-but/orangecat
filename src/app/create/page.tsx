@@ -97,7 +97,7 @@ export default function CreatePage() {
 
     switch (currentStep) {
       case 1:
-        return <Step1 {...stepProps} />
+        return <Step1 {...stepProps} isAuthenticated={!!user} />
       case 2:
         return <Step2 {...stepProps} />
       case 3:
@@ -105,7 +105,7 @@ export default function CreatePage() {
       case 4:
         return <Step4 {...stepProps} />
       default:
-        return <Step1 {...stepProps} />
+        return <Step1 {...stepProps} isAuthenticated={!!user} />
     }
   }
 

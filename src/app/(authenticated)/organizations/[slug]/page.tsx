@@ -327,4 +327,4 @@ export default function OrganizationDetailPage({ params }: { params: { slug: str
       </div>
     </div>
   )
-}
+}i
