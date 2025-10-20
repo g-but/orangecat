@@ -53,6 +53,7 @@
     "dist",
     "build",
     "coverage",
+    "cypress",
     "**/*.spec.ts",
     "**/*.test.ts"
   ]

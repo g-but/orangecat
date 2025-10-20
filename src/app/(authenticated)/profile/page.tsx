@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button'
 import { AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
+import TreasuryActivity from '@/components/organizations/TreasuryActivity'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -87,6 +88,11 @@ export default function ProfilePage() {
         onSave={handleSave}
         onModeChange={setMode}
       />
+
+      {/* Wallet transparency */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <TreasuryActivity endpoint="/api/profile/treasury/activity" />
+      </div>
 
       {/* Edit modal - shows as overlay when editing */}
       {mode === 'edit' && isOwnProfile && user?.id && (
