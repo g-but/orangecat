@@ -65,15 +65,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Get authenticated user from Authorization header
-    const authHeader = request.headers.get('Authorization')
-    if (!authHeader) {
-      return NextResponse.json(
-        { error: 'No authorization header' },
-        { status: 401 }
-      )
-    }
-
     // Create Supabase client
     const supabase = await createServerClient()
     

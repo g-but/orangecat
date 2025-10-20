@@ -86,7 +86,8 @@
     "docs:check-links:ci": "node scripts/check-documentation-links.js --ci",
     "bundle:analyze": "ANALYZE=true npm run build",
     "bundle:monitor": "node scripts/bundle-size-monitor.js",
-    "bundle:check": "npm run build && npm run bundle:monitor"
+    "bundle:check": "npm run build && npm run bundle:monitor",
+    "lint:long": "node scripts/check-long-files.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

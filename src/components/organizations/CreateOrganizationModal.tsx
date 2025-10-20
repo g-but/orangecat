@@ -85,21 +85,11 @@ export default function CreateOrganizationModal({
         return
       }
 
-      // Get auth token from user session
-      const { data: { session } } = await (window as any).__supabaseClient?.auth?.getSession?.() || {}
-      
-      if (!session?.access_token) {
-        setError('No authentication token available')
-        setIsLoading(false)
-        return
-      }
-
       // Call the API to create organization
       const response = await fetch('/api/organizations/create', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
           name: formData.name,

@@ -6,16 +6,27 @@ import { useAuth } from '@/hooks/useAuth'
 import supabase from '@/services/supabase/client'
 import { toast } from 'sonner'
 import { CampaignStorageService } from '@/services/campaigns/campaignStorageService'
-import { isValidBitcoinAddress, isValidLightningAddress, validateUrl } from '@/utils/validation'
+import { isValidBitcoinAddress, validateUrl } from '@/utils/validation'
+import { z } from 'zod'
+
+const campaignFormSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters'),
+  description: z.string().optional(),
+  bitcoin_address: z.string().refine(isValidBitcoinAddress, 'Invalid Bitcoin address'),
+  website_url: z.string().url('Invalid URL').optional().or(z.literal('')),
+  goal_amount: z.string().refine(val => !isNaN(parseFloat(val)), 'Invalid number').optional().or(z.literal('')),
+  tags: z.string().optional(),
+  banner_url: z.string().optional(),
+  gallery_images: z.array(z.string()).optional(),
+});
 
 export interface CampaignFormData {
   title: string
   description: string
   bitcoin_address: string
-  lightning_address: string
   website_url: string
   goal_amount: string
-  categories: string[]
+  tags: string
   banner_url: string
   gallery_images: string[]
 }
@@ -40,15 +51,15 @@ export default function CreateCampaignForm({
   const [error, setError] = useState<string | null>(null)
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({})
   const [isUploading, setIsUploading] = useState(false)
+  const [formErrors, setFormErrors] = useState<z.ZodError | null>(null)
   
   const [formData, setFormData] = useState<CampaignFormData>({
     title: '',
     description: '',
     bitcoin_address: '',
-    lightning_address: '',
     website_url: '',
     goal_amount: '',
-    categories: [],
+    tags: '',
     banner_url: '',
     gallery_images: []
   })
@@ -84,16 +95,18 @@ export default function CreateCampaignForm({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
+    const newFormData = { ...formData, [name]: value };
+    setFormData(newFormData);
+    const result = campaignFormSchema.safeParse(newFormData);
+    if (!result.success) {
+      setFormErrors(result.error);
+    } else {
+      setFormErrors(null);
+    }
   }
 
-  const handleCategoryToggle = (categoryValue: string) => {
-    setFormData(prev => ({
-      ...prev,
-      categories: prev.categories.includes(categoryValue)
-        ? prev.categories.filter(cat => cat !== categoryValue)
-        : [...prev.categories, categoryValue]
-    }))
+  const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData(prev => ({ ...prev, tags: e.target.value }))
   }
 
   const handleFileUpload = async (file: File, type: 'banner' | 'gallery') => {
@@ -192,40 +205,20 @@ export default function CreateCampaignForm({
     setLoading(true)
     setError(null)
 
+    const result = campaignFormSchema.safeParse(formData);
+    if (!result.success) {
+      setFormErrors(result.error);
+      toast.error('Please fix the errors in the form');
+      setLoading(false);
+      return;
+    }
+
     try {
       if (!user) {
         throw new Error('You must be logged in to create a campaign')
       }
 
-      if (!formData.title.trim()) {
-        throw new Error('Please provide a title for your campaign')
-      }
-
-      if (!formData.bitcoin_address.trim() && !formData.lightning_address.trim()) {
-        throw new Error('Please provide at least one payment address (Bitcoin or Lightning)')
-      }
-
-      // Validate payment addresses if provided
-      const btc = formData.bitcoin_address.trim()
-      const ln = formData.lightning_address.trim()
-
-      if (btc) {
-        const { valid, error } = isValidBitcoinAddress(btc)
-        if (!valid) {throw new Error(error || 'Invalid Bitcoin address')}
-      }
-
-      if (ln) {
-        const { valid, error } = isValidLightningAddress(ln)
-        if (!valid) {throw new Error(error || 'Invalid Lightning address')}
-      }
-
-      // Normalize and validate website URL (optional)
-      let websiteUrl: string | null = null
-      if (formData.website_url && formData.website_url.trim()) {
-        const { isValid, normalized, error } = validateUrl(formData.website_url)
-        if (!isValid) {throw new Error(error || 'Invalid website URL')}
-        websiteUrl = normalized
-      }
+      const tags = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
 
       // Create the funding page in the database
       const fundingPageData = {
@@ -233,8 +226,7 @@ export default function CreateCampaignForm({
         title: formData.title.trim(),
         description: formData.description.trim() || null,
         bitcoin_address: formData.bitcoin_address.trim() || null,
-        lightning_address: formData.lightning_address.trim() || null,
-        website_url: websiteUrl,
+        website_url: formData.website_url,
         goal_amount: formData.goal_amount ? (() => {
           const parsed = parseFloat(formData.goal_amount)
           if (Number.isNaN(parsed) || parsed < 0) {
@@ -242,8 +234,8 @@ export default function CreateCampaignForm({
           }
           return parsed
         })() : null,
-        category: formData.categories.length > 0 ? formData.categories[0] : null,
-        tags: formData.categories.length > 1 ? formData.categories.slice(1) : [],
+        category: tags.length > 0 ? tags[0] : null,
+        tags: tags.length > 1 ? tags.slice(1) : [],
         banner_url: formData.banner_url || null,
         gallery_images: formData.gallery_images,
         is_active: true,
@@ -279,15 +271,15 @@ export default function CreateCampaignForm({
   // Calculate completion percentage
   const getCompletionPercentage = () => {
     let completed = 0
-    const total = 8
+    const total = 7
 
     if (formData.title.trim()) {completed++}
     if (formData.description.trim()) {completed++}
-    if (formData.categories.length > 0) {completed++}
-    if (formData.bitcoin_address.trim() || formData.lightning_address.trim()) {completed++}
+    if (formData.tags.trim().length > 0) {completed++}
+    if (formData.bitcoin_address.trim()) {completed++}
     if (formData.website_url.trim()) {completed++}
     if (formData.goal_amount.trim()) {completed++}
-    if (formData.banner_url) {completed++}
+    if (formData.banner_.url) {completed++}
     if (formData.gallery_images.length > 0) {completed++}
 
     return Math.round((completed / total) * 100)
@@ -299,8 +291,9 @@ export default function CreateCampaignForm({
     error,
     uploadProgress,
     isUploading,
+    formErrors,
     handleChange,
-    handleCategoryToggle,
+    handleTagsChange,
     handleFileUpload,
     handleDrop,
     handleDragOver,
@@ -309,7 +302,7 @@ export default function CreateCampaignForm({
     handleSubmit,
     getCompletionPercentage,
     canProceedToStep2: formData.title.trim().length > 0,
-    canProceedToStep3: formData.bitcoin_address.trim().length > 0 || formData.lightning_address.trim().length > 0,
+    canProceedToStep3: formData.bitcoin_address.trim().length > 0,
     canProceedToStep4: true
   }
-} 
+}
