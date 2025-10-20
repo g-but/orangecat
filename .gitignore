@@ -12,6 +12,7 @@
 .jest-cache/
 *.lcov
 test-results/
+test-screenshots/
 playwright-report/
 playwright/.cache/
 

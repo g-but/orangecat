@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import Loading from '@/components/Loading'
+import TreasuryControls from '@/components/organizations/TreasuryControls'
+import TreasuryActivity from '@/components/organizations/TreasuryActivity'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { Building, Users, Globe, Bitcoin, ArrowLeft, Plus, Target, Zap } from 'lucide-react'
@@ -233,7 +235,27 @@ export default function OrganizationDetailPage({ params }: { params: { slug: str
                 >
                   Copy Invite Link
                 </Button>
+                <Button variant="outline" className="ml-2" onClick={() => router.push(`/organizations/${org.slug}/settings`)}>
+                  Settings
+                </Button>
               </div>
+            </Card>
+
+            {/* Treasury */}
+            <Card className="p-6 mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">Treasury</h2>
+                <Button variant="outline" onClick={() => router.push(`/organizations/${org.slug}/settings`)}>Configure</Button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                <div className="md:col-span-2">
+                  <TreasuryActivity slug={org.slug} />
+                </div>
+                <div>
+                  <TreasuryControls slug={org.slug} />
+                </div>
+              </div>
+              <p className="text-xs text-gray-600 mt-3">Use an xpub to generate fresh addresses while aggregating totals across all derived addresses.</p>
             </Card>
           </>
         )}

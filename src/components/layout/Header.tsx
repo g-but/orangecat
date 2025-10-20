@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Menu, X, ChevronDown, Zap, Building, Calendar, Wallet, Users, Globe2 } from 'lucide-react'
+import { Menu, X, ChevronDown, Zap, Building, Calendar, Wallet, Users, Globe2, Target } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import Logo from './Logo'
@@ -26,6 +26,11 @@ const aboutLinks = [
     description: 'Technical guides and API references'
   },
   {
+    name: 'FAQ',
+    href: '/faq',
+    description: 'Frequently asked questions'
+  },
+  {
     name: 'Blog',
     href: '/blog',
     description: 'Latest updates and insights'
@@ -37,8 +42,8 @@ const aboutLinks = [
   }
 ]
 
-// Products dropdown - redesigned with better structure
-const productCategories = [
+// Shop dropdown - redesigned with better structure
+const shopCategories = [
   {
     title: 'Active Products',
     items: [
@@ -187,32 +192,32 @@ export default function Header() {
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-1">
-              {/* Products Dropdown - Only for non-logged-in users */}
+              {/* Shop Dropdown - Only for non-logged-in users */}
               {!user && (
                 <div 
                   className="relative"
-                  onMouseEnter={() => handleMouseEnter('products')}
+                  onMouseEnter={() => handleMouseEnter('shop')}
                   onMouseLeave={handleMouseLeave}
                 >
                   <button className={`flex items-center space-x-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 min-h-[36px] ${
-                    activeDropdown === 'products' || pathname.startsWith('/fundraising') || pathname.startsWith('/coming-soon')
+                    activeDropdown === 'shop' || pathname.startsWith('/fundraising') || pathname.startsWith('/coming-soon')
                       ? 'text-orange-600 bg-orange-50' 
                       : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
                   }`}>
-                    <span>Products</span>
+                    <span>Shop</span>
                     <ChevronDown className={`h-3 w-3 transition-transform duration-200 ${
-                      activeDropdown === 'products' ? 'rotate-180' : ''
+                      activeDropdown === 'shop' ? 'rotate-180' : ''
                     }`} />
                   </button>
 
-                  {/* Products Dropdown Panel - Redesigned */}
-                  {activeDropdown === 'products' && (
+                  {/* Shop Dropdown Panel - Redesigned */}
+                  {activeDropdown === 'shop' && (
                     <div 
                       className="absolute top-full left-0 mt-1 w-80 bg-white rounded-lg shadow-xl border border-gray-200 py-2 z-dropdown animate-in fade-in slide-in-from-top-1 duration-150"
                       onMouseEnter={handleDropdownMouseEnter}
                       onMouseLeave={handleDropdownMouseLeave}
                     >
-                      {productCategories.map((category, categoryIndex) => (
+                      {shopCategories.map((category, categoryIndex) => (
                         <div key={category.title}>
                           {categoryIndex > 0 && <div className="border-t border-gray-100 my-2" />}
                           
@@ -386,12 +391,12 @@ export default function Header() {
           <div className="fixed top-16 right-0 w-full max-w-sm h-[calc(100vh-4rem)] bg-white shadow-2xl overflow-y-auto">
             <div className="p-4 space-y-6">
               
-              {/* Products Section - Only for non-logged-in users */}
+              {/* Shop Section - Only for non-logged-in users */}
               {!user && (
                 <div>
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Products</h3>
+                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Shop</h3>
                   <div className="space-y-4">
-                    {productCategories.map((category) => (
+                    {shopCategories.map((category) => (
                       <div key={category.title}>
                         <h4 className="text-sm font-semibold text-gray-900 mb-2">{category.title}</h4>
                         <div className="space-y-1">
@@ -492,4 +497,4 @@ export default function Header() {
       )}
     </>
   )
-} 
+}

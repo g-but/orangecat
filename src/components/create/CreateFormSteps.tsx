@@ -18,14 +18,14 @@ import {
   Users,
   Heart
 } from 'lucide-react'
-import { simpleCategories } from '@/config/categories'
-import { getColorClasses } from '@/lib/theme'
 import type { CampaignFormData } from './CreateCampaignForm'
+import { z } from 'zod'
 
 interface StepProps {
   formData: CampaignFormData
+  formErrors: z.ZodError | null
   handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
-  handleCategoryToggle: (category: string) => void
+  handleTagsChange: (e: React.ChangeEvent<HTMLInputElement>) => void
   handleFileUpload: (file: File, type: 'banner' | 'gallery') => Promise<void>
   handleDrop: (e: React.DragEvent, type: 'banner' | 'gallery') => void
   handleDragOver: (e: React.DragEvent) => void
@@ -42,7 +42,7 @@ interface StepProps {
 }
 
 // Step 1: Project Details
-export function Step1({ formData, handleChange, handleCategoryToggle, nextStep, canProceedToStep2, isAuthenticated }: StepProps & { isAuthenticated?: boolean }) {
+export function Step1({ formData, formErrors, handleChange, handleTagsChange, nextStep, canProceedToStep2, isAuthenticated }: StepProps & { isAuthenticated?: boolean }) {
   return (
     <div className="space-y-6">
       {/* Guest mode welcome message - only show for non-authenticated users */}
@@ -85,6 +85,9 @@ export function Step1({ formData, handleChange, handleCategoryToggle, nextStep, 
               className="w-full text-lg"
               maxLength={100}
             />
+            {formErrors?.issues.find(issue => issue.path[0] === 'title') && (
+              <p className="mt-1 text-xs text-red-600">{formErrors.issues.find(issue => issue.path[0] === 'title')?.message}</p>
+            )}
             <div className="mt-1 text-xs text-gray-500 flex justify-between">
               <span>Make it catchy and memorable</span>
               <span>{formData.title.length}/100</span>
@@ -112,37 +115,23 @@ export function Step1({ formData, handleChange, handleCategoryToggle, nextStep, 
             </div>
           </div>
 
-          {/* Categories */}
+          {/* Tags */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Categories (select up to 3)
+            <label htmlFor="tags" className="block text-sm font-medium text-gray-700 mb-2">
+              Tags (comma-separated)
             </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {simpleCategories.map((category) => {
-                const isSelected = formData.categories.includes(category.value)
-                return (
-                  <button
-                    key={category.value}
-                    type="button"
-                    onClick={() => handleCategoryToggle(category.value)}
-                    disabled={!isSelected && formData.categories.length >= 3}
-                    className={`p-3 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${
-                      isSelected
-                        ? `${getColorClasses.bitcoin} border-orange-500 text-white shadow-lg`
-                        : 'border-gray-200 text-gray-700 hover:border-orange-300 hover:bg-orange-50'
-                    } ${!isSelected && formData.categories.length >= 3 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex items-center justify-center mb-1">
-                      <span className="text-lg">{category.icon}</span>
-                    </div>
-                    {category.label}
-                  </button>
-                )
-              })}
-            </div>
-            {formData.categories.length >= 3 && (
-              <p className="mt-2 text-xs text-orange-600">Maximum 3 categories selected</p>
-            )}
+            <Input
+              id="tags"
+              name="tags"
+              type="text"
+              placeholder="e.g. bitcoin, open-source, education"
+              value={formData.tags}
+              onChange={handleTagsChange}
+              className="w-full"
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Help people discover your project by adding relevant tags.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -163,7 +152,7 @@ export function Step1({ formData, handleChange, handleCategoryToggle, nextStep, 
 }
 
 // Step 2: Payment Setup
-export function Step2({ formData, handleChange, nextStep, prevStep, canProceedToStep3 }: StepProps) {
+export function Step2({ formData, formErrors, handleChange, nextStep, prevStep, canProceedToStep3 }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -188,30 +177,12 @@ export function Step2({ formData, handleChange, nextStep, prevStep, canProceedTo
               onChange={handleChange}
               className="w-full font-mono text-sm"
             />
+            {formErrors?.issues.find(issue => issue.path[0] === 'bitcoin_address') && (
+              <p className="mt-1 text-xs text-red-600">{formErrors.issues.find(issue => issue.path[0] === 'bitcoin_address')?.message}</p>
+            )}
             <p className="mt-1 text-xs text-gray-500">
               Your Bitcoin wallet address where funds will be sent. No wallet yet?{' '}
               <a href="/wallets" className="text-orange-600 hover:text-orange-700 underline">Get a wallet</a>.
-            </p>
-          </div>
-
-          {/* Lightning Address */}
-          <div>
-            <label htmlFor="lightning_address" className="block text-sm font-medium text-gray-700 mb-2">
-              <Zap className="w-4 h-4 inline mr-2" />
-              Lightning Address
-            </label>
-            <Input
-              id="lightning_address"
-              name="lightning_address"
-              type="email"
-              placeholder="user@domain.com"
-              value={formData.lightning_address}
-              onChange={handleChange}
-              className="w-full"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Lightning address for instant micropayments (optional).{' '}
-              <a href="/wallets" className="text-orange-600 hover:text-orange-700 underline">Learn about wallets</a>.
             </p>
           </div>
 
@@ -237,6 +208,9 @@ export function Step2({ formData, handleChange, nextStep, prevStep, canProceedTo
                 BTC
               </span>
             </div>
+            {formErrors?.issues.find(issue => issue.path[0] === 'goal_amount') && (
+              <p className="mt-1 text-xs text-red-600">{formErrors.issues.find(issue => issue.path[0] === 'goal_amount')?.message}</p>
+            )}
             <p className="mt-1 text-xs text-gray-500">
               Set a funding target to show progress (leave blank for no limit)
             </p>
@@ -245,7 +219,7 @@ export function Step2({ formData, handleChange, nextStep, prevStep, canProceedTo
           {!canProceedToStep3 && (
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
               <p className="text-sm text-orange-800">
-                ⚠️ Please provide at least one payment address (Bitcoin or Lightning) to continue
+                ⚠️ Please provide a Bitcoin address to continue
               </p>
             </div>
           )}
@@ -276,7 +250,7 @@ export function Step2({ formData, handleChange, nextStep, prevStep, canProceedTo
 }
 
 // Step 3: Final Details
-export function Step3({ formData, handleChange, nextStep, prevStep }: StepProps) {
+export function Step3({ formData, formErrors, handleChange, nextStep, prevStep }: StepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -301,6 +275,9 @@ export function Step3({ formData, handleChange, nextStep, prevStep }: StepProps)
               onChange={handleChange}
               className="w-full"
             />
+            {formErrors?.issues.find(issue => issue.path[0] === 'website_url') && (
+              <p className="mt-1 text-xs text-red-600">{formErrors.issues.find(issue => issue.path[0] === 'website_url')?.message}</p>
+            )}
             <p className="mt-1 text-xs text-gray-500">
               Link to your website, GitHub, Twitter, or other relevant page
             </p>
@@ -322,7 +299,7 @@ export function Step3({ formData, handleChange, nextStep, prevStep }: StepProps)
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-4">
                   <span className="text-gray-500">
-                    {formData.categories.length} categories
+                    {formData.tags}
                   </span>
                   {formData.goal_amount && (
                     <span className="text-orange-600 font-medium">
@@ -364,6 +341,7 @@ export function Step3({ formData, handleChange, nextStep, prevStep }: StepProps)
 // Step 4: Media & Launch
 export function Step4({ 
   formData, 
+  formErrors,
   handleFileUpload, 
   handleDrop, 
   handleDragOver, 
@@ -479,4 +457,4 @@ export function Step4({
       </form>
     </div>
   )
-} 
+}

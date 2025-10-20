@@ -186,7 +186,12 @@ export default function LightningPayment({
               <Zap className="w-3 h-3 text-white" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-yellow-800 mb-1">⚡ Lightning Network - Coming Soon</p>
+              <div className="flex items-center">
+                <p className="text-sm font-semibold text-yellow-800 mb-1">⚡ Lightning Network - Coming Soon</p>
+                <a href="/faq" target="_blank" rel="noopener noreferrer" className="ml-2 text-yellow-800 hover:text-yellow-600">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.897-1.355 3.52-3.228 3.894v.001c-.61.126-1.022.686-1.022 1.314v.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-.747-.604-1.35-1.35-1.35h-.002c-.747 0-1.35.603-1.35 1.35v-.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-2.12-1.78-3.87-4-3.87-1.933 0-3.5 1.567-3.5 3.5 0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-.747-.604-1.35-1.35-1.35h-.002c-.747 0-1.35.603-1.35 1.35v.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228a1.35 1.35 0 0 0-1.35-1.35h-.002zM12 18h.01"></path></svg>
+                </a>
+              </div>
               <p className="text-xs text-yellow-700 leading-relaxed mb-2">
                 Lightning payments are currently in development. This is a preview of the upcoming instant Bitcoin payment feature.
               </p>
@@ -212,6 +217,7 @@ export default function LightningPayment({
                 placeholder="Enter amount in satoshis"
                 min="1"
                 className="font-mono"
+                disabled={true}
               />
             </div>
             
@@ -225,6 +231,7 @@ export default function LightningPayment({
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Add a message with your payment"
                 maxLength={100}
+                disabled={true}
               />
             </div>
 
@@ -235,7 +242,7 @@ export default function LightningPayment({
                   <h4 className="font-medium text-blue-900 mb-1">Lightning Benefits</h4>
                   <ul className="text-sm text-blue-700 space-y-1">
                     <li>• Instant payments (usually under 3 seconds)</li>
-                    <li>• Extremely low fees (typically &lt;1 sat)</li>
+                    <li>• Extremely low fees (typically &lt; 1 sat)</li>
                     <li>• Perfect for small amounts and tips</li>
                   </ul>
                 </div>
@@ -244,17 +251,10 @@ export default function LightningPayment({
 
             <Button 
               onClick={generateInvoice} 
-              disabled={isGenerating || !amount}
+              disabled={true}
               className="w-full"
             >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating Invoice...
-                </>
-              ) : (
-                'Generate Lightning Invoice'
-              )}
+              {'Generate Lightning Invoice'}
             </Button>
           </div>
         ) : (
