@@ -84,17 +84,17 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     const validatedData = projectSchema.parse(body);
 
     // Check if user owns the project
-    const { data: existingCampaign, error: fetchError } = await supabase
+    const { data: existingProject, error: fetchError } = await supabase
       .from('projects')
-      .select('creator_id')
+      .select('user_id')
       .eq('id', id)
       .single();
 
-    if (fetchError || !existingCampaign) {
+    if (fetchError || !existingProject) {
       return apiNotFound('Project not found');
     }
 
-    if (existingCampaign.creator_id !== user.id) {
+    if (existingProject.user_id !== user.id) {
       return apiUnauthorized('You can only update your own projects');
     }
 
