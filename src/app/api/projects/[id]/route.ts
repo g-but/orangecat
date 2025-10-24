@@ -22,7 +22,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       .select(
         `
         *,
-        profiles:creator_id (
+        profiles:user_id (
           id,
           username,
           name,
