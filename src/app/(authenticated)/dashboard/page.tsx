@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { useCampaignStore } from '@/stores/projectStore';
+import { useProjectStore } from '@/stores/projectStore';
 import { useAnalytics } from '@/hooks/useAnalytics';
 import Loading from '@/components/Loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -38,7 +38,7 @@ export default function DashboardPage() {
     loadProjects,
     isLoading: projectLoading,
     getStats,
-  } = useCampaignStore();
+  } = useProjectStore();
   const { metrics, isLoading: analyticsLoading } = useAnalytics();
   const router = useRouter();
   const [localLoading, setLocalLoading] = useState(true);
@@ -134,7 +134,7 @@ export default function DashboardPage() {
   const totalDrafts = drafts.length;
 
   // Get featured project (most recent active or highest funded)
-  const featuredCampaign =
+  const featuredProject =
     activeProjects.length > 0
       ? activeProjects.sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
       : projects.find(c => c.title?.toLowerCase().includes('orange cat')) || // Specifically look for Orange Cat
@@ -181,8 +181,8 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Featured Campaign Spotlight */}
-        {featuredCampaign && (
+        {/* Featured Project Spotlight */}
+        {featuredProject && (
           <Card className="border-orange-200 bg-gradient-to-r from-orange-50 via-yellow-50 to-amber-50">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
@@ -192,22 +192,22 @@ export default function DashboardPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h2 className="text-lg font-semibold text-gray-900">
-                      🎯 Your Featured Campaign
+                      🎯 Your Featured Project
                     </h2>
                     <div className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
-                      {featuredCampaign.is_active ? 'Active' : 'Draft'}
+                      {featuredProject.is_active ? 'Active' : 'Draft'}
                     </div>
                   </div>
 
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{featuredCampaign.title}</h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{featuredCampaign.description}</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">{featuredProject.title}</h3>
+                  <p className="text-gray-600 mb-4 line-clamp-2">{featuredProject.description}</p>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
                       <p className="text-sm text-gray-500">Raised</p>
                       <p className="font-semibold text-green-600">
                         <CurrencyDisplay
-                          amount={featuredCampaign.total_funding || 0}
+                          amount={featuredProject.total_funding || 0}
                           currency="BTC"
                           size="sm"
                         />
@@ -217,7 +217,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-500">Goal</p>
                       <p className="font-semibold text-blue-600">
                         <CurrencyDisplay
-                          amount={featuredCampaign.goal_amount || 0}
+                          amount={featuredProject.goal_amount || 0}
                           currency="BTC"
                           size="sm"
                         />
@@ -226,16 +226,15 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-sm text-gray-500">Supporters</p>
                       <p className="font-semibold text-purple-600">
-                        {featuredCampaign.contributor_count || 0}
+                        {featuredProject.contributor_count || 0}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Progress</p>
                       <p className="font-semibold text-orange-600">
-                        {featuredCampaign.goal_amount
+                        {featuredProject.goal_amount
                           ? Math.round(
-                              ((featuredCampaign.total_funding || 0) /
-                                featuredCampaign.goal_amount) *
+                              ((featuredProject.total_funding || 0) / featuredProject.goal_amount) *
                                 100
                             )
                           : 0}
@@ -245,13 +244,13 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Link href={`/fund-us/${featuredCampaign.id}`}>
+                    <Link href={`/projects/${featuredProject.id}`}>
                       <Button size="sm">
                         <Eye className="w-4 h-4 mr-1" />
-                        View Campaign
+                        View Project
                       </Button>
                     </Link>
-                    <Link href={`/projects/create?draft=${featuredCampaign.id}`}>
+                    <Link href={`/projects/create?draft=${featuredProject.id}`}>
                       <Button size="sm" variant="outline">
                         <Edit3 className="w-4 h-4 mr-1" />
                         Edit
@@ -456,7 +455,7 @@ export default function DashboardPage() {
                   </div>
                   <ArrowRight className="w-5 h-5 text-orange-500" />
                 </div>
-                <h3 className="font-bold text-gray-900 mb-3 text-xl">Create Your First Campaign</h3>
+                <h3 className="font-bold text-gray-900 mb-3 text-xl">Create Your First Project</h3>
                 <div className="space-y-2 text-sm text-gray-600 mb-6">
                   <div className="font-semibold text-lg text-gray-900">🚀 Ready to launch?</div>
                   <div>Your Bitcoin fundraising page is just a few clicks away</div>
@@ -593,7 +592,7 @@ export default function DashboardPage() {
                 <p>Activity tracking coming soon</p>
                 <Link href="/dashboard/projects">
                   <Button variant="outline" className="mt-4">
-                    View Campaign Details
+                    View Project Details
                   </Button>
                 </Link>
               </div>
