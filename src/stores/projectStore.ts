@@ -68,7 +68,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('creator_id', userId)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) {

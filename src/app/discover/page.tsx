@@ -416,7 +416,7 @@ export default function DiscoverPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1.3 }}
         >
-          {/* Campaign Creation CTA (when no projects exist) */}
+          {/* Project Creation CTA (when no projects exist) */}
           {filteredProjects.length === 0 &&
             !searchTerm &&
             selectedCategory === 'all' &&
@@ -463,7 +463,7 @@ export default function DiscoverPage() {
                       size="lg"
                       className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                     >
-                      🎯 Create the First Campaign
+                      🎯 Create the First Project
                     </Button>
 
                     <p className="text-sm text-gray-500 mt-4">
@@ -497,7 +497,7 @@ export default function DiscoverPage() {
                     href="/projects/create"
                     className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   >
-                    🚀 Create Your First Campaign
+                    🚀 Create Your First Project
                   </Button>
 
                   {searchTerm || selectedCategory !== 'all' || selectedTags.length > 0 ? (
@@ -522,7 +522,7 @@ export default function DiscoverPage() {
                   <h4 className="font-semibold text-orange-800 mb-2">Quick Start:</h4>
                   <ol className="text-sm text-orange-700 space-y-1 text-left">
                     <li>1. Sign up (or sign in)</li>
-                    <li>2. Click "Create Campaign" above</li>
+                    <li>2. Click "Create Project" above</li>
                     <li>3. Add your Bitcoin address</li>
                     <li>4. Share your project link</li>
                   </ol>
@@ -548,7 +548,7 @@ export default function DiscoverPage() {
                 </h2>
               </div>
 
-              {/* Campaign Grid */}
+              {/* Project Grid */}
               <div
                 className={`grid gap-6 ${
                   viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
