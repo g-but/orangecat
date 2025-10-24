@@ -1,27 +1,27 @@
 /**
  * PROFILE SERVICE - COMPREHENSIVE TEST COVERAGE
- * 
+ *
  * This test suite provides comprehensive coverage for the ProfileService,
  * testing all user profile operations, authentication flows, error handling,
  * fallback mechanisms, and edge cases.
- * 
+ *
  * Created: 2025-01-08
  * Last Modified: 2025-01-08
  * Last Modified Summary: Comprehensive ProfileService tests with fallback testing
  */
-import { ProfileService } from '../profileService'
-import { jest } from '@jest/globals'
-import type { ScalableProfile, ScalableProfileFormData } from '../profile/types';
+import { ProfileService } from '@/services/supabase/core/consolidated';
+import { jest } from '@jest/globals';
+import type { ScalableProfile, ScalableProfileFormData } from '@/services/profile/types';
 
 // Mock dependencies
-jest.mock('../profile/reader', () => ({
+jest.mock('@/services/profile/reader', () => ({
   ProfileReader: {
     getProfile: jest.fn(),
     getProfiles: jest.fn(),
     searchProfiles: jest.fn(),
     getAllProfiles: jest.fn(),
     incrementProfileViews: jest.fn(),
-  }
+  },
 }));
 
 jest.mock('../profile/writer', () => ({
@@ -31,7 +31,7 @@ jest.mock('../profile/writer', () => ({
     updateAnalytics: jest.fn(),
     deleteProfile: jest.fn(),
     fallbackUpdate: jest.fn(),
-  }
+  },
 }));
 
 import { ProfileReader } from '../profile/reader';
@@ -41,13 +41,11 @@ const mockedProfileReader = jest.mocked(ProfileReader);
 const mockedProfileWriter = jest.mocked(ProfileWriter);
 
 describe('👤 Profile Service - Comprehensive Coverage', () => {
-
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
   describe('🎯 Service Architecture', () => {
-    
     test('should export ProfileService class', () => {
       expect(ProfileService).toBeDefined();
       expect(typeof ProfileService).toBe('function');
@@ -58,14 +56,12 @@ describe('👤 Profile Service - Comprehensive Coverage', () => {
       expect(typeof ProfileService.updateProfile).toBe('function');
       expect(typeof ProfileService.createProfile).toBe('function');
       // Note: updatePassword is a legacy method not using the reader/writer pattern
-      expect(typeof ProfileService.updatePassword).toBe('function'); 
+      expect(typeof ProfileService.updatePassword).toBe('function');
       expect(typeof ProfileService.fallbackProfileUpdate).toBe('function');
     });
-
   });
 
   describe('👤 Get Profile Operations', () => {
-    
     test('should retrieve profile successfully', async () => {
       const mockProfile: ScalableProfile = {
         id: 'user-123',
@@ -119,7 +115,7 @@ describe('👤 Profile Service - Comprehensive Coverage', () => {
         preferences: null,
         metadata: null,
         verification_data: null,
-        privacy_settings: null
+        privacy_settings: null,
       };
 
       mockedProfileReader.getProfile.mockResolvedValue(mockProfile);
@@ -150,25 +146,23 @@ describe('👤 Profile Service - Comprehensive Coverage', () => {
       mockedProfileReader.getProfile.mockResolvedValue(null);
 
       const result = await ProfileService.getProfile('');
-      
+
       expect(result).toBeNull();
       expect(mockedProfileReader.getProfile).toHaveBeenCalledWith('');
     });
-
   });
 
   describe('✏️ Update Profile Operations', () => {
-    
     test('should update profile successfully', async () => {
       const userId = 'user-123';
       const formData: ScalableProfileFormData = {
         username: 'newusername',
         full_name: 'New Name',
-        bio: 'Updated bio'
+        bio: 'Updated bio',
       };
       const mockResponse = {
-          success: true,
-          data: { id: userId, ...formData } as ScalableProfile
+        success: true,
+        data: { id: userId, ...formData } as ScalableProfile,
       };
       mockedProfileWriter.updateProfile.mockResolvedValue(mockResponse);
 
@@ -181,57 +175,53 @@ describe('👤 Profile Service - Comprehensive Coverage', () => {
     });
 
     test('should return error on update failure', async () => {
-        const userId = 'user-123';
-        const formData: ScalableProfileFormData = { username: 'failuser' };
-        const mockResponse = {
-            success: false,
-            error: 'Failed to update'
-        };
-        mockedProfileWriter.updateProfile.mockResolvedValue(mockResponse);
+      const userId = 'user-123';
+      const formData: ScalableProfileFormData = { username: 'failuser' };
+      const mockResponse = {
+        success: false,
+        error: 'Failed to update',
+      };
+      mockedProfileWriter.updateProfile.mockResolvedValue(mockResponse);
 
-        const result = await ProfileService.updateProfile(userId, formData);
+      const result = await ProfileService.updateProfile(userId, formData);
 
-        expect(result.success).toBe(false);
-        expect(result.data).toBeUndefined();
-        expect(result.error).toBe('Failed to update');
+      expect(result.success).toBe(false);
+      expect(result.data).toBeUndefined();
+      expect(result.error).toBe('Failed to update');
     });
-
   });
-  
+
   describe('➕ Create Profile Operations', () => {
-
     test('should create profile successfully', async () => {
-        const userId = 'user-456';
-        const formData: ScalableProfileFormData = {
-            username: 'newbie',
-            full_name: 'Newbie User'
-        };
-        const mockResponse = {
-            success: true,
-            data: { id: userId, ...formData } as ScalableProfile
-        };
-        mockedProfileWriter.createProfile.mockResolvedValue(mockResponse);
+      const userId = 'user-456';
+      const formData: ScalableProfileFormData = {
+        username: 'newbie',
+        full_name: 'Newbie User',
+      };
+      const mockResponse = {
+        success: true,
+        data: { id: userId, ...formData } as ScalableProfile,
+      };
+      mockedProfileWriter.createProfile.mockResolvedValue(mockResponse);
 
-        const result = await ProfileService.createProfile(userId, formData);
+      const result = await ProfileService.createProfile(userId, formData);
 
-        expect(result.success).toBe(true);
-        expect(result.data).toBeDefined();
-        expect(result.data?.username).toBe('newbie');
+      expect(result.success).toBe(true);
+      expect(result.data).toBeDefined();
+      expect(result.data?.username).toBe('newbie');
     });
   });
 
   describe('🗑️ Delete Profile Operations', () => {
-
     test('should delete profile successfully', async () => {
-        const userId = 'user-789';
-        const mockResponse = { success: true };
-        mockedProfileWriter.deleteProfile.mockResolvedValue(mockResponse);
-        
-        const result = await ProfileService.deleteProfile(userId);
+      const userId = 'user-789';
+      const mockResponse = { success: true };
+      mockedProfileWriter.deleteProfile.mockResolvedValue(mockResponse);
 
-        expect(result.success).toBe(true);
-        expect(result.data).toBeUndefined();
+      const result = await ProfileService.deleteProfile(userId);
+
+      expect(result.success).toBe(true);
+      expect(result.data).toBeUndefined();
     });
   });
-
-}); 
+});

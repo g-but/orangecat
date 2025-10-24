@@ -1,21 +1,26 @@
-import { NextRequest } from 'next/server'
-import { createServerClient } from '@/lib/db'
-import { handleApiError, AuthError, NotFoundError, ValidationError } from '@/lib/errors'
-import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit'
-import { projectSchema } from '@/lib/validation'
+import { NextRequest } from 'next/server';
+import { createServerClient } from '@/lib/supabase/server';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiNotFound,
+  apiValidationError,
+  apiInternalError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
+import { projectSchema } from '@/lib/validation';
 
 // GET /api/projects/[id] - Get specific project
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const supabase = await createServerClient()
-    const { id } = params
+    const supabase = await createServerClient();
+    const { id } = params;
 
     const { data: project, error } = await supabase
       .from('projects')
-      .select(`
+      .select(
+        `
         *,
         profiles:creator_id (
           id,
@@ -38,124 +43,122 @@ export async function GET(
             avatar_url
           )
         )
-      `)
+      `
+      )
       .eq('id', id)
-      .single()
+      .single();
 
     if (error || !project) {
-      throw new NotFoundError('Project')
+      return apiNotFound('Project not found');
     }
 
-    return Response.json({ success: true, data: project })
+    return apiSuccess(project);
   } catch (error) {
-    return handleApiError(error)
+    return handleApiError(error);
   }
 }
 
 // PUT /api/projects/[id] - Update project
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     // Rate limiting check (stricter for PUT)
-    const rateLimitResult = rateLimit(request)
+    const rateLimitResult = rateLimit(request);
     if (!rateLimitResult.success) {
-      return createRateLimitResponse(rateLimitResult)
+      return createRateLimitResponse(rateLimitResult);
     }
 
-    const supabase = await createServerClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      throw new AuthError()
+      return apiUnauthorized();
     }
 
-    const { id } = params
-    const body = await request.json()
+    const { id } = params;
+    const body = await request.json();
 
     // Validate input data
-    const validatedData = projectSchema.parse(body)
+    const validatedData = projectSchema.parse(body);
 
     // Check if user owns the project
     const { data: existingCampaign, error: fetchError } = await supabase
       .from('projects')
       .select('creator_id')
       .eq('id', id)
-      .single()
+      .single();
 
     if (fetchError || !existingCampaign) {
-      throw new NotFoundError('Project')
+      return apiNotFound('Project not found');
     }
 
     if (existingCampaign.creator_id !== user.id) {
-      throw new AuthError('You can only update your own projects')
+      return apiUnauthorized('You can only update your own projects');
     }
 
     const { data: project, error } = await supabase
       .from('projects')
       .update({
         ...validatedData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', id)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      throw new Error('Failed to update project')
+      return apiInternalError('Failed to update project', { details: error.message });
     }
 
-    return Response.json({ success: true, data: project })
+    return apiSuccess(project);
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
-      return handleApiError(new ValidationError('Invalid project data'))
+      return apiValidationError('Invalid project data');
     }
-    return handleApiError(error)
+    return handleApiError(error);
   }
 }
 
 // DELETE /api/projects/[id] - Delete project
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const supabase = await createServerClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      throw new AuthError()
+      return apiUnauthorized();
     }
 
-    const { id } = params
+    const { id } = params;
 
     // Check if user owns the project
     const { data: existingCampaign, error: fetchError } = await supabase
       .from('projects')
       .select('creator_id')
       .eq('id', id)
-      .single()
+      .single();
 
     if (fetchError || !existingCampaign) {
-      throw new NotFoundError('Project')
+      return apiNotFound('Project not found');
     }
 
     if (existingCampaign.creator_id !== user.id) {
-      throw new AuthError('You can only delete your own projects')
+      return apiUnauthorized('You can only delete your own projects');
     }
 
-    const { error } = await supabase
-      .from('projects')
-      .delete()
-      .eq('id', id)
+    const { error } = await supabase.from('projects').delete().eq('id', id);
 
     if (error) {
-      throw new Error('Failed to delete project')
+      return apiInternalError('Failed to delete project', { details: error.message });
     }
 
-    return Response.json({ success: true, message: 'Campaign deleted' })
+    return apiSuccess({ message: 'Project deleted successfully' });
   } catch (error) {
-    return handleApiError(error)
+    return handleApiError(error);
   }
 }
