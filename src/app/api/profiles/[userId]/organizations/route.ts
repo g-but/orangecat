@@ -1,4 +1,5 @@
-import { createServerClient } from '@/lib/db'
+import { logger } from '@/utils/logger'
+import { createServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
@@ -97,7 +98,7 @@ export async function GET(
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error fetching user organizations:', error)
+    logger.error('Error fetching user organizations:', error)
     return NextResponse.json(
       { error: 'Failed to fetch organizations' },
       { status: 500 }

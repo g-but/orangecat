@@ -67,46 +67,46 @@ export const projects: Initiative = {
     }
   ],
   types: [
-    { 
-      name: 'Open Source', 
+    {
+      name: 'Open Source',
       icon: 'Code',
       description: 'Open source software projects',
-      example: 'Bitcoin development tools',
+      example: 'Web development frameworks',
       color: 'bg-purple-100 text-purple-700 border-purple-200'
     },
-    { 
-      name: 'Research Projects', 
+    {
+      name: 'Research Projects',
       icon: 'Search',
       description: 'Academic and technical research',
-      example: 'Lightning Network research',
+      example: 'Environmental impact studies',
       color: 'bg-blue-100 text-blue-700 border-blue-200'
     },
-    { 
-      name: 'Creative Works', 
+    {
+      name: 'Creative Works',
       icon: 'Palette',
       description: 'Art, design, and creative projects',
-      example: 'Bitcoin documentary',
+      example: 'Independent film production',
       color: 'bg-pink-100 text-pink-700 border-pink-200'
     },
-    { 
-      name: 'Community Projects', 
+    {
+      name: 'Community Projects',
       icon: 'Users',
       description: 'Community-driven initiatives',
-      example: 'Local Bitcoin adoption',
+      example: 'Neighborhood revitalization',
       color: 'bg-green-100 text-green-700 border-green-200'
     },
-    { 
-      name: 'Infrastructure', 
+    {
+      name: 'Infrastructure',
       icon: 'Network',
       description: 'Technical infrastructure projects',
-      example: 'Lightning node network',
+      example: 'Community WiFi network',
       color: 'bg-orange-100 text-orange-700 border-orange-200'
     },
-    { 
-      name: 'Educational', 
+    {
+      name: 'Educational',
       icon: 'GraduationCap',
       description: 'Educational content and courses',
-      example: 'Bitcoin development course',
+      example: 'Online learning platform',
       color: 'bg-indigo-100 text-indigo-700 border-indigo-200'
     }
   ],

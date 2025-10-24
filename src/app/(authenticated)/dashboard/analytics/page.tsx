@@ -50,28 +50,28 @@ interface CampaignPerformance {
 
 export default function AnalyticsPage() {
   const { user, isLoading: authLoading } = useRequireAuth()
-  const { campaigns, loadCampaigns, isLoading: campaignLoading } = useCampaignStore()
+  const { projects, loadProjects, isLoading: projectLoading } = useCampaignStore()
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
   const [selectedCampaign, setSelectedCampaign] = useState<string>('all')
 
   useEffect(() => {
     if (user?.id) {
-      loadCampaigns(user.id)
+      loadProjects(user.id)
     }
-  }, [user?.id, loadCampaigns])
+  }, [user?.id, loadProjects])
 
-  if (authLoading || campaignLoading) {
+  if (authLoading || projectLoading) {
     return <Loading fullScreen />
   }
 
   // Calculate analytics metrics
   const calculateMetrics = (): AnalyticsMetric[] => {
-    const activeCampaigns = campaigns.filter(c => c.isActive)
-    const totalRaised = campaigns.reduce((sum, c) => sum + (c.total_funding || 0), 0)
-    const totalSupporters = campaigns.reduce((sum, c) => sum + (c.contributor_count || 0), 0)
+    const activeProjects = projects.filter(c => c.isActive)
+    const totalRaised = projects.reduce((sum, c) => sum + (c.total_funding || 0), 0)
+    const totalSupporters = projects.reduce((sum, c) => sum + (c.contributor_count || 0), 0)
     const avgDonation = totalSupporters > 0 ? totalRaised / totalSupporters : 0
-    const successRate = campaigns.length > 0 ? 
-      (campaigns.filter(c => c.goal_amount && c.total_funding >= c.goal_amount).length / campaigns.length) * 100 : 0
+    const successRate = projects.length > 0 ? 
+      (projects.filter(c => c.goal_amount && c.total_funding >= c.goal_amount).length / projects.length) * 100 : 0
 
     return [
       {
@@ -83,10 +83,10 @@ export default function AnalyticsPage() {
         color: 'text-green-600'
       },
       {
-        label: 'Active Campaigns',
-        value: activeCampaigns.length,
-        change: activeCampaigns.length > 0 ? 2 : 0,
-        changeType: activeCampaigns.length > 0 ? 'increase' : 'neutral',
+        label: 'Active Projects',
+        value: activeProjects.length,
+        change: activeProjects.length > 0 ? 2 : 0,
+        changeType: activeProjects.length > 0 ? 'increase' : 'neutral',
         icon: Target,
         color: 'text-blue-600'
       },
@@ -126,23 +126,23 @@ export default function AnalyticsPage() {
   }
 
   const getCampaignPerformance = (): CampaignPerformance[] => {
-    return campaigns.map(campaign => ({
-      id: campaign.id,
-      title: campaign.title || 'Untitled Campaign',
-      totalRaised: campaign.total_funding || 0,
-      goalAmount: campaign.goal_amount || 0,
-      supporters: campaign.contributor_count || 0,
+    return projects.map(project => ({
+      id: project.id,
+      title: project.title || 'Untitled Campaign',
+      totalRaised: project.total_funding || 0,
+      goalAmount: project.goal_amount || 0,
+      supporters: project.contributor_count || 0,
       conversionRate: Math.random() * 5 + 1, // Mock data
-      avgDonation: campaign.contributor_count > 0 ? 
-        (campaign.total_funding || 0) / campaign.contributor_count : 0,
-      daysActive: Math.floor((Date.now() - new Date(campaign.created_at).getTime()) / (1000 * 60 * 60 * 24)),
+      avgDonation: project.contributor_count > 0 ? 
+        (project.total_funding || 0) / project.contributor_count : 0,
+      daysActive: Math.floor((Date.now() - new Date(project.created_at).getTime()) / (1000 * 60 * 60 * 24)),
       views: Math.floor(Math.random() * 1000) + 100, // Mock data
       shares: Math.floor(Math.random() * 50) + 5 // Mock data
     }))
   }
 
   const metrics = calculateMetrics()
-  const campaignPerformance = getCampaignPerformance()
+  const projectPerformance = getCampaignPerformance()
 
   const formatCurrency = (amount: number) => {
     if (amount >= 1) {
@@ -207,10 +207,10 @@ export default function AnalyticsPage() {
               onChange={(e) => setSelectedCampaign(e.target.value)}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
             >
-              <option value="all">All Campaigns</option>
-              {campaigns.map((campaign) => (
-                <option key={campaign.id} value={campaign.id}>
-                  {campaign.title || 'Untitled Campaign'}
+              <option value="all">All Projects</option>
+              {projects.map((project) => (
+                <option key={project.id} value={project.id}>
+                  {project.title || 'Untitled Campaign'}
                 </option>
               ))}
             </select>
@@ -259,12 +259,12 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Campaign Performance Table */}
-      {campaignPerformance.length > 0 && (
+      {projectPerformance.length > 0 && (
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Campaign Performance</CardTitle>
             <CardDescription>
-              Detailed breakdown of your campaign metrics
+              Detailed breakdown of your project metrics
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -283,23 +283,23 @@ export default function AnalyticsPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {campaignPerformance.map((campaign) => {
-                    const progress = campaign.goalAmount > 0 ? 
-                      Math.min((campaign.totalRaised / campaign.goalAmount) * 100, 100) : 0
+                  {projectPerformance.map((project) => {
+                    const progress = project.goalAmount > 0 ? 
+                      Math.min((project.totalRaised / project.goalAmount) * 100, 100) : 0
                     
                     return (
-                      <tr key={campaign.id} className="border-b border-gray-100 hover:bg-gray-50">
+                      <tr key={project.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="py-3 px-4">
                           <div>
-                            <p className="font-medium text-gray-900">{campaign.title}</p>
-                            <p className="text-sm text-gray-500">{campaign.daysActive} days active</p>
+                            <p className="font-medium text-gray-900">{project.title}</p>
+                            <p className="text-sm text-gray-500">{project.daysActive} days active</p>
                           </div>
                         </td>
                         <td className="py-3 px-4 font-medium">
-                          {formatCurrency(campaign.totalRaised)}
+                          {formatCurrency(project.totalRaised)}
                         </td>
                         <td className="py-3 px-4 text-gray-600">
-                          {formatCurrency(campaign.goalAmount)}
+                          {formatCurrency(project.goalAmount)}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
@@ -312,14 +312,14 @@ export default function AnalyticsPage() {
                             <span className="text-sm font-medium">{progress.toFixed(0)}%</span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 font-medium">{campaign.supporters}</td>
+                        <td className="py-3 px-4 font-medium">{project.supporters}</td>
                         <td className="py-3 px-4 text-gray-600">
-                          {formatCurrency(campaign.avgDonation)}
+                          {formatCurrency(project.avgDonation)}
                         </td>
-                        <td className="py-3 px-4 text-gray-600">{campaign.views}</td>
+                        <td className="py-3 px-4 text-gray-600">{project.views}</td>
                         <td className="py-3 px-4">
                           <span className="text-sm font-medium text-green-600">
-                            {campaign.conversionRate.toFixed(1)}%
+                            {project.conversionRate.toFixed(1)}%
                           </span>
                         </td>
                       </tr>
@@ -383,12 +383,12 @@ export default function AnalyticsPage() {
             AI-Powered Insights
           </CardTitle>
           <CardDescription>
-            Personalized recommendations to improve your campaigns
+            Personalized recommendations to improve your projects
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {campaigns.length > 0 ? (
+            {projects.length > 0 ? (
               <>
                 <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
                   <div className="flex items-start gap-3">
@@ -396,7 +396,7 @@ export default function AnalyticsPage() {
                     <div>
                       <h4 className="font-medium text-blue-900">Optimize Your Campaign Timing</h4>
                       <p className="text-blue-700 text-sm mt-1">
-                        Your campaigns perform 23% better when launched on Tuesdays. Consider timing your next launch accordingly.
+                        Your projects perform 23% better when launched on Tuesdays. Consider timing your next launch accordingly.
                       </p>
                     </div>
                   </div>
@@ -408,7 +408,7 @@ export default function AnalyticsPage() {
                     <div>
                       <h4 className="font-medium text-green-900">Increase Social Sharing</h4>
                       <p className="text-green-700 text-sm mt-1">
-                        Campaigns with regular social media updates raise 40% more on average. Share updates 2-3 times per week.
+                        Projects with regular social media updates raise 40% more on average. Share updates 2-3 times per week.
                       </p>
                     </div>
                   </div>
@@ -429,8 +429,8 @@ export default function AnalyticsPage() {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>Create your first campaign to see personalized insights</p>
-                <Button href="/create" className="mt-4">
+                <p>Create your first project to see personalized insights</p>
+                <Button href="/projects/create" className="mt-4">
                   Create Campaign
                 </Button>
               </div>

@@ -1,7 +1,7 @@
 export interface Profile {
   id: string; // Primary key, matches auth.users.id
   username?: string | null;
-  display_name?: string | null; // Matches actual database column
+  name?: string | null; // Matches actual database column
   bio?: string | null;
   avatar_url?: string | null;
   banner_url?: string | null;
@@ -20,7 +20,7 @@ export interface Profile {
   verification_status?: VerificationStatus;
 }
 
-export type ProfileType = 'individual' | 'campaign' | 'organization' | 'collective' | 'project';
+export type ProfileType = 'individual' | 'project' | 'organization' | 'collective' | 'project';
 
 export interface AssociatedEntity {
   id: string;
@@ -61,15 +61,15 @@ export const PROFILE_CATEGORIES = {
       'What impact do you want to make in the world?'
     ]
   },
-  campaign: {
+  project: {
     label: 'Campaign',
     description: 'A specific project or initiative seeking Bitcoin funding',
     icon: '🎯',
     color: 'orange',
     inspirationPrompts: [
-      'What problem does this campaign solve?',
+      'What problem does this project solve?',
       'How will supporters see their impact?',
-      'What makes this campaign unique and worthy of support?'
+      'What makes this project unique and worthy of support?'
     ]
   },
   organization: {

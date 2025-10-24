@@ -1,10 +1,11 @@
 'use client'
 
+import { logger } from '@/utils/logger'
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import type { User, Session } from '@supabase/supabase-js'
 import type { Profile } from '@/types/database'
-import { supabase } from '@/lib/db'
+import { supabase } from '@/lib/supabase/browser'
 
 interface AuthState {
   // data
@@ -82,7 +83,7 @@ export const useAuthStore = create<AuthState>()(
             return { error: 'Profile not found' }
           }
         } catch (error) {
-          console.error('Failed to fetch profile:', error)
+          logger.error('Failed to fetch profile:', error)
           return { error: 'Failed to fetch profile' }
         }
       },

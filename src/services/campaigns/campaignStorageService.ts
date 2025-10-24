@@ -1,13 +1,13 @@
 /**
  * Campaign Storage Service
- * Handles campaign media uploads to Supabase storage
+ * Handles project media uploads to Supabase storage
  * 
  * Created: 2025-01-28
  * Last Modified: 2025-01-28
  * Last Modified Summary: Initial creation for Option A - Campaign Creation Modernization
  */
 
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 import { toast } from 'sonner'
 import { logger } from '@/utils/logger'
 import type { CatchError } from '@/types/common'
@@ -26,42 +26,42 @@ export interface FileUploadProgress {
 }
 
 export class CampaignStorageService {
-  private static readonly BUCKET_NAME = 'campaigns'
-  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB for campaign media
+  private static readonly BUCKET_NAME = 'projects'
+  private static readonly MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB for project media
   private static readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
   /**
-   * Upload campaign banner image
+   * Upload project banner image
    */
   static async uploadBanner(
-    campaignId: string,
+    projectId: string,
     file: File,
     onProgress?: (progress: FileUploadProgress) => void
   ): Promise<FileUploadResult> {
-    return this.uploadFile(file, `${campaignId}/banner`, 'banner', onProgress)
+    return this.uploadFile(file, `${projectId}/banner`, 'banner', onProgress)
   }
 
   /**
-   * Upload campaign gallery image
+   * Upload project gallery image
    */
   static async uploadGalleryImage(
-    campaignId: string,
+    projectId: string,
     file: File,
     imageIndex: number,
     onProgress?: (progress: FileUploadProgress) => void
   ): Promise<FileUploadResult> {
-    return this.uploadFile(file, `${campaignId}/gallery/${imageIndex}`, 'gallery image', onProgress)
+    return this.uploadFile(file, `${projectId}/gallery/${imageIndex}`, 'gallery image', onProgress)
   }
 
   /**
-   * Upload campaign logo/avatar
+   * Upload project logo/avatar
    */
   static async uploadLogo(
-    campaignId: string,
+    projectId: string,
     file: File,
     onProgress?: (progress: FileUploadProgress) => void
   ): Promise<FileUploadResult> {
-    return this.uploadFile(file, `${campaignId}/logo`, 'logo', onProgress)
+    return this.uploadFile(file, `${projectId}/logo`, 'logo', onProgress)
   }
 
   /**
@@ -162,7 +162,7 @@ export class CampaignStorageService {
   }
 
   /**
-   * Delete campaign media file
+   * Delete project media file
    */
   static async deleteFile(filePath: string): Promise<boolean> {
     try {

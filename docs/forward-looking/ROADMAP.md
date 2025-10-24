@@ -29,12 +29,12 @@
 
 **Current Issues:**
 - 8 failing tests blocking CI/CD
-- ~~Supabase mocking issues in campaign store~~ ✅ **RESOLVED** (unified architecture)
+- ~~Supabase mocking issues in project store~~ ✅ **RESOLVED** (unified architecture)
 - Celebrity protection validation mismatches
 
 **Tasks:**
 - [ ] Fix Supabase client mocking in test environment
-- [x] ~~Resolve `campaignStore.test.ts` - `.single is not a function` error~~ ✅ **COMPLETED** (unified store migration)
+- [x] ~~Resolve `projectStore.test.ts` - `.single is not a function` error~~ ✅ **COMPLETED** (unified store migration)
 - [ ] Fix celebrity impersonation test assertions in `celebrity-impersonation-prevention.test.ts`
 - [ ] Fix funding security test validation patterns
 - [ ] Update test expectations to match current validation logic
@@ -45,7 +45,7 @@
 - [ ] CI/CD pipeline runs clean
 
 **Files to Fix:**
-- `src/stores/__tests__/campaignStore.test.ts`
+- `src/stores/__tests__/projectStore.test.ts`
 - `src/app/api/__tests__/celebrity-impersonation-prevention.test.ts`
 - `src/app/api/__tests__/funding-security.test.ts`
 - `tests/setup.ts` (Supabase mocking)
@@ -151,7 +151,7 @@
 - `playwright.config.ts`
 - `tests/integration/auth.spec.ts`
 - `tests/integration/profile.spec.ts`
-- `tests/integration/campaigns.spec.ts`
+- `tests/integration/projects.spec.ts`
 
 ---
 
@@ -296,7 +296,7 @@
 
 **Files to Create:**
 - `src/domains/user/`
-- `src/domains/campaigns/`
+- `src/domains/projects/`
 - `src/domains/payments/`
 
 ---
@@ -330,7 +330,7 @@
 
 **Tasks:**
 - [ ] Implement WebSocket connections for real-time updates
-- [ ] Add real-time campaign funding updates
+- [ ] Add real-time project funding updates
 - [ ] Add real-time notifications
 - [ ] Implement collaborative features
 
@@ -368,7 +368,7 @@
 
 **Tasks:**
 - [ ] Implement user behavior analytics
-- [ ] Add campaign performance metrics
+- [ ] Add project performance metrics
 - [ ] Create business intelligence dashboard
 - [ ] Add A/B testing framework
 

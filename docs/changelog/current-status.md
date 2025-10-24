@@ -56,7 +56,7 @@ npm run format
 ### Core Platform
 - ✅ **Authentication** - Login/signup with Supabase
 - ✅ **Profile Management** - Edit and save profile information
-- ✅ **Campaign Browsing** - View campaigns (read-only currently)
+- ✅ **Campaign Browsing** - View projects (read-only currently)
 - ✅ **Organization Profiles** - Basic organization pages
 - ✅ **Database Connection** - Supabase PostgreSQL connected (7 profiles)
 
@@ -86,7 +86,7 @@ npm run format
 - ✅ Created SQL migrations for missing tables:
   - `organization_members` - Organization membership with roles
   - `projects` - Long-term initiatives
-  - `project_id` link in campaigns
+  - `project_id` link in projects
 - ✅ Updated TypeScript types in database.ts
 - ✅ Created implementation guide (IMPLEMENTATION_GUIDE.md)
 
@@ -125,14 +125,14 @@ npm run format
 ### Database Tables (Existing)
 - ✅ `profiles` - User profiles
 - ✅ `organizations` - Organization entities
-- ✅ `campaigns` - Fundraising campaigns
+- ✅ `projects` - Fundraising projects
 - ✅ `donations` - Donation records
 - ✅ `profile_associations` - Universal relationships
 
 ### Database Tables (Ready to Create)
 - 📦 `organization_members` - Migration ready
 - 📦 `projects` - Migration ready
-- 📦 Updated `campaigns` with `project_id` - Migration ready
+- 📦 Updated `projects` with `project_id` - Migration ready
 
 ### APIs (Working)
 - ✅ `/api/health` - Health check endpoint

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 // import { createClient } from '@/lib/supabase/client' // Old import
-import supabase from '@/services/supabase/client' // New default import
+import supabase from '@/lib/supabase/browser' // New default import
 import Link from 'next/link'
 import { 
   ArrowLeft, 
@@ -81,7 +81,7 @@ const featureDetails: Record<string, FeatureInfo> = {
       'Event creation and management',
       'Bitcoin ticket sales',
       'Attendee management',
-      'Event fundraising campaigns',
+      'Event fundraising projects',
       'Real-time communication',
       'Post-event analytics'
     ],

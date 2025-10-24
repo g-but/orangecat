@@ -33,7 +33,7 @@ export default function AuthenticatedHeader() {
         {/* Center: Enhanced Search Bar */}
         <div className="flex-1 max-w-md mx-4 hidden md:block">
           <EnhancedSearchBar 
-            placeholder="Search campaigns, people..."
+            placeholder="Search projects, people..."
             className="w-full"
           />
         </div>
@@ -65,7 +65,7 @@ export default function AuthenticatedHeader() {
               {profile.avatar_url ? (
                 <Image
                   src={profile.avatar_url}
-                  alt={profile.display_name || 'User Avatar'}
+                  alt={profile.name || 'User Avatar'}
                   width={24}
                   height={24}
                   className="rounded-full object-cover"
@@ -74,7 +74,7 @@ export default function AuthenticatedHeader() {
                 <DefaultAvatar size={24} className="rounded-full" />
               )}
               <span className="text-sm font-medium text-gray-700 hidden lg:block max-w-20 truncate">
-                {profile.display_name || profile.username}
+                {profile.name || profile.username}
               </span>
             </Link>
           )}

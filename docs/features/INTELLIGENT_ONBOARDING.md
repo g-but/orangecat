@@ -6,7 +6,7 @@
 
 ## Overview
 
-The Intelligent Onboarding Flow is a guided system that helps new users understand whether they should set up a personal Bitcoin fundraising campaign or create an organization for collective management.
+The Intelligent Onboarding Flow is a guided system that helps new users understand whether they should set up a personal Bitcoin fundraising project or create an organization for collective management.
 
 ## User Flow
 
@@ -19,7 +19,7 @@ Users describe their project, cause, or idea in a text field. They can also sele
 
 ### Step 2: Smart Analysis
 The system analyzes the user's description using keyword matching and contextual analysis to determine:
-- Whether an organization or personal campaign is recommended
+- Whether an organization or personal project is recommended
 - The confidence level of the recommendation
 - The type of setup (business, charity, community, etc.)
 
@@ -56,7 +56,7 @@ Users are presented with two options:
 1. **Create Organization** - For collective projects
 2. **Create Personal Campaign** - For individual projects
 
-Additionally, they can browse existing campaigns to explore the platform.
+Additionally, they can browse existing projects to explore the platform.
 
 ## Technical Implementation
 
@@ -81,7 +81,7 @@ Response:
   "isCharity": true,
   "needsFunding": true,
   "confidence": 85,
-  "recommendation": "Your charitable cause can be effectively managed through a personal campaign...",
+  "recommendation": "Your charitable cause can be effectively managed through a personal project...",
   "suggestedSetup": "personal"
 }
 ```
@@ -101,7 +101,7 @@ Response:
 5. Step 4: User clicks either:
    - "Create Organization" → redirects to `/organizations/create`
    - "Create Campaign" → redirects to `/create`
-   - "Browse Campaigns" → redirects to `/discover`
+   - "Browse Projects" → redirects to `/discover`
 
 ### Backend Flow for Organization Creation
 
@@ -125,14 +125,14 @@ Database tables involved:
 ✅ **Clarity** - Clear explanation of benefits for each path  
 ✅ **Transparency** - Show confidence levels in recommendations  
 ✅ **Flexibility** - Users can override recommendations  
-✅ **Education** - Learn about organization vs personal campaigns  
+✅ **Education** - Learn about organization vs personal projects  
 
 ## Integration with Home Page
 
 The home page features:
 - **Primary CTA:** "🚀 Smart Setup Guide" → `/onboarding`
 - **Secondary CTA:** "Create Campaign Now" → `/create`
-- **Tertiary CTA:** "Browse Campaigns" → `/discover`
+- **Tertiary CTA:** "Browse Projects" → `/discover`
 
 New users are encouraged to start with the Smart Setup Guide to understand their options.
 

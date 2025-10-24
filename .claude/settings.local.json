@@ -89,9 +89,25 @@
       "Bash(SUPABASE_SERVICE_ROLE_KEY=\"REDACTED_SERVICE_KEY\":*)",
       "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql:*)",
       "Bash(vercel:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(git -C /home/g/dev/orangecat status)",
+      "Bash(while read file)",
+      "Bash(done)",
+      "Bash(xargs:*)",
+      "Bash(timeout 30s npx next lint:*)",
+      "Bash(awk:*)",
+      "mcp__memory__create_entities",
+      "mcp__memory__delete_observations",
+      "mcp__memory__add_observations"
     ],
-    "deny": []
+    "deny": [
+      "Bash(rm **/.env.local)",
+      "Bash(rm **/.env)",
+      "Bash(rm .env.local)",
+      "Bash(rm .env)",
+      "Bash(git rm **/.env.local)",
+      "Bash(git rm **/.env)"
+    ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [

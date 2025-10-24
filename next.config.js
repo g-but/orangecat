@@ -107,14 +107,13 @@ const nextConfig = {
     },
   }),
   
-  // TypeScript optimization - completely skip TypeScript validation
+  // TypeScript and ESLint validation enabled for code quality
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
-  
-  // ESLint optimization
+
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
   // Remove X-Powered-By header

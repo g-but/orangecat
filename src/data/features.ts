@@ -51,13 +51,13 @@ export const platformFeatures: PlatformFeature[] = [
   },
   {
     title: 'Fundraising Pages',
-    description: 'Create powerful fundraising campaigns with Bitcoin for any cause',
+    description: 'Create powerful fundraising projects with Bitcoin for any cause',
     icon: Handshake,
     href: '/fund-yourself',
     landingPageHref: '/fund-yourself',
     color: 'bg-gradient-to-r from-teal-500 to-cyan-500',
     iconColor: 'text-teal-600',
-    preview: 'Advanced campaign tools, goal tracking, and supporter engagement features.',
+    preview: 'Advanced project tools, goal tracking, and supporter engagement features.',
     comingSoon: false,
     priority: 4
   },

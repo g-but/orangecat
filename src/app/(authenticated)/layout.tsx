@@ -77,7 +77,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
           {/* Center: Enhanced Search */}
           <div className="hidden md:flex flex-1 max-w-md mx-6">
             <EnhancedSearchBar 
-              placeholder="Search campaigns, people..."
+              placeholder="Search projects, people..."
               className="w-full"
             />
           </div>
@@ -143,7 +143,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                   {profile.avatar_url && !avatarError ? (
                     <Image
                       src={profile.avatar_url}
-                      alt={profile.display_name || 'User Avatar'}
+                      alt={profile.name || 'User Avatar'}
                       width={isExpanded ? 40 : 36}
                       height={isExpanded ? 40 : 36}
                       className="rounded-full object-cover transition-all duration-300 group-hover:ring-2 group-hover:ring-tiffany-200"
@@ -159,7 +159,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                 </div>
                 <div className={`flex-1 min-w-0 ${isExpanded ? 'block' : 'hidden lg:hidden'}`}>
                   <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-tiffany-700 transition-colors">
-                    {profile.display_name || profile.username || 'User'}
+                    {profile.name || profile.username || 'User'}
                   </p>
                   <p className="text-xs text-gray-500 truncate">
                     @{profile.username || 'username'}

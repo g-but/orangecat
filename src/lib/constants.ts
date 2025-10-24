@@ -195,7 +195,7 @@ export function getErrorMessage(code: string): string {
     [ERROR_CODES.DUPLICATE_RECORD]: 'This record already exists',
     [ERROR_CODES.DATABASE_CONNECTION_ERROR]: 'Database connection error',
     [ERROR_CODES.INSUFFICIENT_FUNDS]: 'Insufficient funds for this transaction',
-    [ERROR_CODES.CAMPAIGN_NOT_ACTIVE]: 'This campaign is not currently active',
+    [ERROR_CODES.CAMPAIGN_NOT_ACTIVE]: 'This project is not currently active',
     [ERROR_CODES.PAYMENT_FAILED]: 'Payment processing failed',
     [ERROR_CODES.RATE_LIMIT_EXCEEDED]: 'Too many requests. Please try again later.',
     [ERROR_CODES.INTERNAL_ERROR]: 'An internal error occurred',

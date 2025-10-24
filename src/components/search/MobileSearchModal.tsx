@@ -89,9 +89,9 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
     },
     {
       icon: <Target className="w-5 h-5" />,
-      label: 'Browse Campaigns', 
+      label: 'Browse Projects', 
       action: () => {
-        router.push('/discover?type=campaigns')
+        router.push('/discover?type=projects')
         onClose()
       }
     },
@@ -109,7 +109,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
     'Bitcoin Lightning Network',
     'Open Source Projects', 
     'Education Initiatives',
-    'Environmental Campaigns'
+    'Environmental Projects'
   ]
 
   if (!isOpen) {return null}
@@ -129,7 +129,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search campaigns, people, organizations..."
+            placeholder="Search projects, people, organizations..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             autoFocus
@@ -265,7 +265,7 @@ export default function MobileSearchModal({ isOpen, onClose }: MobileSearchModal
             <Search className="w-12 h-12 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-500 text-lg">Start typing to search</p>
             <p className="text-gray-400 mt-2">
-              Find campaigns, people, and organizations
+              Find projects, people, and organizations
             </p>
           </div>
         )}

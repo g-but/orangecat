@@ -8,7 +8,7 @@
 We have successfully implemented a complete, working backend system for intelligent user onboarding and organization creation. Users can now:
 
 1. **Describe their needs** in natural language
-2. **Receive personalized recommendations** on whether to create an organization or personal campaign
+2. **Receive personalized recommendations** on whether to create an organization or personal project
 3. **Create real organizations** with full database persistence
 4. **Manage memberships** with role-based access control
 5. **Set up treasuries** for Bitcoin fund management
@@ -220,7 +220,7 @@ Data Persisted in Real Database
 **1. Unauthenticated User Lands on Home Page**
 - Sees "Smart Setup Guide" CTA
 - Sees "Create Campaign Now" option
-- Sees "Browse Campaigns" option
+- Sees "Browse Projects" option
 
 **2. User Clicks "Smart Setup Guide"**
 - Redirected to `/auth` if not logged in
@@ -247,7 +247,7 @@ Data Persisted in Real Database
 **Step 4 - Choose Path:**
 - Option 1: "Create Organization"
 - Option 2: "Create Campaign"
-- Option 3: "Browse Existing Campaigns"
+- Option 3: "Browse Existing Projects"
 
 **4. Organization Creation**
 - User fills out organization form

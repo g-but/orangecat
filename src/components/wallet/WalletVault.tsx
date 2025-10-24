@@ -36,7 +36,7 @@ export interface WalletAddress {
   name: string
   address: string
   type: 'bitcoin' | 'lightning' | 'ethereum' | 'solana' | 'other'
-  category: 'personal' | 'organization' | 'campaign' | 'friend' | 'business' | 'donation'
+  category: 'personal' | 'organization' | 'project' | 'friend' | 'business' | 'donation'
   description?: string
   tags: string[]
   isFavorite: boolean
@@ -124,7 +124,7 @@ export default function WalletVault() {
     switch (category) {
       case 'personal': return Users
       case 'organization': return Building
-      case 'campaign': return Heart
+      case 'project': return Heart
       case 'friend': return Users
       case 'business': return Building
       case 'donation': return Heart
@@ -136,7 +136,7 @@ export default function WalletVault() {
     switch (category) {
       case 'personal': return 'bg-blue-100 text-blue-700'
       case 'organization': return 'bg-purple-100 text-purple-700'
-      case 'campaign': return 'bg-pink-100 text-pink-700'
+      case 'project': return 'bg-pink-100 text-pink-700'
       case 'friend': return 'bg-green-100 text-green-700'
       case 'business': return 'bg-orange-100 text-orange-700'
       case 'donation': return 'bg-red-100 text-red-700'
@@ -209,7 +209,7 @@ export default function WalletVault() {
                 <option value="all">All Categories</option>
                 <option value="personal">Personal</option>
                 <option value="organization">Organization</option>
-                <option value="campaign">Campaign</option>
+                <option value="project">Campaign</option>
                 <option value="friend">Friend</option>
                 <option value="business">Business</option>
                 <option value="donation">Donation</option>
@@ -436,7 +436,7 @@ export default function WalletVault() {
                       <select className="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         <option value="personal">Personal</option>
                         <option value="organization">Organization</option>
-                        <option value="campaign">Campaign</option>
+                        <option value="project">Campaign</option>
                         <option value="friend">Friend</option>
                         <option value="business">Business</option>
                         <option value="donation">Donation</option>

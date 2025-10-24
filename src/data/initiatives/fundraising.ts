@@ -19,8 +19,8 @@ export const fundraising: Initiative = {
     text: 'red-600',
     border: 'red-200'
   },
-  description: 'Launch fundraising campaigns for causes, startups, and creative projects with Bitcoin-powered transparency.',
-  longDescription: 'Create compelling campaigns, accept Bitcoin donations, track progress transparently, and build trust with your supporters through immutable donation records.',
+  description: 'Launch fundraising projects for causes, startups, and creative projects with Bitcoin-powered transparency.',
+  longDescription: 'Create compelling projects, accept Bitcoin donations, track progress transparently, and build trust with your supporters through immutable donation records.',
   status: 'available',
   timeline: 'Available Now',
   routes: {
@@ -32,7 +32,7 @@ export const fundraising: Initiative = {
     {
       icon: 'Target',
       title: 'Campaign Creation',
-      description: 'Create compelling fundraising campaigns with rich media and transparent goals.',
+      description: 'Create compelling fundraising projects with rich media and transparent goals.',
       color: 'text-blue-600 bg-blue-100'
     },
     {
@@ -56,13 +56,13 @@ export const fundraising: Initiative = {
     {
       icon: 'Users',
       title: 'Social Sharing',
-      description: 'Built-in social sharing tools to amplify your campaign reach and engagement.',
+      description: 'Built-in social sharing tools to amplify your project reach and engagement.',
       color: 'text-pink-600 bg-pink-100'
     },
     {
       icon: 'Bell',
       title: 'Smart Notifications',
-      description: 'Automated updates to supporters about campaign milestones and progress.',
+      description: 'Automated updates to supporters about project milestones and progress.',
       color: 'text-yellow-600 bg-yellow-100'
     }
   ],
@@ -96,7 +96,7 @@ export const fundraising: Initiative = {
       color: 'bg-green-100 text-green-700 border-green-200'
     },
     { 
-      name: 'Educational Campaigns', 
+      name: 'Educational Projects', 
       icon: 'GraduationCap',
       description: 'Education and awareness projects',
       example: 'Bitcoin education program',
@@ -124,7 +124,7 @@ export const fundraising: Initiative = {
   ],
   useCases: [
     'Raise funds for charitable causes',
-    'Launch startup funding campaigns',
+    'Launch startup funding projects',
     'Support creative and artistic projects',
     'Fund community development initiatives'
   ],
@@ -145,7 +145,7 @@ export const fundraising: Initiative = {
     },
     {
       name: 'Indiegogo',
-      description: 'Flexible funding campaigns',
+      description: 'Flexible funding projects',
       url: 'https://indiegogo.com',
       icon: 'Target',
       color: 'bg-pink-100 text-pink-600'

@@ -30,7 +30,7 @@ import {
 import { Input } from '@/components/ui/Input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { toast } from 'sonner'
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 
 // Login schema
 const loginSchema = z.object({
@@ -61,11 +61,11 @@ type RegisterFormValues = z.infer<typeof registerSchema>
 
 interface InlineAuthStepProps {
   onSuccess: (userId: string) => Promise<void>
-  campaignData: any
+  projectData: any
   onBack: () => void
 }
 
-export default function InlineAuthStep({ onSuccess, campaignData, onBack }: InlineAuthStepProps) {
+export default function InlineAuthStep({ onSuccess, projectData, onBack }: InlineAuthStepProps) {
   const router = useRouter()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [isLoading, setIsLoading] = useState(false)
@@ -103,7 +103,7 @@ export default function InlineAuthStep({ onSuccess, campaignData, onBack }: Inli
 
       if (authData.user) {
         toast.success('Welcome back! 🎉', {
-          description: 'Publishing your campaign...',
+          description: 'Publishing your project...',
         })
         await onSuccess(authData.user.id)
       }
@@ -156,13 +156,13 @@ export default function InlineAuthStep({ onSuccess, campaignData, onBack }: Inli
             id: authData.user.id,
             username: data.username,
             email: data.email,
-            display_name: data.username,
+            name: data.username,
           })
 
         if (profileError) {throw profileError}
 
         toast.success('Account created! 🎉', {
-          description: 'Publishing your campaign...',
+          description: 'Publishing your project...',
         })
         await onSuccess(authData.user.id)
       }
@@ -193,7 +193,7 @@ export default function InlineAuthStep({ onSuccess, campaignData, onBack }: Inli
                 Almost there! 🚀
               </h2>
               <p className="text-gray-600">
-                Your campaign is ready to publish. Just sign in or create a quick account to post it.
+                Your project is ready to publish. Just sign in or create a quick account to post it.
               </p>
             </div>
           </div>
@@ -436,17 +436,17 @@ export default function InlineAuthStep({ onSuccess, campaignData, onBack }: Inli
           <div className="bg-white rounded-lg p-4 border border-gray-200 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Title</span>
-              <span className="text-sm font-medium text-gray-900">{campaignData.title}</span>
+              <span className="text-sm font-medium text-gray-900">{projectData.title}</span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Goal</span>
               <span className="text-sm font-medium text-gray-900">
-                ₿{(campaignData.goal_amount / 100000000).toFixed(4)}
+                ₿{(projectData.goal_amount / 100000000).toFixed(4)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Category</span>
-              <span className="text-sm font-medium text-gray-900">{campaignData.category}</span>
+              <span className="text-sm font-medium text-gray-900">{projectData.category}</span>
             </div>
           </div>
         </div>

@@ -166,7 +166,7 @@ curl -H "Authorization: Bearer $TOKEN" \
      http://localhost:3003/api/profile
 
 # Test with POST data
-curl -X POST http://localhost:3003/api/campaigns \
+curl -X POST http://localhost:3003/api/projects \
   -H "Content-Type: application/json" \
   -d '{"title": "Test Campaign"}'
 ```
@@ -175,7 +175,7 @@ curl -X POST http://localhost:3003/api/campaigns \
 ```typescript
 // Client-side API debugging
 try {
-  const response = await fetch('/api/campaigns');
+  const response = await fetch('/api/projects');
   if (!response.ok) {
     console.error('API Error:', response.status, response.statusText);
     const errorBody = await response.text();
@@ -285,7 +285,7 @@ ORDER BY mean_time DESC
 LIMIT 10;
 
 -- Analyze specific query
-EXPLAIN ANALYZE SELECT * FROM campaigns WHERE status = 'active';
+EXPLAIN ANALYZE SELECT * FROM projects WHERE status = 'active';
 ```
 
 ### Bundle Size Analysis

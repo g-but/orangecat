@@ -22,7 +22,7 @@ import { toast } from 'sonner'
 
 interface Notification {
   id: string
-  type: 'payment' | 'lightning' | 'campaign' | 'social' | 'system'
+  type: 'payment' | 'lightning' | 'project' | 'social' | 'system'
   title: string
   message: string
   timestamp: Date
@@ -30,7 +30,7 @@ interface Notification {
   actionUrl?: string
   metadata?: {
     amount?: number
-    campaignId?: string
+    projectId?: string
     currency?: 'BTC' | 'SATS'
     userId?: string
   }
@@ -48,7 +48,7 @@ export default function NotificationCenter({
   className = ''
 }: NotificationCenterProps) {
   const [notifications, setNotifications] = useState<Notification[]>([])
-  const [filter, setFilter] = useState<'all' | 'unread' | 'payments' | 'campaigns'>('all')
+  const [filter, setFilter] = useState<'all' | 'unread' | 'payments' | 'projects'>('all')
   const [isLoading, setIsLoading] = useState(true)
 
   // Mock notifications data (in real app, fetch from API)
@@ -58,47 +58,47 @@ export default function NotificationCenter({
         id: '1',
         type: 'payment',
         title: 'New Bitcoin Payment Received',
-        message: 'You received 0.001 BTC for your "Open Source Project" campaign',
+        message: 'You received 0.001 BTC for your "Open Source Project" project',
         timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
         read: false,
         actionUrl: '/dashboard/analytics',
-        metadata: { amount: 0.001, campaignId: 'camp_1', currency: 'BTC' }
+        metadata: { amount: 0.001, projectId: 'camp_1', currency: 'BTC' }
       },
       {
         id: '2',
         type: 'lightning',
         title: 'Lightning Payment Received',
-        message: 'You received 50,000 sats via Lightning for your campaign',
+        message: 'You received 50,000 sats via Lightning for your project',
         timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
         read: false,
         actionUrl: '/dashboard/analytics',
-        metadata: { amount: 50000, campaignId: 'camp_1', currency: 'SATS' }
+        metadata: { amount: 50000, projectId: 'camp_1', currency: 'SATS' }
       },
       {
         id: '3',
-        type: 'campaign',
+        type: 'project',
         title: 'Campaign Milestone Reached',
         message: 'Your "Open Source Project" reached 50% of its funding goal!',
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
         read: true,
-        actionUrl: '/campaign/open-source-project',
-        metadata: { campaignId: 'camp_1' }
+        actionUrl: '/project/open-source-project',
+        metadata: { projectId: 'camp_1' }
       },
       {
         id: '4',
         type: 'social',
         title: 'New Campaign Supporter',
-        message: 'Alice joined your campaign as a supporter',
+        message: 'Alice joined your project as a supporter',
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
         read: true,
-        actionUrl: '/campaign/open-source-project/supporters',
-        metadata: { campaignId: 'camp_1', userId: 'user_alice' }
+        actionUrl: '/project/open-source-project/supporters',
+        metadata: { projectId: 'camp_1', userId: 'user_alice' }
       },
       {
         id: '5',
         type: 'system',
         title: 'Weekly Analytics Report',
-        message: 'Your weekly campaign performance report is ready',
+        message: 'Your weekly project performance report is ready',
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
         read: true,
         actionUrl: '/dashboard/analytics'
@@ -117,7 +117,7 @@ export default function NotificationCenter({
         return <Bitcoin className="w-5 h-5 text-orange-500" />
       case 'lightning':
         return <Zap className="w-5 h-5 text-yellow-500" />
-      case 'campaign':
+      case 'project':
         return <TrendingUp className="w-5 h-5 text-green-500" />
       case 'social':
         return <Users className="w-5 h-5 text-blue-500" />
@@ -131,7 +131,7 @@ export default function NotificationCenter({
   const filteredNotifications = notifications.filter(notification => {
     if (filter === 'unread') {return !notification.read}
     if (filter === 'payments') {return ['payment', 'lightning'].includes(notification.type)}
-    if (filter === 'campaigns') {return notification.type === 'campaign'}
+    if (filter === 'projects') {return notification.type === 'project'}
     return true
   })
 
@@ -197,7 +197,7 @@ export default function NotificationCenter({
               { key: 'all', label: 'All' },
               { key: 'unread', label: 'Unread' },
               { key: 'payments', label: 'Payments' },
-              { key: 'campaigns', label: 'Campaigns' }
+              { key: 'projects', label: 'Projects' }
             ].map(tab => (
               <button
                 key={tab.key}

@@ -40,8 +40,8 @@ export default function MobileBottomNav() {
     {
       icon: Plus,
       label: 'Create',
-      href: '/create',
-      active: pathname?.startsWith('/create'),
+      href: '/projects/create',
+      active: pathname?.startsWith('/projects/create'),
       primary: true
     },
     {

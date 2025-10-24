@@ -6,7 +6,7 @@ import { CheckCircle2, AlertCircle, Loader2, Key, Eye, EyeOff, ArrowLeft } from 
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Card from '@/components/ui/Card'
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 import Link from 'next/link'
 
 export default function ResetPasswordPage() {

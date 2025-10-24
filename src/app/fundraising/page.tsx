@@ -49,7 +49,7 @@ export default function FundraisingPage() {
     {
       icon: BarChart3,
       title: 'Advanced Analytics',
-      description: 'Track your campaign performance with detailed insights and donor analytics'
+      description: 'Track your project performance with detailed insights and donor analytics'
     },
     {
       icon: Shield,
@@ -82,15 +82,15 @@ export default function FundraisingPage() {
     'Instant Bitcoin payments to your wallet',
     'Global accessibility with no geographic restrictions',
     'Transparent blockchain-based transactions',
-    'Professional campaign pages with customization',
+    'Professional project pages with customization',
     'Built-in analytics and reporting tools'
   ]
 
   const handleGetStarted = () => {
     if (session) {
-      router.push('/create')
+      router.push('/projects/create')
     } else {
-      router.push('/auth?mode=login&redirect=/create')
+      router.push('/auth?mode=login&redirect=/projects/create')
     }
   }
 
@@ -103,7 +103,7 @@ export default function FundraisingPage() {
       {/* Hero Section */}
       <PageHeader
         title="Fundraising with Bitcoin"
-        description="Create powerful fundraising campaigns and accept Bitcoin donations for any cause, project, or dream"
+        description="Create powerful fundraising projects and accept Bitcoin donations for any cause, project, or dream"
       />
 
       {/* Key Features */}
@@ -195,7 +195,7 @@ export default function FundraisingPage() {
               <span className="text-2xl font-bold text-tiffany-600">2</span>
             </div>
             <h3 className="text-xl font-semibold mb-3">Share & Promote</h3>
-            <p className="text-gray-600">Share your campaign with your network and the Bitcoin community</p>
+            <p className="text-gray-600">Share your project with your network and the Bitcoin community</p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">

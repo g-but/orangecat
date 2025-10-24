@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/Button'
 import BitcoinPaymentModal from './BitcoinPaymentModal'
 
 interface BitcoinPaymentButtonProps {
-  campaignId: string
-  campaignTitle: string
+  projectId: string
+  projectTitle: string
   suggestedAmount?: number
 }
 
 export default function BitcoinPaymentButton({
-  campaignId,
-  campaignTitle,
+  projectId,
+  projectTitle,
   suggestedAmount = 10000
 }: BitcoinPaymentButtonProps) {
   const [showModal, setShowModal] = useState(false)
@@ -32,8 +32,8 @@ export default function BitcoinPaymentButton({
       <BitcoinPaymentModal
         isOpen={showModal}
         onClose={() => setShowModal(false)}
-        campaignId={campaignId}
-        campaignTitle={campaignTitle}
+        projectId={projectId}
+        projectTitle={projectTitle}
         suggestedAmount={suggestedAmount}
       />
     </>

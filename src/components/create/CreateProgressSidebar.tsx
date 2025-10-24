@@ -37,7 +37,7 @@ export default function CreateProgressSidebar({
     {
       number: 4,
       title: 'Media & Launch',
-      description: 'Add images and publish your campaign',
+      description: 'Add images and publish your project',
       fields: ['banner_url', 'gallery_images']
     }
   ]

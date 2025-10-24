@@ -1,9 +1,20 @@
 /**
+ * ⚠️ DEPRECATED: This file is deprecated and will be removed in a future version.
+ *
+ * Please use the unified Supabase clients instead:
+ * - For browser/client components: import from '@/lib/supabase/browser'
+ * - For server/API routes: import from '@/lib/supabase/server'
+ *
+ * Migration completed: 2025-10-23
+ * Scheduled for removal: After all consumers are migrated
+ *
+ * ---
+ *
  * SUPABASE CLIENT - CLEAN CONFIGURATION
- * 
+ *
  * This file provides a clean, minimal Supabase client instance
  * with proper configuration and environment validation.
- * 
+ *
  * Created: 2025-06-08
  * Last Modified: 2025-06-12
  * Last Modified Summary: Fixed server-side build errors by adding browser environment checks
@@ -12,6 +23,15 @@
 import type { Database } from '@/types/database'
 import { logger, logSupabase } from '@/utils/logger'
 import type { EnvironmentConfig } from '../types'
+
+// Log deprecation warning in development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  logger.warn(
+    '⚠️ DEPRECATED: @/services/supabase/core/client is deprecated. Use @/lib/supabase/browser instead.',
+    undefined,
+    'Supabase'
+  )
+}
 
 // Check if we're in a browser environment
 const isBrowser = typeof window !== 'undefined'

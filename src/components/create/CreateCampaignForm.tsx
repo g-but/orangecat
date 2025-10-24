@@ -3,13 +3,13 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 import { toast } from 'sonner'
-import { CampaignStorageService } from '@/services/campaigns/campaignStorageService'
+import { CampaignStorageService } from '@/services/projects/projectStorageService'
 import { isValidBitcoinAddress, validateUrl } from '@/utils/validation'
 import { z } from 'zod'
 
-const campaignFormSchema = z.object({
+const projectFormSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
   description: z.string().optional(),
   bitcoin_address: z.string().refine(isValidBitcoinAddress, 'Invalid Bitcoin address'),
@@ -70,7 +70,7 @@ export default function CreateCampaignForm({
     
     const saveTimer = setTimeout(() => {
       const draftData = { formData, currentStep }
-      localStorage.setItem(`campaign-draft-${user.id}`, JSON.stringify(draftData))
+      localStorage.setItem(`project-draft-${user.id}`, JSON.stringify(draftData))
     }, 2000)
 
     return () => clearTimeout(saveTimer)
@@ -80,7 +80,7 @@ export default function CreateCampaignForm({
   useEffect(() => {
     if (!user) {return}
     
-    const savedDraft = localStorage.getItem(`campaign-draft-${user.id}`)
+    const savedDraft = localStorage.getItem(`project-draft-${user.id}`)
     if (savedDraft) {
       try {
         const draftData = JSON.parse(savedDraft)
@@ -97,7 +97,7 @@ export default function CreateCampaignForm({
     const { name, value } = e.target
     const newFormData = { ...formData, [name]: value };
     setFormData(newFormData);
-    const result = campaignFormSchema.safeParse(newFormData);
+    const result = projectFormSchema.safeParse(newFormData);
     if (!result.success) {
       setFormErrors(result.error);
     } else {
@@ -119,7 +119,7 @@ export default function CreateCampaignForm({
       setIsUploading(true)
       setUploadProgress(prev => ({ ...prev, [type]: 0 }))
 
-      // Generate temporary campaign ID for uploads
+      // Generate temporary project ID for uploads
       const tempCampaignId = `temp-${user.id}-${Date.now()}`
 
       let result
@@ -205,7 +205,7 @@ export default function CreateCampaignForm({
     setLoading(true)
     setError(null)
 
-    const result = campaignFormSchema.safeParse(formData);
+    const result = projectFormSchema.safeParse(formData);
     if (!result.success) {
       setFormErrors(result.error);
       toast.error('Please fix the errors in the form');
@@ -215,7 +215,7 @@ export default function CreateCampaignForm({
 
     try {
       if (!user) {
-        throw new Error('You must be logged in to create a campaign')
+        throw new Error('You must be logged in to create a project')
       }
 
       const tags = formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '')
@@ -246,23 +246,23 @@ export default function CreateCampaignForm({
       }
 
       const { data, error: insertError } = await supabase
-        .from('funding_pages')
+        .from('projects')
         .insert([fundingPageData])
         .select()
         .single()
 
       if (insertError) {
-        throw new Error(`Failed to create campaign: ${insertError.message}`)
+        throw new Error(`Failed to create project: ${insertError.message}`)
       }
       
       // Clear the draft from localStorage
-      localStorage.removeItem(`campaign-draft-${user.id}`)
+      localStorage.removeItem(`project-draft-${user.id}`)
       
       toast.success('🎉 Campaign created successfully!')
-      router.push(`/campaign/${data.slug || data.id}`)
+      router.push(`/project/${data.slug || data.id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create campaign')
-      toast.error('Failed to create campaign')
+      setError(err instanceof Error ? err.message : 'Failed to create project')
+      toast.error('Failed to create project')
     } finally {
       setLoading(false)
     }

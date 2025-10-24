@@ -19,7 +19,7 @@ export default function CreateAssociationButton({
   const [isOpen, setIsOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState<Partial<CreateAssociationInput>>({
-    target_entity_type: 'campaign',
+    target_entity_type: 'project',
     relationship_type: 'created',
     visibility: 'public'
   })
@@ -36,7 +36,7 @@ export default function CreateAssociationButton({
       await AssociationService.createAssociation(formData as CreateAssociationInput)
       setIsOpen(false)
       setFormData({
-        target_entity_type: 'campaign',
+        target_entity_type: 'project',
         relationship_type: 'created',
         visibility: 'public'
       })
@@ -90,7 +90,7 @@ export default function CreateAssociationButton({
               }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             >
-              <option value="campaign">Campaign</option>
+              <option value="project">Campaign</option>
               <option value="organization">Organization</option>
               <option value="project">Project</option>
               <option value="profile">Profile</option>

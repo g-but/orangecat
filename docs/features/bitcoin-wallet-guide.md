@@ -10,7 +10,7 @@ The Bitcoin Wallet Guide is a dedicated page that helps users who don't have a B
 
 ## Purpose
 
-Many users come to OrangeCat wanting to create campaigns or profiles but get stuck when asked for a Bitcoin address because they don't have a Bitcoin wallet yet. This guide provides:
+Many users come to OrangeCat wanting to create projects or profiles but get stuck when asked for a Bitcoin address because they don't have a Bitcoin wallet yet. This guide provides:
 
 1. **Clear explanations** of what a Bitcoin wallet is
 2. **Curated wallet recommendations** with pros/cons
@@ -103,7 +103,7 @@ The guide includes curated wallet options:
 3. Clicks link → opens guide in new tab
 4. Follows guide to set up wallet
 5. Returns to original form with Bitcoin address
-6. Completes profile/campaign setup
+6. Completes profile/project setup
 
 ### Accessibility
 - **Keyboard navigation** support

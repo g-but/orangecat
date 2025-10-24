@@ -1,5 +1,6 @@
+import { logger } from '@/utils/logger'
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 
 export async function PATCH(req: NextRequest, { params }: { params: { slug: string } }) {
   try {
@@ -86,7 +87,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { slug: stri
 
     return NextResponse.json({ success: true })
   } catch (e) {
-    console.error('Settings update error', e)
+    logger.error('Settings update error', e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }

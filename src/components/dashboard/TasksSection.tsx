@@ -30,7 +30,7 @@ interface Task {
   description: string
   completed: boolean
   priority: 'high' | 'medium' | 'low'
-  category: 'setup' | 'campaign' | 'growth' | 'optimization'
+  category: 'setup' | 'project' | 'growth' | 'optimization'
   action: {
     label: string
     href: string
@@ -102,32 +102,32 @@ export default function TasksSection({ className }: TasksSectionProps) {
       tasks.push({
         id: 'complete-draft',
         title: 'Complete Your Campaign',
-        description: `You have ${drafts.length} draft campaign${drafts.length > 1 ? 's' : ''} waiting to be published`,
+        description: `You have ${drafts.length} draft project${drafts.length > 1 ? 's' : ''} waiting to be published`,
         completed: false,
         priority: 'high',
-        category: 'campaign',
-        action: { label: 'Continue Campaign', href: '/create' },
+        category: 'project',
+        action: { label: 'Continue Campaign', href: '/projects/create' },
         icon: Target
       })
     } else {
       tasks.push({
-        id: 'create-first-campaign',
+        id: 'create-first-project',
         title: 'Create Your First Campaign',
         description: 'Start fundraising with Bitcoin in just a few minutes',
         completed: false,
         priority: 'medium',
-        category: 'campaign',
-        action: { label: 'Create Campaign', href: '/create' },
+        category: 'project',
+        action: { label: 'Create Campaign', href: '/projects/create' },
         icon: Plus
       })
     }
 
     // Growth tasks
     tasks.push({
-      id: 'explore-campaigns',
-      title: 'Explore Other Campaigns',
+      id: 'explore-projects',
+      title: 'Explore Other Projects',
       description: 'Discover and support projects and initiatives in your community',
-      completed: completedTasks.has('explore-campaigns'),
+      completed: completedTasks.has('explore-projects'),
       priority: 'low',
       category: 'growth',
       action: { label: 'Explore', href: '/discover' },
@@ -177,7 +177,7 @@ export default function TasksSection({ className }: TasksSectionProps) {
   const getCategoryIcon = (category: Task['category']) => {
     switch (category) {
       case 'setup': return Star
-      case 'campaign': return Target
+      case 'project': return Target
       case 'growth': return TrendingUp
       case 'optimization': return Eye
     }
@@ -194,7 +194,7 @@ export default function TasksSection({ className }: TasksSectionProps) {
           <p className="text-gray-600 mb-4">
             You&apos;ve completed all the recommended setup tasks. Your profile is ready for Bitcoin fundraising!
           </p>
-          <Link href="/create">
+          <Link href="/projects/create">
             <Button className="bg-green-600 hover:bg-green-700">
               <Plus className="w-4 h-4 mr-2" />
               Create Your Next Campaign

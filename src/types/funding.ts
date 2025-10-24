@@ -40,7 +40,7 @@ export interface FundingPageFormData {
 
 export interface PublicFundingPage extends FundingPage {
   username?: string
-  display_name?: string
+  name?: string
   avatar_url?: string
 }
 

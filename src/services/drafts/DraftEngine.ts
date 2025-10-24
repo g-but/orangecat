@@ -14,7 +14,7 @@ import {
   DraftQuery
 } from './types'
 import { logger } from '@/utils/logger'
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 
 export class DraftEngine {
   private static instance: DraftEngine
@@ -154,7 +154,7 @@ export class DraftEngine {
       const supabaseClient = this.supabase
       // Check for remote changes
       const { data: remoteDraft, error } = await supabaseClient
-        .from('campaign_drafts')
+        .from('project_drafts')
         .select('*')
         .eq('id', draftId)
         .single()
@@ -192,7 +192,7 @@ export class DraftEngine {
       }
 
       const { error: syncError } = await supabase
-        .from('campaign_drafts')
+        .from('project_drafts')
         .upsert(syncData)
 
       if (syncError) {throw syncError}

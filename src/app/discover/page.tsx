@@ -1,5 +1,6 @@
 "use client";
 
+import { logger } from '@/utils/logger'
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -45,12 +46,12 @@ export default function DiscoverPage() {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [campaigns, setCampaigns] = useState<SearchFundingPage[]>([]);
+  const [projects, setProjects] = useState<SearchFundingPage[]>([]);
   const [profiles, setProfiles] = useState<any[]>([]);
 
-  // Load real campaign data on mount and when search params change
+  // Load real project data on mount and when search params change
   useEffect(() => {
-    const loadCampaigns = async () => {
+    const loadProjects = async () => {
       try {
         setLoading(true);
 
@@ -58,41 +59,41 @@ export default function DiscoverPage() {
           // Use search function for filtered results
           const searchResults = await search({
             query: searchTerm || undefined,
-            type: 'campaigns',
+            type: 'projects',
             sortBy: sortBy as any,
             limit: 50
           });
 
-          const campaignResults = searchResults.results
-            .filter(result => result.type === 'campaign')
+          const projectResults = searchResults.results
+            .filter(result => result.type === 'project')
             .map(result => result.data as SearchFundingPage);
 
-          setCampaigns(campaignResults);
+          setProjects(projectResults);
         } else {
           // Use trending for default view
           const trendingResults = await getTrending();
-          const campaignResults = trendingResults.results
-            .filter(result => result.type === 'campaign')
+          const projectResults = trendingResults.results
+            .filter(result => result.type === 'project')
             .map(result => result.data as SearchFundingPage);
 
-          setCampaigns(campaignResults);
+          setProjects(projectResults);
         }
       } catch (error) {
-        console.error('Error loading campaigns:', error);
-        setCampaigns([]);
+        logger.error('Error loading projects:', error);
+        setProjects([]);
       } finally {
         setLoading(false);
       }
     };
 
-    loadCampaigns();
+    loadProjects();
   }, [searchTerm, selectedCategory, sortBy]);
 
   // Filter and search logic (now using real data)
-  const filteredCampaigns = useMemo(() => {
+  const filteredProjects = useMemo(() => {
     // The search service already handles filtering and sorting
     // We just need to filter out any results that don't match our current filters
-    let filtered = [...campaigns];
+    let filtered = [...projects];
 
     // Additional client-side filtering for features not in the search service yet
     if (selectedCategory !== 'all') {
@@ -104,7 +105,7 @@ export default function DiscoverPage() {
     }
 
     return filtered;
-  }, [campaigns, selectedCategory, selectedTags]);
+  }, [projects, selectedCategory, selectedTags]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -149,19 +150,19 @@ export default function DiscoverPage() {
     router.push('/discover');
   };
 
-  // Get unique tags from all campaigns (tags don't exist in current schema)
+  // Get unique tags from all projects (tags don't exist in current schema)
   const allTags = useMemo(() => {
     return []; // No tags in current schema
   }, []);
 
   const stats = useMemo(() => {
-    const totalCampaigns = filteredCampaigns.length;
+    const totalProjects = filteredProjects.length;
     // For now, we don't have supporter or funding data in the current schema
     // These will be 0 until we add those fields to the database
     const totalSupporters = 0;
     const totalFunding = 0;
-    return { totalCampaigns, totalSupporters, totalFunding };
-  }, [filteredCampaigns]);
+    return { totalProjects, totalSupporters, totalFunding };
+  }, [filteredProjects]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/50 via-white to-tiffany-50/30">
@@ -235,7 +236,7 @@ export default function DiscoverPage() {
             >
               <span className="block">Discover</span>
               <span className="block bg-gradient-to-r from-tiffany-600 via-bitcoinOrange to-orange-500 bg-clip-text text-transparent">
-                Bitcoin Campaigns
+                Bitcoin Projects
               </span>
             </motion.h1>
 
@@ -256,8 +257,8 @@ export default function DiscoverPage() {
               transition={{ duration: 0.8, delay: 0.9 }}
             >
               <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50">
-                <div className="text-2xl font-bold text-gray-900">{stats.totalCampaigns}</div>
-                <div className="text-sm text-gray-600">Active Campaigns</div>
+                <div className="text-2xl font-bold text-gray-900">{stats.totalProjects}</div>
+                <div className="text-sm text-gray-600">Active Projects</div>
               </div>
               <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-4 border border-white/50">
                 <div className="text-2xl font-bold text-bitcoinOrange">{stats.totalSupporters}</div>
@@ -289,7 +290,7 @@ export default function DiscoverPage() {
             </div>
             <Input
               type="text"
-              placeholder="Search campaigns, creators, or keywords..."
+              placeholder="Search projects, creators, or keywords..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className="pl-12 pr-4 py-4 text-lg bg-white/80 backdrop-blur-sm border-gray-200/80 rounded-2xl focus:ring-2 focus:ring-bitcoinOrange/20 focus:border-bitcoinOrange"
@@ -417,8 +418,8 @@ export default function DiscoverPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 1.3 }}
         >
-          {/* Campaign Creation CTA (when no campaigns exist) */}
-          {filteredCampaigns.length === 0 && !searchTerm && selectedCategory === 'all' && selectedTags.length === 0 && (
+          {/* Campaign Creation CTA (when no projects exist) */}
+          {filteredProjects.length === 0 && !searchTerm && selectedCategory === 'all' && selectedTags.length === 0 && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -434,7 +435,7 @@ export default function DiscoverPage() {
                     Start the Bitcoin Revolution! 🚀
                   </h3>
                   <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                    No campaigns yet? Be the pioneer! Create the first Bitcoin fundraising campaign and show the world how easy it is to fund dreams with Bitcoin.
+                    No projects yet? Be the pioneer! Create the first Bitcoin fundraising project and show the world how easy it is to fund dreams with Bitcoin.
                   </p>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -446,7 +447,7 @@ export default function DiscoverPage() {
                     <div className="p-4 bg-white/60 rounded-lg">
                       <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
                       <div className="text-sm font-medium">Create</div>
-                      <div className="text-xs text-gray-600">Set up your campaign</div>
+                      <div className="text-xs text-gray-600">Set up your project</div>
                     </div>
                     <div className="p-4 bg-white/60 rounded-lg">
                       <div className="text-2xl font-bold text-green-600 mb-1">3</div>
@@ -456,7 +457,7 @@ export default function DiscoverPage() {
                   </div>
 
                   <Button
-                    href="/create"
+                    href="/projects/create"
                     size="lg"
                     className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                   >
@@ -470,26 +471,26 @@ export default function DiscoverPage() {
               </div>
             </motion.div>
           )}
-          {filteredCampaigns.length === 0 ? (
+          {filteredProjects.length === 0 ? (
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
                 <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   {searchTerm || selectedCategory !== 'all' || selectedTags.length > 0
-                    ? 'No campaigns match your criteria'
-                    : 'Be the first to create a Bitcoin campaign!'
+                    ? 'No projects match your criteria'
+                    : 'Be the first to create a Bitcoin project!'
                   }
                 </h3>
                 <p className="text-gray-600 mb-8">
                   {searchTerm || selectedCategory !== 'all' || selectedTags.length > 0
-                    ? 'Try adjusting your search criteria or browse all campaigns.'
-                    : 'Start a Bitcoin fundraising campaign and be part of the revolution. It takes just a few minutes!'
+                    ? 'Try adjusting your search criteria or browse all projects.'
+                    : 'Start a Bitcoin fundraising project and be part of the revolution. It takes just a few minutes!'
                   }
                 </p>
 
                 <div className="space-y-3">
                   <Button
-                    href="/create"
+                    href="/projects/create"
                     className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     🚀 Create Your First Campaign
@@ -505,7 +506,7 @@ export default function DiscoverPage() {
                     </Button>
                   ) : (
                     <div className="text-sm text-gray-500">
-                      <p>Need inspiration? Check out our <a href="/blog" className="text-orange-600 hover:underline">blog</a> for campaign ideas.</p>
+                      <p>Need inspiration? Check out our <a href="/blog" className="text-orange-600 hover:underline">blog</a> for project ideas.</p>
                     </div>
                   )}
                 </div>
@@ -517,17 +518,17 @@ export default function DiscoverPage() {
                     <li>1. Sign up (or sign in)</li>
                     <li>2. Click "Create Campaign" above</li>
                     <li>3. Add your Bitcoin address</li>
-                    <li>4. Share your campaign link</li>
+                    <li>4. Share your project link</li>
                   </ol>
                 </div>
               </div>
             </div>
-          ) : filteredCampaigns.length === 0 && (searchTerm || selectedCategory !== 'all' || selectedTags.length > 0) ? (
+          ) : filteredProjects.length === 0 && (searchTerm || selectedCategory !== 'all' || selectedTags.length > 0) ? (
             <>
               {/* Filtered Results Header */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  No campaigns match your criteria
+                  No projects match your criteria
                 </h2>
               </div>
             </>
@@ -536,7 +537,7 @@ export default function DiscoverPage() {
               {/* Results Header */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-900">
-                  {filteredCampaigns.length} campaign{filteredCampaigns.length !== 1 ? 's' : ''} found
+                  {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''} found
                 </h2>
               </div>
 
@@ -546,15 +547,15 @@ export default function DiscoverPage() {
                   ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
                   : 'grid-cols-1'
               }`}>
-                {filteredCampaigns.map((campaign, index) => (
+                {filteredProjects.map((project, index) => (
                   <motion.div
-                    key={campaign.id}
+                    key={project.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
                   >
                     <ModernCampaignCard 
-                      campaign={campaign} 
+                      project={project} 
                       viewMode={viewMode}
                     />
                   </motion.div>

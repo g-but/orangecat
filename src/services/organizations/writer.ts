@@ -1,4 +1,4 @@
-import getSupabaseClient from '@/services/supabase/client'
+import getSupabaseClient from '@/lib/supabase/browser'
 import type { Organization, CreateOrganizationInput, UpdateOrganizationInput } from './types'
 
 export class OrganizationWriter {

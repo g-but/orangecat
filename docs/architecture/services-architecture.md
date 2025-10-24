@@ -64,7 +64,7 @@ interface FundingService {
   createCampaign(data: CampaignData): Promise<Campaign>;
   getCampaign(id: string): Promise<Campaign>;
   updateCampaign(id: string, data: CampaignUpdate): Promise<Campaign>;
-  processDonation(campaignId: string, amount: number): Promise<Transaction>;
+  processDonation(projectId: string, amount: number): Promise<Transaction>;
 }
 ```
 

@@ -19,7 +19,7 @@ import { logger } from '@/utils/logger'
 export interface DatabaseProfile {
   id: string
   username?: string | null
-  display_name?: string | null
+  name?: string | null
   bio?: string | null
   avatar_url?: string | null
   banner_url?: string | null
@@ -38,7 +38,7 @@ export interface ServiceResponse<T> {
 
 export interface ProfileUpdateData {
   username?: string
-  display_name?: string
+  name?: string
   bio?: string
   avatar_url?: string
   banner_url?: string
@@ -212,7 +212,7 @@ export class ProfileService {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+        .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
         .limit(limit)
 
       if (error) {
@@ -263,7 +263,7 @@ export class DatabaseService {
       // Test expected columns exist
       const { data, error } = await supabase
         .from('profiles')
-        .select('id, username, display_name, bio, avatar_url, banner_url, website, bitcoin_address, lightning_address, created_at, updated_at')
+        .select('id, username, name, bio, avatar_url, banner_url, website, bitcoin_address, lightning_address, created_at, updated_at')
         .limit(1)
 
       if (error) {

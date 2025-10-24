@@ -101,9 +101,9 @@ SELECT create_audit_log(
   p_user_id := current_user_id,
   p_action := 'approve',
   p_table_name := 'funding_pages',
-  p_record_id := campaign_id,
-  p_old_data := old_campaign,
-  p_new_data := new_campaign,
+  p_record_id := project_id,
+  p_old_data := old_project,
+  p_new_data := new_project,
   p_severity := 'warning'
 );
 ```

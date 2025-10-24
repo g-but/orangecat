@@ -56,8 +56,8 @@ export default function UserProfileDropdown({
     {
       label: 'Fundraising',
       icon: Handshake,
-      href: '/dashboard/fundraising',
-      description: 'Manage your campaigns'
+      href: '/dashboard/projects',
+      description: 'Manage your projects'
     },
     {
       label: 'Edit Profile',
@@ -146,8 +146,8 @@ export default function UserProfileDropdown({
   
   // PRIORITY: Profile data first, then fallback to email
   let displayName = 'User'
-  if (profile?.display_name) {
-    displayName = profile.display_name
+  if (profile?.name) {
+    displayName = profile.name
   } else if (profile?.username) {
     displayName = profile.username
   } else if (user?.user_metadata?.full_name) {

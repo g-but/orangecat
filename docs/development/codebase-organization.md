@@ -56,7 +56,7 @@ src/
 │   ├── 📁 profile/         # Profile management
 │   ├── 📁 supabase/        # Supabase services
 │   ├── 📁 bitcoin/         # Bitcoin services
-│   ├── 📁 campaigns/       # Campaign services
+│   ├── 📁 projects/       # Campaign services
 │   └── 📁 __tests__/       # Service tests
 ├── 📁 hooks/              # Custom React hooks
 │   └── 📁 __tests__/       # Hook tests

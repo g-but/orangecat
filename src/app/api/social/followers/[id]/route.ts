@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { logger } from '@/utils/logger'
 
 export async function GET(
@@ -24,7 +24,7 @@ export async function GET(
         profiles!follows_follower_id_fkey (
           id,
           username,
-          display_name,
+          name,
           avatar_url,
           bio
         )
@@ -59,9 +59,6 @@ export async function GET(
     )
   }
 }
-
-
-
 
 
 

@@ -40,7 +40,7 @@ const mockSuggestions = {
   'bitcoin': ['Bitcoin Lightning Network', 'Bitcoin Education', 'Bitcoin Mining Projects'],
   'open': ['Open Source Projects', 'Open Education Initiative', 'Open Data Campaign'],
   'education': ['Education Initiatives', 'Educational Technology', 'Education for All'],
-  'environment': ['Environmental Campaigns', 'Environmental Protection', 'Environmental Research'],
+  'environment': ['Environmental Projects', 'Environmental Protection', 'Environmental Research'],
   'health': ['Healthcare Projects', 'Mental Health Awareness', 'Public Health Initiative'],
   'art': ['Art Projects', 'Digital Art', 'Community Art'],
   'tech': ['Technology Projects', 'Tech Education', 'Tech for Good'],
@@ -385,7 +385,7 @@ export function useRecentSearches(userId?: string) {
 
 export function useSearchFilters() {
   const [filters, setFilters] = useState({
-    type: 'all' as 'all' | 'campaigns' | 'profiles' | 'organizations',
+    type: 'all' as 'all' | 'projects' | 'profiles' | 'organizations',
     category: 'all',
     location: '',
     dateRange: 'all' as 'all' | 'week' | 'month' | 'year',

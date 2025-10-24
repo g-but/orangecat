@@ -19,6 +19,26 @@
             "date": 1760775987655,
             "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-10-18.log",
             "hash": "c4fda80a3e0ecf7c357ea1ad0a66d0e34ddaacd801d6343a214591838c2291e5"
+        },
+        {
+            "date": 1760989341994,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-10-20.log",
+            "hash": "40603bd668547161173e492d3c222b2683f6d2390acb95e656d418557048a75a"
+        },
+        {
+            "date": 1761039742281,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-10-21.log",
+            "hash": "c4443fde5e6f3fd6da79b0e0e14d329665b24fa5b3446abda38df338c2b9df57"
+        },
+        {
+            "date": 1761142355755,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-10-22.log",
+            "hash": "d04d13b98db72101575e303ae96201807fcea64a64fa09fabf7d6c340e58d85d"
+        },
+        {
+            "date": 1761196910913,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-10-23.log",
+            "hash": "0e8cb6c65204052538851f639238ca76632c18060e877478df6d3a884f905e1e"
         }
     ],
     "hashType": "sha256"

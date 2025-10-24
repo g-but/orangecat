@@ -24,7 +24,7 @@ const profileToTransparencyData = (profile: Profile): TransparencyData => {
     hasTransactionComments: false, // Not available from profile data
     hasFinancialReports: false, // Not available from profile data
     hasPublicChannels: Boolean(profile.username), 
-    hasCommunityUpdates: Boolean(profile.display_name),
+    hasCommunityUpdates: Boolean(profile.name),
     isResponsiveToFeedback: true, // Default for the platform
   };
 };

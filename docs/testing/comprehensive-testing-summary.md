@@ -41,7 +41,7 @@ I have successfully implemented a comprehensive testing infrastructure for Orang
 #### 4. **Test Utilities Library**
 - **File**: `tests/utils.ts` - Shared testing utilities
 - **Features**:
-  - Test data factories (users, campaigns, transactions)
+  - Test data factories (users, projects, transactions)
   - API mocking utilities
   - Time control utilities
   - Security testing helpers

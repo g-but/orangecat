@@ -114,7 +114,7 @@ export default function Hero() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
             >
-              Create transparent funding campaigns and receive Bitcoin donations instantly. 
+              Create transparent funding projects and receive Bitcoin donations instantly. 
               Perfect for personal projects, organizations, and causes you care about.
             </motion.p>
             
@@ -142,7 +142,7 @@ export default function Hero() {
                   className="w-full sm:w-auto text-lg px-8 py-4 min-h-[56px] border-2 border-tiffany-300 text-tiffany-700 hover:bg-tiffany-50 hover:border-tiffany-400 transform hover:scale-105 transition-all duration-200"
                 >
                   <TrendingUp className="mr-2 h-5 w-5" />
-                  Explore Campaigns
+                  Explore Projects
                 </Button>
               </Link>
             </motion.div>

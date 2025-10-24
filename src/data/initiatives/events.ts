@@ -114,7 +114,7 @@ export const events: Initiative = {
     'Event creation and management',
     'Bitcoin ticket sales',
     'Attendee management',
-    'Event fundraising campaigns',
+    'Event fundraising projects',
     'Real-time communication',
     'Post-event analytics',
     'Venue coordination',

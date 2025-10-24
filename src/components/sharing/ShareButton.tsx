@@ -6,20 +6,20 @@ import Button from '@/components/ui/Button'
 import CampaignShare from './CampaignShare'
 
 interface ShareButtonProps {
-  campaignId: string
-  campaignTitle: string
-  campaignDescription?: string
-  campaignImage?: string
+  projectId: string
+  projectTitle: string
+  projectDescription?: string
+  projectImage?: string
   variant?: 'button' | 'icon'
   size?: 'sm' | 'md' | 'lg'
   className?: string
 }
 
 export default function ShareButton({
-  campaignId,
-  campaignTitle,
-  campaignDescription,
-  campaignImage,
+  projectId,
+  projectTitle,
+  projectDescription,
+  projectImage,
   variant = 'button',
   size = 'md',
   className = ''
@@ -72,7 +72,7 @@ export default function ShareButton({
           ref={buttonRef}
           onClick={toggleShare}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          aria-label="Share campaign"
+          aria-label="Share project"
         >
           <Share2 className={`${
             size === 'sm' ? 'w-4 h-4' :
@@ -87,10 +87,10 @@ export default function ShareButton({
             className="absolute top-full right-0 mt-2 z-50"
           >
             <CampaignShare
-              campaignId={campaignId}
-              campaignTitle={campaignTitle}
-              campaignDescription={campaignDescription}
-              campaignImage={campaignImage}
+              projectId={projectId}
+              projectTitle={projectTitle}
+              projectDescription={projectDescription}
+              projectImage={projectImage}
               variant="dropdown"
               onClose={() => setShowShare(false)}
             />
@@ -123,10 +123,10 @@ export default function ShareButton({
           className="absolute top-full right-0 mt-2 z-50"
         >
           <CampaignShare
-            campaignId={campaignId}
-            campaignTitle={campaignTitle}
-            campaignDescription={campaignDescription}
-            campaignImage={campaignImage}
+            projectId={projectId}
+            projectTitle={projectTitle}
+            projectDescription={projectDescription}
+            projectImage={projectImage}
             variant="dropdown"
             onClose={() => setShowShare(false)}
           />

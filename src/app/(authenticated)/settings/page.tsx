@@ -277,7 +277,7 @@ export default function SettingsPage() {
               <div className="bg-red-50 border border-red-200 rounded-lg p-6">
                 <h4 className="text-lg font-medium text-red-800 mb-2">Delete Account</h4>
                 <p className="text-sm text-red-700 mb-4">
-                  This will permanently delete your account and all associated data including your profile, campaigns, and transaction history. This action cannot be undone.
+                  This will permanently delete your account and all associated data including your profile, projects, and transaction history. This action cannot be undone.
                 </p>
                 <Button
                   type="button"

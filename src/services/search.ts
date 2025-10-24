@@ -1,11 +1,11 @@
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
 
 // Search interfaces
 export interface SearchProfile {
   id: string
   username: string | null
-  display_name: string | null
+  name: string | null
   bio: string | null
   avatar_url: string | null
   created_at: string
@@ -24,7 +24,7 @@ export interface SearchFundingPage {
   updated_at: string
   profiles?: {
     username: string | null
-    display_name: string | null
+    name: string | null
     avatar_url: string | null
   }
 }
@@ -43,18 +43,18 @@ interface RawSearchFundingPage {
   updated_at: string
   profiles: Array<{
     username: string | null
-    display_name: string | null
+    name: string | null
     avatar_url: string | null
   }>
 }
 
 export type SearchResult = {
-  type: 'profile' | 'campaign'
+  type: 'profile' | 'project'
   data: SearchProfile | SearchFundingPage
   relevanceScore?: number
 }
 
-export type SearchType = 'all' | 'profiles' | 'campaigns'
+export type SearchType = 'all' | 'profiles' | 'projects'
 export type SortOption = 'relevance' | 'recent' | 'popular' | 'funding'
 
 export interface SearchFilters {
@@ -85,7 +85,7 @@ export interface SearchResponse {
   facets?: {
     categories: Array<{ name: string; count: number }>
     totalProfiles: number
-    totalCampaigns: number
+    totalProjects: number
   }
 }
 
@@ -180,8 +180,8 @@ function calculateRelevanceScore(result: SearchResult, query: string): number {
     else if (profile.username?.toLowerCase().includes(lowerQuery)) {score += 50}
 
     // Display name matches
-    if (profile.display_name?.toLowerCase() === lowerQuery) {score += 80}
-    else if (profile.display_name?.toLowerCase().includes(lowerQuery)) {score += 40}
+    if (profile.name?.toLowerCase() === lowerQuery) {score += 80}
+    else if (profile.name?.toLowerCase().includes(lowerQuery)) {score += 40}
 
     // Bio matches
     if (profile.bio?.toLowerCase().includes(lowerQuery)) {score += 20}
@@ -190,23 +190,23 @@ function calculateRelevanceScore(result: SearchResult, query: string): number {
     if (profile.avatar_url) {score += 5}
 
   } else {
-    const campaign = result.data as SearchFundingPage
+    const project = result.data as SearchFundingPage
 
     // Title matches get high score
-    if (campaign.title.toLowerCase() === lowerQuery) {score += 100}
-    else if (campaign.title.toLowerCase().includes(lowerQuery)) {score += 60}
+    if (project.title.toLowerCase() === lowerQuery) {score += 100}
+    else if (project.title.toLowerCase().includes(lowerQuery)) {score += 60}
 
     // Description matches
-    if (campaign.description?.toLowerCase().includes(lowerQuery)) {score += 30}
+    if (project.description?.toLowerCase().includes(lowerQuery)) {score += 30}
 
     // Bitcoin address matches (for technical searches)
-    if (campaign.bitcoin_address?.toLowerCase().includes(lowerQuery)) {score += 15}
+    if (project.bitcoin_address?.toLowerCase().includes(lowerQuery)) {score += 15}
 
-    // Boost for verified campaigns
-    if (campaign.is_verified) {score += 10}
+    // Boost for verified projects
+    if (project.is_verified) {score += 10}
 
-    // Boost for campaigns with higher verification level
-    score += campaign.verification_level * 2
+    // Boost for projects with higher verification level
+    score += project.verification_level * 2
   }
 
   return score
@@ -221,14 +221,14 @@ async function searchProfiles(
   // Start with minimal columns for better performance
   let profileQuery = supabase
     .from('profiles')
-    .select('id, username, display_name, bio, avatar_url, created_at')
+    .select('id, username, name, bio, avatar_url, created_at')
   
   if (query) {
     // OPTIMIZATION: Use tsvector for full-text search when available
     // For now, optimize ILIKE queries with proper ordering
     const sanitizedQuery = query.replace(/[%_]/g, '\\$&') // Escape SQL wildcards
     profileQuery = profileQuery.or(
-      `username.ilike.%${sanitizedQuery}%,display_name.ilike.%${sanitizedQuery}%,bio.ilike.%${sanitizedQuery}%`
+      `username.ilike.%${sanitizedQuery}%,name.ilike.%${sanitizedQuery}%,bio.ilike.%${sanitizedQuery}%`
     )
   }
   
@@ -241,7 +241,7 @@ async function searchProfiles(
   return profiles || []
 }
 
-// Optimized campaign search with better query structure
+// Optimized project search with better query structure
 async function searchFundingPages(
   query?: string,
   filters?: SearchFilters,
@@ -249,18 +249,18 @@ async function searchFundingPages(
   offset: number = 0
 ): Promise<SearchFundingPage[]> {
   // OPTIMIZATION: Only select necessary columns to reduce payload
-  let campaignQuery = supabase
-    .from('funding_pages')
+  let projectQuery = supabase
+    .from('projects')
     .select(`
       id, user_id, title, description, bitcoin_address, is_verified,
       verification_level, is_public, created_at, updated_at,
-      profiles!inner(username, display_name, avatar_url)
+      profiles!inner(username, name, avatar_url)
     `)
     .eq('is_public', true) // OPTIMIZATION: This should use an index
 
   if (query) {
     const sanitizedQuery = query.replace(/[%_]/g, '\\$&')
-    campaignQuery = campaignQuery.or(
+    projectQuery = projectQuery.or(
       `title.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`
     )
   }
@@ -270,50 +270,50 @@ async function searchFundingPages(
     // Most selective filters first for better query performance
     if (filters.isActive !== undefined) {
       // Note: is_active doesn't exist in current schema, using is_verified as proxy
-      campaignQuery = campaignQuery.eq('is_verified', filters.isActive)
+      projectQuery = projectQuery.eq('is_verified', filters.isActive)
     }
 
     if (filters.categories && filters.categories.length > 0) {
       // Note: category doesn't exist in current schema, skipping for now
-      // campaignQuery = campaignQuery.in('category', filters.categories)
+      // projectQuery = projectQuery.in('category', filters.categories)
     }
 
     if (filters.hasGoal) {
       // Note: goal_amount doesn't exist in current schema
-      // campaignQuery = campaignQuery.not('goal_amount', 'is', null)
+      // projectQuery = projectQuery.not('goal_amount', 'is', null)
     }
 
     if (filters.minFunding !== undefined) {
       // Note: total_funding doesn't exist in current schema
-      // campaignQuery = campaignQuery.gte('total_funding', filters.minFunding)
+      // projectQuery = projectQuery.gte('total_funding', filters.minFunding)
     }
 
     if (filters.maxFunding !== undefined) {
       // Note: total_funding doesn't exist in current schema
-      // campaignQuery = campaignQuery.lte('total_funding', filters.maxFunding)
+      // projectQuery = projectQuery.lte('total_funding', filters.maxFunding)
     }
 
     if (filters.dateRange) {
-      campaignQuery = campaignQuery
+      projectQuery = projectQuery
         .gte('created_at', filters.dateRange.start)
         .lte('created_at', filters.dateRange.end)
     }
   }
 
   // OPTIMIZATION: Use index-friendly ordering
-  const { data: rawCampaigns, error } = await campaignQuery
+  const { data: rawProjects, error } = await projectQuery
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 
   if (error) {throw error}
 
   // OPTIMIZATION: Minimize data transformation overhead
-  const campaigns: SearchFundingPage[] = (rawCampaigns as RawSearchFundingPage[] || []).map(campaign => ({
-    ...campaign,
-    profiles: campaign.profiles?.[0] || undefined
+  const projects: SearchFundingPage[] = (rawProjects as RawSearchFundingPage[] || []).map(project => ({
+    ...project,
+    profiles: project.profiles?.[0] || undefined
   }))
 
-  return campaigns
+  return projects
 }
 
 // OPTIMIZATION: Cached facets with smarter update strategy
@@ -328,16 +328,16 @@ async function getSearchFacets(): Promise<SearchResponse['facets']> {
 
   try {
     // OPTIMIZATION: Use Promise.all for parallel queries
-    const [profilesResult, campaignsResult] = await Promise.all([
+    const [profilesResult, projectsResult] = await Promise.all([
       // Use count queries with head:true for better performance
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
-      supabase.from('funding_pages').select('id', { count: 'exact', head: true }).eq('is_public', true)
+      supabase.from('projects').select('id', { count: 'exact', head: true }).eq('is_public', true)
     ])
 
     const facets = {
       categories: [], // Categories don't exist in current schema
       totalProfiles: profilesResult.count || 0,
-      totalCampaigns: campaignsResult.count || 0
+      totalProjects: projectsResult.count || 0
     }
 
     // Cache the facets
@@ -352,7 +352,7 @@ async function getSearchFacets(): Promise<SearchResponse['facets']> {
     return {
       categories: [],
       totalProfiles: 0,
-      totalCampaigns: 0
+      totalProjects: 0
     }
   }
 }
@@ -414,13 +414,13 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
 
     // OPTIMIZATION: Use Promise.all for parallel searches when type is 'all'
     if (type === 'all') {
-      const [profiles, campaigns] = await Promise.all([
+      const [profiles, projects] = await Promise.all([
         searchProfiles(query, limit, offset).catch(error => {
           logger.warn('Error searching profiles', error, 'Search')
           return []
         }),
         searchFundingPages(query, filters, limit, offset).catch(error => {
-          logger.warn('Error searching campaigns', error, 'Search')
+          logger.warn('Error searching projects', error, 'Search')
           return []
         })
       ])
@@ -434,9 +434,9 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
         results.push(result)
       })
 
-      // Process campaigns
-      campaigns.forEach(campaign => {
-        const result: SearchResult = { type: 'campaign', data: campaign }
+      // Process projects
+      projects.forEach(project => {
+        const result: SearchResult = { type: 'project', data: project }
         if (query) {
           result.relevanceScore = calculateRelevanceScore(result, query)
         }
@@ -459,18 +459,18 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
         }
       }
 
-      if (type === 'campaigns') {
+      if (type === 'projects') {
         try {
-          const campaigns = await searchFundingPages(query, filters, limit, offset)
-          campaigns.forEach(campaign => {
-            const result: SearchResult = { type: 'campaign', data: campaign }
+          const projects = await searchFundingPages(query, filters, limit, offset)
+          projects.forEach(project => {
+            const result: SearchResult = { type: 'project', data: project }
             if (query) {
               result.relevanceScore = calculateRelevanceScore(result, query)
             }
             results.push(result)
           })
-        } catch (campaignError) {
-          logger.warn('Error searching campaigns', campaignError, 'Search')
+        } catch (projectError) {
+          logger.warn('Error searching projects', projectError, 'Search')
         }
       }
     }
@@ -484,7 +484,7 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
 
     // Get facets only if needed (not for every search)
     let facets: SearchResponse['facets'] | undefined
-    if (type === 'all' || type === 'campaigns') {
+    if (type === 'all' || type === 'projects') {
       try {
         facets = await getSearchFacets()
       } catch (facetsError) {
@@ -525,14 +525,14 @@ export async function getTrending(): Promise<SearchResponse> {
     const results: SearchResult[] = []
 
     // OPTIMIZATION: Use Promise.all for parallel queries
-    const [campaignsData, profilesData] = await Promise.all([
-      // Get recent campaigns (since we don't have contributor_count)
+    const [projectsData, profilesData] = await Promise.all([
+      // Get recent projects (since we don't have contributor_count)
       supabase
-      .from('funding_pages')
+      .from('projects')
       .select(`
         id, user_id, title, description, bitcoin_address, is_verified,
         verification_level, is_public, created_at, updated_at,
-        profiles!inner(username, display_name, avatar_url)
+        profiles!inner(username, name, avatar_url)
       `)
       .eq('is_public', true)
       .order('created_at', { ascending: false })
@@ -541,23 +541,23 @@ export async function getTrending(): Promise<SearchResponse> {
       // Get recent profiles
       supabase
         .from('profiles')
-        .select('id, username, display_name, bio, avatar_url, created_at')
+        .select('id, username, name, bio, avatar_url, created_at')
         .order('created_at', { ascending: false })
       .limit(10)
     ])
 
-    // Process campaigns
-    if (!campaignsData.error && campaignsData.data) {
-      const recentCampaigns: SearchFundingPage[] = (campaignsData.data as RawSearchFundingPage[]).map(campaign => ({
-        ...campaign,
-        profiles: campaign.profiles?.[0] || undefined
+    // Process projects
+    if (!projectsData.error && projectsData.data) {
+      const recentProjects: SearchFundingPage[] = (projectsData.data as RawSearchFundingPage[]).map(project => ({
+        ...project,
+        profiles: project.profiles?.[0] || undefined
       }))
 
-      recentCampaigns.forEach(campaign => {
-        results.push({ type: 'campaign', data: campaign })
+      recentProjects.forEach(project => {
+        results.push({ type: 'project', data: project })
       })
-    } else if (campaignsData.error) {
-      logger.warn('Error fetching campaigns for trending', { error: campaignsData.error.message }, 'Search')
+    } else if (projectsData.error) {
+      logger.warn('Error fetching projects for trending', { error: projectsData.error.message }, 'Search')
     }
 
     // Process profiles
@@ -598,16 +598,16 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
     const sanitizedQuery = query.replace(/[%_]/g, '\\$&')
     
     // OPTIMIZATION: Use Promise.all for parallel suggestion queries
-    const [profileSuggestions, campaignSuggestions] = await Promise.all([
+    const [profileSuggestions, projectSuggestions] = await Promise.all([
       supabase
       .from('profiles')
-      .select('username, display_name')
-        .or(`username.ilike.%${sanitizedQuery}%,display_name.ilike.%${sanitizedQuery}%`)
+      .select('username, name')
+        .or(`username.ilike.%${sanitizedQuery}%,name.ilike.%${sanitizedQuery}%`)
         .not('username', 'is', null)
         .limit(limit),
       
       supabase
-      .from('funding_pages')
+      .from('projects')
       .select('title, category')
         .or(`title.ilike.%${sanitizedQuery}%,category.ilike.%${sanitizedQuery}%`)
       .eq('is_public', true)
@@ -620,15 +620,15 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
     if (!profileSuggestions.error && profileSuggestions.data) {
       profileSuggestions.data.forEach(profile => {
         if (profile.username) {suggestions.add(profile.username)}
-        if (profile.display_name) {suggestions.add(profile.display_name)}
+        if (profile.name) {suggestions.add(profile.name)}
       })
     }
     
-    // Add campaign suggestions
-    if (!campaignSuggestions.error && campaignSuggestions.data) {
-      campaignSuggestions.data.forEach(campaign => {
-        if (campaign.title) {suggestions.add(campaign.title)}
-        if (campaign.category) {suggestions.add(campaign.category)}
+    // Add project suggestions
+    if (!projectSuggestions.error && projectSuggestions.data) {
+      projectSuggestions.data.forEach(project => {
+        if (project.title) {suggestions.add(project.title)}
+        if (project.category) {suggestions.add(project.category)}
       })
     }
     

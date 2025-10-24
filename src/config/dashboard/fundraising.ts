@@ -1,13 +1,15 @@
-// Fundraising Configuration (no icon needed as it's the main feature)
+// Projects Configuration
 export const fundraisingConfig = {
-  title: "Your Fundraising",
-  subtitle: "Manage your fundraising campaigns and donations",
-  itemsTitle: "Your Campaigns",
+  title: "Your Projects",
+  subtitle: "Manage your Bitcoin projects and initiatives",
+  itemsTitle: "Your Projects",
   activityTitle: "Recent Activity",
-  createButtonLabel: "Create Campaign",
-  createButtonHref: "/create",
+  createButtonLabel: "Create Project",
+  createButtonHref: "/projects/create",
   backButtonHref: "/dashboard",
-  featureName: "Fundraising",
-  learnMoreUrl: "/fundraising"
+  featureName: "Projects",
+  learnMoreUrl: "/projects"
 }
 
+// Export alias for consistency
+export const projectsConfig = fundraisingConfig

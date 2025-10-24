@@ -18,7 +18,7 @@ export type PaymentType = 'lightning' | 'onchain'
 // Payment request interface
 export interface PaymentRequest {
   id: string
-  campaignId: string
+  projectId: string
   amount: number // amount in satoshis
   type: PaymentType
   address?: string // Bitcoin address for on-chain
@@ -75,7 +75,7 @@ class BitcoinPaymentService {
    * Create a Lightning Network payment request
    */
   async createLightningPayment(
-    campaignId: string,
+    projectId: string,
     amount: number,
     description: string
   ): Promise<PaymentResult> {
@@ -85,7 +85,7 @@ class BitcoinPaymentService {
       
       const paymentRequest: PaymentRequest = {
         id: paymentId,
-        campaignId,
+        projectId,
         amount,
         type: 'lightning',
         invoice,
@@ -113,7 +113,7 @@ class BitcoinPaymentService {
    * Create an on-chain Bitcoin payment request
    */
   async createOnChainPayment(
-    campaignId: string,
+    projectId: string,
     amount: number,
     description: string,
     recipientAddress: string
@@ -123,7 +123,7 @@ class BitcoinPaymentService {
       
       const paymentRequest: PaymentRequest = {
         id: paymentId,
-        campaignId,
+        projectId,
         amount,
         type: 'onchain',
         address: recipientAddress,

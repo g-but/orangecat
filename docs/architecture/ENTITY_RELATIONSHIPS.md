@@ -1,12 +1,12 @@
 # Entity Relationships & Architecture
 
-**Created:** 2025-10-17  
-**Last Modified:** 2025-10-17  
-**Last Modified Summary:** Complete entity relationship mapping with database schema and APIs
+**Created:** 2025-10-17
+**Last Modified:** 2025-12-21
+**Last Modified Summary:** Updated for simplified database schema with unified projects entity and multi-entity transactions
 
 ## Entity Overview
 
-The OrangeCat platform has 4 core entity types:
+The OrangeCat platform uses a **simplified architecture** with 5 core entities optimized for Bitcoin crowdfunding:
 
 ```
 ┌─────────────────┐
@@ -14,16 +14,18 @@ The OrangeCat platform has 4 core entity types:
 │   (Users)       │
 └────────┬────────┘
          │
-         ├─────────────────┐────────────────┬──────────────────┐
-         │                 │                │                  │
-         ▼                 ▼                ▼                  ▼
-    ┌────────┐      ┌──────────────┐   ┌────────┐      ┌─────────────┐
-    │CAMPAIGNS│      │ORGANIZATIONS │   │PROJECTS│      │MEMBERSHIPS  │
-    └────────┘      └──────────────┘   └────────┘      └─────────────┘
-         │                 │                │                  ▲
-         └─────────────────┼────────────────┴──────────────────┘
+         ├─────────────────┐
+         │                 │
+         ▼                 ▼
+    ┌────────┐      ┌──────────────┐
+    │PROJECTS│      │ORGANIZATIONS │   (Multi-entity transactions)
+    └────────┘      └──────────────┘          │
+         │                 │                 │
+         └─────────────────┼─────────────────┘
                            │
-                    (All connected)
+                    ┌─────────────┐
+                    │TRANSACTIONS │  (Universal payments)
+                    └─────────────┘
 ```
 
 ---
@@ -48,7 +50,7 @@ updated_at          TIMESTAMP
 
 ### What Individuals Can Do
 
-- ✅ Create personal campaigns
+- ✅ Create personal projects
 - ✅ Create personal projects  
 - ✅ Found organizations
 - ✅ Join organizations as members
@@ -70,9 +72,9 @@ PATCH /api/profiles/{userId}
 Body: { full_name, bio, website, bitcoin_address, avatar_url, ... }
 ```
 
-**Get User's Campaigns:**
+**Get User's Projects:**
 ```
-GET /api/profiles/{userId}/campaigns
+GET /api/profiles/{userId}/projects
 ```
 
 **Get User's Projects:**
@@ -113,7 +115,7 @@ updated_at              TIMESTAMP
 
 ### What Organizations Can Do
 
-- ✅ Create campaigns (org-owned)
+- ✅ Create projects (org-owned)
 - ✅ Create projects (org-owned)
 - ✅ Manage members with roles
 - ✅ Have treasuries
@@ -172,9 +174,9 @@ DELETE /api/organizations/{id}/members/{user_id}
 GET /api/organizations/{id}/members
 ```
 
-**Get Organization Campaigns:**
+**Get Organization Projects:**
 ```
-GET /api/organizations/{id}/campaigns
+GET /api/organizations/{id}/projects
 ```
 
 **Get Organization Projects:**
@@ -186,11 +188,11 @@ GET /api/organizations/{id}/projects
 
 ## 3. CAMPAIGNS
 
-### Database Table: `campaigns`
+### Database Table: `projects`
 
 ```sql
 id                  UUID PRIMARY KEY
-user_id             UUID (creator, nullable for org campaigns)
+user_id             UUID (creator, nullable for org projects)
 organization_id     UUID (nullable if personal)
 project_id          UUID (nullable)
 title               TEXT NOT NULL
@@ -228,7 +230,7 @@ Campaign ──┐
 
 **Create Campaign (Personal):**
 ```
-POST /api/campaigns
+POST /api/projects
 Body: {
   title, description, goal_amount, bitcoin_address,
   category, tags, is_public
@@ -237,7 +239,7 @@ Body: {
 
 **Create Campaign (Organization):**
 ```
-POST /api/organizations/{org_id}/campaigns
+POST /api/organizations/{org_id}/projects
 Body: {
   title, description, goal_amount, bitcoin_address,
   category, tags, is_public, project_id (optional)
@@ -247,28 +249,28 @@ Body: {
 
 **Get Campaign:**
 ```
-GET /api/campaigns/{id}
+GET /api/projects/{id}
 ```
 
-**List Campaigns:**
+**List Projects:**
 ```
-GET /api/campaigns?status=active&sort=created_at
+GET /api/projects?status=active&sort=created_at
 ```
 
 **Update Campaign:**
 ```
-PATCH /api/campaigns/{id}
+PATCH /api/projects/{id}
 Body: { title, description, status, ... }
 ```
 
 **Get Campaign Donations:**
 ```
-GET /api/campaigns/{id}/donations
+GET /api/projects/{id}/donations
 ```
 
 **Get Campaign Stats:**
 ```
-GET /api/campaigns/{id}/stats
+GET /api/projects/{id}/stats
 Response: { raised_amount, donor_count, days_remaining, ... }
 ```
 
@@ -301,7 +303,7 @@ updated_at          TIMESTAMP
 ### Key Features
 
 - ✅ Can be owned by individuals or organizations
-- ✅ Can contain multiple campaigns
+- ✅ Can contain multiple projects
 - ✅ Long-term initiatives/collections
 - ✅ Tags and categories for discovery
 - ✅ Visibility control (public/unlisted/private)
@@ -311,7 +313,7 @@ updated_at          TIMESTAMP
 ```
 Project ──┐
           ├─→ Owner (Profile or Organization)
-          ├─→ Campaigns (multiple)
+          ├─→ Projects (multiple)
           └─→ Team Members (if org-owned)
 ```
 
@@ -353,19 +355,19 @@ PATCH /api/projects/{id}
 Body: { name, description, status, tags, ... }
 ```
 
-**Get Project Campaigns:**
+**Get Project Projects:**
 ```
-GET /api/projects/{id}/campaigns
+GET /api/projects/{id}/projects
 ```
 
 **Add Campaign to Project:**
 ```
-POST /api/projects/{id}/campaigns/{campaign_id}
+POST /api/projects/{id}/projects/{project_id}
 ```
 
 **Remove Campaign from Project:**
 ```
-DELETE /api/projects/{id}/campaigns/{campaign_id}
+DELETE /api/projects/{id}/projects/{project_id}
 ```
 
 ---
@@ -379,7 +381,7 @@ User (Profile)
   ↓
 Create Campaign API
   ↓
-INSERT campaigns (user_id=userId, organization_id=NULL, project_id=NULL)
+INSERT projects (user_id=userId, organization_id=NULL, project_id=NULL)
   ↓
 RLS Policy: user_id = auth.uid() ✓
   ↓
@@ -391,17 +393,17 @@ Campaign live and accepting donations
 ```
 Organization Member
   ↓
-POST /api/organizations/{org_id}/campaigns
+POST /api/organizations/{org_id}/projects
   ↓
 Check: Is user member of organization? ✓
 Check: Does user have permission? ✓
   ↓
-INSERT campaigns (organization_id=orgId, user_id=NULL, project_id=?)
+INSERT projects (organization_id=orgId, user_id=NULL, project_id=?)
   ↓
 Campaign created under organization's treasury
 ```
 
-### Example 3: Project with Multiple Campaigns
+### Example 3: Project with Multiple Projects
 
 ```
 Organization
@@ -412,8 +414,8 @@ Create Campaign "Beginner Course" → Add to project
 Create Campaign "Advanced Course" → Add to project
 Create Campaign "Community Fund" → Add to project
   ↓
-Project dashboard shows all 3 campaigns
-Each campaign collects funds separately
+Project dashboard shows all 3 projects
+Each project collects funds separately
 Organization receives all donations in treasury
 ```
 
@@ -429,7 +431,7 @@ POST /api/organizations/{id}/members
 INSERT memberships (organization_id, profile_id, role='member')
   ↓
 User now has access to:
-  - Organization campaigns
+  - Organization projects
   - Organization projects
   - Voting on proposals
   - Viewing org treasury
@@ -439,10 +441,10 @@ User now has access to:
 
 ## Access Control (RLS Policies)
 
-### For Campaigns
+### For Projects
 
 ```sql
--- Anyone can view public campaigns
+-- Anyone can view public projects
 SELECT: is_public = true OR creator_id = auth.uid() OR organization_id IN (user's orgs)
 
 -- Only creator/org can create
@@ -488,7 +490,7 @@ DELETE: EXISTS (SELECT FROM memberships WHERE role = 'owner')
 ### Profiles
 - `GET /api/profiles/{userId}` - Get profile
 - `PATCH /api/profiles/{userId}` - Update profile
-- `GET /api/profiles/{userId}/campaigns` - List user's campaigns
+- `GET /api/profiles/{userId}/projects` - List user's projects
 - `GET /api/profiles/{userId}/projects` - List user's projects
 - `GET /api/profiles/{userId}/organizations` - List user's orgs
 
@@ -500,28 +502,28 @@ DELETE: EXISTS (SELECT FROM memberships WHERE role = 'owner')
 - `POST /api/organizations/{id}/members` - Add member
 - `DELETE /api/organizations/{id}/members/{user_id}` - Remove member
 - `GET /api/organizations/{id}/members` - List members
-- `GET /api/organizations/{id}/campaigns` - List org campaigns
-- `POST /api/organizations/{id}/campaigns` - Create campaign
 - `GET /api/organizations/{id}/projects` - List org projects
 - `POST /api/organizations/{id}/projects` - Create project
-
-### Campaigns
-- `POST /api/campaigns` - Create campaign (personal)
-- `GET /api/campaigns/{id}` - Get campaign
-- `GET /api/campaigns` - List campaigns
-- `PATCH /api/campaigns/{id}` - Update campaign
-- `GET /api/campaigns/{id}/donations` - List donations
-- `GET /api/campaigns/{id}/stats` - Get stats
-- `POST /api/campaigns/{id}/donate` - Donate to campaign
+- `GET /api/organizations/{id}/projects` - List org projects
+- `POST /api/organizations/{id}/projects` - Create project
 
 ### Projects
 - `POST /api/projects` - Create project (personal)
 - `GET /api/projects/{id}` - Get project
 - `GET /api/projects` - List projects
 - `PATCH /api/projects/{id}` - Update project
-- `GET /api/projects/{id}/campaigns` - List campaigns
-- `POST /api/projects/{id}/campaigns/{campaign_id}` - Add campaign
-- `DELETE /api/projects/{id}/campaigns/{campaign_id}` - Remove campaign
+- `GET /api/projects/{id}/donations` - List donations
+- `GET /api/projects/{id}/stats` - Get stats
+- `POST /api/projects/{id}/donate` - Donate to project
+
+### Projects
+- `POST /api/projects` - Create project (personal)
+- `GET /api/projects/{id}` - Get project
+- `GET /api/projects` - List projects
+- `PATCH /api/projects/{id}` - Update project
+- `GET /api/projects/{id}/projects` - List projects
+- `POST /api/projects/{id}/projects/{project_id}` - Add project
+- `DELETE /api/projects/{id}/projects/{project_id}` - Remove project
 
 ---
 
@@ -533,16 +535,16 @@ Home (/
 │  ├─ Browse
 │  ├─ Create (/organizations/create) ← Implemented
 │  └─ {slug} (org detail)
-├─ Campaigns (/campaigns, /discover)
+├─ Projects (/projects, /discover)
 │  ├─ Browse
 │  ├─ Create (/create) ← Implemented
-│  └─ {id} (campaign detail)
+│  └─ {id} (project detail)
 ├─ Projects (/projects)
 │  ├─ Browse
 │  ├─ Submit (/projects/submit)
 │  └─ {slug} (project detail)
 └─ Profile (/profile)
-   ├─ My Campaigns
+   ├─ My Projects
    ├─ My Projects
    └─ My Organizations
 ```
@@ -552,10 +554,10 @@ Home (/
 ## Summary
 
 ✅ **All 4 entities are interconnected:**
-- Individuals create campaigns, projects, and organizations
-- Organizations manage campaigns and projects
-- Campaigns are standalone or part of projects
-- Projects group related campaigns together
+- Individuals create projects, projects, and organizations
+- Organizations manage projects and projects
+- Projects are standalone or part of projects
+- Projects group related projects together
 - Members link people to organizations
 
 ✅ **Everything uses real database:**

@@ -40,20 +40,20 @@ interface Campaign {
 }
 
 interface ModernCampaignCardProps {
-  campaign: Campaign
+  project: Campaign
   viewMode?: 'grid' | 'list'
   className?: string
 }
 
 export default function ModernCampaignCard({ 
-  campaign, 
+  project, 
   viewMode = 'grid',
   className = '' 
 }: ModernCampaignCardProps) {
   const [isLiked, setIsLiked] = useState(false)
   const [imageError, setImageError] = useState(false)
   
-  const progressPercentage = Math.min((campaign.current_amount / campaign.goal_amount) * 100, 100)
+  const progressPercentage = Math.min((project.current_amount / project.goal_amount) * 100, 100)
   
   const categoryColors = {
     education: 'from-blue-500/20 to-indigo-500/10',
@@ -103,33 +103,33 @@ export default function ModernCampaignCard({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Link href={`/campaign/${campaign.id}`} className="block">
+        <Link href={`/project/${project.id}`} className="block">
           <div className="flex flex-col sm:flex-row">
             {/* Image Section */}
             <div className="relative sm:w-80 h-48 sm:h-40 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-              {campaign.image && !imageError ? (
+              {project.image && !imageError ? (
                 <Image
-                  src={campaign.image}
-                  alt={campaign.title}
+                  src={project.image}
+                  alt={project.title}
                   fill
                   className="object-cover group-hover:scale-105 transition-transform duration-500"
                   onError={() => setImageError(true)}
                 />
               ) : (
-                <div className={`w-full h-full bg-gradient-to-br ${categoryColors[campaign.category as keyof typeof categoryColors] || categoryColors.default} flex items-center justify-center`}>
-                  <Target className={`w-16 h-16 ${categoryIconColors[campaign.category as keyof typeof categoryIconColors] || categoryIconColors.default}`} />
+                <div className={`w-full h-full bg-gradient-to-br ${categoryColors[project.category as keyof typeof categoryColors] || categoryColors.default} flex items-center justify-center`}>
+                  <Target className={`w-16 h-16 ${categoryIconColors[project.category as keyof typeof categoryIconColors] || categoryIconColors.default}`} />
                 </div>
               )}
               
               {/* Badges */}
               <div className="absolute top-3 left-3 flex gap-2">
-                {campaign.featured && (
+                {project.featured && (
                   <div className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('featured')}`}>
                     <Star className="w-3 h-3 mr-1 inline" />
                     Featured
                   </div>
                 )}
-                {campaign.verified && (
+                {project.verified && (
                   <div className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('verified')}`}>
                     <CheckCircle className="w-3 h-3 mr-1 inline" />
                     Verified
@@ -151,11 +151,11 @@ export default function ModernCampaignCard({
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1">
                   <h3 className="text-xl font-bold text-gray-900 group-hover:text-bitcoinOrange transition-colors duration-200 line-clamp-2 mb-2">
-                    {campaign.title}
+                    {project.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-2">by {campaign.creator}</p>
+                  <p className="text-sm text-gray-600 mb-2">by {project.creator}</p>
                   <p className="text-gray-600 line-clamp-2 mb-4">
-                    {campaign.description}
+                    {project.description}
                   </p>
                 </div>
               </div>
@@ -165,28 +165,28 @@ export default function ModernCampaignCard({
                 <div className="flex items-center gap-6 text-sm text-gray-500">
                   <div className="flex items-center gap-1">
                     <Users className="w-4 h-4" />
-                    <span>{campaign.supporters_count}</span>
+                    <span>{project.supporters_count}</span>
                   </div>
-                  {campaign.location && (
+                  {project.location && (
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
-                      <span>{campaign.location}</span>
+                      <span>{project.location}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-1">
                     <Clock className="w-4 h-4" />
-                    <span>{formatDaysLeft(campaign.days_left)}</span>
+                    <span>{formatDaysLeft(project.days_left)}</span>
                   </div>
                 </div>
 
                 <div className="text-right">
                   <CurrencyDisplay 
-                    amount={campaign.current_amount}
+                    amount={project.current_amount}
                     currency="CHF"
                     className="text-lg font-bold text-gray-900"
                   />
                   <p className="text-sm text-gray-500">
-                    {progressPercentage.toFixed(0)}% of CHF {campaign.goal_amount.toLocaleString()}
+                    {progressPercentage.toFixed(0)}% of CHF {project.goal_amount.toLocaleString()}
                   </p>
                 </div>
               </div>
@@ -194,9 +194,9 @@ export default function ModernCampaignCard({
               {/* Bitcoin Payment Button */}
               <div className="flex justify-end" onClick={(e) => e.preventDefault()}>
                 <BitcoinPaymentButton
-                  campaignId={campaign.id}
-                  campaignTitle={campaign.title}
-                  suggestedAmount={Math.min(50000, Math.floor(campaign.goal_amount * 0.01))}
+                  projectId={project.id}
+                  projectTitle={project.title}
+                  suggestedAmount={Math.min(50000, Math.floor(project.goal_amount * 0.01))}
                 />
               </div>
             </div>
@@ -214,20 +214,20 @@ export default function ModernCampaignCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Link href={`/campaign/${campaign.id}`} className="block">
+      <Link href={`/project/${project.id}`} className="block">
         {/* Image Section */}
         <div className="relative h-56 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-          {campaign.image && !imageError ? (
+          {project.image && !imageError ? (
             <Image
-              src={campaign.image}
-              alt={campaign.title}
+              src={project.image}
+              alt={project.title}
               fill
               className="object-cover group-hover:scale-110 transition-transform duration-700"
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${categoryColors[campaign.category as keyof typeof categoryColors] || categoryColors.default} flex items-center justify-center`}>
-              <Target className={`w-20 h-20 ${categoryIconColors[campaign.category as keyof typeof categoryIconColors] || categoryIconColors.default}`} />
+            <div className={`w-full h-full bg-gradient-to-br ${categoryColors[project.category as keyof typeof categoryColors] || categoryColors.default} flex items-center justify-center`}>
+              <Target className={`w-20 h-20 ${categoryIconColors[project.category as keyof typeof categoryIconColors] || categoryIconColors.default}`} />
             </div>
           )}
           
@@ -236,7 +236,7 @@ export default function ModernCampaignCard({
           
           {/* Badges */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">
-            {campaign.featured && (
+            {project.featured && (
               <motion.div 
                 className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('featured')}`}
                 initial={{ scale: 0 }}
@@ -247,7 +247,7 @@ export default function ModernCampaignCard({
                 Featured
               </motion.div>
             )}
-            {campaign.verified && (
+            {project.verified && (
               <motion.div 
                 className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('verified')}`}
                 initial={{ scale: 0 }}
@@ -295,11 +295,11 @@ export default function ModernCampaignCard({
           {/* Title and Creator */}
           <div className="mb-4">
             <h3 className="text-xl font-bold text-gray-900 group-hover:text-bitcoinOrange transition-colors duration-200 line-clamp-2 mb-2">
-              {campaign.title}
+              {project.title}
             </h3>
-            <p className="text-sm text-gray-600 mb-3">by {campaign.creator}</p>
+            <p className="text-sm text-gray-600 mb-3">by {project.creator}</p>
             <p className="text-gray-600 line-clamp-3 text-sm leading-relaxed">
-              {campaign.description}
+              {project.description}
             </p>
           </div>
 
@@ -308,18 +308,18 @@ export default function ModernCampaignCard({
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
-                <span>{campaign.supporters_count}</span>
+                <span>{project.supporters_count}</span>
               </div>
-              {campaign.location && (
+              {project.location && (
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
-                  <span className="truncate max-w-20">{campaign.location.split(',')[0]}</span>
+                  <span className="truncate max-w-20">{project.location.split(',')[0]}</span>
                 </div>
               )}
             </div>
             <div className="flex items-center gap-1 text-orange-600">
               <Clock className="w-4 h-4" />
-              <span className="font-medium">{formatDaysLeft(campaign.days_left)}</span>
+              <span className="font-medium">{formatDaysLeft(project.days_left)}</span>
             </div>
           </div>
 
@@ -327,7 +327,7 @@ export default function ModernCampaignCard({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <CurrencyDisplay 
-                amount={campaign.current_amount}
+                amount={project.current_amount}
                 currency="CHF"
                 className="text-lg font-bold text-gray-900"
               />
@@ -336,14 +336,14 @@ export default function ModernCampaignCard({
               </span>
             </div>
             <p className="text-sm text-gray-500">
-              of CHF {campaign.goal_amount.toLocaleString()} goal
+              of CHF {project.goal_amount.toLocaleString()} goal
             </p>
           </div>
 
           {/* Tags */}
-          {campaign.tags.length > 0 && (
+          {project.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4 mb-4">
-              {campaign.tags.slice(0, 3).map((tag) => (
+              {project.tags.slice(0, 3).map((tag) => (
                 <span
                   key={tag}
                   className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium hover:bg-gray-200 transition-colors duration-200"
@@ -351,9 +351,9 @@ export default function ModernCampaignCard({
                   {tag}
                 </span>
               ))}
-              {campaign.tags.length > 3 && (
+              {project.tags.length > 3 && (
                 <span className="text-xs text-gray-400 self-center">
-                  +{campaign.tags.length - 3} more
+                  +{project.tags.length - 3} more
                 </span>
               )}
             </div>
@@ -362,9 +362,9 @@ export default function ModernCampaignCard({
           {/* Bitcoin Payment Button */}
           <div className="mt-4" onClick={(e) => e.preventDefault()}>
             <BitcoinPaymentButton
-              campaignId={campaign.id}
-              campaignTitle={campaign.title}
-              suggestedAmount={Math.min(50000, Math.floor(campaign.goal_amount * 0.01))}
+              projectId={project.id}
+              projectTitle={project.title}
+              suggestedAmount={Math.min(50000, Math.floor(project.goal_amount * 0.01))}
             />
           </div>
         </div>

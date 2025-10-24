@@ -1,10 +1,11 @@
+import { logger } from '@/utils/logger'
 import { supabase } from './db'
 import type { User } from '@supabase/supabase-js'
 
 export async function getCurrentUser(): Promise<User | null> {
   const { data: { user }, error } = await supabase.auth.getUser()
   if (error) {
-    console.error('Error getting current user:', error)
+    logger.error('Error getting current user:', error)
     return null
   }
   return user
@@ -13,7 +14,7 @@ export async function getCurrentUser(): Promise<User | null> {
 export async function signOut() {
   const { error } = await supabase.auth.signOut()
   if (error) {
-    console.error('Error signing out:', error)
+    logger.error('Error signing out:', error)
     throw error
   }
 }
