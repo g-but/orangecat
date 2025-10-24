@@ -5,7 +5,7 @@
  * Recovers localStorage drafts and ensures no data is lost.
  */
 
-import { useCampaignStore, CampaignFormData } from '@/stores/projectStore';
+import { useProjectStore, ProjectFormData } from '@/stores/projectStore';
 import { logger } from './logger';
 
 interface LegacyLocalStorageDraft {
@@ -53,7 +53,7 @@ export async function migrateLegacyDrafts(userId: string): Promise<{
         }
 
         // Migrate to new store
-        const { saveDraft } = useCampaignStore.getState();
+        const { saveDraft } = useProjectStore.getState();
         const newDraftId = await saveDraft(userId, legacyDraft.formData);
 
         results.migrated++;
@@ -159,7 +159,7 @@ export async function recoverSpecificDraft(
       throw new Error('Draft has no title');
     }
 
-    const { saveDraft } = useCampaignStore.getState();
+    const { saveDraft } = useProjectStore.getState();
     const newDraftId = await saveDraft(userId, legacyDraft.formData);
 
     if (process.env.NODE_ENV === 'development') {
@@ -175,7 +175,7 @@ export async function recoverSpecificDraft(
  * Create the "mao" draft if it's missing
  */
 export async function recreateMaoDraft(userId: string): Promise<string> {
-  const { saveDraft } = useCampaignStore.getState();
+  const { saveDraft } = useProjectStore.getState();
 
   const maoDraft: CampaignFormData = {
     title: 'mao',

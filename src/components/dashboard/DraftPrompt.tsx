@@ -5,7 +5,7 @@ import { Clock, Edit3, ArrowRight, X, FileText, Calendar, Target, AlertCircle } 
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { useCampaignStore, Campaign } from '@/stores/projectStore';
+import { useProjectStore, Project } from '@/stores/projectStore';
 import { formatDistanceToNow } from 'date-fns';
 
 interface DraftPromptProps {
@@ -13,7 +13,7 @@ interface DraftPromptProps {
 }
 
 export default function DraftPrompt({ className }: DraftPromptProps) {
-  const { drafts, isLoading } = useCampaignStore();
+  const { drafts, isLoading } = useProjectStore();
   const [dismissed, setDismissed] = useState(false);
 
   const hasAnyDraft = drafts.length > 0;
@@ -151,7 +151,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
 
 // Additional component for showing multiple drafts in a compact format
 export function DraftsList({ className }: { className?: string }) {
-  const { drafts, isLoading } = useCampaignStore();
+  const { drafts, isLoading } = useProjectStore();
 
   if (isLoading || drafts.length === 0) {
     return null;
