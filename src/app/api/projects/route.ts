@@ -79,7 +79,10 @@ export async function POST(request: NextRequest) {
     return apiSuccess(project, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
-      return apiValidationError('Invalid project data');
+      const zodError = error as any;
+      return apiValidationError('Invalid project data', {
+        details: zodError.errors || zodError.message,
+      });
     }
     return handleApiError(error);
   }
