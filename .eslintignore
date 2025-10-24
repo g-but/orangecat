@@ -1,0 +1,30 @@
+# Build outputs
+.next
+out
+dist
+build
+
+# Dependencies
+node_modules
+
+# Scripts (allowed to use console.log)
+scripts/**/*.js
+scripts/**/*.ts
+
+# Configuration files (allowed to use console.log)
+next.config.js
+*.config.js
+*.config.ts
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Coverage
+coverage
+
+# Misc
+.cache
+.turbo
