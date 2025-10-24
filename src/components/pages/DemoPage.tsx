@@ -196,17 +196,17 @@ export default function DemoPage({ initiative }: DemoPageProps) {
       case 'fundraising':
         return [
           {
-            id: 'create-campaign',
+            id: 'create-project',
             title: 'Create Campaign',
-            description: 'Launch your Bitcoin fundraising campaign',
+            description: 'Launch your Bitcoin fundraising project',
             action: 'Creating "Open Source Lightning Tools"...',
             mockData: { title: 'Open Source Lightning Tools', goal: '10 BTC', duration: '30 days' }
           },
           {
             id: 'customize-page',
             title: 'Customize Page',
-            description: 'Design your campaign page with media and rewards',
-            action: 'Customizing campaign page...',
+            description: 'Design your project page with media and rewards',
+            action: 'Customizing project page...',
             mockData: { media: 5, rewards: 3, updates: 0 }
           },
           {

@@ -1,5 +1,6 @@
 'use client'
 
+import { logger } from '@/utils/logger'
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
@@ -131,7 +132,7 @@ export default function CreateOrganizationModal({
       }, 1500)
 
     } catch (err) {
-      console.error('Error creating organization:', err)
+      logger.error('Error creating organization:', err)
       setError(err instanceof Error ? err.message : 'Failed to create organization')
     } finally {
       setIsLoading(false)

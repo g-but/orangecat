@@ -71,7 +71,7 @@ export async function migrateLegacyDrafts(userId: string): Promise<{
     const legacyPatterns = [
       'useDrafts-',
       'tesla-draft-',
-      'campaign-service-'
+      'project-service-'
     ]
 
     legacyPatterns.forEach(pattern => {

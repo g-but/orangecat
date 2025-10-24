@@ -131,7 +131,7 @@ export default function ModernProfileEditor({
     mode: 'onChange',
     defaultValues: {
       username: profile.username || userEmail?.split('@')[0] || '',
-      display_name: profile.display_name || '',
+      name: profile.name || '',
       bio: profile.bio || '',
       location: profile.location || '',
       avatar_url: profile.avatar_url || '',
@@ -144,11 +144,11 @@ export default function ModernProfileEditor({
 
   // Watch for username changes to auto-update display name if empty
   const watchedUsername = form.watch('username')
-  const watchedDisplayName = form.watch('display_name')
+  const watchedDisplayName = form.watch('name')
 
   useEffect(() => {
     if (watchedUsername && !watchedDisplayName) {
-      form.setValue('display_name', watchedUsername)
+      form.setValue('name', watchedUsername)
     }
   }, [watchedUsername, watchedDisplayName, form])
 
@@ -263,7 +263,7 @@ export default function ModernProfileEditor({
                 {/* Name - Main field like X */}
                 <FormField
                   control={form.control}
-                  name="display_name"
+                  name="name"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-gray-700">Name</FormLabel>

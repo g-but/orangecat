@@ -53,7 +53,7 @@ export default function UnifiedProfileLayout({
   // Calculate profile completion
   const calculateCompletion = () => {
     const fields = [
-      profile.display_name,
+      profile.name,
       profile.bio,
       profile.avatar_url,
       profile.banner_url,
@@ -108,7 +108,7 @@ export default function UnifiedProfileLayout({
             {profile.avatar_url ? (
               <Image
                 src={profile.avatar_url}
-                alt={profile.display_name || 'User'}
+                alt={profile.name || 'User'}
                 width={128}
                 height={128}
                 className="rounded-2xl object-cover border-4 border-white shadow-2xl"
@@ -153,7 +153,7 @@ export default function UnifiedProfileLayout({
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  {profile.display_name || profile.username || 'User'}
+                  {profile.name || profile.username || 'User'}
                 </h1>
                 <p className="text-lg text-orange-600 font-medium mb-4">
                   @{profile.username}
@@ -321,13 +321,12 @@ export default function UnifiedProfileLayout({
                 </div>
 
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Campaigns</span>
-                  <span className="font-medium">{profile.campaign_count || 0}</span>
+                  <span className="text-gray-600">Projects</span>
+                  <span className="font-medium">{profile.project_count || 0}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Followers</span>
-                  <span className="font-medium">{profile.follower_count || 0}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -352,7 +351,7 @@ export default function UnifiedProfileLayout({
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
 
                 <div className="space-y-3">
-                  <Link href="/create" className="block">
+                  <Link href="/projects/create" className="block">
                     <Button variant="outline" className="w-full justify-start">
                       <Target className="w-4 h-4 mr-2" />
                       Create Campaign

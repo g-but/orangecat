@@ -23,7 +23,7 @@ We established four core entities with clear purposes:
 **New Tables Created:**
 - ✅ `organization_members` - Manages organization membership with roles & permissions
 - ✅ `projects` - Tracks long-term initiatives
-- ✅ `project_id` foreign key added to campaigns
+- ✅ `project_id` foreign key added to projects
 
 **All tables include:**
 - Row Level Security (RLS) policies
@@ -62,8 +62,8 @@ Added complete type definitions for:
    - Auto-generates slugs
    - Full-text search enabled
 
-6. **`supabase/migrations/20251013_add_project_to_campaigns.sql`**
-   - Links campaigns to projects
+6. **`supabase/migrations/20251013_add_project_to_projects.sql`**
+   - Links projects to projects
 
 ### TypeScript Updates
 7. **`src/types/database.ts`** - Updated with new table types
@@ -79,7 +79,7 @@ Added complete type definitions for:
 | **Profile** | Only the profile owner |
 | **Organization** | Members with `can_edit_org` permission |
 | **Campaign (personal)** | Only the creator |
-| **Campaign (org)** | Org members with `can_create_campaigns` |
+| **Campaign (org)** | Org members with `can_create_projects` |
 | **Project (personal)** | Only the owner |
 | **Project (org)** | Org members with edit permissions |
 
@@ -88,7 +88,7 @@ Added complete type definitions for:
 | Role | Permissions |
 |------|-------------|
 | **Owner** | Full control, can delete organization |
-| **Admin** | Can manage members, edit settings, create campaigns |
+| **Admin** | Can manage members, edit settings, create projects |
 | **Member** | Standard access, can view and contribute |
 | **Contributor** | Limited access, can contribute content |
 
@@ -114,7 +114,7 @@ Added complete type definitions for:
 ### Phase 4: UI Components (MEDIUM PRIORITY)
 10. Create organization member management UI
 11. Create project creation/editing forms
-12. Create campaign-to-project linking UI
+12. Create project-to-project linking UI
 
 ### Phase 5: Testing (HIGH PRIORITY)
 13. Write integration tests
@@ -146,7 +146,7 @@ Organization
 
 ### 1. Campaign vs Project
 - **Campaign**: Time-bound fundraising with specific goal
-- **Project**: Ongoing initiative that may have multiple campaigns
+- **Project**: Ongoing initiative that may have multiple projects
 - **Rationale**: Allows sustained fundraising over time
 
 ### 2. Organization Membership
@@ -154,7 +154,7 @@ Organization
 - **Rationale**: Clearer schema, better performance, specific permissions
 
 ### 3. Polymorphic Ownership
-- **Decision**: Projects/Campaigns can be owned by Profile OR Organization
+- **Decision**: Projects/Projects can be owned by Profile OR Organization
 - **Rationale**: Maximum flexibility for different use cases
 
 ### 4. Bitcoin Integration
@@ -217,7 +217,7 @@ These are NOT blockers, but future considerations:
 - [ ] How do we handle organization verification (KYC)?
 - [ ] Should projects have sub-projects or milestones?
 - [ ] How do we handle Bitcoin distribution to organization members?
-- [ ] Do we need approval workflows for campaigns/projects?
+- [ ] Do we need approval workflows for projects/projects?
 
 ---
 

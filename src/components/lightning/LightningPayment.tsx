@@ -20,8 +20,8 @@ import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
 
 interface LightningPaymentProps {
   recipientAddress: string
-  campaignTitle: string
-  campaignId: string
+  projectTitle: string
+  projectId: string
   presetAmount?: number // in satoshis
   onPaymentComplete?: (paymentHash: string) => void
   onPaymentFailed?: (error: string) => void
@@ -38,8 +38,8 @@ interface Invoice {
 
 export default function LightningPayment({
   recipientAddress,
-  campaignTitle,
-  campaignId,
+  projectTitle,
+  projectId,
   presetAmount,
   onPaymentComplete,
   onPaymentFailed,
@@ -90,7 +90,7 @@ export default function LightningPayment({
       await new Promise(resolve => setTimeout(resolve, 1500))
       
       const amountSats = parseInt(amount)
-      const description = `${campaignTitle} - ${message || 'Lightning donation'}`
+      const description = `${projectTitle} - ${message || 'Lightning donation'}`
       
       // Development/Demo Implementation
       // In production, this would integrate with a Lightning service provider like:
@@ -153,7 +153,7 @@ export default function LightningPayment({
           </div>
           <h3 className="text-xl font-semibold text-gray-900 mb-2">Payment Received!</h3>
           <p className="text-gray-600 mb-4">
-            Thank you for supporting {campaignTitle} with your Lightning payment.
+            Thank you for supporting {projectTitle} with your Lightning payment.
           </p>
           <CurrencyDisplay 
             amount={invoice!.amount} 

@@ -28,7 +28,7 @@ export interface Association {
   id: string
   source_profile_id: string
   target_entity_id: string
-  target_entity_type: 'profile' | 'campaign' | 'organization' | 'collective' | 'project'
+  target_entity_type: 'profile' | 'project' | 'organization' | 'collective'
   relationship_type: 'created' | 'founded' | 'supports' | 'collaborates' | 'maintains' | 
                      'member' | 'leader' | 'moderator' | 'contributor' | 'advisor' |
                      'investor' | 'sponsor' | 'partner' | 'beneficiary'

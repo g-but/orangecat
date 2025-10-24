@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
 
 // This is a server-side API route that handles sign out

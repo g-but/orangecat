@@ -7,8 +7,8 @@
 - [Authentication](../auth_system.md) - Secure login system
 
 ### **💰 Campaign Management**  
-- [Campaign Creation](campaigns.md) - Create fundraising campaigns
-- [Search & Discovery](search.md) - Find and browse campaigns
+- [Campaign Creation](projects.md) - Create fundraising projects
+- [Search & Discovery](search.md) - Find and browse projects
 
 ### **📊 Analytics**
 - [Dashboard](dashboard.md) - Real-time analytics

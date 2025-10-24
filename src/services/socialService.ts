@@ -10,7 +10,7 @@
  * Last Modified Summary: Updated to use proper database services
  */
 
-import { supabase } from '@/services/supabase/client'
+import { supabase } from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
 
 // Import proper database services
@@ -82,7 +82,7 @@ export class SearchService {
           results.push({
             id: person.id,
             type: 'person',
-            title: person.display_name || person.username,
+            title: person.name || person.username,
             description: person.bio || '',
             image: person.avatar_url,
             url: `/people/${person.id}`,
@@ -121,8 +121,8 @@ export class SearchService {
         })
       }
 
-      // TODO: Add projects search when ProjectService is properly implemented
-      
+      // Projects are the unified entity - search handled above
+
       return results.slice(0, limit)
     } catch (error) {
       logger.error('Error in universal search:', error, 'Social')
@@ -147,9 +147,8 @@ export class SocialAnalyticsService {
         pending_requests: 0,
         organizations_joined: 0,
         organizations_created: 0,
-        projects_joined: 0,
         projects_created: 0,
-        profile_views: 0,
+        projects_supported: 0,
         engagement_rate: 0,
         growth_rate: 0
       }
@@ -157,32 +156,7 @@ export class SocialAnalyticsService {
   }
 }
 
-// =====================================================================
-// 🚀 PROJECT SERVICE - PLACEHOLDER FOR PROPER IMPLEMENTATION
-// =====================================================================
-
-export class ProjectService {
-  // TODO: Implement proper database-backed project service
-  static async createProject(formData: any): Promise<any> {
-    logger.warn('ProjectService.createProject not yet implemented with proper database')
-    throw new Error('ProjectService not yet implemented')
-  }
-
-  static async getUserProjects(userId: string): Promise<any[]> {
-    logger.warn('ProjectService.getUserProjects not yet implemented with proper database')
-    return []
-  }
-
-  static async searchProjects(filters: any = {}): Promise<any[]> {
-    logger.warn('ProjectService.searchProjects not yet implemented with proper database')
-    return []
-  }
-
-  static async joinProject(projectId: string): Promise<void> {
-    logger.warn('ProjectService.joinProject not yet implemented with proper database')
-    throw new Error('ProjectService not yet implemented')
-  }
-}
+// Projects are the unified entity for simplified MVP architecture
 
 // =====================================================================
 // 💡 EMPTY STATE SERVICE - UPDATED CONTENT
@@ -242,32 +216,6 @@ export class EmptyStateService {
           'Environmental initiatives',
           'Creative communities'
         ]
-      },
-      projects: {
-        title: 'No Projects Yet',
-        description: "You haven't created or joined any projects. Start building something amazing!",
-        primaryAction: {
-          label: 'Explore Projects',
-          action: '/projects/discover'
-        },
-        secondaryAction: {
-          label: 'Create Project',
-          action: '/projects/create'
-        },
-        benefits: [
-          'Direct fundraising with Bitcoin',
-          'Team collaboration tools',
-          'Milestone-based funding',
-          'Community support',
-          'Transparent progress tracking'
-        ],
-        examples: [
-          'Community art projects',
-          'Educational initiatives',
-          'Local charity drives',
-          'Creative collaborations',
-          'Innovation projects'
-        ]
       }
     };
 
@@ -284,32 +232,31 @@ export const socialService = {
   // Use proper database services
   searchPeople: PeopleService.searchPeople,
   searchOrganizations: OrganizationService.searchOrganizations,
-  searchProjects: ProjectService.searchProjects,
-  
+  searchProjects: SearchService.universalSearch.bind(SearchService),
+
   // Connection methods
   sendConnectionRequest: PeopleService.sendConnectionRequest,
   getConnections: PeopleService.getConnections,
   respondToConnection: PeopleService.respondToConnection,
-  
+
   // Organization methods
   createOrganization: OrganizationService.createOrganization,
   getUserOrganizations: OrganizationService.getUserOrganizations,
   joinOrganization: OrganizationService.joinOrganization,
-  
+
   // Bitcoin collaboration methods
   createCollaboration: BitcoinCollaborationService.createCollaboration,
   getUserCollaborations: BitcoinCollaborationService.getUserCollaborations,
   recordPayment: BitcoinCollaborationService.recordPayment,
-  
+
   // Analytics
   getUserAnalytics: SocialAnalyticsService.getUserAnalytics,
-  
+
   // Search
   universalSearch: SearchService.universalSearch
 } 
 
 // For unit-tests – expose concrete implementations
 // Already exported above or as classes within this file
-export { ProjectService };
 export { SearchService };
 export { SocialAnalyticsService }; 

@@ -1,4 +1,4 @@
-import getSupabaseClient from '@/services/supabase/client'
+import getSupabaseClient from '@/lib/supabase/browser'
 import type { Organization, OrganizationSearchParams, OrganizationFilters, QueryOptions } from './types'
 
 export class OrganizationReader {

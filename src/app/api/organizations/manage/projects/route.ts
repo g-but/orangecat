@@ -1,4 +1,5 @@
-import { createServerClient } from '@/lib/db'
+import { logger } from '@/utils/logger'
+import { createServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(
@@ -46,7 +47,7 @@ export async function GET(
       { status: 200 }
     )
   } catch (error) {
-    console.error('Error fetching organization projects:', error)
+    logger.error('Error fetching organization projects:', error)
     return NextResponse.json(
       { error: 'Failed to fetch projects' },
       { status: 500 }
@@ -156,7 +157,7 @@ export async function POST(
       { status: 201 }
     )
   } catch (error) {
-    console.error('Error creating project:', error)
+    logger.error('Error creating project:', error)
     return NextResponse.json(
       { error: 'Failed to create project' },
       { status: 500 }

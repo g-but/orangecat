@@ -3,10 +3,10 @@
   "version": "0.1.1",
   "private": true,
   "bin": {
-    "d": "./scripts/dev-start.js"
+    "d": "./scripts/dev/dev-start.js"
   },
   "scripts": {
-    "d": "node scripts/dev-start.js",
+    "d": "node scripts/dev/dev-start.js",
     "dev": "next dev",
     "dev:clean": "bash scripts/dev.sh",
     "dev:win": "scripts/dev.bat",
@@ -146,6 +146,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.53.0",
+    "@swc/core": "^1.13.5",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^14.2.1",
     "@testing-library/user-event": "^14.6.1",

@@ -33,7 +33,7 @@ export default function FundingPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
       const { data, error } = await supabase
-        .from('funding_pages')
+        .from('projects')
         .select('*')
         .eq('id', fundingId)
         .single()

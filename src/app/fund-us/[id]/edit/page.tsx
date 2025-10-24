@@ -27,7 +27,7 @@ export default function EditFundingPage() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
       const { data, error } = await supabase
-        .from('funding_pages')
+        .from('projects')
         .select('*')
         .eq('id', fundingId)
         .single()
@@ -56,7 +56,7 @@ export default function EditFundingPage() {
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
       )
-        .from('funding_pages')
+        .from('projects')
         .update({
           title: page.title,
           description: page.description,

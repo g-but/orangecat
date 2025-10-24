@@ -2,18 +2,22 @@
 ## Entity Relationships & Data Model
 
 **Created:** 2025-10-13
-**Status:** Draft for Review
-**Purpose:** Define clear boundaries between entities and their relationships
+**Last Modified:** 2025-12-21
+**Status:** Production Ready
+**Purpose:** Define clear boundaries between entities and their relationships in the simplified MVP architecture
 
 ---
 
-## 🎯 Core Problem
+## 🎯 Current Architecture
 
-You're right - we haven't established clear distinctions between:
-- Individual Profiles vs Organizations
-- Campaigns vs Projects
-- How entities relate and permission models
-- Who can edit what
+OrangeCat now uses a **simplified, maintainable database schema** optimized for Bitcoin crowdfunding with multi-entity transactions and full transparency.
+
+### Core Design Philosophy
+- **5 Essential Tables** (down from 10+ complex tables)
+- **Unified "Projects" Entity** (consolidated from campaigns + projects)
+- **Multi-Entity Transactions** (any entity can donate to any other)
+- **Bitcoin-Native Design** (Lightning/Bitcoin addresses for all entities)
+- **Transparency by Default** (public transaction visibility)
 
 ## 📐 Entity Definitions
 
@@ -26,10 +30,10 @@ You're right - we haven't established clear distinctions between:
 - Social connections and following
 
 **Can Do:**
-- Create campaigns (personal fundraising)
+- Create projects (personal fundraising)
 - Join organizations (become member/leader)
 - Create/lead organizations
-- Support other campaigns/organizations
+- Support other projects/organizations
 - Receive Bitcoin directly
 
 **Cannot Do:**
@@ -42,10 +46,9 @@ You're right - we haven't established clear distinctions between:
 {
   id: uuid (auth.users.id)
   username: string (unique)
-  display_name: string
+  name: string  // User's display name (standardized)
   bio: string
   avatar_url: string
-  banner_url: string
   bitcoin_address: string  // Personal receiving address
   lightning_address: string
   created_at: timestamp
@@ -69,7 +72,7 @@ You're right - we haven't established clear distinctions between:
 - "Open Source Project Foundation"
 
 **Can Do:**
-- Run multiple campaigns
+- Run multiple projects
 - Have multiple members with roles
 - Distribute Bitcoin rewards to members
 - Create projects under their umbrella
@@ -113,49 +116,58 @@ CREATE TABLE organization_members (
 
 ---
 
-### 3. **Campaign** (Fundraising Initiative)
-**What it is:** A time-bound fundraising effort with a specific goal.
+### 3. **Project** (Unified Fundraising Entity)
+**What it is:** A flexible fundraising or collaborative initiative that can be time-bound or open-ended.
 
 **Core Purpose:**
-- Raise Bitcoin for a specific cause
-- Track donations and progress
-- Transparent goal and current amount
+- Raise Bitcoin for any cause (optional goal setting)
+- Track donations and progress (when applicable)
+- Support both fundraising and non-fundraising projects
+- Enable collaboration and community building
 
 **Created By:**
-- Individual Profile (personal campaign)
-- Organization (organization campaign)
+- Individual Profile (personal project)
+- Organization (organizational project)
 
 **Examples:**
-- "Help John Pay Medical Bills" (personal)
-- "Food Bank Winter Drive 2025" (organization)
-- "Open Source Project Funding" (organization)
+- "Bitcoin Education Center" (personal project with fundraising)
+- "Lightning Network Tools" (open-source development project)
+- "Community Bitcoin Meetups" (ongoing community project)
 
-**Lifecycle:**
-- Active → Funded → Completed/Expired
+**Key Features:**
+- **Optional Fundraising**: Can have goals or be open-ended
+- **Timeline Planning**: Optional start/end dates for structured projects
+- **Bitcoin Integration**: Lightning/Bitcoin addresses for all projects
+- **Transparency**: Public transaction visibility by default
 
 **Key Fields:**
 ```typescript
 {
   id: uuid
   title: string
-  description: string (rich text/markdown)
-  goal_amount: number (in sats)
+  description: string
+
+  // Optional fundraising (nullable for non-fundraising projects)
+  goal_amount: number | null (in sats)
   current_amount: number (in sats)
-  currency: 'SATS' | 'BTC' | 'USD'
+  currency: 'SATS' | 'BTC'
 
   // Ownership
   creator_id: uuid (profile.id)  // Who created it
-  organization_id: uuid | null   // If org campaign
+  organization_id: uuid | null   // If org project
 
-  // Payment
-  bitcoin_address: string  // Unique per campaign
-  lightning_address: string
+  // Payment (optional - only needed if accepting donations)
+  bitcoin_address: string | null
+  lightning_address: string | null
 
-  // Metadata
-  status: 'draft' | 'active' | 'funded' | 'completed' | 'cancelled'
-  featured: boolean
-  category: string
-  end_date: timestamp | null
+  // Project management
+  status: 'draft' | 'active' | 'completed' | 'cancelled'
+  category: string | null
+  tags: string[] | null
+  start_date: timestamp | null
+  target_completion: timestamp | null
+
+  // Timestamps
   created_at: timestamp
   updated_at: timestamp
 }
@@ -167,316 +179,151 @@ CREATE TABLE organization_members (
 
 ---
 
-### 4. **Project** (Long-term Initiative)
-**What it is:** An ongoing, long-term effort that may have multiple campaigns.
+### 4. **Transaction** (Multi-Entity Payments)
+**What it is:** A universal payment system supporting donations between any entities.
 
 **Core Purpose:**
-- Sustained work over time
-- Multiple campaigns can belong to one project
-- Progress tracking beyond single campaign
+- Enable payments between any combination of profiles, organizations, and projects
+- Provide complete transparency and audit trails
+- Support various payment purposes (funding, tips, grants, etc.)
 
-**Difference from Campaign:**
-- Campaign = Time-bound fundraising
-- Project = Ongoing initiative
+**Key Features:**
+- **Multi-Entity Support**: Any entity can send to any other entity
+- **Purpose Categorization**: funding, tips, grants, refunds, etc.
+- **Transparency Control**: Public or private transactions
+- **Bitcoin-Native**: Lightning and on-chain payment support
 
 **Examples:**
-- "Community Garden" (project)
-  └─ "Spring Planting Campaign 2025" (campaign)
-  └─ "Tool Shed Funding Campaign" (campaign)
+- Profile → Project: Traditional crowdfunding donations
+- Organization → Profile: Grant payments or tips
+- Project → Organization: Refunds or shared revenue
+- Organization → Project: Sponsorship or investment
 
 **Key Fields:**
 ```typescript
 {
   id: uuid
-  name: string
-  description: string
-  slug: string (unique)
+  amount_sats: number  // Amount in satoshis
 
-  // Ownership
-  owner_type: 'profile' | 'organization'
-  owner_id: uuid  // profile.id or organization.id
+  // Source entity
+  from_entity_type: 'profile' | 'organization' | 'project'
+  from_entity_id: uuid
 
-  // Details
-  avatar_url: string
-  banner_url: string
-  status: 'planning' | 'active' | 'completed' | 'on_hold'
+  // Destination entity
+  to_entity_type: 'profile' | 'organization' | 'project'
+  to_entity_id: uuid
 
-  // Metadata
-  start_date: timestamp
-  target_completion: timestamp | null
+  // Payment details
+  payment_method: 'bitcoin' | 'lightning' | 'on-chain' | 'off-chain'
+  transaction_hash: string | null
+  status: 'pending' | 'confirmed' | 'failed'
+
+  // Transparency
+  purpose: string | null  // funding, tip, grant, etc.
+  public_visibility: boolean
+  anonymous: boolean
+
+  // Audit trail
+  audit_trail: jsonb  // Detailed transaction history
+
+  // Timestamps
   created_at: timestamp
-  updated_at: timestamp
+  confirmed_at: timestamp | null
 }
 ```
 
-**Missing Table:** `projects`
-```sql
-CREATE TABLE projects (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  slug text UNIQUE NOT NULL,
-  description text,
-  owner_type text CHECK (owner_type IN ('profile', 'organization')),
-  owner_id uuid NOT NULL,
-  avatar_url text,
-  banner_url text,
-  status text CHECK (status IN ('planning', 'active', 'completed', 'on_hold')),
-  start_date timestamp DEFAULT now(),
-  target_completion timestamp,
-  created_at timestamp DEFAULT now(),
-  updated_at timestamp DEFAULT now()
-);
+## 🔗 Entity Relationships & Permissions
 
--- Link campaigns to projects
-ALTER TABLE campaigns ADD COLUMN project_id uuid REFERENCES projects(id);
-```
+The current architecture uses **simplified, direct relationships** between entities:
 
----
+### Core Relationships
 
-## 🔗 Associations & Relationships
+#### 1. **Profile → Project (Creator)**
+- **Direction**: Profile creates Project
+- **Permission**: Full CRUD control
+- **Use Case**: Personal fundraising projects
 
-The `profile_associations` table is your **universal relationship system**.
+#### 2. **Organization → Project (Owner)**
+- **Direction**: Organization owns Project
+- **Permission**: Organization admins can manage
+- **Use Case**: Organizational fundraising initiatives
 
-### Association Types
+#### 3. **Profile → Organization (Membership)**
+- **Direction**: Profile joins Organization
+- **Permission**: Based on role (member/admin/owner)
+- **Use Case**: Community participation
 
-#### 1. **Profile → Organization**
-```typescript
-{
-  source_profile_id: "user-123",
-  target_entity_id: "org-456",
-  target_entity_type: "organization",
-  relationship_type: "member" | "leader" | "founder",
-  role: "admin" | "treasurer" | "volunteer",
-  permissions: {
-    can_edit_org: boolean,
-    can_create_campaigns: boolean,
-    can_approve_expenses: boolean
-  },
-  reward_percentage: 10  // Gets 10% of org rewards
-}
-```
+#### 4. **Multi-Entity Transactions**
+- **Direction**: Any entity → Any entity
+- **Permission**: Based on entity ownership/permissions
+- **Use Case**: Donations, tips, grants, refunds
 
-#### 2. **Profile → Campaign**
-```typescript
-{
-  source_profile_id: "user-123",
-  target_entity_id: "campaign-789",
-  target_entity_type: "campaign",
-  relationship_type: "created" | "supports" | "beneficiary",
-  role: "creator" | "supporter"
-}
-```
+### Permission System
 
-#### 3. **Profile → Project**
-```typescript
-{
-  source_profile_id: "user-123",
-  target_entity_id: "project-101",
-  target_entity_type: "project",
-  relationship_type: "maintains" | "contributes" | "sponsors",
-  role: "lead_developer" | "contributor"
-}
-```
+**Simple Role-Based Access:**
+- **Profile Owner**: Can manage their own profile and created projects
+- **Organization Admin**: Can manage organization and its projects
+- **Transaction Participants**: Can view their own transactions
+
+**No Complex Association Tables** - Direct foreign key relationships keep it simple and fast.
 
 ---
 
-## 🔐 Permission Model
+## 🗄️ Current Database Schema Summary
 
-### Edit Permissions Matrix
+### **5 Core Tables (Simplified from 10+)**
 
-| Entity | Who Can Edit? |
-|--------|--------------|
-| **Profile** | Only the profile owner (user.id == profile.id) |
-| **Organization** | Members with `can_edit_org` permission |
-| **Campaign (personal)** | Only creator (creator_id) |
-| **Campaign (org)** | Org members with `can_create_campaigns` permission |
-| **Project (personal)** | Only owner (owner_id where owner_type='profile') |
-| **Project (org)** | Org members with edit permissions |
+| Table | Purpose | Key Relationships |
+|-------|---------|------------------|
+| `profiles` | User accounts | `auth.users` (1:1) |
+| `projects` | Unified fundraising entities | `profiles` (N:1), `organizations` (N:1) |
+| `transactions` | Multi-entity payments | `profiles` (N:1), `projects` (N:1), `organizations` (N:1) |
+| `organizations` | Group entities | `profiles` (N:1) |
+| `organization_members` | Team management | `organizations` (N:1), `profiles` (N:1) |
 
-### Permission Checking Logic
-
-```typescript
-async function canEditOrganization(userId: string, orgId: string): Promise<boolean> {
-  // Check if user is a member with edit permissions
-  const membership = await db
-    .from('organization_members')
-    .select('role, permissions')
-    .eq('organization_id', orgId)
-    .eq('profile_id', userId)
-    .eq('status', 'active')
-    .single();
-
-  if (!membership) return false;
-
-  // Owners and admins can always edit
-  if (membership.role === 'owner' || membership.role === 'admin') {
-    return true;
-  }
-
-  // Check specific permission
-  return membership.permissions?.can_edit_org === true;
-}
-```
+### **Schema Benefits**
+- ✅ **Bitcoin-Native**: Lightning/Bitcoin addresses for all entities
+- ✅ **Multi-Entity Transactions**: Any entity can donate to any other
+- ✅ **Transparency**: Public transaction visibility and audit trails
+- ✅ **Simplicity**: 5 tables instead of 10+ complex tables
+- ✅ **Performance**: Proper indexing and minimal JOINs
 
 ---
 
-## 🏗️ Missing Database Tables
+## 📋 Implementation Status
 
-### 1. Organization Members
-```sql
-CREATE TABLE organization_members (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id uuid REFERENCES organizations(id) ON DELETE CASCADE,
-  profile_id uuid REFERENCES profiles(id) ON DELETE CASCADE,
-  role text CHECK (role IN ('owner', 'admin', 'member', 'contributor')),
-  permissions jsonb DEFAULT '{
-    "can_edit_org": false,
-    "can_create_campaigns": false,
-    "can_invite_members": false,
-    "can_manage_funds": false
-  }',
-  bitcoin_reward_address text,  -- Member's reward address
-  reward_share_percentage numeric DEFAULT 0,
-  joined_at timestamp DEFAULT now(),
-  invited_by uuid REFERENCES profiles(id),
-  status text CHECK (status IN ('active', 'pending', 'removed')),
-  created_at timestamp DEFAULT now(),
-  updated_at timestamp DEFAULT now(),
-  UNIQUE(organization_id, profile_id)
-);
+### ✅ **Completed**
+- **Database Migration**: Simplified schema with unified projects entity
+- **Multi-Entity Transactions**: Any entity can donate to any other entity
+- **TypeScript Types**: Updated for simplified schema
+- **API Routes**: `/api/projects/*` and `/api/transactions/*`
+- **Authentication**: Proper RLS policies and permissions
 
-CREATE INDEX idx_org_members_org ON organization_members(organization_id);
-CREATE INDEX idx_org_members_profile ON organization_members(profile_id);
-```
+### 🚧 **In Progress**
+- **Frontend Updates**: Dashboard and project creation interfaces
+- **Transaction Management**: UI for creating and viewing transactions
+- **Organization Management**: Enhanced org functionality
 
-### 2. Projects
-```sql
-CREATE TABLE projects (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  name text NOT NULL,
-  slug text UNIQUE NOT NULL,
-  description text,
-  owner_type text CHECK (owner_type IN ('profile', 'organization')),
-  owner_id uuid NOT NULL,
-  avatar_url text,
-  banner_url text,
-  website text,
-  bitcoin_address text,
-  lightning_address text,
-  status text CHECK (status IN ('planning', 'active', 'completed', 'on_hold', 'cancelled')),
-  visibility text CHECK (visibility IN ('public', 'unlisted', 'private')),
-  start_date timestamp DEFAULT now(),
-  target_completion timestamp,
-  created_at timestamp DEFAULT now(),
-  updated_at timestamp DEFAULT now()
-);
-
-CREATE INDEX idx_projects_owner ON projects(owner_id, owner_type);
-CREATE INDEX idx_projects_slug ON projects(slug);
-```
-
-### 3. Project Campaigns Link
-```sql
--- Add to existing campaigns table
-ALTER TABLE campaigns
-  ADD COLUMN project_id uuid REFERENCES projects(id) ON DELETE SET NULL;
-
-CREATE INDEX idx_campaigns_project ON campaigns(project_id);
-```
+### 📋 **Next Steps**
+1. **Complete Frontend Integration** - Update all components for new schema
+2. **Test Multi-Entity Transactions** - Verify all donation flows work
+3. **Performance Optimization** - Ensure fast queries with proper indexing
+4. **Documentation Updates** - Keep all docs current with schema changes
 
 ---
 
-## 📊 Entity Relationship Diagram
+## 🎯 Architecture Philosophy
 
-```
-┌─────────────┐
-│   Profile   │ (Individual User)
-└─────┬───────┘
-      │
-      ├─── creates ────→ ┌──────────┐
-      │                   │ Campaign │ (Personal Fundraising)
-      │                   └──────────┘
-      │
-      ├─── founds ────→ ┌──────────────┐
-      │                  │ Organization │ (Group Entity)
-      │                  └──────┬───────┘
-      │                         │
-      ├─── joins ───────────────┘
-      │   (via organization_members)
-      │
-      └─── maintains ──→ ┌─────────┐
-                          │ Project │ (Long-term Initiative)
-                          └────┬────┘
-                               │
-                               └─── contains ──→ ┌──────────┐
-                                                  │ Campaign │
-                                                  └──────────┘
+### **Before (Over-engineered)**
+- 10+ tables with complex relationships
+- Separate campaigns and projects entities
+- Overly complex permission systems
+- Feature creep for "enterprise" features
 
-Organizations can also:
-  - Create campaigns
-  - Manage projects
-  - Have multiple members
-  - Distribute Bitcoin rewards
-```
+### **After (MVP-Focused)**
+- **5 essential tables** with clear purposes
+- **Unified projects entity** for all fundraising needs
+- **Multi-entity transactions** for maximum flexibility
+- **Bitcoin-native design** with transparency by default
 
----
-
-## 🚀 Implementation Priorities
-
-### Phase 1: Critical Missing Pieces
-1. ✅ Profile editing (DONE)
-2. ❌ Create `organization_members` table
-3. ❌ Create `projects` table
-4. ❌ Add `project_id` to campaigns
-
-### Phase 2: Organization Features
-5. ❌ Create organization API
-6. ❌ Organization member management
-7. ❌ Permission checking middleware
-8. ❌ Organization profile page
-
-### Phase 3: Advanced Features
-9. ❌ Projects system
-10. ❌ Campaign-to-project linking
-11. ❌ Bitcoin reward distribution
-12. ❌ Multi-signature wallets for orgs
-
----
-
-## 🤔 Key Design Decisions
-
-### 1. Campaign vs Project
-**Decision:** Campaigns are time-bound fundraising; Projects are ongoing initiatives.
-**Rationale:** Allows multiple campaigns for same project over time.
-
-### 2. Organization Ownership
-**Decision:** Use `organization_members` table instead of `profile_associations`.
-**Rationale:** Clearer schema, specific permissions model, better performance.
-
-### 3. Permission Model
-**Decision:** Role-based with granular permission overrides.
-**Rationale:** Flexible enough for different org structures.
-
-### 4. Bitcoin Addresses
-**Decision:** Each entity (profile, org, campaign) has own address.
-**Rationale:** Clear fund attribution and distribution.
-
----
-
-## 📝 Next Steps
-
-1. **Review this architecture** - Agree on entity distinctions
-2. **Create missing tables** - Run migrations for `organization_members` and `projects`
-3. **Build Organization API** - CRUD operations + member management
-4. **Implement permissions** - Middleware for edit checks
-5. **Build UIs** - Organization pages, member management, project creation
-
----
-
-## Questions to Answer
-
-- [ ] Should organizations have "sub-organizations" or "departments"?
-- [ ] How do we handle organization verification (KYC)?
-- [ ] Should projects have sub-projects or milestones?
-- [ ] How do we handle Bitcoin distribution to organization members?
-- [ ] Do we need approval workflows for campaigns/projects?
+**Result**: A **maintainable, scalable foundation** for Bitcoin crowdfunding that prioritizes **user experience** over **architectural complexity**.

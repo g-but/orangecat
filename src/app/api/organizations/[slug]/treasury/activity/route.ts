@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 
 const cache = new Map<string, { t: number; data: any }>()
 const CACHE_TTL_MS = 10_000

@@ -1,5 +1,6 @@
+import { logger } from '@/utils/logger'
 import { NextRequest } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { handleApiError, AuthError, ValidationError } from '@/lib/errors'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
       })
 
     if (uploadError) {
-      console.error('Upload error:', uploadError)
+      logger.error('Upload error:', uploadError)
       throw new Error(`Upload failed: ${uploadError.message}`)
     }
 

@@ -10,16 +10,16 @@ import QRCodeGenerator from './QRCodeGenerator'
 interface BitcoinPaymentModalProps {
   isOpen: boolean
   onClose: () => void
-  campaignId: string
-  campaignTitle: string
+  projectId: string
+  projectTitle: string
   suggestedAmount?: number
 }
 
 export default function BitcoinPaymentModal({
   isOpen,
   onClose,
-  campaignId,
-  campaignTitle,
+  projectId,
+  projectTitle,
   suggestedAmount = 10000
 }: BitcoinPaymentModalProps) {
   const [paymentType, setPaymentType] = useState<PaymentType>('lightning')
@@ -30,10 +30,10 @@ export default function BitcoinPaymentModal({
   const handleCreatePayment = async () => {
     setLoading(true)
     
-    const description = `Donation to ${campaignTitle}`
+    const description = `Donation to ${projectTitle}`
     const result = paymentType === 'lightning' 
-      ? await bitcoinPaymentService.createLightningPayment(campaignId, amount, description)
-      : await bitcoinPaymentService.createOnChainPayment(campaignId, amount, description, 'bc1dummy')
+      ? await bitcoinPaymentService.createLightningPayment(projectId, amount, description)
+      : await bitcoinPaymentService.createOnChainPayment(projectId, amount, description, 'bc1dummy')
     
     if (result.success && result.paymentRequest) {
       setPaymentRequest(result.paymentRequest)
@@ -59,7 +59,7 @@ export default function BitcoinPaymentModal({
             <>
               <div className="text-center">
                 <h3 className="font-semibold mb-1">Supporting</h3>
-                <p className="text-gray-600">{campaignTitle}</p>
+                <p className="text-gray-600">{projectTitle}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">

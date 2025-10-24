@@ -24,7 +24,7 @@ interface LegacyAssociation {
   entity: {
     username: string
     name: string
-    type: 'individual' | 'campaign' | 'organization' | 'collective' | 'project'
+    type: 'individual' | 'project' | 'organization' | 'collective' | 'project'
     description?: string
     url?: string
   }
@@ -194,7 +194,7 @@ export default function ProfileAssociations({
             <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p className="text-gray-500">No connections yet</p>
             <p className="text-sm text-gray-400 mt-1">
-              Start by creating campaigns or joining organizations
+              Start by creating projects or joining organizations
             </p>
           </div>
         </CardContent>

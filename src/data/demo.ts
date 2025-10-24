@@ -56,7 +56,7 @@ export interface OrganizationData {
   slug: string
   description: string
   members: number
-  campaigns: number
+  projects: number
   totalRaised: number
   category: string
   verified: boolean
@@ -71,7 +71,7 @@ export const demoOrganizations: OrganizationData[] = [
     slug: 'bitcoin-devs',
     description: 'A community of Bitcoin developers working on core protocol improvements',
     members: 247,
-    campaigns: 3,
+    projects: 3,
     totalRaised: 2100000,
     category: 'Technology',
     verified: true,
@@ -84,7 +84,7 @@ export const demoOrganizations: OrganizationData[] = [
     slug: 'lightning-network',
     description: 'Advancing Lightning Network adoption and development worldwide',
     members: 189,
-    campaigns: 2,
+    projects: 2,
     totalRaised: 1500000,
     category: 'Technology',
     verified: true,
@@ -97,7 +97,7 @@ export const demoOrganizations: OrganizationData[] = [
     slug: 'bitcoin-education',
     description: 'Making Bitcoin education accessible to everyone',
     members: 156,
-    campaigns: 1,
+    projects: 1,
     totalRaised: 800000,
     category: 'Education',
     verified: false,

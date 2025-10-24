@@ -136,7 +136,7 @@ test('should complete user registration flow', async ({ page }) => {
 #### Critical Path Testing
 ```typescript
 test('should handle Bitcoin donation flow', async ({ page }) => {
-  await page.goto('/campaign/test-campaign');
+  await page.goto('/project/test-project');
 
   await page.getByRole('button', { name: /donate/i }).click();
   await page.getByRole('textbox', { name: /amount/i }).fill('0.001');
@@ -160,7 +160,7 @@ tests/                        # Integration and E2E tests
   /e2e/                       # Playwright E2E tests
     /auth/                    # Authentication flows
     /donations/               # Donation flows
-    /campaigns/               # Campaign management
+    /projects/               # Campaign management
   /integration/               # Jest integration tests
   /performance/               # Performance tests
   /security/                  # Security tests
@@ -206,7 +206,7 @@ export const createTestUser = (overrides = {}) => ({
 });
 
 export const createTestCampaign = (overrides = {}) => ({
-  id: 'test-campaign-id',
+  id: 'test-project-id',
   title: 'Test Campaign',
   goalAmount: 1000000, // in sats
   ...overrides
@@ -313,7 +313,7 @@ test('should handle concurrent user load', async () => {
 
   // Simulate concurrent users
   await Promise.all(
-    pages.map(page => page.goto('/campaign/test-campaign'))
+    pages.map(page => page.goto('/project/test-project'))
   );
 
   // Verify system remains responsive

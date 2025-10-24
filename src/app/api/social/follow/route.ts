@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { logger } from '@/utils/logger'
 
 async function handleFollow(request: AuthenticatedRequest) {
@@ -84,9 +84,6 @@ async function handleFollow(request: AuthenticatedRequest) {
 }
 
 export const POST = withAuth(handleFollow)
-
-
-
 
 
 

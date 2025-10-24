@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { profileSchema, normalizeProfileData, type ProfileData } from '@/lib/validation'
 import { handleApiError, AuthError, ValidationError, NotFoundError } from '@/lib/errors'
 

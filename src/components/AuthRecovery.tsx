@@ -5,7 +5,7 @@ import { AlertCircle, RefreshCw, Mail, Key, CheckCircle } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import { useAuth } from '@/hooks/useAuth'
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 
 interface AuthRecoveryProps {
   error: string

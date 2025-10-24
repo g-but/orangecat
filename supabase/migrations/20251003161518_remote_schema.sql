@@ -489,11 +489,38 @@ alter table "public"."organizations" drop constraint "organizations_status_check
 
 alter table "public"."organizations" drop constraint "organizations_type_check";
 
-alter table "public"."profiles" drop constraint "profiles_kyc_status_check";
+-- Safely drop kyc_status constraint if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'profiles_kyc_status_check'
+  ) THEN
+    ALTER TABLE profiles DROP CONSTRAINT profiles_kyc_status_check;
+  END IF;
+END $$;
 
-alter table "public"."profiles" drop constraint "profiles_status_check";
+-- Safely drop status constraint if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'profiles_status_check'
+  ) THEN
+    ALTER TABLE profiles DROP CONSTRAINT profiles_status_check;
+  END IF;
+END $$;
 
-alter table "public"."profiles" drop constraint "profiles_verification_status_check";
+-- Safely drop verification_status constraint if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint 
+    WHERE conname = 'profiles_verification_status_check'
+  ) THEN
+    ALTER TABLE profiles DROP CONSTRAINT profiles_verification_status_check;
+  END IF;
+END $$;
 
 alter table "public"."transactions" drop constraint "transactions_payment_method_check";
 
@@ -796,15 +823,60 @@ alter table "public"."organizations" disable row level security;
 
 alter table "public"."profiles" drop column "banner_url";
 
-alter table "public"."profiles" drop column "bio";
+-- Safely drop bio column if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'profiles' AND column_name = 'bio'
+  ) THEN
+    ALTER TABLE profiles DROP COLUMN bio;
+  END IF;
+END $$;
 
-alter table "public"."profiles" drop column "bitcoin_address";
+-- Safely drop bitcoin_address column if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'profiles' AND column_name = 'bitcoin_address'
+  ) THEN
+    ALTER TABLE profiles DROP COLUMN bitcoin_address;
+  END IF;
+END $$;
 
-alter table "public"."profiles" drop column "bitcoin_balance";
+-- Safely drop bitcoin_balance column if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'profiles' AND column_name = 'bitcoin_balance'
+  ) THEN
+    ALTER TABLE profiles DROP COLUMN bitcoin_balance;
+  END IF;
+END $$;
 
-alter table "public"."profiles" drop column "bitcoin_public_key";
+-- Safely drop bitcoin_public_key column if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'profiles' AND column_name = 'bitcoin_public_key'
+  ) THEN
+    ALTER TABLE profiles DROP COLUMN bitcoin_public_key;
+  END IF;
+END $$;
 
-alter table "public"."profiles" drop column "campaign_count";
+-- Safely drop campaign_count column if it exists
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'profiles' AND column_name = 'campaign_count'
+  ) THEN
+    ALTER TABLE profiles DROP COLUMN campaign_count;
+  END IF;
+END $$;
 
 alter table "public"."profiles" drop column "cover_image_url";
 

@@ -5,13 +5,13 @@ import { Campaign } from '@/stores/campaignStore'
 import CampaignManagement from './CampaignManagement'
 
 interface CampaignDetailsModalProps {
-  campaign: Campaign | null
+  project: Campaign | null
   isOpen: boolean
   onClose: () => void
 }
 
-export default function CampaignDetailsModal({ campaign, isOpen, onClose }: CampaignDetailsModalProps) {
-  if (!isOpen || !campaign) {return null}
+export default function CampaignDetailsModal({ project, isOpen, onClose }: CampaignDetailsModalProps) {
+  if (!isOpen || !project) {return null}
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
@@ -37,7 +37,7 @@ export default function CampaignDetailsModal({ campaign, isOpen, onClose }: Camp
           
           {/* Content */}
           <div className="p-6">
-            <CampaignManagement campaign={campaign} onClose={onClose} />
+            <CampaignManagement project={project} onClose={onClose} />
           </div>
         </div>
       </div>

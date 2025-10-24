@@ -1,4 +1,5 @@
-import { createServerClient } from '@/lib/db'
+import { logger } from '@/utils/logger'
+import { createServerClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 interface CreateOrganizationRequest {
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (orgError) {
-      console.error('Organization creation error:', orgError)
+      logger.error('Organization creation error:', orgError)
       return NextResponse.json(
         { error: `Failed to create organization: ${orgError.message}` },
         { status: 500 }
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (memberError) {
-      console.error('Membership creation error:', memberError)
+      logger.error('Membership creation error:', memberError)
       // Organization was created but membership failed - this is a partial failure
       // In a transaction system, we'd rollback, but with Supabase we continue
       return NextResponse.json(
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
     )
 
   } catch (error) {
-    console.error('Error creating organization:', error)
+    logger.error('Error creating organization:', error)
     return NextResponse.json(
       { error: 'Failed to create organization' },
       { status: 500 }

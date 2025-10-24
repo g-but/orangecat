@@ -5,42 +5,39 @@ export interface Database {
         Row: {
           id: string
           username: string | null
-          display_name: string | null
+          name: string | null
           bio: string | null
-          location: string | null
           avatar_url: string | null
-          banner_url: string | null
-          website: string | null
           bitcoin_address: string | null
           lightning_address: string | null
+          verification_status: string | null
+          status: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id: string
           username?: string | null
-          display_name?: string | null
+          name?: string | null
           bio?: string | null
-          location?: string | null
           avatar_url?: string | null
-          banner_url?: string | null
-          website?: string | null
           bitcoin_address?: string | null
           lightning_address?: string | null
+          verification_status?: string | null
+          status?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           username?: string | null
-          display_name?: string | null
+          name?: string | null
           bio?: string | null
-          location?: string | null
           avatar_url?: string | null
-          banner_url?: string | null
-          website?: string | null
           bitcoin_address?: string | null
           lightning_address?: string | null
+          verification_status?: string | null
+          status?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -89,21 +86,27 @@ export interface Database {
           updated_at?: string
         }
       }
-      campaigns: {
+      projects: {
         Row: {
           id: string
           title: string
           description: string
-          goal_amount: number
+          goal_amount: number | null
+          goal_currency: string | null
+          funding_purpose: string | null
           current_amount: number
           currency: string
           status: string
           creator_id: string
           organization_id: string | null
-          project_id: string | null
           bitcoin_address: string | null
           lightning_address: string | null
           featured: boolean
+          start_date: string | null
+          target_completion: string | null
+          category: string | null
+          tags: string[] | null
+          metadata: Json | null
           created_at: string
           updated_at: string
         }
@@ -111,16 +114,22 @@ export interface Database {
           id?: string
           title: string
           description: string
-          goal_amount: number
+          goal_amount?: number | null
+          goal_currency?: string | null
+          funding_purpose?: string | null
           current_amount?: number
           currency?: string
           status?: string
           creator_id: string
           organization_id?: string | null
-          project_id?: string | null
           bitcoin_address?: string | null
           lightning_address?: string | null
           featured?: boolean
+          start_date?: string | null
+          target_completion?: string | null
+          category?: string | null
+          tags?: string[] | null
+          metadata?: Json | null
           created_at?: string
           updated_at?: string
         }
@@ -128,65 +137,110 @@ export interface Database {
           id?: string
           title?: string
           description?: string
-          goal_amount?: number
+          goal_amount?: number | null
+          goal_currency?: string | null
+          funding_purpose?: string | null
           current_amount?: number
           currency?: string
           status?: string
           creator_id?: string
           organization_id?: string | null
-          project_id?: string | null
           bitcoin_address?: string | null
           lightning_address?: string | null
           featured?: boolean
+          start_date?: string | null
+          target_completion?: string | null
+          category?: string | null
+          tags?: string[] | null
+          metadata?: Json | null
           created_at?: string
           updated_at?: string
         }
       }
-      donations: {
+      transactions: {
         Row: {
           id: string
-          campaign_id: string
-          donor_id: string | null
-          amount: number
+          amount_sats: number
           currency: string
+          from_entity_type: string
+          from_entity_id: string
+          to_entity_type: string
+          to_entity_id: string
           payment_method: string
           transaction_hash: string | null
           lightning_payment_hash: string | null
+          payment_proof: string | null
           status: string
+          fee_sats: number
+          exchange_rate: number | null
           anonymous: boolean
           message: string | null
-          created_at: string
+          purpose: string | null
+          tags: string[] | null
+          public_visibility: boolean
+          audit_trail: Json | null
+          verification_status: string | null
+          initiated_at: string | null
           confirmed_at: string | null
+          settled_at: string | null
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
-          campaign_id: string
-          donor_id?: string | null
-          amount: number
+          amount_sats: number
           currency?: string
+          from_entity_type: string
+          from_entity_id: string
+          to_entity_type: string
+          to_entity_id: string
           payment_method: string
           transaction_hash?: string | null
           lightning_payment_hash?: string | null
+          payment_proof?: string | null
           status?: string
+          fee_sats?: number
+          exchange_rate?: number | null
           anonymous?: boolean
           message?: string | null
-          created_at?: string
+          purpose?: string | null
+          tags?: string[] | null
+          public_visibility?: boolean
+          audit_trail?: Json | null
+          verification_status?: string | null
+          initiated_at?: string | null
           confirmed_at?: string | null
+          settled_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
-          campaign_id?: string
-          donor_id?: string | null
-          amount?: number
+          amount_sats?: number
           currency?: string
+          from_entity_type?: string
+          from_entity_id?: string
+          to_entity_type?: string
+          to_entity_id?: string
           payment_method?: string
           transaction_hash?: string | null
           lightning_payment_hash?: string | null
+          payment_proof?: string | null
           status?: string
+          fee_sats?: number
+          exchange_rate?: number | null
           anonymous?: boolean
           message?: string | null
-          created_at?: string
+          purpose?: string | null
+          tags?: string[] | null
+          public_visibility?: boolean
+          audit_trail?: Json | null
+          verification_status?: string | null
+          initiated_at?: string | null
           confirmed_at?: string | null
+          settled_at?: string | null
+          created_at?: string
+          updated_at?: string
         }
       }
       organization_members: {
@@ -325,30 +379,27 @@ export interface Database {
 
 // Helper types
 export type Profile = Database['public']['Tables']['profiles']['Row']
-export type Campaign = Database['public']['Tables']['campaigns']['Row']
-export type Donation = Database['public']['Tables']['donations']['Row']
+export type Project = Database['public']['Tables']['projects']['Row']
+export type Transaction = Database['public']['Tables']['transactions']['Row']
 export type Organization = Database['public']['Tables']['organizations']['Row']
 export type OrganizationMember = Database['public']['Tables']['organization_members']['Row']
-export type Project = Database['public']['Tables']['projects']['Row']
 
 export type ProfileInsert = Database['public']['Tables']['profiles']['Insert']
-export type CampaignInsert = Database['public']['Tables']['campaigns']['Insert']
-export type DonationInsert = Database['public']['Tables']['donations']['Insert']
+export type ProjectInsert = Database['public']['Tables']['projects']['Insert']
+export type TransactionInsert = Database['public']['Tables']['transactions']['Insert']
 export type OrganizationInsert = Database['public']['Tables']['organizations']['Insert']
 export type OrganizationMemberInsert = Database['public']['Tables']['organization_members']['Insert']
-export type ProjectInsert = Database['public']['Tables']['projects']['Insert']
 
 export type ProfileUpdate = Database['public']['Tables']['profiles']['Update']
-export type CampaignUpdate = Database['public']['Tables']['campaigns']['Update']
-export type DonationUpdate = Database['public']['Tables']['donations']['Update']
+export type ProjectUpdate = Database['public']['Tables']['projects']['Update']
+export type TransactionUpdate = Database['public']['Tables']['transactions']['Update']
 export type OrganizationUpdate = Database['public']['Tables']['organizations']['Update']
 export type OrganizationMemberUpdate = Database['public']['Tables']['organization_members']['Update']
-export type ProjectUpdate = Database['public']['Tables']['projects']['Update']
 
 // Form data types for profile operations
 export type ProfileFormData = {
   username?: string | null
-  display_name?: string | null
+  name?: string | null
   bio?: string | null
   location?: string | null
   avatar_url?: string | null
@@ -356,6 +407,32 @@ export type ProfileFormData = {
   website?: string | null
   bitcoin_address?: string | null
   lightning_address?: string | null
+}
+
+// Form data types for entity operations
+export type ProjectFormData = {
+  title: string
+  description: string
+  goal_amount?: number | null
+  currency?: string
+  start_date?: string | null
+  target_completion?: string | null
+  category?: string | null
+  tags?: string[]
+  organization_id?: string | null
+}
+
+export type TransactionFormData = {
+  amount_sats: number
+  from_entity_type: 'profile' | 'organization' | 'project'
+  from_entity_id: string
+  to_entity_type: 'profile' | 'organization' | 'project'
+  to_entity_id: string
+  payment_method: 'bitcoin' | 'lightning' | 'on-chain' | 'off-chain'
+  message?: string | null
+  purpose?: string | null
+  anonymous?: boolean
+  public_visibility?: boolean
 }
 
 export type ProfileData = Profile
@@ -370,6 +447,26 @@ export type OrganizationFormData = {
   website?: string | null
   bitcoin_address?: string | null
   lightning_address?: string | null
+}
+
+// Form data types for settings operations
+export type ProfileFormData = {
+  username: string
+  name?: string
+  bio?: string
+  avatar_url?: string
+  banner_url?: string
+  website?: string
+  bitcoin_address?: string
+  lightning_address?: string
+  location?: string
+}
+
+// Form data types for password operations
+export type PasswordFormData = {
+  currentPassword: string
+  newPassword: string
+  confirmPassword: string
 }
 
 // Form data types for project operations
@@ -394,11 +491,11 @@ export type ProjectFormData = {
 // Permission types for organization members
 export type OrganizationPermissions = {
   can_edit_org?: boolean
-  can_create_campaigns?: boolean
+  can_create_projects?: boolean
   can_invite_members?: boolean
   can_manage_funds?: boolean
   can_remove_members?: boolean
-  can_edit_campaigns?: boolean
+  can_edit_projects?: boolean
 }
 
 // Extended types with relationships
@@ -407,13 +504,16 @@ export type OrganizationWithMembers = Organization & {
   member_count?: number
 }
 
-export type ProjectWithCampaigns = Project & {
-  campaigns?: Campaign[]
-  campaign_count?: number
+export type ProjectWithSubprojects = Project & {
+  subprojects?: Project[]
+  subproject_count?: number
 }
 
-export type CampaignWithProject = Campaign & {
-  project?: Project | null
+// Extended project type with additional computed fields
+export type ProjectWithStats = Project & {
+  total_donations?: number
+  donor_count?: number
+  days_remaining?: number | null
 }
 
 export type ProfileWithOrganizations = Profile & {

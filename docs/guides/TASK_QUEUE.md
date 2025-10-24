@@ -4,13 +4,13 @@
 - [ ] **Bitcoin Integration Enhancement** (Owner: TBD, ETA: TBD)
   - Description: Enhance Lightning Network integration and Bitcoin payment processing
 - [ ] **Campaign Management API** (Owner: TBD, ETA: TBD)
-  - Description: REST API for campaign creation, updates, and funding management
+  - Description: REST API for project creation, updates, and funding management
 - [ ] **Transparency Features** (Owner: TBD, ETA: TBD)
   - Description: Real-time transaction tracking and transparency scoring system
 
 ## Priority 2 (Medium)
 - [ ] **Advanced Analytics Dashboard** (Owner: TBD, ETA: TBD)
-  - Description: React dashboard for campaign insights and funding analytics
+  - Description: React dashboard for project insights and funding analytics
 - [ ] **Mobile App Enhancement** (Owner: TBD, ETA: TBD)
   - Description: Progressive Web App improvements and mobile Bitcoin wallet integration
 

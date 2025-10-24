@@ -141,20 +141,20 @@ npm run bundle:check
 #### Database Indexing
 ```sql
 -- Add performance indexes
-CREATE INDEX idx_campaigns_active_created 
-ON campaigns(created_at DESC) 
+CREATE INDEX idx_projects_active_created 
+ON projects(created_at DESC) 
 WHERE status = 'active';
 
 -- Composite indexes for common queries
-CREATE INDEX idx_campaigns_user_status 
-ON campaigns(user_id, status, created_at DESC);
+CREATE INDEX idx_projects_user_status 
+ON projects(user_id, status, created_at DESC);
 ```
 
 #### Query Optimization
 ```typescript
 // Use specific columns instead of SELECT *
 const { data } = await supabase
-  .from('campaigns')
+  .from('projects')
   .select('id, title, status') // Only needed columns
   .eq('status', 'active')
   .limit(20);
@@ -270,11 +270,11 @@ const HeavyComponent = lazy(() => import('./HeavyComponent'));
 **Solutions:**
 ```sql
 -- Add missing indexes
-CREATE INDEX idx_campaigns_status_created 
-ON campaigns(status, created_at DESC);
+CREATE INDEX idx_projects_status_created 
+ON projects(status, created_at DESC);
 
 -- Optimize query patterns
-SELECT id, title FROM campaigns WHERE status = 'active' ORDER BY created_at DESC;
+SELECT id, title FROM projects WHERE status = 'active' ORDER BY created_at DESC;
 ```
 
 ### Inefficient Re-renders

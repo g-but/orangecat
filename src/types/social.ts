@@ -128,115 +128,7 @@ export interface OrganizationFormData {
   settings?: Partial<Organization['settings']>
 }
 
-// =====================================================================
-// 🚀 PROJECTS
-// =====================================================================
-
-export interface Project {
-  id: string
-  name: string
-  description: string
-  detailed_description?: string
-  
-  // Project classification
-  category: 'fundraising' | 'development' | 'research' | 'community' | 'education' | 'other'
-  tags: string[]
-  
-  // Bitcoin wallet info
-  bitcoin_address: string
-  lightning_address?: string
-  wallet_balance: number
-  funding_goal?: number
-  total_raised: number
-  total_spent: number
-  
-  // Project status
-  status: 'planning' | 'active' | 'completed' | 'paused' | 'cancelled'
-  visibility: 'public' | 'private' | 'organization_only'
-  
-  // Timeline
-  start_date?: string
-  end_date?: string
-  deadline?: string
-  
-  // Ownership
-  created_by: string
-  organization_id?: string
-  
-  // Team
-  team_size: number
-  max_team_size?: number
-  
-  // Media
-  logo_url?: string
-  banner_url?: string
-  images?: string[]
-  
-  // Metadata
-  created_at: string
-  updated_at: string
-  
-  // Social & Contact
-  website?: string
-  social_links: Record<string, string>
-  
-  // Settings
-  settings: {
-    allow_public_contributions: boolean
-    require_approval_to_join: boolean
-    public_transactions: boolean
-    milestone_based: boolean
-    voting_enabled: boolean
-  }
-  
-  // Populated fields
-  creator?: ScalableProfile
-  organization?: Organization
-  team_members?: ProjectMember[]
-  milestones?: ProjectMilestone[]
-}
-
-export interface ProjectMember {
-  id: string
-  project_id: string
-  user_id: string
-  role: 'owner' | 'lead' | 'contributor' | 'supporter'
-  permissions: string[]
-  joined_at: string
-  contribution_type?: string[]
-  
-  // Populated fields
-  user?: ScalableProfile
-}
-
-export interface ProjectMilestone {
-  id: string
-  project_id: string
-  title: string
-  description: string
-  funding_target?: number
-  deadline?: string
-  status: 'pending' | 'in_progress' | 'completed' | 'missed'
-  created_at: string
-  completed_at?: string
-}
-
-export interface ProjectFormData {
-  name: string
-  description: string
-  detailed_description?: string
-  category: Project['category']
-  tags?: string[]
-  funding_goal?: number
-  start_date?: string
-  end_date?: string
-  deadline?: string
-  organization_id?: string
-  visibility: Project['visibility']
-  website?: string
-  social_links?: Record<string, string>
-  settings?: Partial<Project['settings']>
-}
+// All entities consolidated into projects for unified architecture
 
 // =====================================================================
 // 🔍 SEARCH & DISCOVERY
@@ -360,7 +252,6 @@ export interface SocialAnalytics {
   average_contribution: number
   
   // Engagement
-  profile_views: number
   collaboration_score: number
   reputation_score: number
 }
@@ -478,14 +369,14 @@ export interface ApplicationWithDetails extends OrganizationApplication {
   applicant: {
     id: string
     username?: string
-    display_name?: string
+    name?: string
     avatar_url?: string
     bio?: string
   }
   reviewer?: {
     id: string
     username?: string
-    display_name?: string
+    name?: string
   }
 }
 
@@ -529,13 +420,13 @@ export interface InvitationWithDetails extends OrganizationInvitation {
   inviter: {
     id: string
     username?: string
-    display_name?: string
+    name?: string
     avatar_url?: string
   }
   invitee?: {
     id: string
     username?: string
-    display_name?: string
+    name?: string
     avatar_url?: string
   }
 }
@@ -551,7 +442,7 @@ export type PaymentStatus = 'pending' | 'confirmed' | 'failed' | 'refunded'
 export interface CollaborationParticipant {
   user_id: string
   username?: string
-  display_name?: string
+  name?: string
   avatar_url?: string
   amount: number
   percentage?: number
@@ -611,7 +502,7 @@ export interface CollaborationWithDetails extends BitcoinCollaboration {
   initiator: {
     id: string
     username?: string
-    display_name?: string
+    name?: string
     avatar_url?: string
   }
   payments: CollaborationPayment[]

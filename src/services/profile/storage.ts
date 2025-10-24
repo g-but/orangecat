@@ -7,7 +7,7 @@
  * Last Modified Summary: Created to handle profile image uploads
  */
 
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
 
 export interface FileUploadResult {

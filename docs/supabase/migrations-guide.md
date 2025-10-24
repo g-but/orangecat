@@ -26,9 +26,9 @@ The database consists of three main tables:
    - Contains optional fields like username, display_name, website, etc.
 
 2. **funding_pages**
-   - Stores crowdfunding campaign information
+   - Stores crowdfunding project information
    - Links to profiles via user_id
-   - Tracks campaign status, goals, and current funding
+   - Tracks project status, goals, and current funding
 
 3. **transactions**
    - Records donations and payments

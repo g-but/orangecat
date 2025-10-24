@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger'
 /**
  * Mempool API Service
  * Fetches Bitcoin address balance and transaction data from mempool.space
@@ -79,13 +80,13 @@ export async function getAddressStats(address: string): Promise<AddressStats | n
     })
 
     if (!response.ok) {
-      console.error(`Mempool API error: ${response.status}`)
+      logger.error(`Mempool API error: ${response.status}`)
       return null
     }
 
     return await response.json()
   } catch (error) {
-    console.error('Failed to fetch address stats:', error)
+    logger.error('Failed to fetch address stats:', error)
     return null
   }
 }
@@ -116,14 +117,14 @@ export async function getAddressTransactions(
     })
 
     if (!response.ok) {
-      console.error(`Mempool API error: ${response.status}`)
+      logger.error(`Mempool API error: ${response.status}`)
       return []
     }
 
     const txs: MempoolTransaction[] = await response.json()
     return txs.slice(0, limit)
   } catch (error) {
-    console.error('Failed to fetch transactions:', error)
+    logger.error('Failed to fetch transactions:', error)
     return []
   }
 }

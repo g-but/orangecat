@@ -223,7 +223,7 @@ export const fundingTools = [
   },
   {
     name: 'GoFundMe',
-    description: 'Personal fundraising campaigns',
+    description: 'Personal fundraising projects',
     url: 'https://gofundme.com',
     icon: Heart,
     color: 'bg-red-100 text-red-600'

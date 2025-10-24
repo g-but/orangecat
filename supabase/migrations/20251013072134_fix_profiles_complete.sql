@@ -130,7 +130,7 @@ BEGIN
   INSERT INTO public.profiles (
     id,
     username,
-    display_name,
+    name,
     email,
     status,
     created_at,
@@ -139,7 +139,7 @@ BEGIN
     new.id,
     -- Use email as initial username, or generate from user ID if no email
     COALESCE(new.email, 'user_' || substring(new.id::text, 1, 8)),
-    -- Try multiple sources for display name, with fallback to email username
+    -- Try multiple sources for name, with fallback to email username
     COALESCE(
       new.raw_user_meta_data->>'full_name',
       new.raw_user_meta_data->>'name',
@@ -165,8 +165,8 @@ END;
 $$;
 
 -- Add helpful comment
-COMMENT ON FUNCTION public.handle_new_user() IS 
-  'Automatically creates a profile when a new user signs up. Uses email for initial username and extracts display name from user metadata or email.';
+COMMENT ON FUNCTION public.handle_new_user() IS
+  'Automatically creates a profile when a new user signs up. Uses email for initial username and extracts name from user metadata or email.';
 
 -- =====================================================================
 -- STEP 4: VERIFY TRIGGER EXISTS (READ-ONLY CHECK)
@@ -241,29 +241,41 @@ CREATE POLICY "Users can delete own profile"
 -- STEP 6: ADD PERFORMANCE INDEXES
 -- =====================================================================
 
--- Core indexes
+-- Core indexes (only for existing columns)
 CREATE INDEX IF NOT EXISTS idx_profiles_username ON public.profiles(username) WHERE username IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email) WHERE email IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_profiles_status ON public.profiles(status);
 CREATE INDEX IF NOT EXISTS idx_profiles_verification_status ON public.profiles(verification_status);
 CREATE INDEX IF NOT EXISTS idx_profiles_created_at ON public.profiles(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_profiles_updated_at ON public.profiles(updated_at DESC);
 
--- Analytics indexes
-CREATE INDEX IF NOT EXISTS idx_profiles_follower_count ON public.profiles(follower_count DESC) WHERE follower_count > 0;
-CREATE INDEX IF NOT EXISTS idx_profiles_total_raised ON public.profiles(total_raised DESC) WHERE total_raised > 0;
+-- Only create analytics indexes if the columns exist
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'follower_count') THEN
+    CREATE INDEX IF NOT EXISTS idx_profiles_follower_count ON public.profiles(follower_count DESC) WHERE follower_count > 0;
+  END IF;
 
--- Search indexes (for username and display_name search)
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'total_raised') THEN
+    CREATE INDEX IF NOT EXISTS idx_profiles_total_raised ON public.profiles(total_raised DESC) WHERE total_raised > 0;
+  END IF;
+END $$;
+
+-- Search indexes (for username and name search)
 -- These require pg_trgm extension - create if possible, skip if not
 DO $$
 BEGIN
   -- Try to enable pg_trgm extension
   CREATE EXTENSION IF NOT EXISTS pg_trgm;
-  
+
   -- Create trigram indexes if extension is available
   IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_trgm') THEN
     CREATE INDEX IF NOT EXISTS idx_profiles_username_trgm ON public.profiles USING gin(username gin_trgm_ops) WHERE username IS NOT NULL;
-    CREATE INDEX IF NOT EXISTS idx_profiles_display_name_trgm ON public.profiles USING gin(display_name gin_trgm_ops) WHERE display_name IS NOT NULL;
+
+    -- Check if column exists before creating index
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'name') THEN
+      CREATE INDEX IF NOT EXISTS idx_profiles_name_trgm ON public.profiles USING gin(name gin_trgm_ops) WHERE name IS NOT NULL;
+    END IF;
+
     RAISE NOTICE 'Created trigram search indexes';
   ELSE
     RAISE NOTICE 'Skipping trigram indexes - pg_trgm extension not available';

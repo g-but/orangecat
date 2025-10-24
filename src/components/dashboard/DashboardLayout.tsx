@@ -18,7 +18,7 @@ export default function DashboardLayout({ children, user, profile }: DashboardLa
   return (
     <div className="w-full">
       {/* Show CTA only if profile is missing required fields */}
-      {profile && (!profile.username || !profile.display_name || !profile.bio || !profile.bitcoin_address) && (
+      {profile && (!profile.username || !profile.name || !profile.bio || !profile.bitcoin_address) && (
         <div className="mb-6 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 rounded">
           <div className="flex">
             <div className="py-1"><AlertCircle className="h-5 w-5 text-yellow-500 mr-3" /></div>

@@ -21,15 +21,14 @@ import Card from '@/components/ui/Card'
 interface Person {
   id: string
   username?: string
-  display_name?: string
+  name?: string
   bio?: string
   avatar_url?: string
   website?: string
   bitcoin_address?: string
   lightning_address?: string
   created_at: string
-  profile_views?: number
-  campaign_count?: number
+  project_count?: number
   total_raised?: number
 }
 
@@ -84,7 +83,7 @@ export default function PersonCard({
             {person.avatar_url ? (
               <img 
                 src={person.avatar_url} 
-                alt={person.display_name || person.username} 
+                alt={person.name || person.username} 
                 className="w-full h-full rounded-full object-cover"
               />
             ) : (
@@ -98,11 +97,11 @@ export default function PersonCard({
         
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 truncate">
-            {person.display_name || person.username || 'Anonymous User'}
+            {person.name || person.username || 'Anonymous User'}
           </h3>
           
           <div className="flex items-center space-x-2 mb-2">
-            {person.username && person.display_name && (
+            {person.username && person.name && (
               <span className="text-sm text-gray-500">@{person.username}</span>
             )}
             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${typeColor}`}>
@@ -119,16 +118,10 @@ export default function PersonCard({
           
           {/* Stats */}
           <div className="flex items-center space-x-4 mb-4 text-xs text-gray-500">
-            {person.profile_views && (
-              <div className="flex items-center">
-                <Users className="w-3 h-3 mr-1" />
-                {person.profile_views} views
-              </div>
-            )}
-            {person.campaign_count && person.campaign_count > 0 && (
+            {person.project_count && person.project_count > 0 && (
               <div className="flex items-center">
                 <Briefcase className="w-3 h-3 mr-1" />
-                {person.campaign_count} campaigns
+                {person.project_count} projects
               </div>
             )}
             {person.total_raised && person.total_raised > 0 && (

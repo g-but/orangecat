@@ -290,26 +290,52 @@ create trigger on_auth_user_created
 -- INDEXES FOR PERFORMANCE
 -- =====================================================================
 
--- Profile indexes
-create index if not exists idx_profiles_username on public.profiles(username);
-create index if not exists idx_profiles_status on public.profiles(status);
-create index if not exists idx_profiles_verification_status on public.profiles(verification_status);
-create index if not exists idx_profiles_created_at on public.profiles(created_at);
+-- Profile indexes (only for existing columns)
+create index if not exists idx_profiles_username on public.profiles(username) WHERE username IS NOT NULL;
 
--- Campaign indexes
-create index if not exists idx_campaigns_user_id on public.campaigns(user_id);
-create index if not exists idx_campaigns_status on public.campaigns(status);
-create index if not exists idx_campaigns_created_at on public.campaigns(created_at);
+-- Only create indexes for columns that exist
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'status') THEN
+    CREATE INDEX IF NOT EXISTS idx_profiles_status ON public.profiles(status);
+  END IF;
 
--- Funding page indexes
-create index if not exists idx_funding_pages_user_id on public.funding_pages(user_id);
-create index if not exists idx_funding_pages_status on public.funding_pages(status);
-create index if not exists idx_funding_pages_created_at on public.funding_pages(created_at);
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'profiles' AND column_name = 'verification_status') THEN
+    CREATE INDEX IF NOT EXISTS idx_profiles_verification_status ON public.profiles(verification_status);
+  END IF;
+END $$;
 
--- Transaction indexes
-create index if not exists idx_transactions_funding_page_id on public.transactions(funding_page_id);
-create index if not exists idx_transactions_user_id on public.transactions(user_id);
-create index if not exists idx_transactions_status on public.transactions(status);
+create index if not exists idx_profiles_created_at on public.profiles(created_at) WHERE created_at IS NOT NULL;
+
+-- Project indexes (renamed from campaigns) - only create if table exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'projects') THEN
+    CREATE INDEX IF NOT EXISTS idx_projects_creator_id ON public.projects(creator_id);
+    CREATE INDEX IF NOT EXISTS idx_projects_status ON public.projects(status);
+    CREATE INDEX IF NOT EXISTS idx_projects_created_at ON public.projects(created_at);
+  END IF;
+END $$;
+
+-- Funding page indexes (only create if table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'funding_pages') THEN
+    CREATE INDEX IF NOT EXISTS idx_funding_pages_user_id ON public.funding_pages(user_id);
+    CREATE INDEX IF NOT EXISTS idx_funding_pages_status ON public.funding_pages(status);
+    CREATE INDEX IF NOT EXISTS idx_funding_pages_created_at ON public.funding_pages(created_at);
+  END IF;
+END $$;
+
+-- Transaction indexes (only create if table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'transactions') THEN
+    CREATE INDEX IF NOT EXISTS idx_transactions_funding_page_id ON public.transactions(funding_page_id);
+    CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON public.transactions(user_id);
+    CREATE INDEX IF NOT EXISTS idx_transactions_status ON public.transactions(status);
+  END IF;
+END $$;
 create index if not exists idx_transactions_created_at on public.transactions(created_at);
 
 -- =====================================================================

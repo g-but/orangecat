@@ -235,7 +235,7 @@ export function createValidationMiddleware(
  */
 export const profileValidationSchema = {
   username: isValidUsername,
-  display_name: isValidDisplayName,
+  name: isValidDisplayName,
   bio: isValidBio,
   bitcoin_address: isValidBitcoinAddress,
   avatar_url: isValidUrl

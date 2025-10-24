@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 
 const cache = new Map<string, { t: number; data: any }>()
 const CACHE_TTL_MS = 10_000
@@ -13,23 +13,23 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
     const supabase = await createServerClient()
     const { data: project } = await supabase
       .from('projects')
-      .select('id, bitcoin_address, is_public, owner_type, owner_id')
+      .select('id, bitcoin_address, is_public, user_id, organization_id')
       .eq('id', params.id)
       .single()
-    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    if (!project) return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
 
     if (!project.is_public) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-      if (project.owner_type === 'organization') {
+      if (project.organization_id) {
         const { data: member } = await supabase
           .from('memberships')
           .select('status')
-          .eq('organization_id', project.owner_id)
+          .eq('organization_id', project.organization_id)
           .eq('profile_id', user.id)
           .single()
         if (!member || member.status !== 'active') return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-      } else if (project.owner_type === 'profile' && project.owner_id !== user.id) {
+      } else if (project.user_id !== user.id) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
     }

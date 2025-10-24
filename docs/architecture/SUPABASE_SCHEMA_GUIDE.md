@@ -40,10 +40,10 @@ This is our custom table that extends user information beyond what Supabase Auth
 | `created_at` | timestamp | ❌ | When profile was created |
 | `updated_at` | timestamp | ❌ | Last profile update |
 
-### 3. `public.funding_pages` (Crowdfunding Campaigns)
-Stores information about crowdfunding campaigns created by users.
+### 3. `public.funding_pages` (Crowdfunding Projects)
+Stores information about crowdfunding projects created by users.
 
-**Purpose**: Manage crowdfunding campaigns and projects
+**Purpose**: Manage crowdfunding projects and projects
 **Linked to**: `auth.users` via `user_id`
 
 | Column | Type | Description |
@@ -53,8 +53,8 @@ Stores information about crowdfunding campaigns created by users.
 | `title` | text | Campaign title |
 | `description` | text | Campaign description |
 | `bitcoin_address` | text | Bitcoin address for donations |
-| `is_active` | boolean | Whether campaign is active |
-| `is_public` | boolean | Whether campaign is publicly visible |
+| `is_active` | boolean | Whether project is active |
+| `is_public` | boolean | Whether project is publicly visible |
 | `total_funding` | decimal | Total amount raised |
 | `contributor_count` | integer | Number of contributors |
 | `created_at` | timestamp | Campaign creation date |
@@ -117,12 +117,12 @@ CREATE POLICY "Users can update their own profile"
 
 ### Funding Pages Policies
 ```sql
--- Public campaigns are viewable by everyone
+-- Public projects are viewable by everyone
 CREATE POLICY "Public funding pages are viewable by everyone"
   ON public.funding_pages FOR SELECT
   USING (is_public = true);
 
--- Users can only manage their own campaigns
+-- Users can only manage their own projects
 CREATE POLICY "Users can manage their own funding pages"
   ON public.funding_pages FOR ALL
   USING (auth.uid() = user_id);

@@ -30,7 +30,7 @@ export { ProfileReader } from './reader';
 export { ProfileWriter } from './writer';
 
 // Main service class that combines all operations
-import supabase from '@/services/supabase/client';
+import supabase from '@/lib/supabase/browser';
 import { ProfileReader } from './reader';
 import { ProfileWriter } from './writer';
 import type { ScalableProfile, ScalableProfileFormData, ProfileAnalytics, ProfileServiceResponse } from './types';

@@ -1,3 +1,13 @@
+/**
+ * ⚠️ DEPRECATED: This file is deprecated and will be removed in a future version.
+ *
+ * Please use the unified Supabase server client instead:
+ * - For server/API routes: import from '@/lib/supabase/server'
+ *
+ * Migration completed: 2025-10-23
+ * Scheduled for removal: After all consumers are migrated
+ */
+
 import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies as getNextCookies } from 'next/headers'
 import { Database } from '@/types/database'
@@ -6,6 +16,13 @@ import { SupabaseClient } from '@supabase/supabase-js'
 // Environment variables with fallbacks for build time
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+
+// Log deprecation warning in development
+if (process.env.NODE_ENV === 'development') {
+  console.warn(
+    '⚠️ DEPRECATED: @/services/supabase/server is deprecated. Use @/lib/supabase/server instead.'
+  )
+}
 
 // Warn if using fallback values in production
 if ((!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) && process.env.NODE_ENV === 'production') {

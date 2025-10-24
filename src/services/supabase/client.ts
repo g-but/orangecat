@@ -1,8 +1,28 @@
+/**
+ * ⚠️ DEPRECATED: This file is deprecated and will be removed in a future version.
+ *
+ * Please use the unified Supabase clients instead:
+ * - For browser/client components: import from '@/lib/supabase/browser'
+ * - For server/API routes: import from '@/lib/supabase/server'
+ *
+ * Migration completed: 2025-10-23
+ * Scheduled for removal: After all consumers are migrated
+ */
+
 'use client'
 
 import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database'
 import { logger } from '@/utils/logger'
+
+// Log deprecation warning in development
+if (process.env.NODE_ENV === 'development') {
+  logger.warn(
+    '⚠️ DEPRECATED: @/services/supabase/client is deprecated. Use @/lib/supabase/browser instead.',
+    undefined,
+    'Supabase'
+  )
+}
 
 // Environment variables with fallbacks for production builds
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'

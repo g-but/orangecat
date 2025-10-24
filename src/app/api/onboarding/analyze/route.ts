@@ -1,3 +1,4 @@
+import { logger } from '@/utils/logger'
 import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -69,9 +70,15 @@ function analyzeDescription(description: string): AnalysisResponse {
   confidence += Math.min(scores.community, 30)
   
   // Boost confidence based on description quality
-  if (description.length > 100) confidence += 15
-  if (description.length > 200) confidence += 10
-  if (description.split('\n').length > 2) confidence += 10
+  if (description.length > 100) {
+    confidence += 15
+  }
+  if (description.length > 200) {
+    confidence += 10
+  }
+  if (description.split('\n').length > 2) {
+    confidence += 10
+  }
   
   // Cap confidence at 100
   confidence = Math.min(confidence, 100)
@@ -94,11 +101,11 @@ function analyzeDescription(description: string): AnalysisResponse {
   } else {
     suggestedSetup = 'personal'
     if (isCharity) {
-      recommendation = 'Your charitable cause can be effectively managed through a personal campaign. This allows you to directly control how funds are used while maintaining transparency.'
+      recommendation = 'Your charitable cause can be effectively managed through a personal project. This allows you to directly control how funds are used while maintaining transparency.'
     } else if (isBusiness) {
-      recommendation = 'A personal campaign is perfect for your business or project. You maintain full control while being transparent with your supporters about how funds are used.'
+      recommendation = 'A personal project is perfect for your business or project. You maintain full control while being transparent with your supporters about how funds are used.'
     } else {
-      recommendation = 'A personal campaign is the ideal fit for your needs. It\'s quick to set up and gives you direct control over your Bitcoin fundraising.'
+      recommendation = 'A personal project is the ideal fit for your needs. It\'s quick to set up and gives you direct control over your Bitcoin fundraising.'
     }
   }
 
@@ -131,7 +138,7 @@ export async function POST(request: NextRequest) {
     
     return NextResponse.json(analysis, { status: 200 })
   } catch (error) {
-    console.error('Error analyzing description:', error)
+    logger.error('Error analyzing description:', error)
     return NextResponse.json(
       { error: 'Failed to analyze description' },
       { status: 500 }

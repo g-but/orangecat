@@ -356,7 +356,7 @@ tests/                        # Integration and E2E tests
   /e2e/                       # Playwright E2E tests
     /auth/                    # Authentication flows
     /donations/               # Donation flows
-    /campaigns/               # Campaign management
+    /projects/               # Campaign management
   /integration/               # Jest integration tests
   /performance/               # Performance tests
   /security/                  # Security tests

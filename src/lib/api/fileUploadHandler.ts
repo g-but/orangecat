@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import supabaseAdmin from '@/services/supabase/admin'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { logger } from '@/utils/logger'
 import { FileUploadValidator } from '@/utils/fileUploadValidation'
 

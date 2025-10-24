@@ -76,7 +76,7 @@ export default function IntelligentOnboarding() {
 
   const handleSetup = (type: 'organization' | 'personal') => {
     if (type === 'organization') router.push('/organizations/create')
-    else router.push('/create')
+    else router.push('/projects/create')
   }
 
   // Step 1: Describe needs
@@ -191,7 +191,7 @@ export default function IntelligentOnboarding() {
             </h2>
             <p className="text-gray-600">{analysis.recommendation || (analysis.isOrganization
               ? 'Based on your description, an organization fits best for collective management and transparency.'
-              : 'Based on your description, a personal campaign fits best for quick setup and individual control.')}
+              : 'Based on your description, a personal project fits best for quick setup and individual control.')}
             </p>
           </div>
 
@@ -211,7 +211,7 @@ export default function IntelligentOnboarding() {
                     ]
                   : [
                       'Get started quickly with a simple setup',
-                      'You have full control over your campaign',
+                      'You have full control over your project',
                       'A personal page to share your story',
                       'Directly connect with your supporters'
                     ]
@@ -297,7 +297,7 @@ export default function IntelligentOnboarding() {
           <Card className="p-4 border-2 border-gray-200 hover:border-gray-300 transition-colors cursor-pointer" onClick={() => router.push('/discover')}>
             <div className="flex items-center gap-3 mb-2">
               <Globe className="w-6 h-6 text-gray-600" />
-              <h3 className="text-lg font-semibold text-gray-800">Explore Campaigns</h3>
+              <h3 className="text-lg font-semibold text-gray-800">Explore Projects</h3>
             </div>
             <p className="text-sm text-gray-600">See how others are using OrangeCat.</p>
           </Card>

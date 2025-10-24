@@ -23,7 +23,7 @@ interface NavigationConfig {
 
 export const navigation: NavigationConfig = {
   main: [
-    { name: 'Fund Yourself', href: '/create' },
+    { name: 'Fund Yourself', href: '/projects/create' },
     { name: 'Discover', href: '/discover' },
     { name: 'Fund Us', href: '/fund-us' },
     { name: 'About', href: '/about' },

@@ -1,7 +1,7 @@
 /**
  * UNIFIED CAMPAIGN SERVICE - SINGLE SOURCE OF TRUTH
  * 
- * This service is the ONLY place where campaign/draft data is managed.
+ * This service is the ONLY place where project/draft data is managed.
  * All other parts of the app should use this service instead of direct database calls.
  * 
  * FIXES:
@@ -12,10 +12,10 @@
  */
 
 import { FundingPage } from '@/types/funding'
-import type { CampaignFormData, CampaignDraftData, safeParseCampaignGoal } from '@/types/campaign'
+import type { CampaignFormData, CampaignDraftData, safeParseCampaignGoal } from '@/types/project'
 import { getErrorMessage, type CatchError } from '@/types/common'
 import { logger } from '@/utils/logger'
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 
 export interface CampaignFilters {
   userId?: string
@@ -62,60 +62,60 @@ export class CampaignService {
 
   /**
    * GET ALL CAMPAIGNS FOR A USER (database + local drafts)
-   * This is the ONLY method to get campaign data
+   * This is the ONLY method to get project data
    */
-  async getAllCampaigns(userId: string): Promise<UnifiedCampaign[]> {
+  async getAllProjects(userId: string): Promise<UnifiedCampaign[]> {
     try {
       // Validate input
       if (!userId || userId.trim() === '') {
         throw new Error('User ID is required')
       }
 
-      // 1. Get all database campaigns
+      // 1. Get all database projects
       const supabase = await this.supabase
-      const { data: dbCampaigns, error } = await supabase
-        .from('funding_pages')
+      const { data: dbProjects, error } = await supabase
+        .from('projects')
         .select('*')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
 
       if (error) {throw error}
 
-      // 2. Convert database campaigns to unified format
-      const unifiedDbCampaigns: UnifiedCampaign[] = (dbCampaigns || []).map((campaign: any) => ({
-        ...campaign,
+      // 2. Convert database projects to unified format
+      const unifiedDbProjects: UnifiedCampaign[] = (dbProjects || []).map((project: any) => ({
+        ...project,
         source: 'database' as const,
-        isDraft: !campaign.is_active && !campaign.is_public,
-        isActive: campaign.is_active && campaign.is_public,
-        isPaused: !campaign.is_active && campaign.is_public
+        isDraft: !project.is_active && !project.is_public,
+        isActive: project.is_active && project.is_public,
+        isPaused: !project.is_active && project.is_public
       }))
 
       // 3. Get local draft if exists
       const localDraft = this.getLocalDraft(userId)
       
       // 4. Merge and deduplicate
-      const allCampaigns: UnifiedCampaign[] = [...unifiedDbCampaigns]
+      const allProjects: UnifiedCampaign[] = [...unifiedDbProjects]
       
       if (localDraft) {
         // Check if local draft is already in database
-        const existingDbVersion = unifiedDbCampaigns.find(
+        const existingDbVersion = unifiedDbProjects.find(
           db => db.id === localDraft.draftId
         )
         
         if (existingDbVersion) {
           // Replace database version with local version (local takes priority)
-          const index = allCampaigns.findIndex(c => c.id === localDraft.draftId)
-          allCampaigns[index] = this.localDraftToUnified(localDraft, existingDbVersion)
+          const index = allProjects.findIndex(c => c.id === localDraft.draftId)
+          allProjects[index] = this.localDraftToUnified(localDraft, existingDbVersion)
         } else {
-          // Add local draft as new campaign
-          allCampaigns.unshift(this.localDraftToUnified(localDraft))
+          // Add local draft as new project
+          allProjects.unshift(this.localDraftToUnified(localDraft))
         }
       }
 
-      return allCampaigns
+      return allProjects
 
     } catch (error) {
-      logger.error('Error loading campaigns', error, 'Campaign')
+      logger.error('Error loading projects', error, 'Campaign')
       throw error
     }
   }
@@ -123,8 +123,8 @@ export class CampaignService {
   /**
    * FILTER CAMPAIGNS BY CRITERIA
    */
-  async filterCampaigns(campaigns: UnifiedCampaign[], filters: CampaignFilters): Promise<UnifiedCampaign[]> {
-    let filtered = [...campaigns]
+  async filterProjects(projects: UnifiedCampaign[], filters: CampaignFilters): Promise<UnifiedCampaign[]> {
+    let filtered = [...projects]
 
     if (filters.status && filters.status !== 'all') {
       switch (filters.status) {
@@ -150,10 +150,10 @@ export class CampaignService {
   /**
    * GET CAMPAIGNS BY TYPE
    */
-  async getCampaignsByType(userId: string, type: 'drafts' | 'active' | 'paused' | 'all'): Promise<UnifiedCampaign[]> {
-    const allCampaigns = await this.getAllCampaigns(userId)
+  async getProjectsByType(userId: string, type: 'drafts' | 'active' | 'paused' | 'all'): Promise<UnifiedCampaign[]> {
+    const allProjects = await this.getAllProjects(userId)
     const filterStatus = type === 'drafts' ? 'draft' : type
-    return this.filterCampaigns(allCampaigns, { status: filterStatus })
+    return this.filterProjects(allProjects, { status: filterStatus })
   }
 
   /**
@@ -218,7 +218,7 @@ export class CampaignService {
       if (draftId) {
         // Update existing draft
         const { data, error } = await supabase
-          .from('funding_pages')
+          .from('projects')
           .update(draftData)
           .eq('id', draftId)
           .eq('user_id', userId)
@@ -230,7 +230,7 @@ export class CampaignService {
       } else {
         // Create new draft
         const { data, error } = await supabase
-          .from('funding_pages')
+          .from('projects')
           .insert(draftData)
           .select()
           .single()
@@ -258,13 +258,13 @@ export class CampaignService {
   /**
    * PUBLISH CAMPAIGN (convert draft to active)
    */
-  async publishCampaign(userId: string, campaignId: string, formData: any): Promise<UnifiedCampaign> {
+  async publishCampaign(userId: string, projectId: string, formData: any): Promise<UnifiedCampaign> {
     try {
       // Validate inputs
       if (!userId || userId.trim() === '') {
         throw new Error('User ID is required')
       }
-      if (!campaignId || campaignId.trim() === '') {
+      if (!projectId || projectId.trim() === '') {
         throw new Error('Campaign ID is required')
       }
       if (!formData) {
@@ -293,9 +293,9 @@ export class CampaignService {
 
       const supabase = await this.supabase
       const { data, error } = await supabase
-        .from('funding_pages')
+        .from('projects')
         .update(publishData)
-        .eq('id', campaignId)
+        .eq('id', projectId)
         .eq('user_id', userId)
         .select()
         .single()
@@ -314,7 +314,7 @@ export class CampaignService {
       }
 
     } catch (error) {
-      logger.error('Error publishing campaign', error, 'Campaign')
+      logger.error('Error publishing project', error, 'Campaign')
       throw error
     }
   }
@@ -393,13 +393,13 @@ export class CampaignService {
 }
 
 // Export singleton instance
-export const campaignService = CampaignService.getInstance()
+export const projectService = CampaignService.getInstance()
 
 // Export convenience functions
-export const getAllCampaigns = (userId: string) => campaignService.getAllCampaigns(userId)
-export const getDrafts = (userId: string) => campaignService.getCampaignsByType(userId, 'drafts')
-export const getActiveCampaigns = (userId: string) => campaignService.getCampaignsByType(userId, 'active')
+export const getAllProjects = (userId: string) => projectService.getAllProjects(userId)
+export const getDrafts = (userId: string) => projectService.getProjectsByType(userId, 'drafts')
+export const getActiveProjects = (userId: string) => projectService.getProjectsByType(userId, 'active')
 export const saveDraft = (userId: string, formData: any, currentStep?: number, draftId?: string) => 
-  campaignService.saveDraft(userId, formData, currentStep, draftId)
-export const publishCampaign = (userId: string, campaignId: string, formData: any) => 
-  campaignService.publishCampaign(userId, campaignId, formData) 
+  projectService.saveDraft(userId, formData, currentStep, draftId)
+export const publishCampaign = (userId: string, projectId: string, formData: any) => 
+  projectService.publishCampaign(userId, projectId, formData) 

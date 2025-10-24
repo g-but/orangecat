@@ -85,7 +85,7 @@ export async function getProfile(userId: string): Promise<ProfileResponse> {
  * ```typescript
  * const result = await updateProfile('user-123', {
  *   username: 'newusername',
- *   display_name: 'New Display Name',
+ *   name: 'New Display Name',
  *   bio: 'Updated bio'
  * });
  * 
@@ -174,7 +174,7 @@ export async function updateProfile(
  * ```typescript
  * const { data: profile, error } = await createProfile('user-123', {
  *   username: 'johndoe',
- *   display_name: 'John Doe'
+ *   name: 'John Doe'
  * });
  * 
  * if (profile) {
@@ -297,7 +297,7 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
  * ```typescript
  * const { data: profile, error } = await getProfileByUsername('johndoe');
  * if (profile) {
- *   console.log('Profile found:', profile.display_name);
+ *   console.log('Profile found:', profile.name);
  * } else {
  *   console.log('Profile not found');
  * }
@@ -371,7 +371,7 @@ export async function searchProfiles(
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .or(`username.ilike.%${query}%,display_name.ilike.%${query}%`)
+      .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
       .limit(limit)
 
     if (error) {
@@ -440,8 +440,8 @@ export function validateProfileData(data: Partial<ProfileUpdateData>): {
   }
   
   // Display name validation
-  if (data.display_name !== undefined && data.display_name) {
-    if (data.display_name.length > 50) {
+  if (data.name !== undefined && data.name) {
+    if (data.name.length > 50) {
       errors.push('Display name must be no more than 50 characters long')
     }
   }

@@ -34,20 +34,20 @@ This guide provides step-by-step instructions for implementing the architecture 
    - Full-text search support
    - Complete RLS policies
 
-3. **`20251013_add_project_to_campaigns.sql`**
-   - Adds `project_id` foreign key to campaigns table
-   - Links campaigns to parent projects
+3. **`20251013_add_project_to_projects.sql`**
+   - Adds `project_id` foreign key to projects table
+   - Links projects to parent projects
 
 ### TypeScript Updates
 
 **`/src/types/database.ts`** - Added:
 - `organization_members` table types (Row, Insert, Update)
 - `projects` table types (Row, Insert, Update)
-- `project_id` field to campaigns
+- `project_id` field to projects
 - Helper types: `OrganizationMember`, `Project`
 - Form data types: `OrganizationFormData`, `ProjectFormData`
 - Permission types: `OrganizationPermissions`
-- Extended types with relationships: `OrganizationWithMembers`, `ProjectWithCampaigns`, etc.
+- Extended types with relationships: `OrganizationWithMembers`, `ProjectWithProjects`, etc.
 
 ---
 
@@ -69,7 +69,7 @@ npx supabase db push
 # 2. Run each migration file in order:
 #    - 20251013_create_organization_members.sql
 #    - 20251013_create_projects.sql
-#    - 20251013_add_project_to_campaigns.sql
+#    - 20251013_add_project_to_projects.sql
 ```
 
 #### Step 1.2: Verify Tables Created
@@ -81,8 +81,8 @@ SELECT * FROM organization_members LIMIT 1;
 -- Check projects table
 SELECT * FROM projects LIMIT 1;
 
--- Check campaigns has project_id
-SELECT id, title, project_id FROM campaigns LIMIT 1;
+-- Check projects has project_id
+SELECT id, title, project_id FROM projects LIMIT 1;
 ```
 
 ---
@@ -229,7 +229,7 @@ import type {
   Project,
   ProjectInsert,
   ProjectUpdate,
-  ProjectWithCampaigns
+  ProjectWithProjects
 } from '@/types/database'
 
 /**
@@ -258,12 +258,12 @@ export async function getPublicProjects(
  */
 export async function getProjectBySlug(
   slug: string
-): Promise<ProjectWithCampaigns | null> {
+): Promise<ProjectWithProjects | null> {
   const supabase = await createServerClient()
 
   const { data, error } = await supabase
     .from('projects')
-    .select('*, campaigns(*)')
+    .select('*, projects(*)')
     .eq('slug', slug)
     .single()
 
@@ -677,7 +677,7 @@ After implementation, test these scenarios:
 ### Projects
 - [ ] Create a personal project
 - [ ] Create an organization project
-- [ ] Link campaigns to projects
+- [ ] Link projects to projects
 - [ ] Update project status
 - [ ] Change project visibility
 - [ ] Delete projects
@@ -693,7 +693,7 @@ After implementation, test these scenarios:
 
 ## 🚨 Known Issues & Considerations
 
-1. **Migration Order**: Migrations must be applied in the correct order (organization_members, then projects, then campaigns update)
+1. **Migration Order**: Migrations must be applied in the correct order (organization_members, then projects, then projects update)
 
 2. **Bitcoin Addresses**: You'll need to implement Bitcoin address generation/validation logic
 

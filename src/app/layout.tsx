@@ -3,7 +3,7 @@ import './globals.css'
 import ClientErrorBoundary from '@/components/ClientErrorBoundary'
 import { Suspense, lazy } from 'react'
 import Loading, { GlobalAuthLoader } from '@/components/Loading'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { headers } from 'next/headers'
 import Script from 'next/script'
 

@@ -254,7 +254,7 @@ WHERE created_at >= '2024-01-01'
 
 #### Campaign Leaderboard
 ```sql
-CREATE MATERIALIZED VIEW campaign_leaderboard AS
+CREATE MATERIALIZED VIEW project_leaderboard AS
 SELECT
   fp.id,
   fp.title,
@@ -272,7 +272,7 @@ GROUP BY fp.id
 ORDER BY fp.current_amount DESC;
 
 -- Refresh hourly
-CREATE INDEX ON campaign_leaderboard(current_amount DESC);
+CREATE INDEX ON project_leaderboard(current_amount DESC);
 ```
 
 #### User Contribution Stats
@@ -281,7 +281,7 @@ CREATE MATERIALIZED VIEW user_contribution_stats AS
 SELECT
   p.id,
   p.username,
-  COUNT(DISTINCT t.funding_page_id) as campaigns_supported,
+  COUNT(DISTINCT t.funding_page_id) as projects_supported,
   SUM(t.amount) as total_donated,
   AVG(t.amount) as avg_donation,
   MIN(t.created_at) as first_donation_at,
@@ -300,11 +300,11 @@ GROUP BY p.id;
 **Implementation:**
 ```sql
 -- Option 1: Manual refresh
-REFRESH MATERIALIZED VIEW CONCURRENTLY campaign_leaderboard;
+REFRESH MATERIALIZED VIEW CONCURRENTLY project_leaderboard;
 
 -- Option 2: Automated (pg_cron)
 SELECT cron.schedule('refresh-leaderboard', '*/15 * * * *',
-  'REFRESH MATERIALIZED VIEW CONCURRENTLY campaign_leaderboard');
+  'REFRESH MATERIALIZED VIEW CONCURRENTLY project_leaderboard');
 ```
 
 **Status:** 📋 **PLANNED** - Q2 2026

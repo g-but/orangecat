@@ -256,3 +256,4 @@ export function TransparencyScore({
     </Card>
   )
 }
+export default TransparencyScore

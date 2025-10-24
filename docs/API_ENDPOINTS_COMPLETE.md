@@ -6,16 +6,16 @@
 
 ## Overview
 
-The API layer fully connects Individuals, Organizations, Campaigns, and Projects with real database operations. All endpoints use Supabase with Row-Level Security (RLS) policies.
+The API layer fully connects Individuals, Organizations, Projects, and Projects with real database operations. All endpoints use Supabase with Row-Level Security (RLS) policies.
 
 ---
 
 ## Profile Endpoints
 
-### 1. Get User's Campaigns
-**Endpoint:** `GET /api/profiles/{userId}/campaigns`
+### 1. Get User's Projects
+**Endpoint:** `GET /api/profiles/{userId}/projects`
 
-**Description:** Fetch all campaigns created by user (personal) and campaigns from organizations they're a member of
+**Description:** Fetch all projects created by user (personal) and projects from organizations they're a member of
 
 **Response:**
 ```json
@@ -46,8 +46,8 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 ```
 
 **What it does:**
-- ✅ Fetches user's personal campaigns
-- ✅ Fetches campaigns from user's organizations
+- ✅ Fetches user's personal projects
+- ✅ Fetches projects from user's organizations
 - ✅ Combines and sorts by date
 - ✅ Returns separate counts for personal/organization/total
 
@@ -142,10 +142,10 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 
 ## Organization Endpoints
 
-### 4. Get Organization's Campaigns
-**Endpoint:** `GET /api/organizations/{id}/campaigns`
+### 4. Get Organization's Projects
+**Endpoint:** `GET /api/organizations/{id}/projects`
 
-**Description:** Fetch all campaigns belonging to an organization
+**Description:** Fetch all projects belonging to an organization
 
 **Response:**
 ```json
@@ -175,7 +175,7 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 ---
 
 ### 5. Create Organization Campaign
-**Endpoint:** `POST /api/organizations/{id}/campaigns`
+**Endpoint:** `POST /api/organizations/{id}/projects`
 
 **Authentication:** Required  
 **Authorization:** Must be org member with appropriate role
@@ -211,7 +211,7 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 
 **Permissions:**
 - ✅ Organization owner/admin can always create
-- ✅ Members with `create_campaigns` permission can create
+- ✅ Members with `create_projects` permission can create
 - ✅ RLS enforces organization membership
 
 ---
@@ -294,10 +294,10 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 
 ## Project Endpoints
 
-### 8. Get Project's Campaigns
-**Endpoint:** `GET /api/projects/{id}/campaigns`
+### 8. Get Project's Projects
+**Endpoint:** `GET /api/projects/{id}/projects`
 
-**Description:** Fetch all campaigns that are part of a project
+**Description:** Fetch all projects that are part of a project
 
 **Response:**
 ```json
@@ -326,7 +326,7 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 ---
 
 ### 9. Add Campaign to Project
-**Endpoint:** `POST /api/projects/{id}/campaigns`
+**Endpoint:** `POST /api/projects/{id}/projects`
 
 **Authentication:** Required  
 **Authorization:** Must be project owner or org admin
@@ -334,7 +334,7 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 **Request:**
 ```json
 {
-  "campaign_id": "uuid"
+  "project_id": "uuid"
 }
 ```
 
@@ -347,15 +347,15 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 ```
 
 **Validation:**
-- ✅ Verifies campaign exists
-- ✅ Checks ownership match (campaign/project owner must match)
-- ✅ Prevents adding other users' campaigns to your project
-- ✅ For org projects: campaign must be org-owned
+- ✅ Verifies project exists
+- ✅ Checks ownership match (project/project owner must match)
+- ✅ Prevents adding other users' projects to your project
+- ✅ For org projects: project must be org-owned
 
 ---
 
 ### 10. Remove Campaign from Project
-**Endpoint:** `DELETE /api/projects/{id}/campaigns`
+**Endpoint:** `DELETE /api/projects/{id}/projects`
 
 **Authentication:** Required  
 **Authorization:** Must be project owner or org admin
@@ -363,7 +363,7 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 **Request:**
 ```json
 {
-  "campaign_id": "uuid"
+  "project_id": "uuid"
 }
 ```
 
@@ -380,9 +380,9 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 ## Data Relationships
 
 ### Campaign Can Have:
-- ✅ `user_id` (if personal campaign)
-- ✅ `organization_id` (if org campaign)
-- ✅ `project_id` (optional, links campaign to project)
+- ✅ `user_id` (if personal project)
+- ✅ `organization_id` (if org project)
+- ✅ `project_id` (optional, links project to project)
 
 ### Project Can Be Owned By:
 - ✅ Profile (owner_type = 'profile', owner_id = user_uuid)
@@ -390,7 +390,7 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 
 ### Organization Can Have:
 - ✅ Multiple members (through `memberships` table)
-- ✅ Multiple campaigns (org_id on campaign)
+- ✅ Multiple projects (org_id on project)
 - ✅ Multiple projects (owner_id on project)
 
 ---
@@ -404,22 +404,22 @@ The API layer fully connects Individuals, Organizations, Campaigns, and Projects
 
 ### Authorization (RLS Policies)
 ```
-GET /profiles/{userId}/campaigns
-├─ Personal campaigns: user_id = auth.uid()
-├─ Organization campaigns: user is active member
-└─ Public campaigns: everyone
+GET /profiles/{userId}/projects
+├─ Personal projects: user_id = auth.uid()
+├─ Organization projects: user is active member
+└─ Public projects: everyone
 
-POST /organizations/{id}/campaigns
+POST /organizations/{id}/projects
 ├─ Check: user is active member
-├─ Check: user has role (owner|admin) OR permission (create_campaigns)
+├─ Check: user has role (owner|admin) OR permission (create_projects)
 └─ Enforce: RLS policies via memberships table
 
-POST /projects/{id}/campaigns
+POST /projects/{id}/projects
 ├─ Check: user owns project OR is org admin
-├─ Check: campaign ownership matches project ownership
-└─ Prevent: cross-org/user campaign assignments
+├─ Check: project ownership matches project ownership
+└─ Prevent: cross-org/user project assignments
 
-DELETE /projects/{id}/campaigns
+DELETE /projects/{id}/projects
 ├─ Same checks as POST
 └─ Only removes if ownership valid
 ```
@@ -459,7 +459,7 @@ DELETE /projects/{id}/campaigns
 ### 500 Server Error
 ```json
 {
-  "error": "Failed to fetch campaigns"
+  "error": "Failed to fetch projects"
 }
 ```
 
@@ -469,30 +469,30 @@ DELETE /projects/{id}/campaigns
 
 | Endpoint | Status | Real DB | RLS | Tests |
 |----------|--------|---------|-----|-------|
-| GET /profiles/{userId}/campaigns | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
+| GET /profiles/{userId}/projects | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
 | GET /profiles/{userId}/projects | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
 | GET /profiles/{userId}/organizations | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
-| GET /organizations/{id}/campaigns | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
-| POST /organizations/{id}/campaigns | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
 | GET /organizations/{id}/projects | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
 | POST /organizations/{id}/projects | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
-| GET /projects/{id}/campaigns | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
-| POST /projects/{id}/campaigns | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
-| DELETE /projects/{id}/campaigns | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
+| GET /organizations/{id}/projects | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
+| POST /organizations/{id}/projects | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
+| GET /projects/{id}/projects | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
+| POST /projects/{id}/projects | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
+| DELETE /projects/{id}/projects | ✅ Done | ✅ Yes | ✅ Yes | ⏳ TODO |
 
 ---
 
 ## Usage Examples
 
-### Example 1: User Views Their Campaigns
+### Example 1: User Views Their Projects
 ```
-GET /api/profiles/550e8400-e29b-41d4-a716-446655440000/campaigns
+GET /api/profiles/550e8400-e29b-41d4-a716-446655440000/projects
 ```
-Returns: Personal campaigns + organization campaigns user is member of
+Returns: Personal projects + organization projects user is member of
 
 ### Example 2: Organization Creates Campaign
 ```
-POST /api/organizations/abc-123-def/campaigns
+POST /api/organizations/abc-123-def/projects
 {
   "title": "Bitcoin Education Initiative",
   "goal_amount": 100000,
@@ -500,12 +500,12 @@ POST /api/organizations/abc-123-def/campaigns
   "category": "education"
 }
 ```
-Creates campaign under organization's treasury
+Creates project under organization's treasury
 
-### Example 3: Project with Multiple Campaigns
+### Example 3: Project with Multiple Projects
 ```
-GET /api/organizations/abc-123-def/campaigns
-├─ Returns: All org campaigns
+GET /api/organizations/abc-123-def/projects
+├─ Returns: All org projects
 │
 POST /api/organizations/abc-123-def/projects
 {
@@ -514,31 +514,31 @@ POST /api/organizations/abc-123-def/projects
 }
 ├─ Creates project in organization
 │
-POST /api/projects/proj-456-ghi/campaigns
+POST /api/projects/proj-456-ghi/projects
 {
-  "campaign_id": "camp-111-jkl"
+  "project_id": "camp-111-jkl"
 }
-├─ Adds first campaign to project
+├─ Adds first project to project
 │
-POST /api/projects/proj-456-ghi/campaigns
+POST /api/projects/proj-456-ghi/projects
 {
-  "campaign_id": "camp-222-mno"
+  "project_id": "camp-222-mno"
 }
-├─ Adds second campaign to project
+├─ Adds second project to project
 │
-GET /api/projects/proj-456-ghi/campaigns
-└─ Returns: Both campaigns in project
+GET /api/projects/proj-456-ghi/projects
+└─ Returns: Both projects in project
 ```
 
 ---
 
 ## Next Steps
 
-- [ ] Build Campaign stats endpoint (`GET /campaigns/{id}/stats`)
+- [ ] Build Campaign stats endpoint (`GET /projects/{id}/stats`)
 - [ ] Build Campaign detail endpoint with donor info
-- [ ] Add frontend forms for organization campaign creation
 - [ ] Add frontend forms for organization project creation
-- [ ] Create dashboards showing "My Campaigns", "My Projects", "My Orgs"
+- [ ] Add frontend forms for organization project creation
+- [ ] Create dashboards showing "My Projects", "My Projects", "My Orgs"
 - [ ] Add real-time transaction updates
 - [ ] Implement caching for performance
 
@@ -554,8 +554,8 @@ GET /api/projects/proj-456-ghi/campaigns
 ✅ **No demos - all operations are real**
 
 The system now fully supports:
-- Individual campaign creation
-- Organization-managed campaigns
-- Projects grouping multiple campaigns
+- Individual project creation
+- Organization-managed projects
+- Projects grouping multiple projects
 - Full membership and permission management
 - Complete audit trail of all operations

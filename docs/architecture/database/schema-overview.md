@@ -32,7 +32,7 @@ OrangeCat's database is designed with three core principles:
       ┌──────────────┐       ┌──────────────────┐
       │funding_pages │       │  organizations   │
       │              │       │  • Multi-user    │
-      │ • Campaigns  │       │  • Governance    │
+      │ • Projects  │       │  • Governance    │
       │ • Goals      │       │  • Treasury      │
       │ • Status     │       └────────┬─────────┘
       └──────┬───────┘                │
@@ -87,7 +87,7 @@ The central user entity, created automatically on signup.
 ### 2. Crowdfunding
 
 #### **funding_pages**
-Individual crowdfunding campaigns.
+Individual crowdfunding projects.
 
 **Fields:**
 - Basic: title, description, slug
@@ -204,7 +204,7 @@ Multi-type notification system.
 
 **Types:**
 - follow, mention, comment, donation
-- campaign_milestone, organization_invite
+- project_milestone, organization_invite
 - system_announcement
 
 **Optimization:**
@@ -249,7 +249,7 @@ Allows custom applications per organization.
 
 **Solution:** Generic association table with type discriminator
 ```sql
-target_entity_type text  -- 'profile', 'campaign', 'organization'
+target_entity_type text  -- 'profile', 'project', 'organization'
 target_entity_id uuid    -- The actual entity's ID
 ```
 
@@ -328,7 +328,7 @@ WHERE NOW() BETWEEN starts_at AND COALESCE(ends_at, 'infinity')
 
 ### Donation Flow
 ```sql
-1. User donates to campaign
+1. User donates to project
 2. INSERT into transactions:
    - funding_page_id
    - amount (numeric)
@@ -337,7 +337,7 @@ WHERE NOW() BETWEEN starts_at AND COALESCE(ends_at, 'infinity')
 3. Lightning invoice created (external)
 4. On payment: UPDATE status = 'completed'
 5. UPDATE funding_pages SET current_amount += amount
-6. INSERT notification for campaign owner
+6. INSERT notification for project owner
 ```
 
 ### Follow Flow
@@ -367,7 +367,7 @@ WHERE NOW() BETWEEN starts_at AND COALESCE(ends_at, 'infinity')
 SELECT * FROM profiles
 WHERE username ILIKE '%orange%'
 
--- Active campaigns (partial index)
+-- Active projects (partial index)
 SELECT * FROM funding_pages
 WHERE status = 'active'
 
@@ -380,7 +380,7 @@ WHERE user_id = ? AND is_read = false
 
 ### Row Level Security (RLS)
 **Every table has policies:**
-1. **Public read**: Profiles, campaigns (non-sensitive data)
+1. **Public read**: Profiles, projects (non-sensitive data)
 2. **Owner write**: Users can only modify their own records
 3. **Role-based**: Org admins can manage org data
 4. **Conditional**: Associations respect visibility settings

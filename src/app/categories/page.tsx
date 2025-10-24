@@ -20,7 +20,7 @@ export default function CategoriesPage() {
 
   const handleCreatePage = () => {
     if (session) {
-      router.push('/create')
+      router.push('/projects/create')
     } else {
       router.push('/auth?mode=register')
     }

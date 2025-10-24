@@ -82,7 +82,7 @@ export default function DraftContinueDialog({
                     You Have Unfinished Work
                   </h2>
                   <p className="text-gray-600">
-                    What would you like to do with your {totalDrafts > 1 ? 'draft campaigns' : 'draft campaign'}?
+                    What would you like to do with your {totalDrafts > 1 ? 'draft projects' : 'draft project'}?
                   </p>
                 </div>
               </div>
@@ -159,8 +159,8 @@ export default function DraftContinueDialog({
                     <h4 className="font-semibold text-gray-900">Continue Where You Left Off</h4>
                     <p className="text-sm text-gray-600">
                       {isLocalDraft 
-                        ? 'Resume your unsaved progress and complete your campaign'
-                        : 'Complete your draft campaign and publish it'}
+                        ? 'Resume your unsaved progress and complete your project'
+                        : 'Complete your draft project and publish it'}
                     </p>
                   </div>
                 </div>
@@ -187,7 +187,7 @@ export default function DraftContinueDialog({
                   <div>
                     <h4 className="font-semibold text-gray-900">Start a New Campaign</h4>
                     <p className="text-sm text-gray-600">
-                      Create a completely new campaign from scratch
+                      Create a completely new project from scratch
                     </p>
                   </div>
                 </div>
@@ -215,9 +215,9 @@ export default function DraftContinueDialog({
             {/* Additional Options */}
             {totalDrafts > 1 && (
               <div className="pt-4 border-t border-gray-200">
-                <Link href="/dashboard/fundraising">
+                <Link href="/dashboard/projects">
                   <Button variant="ghost" className="w-full text-gray-600 hover:text-gray-800">
-                    View All {totalDrafts} Draft Campaigns
+                    View All {totalDrafts} Draft Projects
                   </Button>
                 </Link>
               </div>

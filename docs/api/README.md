@@ -11,7 +11,7 @@ last_modified_summary: Added documentation standards including creation and modi
 
 ## 📋 Overview
 
-OrangeCat provides a comprehensive REST API for managing Bitcoin fundraising campaigns, user profiles, and authentication. All API endpoints follow RESTful conventions and return JSON responses.
+OrangeCat provides a comprehensive REST API for managing Bitcoin fundraising projects, user profiles, and authentication. All API endpoints follow RESTful conventions and return JSON responses.
 
 **Base URL**: `/api/`  
 **Authentication**: JWT tokens via Supabase Auth  
@@ -41,7 +41,7 @@ headers: {
 - [Profile API](profiles.md) - User profile CRUD operations
 
 ### **💰 Campaign Management**
-- [Campaign API](campaigns.md) - Fundraising campaign operations
+- [Campaign API](projects.md) - Fundraising project operations
 
 ### **📁 File Upload**
 - [Upload API](uploads.md) - Avatar and banner image uploads
@@ -69,8 +69,8 @@ Authorization: Bearer {token}
 
 ### **3. Create Campaign**
 ```javascript
-// Create new campaign
-POST /api/campaigns
+// Create new project
+POST /api/projects
 Authorization: Bearer {token}
 {
   "title": "My Campaign",

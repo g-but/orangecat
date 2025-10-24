@@ -92,9 +92,9 @@ export default function EventsPage() {
 
   const handleGetStarted = () => {
     if (session) {
-      router.push('/create')
+      router.push('/projects/create')
     } else {
-      router.push('/auth?mode=login&redirect=/create')
+      router.push('/auth?mode=login&redirect=/projects/create')
     }
   }
 

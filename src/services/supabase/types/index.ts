@@ -6,7 +6,7 @@
  * 
  * Created: 2025-06-08
  * Last Modified: 2025-06-08
- * Last Modified Summary: Initial creation with auth, profile, and campaign types
+ * Last Modified Summary: Initial creation with auth, profile, and project types
  */
 
 import { Session, User } from '@supabase/supabase-js'
@@ -50,7 +50,7 @@ export interface PasswordUpdateRequest {
 export interface Profile {
   id: string
   username?: string | null
-  display_name?: string | null
+  name?: string | null
   bio?: string | null
   avatar_url?: string | null
   banner_url?: string | null
@@ -62,7 +62,7 @@ export interface Profile {
 
 export interface ProfileUpdateData {
   username?: string | null
-  display_name?: string | null
+  name?: string | null
   bio?: string | null
   avatar_url?: string | null
   banner_url?: string | null

@@ -124,7 +124,7 @@ export function getStatusColor(status: string): string {
 
 // Predefined gradient and color combinations
 export const cardStyles = {
-  campaign: {
+  project: {
     iconGradient: 'bg-gradient-to-r from-teal-100 to-cyan-100',
     iconColor: 'text-teal-600'
   },

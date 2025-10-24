@@ -99,7 +99,7 @@ type CampaignStatus = 'active' | 'completed' | 'cancelled';
 
 interface Donation {
   id: string;
-  campaignId: string;
+  projectId: string;
   userId: string;
   amount: number;
   transactionId: string;

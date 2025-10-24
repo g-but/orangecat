@@ -10,7 +10,7 @@
 // ENUM TYPES (matching database enums)
 // =====================================================================
 
-export type EntityType = 'profile' | 'campaign' | 'organization' | 'collective' | 'project'
+export type EntityType = 'profile' | 'project' | 'organization' | 'collective' | 'project'
 
 export type RelationshipType = 
   | 'created' | 'founded' | 'supports' | 'collaborates' | 'maintains'
@@ -126,7 +126,7 @@ export interface MembershipWithProfile extends Membership {
   profile: {
     id: string
     username?: string
-    display_name?: string
+    name?: string
     avatar_url?: string
     bio?: string
   }

@@ -19,10 +19,10 @@ import { toast } from 'sonner'
 import { trackEvent } from '@/utils/monitoring'
 
 interface CampaignShareProps {
-  campaignId: string
-  campaignTitle: string
-  campaignDescription?: string
-  campaignImage?: string
+  projectId: string
+  projectTitle: string
+  projectDescription?: string
+  projectImage?: string
   currentUrl?: string
   onClose?: () => void
   variant?: 'modal' | 'dropdown' | 'inline'
@@ -38,9 +38,9 @@ interface SharePlatform {
 }
 
 export default function CampaignShare({
-  campaignId,
-  campaignTitle,
-  campaignDescription = '',
+  projectId,
+  projectTitle,
+  projectDescription = '',
   currentUrl,
   onClose,
   variant = 'dropdown',
@@ -48,12 +48,12 @@ export default function CampaignShare({
 }: CampaignShareProps) {
   const [copySuccess, setCopySuccess] = useState(false)
 
-  // Construct the campaign URL
-  const campaignUrl = currentUrl || `${window.location.origin}/campaign/${campaignId}`
+  // Construct the project URL
+  const projectUrl = currentUrl || `${window.location.origin}/project/${projectId}`
   
   // Create optimized share text
-  const shareTitle = `Support: ${campaignTitle}`
-  const shareDescription = campaignDescription || `Check out this amazing Bitcoin fundraising campaign: ${campaignTitle}`
+  const shareTitle = `Support: ${projectTitle}`
+  const shareDescription = projectDescription || `Check out this amazing Bitcoin fundraising project: ${projectTitle}`
 
   // Social media sharing platforms
   const platforms: SharePlatform[] = [
@@ -105,8 +105,8 @@ export default function CampaignShare({
       color: 'text-gray-600',
       bgColor: 'bg-gray-50 hover:bg-gray-100',
       action: (url, title, description) => {
-        const subject = encodeURIComponent(`Support this campaign: ${title}`)
-        const body = encodeURIComponent(`Hi,\n\nI wanted to share this amazing Bitcoin fundraising campaign with you:\n\n${title}\n\n${description}\n\nCheck it out here: ${url}\n\nBest regards`)
+        const subject = encodeURIComponent(`Support this project: ${title}`)
+        const body = encodeURIComponent(`Hi,\n\nI wanted to share this amazing Bitcoin fundraising project with you:\n\n${title}\n\n${description}\n\nCheck it out here: ${url}\n\nBest regards`)
         window.location.href = `mailto:?subject=${subject}&body=${body}`
       }
     }
@@ -114,7 +114,7 @@ export default function CampaignShare({
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(campaignUrl)
+      await navigator.clipboard.writeText(projectUrl)
       setCopySuccess(true)
       toast.success('Campaign link copied to clipboard!')
       setTimeout(() => setCopySuccess(false), 2000)
@@ -126,12 +126,12 @@ export default function CampaignShare({
   const trackShareEvent = (platform: string) => {
     // Analytics tracking for share events
     // Track share event for analytics
-    trackEvent(`campaign_share_${platform}`, { campaignId, campaignTitle })
+    trackEvent(`project_share_${platform}`, { projectId, projectTitle })
   }
 
   const handlePlatformShare = (platform: SharePlatform) => {
     trackShareEvent(platform.name)
-    platform.action(campaignUrl, shareTitle, shareDescription)
+    platform.action(projectUrl, shareTitle, shareDescription)
   }
 
   if (variant === 'modal') {
@@ -151,8 +151,8 @@ export default function CampaignShare({
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <h4 className="font-medium text-gray-900 mb-1">{campaignTitle}</h4>
-              <p className="text-sm text-gray-600 line-clamp-2">{campaignDescription}</p>
+              <h4 className="font-medium text-gray-900 mb-1">{projectTitle}</h4>
+              <p className="text-sm text-gray-600 line-clamp-2">{projectDescription}</p>
             </div>
 
             {/* Social Platforms Grid */}
@@ -177,7 +177,7 @@ export default function CampaignShare({
               <div className="flex-1 flex items-center bg-gray-50 rounded-lg px-3 py-2">
                 <input
                   type="text"
-                  value={campaignUrl}
+                  value={projectUrl}
                   readOnly
                   className="flex-1 bg-transparent text-sm text-gray-600 outline-none"
                 />
@@ -252,7 +252,7 @@ export default function CampaignShare({
           <div className="flex-1 flex items-center bg-gray-50 rounded px-2 py-1">
             <input
               type="text"
-              value={campaignUrl}
+              value={projectUrl}
               readOnly
               className="flex-1 bg-transparent text-xs text-gray-600 outline-none"
             />

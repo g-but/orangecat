@@ -522,7 +522,7 @@ export default function BitcoinWalletGuidePage() {
               </h2>
               <p className="text-gray-600 mb-6">
                 Once you have your Bitcoin wallet set up, you can add your Bitcoin address to your OrangeCat profile 
-                and start receiving donations for your projects and campaigns.
+                and start receiving donations for your projects and projects.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
