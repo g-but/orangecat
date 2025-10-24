@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { logger } from '@/utils/logger'
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Search, 
-  Filter, 
+import { logger } from '@/utils/logger';
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Search,
+  Filter,
   SlidersHorizontal,
   X,
   TrendingUp,
@@ -20,10 +20,10 @@ import {
   Star,
   Target,
   Users,
-  MapPin
-} from "lucide-react";
-import Button from "@/components/ui/Button";
-import ModernCampaignCard from "@/components/ui/ModernCampaignCard";
+  MapPin,
+} from 'lucide-react';
+import Button from '@/components/ui/Button';
+import ModernCampaignCard from '@/components/ui/ModernCampaignCard';
 import Input from '@/components/ui/Input';
 import { categoryValues, simpleCategories } from '@/config/categories';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,7 +31,7 @@ import { useAuth } from '@/hooks/useAuth';
 type ViewMode = 'grid' | 'list';
 
 // Import search functionality
-import { search, getTrending, SearchFundingPage } from '@/services/search'
+import { search, getTrending, SearchFundingPage } from '@/services/search';
 
 export default function DiscoverPage() {
   const router = useRouter();
@@ -47,7 +47,6 @@ export default function DiscoverPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [projects, setProjects] = useState<SearchFundingPage[]>([]);
-  const [profiles, setProfiles] = useState<any[]>([]);
 
   // Load real project data on mount and when search params change
   useEffect(() => {
@@ -61,7 +60,7 @@ export default function DiscoverPage() {
             query: searchTerm || undefined,
             type: 'projects',
             sortBy: sortBy as any,
-            limit: 50
+            limit: 50,
           });
 
           const projectResults = searchResults.results
@@ -93,7 +92,7 @@ export default function DiscoverPage() {
   const filteredProjects = useMemo(() => {
     // The search service already handles filtering and sorting
     // We just need to filter out any results that don't match our current filters
-    let filtered = [...projects];
+    const filtered = [...projects];
 
     // Additional client-side filtering for features not in the search service yet
     if (selectedCategory !== 'all') {
@@ -135,11 +134,7 @@ export default function DiscoverPage() {
   };
 
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
-    );
+    setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));
   };
 
   const clearFilters = () => {
@@ -167,53 +162,53 @@ export default function DiscoverPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/50 via-white to-tiffany-50/30">
       {/* Hero Section */}
-      <motion.div 
+      <motion.div
         className="relative overflow-hidden bg-gradient-to-br from-bitcoinOrange/5 via-tiffany-50/80 to-orange-50/60 border-b border-gray-100/50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
         <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
-        
+
         {/* Animated Background Elements */}
         <div className="absolute inset-0 overflow-hidden">
           <motion.div
             className="absolute top-20 left-10 w-3 h-3 bg-bitcoinOrange/20 rounded-full"
-            animate={{ 
+            animate={{
               y: [0, -30, 0],
-              opacity: [0.2, 0.6, 0.2] 
+              opacity: [0.2, 0.6, 0.2],
             }}
-            transition={{ 
+            transition={{
               duration: 4,
               repeat: Infinity,
-              ease: "easeInOut" 
+              ease: 'easeInOut',
             }}
           />
           <motion.div
             className="absolute top-40 right-20 w-2 h-2 bg-tiffany-400/30 rounded-full"
-            animate={{ 
+            animate={{
               y: [0, 20, 0],
               x: [0, 15, 0],
-              opacity: [0.3, 0.7, 0.3] 
+              opacity: [0.3, 0.7, 0.3],
             }}
-            transition={{ 
+            transition={{
               duration: 5,
               repeat: Infinity,
-              ease: "easeInOut",
-              delay: 0.5 
+              ease: 'easeInOut',
+              delay: 0.5,
             }}
           />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
-          <motion.div 
+          <motion.div
             className="text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             {/* Hero Badge */}
-            <motion.div 
+            <motion.div
               className="mb-6"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
@@ -228,7 +223,7 @@ export default function DiscoverPage() {
               </div>
             </motion.div>
 
-            <motion.h1 
+            <motion.h1
               className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 mb-6"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
@@ -240,17 +235,18 @@ export default function DiscoverPage() {
               </span>
             </motion.h1>
 
-            <motion.p 
+            <motion.p
               className="mt-6 max-w-3xl mx-auto text-lg sm:text-xl text-gray-600 leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              Support innovative projects, help local communities, and be part of the Bitcoin revolution.
+              Support innovative projects, help local communities, and be part of the Bitcoin
+              revolution.
             </motion.p>
 
             {/* Stats */}
-            <motion.div 
+            <motion.div
               className="mt-10 grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -275,9 +271,8 @@ export default function DiscoverPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
         {/* Search and Filters */}
-        <motion.div 
+        <motion.div
           className="mb-8 space-y-6"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -292,7 +287,7 @@ export default function DiscoverPage() {
               type="text"
               placeholder="Search projects, creators, or keywords..."
               value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
+              onChange={e => handleSearch(e.target.value)}
               className="pl-12 pr-4 py-4 text-lg bg-white/80 backdrop-blur-sm border-gray-200/80 rounded-2xl focus:ring-2 focus:ring-bitcoinOrange/20 focus:border-bitcoinOrange"
             />
           </div>
@@ -317,7 +312,7 @@ export default function DiscoverPage() {
               {/* Sort Filter */}
               <select
                 value={sortBy}
-                onChange={(e) => handleSortChange(e.target.value)}
+                onChange={e => handleSortChange(e.target.value)}
                 className="px-4 py-2 bg-white/80 backdrop-blur-sm border border-gray-200/80 rounded-xl text-sm font-medium focus:ring-2 focus:ring-bitcoinOrange/20 focus:border-bitcoinOrange"
               >
                 <option value="trending">Trending</option>
@@ -338,7 +333,10 @@ export default function DiscoverPage() {
               </Button>
 
               {/* Clear Filters */}
-              {(searchTerm || selectedCategory !== 'all' || selectedTags.length > 0 || sortBy !== 'trending') && (
+              {(searchTerm ||
+                selectedCategory !== 'all' ||
+                selectedTags.length > 0 ||
+                sortBy !== 'trending') && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -386,12 +384,12 @@ export default function DiscoverPage() {
               >
                 <div className="bg-white/60 backdrop-blur-sm rounded-2xl border border-gray-200/50 p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Advanced Filters</h3>
-                  
+
                   {/* Tags Filter */}
                   <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">Tags</label>
                     <div className="flex flex-wrap gap-2">
-                      {allTags.map((tag) => (
+                      {allTags.map(tag => (
                         <button
                           key={tag}
                           onClick={() => toggleTag(tag)}
@@ -419,58 +417,66 @@ export default function DiscoverPage() {
           transition={{ duration: 0.6, delay: 1.3 }}
         >
           {/* Campaign Creation CTA (when no projects exist) */}
-          {filteredProjects.length === 0 && !searchTerm && selectedCategory === 'all' && selectedTags.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 1.5 }}
-              className="mb-8"
-            >
-              <div className="bg-gradient-to-r from-orange-50 via-tiffany-50 to-orange-50 rounded-2xl border border-orange-200 p-8 text-center">
-                <div className="max-w-2xl mx-auto">
-                  <div className="w-16 h-16 bg-gradient-to-r from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Target className="w-8 h-8 text-orange-600" />
+          {filteredProjects.length === 0 &&
+            !searchTerm &&
+            selectedCategory === 'all' &&
+            selectedTags.length === 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 1.5 }}
+                className="mb-8"
+              >
+                <div className="bg-gradient-to-r from-orange-50 via-tiffany-50 to-orange-50 rounded-2xl border border-orange-200 p-8 text-center">
+                  <div className="max-w-2xl mx-auto">
+                    <div className="w-16 h-16 bg-gradient-to-r from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Target className="w-8 h-8 text-orange-600" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                      Start the Bitcoin Revolution! 🚀
+                    </h3>
+                    <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                      No projects yet? Be the pioneer! Create the first Bitcoin fundraising project
+                      and show the world how easy it is to fund dreams with Bitcoin.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="p-4 bg-white/60 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600 mb-1">1</div>
+                        <div className="text-sm font-medium">Sign up</div>
+                        <div className="text-xs text-gray-600">Create your account</div>
+                      </div>
+                      <div className="p-4 bg-white/60 rounded-lg">
+                        <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
+                        <div className="text-sm font-medium">Create</div>
+                        <div className="text-xs text-gray-600">Set up your project</div>
+                      </div>
+                      <div className="p-4 bg-white/60 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600 mb-1">3</div>
+                        <div className="text-sm font-medium">Fund</div>
+                        <div className="text-xs text-gray-600">Receive Bitcoin donations</div>
+                      </div>
+                    </div>
+
+                    <Button
+                      href="/projects/create"
+                      size="lg"
+                      className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+                    >
+                      🎯 Create the First Campaign
+                    </Button>
+
+                    <p className="text-sm text-gray-500 mt-4">
+                      Already have an account?{' '}
+                      <a href="/auth" className="text-orange-600 hover:underline font-medium">
+                        Sign in
+                      </a>{' '}
+                      to get started.
+                    </p>
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    Start the Bitcoin Revolution! 🚀
-                  </h3>
-                  <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                    No projects yet? Be the pioneer! Create the first Bitcoin fundraising project and show the world how easy it is to fund dreams with Bitcoin.
-                  </p>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="p-4 bg-white/60 rounded-lg">
-                      <div className="text-2xl font-bold text-orange-600 mb-1">1</div>
-                      <div className="text-sm font-medium">Sign up</div>
-                      <div className="text-xs text-gray-600">Create your account</div>
-                    </div>
-                    <div className="p-4 bg-white/60 rounded-lg">
-                      <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
-                      <div className="text-sm font-medium">Create</div>
-                      <div className="text-xs text-gray-600">Set up your project</div>
-                    </div>
-                    <div className="p-4 bg-white/60 rounded-lg">
-                      <div className="text-2xl font-bold text-green-600 mb-1">3</div>
-                      <div className="text-sm font-medium">Fund</div>
-                      <div className="text-xs text-gray-600">Receive Bitcoin donations</div>
-                    </div>
-                  </div>
-
-                  <Button
-                    href="/projects/create"
-                    size="lg"
-                    className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                  >
-                    🎯 Create the First Campaign
-                  </Button>
-
-                  <p className="text-sm text-gray-500 mt-4">
-                    Already have an account? <a href="/auth" className="text-orange-600 hover:underline font-medium">Sign in</a> to get started.
-                  </p>
                 </div>
-              </div>
-            </motion.div>
-          )}
+              </motion.div>
+            )}
           {filteredProjects.length === 0 ? (
             <div className="text-center py-16">
               <div className="max-w-md mx-auto">
@@ -478,14 +484,12 @@ export default function DiscoverPage() {
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   {searchTerm || selectedCategory !== 'all' || selectedTags.length > 0
                     ? 'No projects match your criteria'
-                    : 'Be the first to create a Bitcoin project!'
-                  }
+                    : 'Be the first to create a Bitcoin project!'}
                 </h3>
                 <p className="text-gray-600 mb-8">
                   {searchTerm || selectedCategory !== 'all' || selectedTags.length > 0
                     ? 'Try adjusting your search criteria or browse all projects.'
-                    : 'Start a Bitcoin fundraising project and be part of the revolution. It takes just a few minutes!'
-                  }
+                    : 'Start a Bitcoin fundraising project and be part of the revolution. It takes just a few minutes!'}
                 </p>
 
                 <div className="space-y-3">
@@ -497,16 +501,18 @@ export default function DiscoverPage() {
                   </Button>
 
                   {searchTerm || selectedCategory !== 'all' || selectedTags.length > 0 ? (
-                    <Button
-                      onClick={clearFilters}
-                      variant="outline"
-                      className="px-6 py-2"
-                    >
+                    <Button onClick={clearFilters} variant="outline" className="px-6 py-2">
                       Clear Filters
                     </Button>
                   ) : (
                     <div className="text-sm text-gray-500">
-                      <p>Need inspiration? Check out our <a href="/blog" className="text-orange-600 hover:underline">blog</a> for project ideas.</p>
+                      <p>
+                        Need inspiration? Check out our{' '}
+                        <a href="/blog" className="text-orange-600 hover:underline">
+                          blog
+                        </a>{' '}
+                        for project ideas.
+                      </p>
                     </div>
                   )}
                 </div>
@@ -523,7 +529,8 @@ export default function DiscoverPage() {
                 </div>
               </div>
             </div>
-          ) : filteredProjects.length === 0 && (searchTerm || selectedCategory !== 'all' || selectedTags.length > 0) ? (
+          ) : filteredProjects.length === 0 &&
+            (searchTerm || selectedCategory !== 'all' || selectedTags.length > 0) ? (
             <>
               {/* Filtered Results Header */}
               <div className="flex items-center justify-between mb-6">
@@ -542,11 +549,11 @@ export default function DiscoverPage() {
               </div>
 
               {/* Campaign Grid */}
-              <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
-                  : 'grid-cols-1'
-              }`}>
+              <div
+                className={`grid gap-6 ${
+                  viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
+                }`}
+              >
                 {filteredProjects.map((project, index) => (
                   <motion.div
                     key={project.id}
@@ -554,10 +561,7 @@ export default function DiscoverPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, delay: index * 0.1 }}
                   >
-                    <ModernCampaignCard 
-                      project={project} 
-                      viewMode={viewMode}
-                    />
+                    <ModernCampaignCard project={project} viewMode={viewMode} />
                   </motion.div>
                 ))}
               </div>
@@ -567,4 +571,4 @@ export default function DiscoverPage() {
       </div>
     </div>
   );
-} 
+}
