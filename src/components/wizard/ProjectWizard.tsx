@@ -298,15 +298,26 @@ export function ProjectWizard() {
         isEditMode && editProjectId ? `/api/projects/${editProjectId}` : '/api/projects';
       const method = isEditMode ? 'PUT' : 'POST';
 
+      // Calculate goal_amount based on currency
+      let goalAmount = null;
+      if (formData.goalAmount) {
+        const amount = parseFloat(formData.goalAmount);
+        if (formData.goalCurrency === 'BTC' || formData.goalCurrency === 'SATS') {
+          // Convert BTC to satoshis
+          goalAmount = Math.round(amount * 100000000);
+        } else {
+          // For fiat currencies, store as is (the database can handle it)
+          goalAmount = Math.round(amount);
+        }
+      }
+
       const response = await fetch(apiUrl, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title: formData.title.trim(),
           description: formData.description.trim(),
-          goal_amount: formData.goalAmount
-            ? Math.round(parseFloat(formData.goalAmount) * 100000000)
-            : null, // Convert to satoshis
+          goal_amount: goalAmount,
           currency: formData.goalCurrency || 'SATS',
           funding_purpose: formData.fundingPurpose.trim() || null,
           bitcoin_address: formData.bitcoinAddress.trim() || null,

@@ -37,7 +37,7 @@ export const profileSchema = z.object({
 export const projectSchema = z.object({
   title: z.string().min(1).max(100),
   description: z.string().min(1).max(2000),
-  goal_amount: z.number().int().positive().max(1000000000000).optional().nullable(),
+  goal_amount: z.number().int().positive().optional().nullable(),
   currency: z.enum(['CHF', 'USD', 'EUR', 'BTC', 'SATS']).optional().nullable().default('SATS'),
   funding_purpose: z.string().max(500).optional().nullable(),
   bitcoin_address: z
