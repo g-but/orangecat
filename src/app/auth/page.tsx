@@ -1,84 +1,112 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
-import { Bitcoin, ArrowRight, CheckCircle2, Shield, Zap, Loader2, AlertCircle, Globe, ShieldCheck, Users, Eye, EyeOff, RefreshCw, Mail } from 'lucide-react'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import Card from '@/components/ui/Card'
-import Loading from '@/components/Loading'
-import AuthRecovery from '@/components/AuthRecovery'
-import { useAuth , useRedirectIfAuthenticated } from '@/hooks/useAuth'
-import { toast } from 'sonner'
-import { resetPassword } from '@/services/supabase/auth'
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import {
+  Bitcoin,
+  ArrowRight,
+  CheckCircle2,
+  Shield,
+  Zap,
+  Loader2,
+  AlertCircle,
+  Globe,
+  ShieldCheck,
+  Users,
+  Eye,
+  EyeOff,
+  RefreshCw,
+  Mail,
+} from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Card from '@/components/ui/Card';
+import Loading from '@/components/Loading';
+import AuthRecovery from '@/components/AuthRecovery';
+import { useAuth, useRedirectIfAuthenticated } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { resetPassword } from '@/services/supabase/auth';
 
 // Normalize unknown error values to a user-friendly string
-function getReadableError(error: unknown, fallback: string = 'An unexpected error occurred'): string {
-  if (!error) {return fallback}
-  if (typeof error === 'string') {return error}
-  if (error instanceof Error) {return error.message || fallback}
+function getReadableError(
+  error: unknown,
+  fallback: string = 'An unexpected error occurred'
+): string {
+  if (!error) {
+    return fallback;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  if (error instanceof Error) {
+    return error.message || fallback;
+  }
   if (typeof error === 'object') {
-    const maybe = error as Record<string, unknown>
-    const message = maybe.message ?? maybe.error
-    if (typeof message === 'string' && message.length > 0) {return message}
+    const maybe = error as Record<string, unknown>;
+    const message = maybe.message ?? maybe.error;
+    if (typeof message === 'string' && message.length > 0) {
+      return message;
+    }
     try {
-      return JSON.stringify(error)
+      return JSON.stringify(error);
     } catch {
-      return fallback
+      return fallback;
     }
   }
-  return String(error)
+  return String(error);
 }
 
 export default function AuthPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { signIn, signUp, isLoading: authLoading, hydrated, session, profile, clear } = useAuth()
-  const { isLoading: redirectLoading } = useRedirectIfAuthenticated()
-  
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { signIn, signUp, isLoading: authLoading, hydrated, session, profile, clear } = useAuth();
+  const { isLoading: redirectLoading } = useRedirectIfAuthenticated();
+
   // Determine initial mode based on URL parameter
-  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login')
-  
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
+
   useEffect(() => {
-    const modeParam = searchParams.get('mode')
+    const modeParam = searchParams.get('mode');
     if (modeParam === 'login' || modeParam === 'register') {
-      setMode(modeParam)
+      setMode(modeParam);
     }
-  }, [searchParams])
-  
+  }, [searchParams]);
+
   // Clear any stale auth state when visiting auth page
   useEffect(() => {
     if (hydrated && !session && !profile) {
-      clear()
+      clear();
     }
-  }, [hydrated, session, profile, clear])
-  
+  }, [hydrated, session, profile, clear]);
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    confirmPassword: ''
-  })
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [localLoading, setLocalLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [retryCount, setRetryCount] = useState(0)
+    confirmPassword: '',
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   // Combined loading state
   const loading = localLoading || authLoading;
 
   // Combined loading state for better UX
-  const isCurrentlyLoading = loading || redirectLoading
+  const isCurrentlyLoading = loading || redirectLoading;
 
   // Enhanced timeout handling with exponential backoff
   useEffect(() => {
     if (localLoading) {
-      const timeout = Math.min(15000 + (retryCount * 5000), 45000) // 15s, 20s, 25s, max 45s
+      const timeout = Math.min(15000 + retryCount * 5000, 45000); // 15s, 20s, 25s, max 45s
       const timer = setTimeout(() => {
         setLocalLoading(false);
-        setError("Authentication request timed out. This usually means environment variables are not configured properly.");
+        setError(
+          'Authentication request timed out. This usually means environment variables are not configured properly.'
+        );
       }, timeout);
 
       return () => clearTimeout(timer);
@@ -94,93 +122,95 @@ export default function AuthPage() {
       router.replace(redirectUrl); // Use replace to avoid back button issues
     }
   }, [session, hydrated, router, searchParams]);
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLocalLoading(true)
-    setError(null)
-    setSuccess(null)
+    e.preventDefault();
+    setLocalLoading(true);
+    setError(null);
+    setSuccess(null);
 
     try {
       // Basic client-side validation
       if (!formData.email || !formData.password) {
-        throw new Error('Please fill in all required fields')
+        throw new Error('Please fill in all required fields');
       }
 
       if (mode === 'register' && formData.password !== formData.confirmPassword) {
-        throw new Error('Passwords do not match')
+        throw new Error('Passwords do not match');
       }
 
       if (mode === 'register' && formData.password.length < 6) {
-        throw new Error('Password must be at least 6 characters long')
+        throw new Error('Password must be at least 6 characters long');
       }
 
-      const result = mode === 'login' 
-        ? await signIn(formData.email, formData.password)
-        : await signUp(formData.email, formData.password);
+      const result =
+        mode === 'login'
+          ? await signIn(formData.email, formData.password)
+          : await signUp(formData.email, formData.password);
 
       if (result.error) {
         // Enhanced error handling
-        let errorMessage = getReadableError(result.error)
-        
+        let errorMessage = getReadableError(result.error);
+
         // Provide more user-friendly error messages
         if (errorMessage.includes('Invalid login credentials')) {
           errorMessage = 'Invalid email or password. Please check your credentials and try again.';
         } else if (errorMessage.includes('Email not confirmed')) {
-          errorMessage = 'Please check your email and click the confirmation link before signing in.';
+          errorMessage =
+            'Please check your email and click the confirmation link before signing in.';
         } else if (errorMessage.includes('Too many requests')) {
           errorMessage = 'Too many login attempts. Please wait a few minutes before trying again.';
         } else if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
           errorMessage = 'Connection timeout. Please check your internet connection and try again.';
         }
-        
+
         throw new Error(errorMessage);
       }
-      
+
       if (mode === 'register' && result.data && !result.data.session) {
-        setSuccess('Registration successful! Please check your email to verify your account before signing in.');
+        setSuccess(
+          'Registration successful! Please check your email to verify your account before signing in.'
+        );
         setFormData({ email: '', password: '', confirmPassword: '' });
         setMode('login');
       } else if (result.data && result.data.user) {
         // Successful login - redirect will happen automatically via useRedirectIfAuthenticated
         setSuccess('Login successful! Redirecting...');
       }
-
     } catch (error) {
-      const errorMessage = getReadableError(error, 'An unexpected error occurred')
+      const errorMessage = getReadableError(error, 'An unexpected error occurred');
       setError(errorMessage);
       setRetryCount(prev => prev + 1);
     } finally {
       setLocalLoading(false);
     }
-  }
+  };
 
   const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLocalLoading(true)
-    setError(null)
-    setSuccess(null)
+    e.preventDefault();
+    setLocalLoading(true);
+    setError(null);
+    setSuccess(null);
 
     try {
       if (!formData.email) {
-        throw new Error('Please enter your email address')
+        throw new Error('Please enter your email address');
       }
 
-      const result = await resetPassword({ email: formData.email })
+      const result = await resetPassword({ email: formData.email });
 
       if (result.error) {
-        throw new Error(getReadableError(result.error, 'Failed to send reset email'))
+        throw new Error(getReadableError(result.error, 'Failed to send reset email'));
       }
 
-      setSuccess('Password reset email sent! Check your inbox and follow the instructions.')
-      
+      setSuccess('Password reset email sent! Check your inbox and follow the instructions.');
     } catch (error) {
-      const errorMessage = getReadableError(error, 'Failed to send password reset email')
-      setError(errorMessage)
+      const errorMessage = getReadableError(error, 'Failed to send password reset email');
+      setError(errorMessage);
     } finally {
       setLocalLoading(false);
     }
-  }
+  };
 
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
@@ -191,23 +221,23 @@ export default function AuthPage() {
     } else {
       handleSubmit(new Event('submit') as any);
     }
-  }
+  };
 
   const handleClearError = () => {
-    setError(null)
-    setSuccess(null)
-    setRetryCount(0)
-  }
+    setError(null);
+    setSuccess(null);
+    setRetryCount(0);
+  };
 
   // Show initial loading
   const isInitialLoading = !hydrated && redirectLoading;
-  
+
   if (session && hydrated) {
-    return <Loading fullScreen message="Redirecting to dashboard..." />
+    return <Loading fullScreen message="Welcome back! Setting up your dashboard..." />;
   }
 
   if (isInitialLoading) {
-    return <Loading fullScreen message="Loading your account..." />
+    return <Loading fullScreen message="Loading your account..." />;
   }
 
   return (
@@ -221,19 +251,17 @@ export default function AuthPage() {
               🐾
             </div>
           </div>
-          
+
           <h1 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-900 leading-tight">
-            Fund Everything with 
-            <span className="block text-orange-600">
-              Bitcoin
-            </span>
+            Fund Everything with
+            <span className="block text-orange-600">Bitcoin</span>
           </h1>
-          
+
           <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            The decentralized platform for Bitcoin-powered crowdfunding. 
-            Beautiful, transparent, and built for everyone.
+            The decentralized platform for Bitcoin-powered crowdfunding. Beautiful, transparent, and
+            built for everyone.
           </p>
-          
+
           {/* Feature highlights */}
           <div className="space-y-4">
             <div className="flex items-center justify-center lg:justify-start space-x-4">
@@ -264,14 +292,18 @@ export default function AuthPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold mb-2 text-gray-900">
-              {mode === 'login' ? 'Welcome back' : mode === 'register' ? 'Get started' : 'Reset password'}
+              {mode === 'login'
+                ? 'Welcome back'
+                : mode === 'register'
+                  ? 'Get started'
+                  : 'Reset password'}
             </h2>
             <p className="text-gray-600">
-              {mode === 'login' 
-                ? 'Sign in to your OrangeCat account' 
+              {mode === 'login'
+                ? 'Sign in to your OrangeCat account'
                 : mode === 'register'
-                ? 'Create your OrangeCat account'
-                : 'Enter your email to receive reset instructions'}
+                  ? 'Create your OrangeCat account'
+                  : 'Enter your email to receive reset instructions'}
             </p>
           </div>
 
@@ -317,7 +349,10 @@ export default function AuthPage() {
           )}
 
           {/* Clean Form */}
-          <form onSubmit={mode === 'forgot' ? handleForgotPassword : handleSubmit} className="space-y-6">
+          <form
+            onSubmit={mode === 'forgot' ? handleForgotPassword : handleSubmit}
+            className="space-y-6"
+          >
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email address
@@ -326,7 +361,7 @@ export default function AuthPage() {
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={e => setFormData({ ...formData, email: e.target.value })}
                 disabled={loading}
                 placeholder="Enter your email"
                 className="w-full h-12 px-4 rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
@@ -344,7 +379,7 @@ export default function AuthPage() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    onChange={e => setFormData({ ...formData, password: e.target.value })}
                     disabled={loading}
                     placeholder="Enter your password"
                     className="w-full h-12 px-4 pr-12 rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
@@ -363,7 +398,10 @@ export default function AuthPage() {
 
             {mode === 'register' && (
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -371,7 +409,7 @@ export default function AuthPage() {
                     id="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={formData.confirmPassword}
-                    onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
                     disabled={loading}
                     placeholder="Confirm your password"
                     className="w-full h-12 px-4 pr-12 rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
@@ -382,7 +420,11 @@ export default function AuthPage() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -397,15 +439,27 @@ export default function AuthPage() {
                 <div className="flex items-center justify-center space-x-2">
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <span>
-                    {mode === 'login' ? 'Signing in...' : mode === 'register' ? 'Creating account...' : 'Sending email...'}
+                    {mode === 'login'
+                      ? 'Signing in...'
+                      : mode === 'register'
+                        ? 'Creating account...'
+                        : 'Sending email...'}
                   </span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center space-x-2">
                   <span>
-                    {mode === 'login' ? 'Sign in' : mode === 'register' ? 'Create account' : 'Send reset email'}
+                    {mode === 'login'
+                      ? 'Sign in'
+                      : mode === 'register'
+                        ? 'Create account'
+                        : 'Send reset email'}
                   </span>
-                  {mode === 'forgot' ? <Mail className="w-5 h-5" /> : <ArrowRight className="w-5 h-5" />}
+                  {mode === 'forgot' ? (
+                    <Mail className="w-5 h-5" />
+                  ) : (
+                    <ArrowRight className="w-5 h-5" />
+                  )}
                 </div>
               )}
             </Button>
@@ -423,10 +477,14 @@ export default function AuthPage() {
                 </Link>
               </div>
             )}
-            
+
             <div>
               <p className="text-gray-600 text-sm">
-                {mode === 'login' ? "Don't have an account?" : mode === 'register' ? "Already have an account?" : "Remember your password?"}
+                {mode === 'login'
+                  ? "Don't have an account?"
+                  : mode === 'register'
+                    ? 'Already have an account?'
+                    : 'Remember your password?'}
               </p>
               <button
                 onClick={() => setMode(mode === 'login' ? 'register' : 'login')}
@@ -437,10 +495,8 @@ export default function AuthPage() {
               </button>
             </div>
           </div>
-
-
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}
