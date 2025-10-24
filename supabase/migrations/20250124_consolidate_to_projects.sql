@@ -1,10 +1,29 @@
 -- MVP Consolidation: Ensure projects table has all needed columns
 -- Date: 2025-01-24
 
+-- Create projects table if it doesn't exist
+CREATE TABLE IF NOT EXISTS projects (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  title text,
+  description text,
+  goal_amount numeric(20,8),
+  currency text DEFAULT 'SATS',
+  funding_purpose text,
+  bitcoin_address text,
+  lightning_address text,
+  category text,
+  tags text[] DEFAULT '{}',
+  status text DEFAULT 'draft',
+  raised_amount numeric(20,8) DEFAULT 0,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now()
+);
+
 -- If campaigns table exists, rename it to projects
 DO $$ 
 BEGIN
-  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'campaigns') THEN
+  IF EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'campaigns') AND NOT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'projects') THEN
     ALTER TABLE campaigns RENAME TO projects;
   END IF;
 END $$;
