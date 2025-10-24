@@ -9,7 +9,7 @@
 
 import { create } from 'zustand';
 import { logger } from '@/utils/logger';
-import { createBrowserClient } from '@/lib/supabase/browser';
+import getSupabaseClient from '@/lib/supabase/browser';
 
 // Use existing FundingPage type from funding.ts
 import type { FundingPage } from '@/types/funding';
@@ -62,7 +62,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const supabase = createBrowserClient();
+      const supabase = getSupabaseClient();
 
       const { data, error } = await supabase
         .from('projects')
