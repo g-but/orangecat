@@ -77,6 +77,53 @@ export function ProjectWizard() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
 
+  // Example project templates
+  const templates: Record<string, Partial<ProjectFormData>> = {
+    'community-garden': {
+      title: 'Community Garden Project',
+      description:
+        'Creating a shared community space with raised garden beds and educational workshops for local families. This project will transform unused land into a thriving community garden where residents can grow organic vegetables, learn sustainable farming practices, and build stronger neighborhood connections.',
+      goalAmount: '5000',
+      goalCurrency: 'CHF',
+      fundingPurpose:
+        'Construction materials for raised beds, soil and composting infrastructure, gardening tools and equipment, educational workshop materials',
+      selectedCategories: ['community', 'education', 'environment'],
+    },
+    'animal-shelter': {
+      title: 'Local Animal Shelter',
+      description:
+        'Supporting animal rescue operations and providing veterinary care for abandoned pets in our community. Our shelter rescues, rehabilitates, and rehomes animals in need, giving them a second chance at finding loving families.',
+      goalAmount: '10000',
+      goalCurrency: 'CHF',
+      fundingPurpose:
+        'Veterinary care and medical supplies, food and nutrition, shelter maintenance and improvements, adoption program support',
+      selectedCategories: ['charity', 'health', 'humanitarian'],
+    },
+    'art-exhibition': {
+      title: 'Art Exhibition Fundraiser',
+      description:
+        'Organizing a traveling art show featuring local artists and cultural exhibits to celebrate creativity in our community. This exhibition will showcase diverse artistic talents and provide a platform for emerging artists to share their work.',
+      goalAmount: '3000',
+      goalCurrency: 'EUR',
+      fundingPurpose:
+        'Venue rental and setup, artist compensation and materials, marketing and promotional materials, exhibition catalog printing',
+      selectedCategories: ['creative', 'community', 'business'],
+    },
+  };
+
+  // Load template data if template parameter is present
+  useEffect(() => {
+    const template = searchParams.get('template');
+    if (template && templates[template]) {
+      const templateData = templates[template];
+      setFormData(prev => ({
+        ...prev,
+        ...templateData,
+      }));
+      toast.info('📝 Template loaded! Edit the details and create your project.');
+    }
+  }, [searchParams]);
+
   // Validation functions
   const validateField = (field: keyof FormErrors, value: string): string | undefined => {
     switch (field) {

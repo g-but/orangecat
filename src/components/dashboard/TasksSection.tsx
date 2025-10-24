@@ -99,27 +99,27 @@ export default function TasksSection({ className }: TasksSectionProps) {
       });
     }
 
-    // Campaign tasks
+    // Project tasks
     if (hasDrafts) {
       tasks.push({
         id: 'complete-draft',
-        title: 'Complete Your Campaign',
+        title: 'Complete Your Project',
         description: `You have ${drafts.length} draft project${drafts.length > 1 ? 's' : ''} waiting to be published`,
         completed: false,
         priority: 'high',
         category: 'project',
-        action: { label: 'Continue Campaign', href: '/projects/create' },
+        action: { label: 'Continue Project', href: '/projects/create' },
         icon: Target,
       });
     } else {
       tasks.push({
         id: 'create-first-project',
-        title: 'Create Your First Campaign',
+        title: 'Create Your First Project',
         description: 'Start fundraising with Bitcoin in just a few minutes',
         completed: false,
         priority: 'medium',
         category: 'project',
-        action: { label: 'Create Campaign', href: '/projects/create' },
+        action: { label: 'Create Project', href: '/projects/create' },
         icon: Plus,
       });
     }
@@ -212,7 +212,7 @@ export default function TasksSection({ className }: TasksSectionProps) {
           <Link href="/projects/create">
             <Button className="bg-green-600 hover:bg-green-700">
               <Plus className="w-4 h-4 mr-2" />
-              Create Your Next Campaign
+              Create Your Next Project
             </Button>
           </Link>
         </CardContent>

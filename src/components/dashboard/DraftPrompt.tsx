@@ -75,7 +75,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
                 <h3 className="text-lg font-semibold text-gray-900">
-                  {isDraftLocal ? 'Continue Your Campaign' : 'Complete Your Campaign'}
+                  {isDraftLocal ? 'Continue Your Project' : 'Complete Your Project'}
                 </h3>
                 <div className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
                   {isDraftLocal ? 'Unsaved' : 'Draft'}
@@ -122,7 +122,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
                 <Link href="/projects/create">
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                     <Edit3 className="w-4 h-4 mr-2" />
-                    {isDraftLocal ? 'Continue Editing' : 'Complete Campaign'}
+                    {isDraftLocal ? 'Continue Editing' : 'Complete Project'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
