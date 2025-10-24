@@ -125,7 +125,7 @@ export function HeaderCreateButton() {
 
 // Export a specialized version for dashboard cards
 export function DashboardCreateButton({ className = '' }: { className?: string }) {
-  const { drafts } = useCampaignStore();
+  const { drafts } = useProjectStore();
   const hasAnyDraft = drafts.length > 0;
 
   return (
