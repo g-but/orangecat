@@ -1,30 +1,31 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import { toast } from 'sonner'
-import Card from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import { Textarea } from '@/components/ui/Textarea'
-import { Target, Rocket, X, CheckCircle, Loader2 } from 'lucide-react'
+import { logger } from '@/utils/logger';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { Target, Rocket, X, CheckCircle, Loader2 } from 'lucide-react';
 
 interface ProjectFormData {
-  title: string
-  description: string
-  goalAmount: string
-  goalCurrency: string
-  fundingPurpose: string
-  bitcoinAddress: string
-  selectedCategories: string[]
+  title: string;
+  description: string;
+  goalAmount: string;
+  goalCurrency: string;
+  fundingPurpose: string;
+  bitcoinAddress: string;
+  selectedCategories: string[];
 }
 
 interface FormErrors {
-  title?: string
-  description?: string
-  goalAmount?: string
-  bitcoinAddress?: string
+  title?: string;
+  description?: string;
+  goalAmount?: string;
+  bitcoinAddress?: string;
 }
 
 const AVAILABLE_CATEGORIES = [
@@ -37,8 +38,8 @@ const AVAILABLE_CATEGORIES = [
   'creative',
   'environment',
   'humanitarian',
-  'research'
-]
+  'research',
+];
 
 // Helper function to calculate form completion percentage
 const getCompletionPercentage = (formData: ProjectFormData): number => {
@@ -48,23 +49,21 @@ const getCompletionPercentage = (formData: ProjectFormData): number => {
     { value: formData.goalAmount.trim(), weight: 15 },
     { value: formData.fundingPurpose.trim(), weight: 10 },
     { value: formData.bitcoinAddress.trim(), weight: 15 },
-    { value: formData.selectedCategories.length > 0, weight: 5 }
-  ]
+    { value: formData.selectedCategories.length > 0, weight: 5 },
+  ];
 
-  const completedWeight = fields.reduce((sum, field) =>
-    sum + (field.value ? field.weight : 0), 0
-  )
+  const completedWeight = fields.reduce((sum, field) => sum + (field.value ? field.weight : 0), 0);
 
-  return Math.min(completedWeight, 100)
-}
+  return Math.min(completedWeight, 100);
+};
 
 export function ProjectWizard() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const { user } = useAuth()
-  const [isEditMode, setIsEditMode] = useState(false)
-  const [editProjectId, setEditProjectId] = useState<string | null>(null)
-  const [loadingProject, setLoadingProject] = useState(false)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user } = useAuth();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editProjectId, setEditProjectId] = useState<string | null>(null);
+  const [loadingProject, setLoadingProject] = useState(false);
   const [formData, setFormData] = useState<ProjectFormData>({
     title: '',
     description: '',
@@ -72,131 +71,145 @@ export function ProjectWizard() {
     goalCurrency: 'CHF',
     fundingPurpose: '',
     bitcoinAddress: '',
-    selectedCategories: []
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [touched, setTouched] = useState<Set<string>>(new Set())
+    selectedCategories: [],
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<Set<string>>(new Set());
 
   // Validation functions
   const validateField = (field: keyof FormErrors, value: string): string | undefined => {
     switch (field) {
       case 'title':
-        if (!value.trim()) return 'Project title is required'
-        if (value.length < 3) return 'Title must be at least 3 characters'
-        if (value.length > 100) return 'Title must be less than 100 characters'
-        break
+        if (!value.trim()) {
+          return 'Project title is required';
+        }
+        if (value.length < 3) {
+          return 'Title must be at least 3 characters';
+        }
+        if (value.length > 100) {
+          return 'Title must be less than 100 characters';
+        }
+        break;
       case 'description':
-        if (!value.trim()) return 'Project description is required'
-        if (value.length < 10) return 'Description must be at least 10 characters'
-        if (value.length > 2000) return 'Description must be less than 2000 characters'
-        break
+        if (!value.trim()) {
+          return 'Project description is required';
+        }
+        if (value.length < 10) {
+          return 'Description must be at least 10 characters';
+        }
+        if (value.length > 2000) {
+          return 'Description must be less than 2000 characters';
+        }
+        break;
       case 'goalAmount':
         if (value && (isNaN(Number(value)) || Number(value) <= 0)) {
-          return 'Goal amount must be a positive number'
+          return 'Goal amount must be a positive number';
         }
-        break
+        break;
       case 'bitcoinAddress':
         if (value && !/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/.test(value)) {
-          return 'Please enter a valid Bitcoin address'
+          return 'Please enter a valid Bitcoin address';
         }
-        break
+        break;
     }
-    return undefined
-  }
+    return undefined;
+  };
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
-    let isValid = true
+    const newErrors: FormErrors = {};
+    let isValid = true;
 
     // Check required fields
-    const titleError = validateField('title', formData.title)
+    const titleError = validateField('title', formData.title);
     if (titleError) {
-      newErrors.title = titleError
-      isValid = false
+      newErrors.title = titleError;
+      isValid = false;
     }
 
-    const descError = validateField('description', formData.description)
+    const descError = validateField('description', formData.description);
     if (descError) {
-      newErrors.description = descError
-      isValid = false
+      newErrors.description = descError;
+      isValid = false;
     }
 
     // Check optional fields
-    const amountError = validateField('goalAmount', formData.goalAmount)
+    const amountError = validateField('goalAmount', formData.goalAmount);
     if (amountError) {
-      newErrors.goalAmount = amountError
-      isValid = false
+      newErrors.goalAmount = amountError;
+      isValid = false;
     }
 
-    const addressError = validateField('bitcoinAddress', formData.bitcoinAddress)
+    const addressError = validateField('bitcoinAddress', formData.bitcoinAddress);
     if (addressError) {
-      newErrors.bitcoinAddress = addressError
-      isValid = false
+      newErrors.bitcoinAddress = addressError;
+      isValid = false;
     }
 
-    setErrors(newErrors)
-    return isValid
-  }
+    setErrors(newErrors);
+    return isValid;
+  };
 
   // Load draft from localStorage on mount
   useEffect(() => {
     // For edit mode, try to load edit-specific draft first
     if (isEditMode && editProjectId) {
-      const editDraft = localStorage.getItem(`project-edit-${editProjectId}`)
+      const editDraft = localStorage.getItem(`project-edit-${editProjectId}`);
       if (editDraft) {
         try {
-          const parsed = JSON.parse(editDraft)
-          setFormData(parsed)
-          toast.info('Edit draft loaded from previous session')
-          return
+          const parsed = JSON.parse(editDraft);
+          setFormData(parsed);
+          toast.info('Edit draft loaded from previous session');
+          return;
         } catch (error) {
-          console.error('Failed to parse edit draft:', error)
-          localStorage.removeItem(`project-edit-${editProjectId}`)
+          logger.error('Failed to parse edit draft:', error);
+          localStorage.removeItem(`project-edit-${editProjectId}`);
         }
       }
     }
 
     // For create mode or if no edit draft, load general draft
-    const savedDraft = localStorage.getItem('project-draft')
+    const savedDraft = localStorage.getItem('project-draft');
     if (savedDraft) {
       try {
-        const parsed = JSON.parse(savedDraft)
-        setFormData(parsed)
-        toast.info('Draft loaded from previous session')
+        const parsed = JSON.parse(savedDraft);
+        setFormData(parsed);
+        toast.info('Draft loaded from previous session');
       } catch (error) {
-        console.error('Failed to parse saved draft:', error)
-        localStorage.removeItem('project-draft')
+        logger.error('Failed to parse saved draft:', error);
+        localStorage.removeItem('project-draft');
       }
     }
-  }, [isEditMode, editProjectId])
+  }, [isEditMode, editProjectId]);
 
   // Check for edit mode on mount
   useEffect(() => {
-    const editId = searchParams.get('edit')
+    const editId = searchParams.get('edit');
     if (editId) {
-      setIsEditMode(true)
-      setEditProjectId(editId)
-      loadProjectForEdit(editId)
+      setIsEditMode(true);
+      setEditProjectId(editId);
+      loadProjectForEdit(editId);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   // Load existing project data for editing
   const loadProjectForEdit = async (projectId: string) => {
-    if (!user) return
+    if (!user) {
+      return;
+    }
 
-    setLoadingProject(true)
+    setLoadingProject(true);
     try {
-      const response = await fetch(`/api/projects/${projectId}`)
+      const response = await fetch(`/api/projects/${projectId}`);
       if (!response.ok) {
-        throw new Error('Failed to load project')
+        throw new Error('Failed to load project');
       }
 
-      const result = await response.json()
-      const project = result.data
+      const result = await response.json();
+      const project = result.data;
 
       // Convert satoshis back to display format
-      const goalAmount = project.goal_amount ? (project.goal_amount / 100000000).toString() : ''
+      const goalAmount = project.goal_amount ? (project.goal_amount / 100000000).toString() : '';
 
       setFormData({
         title: project.title || '',
@@ -205,83 +218,85 @@ export function ProjectWizard() {
         goalCurrency: project.currency || 'SATS',
         fundingPurpose: project.funding_purpose || '',
         bitcoinAddress: project.bitcoin_address || '',
-        selectedCategories: project.tags || []
-      })
+        selectedCategories: project.tags || [],
+      });
 
-      toast.info('Project loaded for editing')
+      toast.info('Project loaded for editing');
     } catch (error) {
-      console.error('Failed to load project for editing:', error)
-      toast.error('Failed to load project for editing')
-      router.push('/dashboard/projects')
+      logger.error('Failed to load project for editing:', error);
+      toast.error('Failed to load project for editing');
+      router.push('/dashboard/projects');
     } finally {
-      setLoadingProject(false)
+      setLoadingProject(false);
     }
-  }
+  };
 
   // Autosave every 10 seconds (for both create and edit modes)
   useEffect(() => {
     const interval = setInterval(() => {
-      const hasContent = formData.title.trim() || formData.description.trim()
+      const hasContent = formData.title.trim() || formData.description.trim();
       if (hasContent) {
-        const key = isEditMode && editProjectId ? `project-edit-${editProjectId}` : 'project-draft'
-        localStorage.setItem(key, JSON.stringify(formData))
+        const key = isEditMode && editProjectId ? `project-edit-${editProjectId}` : 'project-draft';
+        localStorage.setItem(key, JSON.stringify(formData));
       }
-    }, 10000)
+    }, 10000);
 
-    return () => clearInterval(interval)
-  }, [formData, isEditMode, editProjectId])
+    return () => clearInterval(interval);
+  }, [formData, isEditMode, editProjectId]);
 
   const updateFormData = (updates: Partial<ProjectFormData>) => {
-    setFormData(prev => ({ ...prev, ...updates }))
-  }
+    setFormData(prev => ({ ...prev, ...updates }));
+  };
 
   const handleFieldChange = (field: keyof FormErrors, value: string) => {
-    updateFormData({ [field]: value })
+    updateFormData({ [field]: value });
 
     // Mark field as touched
-    setTouched(prev => new Set(prev).add(field))
+    setTouched(prev => new Set(prev).add(field));
 
     // Validate field in real-time if it's been touched
     if (touched.has(field)) {
-      const error = validateField(field, value)
-      setErrors(prev => ({ ...prev, [field]: error }))
+      const error = validateField(field, value);
+      setErrors(prev => ({ ...prev, [field]: error }));
     }
-  }
+  };
 
   const handleFieldBlur = (field: keyof FormErrors) => {
-    setTouched(prev => new Set(prev).add(field))
-    const error = validateField(field, formData[field as keyof ProjectFormData] as string)
-    setErrors(prev => ({ ...prev, [field]: error }))
-  }
+    setTouched(prev => new Set(prev).add(field));
+    const error = validateField(field, formData[field as keyof ProjectFormData] as string);
+    setErrors(prev => ({ ...prev, [field]: error }));
+  };
 
   const toggleCategory = (category: string) => {
     setFormData(prev => ({
       ...prev,
       selectedCategories: prev.selectedCategories.includes(category)
         ? prev.selectedCategories.filter(c => c !== category)
-        : [...prev.selectedCategories, category]
-    }))
-  }
+        : [...prev.selectedCategories, category],
+    }));
+  };
 
-  const canSubmit = formData.title.trim() && formData.description.trim() && !errors.title && !errors.description
+  const canSubmit =
+    formData.title.trim() && formData.description.trim() && !errors.title && !errors.description;
 
   const handleSubmit = async () => {
     if (!user) {
-      toast.error('Please sign in to create a project')
-      return
+      toast.error('Please sign in to create a project');
+      return;
     }
 
     // Validate all fields before submission
-    const isValid = validateForm()
+    const isValid = validateForm();
     if (!isValid) {
-      toast.error('Please fix the errors before submitting')
-      return
+      toast.error('Please fix the errors before submitting');
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      const apiUrl = isEditMode && editProjectId ? `/api/projects/${editProjectId}` : '/api/projects'
-      const method = isEditMode ? 'PUT' : 'POST'
+      const apiUrl =
+        isEditMode && editProjectId ? `/api/projects/${editProjectId}` : '/api/projects';
+      const method = isEditMode ? 'PUT' : 'POST';
 
       const response = await fetch(apiUrl, {
         method,
@@ -289,66 +304,69 @@ export function ProjectWizard() {
         body: JSON.stringify({
           title: formData.title.trim(),
           description: formData.description.trim(),
-          goal_amount: formData.goalAmount ? Math.round(parseFloat(formData.goalAmount) * 100000000) : null, // Convert to satoshis
+          goal_amount: formData.goalAmount
+            ? Math.round(parseFloat(formData.goalAmount) * 100000000)
+            : null, // Convert to satoshis
           currency: formData.goalCurrency || 'SATS',
           funding_purpose: formData.fundingPurpose.trim() || null,
           bitcoin_address: formData.bitcoinAddress.trim() || null,
           category: formData.selectedCategories[0] || 'other', // Primary category
-          tags: formData.selectedCategories // Multi-select categories as tags
-        })
-      })
+          tags: formData.selectedCategories, // Multi-select categories as tags
+        }),
+      });
 
       if (!response.ok) {
-        let errorMessage = 'Failed to create project'
+        let errorMessage = 'Failed to create project';
         try {
-          const errorData = await response.json()
-          console.error('API Error Response:', errorData)
+          const errorData = await response.json();
+          logger.error('API Error Response:', errorData);
 
           // Handle specific error types
           if (response.status === 400) {
-            errorMessage = 'Invalid project data. Please check your inputs and try again.'
+            errorMessage = 'Invalid project data. Please check your inputs and try again.';
           } else if (response.status === 401) {
-            errorMessage = 'You must be signed in to create a project.'
+            errorMessage = 'You must be signed in to create a project.';
           } else if (response.status === 403) {
-            errorMessage = 'You do not have permission to create projects.'
+            errorMessage = 'You do not have permission to create projects.';
           } else if (response.status === 409) {
-            errorMessage = 'A project with this title already exists. Please choose a different title.'
+            errorMessage =
+              'A project with this title already exists. Please choose a different title.';
           } else if (response.status === 429) {
-            errorMessage = 'Too many requests. Please wait a moment and try again.'
+            errorMessage = 'Too many requests. Please wait a moment and try again.';
           } else if (response.status >= 500) {
-            errorMessage = 'Server error. Please try again in a few minutes.'
+            errorMessage = 'Server error. Please try again in a few minutes.';
           } else {
-            errorMessage = errorData.error || errorData.message || errorMessage
+            errorMessage = errorData.error || errorData.message || errorMessage;
           }
         } catch (e) {
-          console.error('Could not parse error response:', await response.text())
+          logger.error('Could not parse error response:', await response.text());
           if (response.status >= 500) {
-            errorMessage = 'Server error. Please try again later.'
+            errorMessage = 'Server error. Please try again later.';
           }
         }
-        throw new Error(errorMessage)
+        throw new Error(errorMessage);
       }
 
-      const data = await response.json()
-      console.log(isEditMode ? 'Project updated:' : 'Project created:', data)
+      const data = await response.json();
+      logger.debug(isEditMode ? 'Project updated:' : 'Project created:', data);
 
       // Clear draft on successful submission
       if (isEditMode && editProjectId) {
-        localStorage.removeItem(`project-edit-${editProjectId}`)
+        localStorage.removeItem(`project-edit-${editProjectId}`);
       } else {
-        localStorage.removeItem('project-draft')
+        localStorage.removeItem('project-draft');
       }
 
-      toast.success(isEditMode ? 'Project updated successfully!' : 'Project created successfully!')
-      router.push(`/dashboard/projects`)
+      toast.success(isEditMode ? 'Project updated successfully!' : 'Project created successfully!');
+      router.push(`/dashboard/projects`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create project'
-      toast.error(errorMessage)
-      console.error('Project creation error:', error, error instanceof Error ? error.stack : '')
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create project';
+      toast.error(errorMessage);
+      logger.error('Project creation error:', error, error instanceof Error ? error.stack : '');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   if (loadingProject) {
     return (
@@ -358,7 +376,7 @@ export function ProjectWizard() {
           <p className="text-gray-600">Loading project for editing...</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -405,38 +423,30 @@ export function ProjectWizard() {
       <div className="space-y-6">
         {/* Project Title */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Project Title *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Project Title *</label>
           <Input
             value={formData.title}
-            onChange={(e) => handleFieldChange('title', e.target.value)}
+            onChange={e => handleFieldChange('title', e.target.value)}
             onBlur={() => handleFieldBlur('title')}
             placeholder="e.g., Community Garden Project"
             className={`w-full ${errors.title ? 'border-red-500 focus:ring-red-500' : ''}`}
             autoFocus
           />
-          {errors.title && (
-            <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-          )}
+          {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
         </div>
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Description *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
           <Textarea
             value={formData.description}
-            onChange={(e) => handleFieldChange('description', e.target.value)}
+            onChange={e => handleFieldChange('description', e.target.value)}
             onBlur={() => handleFieldBlur('description')}
             placeholder="What's your project about? Tell us your story..."
             rows={4}
             className={`w-full ${errors.description ? 'border-red-500 focus:ring-red-500' : ''}`}
           />
-          {errors.description && (
-            <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-          )}
+          {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
           <p className="mt-1 text-xs text-gray-500">
             {formData.description.length}/2000 characters
           </p>
@@ -451,22 +461,18 @@ export function ProjectWizard() {
             <Input
               type="number"
               value={formData.goalAmount}
-              onChange={(e) => handleFieldChange('goalAmount', e.target.value)}
+              onChange={e => handleFieldChange('goalAmount', e.target.value)}
               onBlur={() => handleFieldBlur('goalAmount')}
               placeholder="5000"
               className={`w-full ${errors.goalAmount ? 'border-red-500 focus:ring-red-500' : ''}`}
             />
-            {errors.goalAmount && (
-              <p className="mt-1 text-sm text-red-600">{errors.goalAmount}</p>
-            )}
+            {errors.goalAmount && <p className="mt-1 text-sm text-red-600">{errors.goalAmount}</p>}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Currency
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
             <select
               value={formData.goalCurrency}
-              onChange={(e) => updateFormData({ goalCurrency: e.target.value })}
+              onChange={e => updateFormData({ goalCurrency: e.target.value })}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
             >
               <option value="CHF">CHF (Swiss Francs)</option>
@@ -485,7 +491,7 @@ export function ProjectWizard() {
           </label>
           <Input
             value={formData.fundingPurpose}
-            onChange={(e) => updateFormData({ fundingPurpose: e.target.value })}
+            onChange={e => updateFormData({ fundingPurpose: e.target.value })}
             placeholder="e.g., equipment, team salaries, marketing"
             className="w-full"
           />
@@ -497,7 +503,7 @@ export function ProjectWizard() {
             Categories (select as many as apply)
           </label>
           <div className="flex flex-wrap gap-2">
-            {AVAILABLE_CATEGORIES.map((category) => (
+            {AVAILABLE_CATEGORIES.map(category => (
               <button
                 key={category}
                 type="button"
@@ -524,7 +530,7 @@ export function ProjectWizard() {
           </label>
           <Input
             value={formData.bitcoinAddress}
-            onChange={(e) => handleFieldChange('bitcoinAddress', e.target.value)}
+            onChange={e => handleFieldChange('bitcoinAddress', e.target.value)}
             onBlur={() => handleFieldBlur('bitcoinAddress')}
             placeholder="bc1q... (add this later if you want to accept donations)"
             className={`w-full ${errors.bitcoinAddress ? 'border-red-500 focus:ring-red-500' : ''}`}
@@ -539,11 +545,7 @@ export function ProjectWizard() {
       </div>
 
       <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
-        <Button
-          variant="outline"
-          onClick={() => router.push('/dashboard')}
-          disabled={isSubmitting}
-        >
+        <Button variant="outline" onClick={() => router.push('/dashboard')} disabled={isSubmitting}>
           Cancel
         </Button>
         <Button
@@ -565,5 +567,5 @@ export function ProjectWizard() {
         </Button>
       </div>
     </Card>
-  )
+  );
 }
