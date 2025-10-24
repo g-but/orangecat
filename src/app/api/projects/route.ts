@@ -63,12 +63,24 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = projectSchema.parse(body);
 
+    // Map validation schema fields to database columns
+    const dbData = {
+      title: validatedData.title,
+      description: validatedData.description,
+      goal_amount: validatedData.goal_amount,
+      currency: validatedData.currency,
+      funding_purpose: validatedData.funding_purpose,
+      bitcoin_address: validatedData.bitcoin_address,
+      lightning_address: validatedData.lightning_address,
+      category: validatedData.category,
+      tags: validatedData.tags,
+      user_id: user.id, // Database uses user_id, not creator_id
+      status: 'draft', // Default status
+    };
+
     const { data: project, error } = await supabase
       .from('projects')
-      .insert({
-        ...validatedData,
-        creator_id: user.id,
-      })
+      .insert(dbData)
       .select('*')
       .single();
 
