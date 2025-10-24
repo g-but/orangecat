@@ -12,10 +12,10 @@ import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import { projectSchema } from '@/lib/validation';
 
 // GET /api/projects/[id] - Get specific project
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createServerClient();
-    const { id } = params;
+    const { id } = await params;
 
     const { data: project, error } = await supabase
       .from('projects')
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 // PUT /api/projects/[id] - Update project
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Rate limiting check (stricter for PUT)
     const rateLimitResult = rateLimit(request);
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return apiUnauthorized();
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // Validate input data
@@ -122,7 +122,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/projects/[id] - Delete project
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const supabase = await createServerClient();
     const {
@@ -134,7 +137,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return apiUnauthorized();
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Check if user owns the project
     const { data: existingProject, error: fetchError } = await supabase
