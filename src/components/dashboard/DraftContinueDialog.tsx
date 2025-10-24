@@ -14,7 +14,7 @@ import {
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { useCampaignStore } from '@/stores/projectStore';
+import { useProjectStore } from '@/stores/projectStore';
 import { formatDistanceToNow } from 'date-fns';
 
 interface DraftContinueDialogProps {
@@ -30,7 +30,7 @@ export default function DraftContinueDialog({
   onContinueDraft,
   onStartFresh,
 }: DraftContinueDialogProps) {
-  const { drafts } = useCampaignStore();
+  const { drafts } = useProjectStore();
 
   const hasAnyDraft = drafts.length > 0;
   const primaryDraft = hasAnyDraft ? drafts[0] : null;

@@ -28,7 +28,7 @@ export default function SmartCreateButton({
   forceNewCampaign = false,
 }: SmartCreateButtonProps) {
   const router = useRouter();
-  const { drafts } = useCampaignStore();
+  const { drafts } = useProjectStore();
   const [showDraftDialog, setShowDraftDialog] = useState(false);
 
   const hasAnyDraft = drafts.length > 0;
