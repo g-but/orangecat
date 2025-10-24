@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, Edit3, FileText } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { useCampaignStore } from '@/stores/projectStore';
+import { useProjectStore } from '@/stores/projectStore';
 import DraftContinueDialog from './DraftContinueDialog';
 
 interface SmartCreateButtonProps {
@@ -63,7 +63,7 @@ export default function SmartCreateButton({
       return (
         <>
           {showIcon && <Edit3 className="w-4 h-4 mr-2" />}
-          {children || (isPendingDraft ? 'Continue Campaign' : 'Complete Campaign')}
+          {children || (isPendingDraft ? 'Continue Project' : 'Complete Project')}
         </>
       );
     }
@@ -71,7 +71,7 @@ export default function SmartCreateButton({
     return (
       <>
         {showIcon && <Plus className="w-4 h-4 mr-2" />}
-        {children || 'Create Campaign'}
+        {children || 'Create Project'}
       </>
     );
   };
@@ -145,7 +145,7 @@ export function NewCampaignButton({
 }: Omit<SmartCreateButtonProps, 'forceNewCampaign'>) {
   return (
     <SmartCreateButton {...props} forceNewCampaign={true} className={className}>
-      {children || 'Start New Campaign'}
+      {children || 'Start New Project'}
     </SmartCreateButton>
   );
 }

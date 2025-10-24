@@ -6,13 +6,13 @@ import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import EntityListPage from '@/components/entities/EntityListPage';
 import { Target } from 'lucide-react';
-import { useCampaignStore, Campaign } from '@/stores/projectStore';
+import { useProjectStore, Project } from '@/stores/projectStore';
 import Button from '@/components/ui/Button';
 
 export default function ProjectsDashboardPage() {
   const { user, isLoading, hydrated, session } = useAuth();
   const router = useRouter();
-  const { projects, loadProjects } = useCampaignStore();
+  const { projects, loadProjects } = useProjectStore();
 
   // Load projects when user is available (hook must be called before any returns)
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function ProjectsDashboardPage() {
   }
 
   return (
-    <EntityListPage<Campaign>
+    <EntityListPage<Project>
       title="Projects"
       description="Manage your Bitcoin projects and initiatives."
       icon={<Target className="w-5 h-5" />}
