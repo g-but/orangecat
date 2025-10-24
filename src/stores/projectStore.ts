@@ -35,6 +35,7 @@ export interface ProjectState {
   // ACTIONS
   loadProjects: (userId: string) => Promise<void>;
   getProjectById: (id: string) => Project | undefined;
+  getStats: () => { totalProjects: number; totalActive: number };
 
   // UTILITIES
   reset: () => void;
@@ -92,6 +93,14 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
   getProjectById: (id: string) => {
     return get().projects.find(p => p.id === id);
+  },
+
+  getStats: () => {
+    const state = get();
+    return {
+      totalProjects: state.projects.length,
+      totalActive: state.activeProjects.length,
+    };
   },
 
   reset: () => {
