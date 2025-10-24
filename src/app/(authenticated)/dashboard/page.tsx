@@ -1,21 +1,21 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import { useCampaignStore } from '@/stores/campaignStore'
-import { useAnalytics } from '@/hooks/useAnalytics'
-import Loading from '@/components/Loading'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import Link from 'next/link'
-import { 
-  Target, 
-  Users, 
-  TrendingUp, 
-  Plus, 
-  ArrowRight, 
-  FileText, 
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { useCampaignStore } from '@/stores/projectStore';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import Loading from '@/components/Loading';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Link from 'next/link';
+import {
+  Target,
+  Users,
+  TrendingUp,
+  Plus,
+  ArrowRight,
+  FileText,
   Eye,
   BarChart3,
   Rocket,
@@ -24,18 +24,25 @@ import {
   Wallet,
   ExternalLink,
   Edit3,
-  Zap
-} from 'lucide-react'
-import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
-import { PROFILE_CATEGORIES } from '@/types/profile'
+  Zap,
+} from 'lucide-react';
+import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
+import { PROFILE_CATEGORIES } from '@/types/profile';
 
 export default function DashboardPage() {
-  const { user, profile, isLoading, error: authError, hydrated, session } = useAuth()
-  const { projects, drafts, activeProjects, loadProjects, isLoading: projectLoading, getStats } = useCampaignStore()
-  const { metrics, isLoading: analyticsLoading } = useAnalytics()
-  const router = useRouter()
-  const [localLoading, setLocalLoading] = useState(true)
-  const [hasRedirected, setHasRedirected] = useState(false)
+  const { user, profile, isLoading, error: authError, hydrated, session } = useAuth();
+  const {
+    projects,
+    drafts,
+    activeProjects,
+    loadProjects,
+    isLoading: projectLoading,
+    getStats,
+  } = useCampaignStore();
+  const { metrics, isLoading: analyticsLoading } = useAnalytics();
+  const router = useRouter();
+  const [localLoading, setLocalLoading] = useState(true);
+  const [hasRedirected, setHasRedirected] = useState(false);
 
   // Debug logging
   useEffect(() => {
@@ -44,21 +51,23 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (hydrated) {
-      setLocalLoading(false)
+      setLocalLoading(false);
     }
-  }, [hydrated])
+  }, [hydrated]);
 
   // Load projects when user is available
   useEffect(() => {
     if (user?.id && hydrated) {
-      loadProjects(user.id)
+      loadProjects(user.id);
     }
-  }, [user?.id, hydrated, loadProjects])
+  }, [user?.id, hydrated, loadProjects]);
 
   // FIXED: Handle authentication redirect with proper client-side check
   useEffect(() => {
-    if (typeof window === 'undefined') {return;} // Don't run on server
-    
+    if (typeof window === 'undefined') {
+      return;
+    } // Don't run on server
+
     if (hydrated && !isLoading && !user && !hasRedirected) {
       setHasRedirected(true);
       router.push('/auth');
@@ -67,12 +76,12 @@ export default function DashboardPage() {
 
   // Handle loading states - simplified to avoid infinite loading
   if (!hydrated || localLoading) {
-    return <Loading fullScreen message="Loading your account..." />
+    return <Loading fullScreen message="Loading your account..." />;
   }
 
   // If no user after hydration, show loading while redirecting
   if (!user && !isLoading) {
-    return <Loading fullScreen message="Redirecting to login..." />
+    return <Loading fullScreen message="Redirecting to login..." />;
   }
 
   // Show error state if there's an authentication error
@@ -98,38 +107,41 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // REMOVED: console.log statement
 
   // Get project stats
-  const stats = getStats()
-  const totalProjects = stats.totalProjects
-  const activeProjectsCount = stats.totalActive
-  const totalRaised = projects.reduce((sum, c) => sum + (c.total_funding || 0), 0)
-  const totalSupporters = projects.reduce((sum, c) => sum + (c.contributor_count || 0), 0)
+  const stats = getStats();
+  const totalProjects = stats.totalProjects;
+  const activeProjectsCount = stats.totalActive;
+  const totalRaised = projects.reduce((sum, c) => sum + (c.total_funding || 0), 0);
+  const totalSupporters = projects.reduce((sum, c) => sum + (c.contributor_count || 0), 0);
 
   // Profile completion
-  const hasUsername = !!profile?.username
-  const hasBio = !!profile?.bio
-  const hasBitcoinAddress = !!profile?.bitcoin_address
-  const profileFields = [hasUsername, hasBio, hasBitcoinAddress]
-  const profileCompletion = Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100)
-  
+  const hasUsername = !!profile?.username;
+  const hasBio = !!profile?.bio;
+  const hasBitcoinAddress = !!profile?.bitcoin_address;
+  const profileFields = [hasUsername, hasBio, hasBitcoinAddress];
+  const profileCompletion = Math.round(
+    (profileFields.filter(Boolean).length / profileFields.length) * 100
+  );
+
   // Get primary draft for urgent actions
-  const hasAnyDraft = drafts.length > 0
-  const primaryDraft = hasAnyDraft ? drafts[0] : null
-  const totalDrafts = drafts.length
+  const hasAnyDraft = drafts.length > 0;
+  const primaryDraft = hasAnyDraft ? drafts[0] : null;
+  const totalDrafts = drafts.length;
 
   // Get featured project (most recent active or highest funded)
-  const featuredCampaign = activeProjects.length > 0 
-    ? activeProjects.sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
-    : projects.find(c => c.title?.toLowerCase().includes('orange cat')) // Specifically look for Orange Cat
-    || projects[0] // Fallback to first project
+  const featuredCampaign =
+    activeProjects.length > 0
+      ? activeProjects.sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
+      : projects.find(c => c.title?.toLowerCase().includes('orange cat')) || // Specifically look for Orange Cat
+        projects[0]; // Fallback to first project
 
   // Profile category for display (default to individual for now)
-  const profileCategory = PROFILE_CATEGORIES.individual
+  const profileCategory = PROFILE_CATEGORIES.individual;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
@@ -139,7 +151,7 @@ export default function DashboardPage() {
           {/* Background decoration */}
           <div className="absolute top-4 right-4 w-24 h-24 bg-gradient-to-br from-bitcoinOrange/10 to-tiffany-400/10 rounded-full blur-2xl" />
           <div className="absolute bottom-4 left-4 w-16 h-16 bg-gradient-to-br from-tiffany-400/10 to-orange-300/10 rounded-full blur-xl" />
-          
+
           <div className="relative">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
               <div className="flex items-center gap-3">
@@ -150,20 +162,21 @@ export default function DashboardPage() {
                   <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent">
                     Welcome back, {profile?.name || profile?.username || 'there'}! 👋
                   </h1>
-                                     {profileCategory && (
-                     <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border backdrop-blur-sm mt-2 ${profileCategory.color}`}>
-                       <span>{profileCategory.icon}</span>
-                       {profileCategory.label}
-                     </div>
-                   )}
+                  {profileCategory && (
+                    <div
+                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border backdrop-blur-sm mt-2 ${profileCategory.color}`}
+                    >
+                      <span>{profileCategory.icon}</span>
+                      {profileCategory.label}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
             <p className="text-lg text-gray-600 leading-relaxed">
               {totalProjects > 0
                 ? `Managing ${totalProjects} project${totalProjects !== 1 ? 's' : ''} • ${activeProjectsCount} active`
-                : "Welcome! Let's create your first Bitcoin fundraising project."
-              }
+                : "Welcome! Let's create your first Bitcoin fundraising project."}
             </p>
           </div>
         </div>
@@ -178,38 +191,55 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h2 className="text-lg font-semibold text-gray-900">🎯 Your Featured Campaign</h2>
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      🎯 Your Featured Campaign
+                    </h2>
                     <div className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
                       {featuredCampaign.is_active ? 'Active' : 'Draft'}
                     </div>
                   </div>
-                  
+
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{featuredCampaign.title}</h3>
                   <p className="text-gray-600 mb-4 line-clamp-2">{featuredCampaign.description}</p>
-                  
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     <div>
                       <p className="text-sm text-gray-500">Raised</p>
                       <p className="font-semibold text-green-600">
-                        <CurrencyDisplay amount={featuredCampaign.total_funding || 0} currency="BTC" size="sm" />
+                        <CurrencyDisplay
+                          amount={featuredCampaign.total_funding || 0}
+                          currency="BTC"
+                          size="sm"
+                        />
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Goal</p>
                       <p className="font-semibold text-blue-600">
-                        <CurrencyDisplay amount={featuredCampaign.goal_amount || 0} currency="BTC" size="sm" />
+                        <CurrencyDisplay
+                          amount={featuredCampaign.goal_amount || 0}
+                          currency="BTC"
+                          size="sm"
+                        />
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Supporters</p>
-                      <p className="font-semibold text-purple-600">{featuredCampaign.contributor_count || 0}</p>
+                      <p className="font-semibold text-purple-600">
+                        {featuredCampaign.contributor_count || 0}
+                      </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Progress</p>
                       <p className="font-semibold text-orange-600">
-                        {featuredCampaign.goal_amount ? 
-                          Math.round(((featuredCampaign.total_funding || 0) / featuredCampaign.goal_amount) * 100) : 0
-                        }%
+                        {featuredCampaign.goal_amount
+                          ? Math.round(
+                              ((featuredCampaign.total_funding || 0) /
+                                featuredCampaign.goal_amount) *
+                                100
+                            )
+                          : 0}
+                        %
                       </p>
                     </div>
                   </div>
@@ -239,7 +269,7 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         )}
-            
+
         {/* Urgent Actions */}
         {(totalDrafts > 0 || profileCompletion < 100) && (
           <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50">
@@ -248,18 +278,32 @@ export default function DashboardPage() {
                 <AlertCircle className="w-6 h-6 text-orange-600 mt-1 flex-shrink-0" />
                 <div className="flex-1">
                   <h2 className="text-lg font-semibold text-gray-900 mb-3">Action Required</h2>
-                  
+
                   {/* Profile completion */}
                   {profileCompletion < 100 && (
                     <div className="mb-4 p-3 bg-white rounded-lg border border-orange-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium text-gray-900">Complete your profile</span>
-                        <span className="text-sm text-orange-600">{profileCompletion}% complete</span>
+                        <span className="text-sm text-orange-600">
+                          {profileCompletion}% complete
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 mb-2">
-                        {!hasUsername && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">Username needed</span>}
-                        {!hasBitcoinAddress && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">Bitcoin address needed</span>}
-                        {!hasBio && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">Bio needed</span>}
+                        {!hasUsername && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                            Username needed
+                          </span>
+                        )}
+                        {!hasBitcoinAddress && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                            Bitcoin address needed
+                          </span>
+                        )}
+                        {!hasBio && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                            Bio needed
+                          </span>
+                        )}
                       </div>
                       <Link href="/profile">
                         <Button size="sm" variant="outline">
@@ -269,7 +313,7 @@ export default function DashboardPage() {
                       </Link>
                     </div>
                   )}
-              
+
                   {/* Draft projects */}
                   {totalDrafts > 0 && (
                     <div className="p-3 bg-white rounded-lg border border-orange-200">
@@ -308,7 +352,10 @@ export default function DashboardPage() {
         {/* Overview Cards with Enhanced Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Fundraising Overview */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard/projects')}>
+          <Card
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => router.push('/dashboard/projects')}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <Target className="w-8 h-8 text-teal-600" />
@@ -317,7 +364,9 @@ export default function DashboardPage() {
               <h3 className="font-semibold text-gray-900 mb-2">Projects</h3>
               <div className="space-y-1 text-sm text-gray-600">
                 <div className="font-medium text-lg text-gray-900">{totalProjects}</div>
-                <div>{activeProjectsCount} active • {totalDrafts} drafts</div>
+                <div>
+                  {activeProjectsCount} active • {totalDrafts} drafts
+                </div>
                 {totalRaised > 0 && (
                   <div className="font-medium text-green-600">
                     <CurrencyDisplay amount={totalRaised} currency="BTC" size="sm" /> raised
@@ -328,7 +377,10 @@ export default function DashboardPage() {
           </Card>
 
           {/* Profile Card */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/profile')}>
+          <Card
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => router.push('/profile')}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <Star className="w-8 h-8 text-blue-600" />
@@ -338,7 +390,11 @@ export default function DashboardPage() {
               <div className="space-y-1 text-sm text-gray-600">
                 <div className="font-medium text-lg text-gray-900">{profileCompletion}%</div>
                 <div>{profile?.username ? `@${profile.username}` : 'No username set'}</div>
-                <div className={profileCompletion === 100 ? 'text-green-600 font-medium' : 'text-orange-600'}>
+                <div
+                  className={
+                    profileCompletion === 100 ? 'text-green-600 font-medium' : 'text-orange-600'
+                  }
+                >
                   {profileCompletion === 100 ? 'All set!' : 'Needs attention'}
                 </div>
               </div>
@@ -346,7 +402,10 @@ export default function DashboardPage() {
           </Card>
 
           {/* Community/Support */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/discover')}>
+          <Card
+            className="hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => router.push('/discover')}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <Users className="w-8 h-8 text-purple-600" />
@@ -363,7 +422,10 @@ export default function DashboardPage() {
 
           {/* Analytics/Performance */}
           {totalProjects > 0 ? (
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard/projects')}>
+            <Card
+              className="hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => router.push('/dashboard/projects')}
+            >
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <BarChart3 className="w-8 h-8 text-green-600" />
@@ -372,7 +434,10 @@ export default function DashboardPage() {
                 <h3 className="font-semibold text-gray-900 mb-2">Performance</h3>
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="font-medium text-lg text-gray-900">
-                    {Math.round(activeProjectsCount > 0 ? (totalRaised / activeProjectsCount) : 0 * 100000000)} sats
+                    {Math.round(
+                      activeProjectsCount > 0 ? totalRaised / activeProjectsCount : 0 * 100000000
+                    )}{' '}
+                    sats
                   </div>
                   <div>Avg per project</div>
                   <div className="text-green-600 font-medium">View analytics</div>
@@ -380,7 +445,10 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 hover:shadow-lg transition-all cursor-pointer" onClick={() => router.push('/projects/create')}>
+            <Card
+              className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 hover:shadow-lg transition-all cursor-pointer"
+              onClick={() => router.push('/projects/create')}
+            >
               <CardContent className="p-8">
                 <div className="flex items-center justify-between mb-6">
                   <div className="p-3 bg-orange-100 rounded-full">
@@ -421,29 +489,40 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid gap-4">
-                {projects.slice(0, 3).map((project) => (
-                  <div key={project.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                {projects.slice(0, 3).map(project => (
+                  <div
+                    key={project.id}
+                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium text-gray-900">{project.title}</h4>
-                        <div className={`px-2 py-1 text-xs rounded-full ${
-                          project.is_active 
-                            ? 'bg-green-100 text-green-700' 
-                            : project.is_public 
-                              ? 'bg-orange-100 text-orange-700' 
-                              : 'bg-gray-100 text-gray-700'
-                        }`}>
+                        <div
+                          className={`px-2 py-1 text-xs rounded-full ${
+                            project.is_active
+                              ? 'bg-green-100 text-green-700'
+                              : project.is_public
+                                ? 'bg-orange-100 text-orange-700'
+                                : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
                           {project.is_active ? 'Active' : project.is_public ? 'Published' : 'Draft'}
                         </div>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>
-                          <CurrencyDisplay amount={project.total_funding || 0} currency="BTC" size="sm" /> raised
+                          <CurrencyDisplay
+                            amount={project.total_funding || 0}
+                            currency="BTC"
+                            size="sm"
+                          />{' '}
+                          raised
                         </span>
                         <span>{project.contributor_count || 0} supporters</span>
                         {project.goal_amount && (
                           <span>
-                            {Math.round(((project.total_funding || 0) / project.goal_amount) * 100)}% of goal
+                            {Math.round(((project.total_funding || 0) / project.goal_amount) * 100)}
+                            % of goal
                           </span>
                         )}
                       </div>
@@ -490,7 +569,7 @@ export default function DashboardPage() {
                   </Button>
                 </Link>
               )}
-              
+
               <Link href="/profile">
                 <Button variant="outline" className="w-full h-16 flex-col">
                   <Star className="w-5 h-5 mb-2" />
@@ -523,5 +602,5 @@ export default function DashboardPage() {
         )}
       </div>
     </div>
-  )
+  );
 }

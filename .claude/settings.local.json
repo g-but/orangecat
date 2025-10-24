@@ -98,7 +98,8 @@
       "Bash(awk:*)",
       "mcp__memory__create_entities",
       "mcp__memory__delete_observations",
-      "mcp__memory__add_observations"
+      "mcp__memory__add_observations",
+      "Bash(timeout 90s npm run build:*)"
     ],
     "deny": [
       "Bash(rm **/.env.local)",
@@ -110,7 +111,5 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "shadcn"
-  ]
+  "enabledMcpjsonServers": ["shadcn"]
 }

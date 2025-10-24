@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import EntityListPage from '@/components/entities/EntityListPage';
 import { Target } from 'lucide-react';
-import { useCampaignStore, Campaign } from '@/stores/campaignStore';
+import { useCampaignStore, Campaign } from '@/stores/projectStore';
 import Button from '@/components/ui/Button';
 
 export default function ProjectsDashboardPage() {
