@@ -9,4 +9,4 @@ module.exports = {
   useSearchParams: () => ({
     get: jest.fn(),
   }),
-}; 
+};
