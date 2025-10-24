@@ -269,6 +269,106 @@ export default function DashboardPage() {
           </Card>
         )}
 
+        {/* Example Project Templates - Only show when user has no projects */}
+        {totalProjects === 0 && (
+          <Card className="border-tiffany-200 bg-gradient-to-r from-tiffany-50 to-orange-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-tiffany-600" />
+                Quick Start: Example Projects
+              </CardTitle>
+              <CardDescription>
+                Click any example to pre-fill the project form and get started instantly
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Example 1: Community Garden */}
+                <Link href="/projects/create?template=community-garden">
+                  <div className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-tiffany-500 transition-all cursor-pointer group">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Target className="w-5 h-5 text-green-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 group-hover:text-tiffany-600 transition-colors">
+                          Community Garden Project
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Creating a shared community space with raised garden beds and educational
+                          workshops.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="px-2 py-1 bg-green-50 text-green-700 rounded-full">
+                        Community
+                      </span>
+                      <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full">
+                        Education
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* Example 2: Animal Shelter */}
+                <Link href="/projects/create?template=animal-shelter">
+                  <div className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-tiffany-500 transition-all cursor-pointer group">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Target className="w-5 h-5 text-orange-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 group-hover:text-tiffany-600 transition-colors">
+                          Local Animal Shelter
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Supporting animal rescue operations and veterinary care for abandoned
+                          pets.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="px-2 py-1 bg-orange-50 text-orange-700 rounded-full">
+                        Charity
+                      </span>
+                      <span className="px-2 py-1 bg-red-50 text-red-700 rounded-full">Health</span>
+                    </div>
+                  </div>
+                </Link>
+
+                {/* Example 3: Art Exhibition */}
+                <Link href="/projects/create?template=art-exhibition">
+                  <div className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-tiffany-500 transition-all cursor-pointer group">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Target className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-gray-900 group-hover:text-tiffany-600 transition-colors">
+                          Art Exhibition Fundraiser
+                        </h4>
+                        <p className="text-sm text-gray-600 mt-1">
+                          Organizing a traveling art show featuring local artists and cultural
+                          exhibits.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-full">
+                        Creative
+                      </span>
+                      <span className="px-2 py-1 bg-pink-50 text-pink-700 rounded-full">
+                        Community
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Urgent Actions */}
         {(totalDrafts > 0 || profileCompletion < 100) && (
           <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50">

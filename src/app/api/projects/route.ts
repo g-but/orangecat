@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       category: validatedData.category,
       tags: validatedData.tags,
       user_id: user.id, // Database uses user_id, not creator_id
-      status: 'draft', // Default status
+      status: 'active', // Set to active immediately for MVP
     };
 
     const { data: project, error } = await supabase

@@ -149,7 +149,7 @@ export default function DraftContinueDialog({
             {/* Progress Bar */}
             <div className="mt-4">
               <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Campaign Progress</span>
+                <span>Project Progress</span>
                 <span>{completionPercentage}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
@@ -200,7 +200,7 @@ export default function DraftContinueDialog({
                     <Plus className="w-5 h-5 text-gray-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Start a New Campaign</h4>
+                    <h4 className="font-semibold text-gray-900">Start a New Project</h4>
                     <p className="text-sm text-gray-600">
                       Create a completely new project from scratch
                     </p>

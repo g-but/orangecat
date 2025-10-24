@@ -1,55 +1,55 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { 
-  Bell, 
-  X, 
-  Check, 
-  Bitcoin, 
-  Zap, 
-  Users, 
+import { useState, useEffect } from 'react';
+import {
+  Bell,
+  X,
+  Check,
+  Bitcoin,
+  Zap,
+  Users,
   MessageSquare,
   TrendingUp,
   Calendar,
   Settings,
   Trash2,
-  MoreVertical
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import { formatDistanceToNow } from 'date-fns'
-import { toast } from 'sonner'
+  MoreVertical,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { formatDistanceToNow } from 'date-fns';
+import { toast } from 'sonner';
 
 interface Notification {
-  id: string
-  type: 'payment' | 'lightning' | 'project' | 'social' | 'system'
-  title: string
-  message: string
-  timestamp: Date
-  read: boolean
-  actionUrl?: string
+  id: string;
+  type: 'payment' | 'lightning' | 'project' | 'social' | 'system';
+  title: string;
+  message: string;
+  timestamp: Date;
+  read: boolean;
+  actionUrl?: string;
   metadata?: {
-    amount?: number
-    projectId?: string
-    currency?: 'BTC' | 'SATS'
-    userId?: string
-  }
+    amount?: number;
+    projectId?: string;
+    currency?: 'BTC' | 'SATS';
+    userId?: string;
+  };
 }
 
 interface NotificationCenterProps {
-  isOpen: boolean
-  onClose: () => void
-  className?: string
+  isOpen: boolean;
+  onClose: () => void;
+  className?: string;
 }
 
 export default function NotificationCenter({
   isOpen,
   onClose,
-  className = ''
+  className = '',
 }: NotificationCenterProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([])
-  const [filter, setFilter] = useState<'all' | 'unread' | 'payments' | 'projects'>('all')
-  const [isLoading, setIsLoading] = useState(true)
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [filter, setFilter] = useState<'all' | 'unread' | 'payments' | 'projects'>('all');
+  const [isLoading, setIsLoading] = useState(true);
 
   // Mock notifications data (in real app, fetch from API)
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function NotificationCenter({
         timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
         read: false,
         actionUrl: '/dashboard/analytics',
-        metadata: { amount: 0.001, projectId: 'camp_1', currency: 'BTC' }
+        metadata: { amount: 0.001, projectId: 'camp_1', currency: 'BTC' },
       },
       {
         id: '2',
@@ -72,27 +72,27 @@ export default function NotificationCenter({
         timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
         read: false,
         actionUrl: '/dashboard/analytics',
-        metadata: { amount: 50000, projectId: 'camp_1', currency: 'SATS' }
+        metadata: { amount: 50000, projectId: 'camp_1', currency: 'SATS' },
       },
       {
         id: '3',
         type: 'project',
-        title: 'Campaign Milestone Reached',
+        title: 'Project Milestone Reached',
         message: 'Your "Open Source Project" reached 50% of its funding goal!',
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
         read: true,
         actionUrl: '/project/open-source-project',
-        metadata: { projectId: 'camp_1' }
+        metadata: { projectId: 'camp_1' },
       },
       {
         id: '4',
         type: 'social',
-        title: 'New Campaign Supporter',
+        title: 'New Project Supporter',
         message: 'Alice joined your project as a supporter',
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6 hours ago
         read: true,
         actionUrl: '/project/open-source-project/supporters',
-        metadata: { projectId: 'camp_1', userId: 'user_alice' }
+        metadata: { projectId: 'camp_1', userId: 'user_alice' },
       },
       {
         id: '5',
@@ -101,76 +101,80 @@ export default function NotificationCenter({
         message: 'Your weekly project performance report is ready',
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
         read: true,
-        actionUrl: '/dashboard/analytics'
-      }
-    ]
+        actionUrl: '/dashboard/analytics',
+      },
+    ];
 
     setTimeout(() => {
-      setNotifications(mockNotifications)
-      setIsLoading(false)
-    }, 500)
-  }, [])
+      setNotifications(mockNotifications);
+      setIsLoading(false);
+    }, 500);
+  }, []);
 
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
       case 'payment':
-        return <Bitcoin className="w-5 h-5 text-orange-500" />
+        return <Bitcoin className="w-5 h-5 text-orange-500" />;
       case 'lightning':
-        return <Zap className="w-5 h-5 text-yellow-500" />
+        return <Zap className="w-5 h-5 text-yellow-500" />;
       case 'project':
-        return <TrendingUp className="w-5 h-5 text-green-500" />
+        return <TrendingUp className="w-5 h-5 text-green-500" />;
       case 'social':
-        return <Users className="w-5 h-5 text-blue-500" />
+        return <Users className="w-5 h-5 text-blue-500" />;
       case 'system':
-        return <Settings className="w-5 h-5 text-gray-500" />
+        return <Settings className="w-5 h-5 text-gray-500" />;
       default:
-        return <Bell className="w-5 h-5 text-gray-500" />
+        return <Bell className="w-5 h-5 text-gray-500" />;
     }
-  }
+  };
 
   const filteredNotifications = notifications.filter(notification => {
-    if (filter === 'unread') {return !notification.read}
-    if (filter === 'payments') {return ['payment', 'lightning'].includes(notification.type)}
-    if (filter === 'projects') {return notification.type === 'project'}
-    return true
-  })
+    if (filter === 'unread') {
+      return !notification.read;
+    }
+    if (filter === 'payments') {
+      return ['payment', 'lightning'].includes(notification.type);
+    }
+    if (filter === 'projects') {
+      return notification.type === 'project';
+    }
+    return true;
+  });
 
-  const unreadCount = notifications.filter(n => !n.read).length
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === id 
-          ? { ...notification, read: true }
-          : notification
+    setNotifications(prev =>
+      prev.map(notification =>
+        notification.id === id ? { ...notification, read: true } : notification
       )
-    )
-  }
+    );
+  };
 
   const markAllAsRead = () => {
-    setNotifications(prev => 
-      prev.map(notification => ({ ...notification, read: true }))
-    )
-    toast.success('All notifications marked as read')
-  }
+    setNotifications(prev => prev.map(notification => ({ ...notification, read: true })));
+    toast.success('All notifications marked as read');
+  };
 
   const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id))
-    toast.success('Notification deleted')
-  }
+    setNotifications(prev => prev.filter(n => n.id !== id));
+    toast.success('Notification deleted');
+  };
 
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
-      markAsRead(notification.id)
+      markAsRead(notification.id);
     }
-    
+
     if (notification.actionUrl) {
       // In a real app, navigate to the URL
-              // Navigate to notification URL
+      // Navigate to notification URL
     }
-  }
+  };
 
-  if (!isOpen) {return null}
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-50 p-4 pt-20">
@@ -197,7 +201,7 @@ export default function NotificationCenter({
               { key: 'all', label: 'All' },
               { key: 'unread', label: 'Unread' },
               { key: 'payments', label: 'Payments' },
-              { key: 'projects', label: 'Projects' }
+              { key: 'projects', label: 'Projects' },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -262,31 +266,35 @@ export default function NotificationCenter({
                     <div className="flex-shrink-0 mt-0.5">
                       {getNotificationIcon(notification.type)}
                     </div>
-                    
+
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <h4 className={`text-sm font-medium ${
-                            notification.read ? 'text-gray-900' : 'text-gray-900'
-                          }`}>
+                          <h4
+                            className={`text-sm font-medium ${
+                              notification.read ? 'text-gray-900' : 'text-gray-900'
+                            }`}
+                          >
                             {notification.title}
                           </h4>
-                          <p className={`text-sm mt-1 ${
-                            notification.read ? 'text-gray-600' : 'text-gray-700'
-                          }`}>
+                          <p
+                            className={`text-sm mt-1 ${
+                              notification.read ? 'text-gray-600' : 'text-gray-700'
+                            }`}
+                          >
                             {notification.message}
                           </p>
                           <p className="text-xs text-gray-500 mt-2">
                             {formatDistanceToNow(notification.timestamp, { addSuffix: true })}
                           </p>
                         </div>
-                        
+
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           {!notification.read && (
                             <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                markAsRead(notification.id)
+                              onClick={e => {
+                                e.stopPropagation();
+                                markAsRead(notification.id);
                               }}
                               className="p-1 hover:bg-white rounded"
                               title="Mark as read"
@@ -294,11 +302,11 @@ export default function NotificationCenter({
                               <Check className="w-3 h-3 text-green-500" />
                             </button>
                           )}
-                          
+
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              deleteNotification(notification.id)
+                            onClick={e => {
+                              e.stopPropagation();
+                              deleteNotification(notification.id);
                             }}
                             className="p-1 hover:bg-white rounded"
                             title="Delete notification"
@@ -336,5 +344,5 @@ export default function NotificationCenter({
         </CardContent>
       </Card>
     </div>
-  )
-} 
+  );
+}
