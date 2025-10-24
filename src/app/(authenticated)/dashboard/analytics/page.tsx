@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRequireAuth } from '@/hooks/useAuth';
-import { useCampaignStore } from '@/stores/projectStore';
+import { useProjectStore } from '@/stores/projectStore';
 import Loading from '@/components/Loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -50,7 +50,7 @@ interface CampaignPerformance {
 
 export default function AnalyticsPage() {
   const { user, isLoading: authLoading } = useRequireAuth();
-  const { projects, loadProjects, isLoading: projectLoading } = useCampaignStore();
+  const { projects, loadProjects, isLoading: projectLoading } = useProjectStore();
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d');
   const [selectedCampaign, setSelectedCampaign] = useState<string>('all');
 
