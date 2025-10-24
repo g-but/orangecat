@@ -3,6 +3,6 @@ module.exports = {
   NextResponse: {
     json: jest.fn(),
     redirect: jest.fn(),
-    next: jest.fn()
-  }
+    next: jest.fn(),
+  },
 };

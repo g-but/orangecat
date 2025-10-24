@@ -1,45 +1,57 @@
-import { NextRequest } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
-import { profileSchema, normalizeProfileData, type ProfileData } from '@/lib/validation'
-import { handleApiError, AuthError, ValidationError, NotFoundError } from '@/lib/errors'
+import { NextRequest } from 'next/server';
+import { createServerClient } from '@/lib/supabase/server';
+import { profileSchema, normalizeProfileData, type ProfileData } from '@/lib/validation';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiNotFound,
+  apiValidationError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
 
 // GET /api/profile - Get current user's profile
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      throw new AuthError()
+      return apiUnauthorized();
     }
 
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single()
+      .single();
 
     if (error) {
-      throw new NotFoundError('Profile')
+      return apiNotFound('Profile not found');
     }
 
-    return Response.json({ success: true, data: profile })
+    return apiSuccess(profile);
   } catch (error) {
-    return handleApiError(error)
+    return handleApiError(error);
   }
 }
 
 // PUT /api/profile - Update current user's profile
 export async function PUT(request: NextRequest) {
   try {
-    const supabase = await createServerClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      throw new AuthError()
+      return apiUnauthorized();
     }
 
-    const body = await request.json()
+    const body = await request.json();
 
     // Check username uniqueness before validation if username is being updated
     if (body.username) {
@@ -48,42 +60,42 @@ export async function PUT(request: NextRequest) {
         .select('id')
         .eq('username', body.username.trim())
         .neq('id', user.id)
-        .single()
+        .single();
 
       if (existingProfile) {
-        throw new ValidationError('Username is already taken')
+        return apiValidationError('Username is already taken', { field: 'username' });
       }
     }
 
     // Normalize and validate the data
-    const normalizedBody = normalizeProfileData(body)
-    const validatedData = profileSchema.parse(normalizedBody)
+    const normalizedBody = normalizeProfileData(body);
+    const validatedData = profileSchema.parse(normalizedBody);
 
     const { data: profile, error } = await supabase
       .from('profiles')
       .update({
         ...validatedData,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq('id', user.id)
       .select()
-      .single()
+      .single();
 
     if (error) {
-      throw new Error('Failed to update profile')
+      return apiValidationError('Failed to update profile', { details: error.message });
     }
 
-    return Response.json({ success: true, data: profile })
+    return apiSuccess(profile);
   } catch (error) {
     // Provide specific error messages for Zod validation errors
     if (error instanceof Error && error.name === 'ZodError') {
-      const zodError = error as any
-      const firstError = zodError.errors?.[0]
-      const fieldName = firstError?.path?.join('.') || 'field'
-      const message = firstError?.message || 'Invalid profile data'
+      const zodError = error as any;
+      const firstError = zodError.errors?.[0];
+      const fieldName = firstError?.path?.join('.') || 'field';
+      const message = firstError?.message || 'Invalid profile data';
 
-      return handleApiError(new ValidationError(`${fieldName}: ${message}`))
+      return apiValidationError(`${fieldName}: ${message}`);
     }
-    return handleApiError(error)
+    return handleApiError(error);
   }
 }
