@@ -1,37 +1,28 @@
-'use client'
+'use client';
 
-import { useUnifiedProfile } from '@/hooks/useUnifiedProfile'
-import UnifiedProfileLayout from '@/components/profile/UnifiedProfileLayout'
-import ModernProfileEditor from '@/components/profile/ModernProfileEditor'
-import TransparencyScore from '@/components/ui/TransparencyScore'
-import Loading from '@/components/Loading'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import { AlertCircle } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import TreasuryActivity from '@/components/organizations/TreasuryActivity'
+import { useUnifiedProfile } from '@/hooks/useUnifiedProfile';
+import UnifiedProfileLayout from '@/components/profile/UnifiedProfileLayout';
+import ModernProfileEditor from '@/components/profile/ModernProfileEditor';
+import TransparencyScore from '@/components/ui/TransparencyScore';
+import Loading from '@/components/Loading';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function ProfilePage() {
-  const router = useRouter()
-  const { user } = useAuth()
+  const router = useRouter();
+  const { user } = useAuth();
 
-  const {
-    profile,
-    isLoading,
-    error,
-    isOwnProfile,
-    mode,
-    setMode,
-    handleSave,
-    refetch
-  } = useUnifiedProfile({
-    username: 'me', // Always load current user's profile
-    autoFetch: true
-  })
+  const { profile, isLoading, error, isOwnProfile, mode, setMode, handleSave, refetch } =
+    useUnifiedProfile({
+      username: 'me', // Always load current user's profile
+      autoFetch: true,
+    });
 
   if (isLoading) {
-    return <Loading fullScreen />
+    return <Loading fullScreen />;
   }
 
   if (error) {
@@ -50,14 +41,12 @@ export default function ProfilePage() {
               <Button onClick={() => router.push('/auth')} variant="outline">
                 Sign In
               </Button>
-              <Button onClick={refetch}>
-                Try Again
-              </Button>
+              <Button onClick={refetch}>Try Again</Button>
             </div>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   if (!profile) {
@@ -69,13 +58,11 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="p-6 text-center">
             <p className="mb-4">Unable to load your profile. Please try signing in again.</p>
-            <Button onClick={() => router.push('/auth')}>
-              Sign In
-            </Button>
+            <Button onClick={() => router.push('/auth')}>Sign In</Button>
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -89,11 +76,6 @@ export default function ProfilePage() {
         onModeChange={setMode}
       />
 
-      {/* Wallet transparency */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <TreasuryActivity endpoint="/api/profile/treasury/activity" />
-      </div>
-
       {/* Edit modal - shows as overlay when editing */}
       {mode === 'edit' && isOwnProfile && user?.id && (
         <ModernProfileEditor
@@ -105,5 +87,5 @@ export default function ProfilePage() {
         />
       )}
     </>
-  )
-} 
+  );
+}
