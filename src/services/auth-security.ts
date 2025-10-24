@@ -7,7 +7,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
-import supabaseClient from '@/services/supabase/client'
+import supabaseClient from '@/lib/supabase/browser'
 import { 
   AuthSecurity, 
   SecurityMonitor, 

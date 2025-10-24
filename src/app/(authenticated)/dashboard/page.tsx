@@ -31,7 +31,7 @@ import { PROFILE_CATEGORIES } from '@/types/profile'
 
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated, session } = useAuth()
-  const { campaigns, drafts, activeCampaigns, loadCampaigns, isLoading: campaignLoading, getStats } = useCampaignStore()
+  const { projects, drafts, activeProjects, loadProjects, isLoading: projectLoading, getStats } = useCampaignStore()
   const { metrics, isLoading: analyticsLoading } = useAnalytics()
   const router = useRouter()
   const [localLoading, setLocalLoading] = useState(true)
@@ -48,12 +48,12 @@ export default function DashboardPage() {
     }
   }, [hydrated])
 
-  // Load campaigns when user is available
+  // Load projects when user is available
   useEffect(() => {
     if (user?.id && hydrated) {
-      loadCampaigns(user.id)
+      loadProjects(user.id)
     }
-  }, [user?.id, hydrated, loadCampaigns])
+  }, [user?.id, hydrated, loadProjects])
 
   // FIXED: Handle authentication redirect with proper client-side check
   useEffect(() => {
@@ -103,12 +103,12 @@ export default function DashboardPage() {
 
   // REMOVED: console.log statement
 
-  // Get campaign stats
+  // Get project stats
   const stats = getStats()
-  const totalCampaigns = stats.totalCampaigns
-  const activeCampaignsCount = stats.totalActive
-  const totalRaised = campaigns.reduce((sum, c) => sum + (c.total_funding || 0), 0)
-  const totalSupporters = campaigns.reduce((sum, c) => sum + (c.contributor_count || 0), 0)
+  const totalProjects = stats.totalProjects
+  const activeProjectsCount = stats.totalActive
+  const totalRaised = projects.reduce((sum, c) => sum + (c.total_funding || 0), 0)
+  const totalSupporters = projects.reduce((sum, c) => sum + (c.contributor_count || 0), 0)
 
   // Profile completion
   const hasUsername = !!profile?.username
@@ -122,11 +122,11 @@ export default function DashboardPage() {
   const primaryDraft = hasAnyDraft ? drafts[0] : null
   const totalDrafts = drafts.length
 
-  // Get featured campaign (most recent active or highest funded)
-  const featuredCampaign = activeCampaigns.length > 0 
-    ? activeCampaigns.sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
-    : campaigns.find(c => c.title?.toLowerCase().includes('orange cat')) // Specifically look for Orange Cat
-    || campaigns[0] // Fallback to first campaign
+  // Get featured project (most recent active or highest funded)
+  const featuredCampaign = activeProjects.length > 0 
+    ? activeProjects.sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
+    : projects.find(c => c.title?.toLowerCase().includes('orange cat')) // Specifically look for Orange Cat
+    || projects[0] // Fallback to first project
 
   // Profile category for display (default to individual for now)
   const profileCategory = PROFILE_CATEGORIES.individual
@@ -148,7 +148,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent">
-                    Welcome back, {profile?.display_name || profile?.username || 'there'}! 👋
+                    Welcome back, {profile?.name || profile?.username || 'there'}! 👋
                   </h1>
                                      {profileCategory && (
                      <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border backdrop-blur-sm mt-2 ${profileCategory.color}`}>
@@ -160,9 +160,9 @@ export default function DashboardPage() {
               </div>
             </div>
             <p className="text-lg text-gray-600 leading-relaxed">
-              {totalCampaigns > 0
-                ? `Managing ${totalCampaigns} campaign${totalCampaigns !== 1 ? 's' : ''} • ${activeCampaignsCount} active`
-                : "Welcome! Let's create your first Bitcoin fundraising campaign."
+              {totalProjects > 0
+                ? `Managing ${totalProjects} project${totalProjects !== 1 ? 's' : ''} • ${activeProjectsCount} active`
+                : "Welcome! Let's create your first Bitcoin fundraising project."
               }
             </p>
           </div>
@@ -221,13 +221,13 @@ export default function DashboardPage() {
                         View Campaign
                       </Button>
                     </Link>
-                    <Link href={`/create?draft=${featuredCampaign.id}`}>
+                    <Link href={`/projects/create?draft=${featuredCampaign.id}`}>
                       <Button size="sm" variant="outline">
                         <Edit3 className="w-4 h-4 mr-1" />
                         Edit
                       </Button>
                     </Link>
-                    <Link href="/dashboard/fundraising">
+                    <Link href="/dashboard/projects">
                       <Button size="sm" variant="outline">
                         <BarChart3 className="w-4 h-4 mr-1" />
                         Analytics
@@ -270,12 +270,12 @@ export default function DashboardPage() {
                     </div>
                   )}
               
-                  {/* Draft campaigns */}
+                  {/* Draft projects */}
                   {totalDrafts > 0 && (
                     <div className="p-3 bg-white rounded-lg border border-orange-200">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium text-gray-900">
-                          {totalDrafts} draft campaign{totalDrafts > 1 ? 's' : ''} waiting
+                          {totalDrafts} draft project{totalDrafts > 1 ? 's' : ''} waiting
                         </span>
                         {primaryDraft && (
                           <span className="text-sm text-orange-600">
@@ -285,13 +285,13 @@ export default function DashboardPage() {
                         )}
                       </div>
                       <div className="flex gap-2">
-                        <Link href="/create">
+                        <Link href="/projects/create">
                           <Button size="sm" variant="outline">
                             <FileText className="w-4 h-4 mr-1" />
                             Continue Editing
                           </Button>
                         </Link>
-                        <Link href="/dashboard/fundraising">
+                        <Link href="/dashboard/projects">
                           <Button size="sm" variant="outline">
                             View All Drafts
                           </Button>
@@ -308,16 +308,16 @@ export default function DashboardPage() {
         {/* Overview Cards with Enhanced Content */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Fundraising Overview */}
-          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard/fundraising')}>
+          <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard/projects')}>
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <Target className="w-8 h-8 text-teal-600" />
                 <ArrowRight className="w-4 h-4 text-gray-400" />
               </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Campaigns</h3>
+              <h3 className="font-semibold text-gray-900 mb-2">Projects</h3>
               <div className="space-y-1 text-sm text-gray-600">
-                <div className="font-medium text-lg text-gray-900">{totalCampaigns}</div>
-                <div>{activeCampaignsCount} active • {totalDrafts} drafts</div>
+                <div className="font-medium text-lg text-gray-900">{totalProjects}</div>
+                <div>{activeProjectsCount} active • {totalDrafts} drafts</div>
                 {totalRaised > 0 && (
                   <div className="font-medium text-green-600">
                     <CurrencyDisplay amount={totalRaised} currency="BTC" size="sm" /> raised
@@ -362,8 +362,8 @@ export default function DashboardPage() {
           </Card>
 
           {/* Analytics/Performance */}
-          {totalCampaigns > 0 ? (
-            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard/fundraising')}>
+          {totalProjects > 0 ? (
+            <Card className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => router.push('/dashboard/projects')}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <BarChart3 className="w-8 h-8 text-green-600" />
@@ -372,15 +372,15 @@ export default function DashboardPage() {
                 <h3 className="font-semibold text-gray-900 mb-2">Performance</h3>
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="font-medium text-lg text-gray-900">
-                    {Math.round(activeCampaignsCount > 0 ? (totalRaised / activeCampaignsCount) : 0 * 100000000)} sats
+                    {Math.round(activeProjectsCount > 0 ? (totalRaised / activeProjectsCount) : 0 * 100000000)} sats
                   </div>
-                  <div>Avg per campaign</div>
+                  <div>Avg per project</div>
                   <div className="text-green-600 font-medium">View analytics</div>
                 </div>
               </CardContent>
             </Card>
           ) : (
-            <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 hover:shadow-lg transition-all cursor-pointer" onClick={() => router.push('/create')}>
+            <Card className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 hover:shadow-lg transition-all cursor-pointer" onClick={() => router.push('/projects/create')}>
               <CardContent className="p-8">
                 <div className="flex items-center justify-between mb-6">
                   <div className="p-3 bg-orange-100 rounded-full">
@@ -402,16 +402,16 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* My Campaigns Section */}
-        {campaigns.length > 0 && (
+        {/* My Projects Section */}
+        {projects.length > 0 && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>My Campaigns</CardTitle>
-                  <CardDescription>Your Bitcoin fundraising campaigns</CardDescription>
+                  <CardTitle>My Projects</CardTitle>
+                  <CardDescription>Your Bitcoin fundraising projects</CardDescription>
                 </div>
-                <Link href="/dashboard/fundraising">
+                <Link href="/dashboard/projects">
                   <Button variant="outline" size="sm">
                     <BarChart3 className="w-4 h-4 mr-2" />
                     View All
@@ -421,40 +421,40 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid gap-4">
-                {campaigns.slice(0, 3).map((campaign) => (
-                  <div key={campaign.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                {projects.slice(0, 3).map((project) => (
+                  <div key={project.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-gray-900">{campaign.title}</h4>
+                        <h4 className="font-medium text-gray-900">{project.title}</h4>
                         <div className={`px-2 py-1 text-xs rounded-full ${
-                          campaign.is_active 
+                          project.is_active 
                             ? 'bg-green-100 text-green-700' 
-                            : campaign.is_public 
+                            : project.is_public 
                               ? 'bg-orange-100 text-orange-700' 
                               : 'bg-gray-100 text-gray-700'
                         }`}>
-                          {campaign.is_active ? 'Active' : campaign.is_public ? 'Published' : 'Draft'}
+                          {project.is_active ? 'Active' : project.is_public ? 'Published' : 'Draft'}
                         </div>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>
-                          <CurrencyDisplay amount={campaign.total_funding || 0} currency="BTC" size="sm" /> raised
+                          <CurrencyDisplay amount={project.total_funding || 0} currency="BTC" size="sm" /> raised
                         </span>
-                        <span>{campaign.contributor_count || 0} supporters</span>
-                        {campaign.goal_amount && (
+                        <span>{project.contributor_count || 0} supporters</span>
+                        {project.goal_amount && (
                           <span>
-                            {Math.round(((campaign.total_funding || 0) / campaign.goal_amount) * 100)}% of goal
+                            {Math.round(((project.total_funding || 0) / project.goal_amount) * 100)}% of goal
                           </span>
                         )}
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Link href={`/fund-us/${campaign.id}`}>
+                      <Link href={`/fund-us/${project.id}`}>
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4" />
                         </Button>
                       </Link>
-                      <Link href={`/create?draft=${campaign.id}`}>
+                      <Link href={`/projects/create?draft=${project.id}`}>
                         <Button variant="outline" size="sm">
                           <Edit3 className="w-4 h-4" />
                         </Button>
@@ -475,11 +475,11 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {totalCampaigns > 0 ? (
-                <Link href="/dashboard/fundraising">
+              {totalProjects > 0 ? (
+                <Link href="/dashboard/projects">
                   <Button variant="outline" className="w-full h-16 flex-col">
                     <Eye className="w-5 h-5 mb-2" />
-                    Manage Campaigns
+                    Manage Projects
                   </Button>
                 </Link>
               ) : (
@@ -502,17 +502,17 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Activity */}
-        {totalCampaigns > 0 && (
+        {totalProjects > 0 && (
           <Card>
             <CardHeader>
               <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest updates from your campaigns</CardDescription>
+              <CardDescription>Latest updates from your projects</CardDescription>
             </CardHeader>
             <CardContent className="p-6">
               <div className="text-center py-8 text-gray-500">
                 <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p>Activity tracking coming soon</p>
-                <Link href="/dashboard/fundraising">
+                <Link href="/dashboard/projects">
                   <Button variant="outline" className="mt-4">
                     View Campaign Details
                   </Button>

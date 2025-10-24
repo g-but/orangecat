@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { useAuthStore } from '@/stores/auth'
-import getSupabaseClient from '@/services/supabase/client'
+import getSupabaseClient from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
 

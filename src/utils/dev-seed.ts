@@ -1,40 +1,40 @@
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 
 // Sample data for testing
 const sampleProfiles = [
   {
     username: 'alice_creator',
-    display_name: 'Alice Johnson',
+    name: 'Alice Johnson',
     bio: 'Creative entrepreneur passionate about sustainable technology and community building.',
     avatar_url: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
   },
   {
     username: 'bob_developer',
-    display_name: 'Bob Smith',
+    name: 'Bob Smith',
     bio: 'Full-stack developer building the future of decentralized applications.',
     avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
   },
   {
     username: 'charlie_artist',
-    display_name: 'Charlie Brown',
+    name: 'Charlie Brown',
     bio: 'Digital artist creating NFTs and exploring the intersection of art and technology.',
     avatar_url: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
   },
   {
     username: 'diana_educator',
-    display_name: 'Diana Wilson',
+    name: 'Diana Wilson',
     bio: 'Educator and advocate for accessible technology education in underserved communities.',
     avatar_url: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
   },
   {
     username: 'evan_musician',
-    display_name: 'Evan Davis',
+    name: 'Evan Davis',
     bio: 'Independent musician and producer creating experimental electronic music.',
     avatar_url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face'
   }
 ]
 
-const sampleCampaigns = [
+const sampleProjects = [
   {
     title: 'Solar-Powered Community Garden',
     description: 'Building a sustainable community garden powered entirely by solar energy. This project will provide fresh produce to local families while demonstrating renewable energy solutions.',
@@ -122,7 +122,7 @@ export async function seedDevelopmentData() {
     
     return {
       profiles: sampleProfiles,
-      campaigns: sampleCampaigns
+      projects: sampleProjects
     }
     
   } catch (error) {
@@ -131,4 +131,4 @@ export async function seedDevelopmentData() {
 }
 
 // Export sample data for manual seeding
-export { sampleProfiles, sampleCampaigns } 
+export { sampleProfiles, sampleProjects } 

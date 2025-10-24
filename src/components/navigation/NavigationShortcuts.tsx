@@ -31,19 +31,15 @@ export function NavigationShortcuts({ sections }: NavigationShortcutsProps) {
         },
         '2': () => {
           event.preventDefault()
-          router.push('/dashboard/fundraising')
+          router.push('/dashboard/projects')
         },
         '3': () => {
           event.preventDefault()
-          router.push('/people')
+          router.push('/dashboard/people')
         },
         '4': () => {
           event.preventDefault()
-          router.push('/organizations')
-        },
-        '5': () => {
-          event.preventDefault()
-          router.push('/projects')
+          router.push('/dashboard/organizations')
         },
         ',': () => {
           event.preventDefault()

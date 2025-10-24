@@ -18,9 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration management for dashboard data
 - Profile editing functionality with real-time updates
 - Improved state management using Zustand
-- Unified Campaign Store (`useCampaignStore`) - single source of truth for all campaign/draft management
+- Unified Campaign Store (`useCampaignStore`) - single source of truth for all project/draft management
 - Campaign migration utility for legacy data cleanup
-- Debug tool for campaign state inspection (`/debug-drafts.html`)
+- Debug tool for project state inspection (`/debug-drafts.html`)
 - **SECURITY**: Comprehensive celebrity impersonation prevention system (2025-06-06)
   - 75+ protected celebrity/brand usernames
   - Character substitution attack detection (e.g., 3l0n_mu5k → elonmusk)
@@ -46,9 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Refactored home page to use modular components
 - Improved code organization and maintainability
 - Enhanced type safety across the application
-- **MAJOR**: Completed unified campaign architecture migration (2025-06-05)
+- **MAJOR**: Completed unified project architecture migration (2025-06-05)
   - Migrated all components to use single `useCampaignStore`
-  - Removed competing draft systems (`useDrafts`, `useCampaigns`, `useTeslaDrafts`)
+  - Removed competing draft systems (`useDrafts`, `useProjects`, `useTeslaDrafts`)
   - Eliminated data inconsistencies and race conditions
   - Improved performance by removing duplicate API calls
 - **SECURITY**: Enhanced authentication system (2025-06-06)
@@ -94,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - 6 funding security tests
 
 ### Removed
-- Legacy draft management hooks: `useDrafts`, `useCampaigns`, `useTeslaDrafts`
+- Legacy draft management hooks: `useDrafts`, `useProjects`, `useTeslaDrafts`
 - Obsolete `TeslaDraftDashboard` component
 - Competing state management systems causing data conflicts
 - **SECURITY**: Production console.log statements exposing sensitive data
@@ -113,7 +113,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ~~Need to add Bitcoin integration~~ ✅ **COMPLETED**
 - ~~Need to set up protected routes~~ ✅ **COMPLETED**
 - ~~Need to add testing infrastructure~~ ✅ **PARTIAL** (security tests only)
-- ~~Need to unify campaign/draft management~~ ✅ **COMPLETED**
+- ~~Need to unify project/draft management~~ ✅ **COMPLETED**
 - ~~Need to fix critical security vulnerabilities~~ ✅ **COMPLETED**
 
 ## [Initial Setup]

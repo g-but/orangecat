@@ -12,22 +12,22 @@ This guide shows how to connect the frontend to all 11 real backend APIs to buil
 
 ---
 
-## 1. User Dashboard - "My Campaigns"
+## 1. User Dashboard - "My Projects"
 
-**Purpose:** Show user all campaigns they created or are part of (via organizations)
+**Purpose:** Show user all projects they created or are part of (via organizations)
 
-**API Used:** `GET /api/profiles/{userId}/campaigns`
+**API Used:** `GET /api/profiles/{userId}/projects`
 
 ### Frontend Hook
 
 ```typescript
-// hooks/useCampaigns.ts
+// hooks/useProjects.ts
 import { useEffect, useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 
-export function useCampaigns() {
+export function useProjects() {
   const { user } = useAuth()
-  const [campaigns, setCampaigns] = useState([])
+  const [projects, setProjects] = useState([])
   const [personalCount, setPersonalCount] = useState(0)
   const [orgCount, setOrgCount] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -35,47 +35,47 @@ export function useCampaigns() {
   useEffect(() => {
     if (!user) return
 
-    const fetchCampaigns = async () => {
+    const fetchProjects = async () => {
       try {
-        const response = await fetch(`/api/profiles/${user.id}/campaigns`)
+        const response = await fetch(`/api/profiles/${user.id}/projects`)
         const data = await response.json()
         
         if (data.success) {
-          setCampaigns(data.data)
+          setProjects(data.data)
           setPersonalCount(data.counts.personal)
           setOrgCount(data.counts.organization)
         }
       } catch (error) {
-        console.error('Failed to fetch campaigns:', error)
+        console.error('Failed to fetch projects:', error)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchCampaigns()
+    fetchProjects()
   }, [user?.id])
 
-  return { campaigns, personalCount, orgCount, loading }
+  return { projects, personalCount, orgCount, loading }
 }
 ```
 
 ### Component Usage
 
 ```typescript
-// components/dashboard/MyCampaigns.tsx
-import { useCampaigns } from '@/hooks/useCampaigns'
+// components/dashboard/MyProjects.tsx
+import { useProjects } from '@/hooks/useProjects'
 
-export default function MyCampaigns() {
-  const { campaigns, personalCount, orgCount, loading } = useCampaigns()
+export default function MyProjects() {
+  const { projects, personalCount, orgCount, loading } = useProjects()
 
-  if (loading) return <div>Loading campaigns...</div>
+  if (loading) return <div>Loading projects...</div>
 
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-4">
         <Card>
-          <h3>Total Campaigns</h3>
-          <p className="text-3xl font-bold">{campaigns.length}</p>
+          <h3>Total Projects</h3>
+          <p className="text-3xl font-bold">{projects.length}</p>
         </Card>
         <Card>
           <h3>Personal</h3>
@@ -88,8 +88,8 @@ export default function MyCampaigns() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {campaigns.map(campaign => (
-          <CampaignCard key={campaign.id} campaign={campaign} />
+        {projects.map(project => (
+          <CampaignCard key={project.id} project={project} />
         ))}
       </div>
     </div>
@@ -177,44 +177,44 @@ export function useOrganizations() {
 
 ---
 
-## 4. Organization Dashboard - Campaigns Tab
+## 4. Organization Dashboard - Projects Tab
 
-**Purpose:** Show all campaigns belonging to an organization
+**Purpose:** Show all projects belonging to an organization
 
-**API Used:** `GET /api/organizations/{id}/campaigns`
+**API Used:** `GET /api/organizations/{id}/projects`
 
 ### Frontend Component
 
 ```typescript
-// components/organization/CampaignsList.tsx
+// components/organization/ProjectsList.tsx
 import { useEffect, useState } from 'react'
 
-export default function CampaignsList({ orgId }) {
-  const [campaigns, setCampaigns] = useState([])
+export default function ProjectsList({ orgId }) {
+  const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchCampaigns = async () => {
-      const response = await fetch(`/api/organizations/${orgId}/campaigns`)
+    const fetchProjects = async () => {
+      const response = await fetch(`/api/organizations/${orgId}/projects`)
       const data = await response.json()
-      setCampaigns(data.data || [])
+      setProjects(data.data || [])
       setLoading(false)
     }
 
-    fetchCampaigns()
+    fetchProjects()
   }, [orgId])
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-4">Campaigns ({campaigns.length})</h2>
+      <h2 className="text-2xl font-bold mb-4">Projects ({projects.length})</h2>
       <div className="grid grid-cols-1 gap-4">
-        {campaigns.map(campaign => (
-          <div key={campaign.id} className="p-4 border rounded-lg">
-            <h3>{campaign.title}</h3>
-            <p className="text-gray-600">{campaign.description}</p>
+        {projects.map(project => (
+          <div key={project.id} className="p-4 border rounded-lg">
+            <h3>{project.title}</h3>
+            <p className="text-gray-600">{project.description}</p>
             <div className="mt-2 flex justify-between">
-              <span className="text-sm">${campaign.raised_amount} / ${campaign.goal_amount}</span>
-              <span className="text-sm font-medium">{campaign.status}</span>
+              <span className="text-sm">${project.raised_amount} / ${project.goal_amount}</span>
+              <span className="text-sm font-medium">{project.status}</span>
             </div>
           </div>
         ))}
@@ -228,9 +228,9 @@ export default function CampaignsList({ orgId }) {
 
 ## 5. Create Campaign Under Organization
 
-**Purpose:** Org members create campaigns that go to org treasury
+**Purpose:** Org members create projects that go to org treasury
 
-**API Used:** `POST /api/organizations/{id}/campaigns`
+**API Used:** `POST /api/organizations/{id}/projects`
 
 ### Frontend Form Component
 
@@ -258,7 +258,7 @@ export default function CreateOrgCampaignForm({ orgId, onSuccess }) {
     setError(null)
 
     try {
-      const response = await fetch(`/api/organizations/${orgId}/campaigns`, {
+      const response = await fetch(`/api/organizations/${orgId}/projects`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
@@ -267,7 +267,7 @@ export default function CreateOrgCampaignForm({ orgId, onSuccess }) {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create campaign')
+        throw new Error(data.error || 'Failed to create project')
       }
 
       // Success
@@ -342,34 +342,34 @@ export default function CreateOrgCampaignForm({ orgId, onSuccess }) {
 
 ---
 
-## 6. Project Dashboard - Campaigns Tab
+## 6. Project Dashboard - Projects Tab
 
-**Purpose:** Show all campaigns in a project
+**Purpose:** Show all projects in a project
 
-**API Used:** `GET /api/projects/{id}/campaigns`
+**API Used:** `GET /api/projects/{id}/projects`
 
 ### Frontend Component
 
 ```typescript
-// components/project/ProjectCampaigns.tsx
+// components/project/ProjectProjects.tsx
 import { useEffect, useState } from 'react'
 
-export default function ProjectCampaigns({ projectId }) {
-  const [campaigns, setCampaigns] = useState([])
+export default function ProjectProjects({ projectId }) {
+  const [projects, setProjects] = useState([])
 
   useEffect(() => {
     const fetch = async () => {
-      const response = await fetch(`/api/projects/${projectId}/campaigns`)
+      const response = await fetch(`/api/projects/${projectId}/projects`)
       const data = await response.json()
-      setCampaigns(data.data || [])
+      setProjects(data.data || [])
     }
     fetch()
   }, [projectId])
 
   return (
     <div>
-      <h3 className="text-xl font-bold">Campaigns in Project ({campaigns.length})</h3>
-      {campaigns.map(c => (
+      <h3 className="text-xl font-bold">Projects in Project ({projects.length})</h3>
+      {projects.map(c => (
         <div key={c.id} className="p-3 border mt-2">
           {c.title} - ${c.raised_amount} raised
         </div>
@@ -383,28 +383,28 @@ export default function ProjectCampaigns({ projectId }) {
 
 ## 7. Add Campaign to Project
 
-**Purpose:** Link campaign to project for grouping
+**Purpose:** Link project to project for grouping
 
-**API Used:** `POST /api/projects/{id}/campaigns`
+**API Used:** `POST /api/projects/{id}/projects`
 
 ### Frontend Function
 
 ```typescript
-// utils/projectCampaigns.ts
-export async function addCampaignToProject(projectId, campaignId) {
-  const response = await fetch(`/api/projects/${projectId}/campaigns`, {
+// utils/projectProjects.ts
+export async function addCampaignToProject(projectId, projectId) {
+  const response = await fetch(`/api/projects/${projectId}/projects`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ campaign_id: campaignId })
+    body: JSON.stringify({ project_id: projectId })
   })
   return response.json()
 }
 
-export async function removeCampaignFromProject(projectId, campaignId) {
-  const response = await fetch(`/api/projects/${projectId}/campaigns`, {
+export async function removeCampaignFromProject(projectId, projectId) {
+  const response = await fetch(`/api/projects/${projectId}/projects`, {
     method: 'DELETE',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ campaign_id: campaignId })
+    body: JSON.stringify({ project_id: projectId })
   })
   return response.json()
 }
@@ -414,29 +414,29 @@ export async function removeCampaignFromProject(projectId, campaignId) {
 
 ## 8. Campaign Stats Display
 
-**Purpose:** Show campaign performance metrics on campaign detail page
+**Purpose:** Show project performance metrics on project detail page
 
-**API Used:** `GET /api/campaigns/{id}/stats`
+**API Used:** `GET /api/projects/{id}/stats`
 
 ### Frontend Component
 
 ```typescript
-// components/campaign/CampaignStats.tsx
+// components/project/CampaignStats.tsx
 import { useEffect, useState } from 'react'
 
-export default function CampaignStats({ campaignId }) {
+export default function CampaignStats({ projectId }) {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetch = async () => {
-      const response = await fetch(`/api/campaigns/${campaignId}/stats`)
+      const response = await fetch(`/api/projects/${projectId}/stats`)
       const data = await response.json()
       setStats(data.data)
       setLoading(false)
     }
     fetch()
-  }, [campaignId])
+  }, [projectId])
 
   if (loading) return <div>Loading stats...</div>
   if (!stats) return <div>Stats unavailable</div>
@@ -492,7 +492,7 @@ export default function CampaignStats({ campaignId }) {
    ↓
 4. User fills form (title, description, goal, address)
    ↓
-5. Form submits to POST /api/organizations/{id}/campaigns
+5. Form submits to POST /api/organizations/{id}/projects
    ↓
 6. API checks: Is user member? Has permission?
    ↓
@@ -500,11 +500,11 @@ export default function CampaignStats({ campaignId }) {
    ↓
 8. Response shows success
    ↓
-9. UI updates via GET /api/organizations/{id}/campaigns
+9. UI updates via GET /api/organizations/{id}/projects
    ↓
-10. Campaign now visible in organization's campaign list
+10. Campaign now visible in organization's project list
    ↓
-11. User can also see it in GET /api/profiles/{userId}/campaigns
+11. User can also see it in GET /api/profiles/{userId}/projects
 ```
 
 ---
@@ -581,19 +581,19 @@ export function useEntity() {
 ## Files to Create
 
 ```
-src/hooks/useCampaigns.ts
+src/hooks/useProjects.ts
 src/hooks/useProjects.ts
 src/hooks/useOrganizations.ts
-src/components/dashboard/MyCampaigns.tsx
+src/components/dashboard/MyProjects.tsx
 src/components/dashboard/MyProjects.tsx
 src/components/dashboard/MyOrganizations.tsx
-src/components/organization/CampaignsList.tsx
+src/components/organization/ProjectsList.tsx
 src/components/organization/ProjectsList.tsx
 src/components/forms/CreateOrgCampaignForm.tsx
 src/components/forms/CreateOrgProjectForm.tsx
-src/components/project/ProjectCampaigns.tsx
-src/components/campaign/CampaignStats.tsx
-src/utils/projectCampaigns.ts
+src/components/project/ProjectProjects.tsx
+src/components/project/CampaignStats.tsx
+src/utils/projectProjects.ts
 src/utils/apiErrorHandler.ts
 ```
 
@@ -602,8 +602,8 @@ src/utils/apiErrorHandler.ts
 ## Summary
 
 With these integrations, you'll have a fully functional system where:
-- Users can see all their campaigns, projects, and organizations
-- Organizations can manage campaigns and projects
-- Projects can group campaigns together
+- Users can see all their projects, projects, and organizations
+- Organizations can manage projects and projects
+- Projects can group projects together
 - All data is real and persisted to database
 - Full permission and security checks on backend

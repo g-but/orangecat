@@ -16,7 +16,7 @@ export interface ScalableProfile extends Profile {
   // Core fields (existing in database)
   id: string
   username: string | null
-  display_name: string | null
+  name: string | null
   avatar_url: string | null
   website: string | null
   created_at: string
@@ -44,27 +44,16 @@ export interface ScalableProfile extends Profile {
   lightning_balance: number | null
   
   // Analytics & Engagement
-  profile_views: number | null
-  follower_count: number | null
   following_count: number | null
-  campaign_count: number | null
+  project_count: number | null
   total_raised: number | null
   total_donated: number | null
   
   // Verification & Security
   verification_status: 'unverified' | 'pending' | 'verified' | 'rejected' | null
   verification_level: number | null
-  kyc_status: 'none' | 'pending' | 'approved' | 'rejected' | null
-  two_factor_enabled: boolean | null
-  last_login_at: string | null
-  login_count: number | null
   
   // Customization & Branding
-  theme_preferences: Record<string, any> | null
-  custom_css: string | null
-  profile_color: string | null
-  cover_image_url: string | null
-  profile_badges: any[] | null
   
   // Status & Temporal
   status: 'active' | 'inactive' | 'suspended' | 'deleted' | null
@@ -95,17 +84,12 @@ export interface ScalableProfileFormData extends ProfileFormData {
   payment_preferences?: Record<string, any>
   social_links?: Record<string, any>
   preferences?: Record<string, any>
-  theme_preferences?: Record<string, any>
-  profile_color?: string
-  cover_image_url?: string
   privacy_settings?: Record<string, any>
 }
 
 export interface ProfileAnalytics {
-  profile_views?: number
-  follower_count?: number
   following_count?: number
-  campaign_count?: number
+  project_count?: number
   total_raised?: number
   total_donated?: number
 }

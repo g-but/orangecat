@@ -61,7 +61,7 @@ export default function HowItWorksPage() {
       details: [
         'Rich text editor with media',
         'Customizable funding goals',
-        'Multiple campaign types'
+        'Multiple project types'
       ]
     },
     {
@@ -106,13 +106,13 @@ export default function HowItWorksPage() {
     {
       number: 1,
       title: 'Discover Projects',
-      description: 'Browse funding pages by category, search for specific causes, or explore trending campaigns. Find projects that resonate with you.',
+      description: 'Browse funding pages by category, search for specific causes, or explore trending projects. Find projects that resonate with you.',
       icon: Globe,
       color: 'bg-blue-500',
       details: [
         'Multiple categories',
         'Search and filter tools',
-        'Trending and featured campaigns'
+        'Trending and featured projects'
       ]
     },
     {
@@ -375,7 +375,7 @@ export default function HowItWorksPage() {
               <p className="text-gray-600 leading-relaxed">
                 OrangeCat is Bitcoin-only by design. This ensures direct peer-to-peer payments with zero fees 
                 and complete transparency. Supporters can easily convert their regular currency to Bitcoin using 
-                any exchange, then donate to your campaign.
+                any exchange, then donate to your project.
               </p>
             </Card>
 
@@ -416,7 +416,7 @@ export default function HowItWorksPage() {
                 variant="outline"
                 size="lg"
               >
-                Explore Campaigns
+                Explore Projects
               </Button>
             </div>
             <p className="mt-6 text-sm text-gray-500">

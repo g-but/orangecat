@@ -40,7 +40,7 @@ export async function getProfile(userId: string): Promise<{ data: Profile | null
     const profile: Profile = {
       id: data.id,
       username: data.username,
-      display_name: data.display_name,
+      name: data.name,
       bio: data.bio,
       avatar_url: data.avatar_url,
       banner_url: data.banner_url,
@@ -90,7 +90,7 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
     const profileData = {
       id: userId,
       username: formData.username?.trim() || null,
-      display_name: formData.display_name?.trim() || null, // Use actual display_name column
+      name: formData.name?.trim() || null, // Use actual name column
       bio: formData.bio?.trim() || null,
       avatar_url: formData.avatar_url || null,
       banner_url: formData.banner_url || null,
@@ -123,7 +123,7 @@ export async function createProfile(userId: string, formData: ProfileFormData): 
     const profile: Profile = {
       id: result.data.id,
       username: result.data.username,
-      display_name: result.data.display_name,
+      name: result.data.name,
       bio: result.data.bio,
       avatar_url: result.data.avatar_url,
       banner_url: result.data.banner_url,
@@ -179,8 +179,8 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
       profileData.username = formData.username?.trim() || null;
     }
 
-    if (formData.display_name !== undefined) {
-      profileData.display_name = formData.display_name?.trim() || null;
+    if (formData.name !== undefined) {
+      profileData.name = formData.name?.trim() || null;
     }
 
     if (formData.bio !== undefined) {
@@ -231,7 +231,7 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
       const newProfileData = {
         id: userId,
         username: profileData.username,
-        display_name: profileData.display_name,
+        name: profileData.name,
         bio: profileData.bio,
         avatar_url: profileData.avatar_url,
         banner_url: profileData.banner_url,
@@ -274,7 +274,7 @@ export async function updateProfile(userId: string, formData: ProfileFormData): 
     const profile: Profile = {
       id: result.data.id,
       username: result.data.username,
-      display_name: result.data.display_name,
+      name: result.data.name,
       bio: result.data.bio,
       avatar_url: result.data.avatar_url,
       banner_url: result.data.banner_url,
@@ -368,7 +368,7 @@ export async function searchProfiles(query: string): Promise<{ data: Profile[]; 
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .or(`username.ilike.${searchTerm},display_name.ilike.${searchTerm}`)
+      .or(`username.ilike.${searchTerm},name.ilike.${searchTerm}`)
       .order('username')
       .limit(20);
 
@@ -405,8 +405,8 @@ export function validateProfileData(formData: ProfileFormData): { valid: boolean
   }
 
   // Validate display name
-  if (formData.display_name !== undefined) {
-    const displayName = formData.display_name?.trim();
+  if (formData.name !== undefined) {
+    const displayName = formData.name?.trim();
     if (displayName && displayName.length > 50) {
       errors.push('Display name must be 50 characters or less');
     }

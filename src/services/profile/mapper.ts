@@ -23,7 +23,7 @@ export class ProfileMapper {
       // Core database fields
       id: dbRow.id,
       username: dbRow.username,
-      display_name: dbRow.display_name,
+      name: dbRow.name,
       avatar_url: dbRow.avatar_url,
       banner_url: dbRow.banner_url,
       bio: dbRow.bio,
@@ -49,27 +49,16 @@ export class ProfileMapper {
       lightning_balance: 0,
       
       // Analytics & Engagement
-      profile_views: 0,
-      follower_count: 0,
       following_count: 0,
-      campaign_count: 0,
+      project_count: 0,
       total_raised: 0,
       total_donated: 0,
       
       // Verification & Security
       verification_status: 'unverified',
       verification_level: 0,
-      kyc_status: 'none',
-      two_factor_enabled: false,
-      last_login_at: null,
-      login_count: 0,
       
       // Customization & Branding
-      theme_preferences: {},
-      custom_css: null,
-      profile_color: null,
-      cover_image_url: null,
-      profile_badges: [],
       
       // Status & Temporal
       status: 'active',
@@ -95,7 +84,7 @@ export class ProfileMapper {
     // Core fields that go directly to database columns
     const coreFields: any = {
       username: profile.username || null,
-      display_name: profile.display_name || null,
+      name: profile.name || null,
       avatar_url: profile.avatar_url || null,
       banner_url: profile.banner_url || null,
       bio: profile.bio || null,

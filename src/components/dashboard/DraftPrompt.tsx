@@ -91,7 +91,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
                   {isDraftLocal ? (
                     <>You have unsaved progress: <span className="font-medium">&ldquo;{primaryDraft.title}&rdquo;</span></>
                   ) : (
-                    <>You have an incomplete campaign: <span className="font-medium">&ldquo;{primaryDraft.title}&rdquo;</span></>
+                    <>You have an incomplete project: <span className="font-medium">&ldquo;{primaryDraft.title}&rdquo;</span></>
                   )}
                 </p>
                                   <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -111,7 +111,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3 mt-4">
-                <Link href="/create">
+                <Link href="/projects/create">
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white">
                     <Edit3 className="w-4 h-4 mr-2" />
                     {isDraftLocal ? 'Continue Editing' : 'Complete Campaign'}
@@ -120,7 +120,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
                 </Link>
                 
                 {totalDrafts > 1 && (
-                  <Link href="/dashboard/fundraising">
+                  <Link href="/dashboard/projects">
                     <Button variant="outline">
                       View All Drafts ({totalDrafts})
                     </Button>
@@ -155,7 +155,7 @@ export function DraftsList({ className }: { className?: string }) {
     <div className={`space-y-3 ${className}`}>
       <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
         <FileText className="w-5 h-5" />
-        Draft Campaigns ({drafts.length})
+        Draft Projects ({drafts.length})
       </h3>
       
       <div className="space-y-2">
@@ -173,7 +173,7 @@ export function DraftsList({ className }: { className?: string }) {
                   </div>
                 </div>
                 
-                <Link href="/create">
+                <Link href="/projects/create">
                   <Button size="sm" variant="outline">
                     <Edit3 className="w-4 h-4 mr-1" />
                     Edit
@@ -185,7 +185,7 @@ export function DraftsList({ className }: { className?: string }) {
         ))}
         
         {drafts.length > 3 && (
-          <Link href="/dashboard/fundraising">
+          <Link href="/dashboard/projects">
             <Button variant="ghost" className="w-full">
               View {drafts.length - 3} more drafts
             </Button>

@@ -25,20 +25,19 @@ export const navigationSections: NavSection[] = [
     priority: 1,
     defaultExpanded: true,
     requiresAuth: true,
-    items: [
-      { 
-        name: 'Home', 
-        href: '/dashboard', 
-        icon: Home, 
+  items: [
+      {
+        name: 'Home',
+        href: '/dashboard',
+        icon: Home,
         description: 'Your main home overview',
         requiresAuth: true
       },
-      { 
-        name: 'Fundraising', 
-        href: '/dashboard/fundraising', 
-        icon: Handshake, 
-        description: 'Manage your Bitcoin campaigns',
-        badge: 'Live',
+      {
+        name: 'Projects',
+        href: '/dashboard/projects',
+        icon: Handshake,
+        description: 'Manage your Bitcoin projects and initiatives',
         requiresAuth: true
       },
     ]
@@ -49,26 +48,19 @@ export const navigationSections: NavSection[] = [
     priority: 2,
     defaultExpanded: true,
     requiresAuth: true,
-    items: [
-      { 
-        name: 'People', 
-        href: '/people', 
-        icon: Users, 
+  items: [
+      {
+        name: 'People',
+        href: '/dashboard/people',
+        icon: Users,
         description: 'Connect with Bitcoin enthusiasts',
         requiresAuth: true
       },
-      { 
-        name: 'Organizations', 
-        href: '/organizations', 
-        icon: Building, 
+      {
+        name: 'Organizations',
+        href: '/dashboard/organizations',
+        icon: Building,
         description: 'Join or create Bitcoin organizations',
-        requiresAuth: true
-      },
-      { 
-        name: 'Projects', 
-        href: '/projects', 
-        icon: Rocket, 
-        description: 'Discover and support Bitcoin projects',
         requiresAuth: true
       },
     ]
@@ -85,7 +77,6 @@ export const navigationSections: NavSection[] = [
         name: 'Events', 
         href: '/dashboard/events', 
         icon: Calendar, 
-        comingSoon: true,
         description: 'Organize and attend events',
         requiresAuth: true
       },
@@ -93,7 +84,6 @@ export const navigationSections: NavSection[] = [
         name: 'Assets', 
         href: '/dashboard/assets', 
         icon: Wallet, 
-        comingSoon: true,
         description: 'Manage your digital assets',
         requiresAuth: true
       },
@@ -142,9 +132,9 @@ export const navigationLabels = {
 export const navigationShortcuts = {
   TOGGLE_SIDEBAR: 'cmd+b',
   GO_TO_HOME: 'cmd+1',
-  GO_TO_FUNDRAISING: 'cmd+2',
-  GO_TO_PEOPLE: 'cmd+3',
-  GO_TO_ORGANIZATIONS: 'cmd+4',
-  GO_TO_PROJECTS: 'cmd+5',
+  GO_TO_CAMPAIGNS: 'cmd+2',
+  GO_TO_PROJECTS: 'cmd+3',
+  GO_TO_PEOPLE: 'cmd+4',
+  GO_TO_ORGANIZATIONS: 'cmd+5',
   GO_TO_SETTINGS: 'cmd+,',
 } as const 

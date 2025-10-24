@@ -133,14 +133,14 @@ export class QueryAnalyzer {
     // Common patterns that usually need indexes
     const commonPatterns = [
       {
-        table: 'campaigns',
+        table: 'projects',
         columns: ['status', 'created_at'],
-        recommendation: 'Add composite index on campaigns(status, created_at) for faster filtering'
+        recommendation: 'Add composite index on projects(status, created_at) for faster filtering'
       },
       {
-        table: 'funding_pages',
-        columns: ['user_id', 'status'],
-        recommendation: 'Add composite index on funding_pages(user_id, status) for dashboard queries'
+        table: 'projects',
+        columns: ['creator_id', 'status'],
+        recommendation: 'Add composite index on projects(creator_id, status) for dashboard queries'
       },
       {
         table: 'transactions',

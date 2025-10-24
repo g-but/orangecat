@@ -66,14 +66,14 @@ function useProfile(userId: string): UseProfileReturn {
 ### Funding Hook
 ```typescript
 interface UseFundingReturn {
-  campaign: Campaign | null;
+  project: Campaign | null;
   loading: boolean;
   error: Error | null;
   donate: (amount: number) => Promise<void>;
   refreshCampaign: () => Promise<void>;
 }
 
-function useFunding(campaignId: string): UseFundingReturn {
+function useFunding(projectId: string): UseFundingReturn {
   // Implementation
 }
 ```
@@ -112,13 +112,13 @@ Hooks can be composed to create more complex functionality:
 function useUserDashboard() {
   const { user } = useAuth();
   const { profile } = useProfile(user?.id);
-  const { campaigns } = useUserCampaigns(user?.id);
+  const { projects } = useUserProjects(user?.id);
 
   return {
     user,
     profile,
-    campaigns,
-    loading: !user || !profile || !campaigns,
+    projects,
+    loading: !user || !profile || !projects,
   };
 }
 ```

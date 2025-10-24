@@ -6,7 +6,7 @@
  * Last Modified Summary: Extracted from profileService.ts for modular architecture - handles read operations
  */
 
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 import { logger, logProfile } from '@/utils/logger'
 import { ProfileMapper } from './mapper'
 import type { ScalableProfile } from './types'
@@ -110,7 +110,7 @@ export class ProfileReader {
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .or(`username.ilike.%${searchTerm}%,display_name.ilike.%${searchTerm}%`)
+        .or(`username.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
@@ -161,7 +161,6 @@ export class ProfileReader {
       const profile = await this.getProfile(userId)
       if (!profile) {return}
 
-      const currentViews = profile.profile_views || 0
       
       // Update view count
       await supabase
@@ -169,7 +168,6 @@ export class ProfileReader {
         .update({ 
           website: JSON.stringify({
             ...JSON.parse(profile.website || '{}'),
-            profile_views: currentViews + 1,
             last_viewed_at: new Date().toISOString()
           })
         })

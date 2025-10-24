@@ -3,7 +3,7 @@
 /**
  * Setup Orange Cat Subscription Funding
  *
- * This script creates the Orange Cat organization and subscription campaigns
+ * This script creates the Orange Cat organization and subscription projects
  * for funding AI development tools (Claude Code and Cursor).
  */
 
@@ -54,19 +54,19 @@ async function setupSubscriptionFunding() {
       console.log('   Tags: bitcoin, crowdfunding, ai, development, opensource');
       console.log('   Make it public and don\'t require approval');
       console.log('');
-      console.log('✅ After creating the organization, run this script again to set up the campaigns.');
+      console.log('✅ After creating the organization, run this script again to set up the projects.');
 
       return;
     }
 
-    // Create subscription campaigns
+    // Create subscription projects
 
     // 1. Claude Code Subscription Campaign
-    console.log('📋 Creating Claude Code subscription campaign...');
+    console.log('📋 Creating Claude Code subscription project...');
     const { data: claudeCampaign, error: claudeError } = await supabase
-      .from('funding_pages')
+      .from('projects')
       .insert({
-        user_id: organizationId, // Using organization ID as user_id for now
+        creator_id: organizationId, // Using organization ID as creator_id
         title: 'Fund Claude Code Subscription',
         description: 'Help fund 1 year of Claude Code subscription to accelerate Orange Cat development. Claude Code provides advanced AI coding assistance that enables faster, higher-quality development.',
         goal_amount: 120000000, // 1.2 BTC (roughly $100/month * 12 months at current rates)
@@ -82,17 +82,17 @@ async function setupSubscriptionFunding() {
       .single();
 
     if (claudeError) {
-      console.warn(`Warning creating Claude campaign: ${claudeError.message}`);
+      console.warn(`Warning creating Claude project: ${claudeError.message}`);
     } else {
-      console.log('✅ Claude Code campaign created:', claudeCampaign.id);
+      console.log('✅ Claude Code project created:', claudeCampaign.id);
     }
 
     // 2. Cursor Subscription Campaign
-    console.log('📋 Creating Cursor subscription campaign...');
+    console.log('📋 Creating Cursor subscription project...');
     const { data: cursorCampaign, error: cursorError } = await supabase
-      .from('funding_pages')
+      .from('projects')
       .insert({
-        user_id: organizationId,
+        creator_id: organizationId,
         title: 'Fund Cursor IDE Subscription',
         description: 'Support funding for Cursor IDE subscription to enhance the development experience. Cursor provides a modern, AI-enhanced coding environment that boosts productivity.',
         goal_amount: 96000000, // 0.96 BTC (roughly $80/month * 12 months)
@@ -108,17 +108,17 @@ async function setupSubscriptionFunding() {
       .single();
 
     if (cursorError) {
-      console.warn(`Warning creating Cursor campaign: ${cursorError.message}`);
+      console.warn(`Warning creating Cursor project: ${cursorError.message}`);
     } else {
-      console.log('✅ Cursor campaign created:', cursorCampaign.id);
+      console.log('✅ Cursor project created:', cursorCampaign.id);
     }
 
     // 3. General Development Fund Campaign
-    console.log('📋 Creating general development fund campaign...');
+    console.log('📋 Creating general development fund project...');
     const { data: generalCampaign, error: generalError } = await supabase
-      .from('funding_pages')
+      .from('projects')
       .insert({
-        user_id: organizationId,
+        creator_id: organizationId,
         title: 'Orange Cat Development Fund',
         description: 'General fund to support ongoing development of the Orange Cat Bitcoin crowdfunding platform. Your donations help maintain servers, improve features, and expand the platform.',
         goal_amount: 50000000, // 0.5 BTC for general development
@@ -134,16 +134,16 @@ async function setupSubscriptionFunding() {
       .single();
 
     if (generalError) {
-      console.warn(`Warning creating general fund campaign: ${generalError.message}`);
+      console.warn(`Warning creating general fund project: ${generalError.message}`);
     } else {
-      console.log('✅ General development fund campaign created:', generalCampaign.id);
+      console.log('✅ General development fund project created:', generalCampaign.id);
     }
 
     console.log('\n🎉 Orange Cat subscription funding setup complete!');
     console.log('\n📊 Summary:');
     console.log(`Organization: Orange Cat (${organizationId})`);
     console.log(`Treasury Address: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh`);
-    console.log('\n💰 Campaigns Created:');
+    console.log('\n💰 Projects Created:');
     if (claudeCampaign) {
       console.log(`- Claude Code: ${claudeCampaign.id} (1.2 BTC goal)`);
     }

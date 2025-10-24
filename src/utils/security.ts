@@ -113,7 +113,7 @@ export const SecuritySchemas = {
       .max(30, 'Username must be at most 30 characters')
       .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, underscores, and hyphens'),
     
-    display_name: z.string()
+    name: z.string()
       .min(1, 'Display name is required')
       .max(50, 'Display name must be at most 50 characters'),
     
@@ -138,7 +138,7 @@ export const SecuritySchemas = {
   }),
 
   // Campaign validation
-  campaignData: z.object({
+  projectData: z.object({
     title: z.string()
       .min(5, 'Title must be at least 5 characters')
       .max(100, 'Title must be at most 100 characters'),
@@ -188,7 +188,7 @@ export const SecuritySchemas = {
       .max(100, 'Search query too long')
       .regex(/^[a-zA-Z0-9\s\-_]+$/, 'Search query contains invalid characters'),
     
-    type: z.enum(['all', 'profiles', 'campaigns']),
+    type: z.enum(['all', 'profiles', 'projects']),
     limit: z.number().min(1).max(50).default(20),
     offset: z.number().min(0).default(0)
   })

@@ -12,7 +12,7 @@ This is a **well-architected, production-ready Bitcoin crowdfunding platform** w
 
 ### Tables (10 total)
 1. **profiles** - User profiles with Bitcoin features
-2. **funding_pages** - Crowdfunding campaigns
+2. **funding_pages** - Crowdfunding projects
 3. **transactions** - Bitcoin transaction tracking
 4. **organizations** - Multi-user entities with governance
 5. **memberships** - Organization membership management
@@ -55,7 +55,7 @@ This is a **well-architected, production-ready Bitcoin crowdfunding platform** w
 bitcoin_balance numeric(20,8) DEFAULT 0
 
 -- Polymorphic associations pattern
-target_entity_type text CHECK (target_entity_type IN ('profile', 'campaign', 'organization', ...))
+target_entity_type text CHECK (target_entity_type IN ('profile', 'project', 'organization', ...))
 target_entity_id uuid
 
 -- JSONB for flexible data
@@ -273,7 +273,7 @@ CREATE TABLE notifications_archive (LIKE notifications INCLUDING ALL)
 CREATE TABLE profile_associations (
   source_profile_id uuid,
   target_entity_id uuid,
-  target_entity_type text,  -- 'profile', 'campaign', 'organization', 'project'
+  target_entity_type text,  -- 'profile', 'project', 'organization', 'project'
   relationship_type text,    -- 'created', 'founded', 'supports', 'collaborates', etc.
   role text,
   status text,

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createServerClient } from '@/lib/db'
+import { createServerClient } from '@/lib/supabase/server'
 
 // GET /api/health - Health check endpoint
 export async function GET(request: NextRequest) {

@@ -33,7 +33,7 @@ export { OrganizationReader } from './reader';
 export { OrganizationWriter } from './writer';
 
 // Main service class that combines all operations
-import getSupabaseClient from '@/services/supabase/client';
+import getSupabaseClient from '@/lib/supabase/browser';
 import { OrganizationReader } from './reader';
 import { OrganizationWriter } from './writer';
 import type { Organization, OrganizationFormData, OrganizationSearchParams } from './types';

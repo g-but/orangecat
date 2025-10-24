@@ -10,7 +10,7 @@ import {
   demoEvents,
   demoProjects,
   demoAssets,
-  demoCampaigns
+  demoProjects
 } from '@/data/dashboardConfigs'
 import { logger } from '@/utils/logger'
 
@@ -45,7 +45,7 @@ const FEATURE_FLAGS = {
   fundraising: { enabled: true, timeline: 'Available Now' },
   organizations: { enabled: false, timeline: 'Q1 2026' },
   events: { enabled: false, timeline: 'Q2 2026' },
-  projects: { enabled: false, timeline: 'Q1 2026' },
+  projects: { enabled: true, timeline: 'Available Now' },
   assets: { enabled: false, timeline: 'Q2 2026' },
   people: { enabled: false, timeline: 'Q2 2026' },
   wallet: { enabled: true, timeline: 'Available Now' }
@@ -135,10 +135,10 @@ class AnalyticsService {
         isDemo: false,
         timeline: FEATURE_FLAGS.fundraising.timeline,
         stats: {
-          totalCampaigns: this.createMetricValue(statsData.totalCampaigns, 'database'),
+          totalProjects: this.createMetricValue(statsData.totalProjects, 'database'),
           totalRaised: this.createMetricValue(statsData.totalRaised, 'database'),
           totalSupporters: this.createMetricValue(statsData.totalSupporters, 'database'),
-          activeCampaigns: this.createMetricValue(statsData.activeCampaigns, 'database'),
+          activeProjects: this.createMetricValue(statsData.activeProjects, 'database'),
           recentDonations: this.createMetricValue(recentDonations, 'database'),
           avgDonationSize: this.createMetricValue(avgDonationSize, 'database'),
           successRate: this.createMetricValue(successRate, 'database')
@@ -159,10 +159,10 @@ class AnalyticsService {
       isDemo: false,
       timeline: FEATURE_FLAGS.fundraising.timeline,
       stats: {
-        totalCampaigns: this.createMetricValue(0, 'database', 'low'),
+        totalProjects: this.createMetricValue(0, 'database', 'low'),
         totalRaised: this.createMetricValue(0, 'database', 'low'),
         totalSupporters: this.createMetricValue(0, 'database', 'low'),
-        activeCampaigns: this.createMetricValue(0, 'database', 'low'),
+        activeProjects: this.createMetricValue(0, 'database', 'low'),
         recentDonations: this.createMetricValue(0, 'database', 'low'),
         avgDonationSize: this.createMetricValue(0, 'database', 'low'),
         successRate: this.createMetricValue(0, 'database', 'low')
@@ -253,9 +253,9 @@ class AnalyticsService {
   }
 
   getProjectsMetrics(): FeatureMetrics {
-    // Projects feature is not implemented yet in current schema
+    // Projects feature is enabled and functional
     return {
-      isEnabled: false,
+      isEnabled: true,
       isDemo: false,
       timeline: FEATURE_FLAGS.projects.timeline,
       stats: {

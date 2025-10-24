@@ -18,7 +18,7 @@ export default function Footer() {
     pathname.startsWith('/events') ||
     pathname.startsWith('/organizations') ||
     pathname.startsWith('/projects') ||
-    pathname.startsWith('/create')
+    pathname.startsWith('/projects/create')
   )
 
   const scrollToTop = () => {

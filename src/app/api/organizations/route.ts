@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { logger } from '@/utils/logger'
 import type { OrganizationFormData, OrganizationSearchParams, OrganizationType } from '@/types/organization'
 import { isValidBitcoinAddress, validateUrl } from '@/utils/validation'
@@ -306,9 +306,6 @@ async function handleCreateOrganization(request: AuthenticatedRequest) {
 // Export the wrapped handlers
 export const GET = withAuth(handleGetOrganizations)
 export const POST = withAuth(handleCreateOrganization)
-
-
-
 
 
 

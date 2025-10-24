@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { logger } from '@/utils/logger'
 
 async function handleOrganizationRequest(request: AuthenticatedRequest, { params }: { params: { slug: string } }) {
@@ -16,7 +16,7 @@ async function handleOrganizationRequest(request: AuthenticatedRequest, { params
         .from('organizations')
         .select(`
           id, profile_id, name, slug, description, avatar_url, website_url,
-          type, category, tags, member_count, campaign_count, total_funding,
+          type, category, tags, member_count, project_count, total_funding,
           trust_score, is_public, treasury_address, founded_at, created_at, updated_at
         `)
 

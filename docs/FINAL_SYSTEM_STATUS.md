@@ -43,23 +43,23 @@
 Built **11 complete APIs** connecting all 4 entities:
 
 #### Profile Endpoints (3 APIs)
-1. `GET /api/profiles/{userId}/campaigns` - User's campaigns
+1. `GET /api/profiles/{userId}/projects` - User's projects
 2. `GET /api/profiles/{userId}/projects` - User's projects
 3. `GET /api/profiles/{userId}/organizations` - User's organizations
 
 #### Organization Endpoints (4 APIs)
-4. `GET /api/organizations/{id}/campaigns` - List campaigns
-5. `POST /api/organizations/{id}/campaigns` - Create campaign
+4. `GET /api/organizations/{id}/projects` - List projects
+5. `POST /api/organizations/{id}/projects` - Create project
 6. `GET /api/organizations/{id}/projects` - List projects
 7. `POST /api/organizations/{id}/projects` - Create project
 
 #### Project Endpoints (3 APIs)
-8. `GET /api/projects/{id}/campaigns` - List campaigns in project
-9. `POST /api/projects/{id}/campaigns` - Add campaign to project
-10. `DELETE /api/projects/{id}/campaigns` - Remove campaign from project
+8. `GET /api/projects/{id}/projects` - List projects in project
+9. `POST /api/projects/{id}/projects` - Add project to project
+10. `DELETE /api/projects/{id}/projects` - Remove project from project
 
 #### Campaign Endpoints (1 API)
-11. `GET /api/campaigns/{id}/stats` - Campaign performance metrics
+11. `GET /api/projects/{id}/stats` - Campaign performance metrics
 
 **Total Code:** 1,400+ lines of production-ready TypeScript
 
@@ -78,7 +78,7 @@ Built **11 complete APIs** connecting all 4 entities:
 
 ```
 Individual (Profile)
-    ├─ Creates personal Campaigns
+    ├─ Creates personal Projects
     ├─ Creates personal Projects
     ├─ Founds Organizations
     └─ Joins Organizations as member
@@ -86,7 +86,7 @@ Individual (Profile)
 Organization
     ├─ Founded by Individual
     ├─ Has Members (roles: owner, admin, member, moderator, guest)
-    ├─ Creates org-owned Campaigns (→ treasury)
+    ├─ Creates org-owned Projects (→ treasury)
     └─ Creates org-owned Projects
 
 Campaign
@@ -97,8 +97,8 @@ Campaign
 
 Project
     ├─ Owner: Individual or Organization
-    ├─ Contains: Multiple Campaigns
-    └─ Purpose: Grouping related campaigns
+    ├─ Contains: Multiple Projects
+    └─ Purpose: Grouping related projects
 ```
 
 ### Data Flow
@@ -154,7 +154,7 @@ Real Data Displayed
 | Update | ✅ Owner | ✅ Admin | ✅ Owner/Admin |
 | Delete | ✅ Owner | ✅ Owner | ✅ Owner |
 | List | ✅ User | ✅ Member | ✅ Public |
-| Group | N/A | ✅ Campaigns | ✅ Under Org |
+| Group | N/A | ✅ Projects | ✅ Under Org |
 | Share | ✅ Public | ✅ Public | ✅ Public |
 
 ---
@@ -165,7 +165,7 @@ Real Data Displayed
 
 ```typescript
 // Use in any component
-const { campaigns, personalCount, orgCount } = useCampaigns()
+const { projects, personalCount, orgCount } = useProjects()
 const { projects, personalCount, orgCount } = useProjects()
 const { organizations, foundedCount, memberCount } = useOrganizations()
 ```
@@ -173,33 +173,33 @@ const { organizations, foundedCount, memberCount } = useOrganizations()
 ### Form Examples
 
 ```typescript
-// Create org campaign
+// Create org project
 <CreateOrgCampaignForm 
   orgId={orgId} 
-  onSuccess={refreshCampaigns} 
+  onSuccess={refreshProjects} 
 />
 
-// Add campaign to project
-addCampaignToProject(projectId, campaignId)
+// Add project to project
+addCampaignToProject(projectId, projectId)
 
-// Remove campaign from project
-removeCampaignFromProject(projectId, campaignId)
+// Remove project from project
+removeCampaignFromProject(projectId, projectId)
 ```
 
 ### Component Examples
 
 ```typescript
-// Show user's campaigns
-<MyCampaigns />
+// Show user's projects
+<MyProjects />
 
-// Show organization's campaigns
-<CampaignsList orgId={orgId} />
+// Show organization's projects
+<ProjectsList orgId={orgId} />
 
-// Show campaign stats
-<CampaignStats campaignId={campaignId} />
+// Show project stats
+<CampaignStats projectId={projectId} />
 
-// Show project campaigns
-<ProjectCampaigns projectId={projectId} />
+// Show project projects
+<ProjectProjects projectId={projectId} />
 ```
 
 ---
@@ -239,13 +239,13 @@ removeCampaignFromProject(projectId, campaignId)
 
 ### New Backend APIs (1,400+ lines)
 ```
-src/app/api/profiles/[userId]/campaigns/route.ts
+src/app/api/profiles/[userId]/projects/route.ts
 src/app/api/profiles/[userId]/projects/route.ts
 src/app/api/profiles/[userId]/organizations/route.ts
-src/app/api/organizations/[id]/campaigns/route.ts
 src/app/api/organizations/[id]/projects/route.ts
-src/app/api/projects/[id]/campaigns/route.ts
-src/app/api/campaigns/[id]/stats/route.ts
+src/app/api/organizations/[id]/projects/route.ts
+src/app/api/projects/[id]/projects/route.ts
+src/app/api/projects/[id]/stats/route.ts
 ```
 
 ### New Components (800+ lines)
@@ -274,7 +274,7 @@ docs/FINAL_SYSTEM_STATUS.md
 ## What's Working
 
 ✅ **Individual Management**
-- Create personal campaigns
+- Create personal projects
 - Create personal projects
 - Found organizations
 - Join organizations
@@ -288,8 +288,8 @@ docs/FINAL_SYSTEM_STATUS.md
 - Manage treasuries
 
 ✅ **Campaign Management**
-- Create personal campaigns
-- Create organization campaigns
+- Create personal projects
+- Create organization projects
 - Set goals and addresses
 - Track fundraising
 - Link to projects
@@ -297,9 +297,9 @@ docs/FINAL_SYSTEM_STATUS.md
 
 ✅ **Project Management**
 - Create projects (personal or org)
-- Add campaigns to projects
-- Remove campaigns from projects
-- Organize related campaigns
+- Add projects to projects
+- Remove projects from projects
+- Organize related projects
 - Track project metrics
 
 ✅ **User Experience**
@@ -317,11 +317,11 @@ Frontend developers can now:
 
 1. Create React hooks for each API
 2. Build dashboard pages showing user data
-3. Create forms for organization campaigns
+3. Create forms for organization projects
 4. Build organization management interfaces
 5. Create project dashboard pages
-6. Add campaign grouping UI
-7. Display campaign statistics
+6. Add project grouping UI
+7. Display project statistics
 8. Implement permission-based UI changes
 
 ---
@@ -373,24 +373,24 @@ Frontend developers can now:
 ## Next Steps for Frontend Team
 
 ### Priority 1: Core Hooks
-- Create `useCampaigns`, `useProjects`, `useOrganizations`
+- Create `useProjects`, `useProjects`, `useOrganizations`
 - Add error states and loading states
 - Add refresh functionality
 
 ### Priority 2: Dashboard Pages
-- Build "My Campaigns" page
+- Build "My Projects" page
 - Build "My Projects" page  
 - Build "My Organizations" page
 
 ### Priority 3: Organization Management
 - Build organization detail page
-- Build campaign management UI
+- Build project management UI
 - Build project management UI
 
 ### Priority 4: Forms
-- Build organization campaign form
 - Build organization project form
-- Add campaign-project linking UI
+- Build organization project form
+- Add project-project linking UI
 
 ### Priority 5: Polish
 - Add notifications
@@ -443,7 +443,7 @@ In this session, we:
 
 **Total work:** ~6,000 lines of code and documentation
 
-**Result:** OrangeCat now has a production-ready backend that connects individuals, organizations, campaigns, and projects with real Bitcoin fundraising capabilities.
+**Result:** OrangeCat now has a production-ready backend that connects individuals, organizations, projects, and projects with real Bitcoin fundraising capabilities.
 
 ---
 

@@ -1,7 +1,7 @@
 /**
  * UNIFIED CAMPAIGN STORE - SINGLE SOURCE OF TRUTH
  * 
- * This replaces ALL draft/campaign systems with one simple, reliable store.
+ * This replaces ALL draft/project systems with one simple, reliable store.
  * No more localStorage vs database confusion.
  * No more multiple hooks doing the same thing.
  * No more over-engineering.
@@ -43,7 +43,7 @@ export interface Campaign extends FundingPage {
 
 export interface CampaignState {
   // DATA
-  campaigns: Campaign[]
+  projects: Campaign[]
   currentDraft: CampaignFormData | null
   currentDraftId: string | null
   
@@ -55,27 +55,27 @@ export interface CampaignState {
   
   // COMPUTED
   drafts: Campaign[]
-  activeCampaigns: Campaign[]
-  pausedCampaigns: Campaign[]
+  activeProjects: Campaign[]
+  pausedProjects: Campaign[]
   
   // ACTIONS
-  loadCampaigns: (userId: string) => Promise<void>
+  loadProjects: (userId: string) => Promise<void>
   saveDraft: (userId: string, data: CampaignFormData, step?: number) => Promise<string>
   updateDraftField: (field: keyof CampaignFormData, value: any) => void
   clearCurrentDraft: () => void
-  publishCampaign: (userId: string, campaignId: string) => Promise<void>
-  deleteCampaign: (campaignId: string) => Promise<void>
-  pauseCampaign: (userId: string, campaignId: string) => Promise<void>
-  resumeCampaign: (userId: string, campaignId: string) => Promise<void>
-  loadCampaignForEdit: (campaignId: string) => void
-  updateCampaign: (userId: string, campaignId: string, data: CampaignFormData) => Promise<void>
+  publishCampaign: (userId: string, projectId: string) => Promise<void>
+  deleteCampaign: (projectId: string) => Promise<void>
+  pauseCampaign: (userId: string, projectId: string) => Promise<void>
+  resumeCampaign: (userId: string, projectId: string) => Promise<void>
+  loadCampaignForEdit: (projectId: string) => void
+  updateCampaign: (userId: string, projectId: string, data: CampaignFormData) => Promise<void>
   syncAll: (userId: string) => Promise<void>
   
   // UTILITIES
   getCampaignById: (id: string) => Campaign | undefined
   hasUnsavedChanges: () => boolean
   getStats: () => {
-    totalCampaigns: number
+    totalProjects: number
     totalDrafts: number
     totalActive: number
     totalPaused: number
@@ -87,7 +87,7 @@ export const useCampaignStore = create<CampaignState>()(
   persist(
     (set, get) => ({
       // INITIAL STATE
-      campaigns: [],
+      projects: [],
       currentDraft: null,
       currentDraftId: null,
       isLoading: false,
@@ -97,49 +97,100 @@ export const useCampaignStore = create<CampaignState>()(
       
       // COMPUTED GETTERS
       get drafts() {
-        return get().campaigns.filter(c => c.isDraft)
+        return get().projects.filter(c => c.isDraft)
       },
       
-      get activeCampaigns() {
-        return get().campaigns.filter(c => c.isActive)
+      get activeProjects() {
+        return get().projects.filter(c => c.isActive)
       },
 
-      get pausedCampaigns() {
-        return get().campaigns.filter(c => c.isPaused)
+      get pausedProjects() {
+        return get().projects.filter(c => c.isPaused)
       },
 
-      // LOAD ALL CAMPAIGNS
-      loadCampaigns: async (userId: string) => {
+      // LOAD ALL PROJECTS
+      loadProjects: async (userId: string) => {
         set({ isLoading: true, error: null })
-        
+
         try {
-          const { data, error } = await supabase
-            .from('funding_pages')
+          // Load user's projects (both as creator and through organizations)
+          const { data: ownedProjects, error: ownedError } = await supabase
+            .from('projects')
             .select('*')
-            .eq('user_id', userId)
+            .eq('creator_id', userId)
             .order('updated_at', { ascending: false })
-          
-          if (error) {throw error}
-          
-          const campaigns: Campaign[] = (data || []).map(campaign => ({
-            ...campaign,
-            isDraft: !campaign.is_active && !campaign.is_public,
-            isActive: campaign.is_active && campaign.is_public,
-            isPaused: !campaign.is_active && campaign.is_public,
-            lastModified: campaign.updated_at,
+
+          if (ownedError) {throw ownedError}
+
+          // Load projects from organizations user belongs to
+          const { data: orgMemberships, error: membershipError } = await supabase
+            .from('organization_members')
+            .select('organization_id')
+            .eq('profile_id', userId)
+            .eq('status', 'active')
+
+          if (membershipError) {throw membershipError}
+
+          let orgProjects: any[] = []
+          if (orgMemberships && orgMemberships.length > 0) {
+            const orgIds = orgMemberships.map(m => m.organization_id)
+            const { data: orgProjectData, error: orgProjectError } = await supabase
+              .from('projects')
+              .select('*')
+              .in('organization_id', orgIds)
+              .order('updated_at', { ascending: false })
+
+            if (orgProjectError) {throw orgProjectError}
+            orgProjects = orgProjectData || []
+          }
+
+          // Combine and deduplicate projects
+          const allProjects = [...(ownedProjects || []), ...(orgProjects || [])]
+          const uniqueProjects = allProjects.filter((project, index, self) =>
+            index === self.findIndex(p => p.id === project.id)
+          )
+
+          const projects: Campaign[] = uniqueProjects.map(project => ({
+            id: project.id,
+            user_id: project.creator_id,
+            title: project.title,
+            description: project.description || '',
+            bitcoin_address: project.bitcoin_address || '',
+            lightning_address: project.lightning_address || '',
+            website_url: '', // Not in our schema yet
+            goal_amount: project.goal_amount ? project.goal_amount / 100000000 : 0, // Convert from satoshis
+            current_amount: project.current_amount ? project.current_amount / 100000000 : 0, // Convert from satoshis
+            total_funding: project.current_amount ? project.current_amount / 100000000 : 0, // Convert from satoshis
+            contributor_count: 0, // Would need to calculate from transactions
+            is_active: project.status === 'active',
+            is_public: true, // Assuming all projects are public for now
+            is_featured: project.featured || false,
+            slug: '', // Not in our schema yet
+            category: project.category || '',
+            tags: project.tags || [],
+            featured_image_url: '', // Not in our schema yet
+            end_date: project.target_completion || '',
+            currency: project.currency || 'SATS',
+            created_at: project.created_at,
+            updated_at: project.updated_at,
+            // Custom fields for our store
+            isDraft: project.status === 'draft',
+            isActive: project.status === 'active',
+            isPaused: project.status === 'completed' || project.status === 'cancelled',
+            lastModified: project.updated_at,
             syncStatus: 'synced' as const
           }))
           
           set({ 
-            campaigns, 
+            projects, 
             isLoading: false, 
             lastSync: new Date().toISOString() 
           })
           
         } catch (error) {
-          logger.error('Failed to load campaigns:', error, 'Campaign')
+          logger.error('Failed to load projects:', error, 'Campaign')
           set({ 
-            error: error instanceof Error ? error.message : 'Failed to load campaigns',
+            error: error instanceof Error ? error.message : 'Failed to load projects',
             isLoading: false 
           })
         }
@@ -155,20 +206,14 @@ export const useCampaignStore = create<CampaignState>()(
         try {
           // Use centralized supabase client
           const draftData = {
-            user_id: userId,
             title: data.title || 'Untitled Campaign',
             description: data.description || null,
             bitcoin_address: data.bitcoin_address || null,
             lightning_address: data.lightning_address || null,
-            website_url: data.website_url || null,
-            goal_amount: data.goal_amount || null,
-            category: data.categories?.[0] || null,
-            tags: data.categories?.slice(1) || [],
-            currency: 'BTC',
-            is_active: false,
-            is_public: false,
-            total_funding: 0,
-            contributor_count: 0
+            goal_amount: data.goal_amount ? Math.round(data.goal_amount * 100000000) : null, // Convert to satoshis
+            currency: 'SATS',
+            status: 'draft',
+            creator_id: userId
           }
           
           let savedCampaign
@@ -176,10 +221,10 @@ export const useCampaignStore = create<CampaignState>()(
           if (draftId) {
             // Update existing draft
             const { data: updated, error } = await supabase
-              .from('funding_pages')
+              .from('projects')
               .update(draftData)
               .eq('id', draftId)
-              .eq('user_id', userId)
+              .eq('creator_id', userId)
               .select()
               .single()
             
@@ -188,11 +233,11 @@ export const useCampaignStore = create<CampaignState>()(
           } else {
             // Create new draft
             const { data: created, error } = await supabase
-              .from('funding_pages')
+              .from('projects')
               .insert(draftData)
               .select()
               .single()
-            
+
             if (error) {throw error}
             savedCampaign = created
             draftId = created.id
@@ -209,9 +254,9 @@ export const useCampaignStore = create<CampaignState>()(
           }
           
           set(state => ({
-            campaigns: draftId && state.campaigns.some(c => c.id === draftId)
-              ? state.campaigns.map(c => c.id === draftId ? updatedCampaign : c)
-              : [...state.campaigns.filter(c => c.id !== draftId), updatedCampaign],
+            projects: draftId && state.projects.some(c => c.id === draftId)
+              ? state.projects.map(c => c.id === draftId ? updatedCampaign : c)
+              : [...state.projects.filter(c => c.id !== draftId), updatedCampaign],
             currentDraft: data,
             currentDraftId: draftId,
             isSyncing: false,
@@ -255,19 +300,18 @@ export const useCampaignStore = create<CampaignState>()(
       },
 
       // PUBLISH CAMPAIGN
-      publishCampaign: async (userId: string, campaignId: string) => {
+      publishCampaign: async (userId: string, projectId: string) => {
         set({ isSyncing: true, error: null })
-        
+
         try {
           const { data, error } = await supabase
-            .from('funding_pages')
-            .update({ 
-              is_active: true, 
-              is_public: true,
+            .from('projects')
+            .update({
+              status: 'active',
               updated_at: new Date().toISOString()
             })
-            .eq('id', campaignId)
-            .eq('user_id', userId)
+            .eq('id', projectId)
+            .eq('creator_id', userId)
             .select()
             .single()
           
@@ -275,8 +319,8 @@ export const useCampaignStore = create<CampaignState>()(
           
           // Update local state
           set(state => ({
-            campaigns: state.campaigns.map(c => 
-              c.id === campaignId 
+            projects: state.projects.map(c => 
+              c.id === projectId 
                 ? { 
                     ...c, 
                     ...data,
@@ -294,9 +338,9 @@ export const useCampaignStore = create<CampaignState>()(
           }))
           
         } catch (error) {
-          logger.error('Failed to publish campaign:', error, 'Campaign')
+          logger.error('Failed to publish project:', error, 'Campaign')
           set({ 
-            error: error instanceof Error ? error.message : 'Failed to publish campaign',
+            error: error instanceof Error ? error.message : 'Failed to publish project',
             isSyncing: false 
           })
           throw error
@@ -304,29 +348,29 @@ export const useCampaignStore = create<CampaignState>()(
       },
 
       // DELETE CAMPAIGN
-      deleteCampaign: async (campaignId: string) => {
+      deleteCampaign: async (projectId: string) => {
         set({ isSyncing: true, error: null })
-        
+
         try {
           const { error } = await supabase
-            .from('funding_pages')
+            .from('projects')
             .delete()
-            .eq('id', campaignId)
+            .eq('id', projectId)
           
           if (error) {throw error}
           
           set(state => ({
-            campaigns: state.campaigns.filter(c => c.id !== campaignId),
-            currentDraft: state.currentDraftId === campaignId ? null : state.currentDraft,
-            currentDraftId: state.currentDraftId === campaignId ? null : state.currentDraftId,
+            projects: state.projects.filter(c => c.id !== projectId),
+            currentDraft: state.currentDraftId === projectId ? null : state.currentDraft,
+            currentDraftId: state.currentDraftId === projectId ? null : state.currentDraftId,
             isSyncing: false,
             lastSync: new Date().toISOString()
           }))
           
         } catch (error) {
-          logger.error('Failed to delete campaign', error, 'Campaign')
+          logger.error('Failed to delete project', error, 'Campaign')
           set({ 
-            error: error instanceof Error ? error.message : 'Failed to delete campaign',
+            error: error instanceof Error ? error.message : 'Failed to delete project',
             isSyncing: false 
           })
           throw error
@@ -334,19 +378,18 @@ export const useCampaignStore = create<CampaignState>()(
       },
 
       // PAUSE CAMPAIGN
-      pauseCampaign: async (userId: string, campaignId: string) => {
+      pauseCampaign: async (userId: string, projectId: string) => {
         set({ isSyncing: true, error: null })
-        
+
         try {
           const { data, error } = await supabase
-            .from('funding_pages')
-            .update({ 
-              is_active: false, 
-              is_public: false,
+            .from('projects')
+            .update({
+              status: 'completed',
               updated_at: new Date().toISOString()
             })
-            .eq('id', campaignId)
-            .eq('user_id', userId)
+            .eq('id', projectId)
+            .eq('creator_id', userId)
             .select()
             .single()
           
@@ -354,8 +397,8 @@ export const useCampaignStore = create<CampaignState>()(
           
           // Update local state
           set(state => ({
-            campaigns: state.campaigns.map(c => 
-              c.id === campaignId 
+            projects: state.projects.map(c => 
+              c.id === projectId 
                 ? { 
                     ...c, 
                     ...data,
@@ -373,9 +416,9 @@ export const useCampaignStore = create<CampaignState>()(
           }))
           
         } catch (error) {
-          logger.error('Failed to pause campaign', error, 'Campaign')
+          logger.error('Failed to pause project', error, 'Campaign')
           set({ 
-            error: error instanceof Error ? error.message : 'Failed to pause campaign',
+            error: error instanceof Error ? error.message : 'Failed to pause project',
             isSyncing: false 
           })
           throw error
@@ -383,19 +426,18 @@ export const useCampaignStore = create<CampaignState>()(
       },
 
       // RESUME CAMPAIGN
-      resumeCampaign: async (userId: string, campaignId: string) => {
+      resumeCampaign: async (userId: string, projectId: string) => {
         set({ isSyncing: true, error: null })
-        
+
         try {
           const { data, error } = await supabase
-            .from('funding_pages')
-            .update({ 
-              is_active: true, 
-              is_public: true,
+            .from('projects')
+            .update({
+              status: 'active',
               updated_at: new Date().toISOString()
             })
-            .eq('id', campaignId)
-            .eq('user_id', userId)
+            .eq('id', projectId)
+            .eq('creator_id', userId)
             .select()
             .single()
           
@@ -403,8 +445,8 @@ export const useCampaignStore = create<CampaignState>()(
           
           // Update local state
           set(state => ({
-            campaigns: state.campaigns.map(c => 
-              c.id === campaignId 
+            projects: state.projects.map(c => 
+              c.id === projectId 
                 ? { 
                     ...c, 
                     ...data,
@@ -422,9 +464,9 @@ export const useCampaignStore = create<CampaignState>()(
           }))
           
         } catch (error) {
-          logger.error('Failed to resume campaign', error, 'Campaign')
+          logger.error('Failed to resume project', error, 'Campaign')
           set({ 
-            error: error instanceof Error ? error.message : 'Failed to resume campaign',
+            error: error instanceof Error ? error.message : 'Failed to resume project',
             isSyncing: false 
           })
           throw error
@@ -432,31 +474,31 @@ export const useCampaignStore = create<CampaignState>()(
       },
 
       // LOAD CAMPAIGN FOR EDIT
-      loadCampaignForEdit: (campaignId: string) => {
+      loadCampaignForEdit: (projectId: string) => {
         const state = get()
-        const campaign = state.campaigns.find(c => c.id === campaignId)
+        const project = state.projects.find(c => c.id === projectId)
         
-        if (campaign) {
+        if (project) {
           const editData: CampaignFormData = {
-            title: campaign.title || '',
-            description: campaign.description || '',
-            bitcoin_address: campaign.bitcoin_address || '',
-            lightning_address: campaign.lightning_address || '',
-            website_url: campaign.website_url || '',
-            goal_amount: campaign.goal_amount || 0,
-                         categories: [campaign.category, ...(campaign.tags || [])].filter((item): item is string => Boolean(item)),
+            title: project.title || '',
+            description: project.description || '',
+            bitcoin_address: project.bitcoin_address || '',
+            lightning_address: project.lightning_address || '',
+            website_url: project.website_url || '',
+            goal_amount: project.goal_amount || 0,
+                         categories: [project.category, ...(project.tags || [])].filter((item): item is string => Boolean(item)),
             images: [] // TODO: Implement images
           }
           
           set({
             currentDraft: editData,
-            currentDraftId: campaignId
+            currentDraftId: projectId
           })
         }
       },
 
       // UPDATE CAMPAIGN
-      updateCampaign: async (userId: string, campaignId: string, data: CampaignFormData) => {
+      updateCampaign: async (userId: string, projectId: string, data: CampaignFormData) => {
         set({ isSyncing: true, error: null })
         
         try {
@@ -466,18 +508,15 @@ export const useCampaignStore = create<CampaignState>()(
             description: data.description || null,
             bitcoin_address: data.bitcoin_address || null,
             lightning_address: data.lightning_address || null,
-            website_url: data.website_url || null,
-            goal_amount: data.goal_amount || null,
-            category: data.categories?.[0] || null,
-            tags: data.categories?.slice(1) || [],
+            goal_amount: data.goal_amount ? Math.round(data.goal_amount * 100000000) : null, // Convert to satoshis
             updated_at: new Date().toISOString()
           }
           
           const { data: updated, error } = await supabase
-            .from('funding_pages')
+            .from('projects')
             .update(updateData)
-            .eq('id', campaignId)
-            .eq('user_id', userId)
+            .eq('id', projectId)
+            .eq('creator_id', userId)
             .select()
             .single()
           
@@ -485,8 +524,8 @@ export const useCampaignStore = create<CampaignState>()(
           
           // Update local state
           set(state => ({
-            campaigns: state.campaigns.map(c => 
-              c.id === campaignId 
+            projects: state.projects.map(c => 
+              c.id === projectId 
                 ? { 
                     ...c, 
                     ...updated,
@@ -502,9 +541,9 @@ export const useCampaignStore = create<CampaignState>()(
           }))
           
         } catch (error) {
-          logger.error('Failed to update campaign', error, 'Campaign')
+          logger.error('Failed to update project', error, 'Campaign')
           set({ 
-            error: error instanceof Error ? error.message : 'Failed to update campaign',
+            error: error instanceof Error ? error.message : 'Failed to update project',
             isSyncing: false 
           })
           throw error
@@ -513,12 +552,12 @@ export const useCampaignStore = create<CampaignState>()(
 
       // SYNC ALL
       syncAll: async (userId: string) => {
-        await get().loadCampaigns(userId)
+        await get().loadProjects(userId)
       },
 
       // UTILITIES
       getCampaignById: (id: string) => {
-        return get().campaigns.find(c => c.id === id)
+        return get().projects.find(c => c.id === id)
       },
 
       hasUnsavedChanges: () => {
@@ -526,18 +565,18 @@ export const useCampaignStore = create<CampaignState>()(
       },
 
       getStats: () => {
-        const { campaigns } = get()
+        const { projects } = get()
         return {
-          totalCampaigns: campaigns.length,
-          totalDrafts: campaigns.filter(c => c.isDraft).length,
-          totalActive: campaigns.filter(c => c.isActive).length,
-          totalPaused: campaigns.filter(c => c.isPaused).length,
-          totalRaised: campaigns.reduce((sum, c) => sum + (c.total_funding || 0), 0)
+          totalProjects: projects.length,
+          totalDrafts: projects.filter(c => c.isDraft).length,
+          totalActive: projects.filter(c => c.isActive).length,
+          totalPaused: projects.filter(c => c.isPaused).length,
+          totalRaised: projects.reduce((sum, c) => sum + (c.total_funding || 0), 0)
         }
       }
     }),
     {
-      name: 'orangecat-campaigns',
+      name: 'orangecat-projects',
       storage: createJSONStorage(() => localStorage),
       // Only persist essential data
       partialize: (state) => ({

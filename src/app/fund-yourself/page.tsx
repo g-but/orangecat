@@ -8,14 +8,14 @@ import Button from '@/components/ui/Button'
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
 import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout'
 import { Plus, Edit2, Share2, BarChart2, Loader2, ArrowRight, Bitcoin, Zap, Users, Globe } from 'lucide-react'
-import { getUserFundingPages } from '@/services/supabase/fundraising'
+import { getUserProjects } from '@/services/supabase/fundraising'
 import { toast } from 'sonner'
 import { getRegionalToolsTitle, getRegionalToolsDescription, fundingTools } from '@/data/marketTools'
 
 export default function FundYourselfPage() {
   const router = useRouter()
   const { user, session } = useAuth()
-  const [pages, setPages] = useState<any[]>([])
+  const [projects, setProjects] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -25,23 +25,23 @@ export default function FundYourselfPage() {
       return
     }
 
-    const loadPages = async () => {
+    const loadProjects = async () => {
       try {
-        const data = await getUserFundingPages(user!.id)
-        setPages(data || [])
+        const data = await getUserProjects(user!.id)
+        setProjects(data || [])
       } catch (err) {
-        setError('Failed to load your funding pages')
-        toast.error('Failed to load your funding pages')
+        setError('Failed to load your projects')
+        toast.error('Failed to load your projects')
       } finally {
         setLoading(false)
       }
     }
 
-    loadPages()
+    loadProjects()
   }, [user, session, router])
 
   const handleCreatePage = () => {
-    router.push('/create')
+    router.push('/projects/create')
   }
 
   if (!session) {
@@ -147,52 +147,52 @@ export default function FundYourselfPage() {
           </div>
         )}
 
-        {pages.length === 0 ? (
+        {projects.length === 0 ? (
           <Card className="p-8 text-center">
             <h3 className="text-xl font-semibold mb-2">Start Your Journey</h3>
             <p className="text-gray-600 mb-6">
-              Create your first funding page and join the Bitcoin funding revolution
+              Create your first project and join the Bitcoin funding revolution
             </p>
             <Button onClick={handleCreatePage}>
-              Create Your First Page
+              Create Your First Project
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </Card>
         ) : (
           <div className="grid gap-6">
-            {pages.map((page) => (
-              <Card key={page.id} className="p-6">
+            {projects.map((project) => (
+              <Card key={project.id} className="p-6">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
-                    <h3 className="text-xl font-semibold mb-2">{page.title}</h3>
-                    <p className="text-gray-600 mb-4 line-clamp-2">{page.description}</p>
+                    <h3 className="text-xl font-semibold mb-2">{project.title}</h3>
+                    <p className="text-gray-600 mb-4 line-clamp-2">{project.description}</p>
                     <div className="flex items-center space-x-6 text-sm text-gray-500">
                       <div className="flex items-center">
                         <BarChart2 className="w-4 h-4 mr-2" />
                         <span className="mr-1">Total:</span>
-                        <CurrencyDisplay 
-                          amount={page.total_funding || 0}
+                        <CurrencyDisplay
+                          amount={project.current_amount || 0}
                           currency="BTC"
                           size="sm"
                         />
                       </div>
                       <div className="flex items-center">
                         <Users className="w-4 h-4 mr-1" />
-                        {page.contributor_count || 0} contributors
+                        {project.contributor_count || 0} contributors
                       </div>
                     </div>
                   </div>
                   <div className="flex space-x-2 ml-4">
                     <Button
                       variant="outline"
-                      onClick={() => router.push(`/fund-us/${page.id}/edit`)}
+                      onClick={() => router.push(`/projects/${project.id}/edit`)}
                     >
                       <Edit2 className="w-4 h-4 mr-2" />
                       Edit
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => router.push(`/fund-us/${page.id}`)}
+                      onClick={() => router.push(`/projects/${project.id}`)}
                     >
                       <Share2 className="w-4 h-4 mr-2" />
                       View

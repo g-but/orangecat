@@ -17,46 +17,46 @@ import {
   Zap
 } from 'lucide-react'
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
-import { getFeaturedCampaigns, FeaturedCampaign } from '@/services/featured'
+import { getFeaturedProjects, FeaturedCampaign } from '@/services/featured'
 
-interface FeaturedCampaignsProps {
+interface FeaturedProjectsProps {
   limit?: number
   showHeader?: boolean
   variant?: 'hero' | 'grid' | 'carousel'
   className?: string
 }
 
-export default function FeaturedCampaigns({ 
+export default function FeaturedProjects({ 
   limit = 6, 
   showHeader = true, 
   variant = 'grid',
   className = '' 
-}: FeaturedCampaignsProps) {
-  const [campaigns, setCampaigns] = useState<FeaturedCampaign[]>([])
+}: FeaturedProjectsProps) {
+  const [projects, setProjects] = useState<FeaturedCampaign[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
-    loadFeaturedCampaigns()
+    loadFeaturedProjects()
   }, [limit]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loadFeaturedCampaigns = async () => {
+  const loadFeaturedProjects = async () => {
     try {
       setLoading(true)
       setError(null)
-      const data = await getFeaturedCampaigns(limit)
-      setCampaigns(data)
+      const data = await getFeaturedProjects(limit)
+      setProjects(data)
     } catch (err: any) {
-      setError('Failed to load featured campaigns')
+      setError('Failed to load featured projects')
     } finally {
       setLoading(false)
     }
   }
 
-  const formatProgress = (campaign: FeaturedCampaign) => {
-    if (!campaign.goal_amount) {return 0}
-    return Math.min((campaign.total_funding / campaign.goal_amount) * 100, 100)
+  const formatProgress = (project: FeaturedCampaign) => {
+    if (!project.goal_amount) {return 0}
+    return Math.min((project.total_funding / project.goal_amount) * 100, 100)
   }
 
   const formatTimeLeft = (endDate?: string) => {
@@ -75,8 +75,8 @@ export default function FeaturedCampaigns({
     return `${diffMonths} month${diffMonths > 1 ? 's' : ''} left`
   }
 
-  const getFeaturedBadge = (campaign: FeaturedCampaign) => {
-    switch (campaign.featured_type) {
+  const getFeaturedBadge = (project: FeaturedCampaign) => {
+    switch (project.featured_type) {
       case 'trending':
         return { icon: TrendingUp, label: 'Trending', color: 'bg-green-100 text-green-700' }
       case 'staff_pick':
@@ -116,29 +116,29 @@ export default function FeaturedCampaigns({
     )
   }
 
-  if (error || campaigns.length === 0) {
-    return null // Gracefully hide if no featured campaigns
+  if (error || projects.length === 0) {
+    return null // Gracefully hide if no featured projects
   }
 
-  const renderCampaignCard = (campaign: FeaturedCampaign, isHero = false) => {
-    const progress = formatProgress(campaign)
-    const timeLeft = formatTimeLeft(campaign.end_date)
-    const badge = getFeaturedBadge(campaign)
+  const renderCampaignCard = (project: FeaturedCampaign, isHero = false) => {
+    const progress = formatProgress(project)
+    const timeLeft = formatTimeLeft(project.end_date)
+    const badge = getFeaturedBadge(project)
     const BadgeIcon = badge.icon
 
     return (
       <Card
-        key={campaign.id}
+        key={project.id}
         className={`group cursor-pointer hover:shadow-xl transition-all duration-300 overflow-hidden ${
           isHero ? 'h-96' : 'h-80'
         }`}
-        onClick={() => router.push(`/campaign/${campaign.slug || campaign.id}`)}
+        onClick={() => router.push(`/project/${project.slug || project.id}`)}
       >
         <div className="relative h-48 overflow-hidden">
-          {campaign.featured_image_url ? (
+          {project.featured_image_url ? (
             <Image
-              src={campaign.featured_image_url}
-              alt={campaign.title}
+              src={project.featured_image_url}
+              alt={project.title}
               fill
               className="object-cover group-hover:scale-105 transition-transform duration-300"
             />
@@ -172,17 +172,17 @@ export default function FeaturedCampaigns({
             <h3 className={`font-semibold text-gray-900 group-hover:text-orange-600 transition-colors mb-2 line-clamp-2 ${
               isHero ? 'text-lg' : 'text-base'
             }`}>
-              {campaign.title}
+              {project.title}
             </h3>
             
-            {campaign.profiles && (
+            {project.profiles && (
               <p className="text-sm text-gray-600 mb-2">
-                by {campaign.profiles.display_name || campaign.profiles.username}
+                by {project.profiles.name || project.profiles.username}
               </p>
             )}
             
             <p className="text-sm text-gray-600 line-clamp-2 mb-3">
-              {campaign.description}
+              {project.description}
             </p>
           </div>
 
@@ -191,7 +191,7 @@ export default function FeaturedCampaigns({
             <div className="flex items-center justify-between text-sm">
               <div>
                 <CurrencyDisplay 
-                  amount={campaign.total_funding}
+                  amount={project.total_funding}
                   currency="BTC"
                   size="sm"
                   className="font-medium text-gray-900"
@@ -206,7 +206,7 @@ export default function FeaturedCampaigns({
               <div className="flex items-center gap-3">
                 <span className="flex items-center">
                   <Users className="w-3 h-3 mr-1" />
-                  {campaign.contributor_count}
+                  {project.contributor_count}
                 </span>
                 {timeLeft && (
                   <span className="flex items-center">
@@ -229,18 +229,18 @@ export default function FeaturedCampaigns({
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
             <Zap className="w-6 h-6 text-orange-500" />
-            Featured Campaigns
+            Featured Projects
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Discover exceptional projects and causes that are making a real impact. 
-            These campaigns have been selected for their innovation, community support, and potential for success.
+            These projects have been selected for their innovation, community support, and potential for success.
           </p>
         </div>
       )}
 
-      {variant === 'hero' && campaigns.length > 0 && (
+      {variant === 'hero' && projects.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {campaigns.slice(0, 2).map(campaign => renderCampaignCard(campaign, true))}
+          {projects.slice(0, 2).map(project => renderCampaignCard(project, true))}
         </div>
       )}
 
@@ -249,19 +249,19 @@ export default function FeaturedCampaigns({
         variant === 'carousel' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' :
         'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
       }`}>
-        {(variant === 'hero' ? campaigns.slice(2) : campaigns).map(campaign => 
-          renderCampaignCard(campaign)
+        {(variant === 'hero' ? projects.slice(2) : projects).map(project => 
+          renderCampaignCard(project)
         )}
       </div>
 
-      {campaigns.length >= limit && (
+      {projects.length >= limit && (
         <div className="text-center">
           <Button 
             href="/discover?featured=true" 
             variant="outline"
             className="group"
           >
-            View All Featured Campaigns
+            View All Featured Projects
             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>

@@ -40,19 +40,19 @@ export default function SmartCreateButton({
       setShowDraftDialog(true)
     } else {
       // Clear any existing drafts from localStorage if starting fresh
-      router.push('/create')
+      router.push('/projects/create')
     }
   }
 
   const handleContinueDraft = () => {
     setShowDraftDialog(false)
-    router.push('/create')
+    router.push('/projects/create')
   }
 
   const handleStartFresh = () => {
     setShowDraftDialog(false)
     // Add query parameter to indicate starting fresh
-    router.push('/create?new=true')
+    router.push('/projects/create?new=true')
   }
 
   // Determine button content based on draft status

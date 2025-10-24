@@ -1,4 +1,4 @@
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
 
 export type FeaturedType = 
@@ -26,22 +26,22 @@ export interface FeaturedCampaign {
   featured_until?: string
   profiles?: {
     username: string
-    display_name?: string
+    name?: string
     avatar_url?: string
   }
 }
 
-// Get featured campaigns
-export async function getFeaturedCampaigns(limit: number = 6): Promise<FeaturedCampaign[]> {
+// Get featured projects
+export async function getFeaturedProjects(limit: number = 6): Promise<FeaturedCampaign[]> {
   try {
-    // For now, we'll simulate featured campaigns by getting high-performing campaigns
-    // In the future, this would query a dedicated featured_campaigns table
-    const { data: campaigns, error } = await supabase
-      .from('funding_pages')
+    // For now, we'll simulate featured projects by getting high-performing projects
+    // In the future, this would query a dedicated featured_projects table
+    const { data: projects, error } = await supabase
+      .from('projects')
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
-        profiles!inner(username, display_name, avatar_url)
+        profiles!inner(username, name, avatar_url)
       `)
       .eq('is_public', true)
       .eq('is_active', true)
@@ -50,17 +50,17 @@ export async function getFeaturedCampaigns(limit: number = 6): Promise<FeaturedC
 
     if (error) {throw error}
 
-    // Transform to featured campaigns with simulated featured types
-    const featuredCampaigns: FeaturedCampaign[] = (campaigns || []).map((campaign, index) => {
-      const progress = campaign.goal_amount ? (campaign.total_funding / campaign.goal_amount) * 100 : 0
+    // Transform to featured projects with simulated featured types
+    const featuredProjects: FeaturedCampaign[] = (projects || []).map((project, index) => {
+      const progress = project.goal_amount ? (project.total_funding / project.goal_amount) * 100 : 0
       
-      // Determine featured type based on campaign characteristics
+      // Determine featured type based on project characteristics
       let featured_type: FeaturedType = 'featured'
       if (progress >= 80) {
         featured_type = 'nearly_funded'
-      } else if (campaign.contributor_count >= 50) {
+      } else if (project.contributor_count >= 50) {
         featured_type = 'community_choice'
-      } else if (campaign.total_funding >= 10000) {
+      } else if (project.total_funding >= 10000) {
         featured_type = 'trending'
       } else if (index < 2) {
         featured_type = 'staff_pick'
@@ -69,29 +69,29 @@ export async function getFeaturedCampaigns(limit: number = 6): Promise<FeaturedC
       }
 
       return {
-        ...campaign,
+        ...project,
         featured_type,
         featured_priority: index + 1,
-        profiles: Array.isArray(campaign.profiles) ? campaign.profiles[0] : campaign.profiles
+        profiles: Array.isArray(project.profiles) ? project.profiles[0] : project.profiles
       }
     })
 
-    return featuredCampaigns
+    return featuredProjects
   } catch (error) {
-    logger.error('Error fetching featured campaigns', error, 'Featured')
+    logger.error('Error fetching featured projects', error, 'Featured')
     return []
   }
 }
 
-// Get trending campaigns (subset of featured)
-export async function getTrendingCampaigns(limit: number = 3): Promise<FeaturedCampaign[]> {
+// Get trending projects (subset of featured)
+export async function getTrendingProjects(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
-    const { data: campaigns, error } = await supabase
-      .from('funding_pages')
+    const { data: projects, error } = await supabase
+      .from('projects')
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
-        profiles!inner(username, display_name, avatar_url)
+        profiles!inner(username, name, avatar_url)
       `)
       .eq('is_public', true)
       .eq('is_active', true)
@@ -100,14 +100,14 @@ export async function getTrendingCampaigns(limit: number = 3): Promise<FeaturedC
 
     if (error) {throw error}
 
-    return (campaigns || []).map((campaign, index) => ({
-      ...campaign,
+    return (projects || []).map((project, index) => ({
+      ...project,
       featured_type: 'trending' as FeaturedType,
       featured_priority: index + 1,
-      profiles: Array.isArray(campaign.profiles) ? campaign.profiles[0] : campaign.profiles
+      profiles: Array.isArray(project.profiles) ? project.profiles[0] : project.profiles
     }))
   } catch (error) {
-    logger.error('Error fetching trending campaigns', error, 'Featured')
+    logger.error('Error fetching trending projects', error, 'Featured')
     return []
   }
 }
@@ -115,13 +115,13 @@ export async function getTrendingCampaigns(limit: number = 3): Promise<FeaturedC
 // Get staff picks
 export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
-    // For now, get campaigns with good descriptions and images
-    const { data: campaigns, error } = await supabase
-      .from('funding_pages')
+    // For now, get projects with good descriptions and images
+    const { data: projects, error } = await supabase
+      .from('projects')
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
-        profiles!inner(username, display_name, avatar_url)
+        profiles!inner(username, name, avatar_url)
       `)
       .eq('is_public', true)
       .eq('is_active', true)
@@ -132,11 +132,11 @@ export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign
 
     if (error) {throw error}
 
-    return (campaigns || []).map((campaign, index) => ({
-      ...campaign,
+    return (projects || []).map((project, index) => ({
+      ...project,
       featured_type: 'staff_pick' as FeaturedType,
       featured_priority: index + 1,
-      profiles: Array.isArray(campaign.profiles) ? campaign.profiles[0] : campaign.profiles
+      profiles: Array.isArray(project.profiles) ? project.profiles[0] : project.profiles
     }))
   } catch (error) {
     logger.error('Error fetching staff picks', error, 'Featured')
@@ -144,15 +144,15 @@ export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign
   }
 }
 
-// Get nearly funded campaigns
-export async function getNearlyFundedCampaigns(limit: number = 3): Promise<FeaturedCampaign[]> {
+// Get nearly funded projects
+export async function getNearlyFundedProjects(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
-    const { data: campaigns, error } = await supabase
-      .from('funding_pages')
+    const { data: projects, error } = await supabase
+      .from('projects')
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
-        profiles!inner(username, display_name, avatar_url)
+        profiles!inner(username, name, avatar_url)
       `)
       .eq('is_public', true)
       .eq('is_active', true)
@@ -162,36 +162,36 @@ export async function getNearlyFundedCampaigns(limit: number = 3): Promise<Featu
 
     if (error) {throw error}
 
-    // Filter for campaigns that are 70%+ funded
-    const nearlyFunded = (campaigns || [])
-      .filter(campaign => {
-        const progress = campaign.goal_amount ? (campaign.total_funding / campaign.goal_amount) * 100 : 0
+    // Filter for projects that are 70%+ funded
+    const nearlyFunded = (projects || [])
+      .filter(project => {
+        const progress = project.goal_amount ? (project.total_funding / project.goal_amount) * 100 : 0
         return progress >= 70 && progress < 100
       })
       .slice(0, limit)
 
-    return nearlyFunded.map((campaign, index) => ({
-      ...campaign,
+    return nearlyFunded.map((project, index) => ({
+      ...project,
       featured_type: 'nearly_funded' as FeaturedType,
       featured_priority: index + 1,
-      profiles: Array.isArray(campaign.profiles) ? campaign.profiles[0] : campaign.profiles
+      profiles: Array.isArray(project.profiles) ? project.profiles[0] : project.profiles
     }))
   } catch (error) {
-    logger.error('Error fetching nearly funded campaigns', error, 'Featured')
+    logger.error('Error fetching nearly funded projects', error, 'Featured')
     return []
   }
 }
 
-// Get new and noteworthy campaigns
+// Get new and noteworthy projects
 export async function getNewAndNoteworthy(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
-    // Get recent campaigns with some traction
-    const { data: campaigns, error } = await supabase
-      .from('funding_pages')
+    // Get recent projects with some traction
+    const { data: projects, error } = await supabase
+      .from('projects')
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
-        profiles!inner(username, display_name, avatar_url)
+        profiles!inner(username, name, avatar_url)
       `)
       .eq('is_public', true)
       .eq('is_active', true)
@@ -202,34 +202,34 @@ export async function getNewAndNoteworthy(limit: number = 3): Promise<FeaturedCa
 
     if (error) {throw error}
 
-    return (campaigns || []).map((campaign, index) => ({
-      ...campaign,
+    return (projects || []).map((project, index) => ({
+      ...project,
       featured_type: 'new_and_noteworthy' as FeaturedType,
       featured_priority: index + 1,
-      profiles: Array.isArray(campaign.profiles) ? campaign.profiles[0] : campaign.profiles
+      profiles: Array.isArray(project.profiles) ? project.profiles[0] : project.profiles
     }))
   } catch (error) {
-    logger.error('Error fetching new and noteworthy campaigns', error, 'Featured')
+    logger.error('Error fetching new and noteworthy projects', error, 'Featured')
     return []
   }
 }
 
-// Admin function to manually feature a campaign (future implementation)
+// Admin function to manually feature a project (future implementation)
 export async function featureCampaign(
-  campaignId: string, 
+  projectId: string, 
   featuredType: FeaturedType, 
   priority: number = 1,
   featuredUntil?: string
 ): Promise<boolean> {
-  // This would be implemented when we add a featured_campaigns table
+  // This would be implemented when we add a featured_projects table
   // For now, return true to indicate success
-  logger.info('Campaign featured', { campaignId, featuredType, priority, featuredUntil }, 'Featured')
+  logger.info('Campaign featured', { projectId, featuredType, priority, featuredUntil }, 'Featured')
   return true
 }
 
-// Admin function to unfeature a campaign
-export async function unfeatureCampaign(campaignId: string): Promise<boolean> {
-  // This would be implemented when we add a featured_campaigns table
-  logger.info('Campaign unfeatured', { campaignId }, 'Featured')
+// Admin function to unfeature a project
+export async function unfeatureCampaign(projectId: string): Promise<boolean> {
+  // This would be implemented when we add a featured_projects table
+  logger.info('Campaign unfeatured', { projectId }, 'Featured')
   return true
 } 

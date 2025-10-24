@@ -1,5 +1,6 @@
 'use client'
 
+import { logger } from '@/utils/logger'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
@@ -82,7 +83,7 @@ export function OrganizationWizard() {
       router.push(`/organizations/${data.data.slug}`)
     } catch (error) {
       toast.error('Failed to create organization')
-      console.error(error)
+      logger.error(error)
     } finally {
       setIsSubmitting(false)
     }

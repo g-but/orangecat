@@ -25,11 +25,11 @@ import {
 import { toast } from 'sonner'
 
 interface CampaignManagementProps {
-  campaign: Campaign
+  project: Campaign
   onClose?: () => void
 }
 
-export default function CampaignManagement({ campaign, onClose }: CampaignManagementProps) {
+export default function CampaignManagement({ project, onClose }: CampaignManagementProps) {
   const { user } = useAuth()
   const { updateCampaign, deleteCampaign } = useCampaignStore()
   const [isEditing, setIsEditing] = useState(false)
@@ -37,12 +37,12 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   
   const [editForm, setEditForm] = useState({
-    title: campaign.title || '',
-    description: campaign.description || '',
-    bitcoin_address: campaign.bitcoin_address || '',
-    lightning_address: campaign.lightning_address || '',
-    website_url: campaign.website_url || '',
-    goal_amount: campaign.goal_amount || 0,
+    title: project.title || '',
+    description: project.description || '',
+    bitcoin_address: project.bitcoin_address || '',
+    lightning_address: project.lightning_address || '',
+    website_url: project.website_url || '',
+    goal_amount: project.goal_amount || 0,
   })
 
   const formatAmount = (amount: number) => {
@@ -65,15 +65,15 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
     
     setIsSaving(true)
     try {
-      await updateCampaign(user.id, campaign.id, {
+      await updateCampaign(user.id, project.id, {
         ...editForm,
-        categories: [campaign.category, ...(campaign.tags || [])].filter((item): item is string => Boolean(item)),
+        categories: [project.category, ...(project.tags || [])].filter((item): item is string => Boolean(item)),
         images: []
       })
       toast.success('Campaign updated successfully')
       setIsEditing(false)
     } catch (error) {
-      toast.error('Failed to update campaign')
+      toast.error('Failed to update project')
     } finally {
       setIsSaving(false)
     }
@@ -83,27 +83,27 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
     if (!user?.id) {return}
     
     try {
-      await deleteCampaign(campaign.id)
+      await deleteCampaign(project.id)
       toast.success('Campaign deleted successfully')
       onClose?.()
     } catch (error) {
-      toast.error('Failed to delete campaign')
+      toast.error('Failed to delete project')
     }
   }
 
   const copyPageLink = () => {
-    const url = `${window.location.origin}/fund-us/${campaign.id}`
+    const url = `${window.location.origin}/fund-us/${project.id}`
     navigator.clipboard.writeText(url)
     toast.success('Campaign link copied!')
   }
 
   const viewCampaign = () => {
-    window.open(`/fund-us/${campaign.id}`, '_blank')
+    window.open(`/fund-us/${project.id}`, '_blank')
   }
 
   const getProgress = () => {
-    if (!campaign.goal_amount) {return 0}
-    return Math.min(((campaign.total_funding || 0) / campaign.goal_amount) * 100, 100)
+    if (!project.goal_amount) {return 0}
+    return Math.min(((project.total_funding || 0) / project.goal_amount) * 100, 100)
   }
 
   return (
@@ -111,9 +111,9 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{campaign.title}</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{project.title}</h2>
           <p className="text-gray-500">
-            {campaign.isActive ? 'Active Campaign' : campaign.isPaused ? 'Paused Campaign' : 'Draft Campaign'}
+            {project.isActive ? 'Active Campaign' : project.isPaused ? 'Paused Campaign' : 'Draft Campaign'}
           </p>
         </div>
         <div className="flex gap-2">
@@ -136,7 +136,7 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
               <div>
                 <p className="text-sm font-medium text-gray-600">Raised</p>
                 <p className="text-lg font-bold text-green-600">
-                  {formatAmount(campaign.total_funding || 0)}
+                  {formatAmount(project.total_funding || 0)}
                 </p>
               </div>
               <DollarSign className="w-5 h-5 text-green-400" />
@@ -150,7 +150,7 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
               <div>
                 <p className="text-sm font-medium text-gray-600">Goal</p>
                 <p className="text-lg font-bold text-blue-600">
-                  {formatAmount(campaign.goal_amount || 0)}
+                  {formatAmount(project.goal_amount || 0)}
                 </p>
               </div>
               <TrendingUp className="w-5 h-5 text-blue-400" />
@@ -175,7 +175,7 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Contributors</p>
-                <p className="text-lg font-bold text-purple-600">{campaign.contributor_count || 0}</p>
+                <p className="text-lg font-bold text-purple-600">{project.contributor_count || 0}</p>
               </div>
               <Users className="w-5 h-5 text-purple-400" />
             </div>
@@ -300,35 +300,35 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
             <div className="space-y-4">
               <div>
                 <h4 className="font-medium text-gray-700">Description</h4>
-                <p className="text-gray-600">{campaign.description || 'No description provided'}</p>
+                <p className="text-gray-600">{project.description || 'No description provided'}</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <h4 className="font-medium text-gray-700">Bitcoin Address</h4>
                   <p className="text-sm text-gray-600 font-mono break-all">
-                    {campaign.bitcoin_address || 'Not configured'}
+                    {project.bitcoin_address || 'Not configured'}
                   </p>
                 </div>
                 
                 <div>
                   <h4 className="font-medium text-gray-700">Lightning Address</h4>
                   <p className="text-sm text-gray-600">
-                    {campaign.lightning_address || 'Not configured'}
+                    {project.lightning_address || 'Not configured'}
                   </p>
                 </div>
               </div>
               
-              {campaign.website_url && (
+              {project.website_url && (
                 <div>
                   <h4 className="font-medium text-gray-700">Website</h4>
                   <a 
-                    href={campaign.website_url} 
+                    href={project.website_url} 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
                   >
-                    {campaign.website_url}
+                    {project.website_url}
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 </div>
@@ -361,7 +361,7 @@ export default function CampaignManagement({ campaign, onClose }: CampaignManage
           {showDeleteConfirm && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-sm text-red-800 mb-3">
-                Are you sure you want to delete this campaign? This action cannot be undone.
+                Are you sure you want to delete this project? This action cannot be undone.
               </p>
               <div className="flex gap-2">
                 <Button variant="danger" size="sm" onClick={handleDelete}>

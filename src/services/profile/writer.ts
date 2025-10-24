@@ -1,13 +1,15 @@
 /**
  * PROFILE WRITER MODULE
- * 
+ *
  * Created: 2025-01-09
- * Last Modified: 2025-01-09
- * Last Modified Summary: Extracted from profileService.ts for modular architecture - handles write operations
+ * Last Modified: 2025-10-23
+ * Last Modified Summary: Enhanced with username uniqueness check and proper error handling
  */
 
+import supabase from '@/lib/supabase/browser'
 import { logger, logProfile } from '@/utils/logger'
-import { ClientProfileService, type ClientProfileUpdateData } from './clientProfileService'
+import { ProfileMapper } from './mapper'
+import { ProfileReader } from './reader'
 import type { ScalableProfile, ScalableProfileFormData, ProfileAnalytics, ProfileServiceResponse } from './types'
 
 // =====================================================================
@@ -15,10 +17,36 @@ import type { ScalableProfile, ScalableProfileFormData, ProfileAnalytics, Profil
 // =====================================================================
 
 export class ProfileWriter {
-  
+
+  /**
+   * Check if username is available (not taken by another user)
+   */
+  static async checkUsernameUniqueness(
+    username: string,
+    currentUserId: string
+  ): Promise<boolean> {
+    if (!username?.trim()) {
+      return true; // Empty username is always "available" (will be handled by validation)
+    }
+
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username.trim())
+        .neq('id', currentUserId)
+        .single();
+
+      return !data; // true if no other user has this username
+    } catch (error) {
+      logger.error('ProfileWriter.checkUsernameUniqueness error:', error);
+      return false; // Err on the side of caution
+    }
+  }
+
   /**
    * Update profile with comprehensive field support
-   * Uses the unified profile service for clean, consistent operations
+   * Includes username uniqueness check and proper error handling
    */
   static async updateProfile(
     userId: string,
@@ -31,62 +59,60 @@ export class ProfileWriter {
     try {
       logProfile('updateProfile', { userId, formData })
 
-      // Convert ScalableProfileFormData to ClientProfileUpdateData
-      const updateData: ClientProfileUpdateData = {
-        display_name: formData.display_name,
-        bio: formData.bio,
-        avatar_url: formData.avatar_url,
-        banner_url: formData.banner_url,
-        website: formData.website,
-        bitcoin_address: formData.bitcoin_address,
-        lightning_address: formData.lightning_address
-      }
+      // Check username uniqueness if username is being updated
+      if (formData.username) {
+        const isAvailable = await this.checkUsernameUniqueness(
+          formData.username,
+          userId
+        );
 
-      // Use the client service
-      const result = await ClientProfileService.updateProfile(userId, updateData)
-
-      if (!result.success) {
-        logger.error('ProfileWriter.updateProfile error:', result.error)
-        return {
-          success: false,
-          error: result.error || 'Failed to update profile. Please try again.'
+        if (!isAvailable) {
+          return {
+            success: false,
+            error: 'Username is already taken'
+          };
         }
       }
 
-      // Convert Profile to ScalableProfile format
-      const updatedProfile: ScalableProfile = {
-        id: result.data!.id,
-        username: result.data!.username,
-        display_name: result.data!.display_name,
-        bio: result.data!.bio,
-        avatar_url: result.data!.avatar_url,
-        banner_url: result.data!.banner_url,
-        website: result.data!.website,
-        bitcoin_address: result.data!.bitcoin_address,
-        lightning_address: result.data!.lightning_address,
-        created_at: result.data!.created_at,
-        updated_at: result.data!.updated_at,
-        // Default values for ScalableProfile fields
-        last_active_at: result.data!.updated_at,
-        status: 'active',
-        onboarding_completed: true,
-        profile_views: 0,
-        follower_count: 0,
-        following_count: 0,
-        campaign_count: 0,
-        total_raised: 0,
-        total_donated: 0
+      // Prepare update data
+      const updateData = {
+        ...formData,
+        updated_at: new Date().toISOString()
+      };
+
+      // Update in database
+      const { data, error } = await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', userId)
+        .select('*')
+        .single();
+
+      if (error) {
+        logger.error('ProfileWriter.updateProfile database error:', error);
+
+        // Handle specific errors
+        if (error.code === '23505') {
+          return { success: false, error: 'Username is already taken' };
+        }
+
+        return {
+          success: false,
+          error: 'Failed to update profile. Please try again.'
+        };
       }
 
-      logProfile('updateProfile success', { userId, profile: updatedProfile })
-      return { success: true, data: updatedProfile }
+      const updatedProfile = ProfileMapper.mapDatabaseToProfile(data);
+      logProfile('updateProfile success', { userId, profile: updatedProfile });
+
+      return { success: true, data: updatedProfile };
 
     } catch (err) {
-      logger.error('ProfileWriter.updateProfile unexpected error:', err)
+      logger.error('ProfileWriter.updateProfile unexpected error:', err);
       return {
         success: false,
         error: 'An unexpected error occurred while updating profile. Please check your connection and try again.'
-      }
+      };
     }
   }
 
@@ -113,10 +139,8 @@ export class ProfileWriter {
         last_active_at: new Date().toISOString(),
         status: 'active',
         onboarding_completed: false,
-        profile_views: 0,
-        follower_count: 0,
         following_count: 0,
-        campaign_count: 0,
+        project_count: 0,
         total_raised: 0,
         total_donated: 0
       }

@@ -11,7 +11,7 @@ import {
 } from '@/utils/validation'
 
 interface FormData {
-  display_name: string
+  name: string
   bio?: string
   website?: string
   bitcoin_address?: string
@@ -19,7 +19,7 @@ interface FormData {
 }
 
 interface FormErrors {
-  display_name?: string
+  name?: string
   bio?: string
   website?: string
   bitcoin_address?: string
@@ -40,7 +40,7 @@ interface UseProfileFormReturn {
 
 export function useProfileForm(initialData: Partial<FormData> = {}): UseProfileFormReturn {
   const [formData, setFormData] = useState<FormData>({
-    display_name: '',
+    name: '',
     bio: '',
     website: '',
     bitcoin_address: '',
@@ -66,8 +66,8 @@ export function useProfileForm(initialData: Partial<FormData> = {}): UseProfileF
     const newErrors: FormErrors = {}
     
     // Validate display name
-    if (!formData.display_name.trim()) {
-      newErrors.display_name = 'Display name is required'
+    if (!formData.name.trim()) {
+      newErrors.name = 'Display name is required'
     }
 
     // Validate website if provided
@@ -105,7 +105,7 @@ export function useProfileForm(initialData: Partial<FormData> = {}): UseProfileF
 
   const resetForm = useCallback(() => {
     setFormData({
-      display_name: '',
+      name: '',
       bio: '',
       website: '',
       bitcoin_address: '',

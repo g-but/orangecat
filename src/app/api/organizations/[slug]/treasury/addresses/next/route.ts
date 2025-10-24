@@ -1,5 +1,6 @@
+import { logger } from '@/utils/logger'
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { deriveP2WPKHFromXpub } from '@/lib/bitcoin'
 
 export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
 
     return NextResponse.json({ address, index: wallet.next_index_receive })
   } catch (e) {
-    console.error('derive_next_address error', e)
+    logger.error('derive_next_address error', e)
     return NextResponse.json({ error: 'Internal error' }, { status: 500 })
   }
 }

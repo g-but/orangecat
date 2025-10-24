@@ -10,7 +10,7 @@
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth (security hardened)
 - **Bitcoin Integration**: Mempool API
-- **State Management**: Zustand (auth & campaigns)
+- **State Management**: Zustand (auth & projects)
 - **Testing**: Jest, React Testing Library
 - **Security**: Multi-layer validation, celebrity impersonation prevention
 - **Logging**: Structured logging system (production-safe)
@@ -56,11 +56,11 @@ src/
 │   ├── useAuth.ts        # Authentication hook (21 tests)
 │   └── __tests__/        # Hook tests
 ├── stores/               # State management (Zustand)
-│   ├── campaignStore.ts  # Campaign state management
+│   ├── projectStore.ts  # Campaign state management
 │   └── __tests__/        # Store tests
 ├── services/             # Business logic services
 │   ├── supabase/         # Supabase client & services
-│   ├── featured.ts       # Featured campaigns
+│   ├── featured.ts       # Featured projects
 │   └── transparency.ts   # Transparency scoring
 ├── utils/                # Utility functions
 │   ├── validation.ts     # Input validation (security hardened)
@@ -288,7 +288,7 @@ The application is deployed on Vercel with the following configuration:
 - **Testing**: Comprehensive test coverage required before production
 - **Type Safety**: Avoid `any` types, use proper TypeScript interfaces
 - **File Structure**: Keep components under 200 lines
-- **State Management**: Use Zustand for complex state (campaigns, auth)
+- **State Management**: Use Zustand for complex state (projects, auth)
 - **Logging**: Use structured logger, never console.log in production
 - **Validation**: Multi-layer security validation for all inputs
 - **Documentation**: Keep documentation updated with current state 

@@ -417,7 +417,7 @@ export default function StudyBitcoinPage() {
               <Wallet className="w-5 h-5 mr-2" />
               Get Your First Wallet
             </Button>
-            <Button href="/create" variant="outline" size="lg" className="min-h-[48px]">
+            <Button href="/projects/create" variant="outline" size="lg" className="min-h-[48px]">
               <Target className="w-5 h-5 mr-2" />
               Start a Campaign
             </Button>

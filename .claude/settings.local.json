@@ -89,9 +89,25 @@
       "Bash(SUPABASE_SERVICE_ROLE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oa3VlaXNsc3R4b21kamF2eWhzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDU0Nzk1MCwiZXhwIjoyMDYwMTIzOTUwfQ.2a3ACqjfx_ja_ShHySmh8NuVHlF7gD5k3VXNml9CNbM\":*)",
       "Bash(PGPASSWORD=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oa3VlaXNsc3R4b21kamF2eWhzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDU0Nzk1MCwiZXhwIjoyMDYwMTIzOTUwfQ.2a3ACqjfx_ja_ShHySmh8NuVHlF7gD5k3VXNml9CNbM\" psql:*)",
       "Bash(vercel:*)",
-      "Bash(gh api:*)"
+      "Bash(gh api:*)",
+      "Bash(git -C /home/g/dev/orangecat status)",
+      "Bash(while read file)",
+      "Bash(done)",
+      "Bash(xargs:*)",
+      "Bash(timeout 30s npx next lint:*)",
+      "Bash(awk:*)",
+      "mcp__memory__create_entities",
+      "mcp__memory__delete_observations",
+      "mcp__memory__add_observations"
     ],
-    "deny": []
+    "deny": [
+      "Bash(rm **/.env.local)",
+      "Bash(rm **/.env)",
+      "Bash(rm .env.local)",
+      "Bash(rm .env)",
+      "Bash(git rm **/.env.local)",
+      "Bash(git rm **/.env)"
+    ]
   },
   "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [

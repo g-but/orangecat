@@ -103,7 +103,11 @@ export function useRedirectIfAuthenticated() {
     const isAuthenticated = !!user;
     
     // Don't redirect authenticated users away from valid authenticated pages
-    const authenticatedPaths = ['/dashboard', '/profile', '/settings', '/organizations', '/create', '/discover', '/people', '/projects', '/fundraising', '/onboarding'];
+    const authenticatedPaths = [
+      '/dashboard', '/profile', '/settings', '/organizations',
+      '/projects/create', '/projects/create', '/organizations/create',
+      '/discover', '/people', '/projects', '/fundraising', '/onboarding'
+    ];
     if (isAuthenticated && pathname !== '/' && !authenticatedPaths.some(path => pathname.startsWith(path))) {
       router.push('/dashboard');
     }

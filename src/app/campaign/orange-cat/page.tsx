@@ -23,11 +23,11 @@ import DefaultAvatar from '@/components/ui/DefaultAvatar'
 export default function OrangeCatCampaignPage() {
   const [supportAmount, setSupportAmount] = useState('')
 
-  // Sample data for Orange Cat campaign
-  const campaign = {
+  // Sample data for Orange Cat project
+  const project = {
     title: "Orange Cat",
     description: "A Bitcoin education platform making cryptocurrency knowledge accessible to everyone through interactive tutorials, guides, and community resources.",
-    profile_type: "campaign",
+    profile_type: "project",
     creator: {
       name: "Mao",
       username: "mao",
@@ -65,7 +65,7 @@ export default function OrangeCatCampaignPage() {
     { key: 'community', label: 'Community Building', icon: '🤝', color: 'green' }
   ]
 
-  const progressPercentage = (parseFloat(campaign.stats.raised) / parseFloat(campaign.stats.goal)) * 100
+  const progressPercentage = (parseFloat(project.stats.raised) / parseFloat(project.stats.goal)) * 100
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white">
@@ -102,26 +102,26 @@ export default function OrangeCatCampaignPage() {
               {/* Campaign Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3 mb-2">
-                  <h1 className="text-3xl font-bold">{campaign.title}</h1>
+                  <h1 className="text-3xl font-bold">{project.title}</h1>
                   <span className="px-3 py-1 rounded-full text-sm font-medium bg-orange-100 text-orange-700 border border-orange-200">
                     Campaign
                   </span>
                 </div>
                 
                 <p className="text-orange-100 leading-relaxed mb-4 max-w-2xl">
-                  {campaign.description}
+                  {project.description}
                 </p>
 
                 {/* Creator Association */}
                 <div className="flex items-center gap-3 mb-4">
                   <span className="text-orange-200">Created by:</span>
                   <Link 
-                    href={`/profile/${campaign.creator.username}`}
+                    href={`/profile/${project.creator.username}`}
                     className="flex items-center gap-2 bg-white/10 rounded-lg px-3 py-2 hover:bg-white/20 transition-colors"
                   >
                     <DefaultAvatar size={24} />
-                    <span className="font-medium">{campaign.creator.name}</span>
-                    {campaign.creator.verified && <CheckCircle className="w-4 h-4 text-blue-400" />}
+                    <span className="font-medium">{project.creator.name}</span>
+                    {project.creator.verified && <CheckCircle className="w-4 h-4 text-blue-400" />}
                     <span className="text-orange-200">• Individual</span>
                   </Link>
                 </div>
@@ -142,15 +142,15 @@ export default function OrangeCatCampaignPage() {
                 {/* Stats */}
                 <div className="flex gap-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold">₿{campaign.stats.raised}</div>
-                    <div className="text-sm text-orange-200">of ₿{campaign.stats.goal} goal</div>
+                    <div className="text-2xl font-bold">₿{project.stats.raised}</div>
+                    <div className="text-sm text-orange-200">of ₿{project.stats.goal} goal</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{campaign.stats.supporters}</div>
+                    <div className="text-2xl font-bold">{project.stats.supporters}</div>
                     <div className="text-sm text-orange-200">supporters</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold">{campaign.stats.days_running}</div>
+                    <div className="text-2xl font-bold">{project.stats.days_running}</div>
                     <div className="text-sm text-orange-200">days running</div>
                   </div>
                 </div>
@@ -179,7 +179,7 @@ export default function OrangeCatCampaignPage() {
                 </div>
                 <div className="bg-white/80 rounded-lg p-4">
                   <p className="text-gray-700 italic text-lg leading-relaxed">
-                    "{campaign.inspiration_statement}"
+                    "{project.inspiration_statement}"
                   </p>
                 </div>
               </CardContent>
@@ -195,7 +195,7 @@ export default function OrangeCatCampaignPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {campaign.impact_metrics.map((metric, index) => (
+                  {project.impact_metrics.map((metric, index) => (
                     <div key={index} className="text-center p-4 bg-gray-50 rounded-lg">
                       <div className="text-3xl mb-2">{metric.icon}</div>
                       <div className="text-2xl font-bold text-gray-900 mb-1">{metric.value}</div>
@@ -221,7 +221,7 @@ export default function OrangeCatCampaignPage() {
                 <div className="space-y-4">
                   <div>
                     <div className="flex justify-between text-sm mb-2">
-                      <span>₿{campaign.stats.raised} raised</span>
+                      <span>₿{project.stats.raised} raised</span>
                       <span>{progressPercentage.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
@@ -235,7 +235,7 @@ export default function OrangeCatCampaignPage() {
                   <div className="pt-4 border-t border-gray-200">
                     <Button 
                       className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-                      onClick={() => window.open(`bitcoin:${campaign.bitcoin_address}`, '_blank')}
+                      onClick={() => window.open(`bitcoin:${project.bitcoin_address}`, '_blank')}
                     >
                       <Bitcoin className="w-4 h-4 mr-2" />
                       Send Bitcoin
@@ -262,20 +262,20 @@ export default function OrangeCatCampaignPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Creator</span>
                     <Link 
-                      href={`/profile/${campaign.creator.username}`}
+                      href={`/profile/${project.creator.username}`}
                       className="flex items-center gap-1 text-blue-600 hover:text-blue-700"
                     >
-                      <span className="font-medium">{campaign.creator.name}</span>
+                      <span className="font-medium">{project.creator.name}</span>
                       <ExternalLink className="w-3 h-3" />
                     </Link>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Supporters</span>
-                    <span className="font-medium">{campaign.stats.supporters}</span>
+                    <span className="font-medium">{project.stats.supporters}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Days Active</span>
-                    <span className="font-medium">{campaign.stats.days_running} days</span>
+                    <span className="font-medium">{project.stats.days_running} days</span>
                   </div>
                 </div>
               </CardContent>

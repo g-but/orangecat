@@ -36,7 +36,7 @@
 - Session retrieval returning null instead of mock data
 
 ### **2. 💰 Campaign Store Integration Problems** 
-**Test Suite**: `campaignStore.comprehensive.test.ts`
+**Test Suite**: `projectStore.comprehensive.test.ts`
 **Root Cause**: Database mock inconsistencies
 **Example Failures**:
 - `TypeError: supabase.from(...).update(...).eq(...).eq is not a function`
@@ -141,7 +141,7 @@
 1. **Campaign Store Integration** (Days 1-3)
    - Fix database operation chaining
    - Resolve draft creation issues
-   - Test campaign lifecycle thoroughly
+   - Test project lifecycle thoroughly
 
 2. **Analytics & API Setup** (Days 4-5)
    - Fix analytics service configuration

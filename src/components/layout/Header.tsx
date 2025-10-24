@@ -48,9 +48,9 @@ const shopCategories = [
     title: 'Active Products',
     items: [
       {
-        name: 'Campaigns',
-        href: '/create',
-        description: 'Create and manage Bitcoin fundraising campaigns',
+        name: 'Projects',
+        href: '/projects/create',
+        description: 'Create and manage Bitcoin fundraising projects',
         icon: Target,
         status: 'live',
         badge: 'Live'
@@ -168,8 +168,8 @@ export default function Header() {
   }
 
   // Context-aware links - different for logged in vs logged out users
-  const getCampaignsLink = () => {
-    return '/create'
+  const getProjectsLink = () => {
+    return '/projects/create'
   }
 
   const getFundOthersLink = () => {

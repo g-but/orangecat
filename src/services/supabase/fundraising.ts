@@ -1,16 +1,15 @@
-import { FundingPage, Transaction } from '@/types/funding'
 import { logger } from '@/utils/logger'
-import supabase from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 
 export interface FundraisingStats {
-  totalCampaigns: number
+  totalProjects: number
   totalRaised: number
   totalSupporters: number
-  activeCampaigns: number
+  activeProjects: number
 }
 
 export interface FundraisingActivity {
-  type: 'donation' | 'supporter' | 'milestone' | 'campaign'
+  type: 'donation' | 'supporter' | 'milestone' | 'project'
   title: string
   context: string
   time: string
@@ -24,51 +23,80 @@ export interface FundraisingActivity {
 export async function getUserFundraisingStats(userId: string): Promise<FundraisingStats> {
   try {
     // Use centralized supabase client
-    // Get user's funding pages
-    const { data: pages, error: pagesError } = await supabase
-      .from('funding_pages')
+    // Get user's projects (both as creator and through organizations)
+    const { data: ownedProjects, error: ownedError } = await supabase
+      .from('projects')
       .select('*')
-      .eq('user_id', userId)
+      .eq('creator_id', userId)
 
-    if (pagesError) {throw pagesError}
+    if (ownedError) {throw ownedError}
 
-    // Get transactions for user's pages
-    const pageIds = pages?.map(page => page.id) || []
+    // Get projects from organizations user belongs to
+    const { data: orgMemberships, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('profile_id', userId)
+      .eq('status', 'active')
+
+    if (membershipError) {throw membershipError}
+
+    let orgProjects: any[] = []
+    if (orgMemberships && orgMemberships.length > 0) {
+      const orgIds = orgMemberships.map(m => m.organization_id)
+      const { data: orgProjectData, error: orgProjectError } = await supabase
+        .from('projects')
+        .select('*')
+        .in('organization_id', orgIds)
+
+      if (orgProjectError) {throw orgProjectError}
+      orgProjects = orgProjectData || []
+    }
+
+    // Combine and deduplicate projects
+    const allProjects = [...(ownedProjects || []), ...(orgProjects || [])]
+    const uniqueProjects = allProjects.filter((project, index, self) =>
+      index === self.findIndex(p => p.id === project.id)
+    )
+
+    // Get transactions for these projects to calculate stats
+    const projectIds = uniqueProjects.map(p => p.id)
+    let totalRaised = 0
     let totalSupporters = 0
-    
-    if (pageIds.length > 0) {
+
+    if (projectIds.length > 0) {
       const { data: transactions, error: transactionsError } = await supabase
         .from('transactions')
-        .select('funding_page_id, user_id')
-        .in('funding_page_id', pageIds)
+        .select('amount_sats, from_entity_id, to_entity_id')
+        .or(`and(to_entity_type.eq.project,to_entity_id.in.(${projectIds.join(',')}))`)
         .eq('status', 'confirmed')
 
       if (transactionsError) {throw transactionsError}
 
-      // Count unique supporters across all campaigns
-      const uniqueSupporters = new Set(transactions?.map(t => t.user_id) || [])
-      totalSupporters = uniqueSupporters.size
+      totalRaised = transactions?.reduce((sum, t) => sum + (t.amount_sats || 0), 0) || 0
+
+      // Count unique donors (from_entity_id where from_entity_type = 'profile')
+      const uniqueDonors = new Set(
+        transactions?.filter(t => t.from_entity_type === 'profile').map(t => t.from_entity_id) || []
+      )
+      totalSupporters = uniqueDonors.size
     }
 
-    const totalCampaigns = pages?.length || 0
-    // Current schema doesn't have is_active, so assume all public pages are active
-    const activeCampaigns = pages?.filter(page => page.is_public).length || 0
-    // Current schema doesn't have total_funding, so use 0 for now
-    const totalRaised = 0
+    const totalProjects = uniqueProjects.length
+    const activeProjects = uniqueProjects.filter(p => p.status === 'active').length
 
     return {
-      totalCampaigns,
+      totalProjects,
       totalRaised,
       totalSupporters,
-      activeCampaigns
+      activeProjects
     }
   } catch (error) {
     logger.error('Error fetching fundraising stats', error, 'Fundraising')
     return {
-      totalCampaigns: 0,
+      totalProjects: 0,
       totalRaised: 0,
       totalSupporters: 0,
-      activeCampaigns: 0
+      activeProjects: 0
     }
   }
 }
@@ -83,7 +111,7 @@ export async function getUserFundraisingActivity(userId: string, limit: number =
 
     // Get user's funding pages
     const { data: pages, error: pagesError } = await supabase
-      .from('funding_pages')
+      .from('projects')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
@@ -98,7 +126,7 @@ export async function getUserFundraisingActivity(userId: string, limit: number =
         .from('transactions')
         .select(`
           *,
-          funding_pages!inner(title)
+          projects!inner(title)
         `)
         .in('funding_page_id', pageIds)
         .eq('status', 'confirmed')
@@ -113,7 +141,7 @@ export async function getUserFundraisingActivity(userId: string, limit: number =
           activities.push({
             type: 'donation',
             title: 'New donation received',
-            context: (transaction as any).funding_pages.title,
+            context: (transaction as any).projects.title,
             time: timeAgo,
             amount: transaction.amount,
             currency: 'SATS'
@@ -122,13 +150,13 @@ export async function getUserFundraisingActivity(userId: string, limit: number =
       }
     }
 
-    // Add campaign creation activities
+    // Add project creation activities
     pages?.slice(0, 3).forEach(page => {
       const timeDiff = Date.now() - new Date(page.created_at).getTime()
       const timeAgo = formatTimeAgo(timeDiff)
 
       activities.push({
-        type: 'campaign',
+        type: 'project',
         title: 'Campaign created',
         context: page.title,
         time: timeAgo
@@ -147,35 +175,64 @@ export async function getUserFundraisingActivity(userId: string, limit: number =
 }
 
 /**
- * Get all funding pages for a user
+ * Get all projects for a user (both owned and through organizations)
  */
-export async function getUserFundingPages(userId: string): Promise<FundingPage[]> {
+export async function getUserProjects(userId: string): Promise<any[]> {
   try {
-    // Use centralized supabase client
-    const { data, error } = await supabase
-      .from('funding_pages')
+    // Get user's projects (both as creator and through organizations)
+    const { data: ownedProjects, error: ownedError } = await supabase
+      .from('projects')
       .select('*')
-      .eq('user_id', userId)
+      .eq('creator_id', userId)
       .order('created_at', { ascending: false })
 
-    if (error) {throw error}
-    return data || []
+    if (ownedError) {throw ownedError}
+
+    // Get projects from organizations user belongs to
+    const { data: orgMemberships, error: membershipError } = await supabase
+      .from('organization_members')
+      .select('organization_id')
+      .eq('profile_id', userId)
+      .eq('status', 'active')
+
+    if (membershipError) {throw membershipError}
+
+    let orgProjects: any[] = []
+    if (orgMemberships && orgMemberships.length > 0) {
+      const orgIds = orgMemberships.map(m => m.organization_id)
+      const { data: orgProjectData, error: orgProjectError } = await supabase
+        .from('projects')
+        .select('*')
+        .in('organization_id', orgIds)
+        .order('created_at', { ascending: false })
+
+      if (orgProjectError) {throw orgProjectError}
+      orgProjects = orgProjectData || []
+    }
+
+    // Combine and deduplicate projects
+    const allProjects = [...(ownedProjects || []), ...(orgProjects || [])]
+    const uniqueProjects = allProjects.filter((project, index, self) =>
+      index === self.findIndex(p => p.id === project.id)
+    )
+
+    return uniqueProjects
   } catch (error) {
-    logger.error('Error fetching funding pages', error, 'Fundraising')
+    logger.error('Error fetching projects', error, 'Fundraising')
     return []
   }
 }
 
 /**
- * Get a single funding page by ID
+ * Get a single project by ID
  */
-export async function getFundingPage(pageId: string): Promise<FundingPage | null> {
+export async function getProject(projectId: string): Promise<any | null> {
   try {
     // Use centralized supabase client
     const { data, error } = await supabase
-      .from('funding_pages')
+      .from('projects')
       .select('*')
-      .eq('id', pageId)
+      .eq('id', projectId)
       .single()
 
     if (error) {
@@ -187,7 +244,7 @@ export async function getFundingPage(pageId: string): Promise<FundingPage | null
     }
     return data
   } catch (error) {
-    logger.error('Error fetching funding page', error, 'Fundraising')
+    logger.error('Error fetching project', error, 'Fundraising')
     return null
   }
 }
@@ -200,7 +257,7 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
     // Use centralized supabase client
     // Get all funding pages
     const { data: pages, error: pagesError } = await supabase
-      .from('funding_pages')
+      .from('projects')
       .select('*')
       .eq('is_public', true)
 
@@ -214,9 +271,9 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
 
     if (transactionsError) {throw transactionsError}
 
-    const totalCampaigns = pages?.length || 0
+    const totalProjects = pages?.length || 0
     // Current schema doesn't have is_active, so assume all public pages are active
-    const activeCampaigns = pages?.filter(page => page.is_public).length || 0
+    const activeProjects = pages?.filter(page => page.is_public).length || 0
     // Current schema doesn't have total_funding, so use 0 for now
     const totalRaised = 0
     
@@ -225,18 +282,18 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
     const totalSupporters = uniqueSupporters.size
 
     return {
-      totalCampaigns,
+      totalProjects,
       totalRaised,
       totalSupporters,
-      activeCampaigns
+      activeProjects
     }
   } catch (error) {
     logger.error('Error fetching global fundraising stats', error, 'Fundraising')
     return {
-      totalCampaigns: 0,
+      totalProjects: 0,
       totalRaised: 0,
       totalSupporters: 0,
-      activeCampaigns: 0
+      activeProjects: 0
     }
   }
 }
@@ -251,7 +308,7 @@ export async function getRecentDonationsCount(userId: string): Promise<number> {
 
     // Get user's funding pages
     const { data: pages, error: pagesError } = await supabase
-      .from('funding_pages')
+      .from('projects')
       .select('id')
       .eq('user_id', userId)
 

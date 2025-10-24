@@ -55,8 +55,8 @@ export function Step1({ formData, formErrors, handleChange, handleTagsChange, ne
             <div>
               <h3 className="font-semibold text-orange-900 mb-1">Welcome! 👋</h3>
               <p className="text-sm text-orange-700">
-                You're in guest mode. Feel free to explore the full campaign creation process.
-                We'll ask you to sign in or create an account only when you're ready to publish your campaign.
+                You're in guest mode. Feel free to explore the full project creation process.
+                We'll ask you to sign in or create an account only when you're ready to publish your project.
               </p>
             </div>
           </div>
@@ -358,7 +358,7 @@ export function Step4({
     <div className="space-y-6">
       <div className="text-center mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Media & Launch</h2>
-        <p className="text-gray-600">Add images and launch your campaign</p>
+        <p className="text-gray-600">Add images and launch your project</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

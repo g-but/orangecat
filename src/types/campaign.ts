@@ -2,7 +2,7 @@
  * Campaign Types - Proper TypeScript Definitions
  * 
  * Replaces 'any' types in Campaign services with proper type definitions
- * for form data, API responses, and campaign operations
+ * for form data, API responses, and project operations
  * 
  * Created: 2025-06-08
  * Last Modified: 2025-06-08
@@ -15,7 +15,7 @@ import type { FormValue, SupabaseResponse } from '@/types/common'
 
 /**
  * Campaign form data structure
- * Replaces: formData: any in campaign services
+ * Replaces: formData: any in project services
  */
 export interface CampaignFormData {
   // Basic Information
@@ -58,7 +58,7 @@ export interface CampaignFormData {
 }
 
 /**
- * Campaign draft data (subset of full campaign)
+ * Campaign draft data (subset of full project)
  * Replaces: draftData: any
  */
 export interface CampaignDraftData {
@@ -85,7 +85,7 @@ export interface CampaignDraftData {
 }
 
 /**
- * Safe number parsing for campaign goals
+ * Safe number parsing for project goals
  * Replaces: safeParseFloat(value: any)
  */
 export function safeParseCampaignGoal(value: unknown): number | null {

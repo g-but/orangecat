@@ -1,5 +1,6 @@
 'use client'
 
+import { logger } from '@/utils/logger'
 import { useEffect, useState } from 'react'
 import { Bitcoin, TrendingUp, ArrowUpRight, ArrowDownRight, ExternalLink, RefreshCw } from 'lucide-react'
 import {
@@ -42,7 +43,7 @@ export default function BitcoinWalletStats({ address, className = '' }: BitcoinW
       }
     } catch (err) {
       setError('Failed to load wallet data')
-      console.error('Error fetching wallet data:', err)
+      logger.error('Error fetching wallet data:', err)
     } finally {
       setLoading(false)
     }

@@ -19,8 +19,8 @@ export default function Home() {
 
   // Redirect logged-in users to dashboard
   if (user) {
-    // Check if user is new (has no campaigns) - for now, always redirect to dashboard
-    // TODO: Add logic to detect if user has campaigns and redirect to onboarding if not
+    // Check if user is new (has no projects) - for now, always redirect to dashboard
+    // TODO: Add logic to detect if user has projects and redirect to onboarding if not
     router.push('/dashboard')
     return <Loading fullScreen message="Redirecting to dashboard..." />
   }
@@ -109,51 +109,30 @@ export default function Home() {
               Ready to Fund Your Dreams with Bitcoin? 🚀
             </h3>
             <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-              Create a Bitcoin fundraising campaign in minutes. Whether you're organizing a cat shelter, art exhibition, community event, or any cause that matters - get funded directly in Bitcoin.
+              Create a Bitcoin fundraising project in minutes. Whether you're organizing a cat shelter, art exhibition, community event, or any cause that matters - get funded directly in Bitcoin.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button
-                href="/onboarding"
+                href="/projects/create"
                 size="lg"
                 className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
-                🚀 Smart Setup Guide
-              </Button>
-              <Button
-                href="/wizard/campaign"
-                variant="outline"
-                size="lg"
-                className="px-8 py-4"
-                onClick={(e) => {
-                  // Track analytics
-                  if (typeof window !== 'undefined' && (window as any).gtag) {
-                    (window as any).gtag('event', 'campaign_creation_start', {
-                      event_category: 'engagement',
-                      event_label: 'homepage_cta'
-                    })
-                  }
-                }}
-              >
-                Create Campaign Now
+                🚀 Create Project
               </Button>
               <Button
                 href="/discover"
-                variant="ghost"
+                variant="outline"
                 size="lg"
                 className="px-8 py-4"
               >
-                Browse Campaigns
+                Browse Projects
               </Button>
             </div>
 
             <div className="mt-6 text-sm text-gray-600 space-y-2">
-              <p className="font-medium">✨ No account needed to start!</p>
-              <p>Explore the full campaign creation process as a guest. We'll ask you to sign in or create an account only when you're ready to publish your campaign.</p>
-              <div className="mt-4 space-y-1">
-                <p><strong>Not sure which setup is right for you?</strong></p>
-                <p>Use our <a href="/onboarding" className="text-orange-600 hover:underline font-medium">Smart Setup Guide</a> to describe your project and get personalized recommendations.</p>
-                <p className="text-xs text-gray-500">Or <a href="/auth?mode=register" className="text-orange-600 hover:underline font-medium">create an account</a> if you prefer to sign up first.</p>
-              </div>
+              <p className="font-medium">✨ Simple 3-step process</p>
+              <p>Enter your project details, add your Bitcoin address (optional), and launch instantly. Sign in when ready to publish.</p>
+              <p className="text-xs text-gray-500 mt-2">New here? <a href="/auth?mode=register" className="text-orange-600 hover:underline font-medium">Create an account</a> to get started.</p>
             </div>
           </div>
         </div>

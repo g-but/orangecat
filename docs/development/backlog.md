@@ -44,7 +44,7 @@
 **Status:** 95% Complete
 - [x] **Bitcoin Integration**: Native Bitcoin and Lightning payments
 - [x] **Profile Management**: User profiles with verification
-- [x] **Campaign Creation**: Basic fundraising campaigns
+- [x] **Campaign Creation**: Basic fundraising projects
 - [x] **Security Hardening**: All critical vulnerabilities fixed
 - [x] **Database Schema**: Core entities and relationships
 - [ ] **Test Coverage**: Increase to 85% (currently ~5%)

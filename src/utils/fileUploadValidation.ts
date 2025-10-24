@@ -63,7 +63,7 @@ export const UPLOAD_CONFIGS = {
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
     dimensions: { width: 1200, height: 400 }
   },
-  campaign: {
+  project: {
     maxSize: 10 * 1024 * 1024, // 10MB
     allowedExtensions: ['.jpg', '.jpeg', '.png', '.webp', '.gif'],
     allowedMimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server'
-import { createServerClient } from '@/services/supabase/server'
+import { createServerClient } from '@/lib/supabase/server'
 import { handleApiError, AuthError, NotFoundError } from '@/lib/errors'
 
 // GET /api/transparency/[profileId] - Get transparency score for a profile

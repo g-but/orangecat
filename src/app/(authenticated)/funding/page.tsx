@@ -37,8 +37,8 @@ const features = [
   },
   {
     icon: Heart,
-    title: 'Donation Campaigns',
-    description: 'Create fundraising campaigns for causes, charities, and community initiatives.',
+    title: 'Donation Projects',
+    description: 'Create fundraising projects for causes, charities, and community initiatives.',
     color: 'text-red-600 bg-red-100'
   },
   {
@@ -62,7 +62,7 @@ const features = [
   {
     icon: TrendingUp,
     title: 'Transparent Analytics',
-    description: 'Track funding progress, donor engagement, and campaign performance in real-time.',
+    description: 'Track funding progress, donor engagement, and project performance in real-time.',
     color: 'text-teal-600 bg-teal-100'
   }
 ]
@@ -113,7 +113,7 @@ const fundingTypes = [
 ]
 
 const capabilities = [
-  'Customizable funding campaign pages',
+  'Customizable funding project pages',
   'Bitcoin and Lightning Network payments',
   'Recurring donation subscriptions',
   'Goal tracking and milestone rewards',
@@ -162,7 +162,7 @@ export default function FundingPage() {
 
       <FeaturesGrid
         title="Funding Platform Features"
-        subtitle="Everything you need to run successful funding campaigns"
+        subtitle="Everything you need to run successful funding projects"
         features={features}
       />
 
@@ -192,14 +192,14 @@ export default function FundingPage() {
         bitcoinTitle="Bitcoin-Native"
         bitcoinDescription="True Bitcoin integration from the ground up. Lightning Network for instant micropayments, global accessibility without traditional banking, and sound money for sustainable funding."
         aiTitle="AI-Powered"
-        aiDescription="Smart campaign optimization, intelligent donor matching, automated progress tracking, and AI-driven insights to maximize funding success and engagement."
+        aiDescription="Smart project optimization, intelligent donor matching, automated progress tracking, and AI-driven insights to maximize funding success and engagement."
         openSourceTitle="Open Source"
         openSourceDescription="Transparent fundraising with community governance. Audit our algorithms, contribute features, and help build the future of decentralized peer-to-peer funding."
       />
 
       <CallToActionCard
         title="Ready to Fund Your Dream?"
-        description="Start your funding campaign today and connect with Bitcoin supporters worldwide who believe in your vision and want to help make it reality."
+        description="Start your funding project today and connect with Bitcoin supporters worldwide who believe in your vision and want to help make it reality."
         primaryButtonText="Start Funding Campaign"
         primaryButtonIcon={Coins}
         gradientColors="bg-gradient-to-r from-green-600 to-emerald-600"

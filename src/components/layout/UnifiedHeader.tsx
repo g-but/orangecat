@@ -101,7 +101,7 @@ export default function UnifiedHeader({
             {showSearch && (
               <div className="flex-1 max-w-md mx-6 hidden md:block">
                 <EnhancedSearchBar 
-                  placeholder="Search campaigns, people..."
+                  placeholder="Search projects, people..."
                   className="w-full"
                 />
               </div>

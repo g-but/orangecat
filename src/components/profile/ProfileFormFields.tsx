@@ -129,7 +129,7 @@ export function DisplayNameField({ control }: { control: Control<ProfileFormValu
   return (
     <FormField
       control={control}
-      name="display_name"
+      name="name"
       render={({ field }) => (
         <FormItem>
           <FormLabel className="text-sm font-medium text-gray-700">

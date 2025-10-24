@@ -19,7 +19,7 @@ import { useAuth } from '@/hooks/useAuth'
 
 interface SearchResult {
   id: string
-  type: 'profile' | 'campaign' | 'trending'
+  type: 'profile' | 'project' | 'trending'
   title: string
   subtitle?: string
   icon?: React.ReactNode
@@ -35,7 +35,7 @@ interface EnhancedSearchBarProps {
 
 export default function EnhancedSearchBar({ 
   className = '', 
-  placeholder = 'Search campaigns, people, organizations...',
+  placeholder = 'Search projects, people, organizations...',
   showQuickActions = true,
   autoFocus = false
 }: EnhancedSearchBarProps) {
@@ -239,8 +239,8 @@ export default function EnhancedSearchBar({
     },
     {
       icon: <Target className="w-4 h-4" />,
-      label: 'Browse Campaigns', 
-      action: () => router.push('/discover?type=campaigns')
+      label: 'Browse Projects', 
+      action: () => router.push('/discover?type=projects')
     },
     {
       icon: <TrendingUp className="w-4 h-4" />,
@@ -253,7 +253,7 @@ export default function EnhancedSearchBar({
     'Bitcoin Lightning Network',
     'Open Source Projects', 
     'Education Initiatives',
-    'Environmental Campaigns'
+    'Environmental Projects'
   ]
 
   // Create a flat array of all items for keyboard navigation
@@ -473,7 +473,7 @@ export default function EnhancedSearchBar({
               <Search className="w-8 h-8 text-gray-300 mx-auto mb-2" />
               <p className="text-sm text-gray-500">Start typing to search</p>
               <p className="text-xs text-gray-400 mt-1">
-                Find campaigns, people, and organizations
+                Find projects, people, and organizations
               </p>
               <p className="text-xs text-gray-400 mt-2">
                 Use ↑↓ arrows to navigate, Enter to select
