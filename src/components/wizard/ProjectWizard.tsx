@@ -57,21 +57,33 @@ const getCompletionPercentage = (formData: ProjectFormData): number => {
   return Math.min(completedWeight, 100);
 };
 
-export function ProjectWizard() {
+interface ProjectWizardProps {
+  projectId?: string;
+  initialData?: Partial<ProjectFormData>;
+  onSave?: () => void;
+  onCancel?: () => void;
+}
+
+export function ProjectWizard({
+  projectId,
+  initialData,
+  onSave,
+  onCancel,
+}: ProjectWizardProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editProjectId, setEditProjectId] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(!!projectId);
+  const [editProjectId, setEditProjectId] = useState<string | null>(projectId || null);
   const [loadingProject, setLoadingProject] = useState(false);
   const [formData, setFormData] = useState<ProjectFormData>({
-    title: '',
-    description: '',
-    goalAmount: '',
-    goalCurrency: 'CHF',
-    fundingPurpose: '',
-    bitcoinAddress: '',
-    selectedCategories: [],
+    title: initialData?.title || '',
+    description: initialData?.description || '',
+    goalAmount: initialData?.goalAmount || '',
+    goalCurrency: initialData?.goalCurrency || 'CHF',
+    fundingPurpose: initialData?.fundingPurpose || '',
+    bitcoinAddress: initialData?.bitcoinAddress || '',
+    selectedCategories: initialData?.selectedCategories || [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
@@ -425,7 +437,13 @@ export function ProjectWizard() {
       }
 
       toast.success(isEditMode ? 'Project updated successfully!' : 'Project created successfully!');
-      router.push(`/dashboard/projects`);
+
+      // Call onSave callback if provided (for edit page), otherwise navigate
+      if (onSave) {
+        onSave();
+      } else {
+        router.push(`/project/${data.data?.id || editProjectId}`);
+      }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create project';
       toast.error(errorMessage);
@@ -612,7 +630,17 @@ export function ProjectWizard() {
       </div>
 
       <div className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200">
-        <Button variant="outline" onClick={() => router.push('/dashboard')} disabled={isSubmitting}>
+        <Button
+          variant="outline"
+          onClick={() => {
+            if (onCancel) {
+              onCancel();
+            } else {
+              router.push('/dashboard');
+            }
+          }}
+          disabled={isSubmitting}
+        >
           Cancel
         </Button>
         <Button
