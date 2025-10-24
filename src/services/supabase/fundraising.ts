@@ -33,36 +33,8 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
       throw ownedError;
     }
 
-    // Get projects from organizations user belongs to
-    const { data: orgMemberships, error: membershipError } = await supabase
-      .from('organization_members')
-      .select('organization_id')
-      .eq('profile_id', userId)
-      .eq('status', 'active');
-
-    if (membershipError) {
-      throw membershipError;
-    }
-
-    let orgProjects: any[] = [];
-    if (orgMemberships && orgMemberships.length > 0) {
-      const orgIds = orgMemberships.map(m => m.organization_id);
-      const { data: orgProjectData, error: orgProjectError } = await supabase
-        .from('projects')
-        .select('*')
-        .in('organization_id', orgIds);
-
-      if (orgProjectError) {
-        throw orgProjectError;
-      }
-      orgProjects = orgProjectData || [];
-    }
-
-    // Combine and deduplicate projects
-    const allProjects = [...(ownedProjects || []), ...(orgProjects || [])];
-    const uniqueProjects = allProjects.filter(
-      (project, index, self) => index === self.findIndex(p => p.id === project.id)
-    );
+    // Organizations removed in MVP - only use user's own projects
+    const uniqueProjects = ownedProjects || [];
 
     // Get transactions for these projects to calculate stats
     const projectIds = uniqueProjects.map(p => p.id);
