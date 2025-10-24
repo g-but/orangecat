@@ -331,12 +331,21 @@ export function ProjectWizard() {
           } else if (response.status === 409) {
             errorMessage =
               'A project with this title already exists. Please choose a different title.';
+          } else if (response.status === 422) {
+            // Validation error - show details
+            const details = errorData.error?.details;
+            if (details && typeof details === 'object') {
+              errorMessage = `Validation error: ${JSON.stringify(details)}`;
+            } else {
+              errorMessage =
+                errorData.error?.message || 'Invalid project data. Please check your inputs.';
+            }
           } else if (response.status === 429) {
             errorMessage = 'Too many requests. Please wait a moment and try again.';
           } else if (response.status >= 500) {
             errorMessage = 'Server error. Please try again in a few minutes.';
           } else {
-            errorMessage = errorData.error || errorData.message || errorMessage;
+            errorMessage = errorData.error?.message || errorData.message || errorMessage;
           }
         } catch (e) {
           logger.error('Could not parse error response:', await response.text());
