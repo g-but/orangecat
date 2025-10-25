@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS public.transactions (
   transaction_hash TEXT,
   lightning_payment_hash TEXT,
   payment_proof TEXT,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'cancelled')),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'cancelled', 'confirmed')),
   fee_sats BIGINT DEFAULT 0,
   exchange_rate NUMERIC(20,8),
   anonymous BOOLEAN DEFAULT FALSE,
