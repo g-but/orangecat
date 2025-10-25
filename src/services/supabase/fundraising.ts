@@ -42,10 +42,14 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
     let totalSupporters = 0;
 
     if (projectIds.length > 0) {
+      // Build OR filter for multiple project IDs
+      const projectFilters = projectIds.map(id => `to_entity_id.eq.${id}`).join(',');
+
       const { data: transactions, error: transactionsError } = await supabase
         .from('transactions')
-        .select('amount_sats, from_entity_id, to_entity_id')
-        .or(`and(to_entity_type.eq.project,to_entity_id.in.(${projectIds.join(',')}))`)
+        .select('amount_sats, from_entity_id, to_entity_id, from_entity_type')
+        .eq('to_entity_type', 'project')
+        .or(projectFilters)
         .eq('status', 'confirmed');
 
       if (transactionsError) {
