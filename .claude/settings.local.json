@@ -108,7 +108,17 @@
       "Bash('https://ohkueislstxomdjavyhs.supabase.co/rest/v1/projects?select=id,title,user_id&order=created_at.desc&limit=1')",
       "Bash('https://ohkueislstxomdjavyhs.supabase.co/rest/v1/profiles?select=id,email,username&id=eq.cec88bc9-557f-452b-92f1-e093092fecd6')",
       "Bash('https://ohkueislstxomdjavyhs.supabase.co/rest/v1/profiles?select=id,email,username&id=eq.d26e6c11-f832-49b0-b0b6-b05a7879ff23')",
-      "Bash(timeout 60s npx tsc:*)"
+      "Bash(timeout 60s npx tsc:*)",
+      "Bash(for component in \"dashboard/AnalyticsDashboard\" \"ui/QRGenerator\" \"ui/RichTextEditor\" \"charts/AdvancedCharts\" \"ui/ImageUpload\" \"ui/DatePicker\" \"search/AdvancedSearch\")",
+      "Bash(do)",
+      "Bash(if [ -f \"src/components/$component.tsx\" ])",
+      "Bash([ -f \"src/components/$component.ts\" ])",
+      "Bash([ -f \"src/components/$component/index.tsx\" ])",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(else)",
+      "Bash(fi)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" timeout 120s npx tsc:*)"
     ],
     "deny": [
       "Bash(rm **/.env.local)",
