@@ -450,7 +450,6 @@ export default function DashboardPage() {
                         {primaryDraft && (
                           <span className="text-sm text-orange-600">
                             &ldquo;{primaryDraft.title}&rdquo;
-                            {primaryDraft.syncStatus === 'pending' && ' (unsaved)'}
                           </span>
                         )}
                       </div>
