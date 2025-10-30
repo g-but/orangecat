@@ -93,6 +93,7 @@ jobs:
           echo "✅ Test suite complete"
 
       - name: 🏗️ Build Application
+        if: false # Disabled - let Vercel handle the build with proper env vars
         run: |
           echo "🏗️ Building application..."
           npm run build
