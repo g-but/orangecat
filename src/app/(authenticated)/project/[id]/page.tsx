@@ -266,14 +266,14 @@ export default function ProjectProfilePage() {
                     <div className="text-2xl font-bold text-bitcoinOrange">
                       <CurrencyDisplay
                         amount={project.raised_amount || 0}
-                        currency={project.currency || 'BTC'}
+                        currency={(project.currency || 'BTC') as 'CHF' | 'USD' | 'BTC' | 'SATS'}
                       />
                     </div>
                     <div className="text-sm text-gray-500">
                       of{' '}
                       <CurrencyDisplay
                         amount={project.goal_amount}
-                        currency={project.currency || 'BTC'}
+                        currency={(project.currency || 'BTC') as 'CHF' | 'USD' | 'BTC' | 'SATS'}
                       />
                     </div>
                   </div>
