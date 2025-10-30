@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { logger } from '@/utils/logger';
 import Loading from '@/components/Loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -58,9 +59,27 @@ export default function DashboardPage() {
   // Load projects when user is available
   useEffect(() => {
     if (user?.id && hydrated) {
-      loadProjects(user.id);
+      loadProjects(user.id).catch(error => {
+        logger.error('Failed to load projects in dashboard', { error }, 'Dashboard');
+      });
     }
-  }, [user?.id, hydrated, loadProjects]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, hydrated]);
+
+  // Reload projects when returning to dashboard (e.g., after creating a project)
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user?.id && hydrated) {
+        loadProjects(user.id).catch(error => {
+          logger.error('Failed to reload projects on focus', { error }, 'Dashboard');
+        });
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, hydrated]);
 
   // FIXED: Handle authentication redirect with proper client-side check
   useEffect(() => {
@@ -112,12 +131,20 @@ export default function DashboardPage() {
 
   // REMOVED: console.log statement
 
-  // Get project stats
+  // Ensure user is authenticated before rendering dashboard content
+  if (!user) {
+    return null; // Will redirect via useEffect
+  }
+
+  // Get project stats - ensure projects is an array before using reduce
+  const safeProjects = Array.isArray(projects) ? projects : [];
+  const safeDrafts = Array.isArray(drafts) ? drafts : [];
+  const safeActiveProjects = Array.isArray(activeProjects) ? activeProjects : [];
   const stats = getStats();
   const totalProjects = stats.totalProjects;
   const activeProjectsCount = stats.totalActive;
-  const totalRaised = projects.reduce((sum, c) => sum + (c.total_funding || 0), 0);
-  const totalSupporters = projects.reduce((sum, c) => sum + (c.contributor_count || 0), 0);
+  const totalRaised = safeProjects.reduce((sum, c) => sum + (c.total_funding || 0), 0);
+  const totalSupporters = safeProjects.reduce((sum, c) => sum + (c.contributor_count || 0), 0);
 
   // Profile completion
   const hasUsername = !!profile?.username;
@@ -129,16 +156,16 @@ export default function DashboardPage() {
   );
 
   // Get primary draft for urgent actions
-  const hasAnyDraft = drafts.length > 0;
-  const primaryDraft = hasAnyDraft ? drafts[0] : null;
-  const totalDrafts = drafts.length;
+  const hasAnyDraft = safeDrafts.length > 0;
+  const primaryDraft = hasAnyDraft ? safeDrafts[0] : null;
+  const totalDrafts = safeDrafts.length;
 
   // Get featured project (most recent active or highest funded)
   const featuredProject =
-    activeProjects.length > 0
-      ? activeProjects.sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
-      : projects.find(c => c.title?.toLowerCase().includes('orange cat')) || // Specifically look for Orange Cat
-        projects[0]; // Fallback to first project
+    safeActiveProjects.length > 0
+      ? safeActiveProjects.sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
+      : safeProjects.find(c => c.title?.toLowerCase().includes('orange cat')) || // Specifically look for Orange Cat
+        safeProjects[0]; // Fallback to first project
 
   // Profile category for display (default to individual for now)
   const profileCategory = PROFILE_CATEGORIES.individual;
@@ -244,7 +271,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Link href={`/projects/${featuredProject.id}`}>
+                    <Link href={`/project/${featuredProject.id}`}>
                       <Button size="sm">
                         <Eye className="w-4 h-4 mr-1" />
                         View Project
@@ -534,7 +561,7 @@ export default function DashboardPage() {
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="font-medium text-lg text-gray-900">
                     {Math.round(
-                      activeProjectsCount > 0 ? totalRaised / activeProjectsCount : 0 * 100000000
+                      (activeProjectsCount > 0 ? totalRaised / activeProjectsCount : 0) * 100000000
                     )}{' '}
                     sats
                   </div>
@@ -570,7 +597,7 @@ export default function DashboardPage() {
         </div>
 
         {/* My Projects Section */}
-        {projects.length > 0 && (
+        {safeProjects.length > 0 && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -588,7 +615,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid gap-4">
-                {projects.slice(0, 3).map(project => (
+                {safeProjects.slice(0, 3).map(project => (
                   <div
                     key={project.id}
                     className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
@@ -627,7 +654,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Link href={`/fund-us/${project.id}`}>
+                      <Link href={`/project/${project.id}`}>
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4" />
                         </Button>

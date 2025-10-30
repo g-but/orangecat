@@ -267,7 +267,7 @@ export default function CreateCampaignForm({
       localStorage.removeItem(`project-draft-${user.id}`);
 
       toast.success('🎉 Project created successfully!');
-      router.push(`/project/${data.slug || data.id}`);
+      router.push(`/project/${data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to create project');
       toast.error('Failed to create project');

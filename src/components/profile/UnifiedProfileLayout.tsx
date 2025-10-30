@@ -1,9 +1,9 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import Image from 'next/image'
-import Link from 'next/link'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Image from 'next/image';
+import Link from 'next/link';
 import {
   Edit,
   Bitcoin,
@@ -16,24 +16,24 @@ import {
   Copy,
   ExternalLink,
   Zap,
-  QrCode
-} from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
-import { ScalableProfile, ProfileFormData } from '@/types/database'
-import Button from '@/components/ui/Button'
-import DefaultAvatar from '@/components/ui/DefaultAvatar'
-import { toast } from 'sonner'
-import { cn } from '@/lib/utils'
-import { QRCodeSVG } from 'qrcode.react'
-import BitcoinWalletStats from '@/components/bitcoin/BitcoinWalletStats'
+  QrCode,
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { ScalableProfile, ProfileFormData } from '@/types/database';
+import Button from '@/components/ui/Button';
+import DefaultAvatar from '@/components/ui/DefaultAvatar';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
+import { QRCodeSVG } from 'qrcode.react';
+import BitcoinWalletStats from '@/components/bitcoin/BitcoinWalletStats';
 
 interface UnifiedProfileLayoutProps {
-  profile: ScalableProfile
-  isOwnProfile: boolean
-  mode?: 'view' | 'edit' // Kept for compatibility but always 'view' now
-  onSave?: (data: ProfileFormData) => Promise<void>
-  onModeChange?: (mode: 'view' | 'edit') => void
-  className?: string
+  profile: ScalableProfile;
+  isOwnProfile: boolean;
+  mode?: 'view' | 'edit'; // Kept for compatibility but always 'view' now
+  onSave?: (data: ProfileFormData) => Promise<void>;
+  onModeChange?: (mode: 'view' | 'edit') => void;
+  className?: string;
 }
 
 export default function UnifiedProfileLayout({
@@ -42,13 +42,13 @@ export default function UnifiedProfileLayout({
   mode = 'view', // Always 'view' now - editing is done via ModernProfileEditor modal
   onSave,
   onModeChange,
-  className
+  className,
 }: UnifiedProfileLayoutProps) {
-  const router = useRouter()
-  const { user } = useAuth()
+  const router = useRouter();
+  const { user } = useAuth();
 
   // UI states
-  const [showQR, setShowQR] = useState<'bitcoin' | 'lightning' | null>(null)
+  const [showQR, setShowQR] = useState<'bitcoin' | 'lightning' | null>(null);
 
   // Calculate profile completion
   const calculateCompletion = () => {
@@ -59,43 +59,43 @@ export default function UnifiedProfileLayout({
       profile.banner_url,
       profile.website,
       profile.bitcoin_address,
-      profile.lightning_address
-    ]
-    const completed = fields.filter(field => field && field.trim()).length
-    return Math.round((completed / fields.length) * 100)
-  }
+      profile.lightning_address,
+    ];
+    const completed = fields.filter(field => field && field.trim()).length;
+    return Math.round((completed / fields.length) * 100);
+  };
 
-  const completionPercentage = calculateCompletion()
+  const completionPercentage = calculateCompletion();
 
   // Copy to clipboard
   const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text)
-    toast.success(`${label} copied to clipboard!`)
-  }
+    navigator.clipboard.writeText(text);
+    toast.success(`${label} copied to clipboard!`);
+  };
 
   // Get completion color
   const getCompletionColor = () => {
-    if (completionPercentage >= 80) {return 'from-green-500 to-emerald-500'}
-    if (completionPercentage >= 60) {return 'from-yellow-500 to-orange-500'}
-    return 'from-red-500 to-pink-500'
-  }
+    if (completionPercentage >= 80) {
+      return 'from-green-500 to-emerald-500';
+    }
+    if (completionPercentage >= 60) {
+      return 'from-yellow-500 to-orange-500';
+    }
+    return 'from-red-500 to-pink-500';
+  };
 
   return (
-    <div className={cn("min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100", className)}>
+    <div
+      className={cn('min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100', className)}
+    >
       <div className="max-w-7xl mx-auto px-4 py-8">
-
         {/* Header Banner Section */}
         <div className="relative mb-8">
           {/* Banner */}
           <div className="relative h-80 bg-gradient-to-r from-orange-400 via-orange-500 to-teal-500 rounded-2xl shadow-xl overflow-hidden">
             {/* Banner Image */}
             {profile.banner_url && (
-              <Image
-                src={profile.banner_url}
-                alt="Profile banner"
-                fill
-                className="object-cover"
-              />
+              <Image src={profile.banner_url} alt="Profile banner" fill className="object-cover" />
             )}
 
             {/* Banner Overlay */}
@@ -114,10 +114,7 @@ export default function UnifiedProfileLayout({
                 className="rounded-2xl object-cover border-4 border-white shadow-2xl"
               />
             ) : (
-              <DefaultAvatar
-                size={128}
-                className="rounded-2xl border-4 border-white shadow-2xl"
-              />
+              <DefaultAvatar size={128} className="rounded-2xl border-4 border-white shadow-2xl" />
             )}
           </div>
 
@@ -145,23 +142,17 @@ export default function UnifiedProfileLayout({
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-20">
-
           {/* Left Column - Profile Info */}
           <div className="lg:col-span-2 space-y-6">
-
             {/* Basic Info Card */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
                   {profile.name || profile.username || 'User'}
                 </h1>
-                <p className="text-lg text-orange-600 font-medium mb-4">
-                  @{profile.username}
-                </p>
+                <p className="text-lg text-orange-600 font-medium mb-4">@{profile.username}</p>
                 {profile.bio && (
-                  <p className="text-gray-600 text-base leading-relaxed mb-4">
-                    {profile.bio}
-                  </p>
+                  <p className="text-gray-600 text-base leading-relaxed mb-4">{profile.bio}</p>
                 )}
                 {profile.website && (
                   <a
@@ -179,7 +170,7 @@ export default function UnifiedProfileLayout({
             </div>
 
             {/* Bitcoin & Payment Details */}
-            {(profile.bitcoin_address || profile.lightning_address) ? (
+            {profile.bitcoin_address || profile.lightning_address ? (
               <div className="space-y-6">
                 {/* Donation Section */}
                 <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl shadow-xl border-2 border-orange-200 p-6">
@@ -225,7 +216,9 @@ export default function UnifiedProfileLayout({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => copyToClipboard(profile.bitcoin_address!, 'Bitcoin address')}
+                          onClick={() =>
+                            copyToClipboard(profile.bitcoin_address!, 'Bitcoin address')
+                          }
                           className="w-full"
                         >
                           <Copy className="w-4 h-4 mr-2" />
@@ -268,7 +261,9 @@ export default function UnifiedProfileLayout({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => copyToClipboard(profile.lightning_address!, 'Lightning address')}
+                          onClick={() =>
+                            copyToClipboard(profile.lightning_address!, 'Lightning address')
+                          }
                           className="w-full"
                         >
                           <Copy className="w-4 h-4 mr-2" />
@@ -284,27 +279,29 @@ export default function UnifiedProfileLayout({
                   <BitcoinWalletStats address={profile.bitcoin_address} />
                 )}
               </div>
-            ) : isOwnProfile && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
-                <div className="text-center text-gray-500 py-8">
-                  <Bitcoin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Accept Bitcoin Donations</h3>
-                  <p className="text-sm mb-4">Add your Bitcoin or Lightning address to start receiving donations</p>
-                  <Button
-                    variant="outline"
-                    onClick={() => onModeChange?.('edit')}
-                  >
-                    <Bitcoin className="w-4 h-4 mr-2" />
-                    Add Payment Details
-                  </Button>
+            ) : (
+              isOwnProfile && (
+                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
+                  <div className="text-center text-gray-500 py-8">
+                    <Bitcoin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                      Accept Bitcoin Donations
+                    </h3>
+                    <p className="text-sm mb-4">
+                      Add your Bitcoin or Lightning address to start receiving donations
+                    </p>
+                    <Button variant="outline" onClick={() => onModeChange?.('edit')}>
+                      <Bitcoin className="w-4 h-4 mr-2" />
+                      Add Payment Details
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              )
             )}
           </div>
 
           {/* Right Column - Stats & Actions */}
           <div className="space-y-6">
-
             {/* Profile Stats */}
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -354,7 +351,7 @@ export default function UnifiedProfileLayout({
                   <Link href="/projects/create" className="block">
                     <Button variant="outline" className="w-full justify-start">
                       <Target className="w-4 h-4 mr-2" />
-                      Create Campaign
+                      Create Project
                     </Button>
                   </Link>
 
@@ -376,5 +373,5 @@ export default function UnifiedProfileLayout({
         </div>
       </div>
     </div>
-  )
+  );
 }

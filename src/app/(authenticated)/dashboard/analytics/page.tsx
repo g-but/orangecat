@@ -439,7 +439,7 @@ export default function AnalyticsPage() {
                 <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <p>Create your first project to see personalized insights</p>
                 <Button href="/projects/create" className="mt-4">
-                  Create Campaign
+                  Create Project
                 </Button>
               </div>
             )}
