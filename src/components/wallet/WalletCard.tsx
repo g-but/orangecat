@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bitcoin,
   Smartphone,
@@ -19,62 +19,79 @@ import {
   Download,
   ExternalLink,
   TrendingUp,
-  Award
-} from 'lucide-react'
-import Button from '@/components/ui/Button'
-import Card from '@/components/ui/Card'
-import Badge from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
-import type { WalletProvider } from '@/data/walletProviders'
+  Award,
+} from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Badge from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import type { WalletProvider } from '@/data/walletProviders';
 
 interface WalletCardProps {
-  wallet: WalletProvider
-  isExpanded: boolean
-  onToggle: () => void
-  className?: string
+  wallet: WalletProvider;
+  isExpanded: boolean;
+  onToggle: () => void;
+  className?: string;
 }
 
 const getTypeIcon = (type: WalletProvider['type']) => {
   switch (type) {
-    case 'hardware': return Shield
-    case 'mobile': return Smartphone
-    case 'desktop': return Monitor
-    case 'browser': return Globe
-    default: return Bitcoin
+    case 'hardware':
+      return Shield;
+    case 'mobile':
+      return Smartphone;
+    case 'desktop':
+      return Monitor;
+    case 'browser':
+      return Globe;
+    default:
+      return Bitcoin;
   }
-}
+};
 
 const getDifficultyColor = (difficulty: WalletProvider['difficulty']) => {
   switch (difficulty) {
-    case 'beginner': return 'text-green-600 bg-green-50'
-    case 'intermediate': return 'text-yellow-600 bg-yellow-50'
-    case 'advanced': return 'text-red-600 bg-red-50'
-    default: return 'text-gray-600 bg-gray-50'
+    case 'beginner':
+      return 'text-green-600 bg-green-50';
+    case 'intermediate':
+      return 'text-yellow-600 bg-yellow-50';
+    case 'advanced':
+      return 'text-red-600 bg-red-50';
+    default:
+      return 'text-gray-600 bg-gray-50';
   }
-}
+};
 
 const getPrivacyColor = (level: WalletProvider['privacyLevel']) => {
   switch (level) {
-    case 'high': return 'text-green-600'
-    case 'medium': return 'text-yellow-600'
-    case 'low': return 'text-red-600'
-    default: return 'text-gray-600'
+    case 'high':
+      return 'text-green-600';
+    case 'medium':
+      return 'text-yellow-600';
+    case 'low':
+      return 'text-red-600';
+    default:
+      return 'text-gray-600';
   }
-}
+};
 
 const getCustodyColor = (custody: WalletProvider['custody']) => {
   switch (custody) {
-    case 'self-custody': return 'text-green-600 bg-green-50'
-    case 'custodial': return 'text-red-600 bg-red-50'
-    case 'hybrid': return 'text-yellow-600 bg-yellow-50'
-    default: return 'text-gray-600 bg-gray-50'
+    case 'self-custody':
+      return 'text-green-600 bg-green-50';
+    case 'custodial':
+      return 'text-red-600 bg-red-50';
+    case 'hybrid':
+      return 'text-yellow-600 bg-yellow-50';
+    default:
+      return 'text-gray-600 bg-gray-50';
   }
-}
+};
 
 export function WalletCard({ wallet, isExpanded, onToggle, className }: WalletCardProps) {
-  const [showDetails, setShowDetails] = useState(false)
+  const [showDetails, setShowDetails] = useState(false);
 
-  const TypeIcon = getTypeIcon(wallet.type)
+  const TypeIcon = getTypeIcon(wallet.type);
 
   return (
     <motion.div
@@ -82,7 +99,7 @@ export function WalletCard({ wallet, isExpanded, onToggle, className }: WalletCa
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className={cn("w-full", className)}
+      className={cn('w-full', className)}
     >
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-200">
         <div className="p-6">
@@ -101,9 +118,7 @@ export function WalletCard({ wallet, isExpanded, onToggle, className }: WalletCa
                       Recommended
                     </Badge>
                   )}
-                  {wallet.verified && (
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                  )}
+                  {wallet.verified && <CheckCircle className="w-4 h-4 text-green-600" />}
                 </div>
                 <p className="text-gray-600 mb-2">{wallet.description}</p>
 
@@ -119,30 +134,21 @@ export function WalletCard({ wallet, isExpanded, onToggle, className }: WalletCa
               </div>
             </div>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onToggle}
-              className="ml-4"
-            >
+            <Button variant="outline" size="sm" onClick={onToggle} className="ml-4">
               {isExpanded ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </Button>
           </div>
 
           {/* Badges */}
           <div className="flex flex-wrap gap-2 mb-4">
-            <Badge className={getDifficultyColor(wallet.difficulty)}>
-              {wallet.difficulty}
-            </Badge>
+            <Badge className={getDifficultyColor(wallet.difficulty)}>{wallet.difficulty}</Badge>
             <Badge className={getCustodyColor(wallet.custody)}>
               {wallet.custody.replace('-', ' ')}
             </Badge>
             <Badge variant="outline" className={getPrivacyColor(wallet.privacyLevel)}>
               {wallet.privacyLevel} privacy
             </Badge>
-            <Badge variant="outline">
-              {wallet.setupTime}min setup
-            </Badge>
+            <Badge variant="outline">{wallet.setupTime}min setup</Badge>
           </div>
 
           {/* Features */}
@@ -198,9 +204,7 @@ export function WalletCard({ wallet, isExpanded, onToggle, className }: WalletCa
                 {/* Long Description */}
                 <div className="mb-6">
                   <h4 className="font-semibold text-gray-900 mb-2">About</h4>
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    {wallet.longDescription}
-                  </p>
+                  <p className="text-gray-700 text-sm leading-relaxed">{wallet.longDescription}</p>
                 </div>
 
                 {/* Pros and Cons */}
@@ -280,6 +284,5 @@ export function WalletCard({ wallet, isExpanded, onToggle, className }: WalletCa
         </AnimatePresence>
       </Card>
     </motion.div>
-  )
+  );
 }
-
