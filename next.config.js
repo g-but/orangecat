@@ -6,7 +6,7 @@ const nextConfig = {
   outputFileTracingRoot: '/home/g/dev/orangecat',
 
   // Externalize Supabase packages for server-side rendering
-  serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr', 'source-map'],
+  serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
 
   // Image optimization
   images: {
