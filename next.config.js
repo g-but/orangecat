@@ -191,4 +191,5 @@ if (process.env.NODE_ENV === 'production') {
   console.log('  ✅ Compression');
   console.log('  ✅ Enhanced Caching Headers');
   console.log('  ✅ Bundle Size Optimization');
+  // Cache-busting deployment: 2025-10-30T20:17
 }
