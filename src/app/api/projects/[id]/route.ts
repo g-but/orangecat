@@ -7,6 +7,7 @@ import {
   apiValidationError,
   apiInternalError,
   handleApiError,
+  handleSupabaseError,
 } from '@/lib/api/standardResponse';
 import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import { projectSchema } from '@/lib/validation';
@@ -17,43 +18,43 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const supabase = await createServerClient();
     const { id } = await params;
 
-    const { data: project, error } = await supabase
-      .from('projects')
-      .select(
-        `
-        *,
-        profiles:user_id (
-          id,
-          username,
-          name,
-          avatar_url
-        ),
-        donations (
-          id,
-          amount,
-          currency,
-          status,
-          anonymous,
-          message,
-          created_at,
-          profiles:donor_id (
-            id,
-            username,
-            name,
-            avatar_url
-          )
-        )
-      `
-      )
-      .eq('id', id)
-      .single();
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      return apiNotFound('Invalid project ID');
+    }
 
-    if (error || !project) {
+    const { data: project, error: projectError } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (projectError || !project) {
+      if (projectError) {
+        return handleSupabaseError(projectError);
+      }
       return apiNotFound('Project not found');
     }
 
-    return apiSuccess(project);
+    // Fetch profile separately
+    let profile = null;
+    if (project.user_id) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id, username, name, avatar_url')
+        .eq('id', project.user_id)
+        .single();
+      profile = profileData;
+    }
+
+    const projectWithProfile = {
+      ...project,
+      raised_amount: project.raised_amount ?? 0,
+      profiles: profile,
+    };
+
+    return apiSuccess(projectWithProfile);
   } catch (error) {
+    console.error('[API] Exception in GET /api/projects/[id]:', error);
     return handleApiError(error);
   }
 }
@@ -109,7 +110,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       .single();
 
     if (error) {
-      return apiInternalError('Failed to update project', { details: error.message });
+      return handleSupabaseError(error);
     }
 
     return apiSuccess(project);
@@ -157,7 +158,7 @@ export async function DELETE(
     const { error } = await supabase.from('projects').delete().eq('id', id);
 
     if (error) {
-      return apiInternalError('Failed to delete project', { details: error.message });
+      return handleSupabaseError(error);
     }
 
     return apiSuccess({ message: 'Project deleted successfully' });

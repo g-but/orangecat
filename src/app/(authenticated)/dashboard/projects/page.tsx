@@ -82,15 +82,15 @@ export default function ProjectsDashboardPage() {
           </div>
           <div className="text-sm text-gray-700">
             <span>
-              {(c.current_amount || 0) > 0
-                ? `${c.current_amount || 0} sats raised`
+              {(c.total_funding || c.raised_amount || 0) > 0
+                ? `${c.total_funding || c.raised_amount || 0} sats raised`
                 : 'No funds raised yet'}
               {c.goal_amount ? ` of ${c.goal_amount} sats` : ''}
             </span>
           </div>
           <div className="pt-2 flex gap-2">
             {c.isActive ? (
-              <Button href={`/projects/${c.id}`} size="sm" variant="outline">
+              <Button href={`/project/${c.id}`} size="sm" variant="outline">
                 View
               </Button>
             ) : (

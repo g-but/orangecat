@@ -118,7 +118,7 @@ export default function AuthPage() {
   useEffect(() => {
     // If we have a session after hydration, redirect immediately
     if (session?.user && hydrated) {
-      const redirectUrl = searchParams.get('from') || '/onboarding';
+      const redirectUrl = searchParams.get('from') || '/dashboard';
       router.replace(redirectUrl); // Use replace to avoid back button issues
     }
   }, [session, hydrated, router, searchParams]);

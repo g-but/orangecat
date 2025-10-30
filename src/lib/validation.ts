@@ -101,4 +101,3 @@ export function normalizeProfileData(data: any): ProfileData {
 export type ProfileData = z.infer<typeof profileSchema>;
 export type ProjectData = z.infer<typeof projectSchema>;
 export type TransactionData = z.infer<typeof transactionSchema>;
-export type OrganizationData = z.infer<typeof organizationSchema>;
