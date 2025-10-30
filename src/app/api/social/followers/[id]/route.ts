@@ -32,7 +32,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Then fetch profiles for each follower_id
     const followerIds = (follows || []).map(f => f.follower_id);
-    let followers = [];
+    let followers: any[] = [];
 
     if (followerIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
