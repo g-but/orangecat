@@ -56,3 +56,6 @@ END $$;
 COMMENT ON COLUMN projects.raised_amount IS 'Total amount raised in sats (or base currency unit)';
 COMMENT ON COLUMN projects.contributor_count IS 'Number of unique contributors to this project';
 
+
+
+

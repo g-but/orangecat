@@ -308,17 +308,6 @@ export type OrganizationFormData = {
 };
 
 // Form data types for settings operations
-export type ProfileFormData = {
-  username: string;
-  name?: string;
-  bio?: string;
-  avatar_url?: string;
-  banner_url?: string;
-  website?: string;
-  bitcoin_address?: string;
-  lightning_address?: string;
-  location?: string;
-};
 
 // Form data types for password operations
 export type PasswordFormData = {
