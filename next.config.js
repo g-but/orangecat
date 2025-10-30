@@ -6,7 +6,7 @@ const nextConfig = {
   outputFileTracingRoot: '/home/g/dev/orangecat',
 
   // Externalize Supabase packages for server-side rendering
-  serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
+  serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr', 'source-map'],
 
   // Image optimization
   images: {
@@ -139,6 +139,7 @@ const nextConfig = {
         '@supabase/realtime-js': 'commonjs @supabase/realtime-js',
         '@supabase/postgrest-js': 'commonjs @supabase/postgrest-js',
         '@supabase/storage-js': 'commonjs @supabase/storage-js',
+        'source-map': 'commonjs source-map',
       });
     }
 
