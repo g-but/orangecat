@@ -1,4 +1,28 @@
 import { Inter, Playfair_Display } from 'next/font/google';
+
+// Font loading with fallback for restricted environments (Vercel build)
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+  fallback: [
+    'system-ui',
+    '-apple-system',
+    'BlinkMacSystemFont',
+    'Segoe UI',
+    'Roboto',
+    'sans-serif',
+  ],
+  preload: false, // Disable preload to avoid build issues
+});
+
+const playfairDisplay = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-playfair-display',
+  display: 'swap',
+  fallback: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
+  preload: false, // Disable preload to avoid build issues
+});
 import './globals.css';
 import ClientErrorBoundary from '@/components/ClientErrorBoundary';
 import { Suspense, lazy } from 'react';
@@ -19,16 +43,6 @@ const DynamicSpeedInsights = lazy(() =>
 );
 const DynamicUnifiedHeader = lazy(() => import('@/components/layout/UnifiedHeader'));
 const DynamicFooter = lazy(() => import('@/components/layout/Footer'));
-
-const inter = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
-});
-
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-playfair-display',
-});
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers();
