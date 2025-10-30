@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 // Profile validation
 // Note: Server-side normalizes empty strings to undefined before validation
-// Username is mandatory (like Twitter @username), name is optional (like Twitter display name)
+// Username is optional (can be set during registration/profile update)
 export const profileSchema = z.object({
   username: z
     .string()
@@ -11,17 +11,20 @@ export const profileSchema = z.object({
     .regex(
       /^[a-zA-Z0-9_-]+$/,
       'Username can only contain letters, numbers, underscores, and hyphens'
-    ),
-  name: z.string().max(100).optional(),
-  bio: z.string().max(500).optional(),
-  location: z.string().max(100).optional(),
-  avatar_url: z.string().url().optional().or(z.literal('')),
-  banner_url: z.string().url().optional().or(z.literal('')),
-  website: z.string().max(200).optional(),
+    )
+    .optional()
+    .nullable(),
+  name: z.string().max(100).optional().nullable(),
+  bio: z.string().max(500).optional().nullable(),
+  location: z.string().max(100).optional().nullable(),
+  avatar_url: z.string().url().optional().nullable().or(z.literal('')),
+  banner_url: z.string().url().optional().nullable().or(z.literal('')),
+  website: z.string().max(200).optional().nullable(),
   bitcoin_address: z
     .string()
     .regex(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/, 'Invalid Bitcoin address format')
     .optional()
+    .nullable()
     .or(z.literal('')),
   lightning_address: z
     .string()
@@ -30,6 +33,7 @@ export const profileSchema = z.object({
       'Invalid Lightning address format (must be like user@domain.com)'
     )
     .optional()
+    .nullable()
     .or(z.literal('')),
 });
 

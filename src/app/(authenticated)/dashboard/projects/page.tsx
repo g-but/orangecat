@@ -82,8 +82,8 @@ export default function ProjectsDashboardPage() {
           </div>
           <div className="text-sm text-gray-700">
             <span>
-              {(c.total_funding || c.raised_amount || 0) > 0
-                ? `${c.total_funding || c.raised_amount || 0} sats raised`
+              {(c.total_funding || 0) > 0
+                ? `${c.total_funding || 0} sats raised`
                 : 'No funds raised yet'}
               {c.goal_amount ? ` of ${c.goal_amount} sats` : ''}
             </span>

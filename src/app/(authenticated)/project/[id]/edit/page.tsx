@@ -132,7 +132,8 @@ export default function EditProjectPage() {
                 title: project.title,
                 description: project.description,
                 goalAmount: project.goal_amount?.toString() || '',
-                goalCurrency: project.currency || 'SATS',
+                goalCurrency:
+                  (project.currency as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS') || 'SATS',
                 fundingPurpose: project.funding_purpose || '',
                 bitcoinAddress: project.bitcoin_address || '',
                 selectedCategories: project.tags || [],
