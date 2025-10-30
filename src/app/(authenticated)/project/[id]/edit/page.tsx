@@ -49,6 +49,11 @@ export default function EditProjectPage() {
         }
 
         const result = await response.json();
+
+        if (!result.success || !result.data) {
+          throw new Error(result.error || 'Project not found');
+        }
+
         setProject(result.data);
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load project');

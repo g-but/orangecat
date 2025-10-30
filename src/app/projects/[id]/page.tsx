@@ -37,7 +37,7 @@ interface Project {
   };
 }
 
-export default function ProjectProfilePage() {
+export default function PublicProjectPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
@@ -75,7 +75,7 @@ export default function ProjectProfilePage() {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load project';
         setError(errorMessage);
-        logger.error('Failed to fetch project', { projectId, error: err }, 'ProjectPage');
+        logger.error('Failed to fetch project', { projectId, error: err }, 'PublicProjectPage');
       } finally {
         setIsLoading(false);
       }
@@ -144,7 +144,7 @@ export default function ProjectProfilePage() {
               Back
             </Button>
 
-            {isOwner && (
+            {isOwner && user && (
               <div className="flex gap-2">
                 <Link href={`/project/${projectId}/edit`}>
                   <Button variant="outline" size="sm">
@@ -216,6 +216,17 @@ export default function ProjectProfilePage() {
                       {project.profiles.name || project.profiles.username || 'Anonymous'}
                     </Link>
                   </div>
+                </div>
+              </div>
+            )}
+            {!project.profiles && (
+              <div className="mt-4 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-semibold">
+                  M
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Created by</p>
+                  <span className="text-sm font-semibold text-gray-900">mao</span>
                 </div>
               </div>
             )}

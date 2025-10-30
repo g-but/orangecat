@@ -9,7 +9,7 @@
 
 import { create } from 'zustand';
 import { logger } from '@/utils/logger';
-import getSupabaseClient from '@/lib/supabase/browser';
+import supabase from '@/lib/supabase/browser';
 
 // Use existing FundingPage type from funding.ts
 import type { FundingPage } from '@/types/funding';
@@ -63,8 +63,6 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     set({ isLoading: true, error: null });
 
     try {
-      const supabase = getSupabaseClient();
-
       const { data, error } = await supabase
         .from('projects')
         .select('*')
@@ -77,9 +75,17 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
       const projects: Project[] = (data || []).map((project: any) => ({
         ...project,
+        // Map database fields to FundingPage interface
+        total_funding: project.raised_amount ?? project.total_funding ?? 0,
+        current_amount: project.raised_amount ?? project.total_funding ?? 0,
+        raised_amount: project.raised_amount ?? 0,
         isDraft: project.status === 'draft',
         isActive: project.status === 'active',
         isPaused: project.status === 'paused',
+        // Ensure boolean fields exist
+        is_active: project.status === 'active',
+        is_public: project.status !== 'draft',
+        contributor_count: project.contributor_count ?? 0,
       }));
 
       set({ projects, isLoading: false });

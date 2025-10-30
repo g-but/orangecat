@@ -48,8 +48,9 @@ export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse;
  */
 export function apiSuccess<T>(
   data: T,
-  metadata?: Omit<ApiSuccessResponse['metadata'], 'timestamp'>
+  options?: Omit<ApiSuccessResponse['metadata'], 'timestamp'> & { status?: number }
 ): NextResponse<ApiSuccessResponse<T>> {
+  const { status, ...metadata } = options || {};
   const response: ApiSuccessResponse<T> = {
     success: true,
     data,
@@ -59,7 +60,7 @@ export function apiSuccess<T>(
     },
   };
 
-  return NextResponse.json(response);
+  return NextResponse.json(response, status ? { status } : undefined);
 }
 
 /**
@@ -134,49 +135,70 @@ export function apiError(
 /**
  * 400 Bad Request
  */
-export function apiBadRequest(message: string = 'Bad request', details?: any): NextResponse<ApiErrorResponse> {
+export function apiBadRequest(
+  message: string = 'Bad request',
+  details?: any
+): NextResponse<ApiErrorResponse> {
   return apiError(message, 'BAD_REQUEST', 400, details);
 }
 
 /**
  * 401 Unauthorized
  */
-export function apiUnauthorized(message: string = 'Unauthorized', details?: any): NextResponse<ApiErrorResponse> {
+export function apiUnauthorized(
+  message: string = 'Unauthorized',
+  details?: any
+): NextResponse<ApiErrorResponse> {
   return apiError(message, 'UNAUTHORIZED', 401, details);
 }
 
 /**
  * 403 Forbidden
  */
-export function apiForbidden(message: string = 'Forbidden', details?: any): NextResponse<ApiErrorResponse> {
+export function apiForbidden(
+  message: string = 'Forbidden',
+  details?: any
+): NextResponse<ApiErrorResponse> {
   return apiError(message, 'FORBIDDEN', 403, details);
 }
 
 /**
  * 404 Not Found
  */
-export function apiNotFound(message: string = 'Not found', details?: any): NextResponse<ApiErrorResponse> {
+export function apiNotFound(
+  message: string = 'Not found',
+  details?: any
+): NextResponse<ApiErrorResponse> {
   return apiError(message, 'NOT_FOUND', 404, details);
 }
 
 /**
  * 409 Conflict
  */
-export function apiConflict(message: string = 'Conflict', details?: any): NextResponse<ApiErrorResponse> {
+export function apiConflict(
+  message: string = 'Conflict',
+  details?: any
+): NextResponse<ApiErrorResponse> {
   return apiError(message, 'CONFLICT', 409, details);
 }
 
 /**
  * 422 Unprocessable Entity (Validation Error)
  */
-export function apiValidationError(message: string = 'Validation failed', details?: any): NextResponse<ApiErrorResponse> {
+export function apiValidationError(
+  message: string = 'Validation failed',
+  details?: any
+): NextResponse<ApiErrorResponse> {
   return apiError(message, 'VALIDATION_ERROR', 422, details);
 }
 
 /**
  * 429 Too Many Requests
  */
-export function apiRateLimited(message: string = 'Too many requests', retryAfter?: number): NextResponse<ApiErrorResponse> {
+export function apiRateLimited(
+  message: string = 'Too many requests',
+  retryAfter?: number
+): NextResponse<ApiErrorResponse> {
   const response = apiError(message, 'RATE_LIMITED', 429, { retryAfter });
 
   if (retryAfter) {
@@ -189,14 +211,20 @@ export function apiRateLimited(message: string = 'Too many requests', retryAfter
 /**
  * 500 Internal Server Error
  */
-export function apiInternalError(message: string = 'Internal server error', details?: any): NextResponse<ApiErrorResponse> {
+export function apiInternalError(
+  message: string = 'Internal server error',
+  details?: any
+): NextResponse<ApiErrorResponse> {
   return apiError(message, 'INTERNAL_ERROR', 500, details);
 }
 
 /**
  * 503 Service Unavailable
  */
-export function apiServiceUnavailable(message: string = 'Service unavailable', details?: any): NextResponse<ApiErrorResponse> {
+export function apiServiceUnavailable(
+  message: string = 'Service unavailable',
+  details?: any
+): NextResponse<ApiErrorResponse> {
   return apiError(message, 'SERVICE_UNAVAILABLE', 503, details);
 }
 
