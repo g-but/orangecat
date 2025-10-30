@@ -25,34 +25,15 @@ export async function POST(request: NextRequest) {
           hasPermission = true;
         }
         break;
-      case 'organization':
-        // Check if user is admin/owner of the organization
-        const { data: membership } = await supabase
-          .from('organization_members')
-          .select('role')
-          .eq('organization_id', body.from_entity_id)
-          .eq('profile_id', user.id)
-          .eq('status', 'active')
-          .single();
-
-        if (membership && ['owner', 'admin'].includes(membership.role)) {
-          hasPermission = true;
-        }
-        break;
       case 'project':
-        // Check if user is creator or org admin for project
+        // Check if user is creator of project
         const { data: project } = await supabase
           .from('projects')
-          .select('creator_id, organization_id')
+          .select('user_id')
           .eq('id', body.from_entity_id)
           .single();
 
-        if (
-          project &&
-          (project.creator_id === user.id ||
-            (project.organization_id &&
-              (await checkOrgAdmin(supabase, project.organization_id, user.id))))
-        ) {
+        if (project && project.user_id === user.id) {
           hasPermission = true;
         }
         break;
@@ -98,21 +79,7 @@ export async function POST(request: NextRequest) {
 }
 
 // Helper function to check if user is admin of organization
-async function checkOrgAdmin(
-  supabase: any,
-  organizationId: string,
-  userId: string
-): Promise<boolean> {
-  const { data: membership } = await supabase
-    .from('organization_members')
-    .select('role')
-    .eq('organization_id', organizationId)
-    .eq('profile_id', userId)
-    .eq('status', 'active')
-    .single();
-
-  return membership && ['owner', 'admin'].includes(membership.role);
-}
+// Organizations removed in MVP - no longer needed
 
 // GET /api/transactions - Get transactions for an entity or all public transactions
 export async function GET(request: NextRequest) {
@@ -140,30 +107,13 @@ export async function GET(request: NextRequest) {
               hasPermission = true;
             }
             break;
-          case 'organization':
-            const { data: membership } = await supabase
-              .from('organization_members')
-              .select('role')
-              .eq('organization_id', entityId)
-              .eq('profile_id', user.id)
-              .eq('status', 'active')
-              .single();
-            if (membership) {
-              hasPermission = true;
-            }
-            break;
           case 'project':
             const { data: project } = await supabase
               .from('projects')
-              .select('creator_id, organization_id')
+              .select('user_id')
               .eq('id', entityId)
               .single();
-            if (
-              project &&
-              (project.creator_id === user.id ||
-                (project.organization_id &&
-                  (await checkOrgAdmin(supabase, project.organization_id, user.id))))
-            ) {
+            if (project && project.user_id === user.id) {
               hasPermission = true;
             }
             break;
