@@ -1,124 +1,128 @@
-'use client'
+'use client';
 
-import React, { Component, ErrorInfo, ReactNode } from 'react'
-import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
-import Button from '@/components/ui/Button'
-import { logger } from '@/utils/logger'
+import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { logger } from '@/utils/logger';
 
 interface Props {
-  children: ReactNode
-  fallback?: ReactNode
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
-  showDetails?: boolean
-  resetOnPropsChange?: boolean
-  level?: 'page' | 'component' | 'route'
+  children: ReactNode;
+  fallback?: ReactNode;
+  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  showDetails?: boolean;
+  resetOnPropsChange?: boolean;
+  level?: 'page' | 'component' | 'route';
 }
 
 interface State {
-  hasError: boolean
-  error?: Error
-  errorInfo?: ErrorInfo
-  eventId?: string
+  hasError: boolean;
+  error?: Error;
+  errorInfo?: ErrorInfo;
+  eventId?: string;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
-  private resetTimeoutId: number | null = null
+  private resetTimeoutId: number | null = null;
 
   constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
+    super(props);
+    this.state = { hasError: false };
   }
 
   static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
-      error
-    }
+      error,
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    const eventId = Math.random().toString(36).substring(7)
-    
-    logger.error('React Error Boundary caught an error', {
-      error: {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      },
-      errorInfo: {
-        componentStack: errorInfo.componentStack
-      },
-      level: this.props.level || 'page',
-      eventId,
-      url: typeof window !== 'undefined' ? window.location.href : 'unknown'
-    }, 'ErrorBoundary')
+    const eventId = Math.random().toString(36).substring(7);
 
-    this.setState({ 
+    logger.error(
+      'React Error Boundary caught an error',
+      {
+        error: {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        },
+        errorInfo: {
+          componentStack: errorInfo.componentStack,
+        },
+        level: this.props.level || 'page',
+        eventId,
+        url: typeof window !== 'undefined' ? window.location.href : 'unknown',
+      },
+      'ErrorBoundary'
+    );
+
+    this.setState({
       errorInfo,
-      eventId
-    })
+      eventId,
+    });
 
-    this.props.onError?.(error, errorInfo)
+    this.props.onError?.(error, errorInfo);
 
     if (this.props.level === 'component') {
       this.resetTimeoutId = window.setTimeout(() => {
-        this.handleReset()
-      }, 30000)
+        this.handleReset();
+      }, 30000);
     }
   }
 
   componentDidUpdate(prevProps: Props) {
-    const { resetOnPropsChange, children } = this.props
-    const { hasError } = this.state
+    const { resetOnPropsChange, children } = this.props;
+    const { hasError } = this.state;
 
     if (hasError && resetOnPropsChange && prevProps.children !== children) {
-      this.setState({ hasError: false, error: undefined, errorInfo: undefined })
+      this.setState({ hasError: false, error: undefined, errorInfo: undefined });
     }
   }
 
   componentWillUnmount() {
     if (this.resetTimeoutId) {
-      clearTimeout(this.resetTimeoutId)
+      clearTimeout(this.resetTimeoutId);
     }
   }
 
   handleReset = () => {
     if (this.resetTimeoutId) {
-      clearTimeout(this.resetTimeoutId)
-      this.resetTimeoutId = null
+      clearTimeout(this.resetTimeoutId);
+      this.resetTimeoutId = null;
     }
-    
-    this.setState({ 
-      hasError: false, 
-      error: undefined, 
+
+    this.setState({
+      hasError: false,
+      error: undefined,
       errorInfo: undefined,
-      eventId: undefined
-    })
-  }
+      eventId: undefined,
+    });
+  };
 
   handleReload = () => {
     if (typeof window !== 'undefined') {
-      window.location.reload()
+      window.location.reload();
     }
-  }
+  };
 
   handleGoHome = () => {
     if (typeof window !== 'undefined') {
-      window.location.href = '/'
+      window.location.href = '/';
     }
-  }
+  };
 
   render() {
     if (!this.state.hasError) {
-      return this.props.children
+      return this.props.children;
     }
 
     if (this.props.fallback) {
-      return this.props.fallback
+      return this.props.fallback;
     }
 
-    const { error, eventId } = this.state
-    const { level = 'page', showDetails = false } = this.props
+    const { error, eventId } = this.state;
+    const { level = 'page', showDetails = process.env.NODE_ENV === 'development' } = this.props;
 
     if (level === 'component') {
       return (
@@ -126,13 +130,11 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="flex items-start">
             <AlertTriangle className="h-5 w-5 text-red-400 mt-0.5 mr-3 flex-shrink-0" />
             <div className="flex-1">
-              <h3 className="text-sm font-medium text-red-800">
-                Component Error
-              </h3>
+              <h3 className="text-sm font-medium text-red-800">Component Error</h3>
               <p className="text-sm text-red-700 mt-1">
                 This component encountered an error and could not render properly.
               </p>
-              
+
               {showDetails && error && (
                 <details className="mt-3">
                   <summary className="text-xs text-red-600 cursor-pointer hover:text-red-800">
@@ -144,7 +146,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                   </div>
                 </details>
               )}
-              
+
               <div className="mt-3">
                 <Button onClick={this.handleReset} variant="secondary" size="sm">
                   <RefreshCw className="w-3 h-3 mr-1" />
@@ -154,7 +156,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             </div>
           </div>
         </div>
-      )
+      );
     }
 
     return (
@@ -163,11 +165,9 @@ export default class ErrorBoundary extends Component<Props, State> {
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
             <AlertTriangle className="h-6 w-6 text-red-600" />
           </div>
-          
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Something went wrong
-          </h2>
-          
+
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
+
           <p className="text-gray-600 mb-6">
             We encountered an unexpected error. Our team has been notified.
           </p>
@@ -175,14 +175,8 @@ export default class ErrorBoundary extends Component<Props, State> {
           {showDetails && error && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg text-left">
               <h3 className="text-sm font-medium text-gray-700 mb-2">Error Details:</h3>
-              <p className="text-xs text-gray-600 font-mono break-all">
-                {error.message}
-              </p>
-              {eventId && (
-                <p className="text-xs text-gray-500 mt-2">
-                  Event ID: {eventId}
-                </p>
-              )}
+              <p className="text-xs text-gray-600 font-mono break-all">{error.message}</p>
+              {eventId && <p className="text-xs text-gray-500 mt-2">Event ID: {eventId}</p>}
             </div>
           )}
 
@@ -191,7 +185,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               <RefreshCw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
-            
+
             <Button onClick={this.handleGoHome} variant="secondary" className="flex-1">
               <Home className="w-4 h-4 mr-2" />
               Go Home
@@ -199,7 +193,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           </div>
         </div>
       </div>
-    )
+    );
   }
 }
 
@@ -212,9 +206,9 @@ export function withErrorBoundary<T extends object>(
     <ErrorBoundary {...errorBoundaryProps}>
       <Component {...props} />
     </ErrorBoundary>
-  )
+  );
 
-  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`
-  
-  return WrappedComponent
-} 
+  WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
+
+  return WrappedComponent;
+}

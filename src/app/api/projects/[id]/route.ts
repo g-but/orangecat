@@ -7,59 +7,60 @@ import {
   apiValidationError,
   apiInternalError,
   handleApiError,
+  handleSupabaseError,
 } from '@/lib/api/standardResponse';
 import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import { projectSchema } from '@/lib/validation';
 
 // GET /api/projects/[id] - Get specific project
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabase = await createServerClient();
-    const { id } = params;
+    const { id } = await params;
 
-    const { data: project, error } = await supabase
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      return apiNotFound('Invalid project ID');
+    }
+
+    const { data: project, error: projectError } = await supabase
       .from('projects')
-      .select(
-        `
-        *,
-        profiles:creator_id (
-          id,
-          username,
-          name,
-          avatar_url
-        ),
-        donations (
-          id,
-          amount,
-          currency,
-          status,
-          anonymous,
-          message,
-          created_at,
-          profiles:donor_id (
-            id,
-            username,
-            name,
-            avatar_url
-          )
-        )
-      `
-      )
+      .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
 
-    if (error || !project) {
+    if (projectError || !project) {
+      if (projectError) {
+        return handleSupabaseError(projectError);
+      }
       return apiNotFound('Project not found');
     }
 
-    return apiSuccess(project);
+    // Fetch profile separately
+    let profile = null;
+    if (project.user_id) {
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id, username, name, avatar_url')
+        .eq('id', project.user_id)
+        .single();
+      profile = profileData;
+    }
+
+    const projectWithProfile = {
+      ...project,
+      raised_amount: project.raised_amount ?? 0,
+      profiles: profile,
+    };
+
+    return apiSuccess(projectWithProfile);
   } catch (error) {
+    console.error('[API] Exception in GET /api/projects/[id]:', error);
     return handleApiError(error);
   }
 }
 
 // PUT /api/projects/[id] - Update project
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Rate limiting check (stricter for PUT)
     const rateLimitResult = rateLimit(request);
@@ -77,24 +78,24 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       return apiUnauthorized();
     }
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
 
     // Validate input data
     const validatedData = projectSchema.parse(body);
 
     // Check if user owns the project
-    const { data: existingCampaign, error: fetchError } = await supabase
+    const { data: existingProject, error: fetchError } = await supabase
       .from('projects')
-      .select('creator_id')
+      .select('user_id')
       .eq('id', id)
       .single();
 
-    if (fetchError || !existingCampaign) {
+    if (fetchError || !existingProject) {
       return apiNotFound('Project not found');
     }
 
-    if (existingCampaign.creator_id !== user.id) {
+    if (existingProject.user_id !== user.id) {
       return apiUnauthorized('You can only update your own projects');
     }
 
@@ -109,7 +110,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .single();
 
     if (error) {
-      return apiInternalError('Failed to update project', { details: error.message });
+      return handleSupabaseError(error);
     }
 
     return apiSuccess(project);
@@ -122,7 +123,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 }
 
 // DELETE /api/projects/[id] - Delete project
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const supabase = await createServerClient();
     const {
@@ -134,27 +138,27 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return apiUnauthorized();
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // Check if user owns the project
-    const { data: existingCampaign, error: fetchError } = await supabase
+    const { data: existingProject, error: fetchError } = await supabase
       .from('projects')
-      .select('creator_id')
+      .select('user_id')
       .eq('id', id)
       .single();
 
-    if (fetchError || !existingCampaign) {
+    if (fetchError || !existingProject) {
       return apiNotFound('Project not found');
     }
 
-    if (existingCampaign.creator_id !== user.id) {
+    if (existingProject.user_id !== user.id) {
       return apiUnauthorized('You can only delete your own projects');
     }
 
     const { error } = await supabase.from('projects').delete().eq('id', id);
 
     if (error) {
-      return apiInternalError('Failed to delete project', { details: error.message });
+      return handleSupabaseError(error);
     }
 
     return apiSuccess({ message: 'Project deleted successfully' });

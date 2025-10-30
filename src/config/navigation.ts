@@ -1,31 +1,30 @@
-import { ComponentType, SVGProps } from 'react'
-import { Github, Twitter } from 'lucide-react'
+import { ComponentType, SVGProps } from 'react';
+import { Github, Twitter } from 'lucide-react';
 
 interface NavigationItem {
-  name: string
-  href: string
-  requiresAuth?: boolean
-  icon?: ComponentType<SVGProps<SVGSVGElement>>
-  description?: string
+  name: string;
+  href: string;
+  requiresAuth?: boolean;
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  description?: string;
 }
 
 interface NavigationConfig {
-  main: NavigationItem[]
+  main: NavigationItem[];
   footer: {
-    product: NavigationItem[]
-    company: NavigationItem[]
-    legal: NavigationItem[]
-    social: NavigationItem[]
-  }
-  user: NavigationItem[]
-  auth: NavigationItem[]
+    product: NavigationItem[];
+    company: NavigationItem[];
+    legal: NavigationItem[];
+    social: NavigationItem[];
+  };
+  user: NavigationItem[];
+  auth: NavigationItem[];
 }
 
 export const navigation: NavigationConfig = {
   main: [
-    { name: 'Fund Yourself', href: '/projects/create' },
+    { name: 'Create Project', href: '/projects/create' },
     { name: 'Discover', href: '/discover' },
-    { name: 'Fund Us', href: '/fund-us' },
     { name: 'About', href: '/about' },
     { name: 'Blog', href: '/blog' },
     { name: 'GitHub', href: 'https://github.com/g-but/orangecat' },
@@ -69,5 +68,5 @@ export const navigation: NavigationConfig = {
   auth: [
     { name: 'Sign In', href: '/auth?mode=login' },
     { name: 'Get Started', href: '/auth?mode=register' },
-  ]
-} 
+  ],
+};

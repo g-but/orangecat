@@ -7,6 +7,7 @@ import {
   apiValidationError,
   apiInternalError,
   handleApiError,
+  handleSupabaseError,
 } from '@/lib/api/standardResponse';
 import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 
@@ -35,7 +36,28 @@ export async function GET(request: NextRequest) {
       return apiInternalError('Failed to fetch projects', { details: error.message });
     }
 
-    return apiSuccess(projects || []);
+    // Fetch profiles for all projects
+    const projectsWithProfiles = await Promise.all(
+      (projects || []).map(async project => {
+        let profile = null;
+        if (project.user_id) {
+          const { data: profileData } = await supabase
+            .from('profiles')
+            .select('id, username, name, avatar_url')
+            .eq('id', project.user_id)
+            .single();
+          profile = profileData;
+        }
+
+        return {
+          ...project,
+          raised_amount: project.raised_amount ?? 0,
+          profiles: profile,
+        };
+      })
+    );
+
+    return apiSuccess(projectsWithProfiles);
   } catch (error) {
     return handleApiError(error);
   }
@@ -63,23 +85,41 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = projectSchema.parse(body);
 
+    // Build insert payload based on current simplified schema (user_id, title, etc.)
+    const insertPayload = {
+      user_id: user.id,
+      title: validatedData.title,
+      description: validatedData.description,
+      goal_amount: validatedData.goal_amount ?? null,
+      currency: validatedData.currency ?? 'SATS',
+      funding_purpose: validatedData.funding_purpose ?? null,
+      bitcoin_address: validatedData.bitcoin_address ?? null,
+      lightning_address: validatedData.lightning_address ?? null,
+      category: validatedData.category ?? null,
+      tags: validatedData.tags ?? [],
+      status: 'active',
+    };
+
     const { data: project, error } = await supabase
       .from('projects')
-      .insert({
-        ...validatedData,
-        creator_id: user.id,
-      })
+      .insert(insertPayload)
       .select('*')
       .single();
 
     if (error) {
-      return apiInternalError('Failed to create project', { details: error.message });
+      try {
+        console.error('[API] /api/projects insert error:', error);
+      } catch {}
+      return handleSupabaseError(error);
     }
 
     return apiSuccess(project, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
-      return apiValidationError('Invalid project data');
+      const zodError = error as any;
+      return apiValidationError('Invalid project data', {
+        details: zodError.errors || zodError.message,
+      });
     }
     return handleApiError(error);
   }

@@ -1,70 +1,86 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
-  FileText, 
-  Plus, 
-  Clock, 
+import { useState } from 'react';
+import {
+  FileText,
+  Plus,
+  Clock,
   AlertTriangle,
-  CheckCircle, 
+  CheckCircle,
   ArrowRight,
   Edit3,
-  X
-} from 'lucide-react'
-import Link from 'next/link'
-import Button from '@/components/ui/Button'
-import { Card, CardContent } from '@/components/ui/Card'
-import { useCampaignStore } from '@/stores/campaignStore'
-import { formatDistanceToNow } from 'date-fns'
+  X,
+} from 'lucide-react';
+import Link from 'next/link';
+import Button from '@/components/ui/Button';
+import { Card, CardContent } from '@/components/ui/Card';
+import { useProjectStore } from '@/stores/projectStore';
+import { formatDistanceToNow } from 'date-fns';
 
 interface DraftContinueDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onContinueDraft: () => void
-  onStartFresh: () => void
+  isOpen: boolean;
+  onClose: () => void;
+  onContinueDraft: () => void;
+  onStartFresh: () => void;
 }
 
-export default function DraftContinueDialog({ 
-  isOpen, 
-  onClose, 
-  onContinueDraft, 
-  onStartFresh 
+export default function DraftContinueDialog({
+  isOpen,
+  onClose,
+  onContinueDraft,
+  onStartFresh,
 }: DraftContinueDialogProps) {
-  const { drafts } = useCampaignStore()
-  
-  const hasAnyDraft = drafts.length > 0
-  const primaryDraft = hasAnyDraft ? drafts[0] : null
-  
-  if (!isOpen || !hasAnyDraft || !primaryDraft) {return null}
+  const { drafts } = useProjectStore();
 
-  const isLocalDraft = primaryDraft.syncStatus === 'pending'
-  const totalDrafts = drafts.length
+  const hasAnyDraft = drafts.length > 0;
+  const primaryDraft = hasAnyDraft ? drafts[0] : null;
+
+  if (!isOpen || !hasAnyDraft || !primaryDraft) {
+    return null;
+  }
+
+  const isLocalDraft = primaryDraft.syncStatus === 'pending';
+  const totalDrafts = drafts.length;
 
   const formatLastUpdated = (date: Date | null) => {
-    if (!date) {return 'recently'}
-    try {
-      return formatDistanceToNow(date, { addSuffix: true })
-    } catch {
-      return 'recently'
+    if (!date) {
+      return 'recently';
     }
-  }
+    try {
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch {
+      return 'recently';
+    }
+  };
 
   const getCompletionPercentage = () => {
     // Simple completion percentage based on filled fields
-    let completed = 0
-    const total = 6
-    
-    if (primaryDraft.title) {completed++}
-    if (primaryDraft.description) {completed++}
-    if (primaryDraft.goal_amount) {completed++}
-    if (primaryDraft.category) {completed++}
-    if (primaryDraft.bitcoin_address) {completed++}
-    if (primaryDraft.website_url) {completed++}
-    
-    return Math.round((completed / total) * 100)
-  }
+    let completed = 0;
+    const total = 6;
 
-  const completionPercentage = getCompletionPercentage()
+    if (primaryDraft.title) {
+      completed++;
+    }
+    if (primaryDraft.description) {
+      completed++;
+    }
+    if (primaryDraft.goal_amount) {
+      completed++;
+    }
+    if (primaryDraft.category) {
+      completed++;
+    }
+    if (primaryDraft.bitcoin_address) {
+      completed++;
+    }
+    if (primaryDraft.website_url) {
+      completed++;
+    }
+
+    return Math.round((completed / total) * 100);
+  };
+
+  const completionPercentage = getCompletionPercentage();
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-modal flex items-center justify-center p-4">
@@ -82,7 +98,8 @@ export default function DraftContinueDialog({
                     You Have Unfinished Work
                   </h2>
                   <p className="text-gray-600">
-                    What would you like to do with your {totalDrafts > 1 ? 'draft projects' : 'draft project'}?
+                    What would you like to do with your{' '}
+                    {totalDrafts > 1 ? 'draft projects' : 'draft project'}?
                   </p>
                 </div>
               </div>
@@ -113,11 +130,9 @@ export default function DraftContinueDialog({
                 </div>
               )}
             </div>
-            
-            <h3 className="font-semibold text-gray-900 mb-2">
-              &ldquo;{primaryDraft.title}&rdquo;
-            </h3>
-            
+
+            <h3 className="font-semibold text-gray-900 mb-2">&ldquo;{primaryDraft.title}&rdquo;</h3>
+
             <div className="flex items-center gap-4 text-sm text-gray-600">
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
@@ -134,11 +149,11 @@ export default function DraftContinueDialog({
             {/* Progress Bar */}
             <div className="mt-4">
               <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Campaign Progress</span>
+                <span>Project Progress</span>
                 <span>{completionPercentage}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${completionPercentage}%` }}
                 />
@@ -158,7 +173,7 @@ export default function DraftContinueDialog({
                   <div>
                     <h4 className="font-semibold text-gray-900">Continue Where You Left Off</h4>
                     <p className="text-sm text-gray-600">
-                      {isLocalDraft 
+                      {isLocalDraft
                         ? 'Resume your unsaved progress and complete your project'
                         : 'Complete your draft project and publish it'}
                     </p>
@@ -166,8 +181,8 @@ export default function DraftContinueDialog({
                 </div>
                 <div className="text-blue-600 text-sm font-medium">Recommended</div>
               </div>
-              
-              <Button 
+
+              <Button
                 onClick={onContinueDraft}
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white"
               >
@@ -185,14 +200,14 @@ export default function DraftContinueDialog({
                     <Plus className="w-5 h-5 text-gray-600" />
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">Start a New Campaign</h4>
+                    <h4 className="font-semibold text-gray-900">Start a New Project</h4>
                     <p className="text-sm text-gray-600">
                       Create a completely new project from scratch
                     </p>
                   </div>
                 </div>
               </div>
-              
+
               {isLocalDraft && (
                 <div className="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
                   <div className="flex items-center gap-2 text-sm text-yellow-800">
@@ -201,8 +216,8 @@ export default function DraftContinueDialog({
                   </div>
                 </div>
               )}
-              
-              <Button 
+
+              <Button
                 onClick={onStartFresh}
                 variant="outline"
                 className="w-full border-gray-300 hover:bg-gray-50"
@@ -226,5 +241,5 @@ export default function DraftContinueDialog({
         </CardContent>
       </Card>
     </div>
-  )
-} 
+  );
+}
