@@ -1,13 +1,13 @@
-'use client'
+'use client';
 
-import React from 'react'
-import Card, { CardContent } from '@/components/ui/Card'
-import Input from '@/components/ui/Input'
-import Button from '@/components/ui/Button'
-import { 
-  Bitcoin, 
-  Loader2, 
-  ArrowRight, 
+import React from 'react';
+import Card, { CardContent } from '@/components/ui/Card';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
+import {
+  Bitcoin,
+  Loader2,
+  ArrowRight,
   Target,
   ArrowLeft,
   Upload,
@@ -16,33 +16,41 @@ import {
   Globe,
   Zap,
   Users,
-  Heart
-} from 'lucide-react'
-import type { CampaignFormData } from './CreateCampaignForm'
-import { z } from 'zod'
+  Heart,
+} from 'lucide-react';
+import type { CampaignFormData } from './CreateCampaignForm';
+import { z } from 'zod';
 
 interface StepProps {
-  formData: CampaignFormData
-  formErrors: z.ZodError | null
-  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void
-  handleTagsChange: (e: React.ChangeEvent<HTMLInputElement>) => void
-  handleFileUpload: (file: File, type: 'banner' | 'gallery') => Promise<void>
-  handleDrop: (e: React.DragEvent, type: 'banner' | 'gallery') => void
-  handleDragOver: (e: React.DragEvent) => void
-  uploadProgress: { [key: string]: number }
-  isUploading: boolean
-  nextStep: () => void
-  prevStep: () => void
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>
-  loading: boolean
-  error: string | null
-  canProceedToStep2: boolean
-  canProceedToStep3: boolean
-  canProceedToStep4: boolean
+  formData: CampaignFormData;
+  formErrors: z.ZodError | null;
+  handleChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
+  handleTagsChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleFileUpload: (file: File, type: 'banner' | 'gallery') => Promise<void>;
+  handleDrop: (e: React.DragEvent, type: 'banner' | 'gallery') => void;
+  handleDragOver: (e: React.DragEvent) => void;
+  uploadProgress: { [key: string]: number };
+  isUploading: boolean;
+  nextStep: () => void;
+  prevStep: () => void;
+  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => Promise<void>;
+  loading: boolean;
+  error: string | null;
+  canProceedToStep2: boolean;
+  canProceedToStep3: boolean;
+  canProceedToStep4: boolean;
 }
 
 // Step 1: Project Details
-export function Step1({ formData, formErrors, handleChange, handleTagsChange, nextStep, canProceedToStep2, isAuthenticated }: StepProps & { isAuthenticated?: boolean }) {
+export function Step1({
+  formData,
+  formErrors,
+  handleChange,
+  handleTagsChange,
+  nextStep,
+  canProceedToStep2,
+  isAuthenticated,
+}: StepProps & { isAuthenticated?: boolean }) {
   return (
     <div className="space-y-6">
       {/* Guest mode welcome message - only show for non-authenticated users */}
@@ -55,8 +63,9 @@ export function Step1({ formData, formErrors, handleChange, handleTagsChange, ne
             <div>
               <h3 className="font-semibold text-orange-900 mb-1">Welcome! 👋</h3>
               <p className="text-sm text-orange-700">
-                You're in guest mode. Feel free to explore the full project creation process.
-                We'll ask you to sign in or create an account only when you're ready to publish your project.
+                You're in guest mode. Feel free to explore the full project creation process. We'll
+                ask you to sign in or create an account only when you're ready to publish your
+                project.
               </p>
             </div>
           </div>
@@ -86,7 +95,9 @@ export function Step1({ formData, formErrors, handleChange, handleTagsChange, ne
               maxLength={100}
             />
             {formErrors?.issues.find(issue => issue.path[0] === 'title') && (
-              <p className="mt-1 text-xs text-red-600">{formErrors.issues.find(issue => issue.path[0] === 'title')?.message}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {formErrors.issues.find(issue => issue.path[0] === 'title')?.message}
+              </p>
             )}
             <div className="mt-1 text-xs text-gray-500 flex justify-between">
               <span>Make it catchy and memorable</span>
@@ -138,21 +149,24 @@ export function Step1({ formData, formErrors, handleChange, handleTagsChange, ne
 
       {/* Navigation */}
       <div className="flex justify-end">
-        <Button
-          onClick={nextStep}
-          disabled={!canProceedToStep2}
-          className="px-6 py-3"
-        >
+        <Button onClick={nextStep} disabled={!canProceedToStep2} className="px-6 py-3">
           Continue
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 // Step 2: Payment Setup
-export function Step2({ formData, formErrors, handleChange, nextStep, prevStep, canProceedToStep3 }: StepProps) {
+export function Step2({
+  formData,
+  formErrors,
+  handleChange,
+  nextStep,
+  prevStep,
+  canProceedToStep3,
+}: StepProps) {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
@@ -164,7 +178,10 @@ export function Step2({ formData, formErrors, handleChange, nextStep, prevStep, 
         <CardContent className="p-6 space-y-6">
           {/* Bitcoin Address */}
           <div>
-            <label htmlFor="bitcoin_address" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="bitcoin_address"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               <Bitcoin className="w-4 h-4 inline mr-2" />
               Bitcoin Address
             </label>
@@ -178,11 +195,16 @@ export function Step2({ formData, formErrors, handleChange, nextStep, prevStep, 
               className="w-full font-mono text-sm"
             />
             {formErrors?.issues.find(issue => issue.path[0] === 'bitcoin_address') && (
-              <p className="mt-1 text-xs text-red-600">{formErrors.issues.find(issue => issue.path[0] === 'bitcoin_address')?.message}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {formErrors.issues.find(issue => issue.path[0] === 'bitcoin_address')?.message}
+              </p>
             )}
             <p className="mt-1 text-xs text-gray-500">
               Your Bitcoin wallet address where funds will be sent. No wallet yet?{' '}
-              <a href="/wallets" className="text-orange-600 hover:text-orange-700 underline">Get a wallet</a>.
+              <a href="/wallets" className="text-orange-600 hover:text-orange-700 underline">
+                Get a wallet
+              </a>
+              .
             </p>
           </div>
 
@@ -209,7 +231,9 @@ export function Step2({ formData, formErrors, handleChange, nextStep, prevStep, 
               </span>
             </div>
             {formErrors?.issues.find(issue => issue.path[0] === 'goal_amount') && (
-              <p className="mt-1 text-xs text-red-600">{formErrors.issues.find(issue => issue.path[0] === 'goal_amount')?.message}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {formErrors.issues.find(issue => issue.path[0] === 'goal_amount')?.message}
+              </p>
             )}
             <p className="mt-1 text-xs text-gray-500">
               Set a funding target to show progress (leave blank for no limit)
@@ -228,25 +252,17 @@ export function Step2({ formData, formErrors, handleChange, nextStep, prevStep, 
 
       {/* Navigation */}
       <div className="flex justify-between">
-        <Button
-          variant="ghost"
-          onClick={prevStep}
-          className="px-6 py-3"
-        >
+        <Button variant="ghost" onClick={prevStep} className="px-6 py-3">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
-        <Button
-          onClick={nextStep}
-          disabled={!canProceedToStep3}
-          className="px-6 py-3"
-        >
+        <Button onClick={nextStep} disabled={!canProceedToStep3} className="px-6 py-3">
           Continue
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 // Step 3: Final Details
@@ -276,7 +292,9 @@ export function Step3({ formData, formErrors, handleChange, nextStep, prevStep }
               className="w-full"
             />
             {formErrors?.issues.find(issue => issue.path[0] === 'website_url') && (
-              <p className="mt-1 text-xs text-red-600">{formErrors.issues.find(issue => issue.path[0] === 'website_url')?.message}</p>
+              <p className="mt-1 text-xs text-red-600">
+                {formErrors.issues.find(issue => issue.path[0] === 'website_url')?.message}
+              </p>
             )}
             <p className="mt-1 text-xs text-gray-500">
               Link to your website, GitHub, Twitter, or other relevant page
@@ -287,7 +305,7 @@ export function Step3({ formData, formErrors, handleChange, nextStep, prevStep }
           <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 mb-3 flex items-center">
               <Users className="w-4 h-4 mr-2" />
-              Campaign Preview
+              Project Preview
             </h3>
             <div className="bg-white rounded-lg p-4 border border-gray-200">
               <h4 className="font-semibold text-lg text-gray-900 mb-2">
@@ -298,18 +316,14 @@ export function Step3({ formData, formErrors, handleChange, nextStep, prevStep }
               </p>
               <div className="flex items-center justify-between text-sm">
                 <div className="flex items-center gap-4">
-                  <span className="text-gray-500">
-                    {formData.tags}
-                  </span>
+                  <span className="text-gray-500">{formData.tags}</span>
                   {formData.goal_amount && (
                     <span className="text-orange-600 font-medium">
                       Goal: {formData.goal_amount} BTC
                     </span>
                   )}
                 </div>
-                {formData.website_url && (
-                  <Globe className="w-4 h-4 text-gray-400" />
-                )}
+                {formData.website_url && <Globe className="w-4 h-4 text-gray-400" />}
               </div>
             </div>
           </div>
@@ -318,41 +332,34 @@ export function Step3({ formData, formErrors, handleChange, nextStep, prevStep }
 
       {/* Navigation */}
       <div className="flex justify-between">
-        <Button
-          variant="ghost"
-          onClick={prevStep}
-          className="px-6 py-3"
-        >
+        <Button variant="ghost" onClick={prevStep} className="px-6 py-3">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back
         </Button>
-        <Button
-          onClick={nextStep}
-          className="px-6 py-3"
-        >
+        <Button onClick={nextStep} className="px-6 py-3">
           Continue
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
     </div>
-  )
+  );
 }
 
 // Step 4: Media & Launch
-export function Step4({ 
-  formData, 
+export function Step4({
+  formData,
   formErrors,
-  handleFileUpload, 
-  handleDrop, 
-  handleDragOver, 
-  uploadProgress, 
-  isUploading, 
-  prevStep, 
-  handleSubmit, 
-  loading, 
-  error 
+  handleFileUpload,
+  handleDrop,
+  handleDragOver,
+  uploadProgress,
+  isUploading,
+  prevStep,
+  handleSubmit,
+  loading,
+  error,
 }: StepProps) {
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   return (
     <div className="space-y-6">
@@ -370,7 +377,7 @@ export function Step4({
                 Banner Image (Optional)
               </label>
               <div
-                onDrop={(e) => handleDrop(e, 'banner')}
+                onDrop={e => handleDrop(e, 'banner')}
                 onDragOver={handleDragOver}
                 className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-orange-400 transition-colors cursor-pointer"
                 onClick={() => fileInputRef.current?.click()}
@@ -409,9 +416,11 @@ export function Step4({
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {handleFileUpload(file, 'banner')}
+                onChange={e => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleFileUpload(file, 'banner');
+                  }
                 }}
                 className="hidden"
               />
@@ -427,12 +436,7 @@ export function Step4({
 
         {/* Navigation */}
         <div className="flex justify-between">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={prevStep}
-            className="px-6 py-3"
-          >
+          <Button type="button" variant="ghost" onClick={prevStep} className="px-6 py-3">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
@@ -449,12 +453,12 @@ export function Step4({
             ) : (
               <>
                 <Heart className="w-4 h-4 mr-2" />
-                Launch Campaign
+                Launch Project
               </>
             )}
           </Button>
         </div>
       </form>
     </div>
-  )
+  );
 }

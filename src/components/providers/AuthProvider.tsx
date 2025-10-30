@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useEffect, useRef } from 'react'
-import { useAuthStore } from '@/stores/auth'
-import getSupabaseClient from '@/lib/supabase/browser'
-import { logger } from '@/utils/logger'
-import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
+import { useEffect, useRef } from 'react';
+import { useAuthStore } from '@/stores/auth';
+import supabase from '@/lib/supabase/browser';
+import { logger } from '@/utils/logger';
+import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 
 /**
  * AuthProvider - Syncs Supabase auth state with Zustand store
@@ -20,108 +20,134 @@ import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js'
  * - USER_UPDATED: User profile/metadata changed
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const setInitialAuthState = useAuthStore(state => state.setInitialAuthState)
-  const fetchProfile = useAuthStore(state => state.fetchProfile)
-  const clear = useAuthStore(state => state.clear)
-  const listenerRef = useRef<{ data: { subscription: { unsubscribe: () => void } } } | null>(null)
+  const setInitialAuthState = useAuthStore(state => state.setInitialAuthState);
+  const fetchProfile = useAuthStore(state => state.fetchProfile);
+  const clear = useAuthStore(state => state.clear);
+  const listenerRef = useRef<{ data: { subscription: { unsubscribe: () => void } } } | null>(null);
 
   useEffect(() => {
     // Prevent duplicate listeners
     if (listenerRef.current) {
-      logger.debug('AuthProvider listener already exists, skipping setup', undefined, 'Auth')
-      return
+      logger.debug('AuthProvider listener already exists, skipping setup', undefined, 'Auth');
+      return;
     }
 
-    logger.info('Setting up auth state change listener', undefined, 'Auth')
+    logger.info('Setting up auth state change listener', undefined, 'Auth');
+
+    // Clear any stale sessionStorage data on mount
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const storedUser = useAuthStore.getState().user;
+
+      // If session user ID doesn't match stored user ID, clear stale data
+      if (storedUser && session?.user && storedUser.id !== session.user.id) {
+        logger.warn(
+          'Session mismatch detected - clearing stale auth data',
+          {
+            storedUserId: storedUser.id,
+            sessionUserId: session.user.id,
+          },
+          'Auth'
+        );
+        clear();
+        setInitialAuthState(session.user, session, null);
+        fetchProfile().catch(err => {
+          logger.warn('Failed to fetch profile after session sync', { error: err }, 'Auth');
+        });
+      }
+    });
 
     // Set up the auth state change listener
-    const { data: { subscription } } = getSupabaseClient().auth.onAuthStateChange(
-      async (event: AuthChangeEvent, session: Session | null) => {
-        logger.debug('Auth state change detected', {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      logger.debug(
+        'Auth state change detected',
+        {
           event,
           hasSession: !!session,
-          hasUser: !!session?.user
-        }, 'Auth')
+          hasUser: !!session?.user,
+        },
+        'Auth'
+      );
 
-        // Handle different auth events
-        switch (event) {
-          case 'INITIAL_SESSION':
-            // Initial session load - set state with existing session
-            if (session?.user) {
-              setInitialAuthState(session.user, session, null)
-              // Fetch profile in background
-              fetchProfile().catch(err => {
-                logger.warn('Failed to fetch profile on initial session', { error: err }, 'Auth')
-              })
-            } else {
-              setInitialAuthState(null, null, null)
-            }
-            break
+      // Handle different auth events
+      switch (event) {
+        case 'INITIAL_SESSION':
+          // Initial session load - set state with existing session
+          if (session?.user) {
+            setInitialAuthState(session.user, session, null);
+            // Fetch profile in background
+            fetchProfile().catch(err => {
+              logger.warn('Failed to fetch profile on initial session', { error: err }, 'Auth');
+            });
+          } else {
+            setInitialAuthState(null, null, null);
+          }
+          break;
 
-          case 'SIGNED_IN':
-            // User just signed in - set user and session
-            if (session?.user) {
-              logger.info('User signed in', { userId: session.user.id }, 'Auth')
-              setInitialAuthState(session.user, session, null)
-              // Fetch profile in background
-              fetchProfile().catch(err => {
-                logger.warn('Failed to fetch profile after sign in', { error: err }, 'Auth')
-              })
-            }
-            break
+        case 'SIGNED_IN':
+          // User just signed in - set user and session
+          if (session?.user) {
+            logger.info('User signed in', { userId: session.user.id }, 'Auth');
+            setInitialAuthState(session.user, session, null);
+            // Fetch profile in background
+            fetchProfile().catch(err => {
+              logger.warn('Failed to fetch profile after sign in', { error: err }, 'Auth');
+            });
+          }
+          break;
 
-          case 'SIGNED_OUT':
-            // User signed out or session expired
-            logger.info('User signed out', undefined, 'Auth')
-            clear()
-            break
+        case 'SIGNED_OUT':
+          // User signed out or session expired
+          logger.info('User signed out', undefined, 'Auth');
+          clear();
+          break;
 
-          case 'TOKEN_REFRESHED':
-            // Token was refreshed - update session
-            if (session?.user) {
-              logger.debug('Token refreshed', { userId: session.user.id }, 'Auth')
-              setInitialAuthState(session.user, session, null)
-            }
-            break
+        case 'TOKEN_REFRESHED':
+          // Token was refreshed - update session
+          if (session?.user) {
+            logger.debug('Token refreshed', { userId: session.user.id }, 'Auth');
+            setInitialAuthState(session.user, session, null);
+          }
+          break;
 
-          case 'USER_UPDATED':
-            // User metadata or profile updated
-            if (session?.user) {
-              logger.debug('User updated', { userId: session.user.id }, 'Auth')
-              setInitialAuthState(session.user, session, null)
-              // Re-fetch profile to get latest data
-              fetchProfile().catch(err => {
-                logger.warn('Failed to fetch profile after user update', { error: err }, 'Auth')
-              })
-            }
-            break
+        case 'USER_UPDATED':
+          // User metadata or profile updated
+          if (session?.user) {
+            logger.debug('User updated', { userId: session.user.id }, 'Auth');
+            setInitialAuthState(session.user, session, null);
+            // Re-fetch profile to get latest data
+            fetchProfile().catch(err => {
+              logger.warn('Failed to fetch profile after user update', { error: err }, 'Auth');
+            });
+          }
+          break;
 
-          case 'PASSWORD_RECOVERY':
-            // User is in password recovery flow
-            logger.info('Password recovery event detected', undefined, 'Auth')
-            // Session should contain the recovery token
-            if (session?.user) {
-              setInitialAuthState(session.user, session, null)
-            }
-            break
+        case 'PASSWORD_RECOVERY':
+          // User is in password recovery flow
+          logger.info('Password recovery event detected', undefined, 'Auth');
+          // Session should contain the recovery token
+          if (session?.user) {
+            setInitialAuthState(session.user, session, null);
+          }
+          break;
 
-          default:
-            logger.warn('Unknown auth event', { event }, 'Auth')
-        }
+        default:
+          logger.warn('Unknown auth event', { event }, 'Auth');
       }
-    )
+    });
 
-    listenerRef.current = { data: { subscription } }
+    listenerRef.current = { data: { subscription } };
 
     // Cleanup on unmount
     return () => {
       if (listenerRef.current) {
-        logger.debug('Cleaning up auth state change listener', undefined, 'Auth')
-        listenerRef.current.data.subscription.unsubscribe()
-        listenerRef.current = null
+        logger.debug('Cleaning up auth state change listener', undefined, 'Auth');
+        listenerRef.current.data.subscription.unsubscribe();
+        listenerRef.current = null;
       }
-    }
-  }, [setInitialAuthState, fetchProfile, clear])
+    };
+  }, [setInitialAuthState, fetchProfile, clear]);
 
-  return <>{children}</>
+  return <>{children}</>;
 }

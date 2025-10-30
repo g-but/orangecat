@@ -1,98 +1,45 @@
-import {
-  Building,
-  Briefcase,
-  Calendar,
-  Handshake,
-  Wallet,
-  Users,
-} from 'lucide-react'
-import { FeaturePreviewProps } from '@/components/sections/FeaturePreview'
+import { Briefcase, Users } from 'lucide-react';
+import { FeaturePreviewProps } from '@/components/sections/FeaturePreview';
 
 export type PlatformFeature = Omit<FeaturePreviewProps, 'variant' | 'showCTA'> & {
-  landingPageHref?: string
-}
+  landingPageHref?: string;
+};
 
 export const platformFeatures: PlatformFeature[] = [
   {
-    title: 'Organizations',
-    description: 'Create and manage organizations with governance, assets, and members',
-    icon: Building,
-    href: '/coming-soon?feature=organizations',
-    landingPageHref: '/about#organizations',
-    color: 'bg-gradient-to-r from-green-500 to-emerald-500',
-    iconColor: 'text-green-600',
-    preview: 'Set up organizational structures, manage member permissions, and coordinate collective activities.',
-    comingSoon: true,
-    priority: 1
-  },
-  {
     title: 'Projects',
-    description: 'Launch and manage projects with transparent funding and milestone tracking',
+    description: 'Create Bitcoin-powered fundraising projects for any cause',
     icon: Briefcase,
-    href: '/coming-soon?feature=projects',
-    landingPageHref: '/about#projects',
-    color: 'bg-gradient-to-r from-indigo-500 to-purple-500',
-    iconColor: 'text-indigo-600',
-    preview: 'Create project proposals, track progress with milestones, and manage collaborative work.',
-    comingSoon: true,
-    priority: 2
-  },
-  {
-    title: 'Events',
-    description: 'Organize and fundraise for conferences, parties, and community gatherings',
-    icon: Calendar,
-    href: '/coming-soon?feature=events',
-    landingPageHref: '/about#events',
-    color: 'bg-gradient-to-r from-blue-500 to-teal-500',
-    iconColor: 'text-blue-600',
-    preview: 'Plan events, sell tickets with Bitcoin, and manage attendee communications.',
-    comingSoon: true,
-    priority: 3
-  },
-  {
-    title: 'Fundraising Pages',
-    description: 'Create powerful fundraising projects with Bitcoin for any cause',
-    icon: Handshake,
-    href: '/fund-yourself',
-    landingPageHref: '/fund-yourself',
-    color: 'bg-gradient-to-r from-teal-500 to-cyan-500',
-    iconColor: 'text-teal-600',
-    preview: 'Advanced project tools, goal tracking, and supporter engagement features.',
+    href: '/projects/create',
+    landingPageHref: '/projects/create',
+    color: 'bg-gradient-to-r from-bitcoin-orange to-orange-500',
+    iconColor: 'text-bitcoin-orange',
+    preview:
+      'Create project pages, accept Bitcoin donations, track funding progress, and engage with supporters.',
     comingSoon: false,
-    priority: 4
-  },
-  {
-    title: 'Assets',
-    description: 'List, rent, and discover physical assets in your community',
-    icon: Wallet,
-    href: '/coming-soon?feature=assets',
-    landingPageHref: '/about#assets',
-    color: 'bg-gradient-to-r from-orange-500 to-red-500',
-    iconColor: 'text-orange-600',
-    preview: 'Create an asset marketplace, earn from unused items, and build a sharing economy.',
-    comingSoon: true,
-    priority: 5
+    priority: 1,
   },
   {
     title: 'People',
-    description: 'Connect with supporters, create circles, and build your community network',
+    description: 'Connect with supporters and build your community network',
     icon: Users,
     href: '/discover',
     landingPageHref: '/discover',
     color: 'bg-gradient-to-r from-purple-500 to-pink-500',
     iconColor: 'text-purple-600',
-    preview: 'Build networks, create interest groups, and facilitate meaningful connections for any cause or community.',
+    preview:
+      'Browse profiles, connect with others, and build meaningful relationships in the Bitcoin community.',
     comingSoon: false,
-    priority: 6
-  }
-]
+    priority: 2,
+  },
+];
 
 // Available features (not coming soon)
-export const availableFeatures = platformFeatures.filter(feature => !feature.comingSoon)
+export const availableFeatures = platformFeatures.filter(feature => !feature.comingSoon);
 
 // Coming soon features
-export const comingSoonFeatures = platformFeatures.filter(feature => feature.comingSoon)
+export const comingSoonFeatures = platformFeatures.filter(feature => feature.comingSoon);
 
 // Get feature by title
-export const getFeatureByTitle = (title: string) => 
-  platformFeatures.find(feature => feature.title.toLowerCase() === title.toLowerCase()) 
+export const getFeatureByTitle = (title: string) =>
+  platformFeatures.find(feature => feature.title.toLowerCase() === title.toLowerCase());
