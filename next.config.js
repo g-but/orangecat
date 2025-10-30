@@ -1,11 +1,8 @@
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
-  // Output configuration
-  output: 'standalone',
-  outputFileTracingRoot: '/home/g/dev/orangecat',
-
   // Externalize Supabase packages for server-side rendering
+  // Note: 'standalone' output is REMOVED - it's incompatible with Vercel
   serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
 
   // Image optimization
@@ -129,19 +126,8 @@ const nextConfig = {
   webpack: (config, options) => {
     const { dev, isServer, webpack } = options;
 
-    // Exclude Supabase packages from server-side bundling
-    if (isServer) {
-      config.externals = config.externals || [];
-      config.externals.push({
-        '@supabase/supabase-js': 'commonjs @supabase/supabase-js',
-        '@supabase/ssr': 'commonjs @supabase/ssr',
-        '@supabase/auth-js': 'commonjs @supabase/auth-js',
-        '@supabase/realtime-js': 'commonjs @supabase/realtime-js',
-        '@supabase/postgrest-js': 'commonjs @supabase/postgrest-js',
-        '@supabase/storage-js': 'commonjs @supabase/storage-js',
-        'source-map': 'commonjs source-map',
-      });
-    }
+    // Note: Manual webpack externals REMOVED - they cause build issues on Vercel
+    // Supabase packages are handled via serverExternalPackages config instead
 
     // Configure fallbacks for Node.js polyfills (only for client-side)
     if (!isServer) {
