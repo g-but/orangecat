@@ -34,6 +34,7 @@ export interface ProjectState {
 
   // ACTIONS
   loadProjects: (userId: string) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
   getProjectById: (id: string) => Project | undefined;
   getStats: () => { totalProjects: number; totalActive: number };
 
@@ -94,6 +95,37 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
       const message = error instanceof Error ? error.message : 'Failed to load projects';
       logger.error('Failed to load projects:', error);
       set({ error: message, isLoading: false });
+    }
+  },
+
+  deleteProject: async (id: string) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const response = await fetch(`/api/projects/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to delete project');
+      }
+
+      // Remove the project from the store
+      set(state => ({
+        projects: state.projects.filter(p => p.id !== id),
+        isLoading: false,
+      }));
+
+      logger.info(`Deleted project ${id}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete project';
+      logger.error('Failed to delete project:', error);
+      set({ error: message, isLoading: false });
+      throw error; // Re-throw so the UI can handle it
     }
   },
 
