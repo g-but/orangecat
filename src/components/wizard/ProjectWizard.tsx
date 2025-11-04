@@ -178,13 +178,23 @@ export function ProjectWizard({
         break;
       case 'websiteUrl':
         if (value && value.trim()) {
+          // Auto-add https:// if no protocol provided
+          let urlToValidate = value.trim();
+          if (!urlToValidate.match(/^https?:\/\//i)) {
+            urlToValidate = `https://${urlToValidate}`;
+          }
+
           try {
-            const url = new URL(value);
+            const url = new URL(urlToValidate);
             if (!['http:', 'https:'].includes(url.protocol)) {
               return 'Website must be a valid HTTP or HTTPS URL';
             }
+            // Check if domain looks reasonable (has at least one dot)
+            if (!url.hostname.includes('.')) {
+              return 'Please enter a valid domain (e.g., example.com)';
+            }
           } catch {
-            return 'Please enter a valid website URL (e.g., https://example.com)';
+            return 'Please enter a valid website URL (e.g., example.com or https://example.com)';
           }
         }
         break;
@@ -382,6 +392,12 @@ export function ProjectWizard({
             : Math.round(amount);
       }
 
+      // Normalize website URL: add https:// if no protocol
+      let websiteUrl = formData.websiteUrl.trim() || null;
+      if (websiteUrl && !websiteUrl.match(/^https?:\/\//i)) {
+        websiteUrl = `https://${websiteUrl}`;
+      }
+
       const response = await fetch(apiUrl, {
         method,
         headers: { 'Content-Type': 'application/json' },
@@ -392,7 +408,7 @@ export function ProjectWizard({
           currency: formData.goalCurrency || 'SATS',
           funding_purpose: formData.fundingPurpose.trim() || null,
           bitcoin_address: formData.bitcoinAddress.trim() || null,
-          website_url: formData.websiteUrl.trim() || null,
+          website_url: websiteUrl,
           category: formData.selectedCategories[0] || 'other',
           tags: formData.selectedCategories,
         }),
