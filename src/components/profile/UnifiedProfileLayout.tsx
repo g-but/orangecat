@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { QRCodeSVG } from 'qrcode.react';
 import BitcoinWalletStats from '@/components/bitcoin/BitcoinWalletStats';
+import { satoshisToBitcoin } from '@/utils/currency';
 
 interface UnifiedProfileLayoutProps {
   profile: ScalableProfile;
@@ -335,7 +336,7 @@ export default function UnifiedProfileLayout({
                   <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                     <span className="text-gray-600">Total Raised</span>
                     <span className="font-medium text-green-600">
-                      ₿{(profile.total_raised / 100000000).toFixed(4)}
+                      ₿{satoshisToBitcoin(profile.total_raised).toFixed(4)}
                     </span>
                   </div>
                 )}

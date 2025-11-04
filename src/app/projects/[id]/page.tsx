@@ -11,8 +11,12 @@ import { ArrowLeft, Edit, ExternalLink, Bitcoin, Heart, Share2 } from 'lucide-re
 import { formatDistanceToNow } from 'date-fns';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { MissingWalletBanner } from '@/components/project/MissingWalletBanner';
+import { getUniqueCategories } from '@/utils/project';
 import Link from 'next/link';
 import Image from 'next/image';
+import CampaignShare from '@/components/sharing/CampaignShare';
+import { toast } from 'sonner';
+import { ROUTES } from '@/lib/routes';
 
 interface Project {
   id: string;
@@ -46,6 +50,7 @@ export default function PublicProjectPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showShareDialog, setShowShareDialog] = useState(false);
 
   const isOwner = project?.user_id === user?.id;
 
@@ -146,13 +151,17 @@ export default function PublicProjectPage() {
 
             {isOwner && user && (
               <div className="flex gap-2">
-                <Link href={`/project/${projectId}/edit`}>
+                <Link href={ROUTES.PROJECTS.EDIT(projectId)}>
                   <Button variant="outline" size="sm">
                     <Edit className="w-4 h-4 mr-2" />
                     Edit Project
                   </Button>
                 </Link>
-                <Button variant="outline" size="sm">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowShareDialog(!showShareDialog)}
+                >
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </Button>
@@ -251,17 +260,16 @@ export default function PublicProjectPage() {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Categories</h3>
                 <div className="flex flex-wrap gap-2">
-                  {project.category && (
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
-                      {project.category}
-                    </span>
-                  )}
-                  {project.tags?.map((tag, idx) => (
+                  {getUniqueCategories(project.category, project.tags).map((category, idx) => (
                     <span
-                      key={idx}
-                      className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                      key={`${category}-${idx}`}
+                      className={`px-3 py-1 rounded-full text-sm ${
+                        idx === 0 && project.category === category
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}
                     >
-                      {tag}
+                      {category}
                     </span>
                   ))}
                 </div>
@@ -277,14 +285,18 @@ export default function PublicProjectPage() {
                     <div className="text-2xl font-bold text-bitcoinOrange">
                       <CurrencyDisplay
                         amount={project.raised_amount || 0}
-                        currency={(project.currency || 'BTC') as 'CHF' | 'USD' | 'BTC' | 'SATS'}
+                        currency={
+                          (project.currency || 'CHF') as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'
+                        }
                       />
                     </div>
                     <div className="text-sm text-gray-500">
                       of{' '}
                       <CurrencyDisplay
                         amount={project.goal_amount}
-                        currency={(project.currency || 'BTC') as 'CHF' | 'USD' | 'BTC' | 'SATS'}
+                        currency={
+                          (project.currency || 'CHF') as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'
+                        }
                       />
                     </div>
                   </div>
@@ -318,7 +330,7 @@ export default function PublicProjectPage() {
                       size="sm"
                       onClick={() => {
                         navigator.clipboard.writeText(project.bitcoin_address!);
-                        alert('Bitcoin address copied to clipboard!');
+                        toast.success('Bitcoin address copied to clipboard!');
                       }}
                     >
                       Copy
@@ -345,7 +357,7 @@ export default function PublicProjectPage() {
                       size="sm"
                       onClick={() => {
                         navigator.clipboard.writeText(project.lightning_address!);
-                        alert('Lightning address copied to clipboard!');
+                        toast.success('Lightning address copied to clipboard!');
                       }}
                     >
                       Copy
@@ -378,6 +390,26 @@ export default function PublicProjectPage() {
           </Card>
         )}
       </div>
+
+      {/* Share Dialog */}
+      {showShareDialog && project && (
+        <div className="fixed inset-0 z-50 flex items-start justify-end p-4 pointer-events-none">
+          <div className="pointer-events-auto mt-20 mr-4">
+            <CampaignShare
+              projectId={project.id}
+              projectTitle={project.title}
+              projectDescription={project.description}
+              currentUrl={
+                typeof window !== 'undefined'
+                  ? `${window.location.origin}${ROUTES.PROJECTS.VIEW(project.id)}`
+                  : ''
+              }
+              onClose={() => setShowShareDialog(false)}
+              variant="dropdown"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

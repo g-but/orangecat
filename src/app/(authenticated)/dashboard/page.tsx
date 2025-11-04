@@ -143,7 +143,25 @@ export default function DashboardPage() {
   const stats = getStats();
   const totalProjects = stats.totalProjects;
   const activeProjectsCount = stats.totalActive;
-  const totalRaised = safeProjects.reduce((sum, c) => sum + (c.total_funding || 0), 0);
+
+  // Calculate totals by currency to avoid mixing BTC and CHF
+  const fundingByCurrency = safeProjects.reduce(
+    (acc, project) => {
+      const currency = project.currency || 'CHF';
+      acc[currency] = (acc[currency] || 0) + (project.total_funding || 0);
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  // Use the primary currency (CHF by default, or BTC if that's the only one)
+  const primaryCurrency =
+    fundingByCurrency['CHF'] !== undefined
+      ? 'CHF'
+      : fundingByCurrency['BTC'] !== undefined
+        ? 'BTC'
+        : 'CHF';
+  const totalRaised = fundingByCurrency[primaryCurrency] || 0;
   const totalSupporters = safeProjects.reduce((sum, c) => sum + (c.contributor_count || 0), 0);
 
   // Profile completion
@@ -161,9 +179,10 @@ export default function DashboardPage() {
   const totalDrafts = safeDrafts.length;
 
   // Get featured project (most recent active or highest funded)
+  // Note: Use spread operator to avoid mutating store state
   const featuredProject =
     safeActiveProjects.length > 0
-      ? safeActiveProjects.sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
+      ? [...safeActiveProjects].sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
       : safeProjects.find(c => c.title?.toLowerCase().includes('orange cat')) || // Specifically look for Orange Cat
         safeProjects[0]; // Fallback to first project
 
@@ -235,7 +254,7 @@ export default function DashboardPage() {
                       <p className="font-semibold text-green-600">
                         <CurrencyDisplay
                           amount={featuredProject.total_funding || 0}
-                          currency="BTC"
+                          currency={featuredProject.currency || 'CHF'}
                           size="sm"
                         />
                       </p>
@@ -245,7 +264,7 @@ export default function DashboardPage() {
                       <p className="font-semibold text-blue-600">
                         <CurrencyDisplay
                           amount={featuredProject.goal_amount || 0}
-                          currency="BTC"
+                          currency={featuredProject.currency || 'CHF'}
                           size="sm"
                         />
                       </p>
@@ -494,7 +513,8 @@ export default function DashboardPage() {
                 </div>
                 {totalRaised > 0 && (
                   <div className="font-medium text-green-600">
-                    <CurrencyDisplay amount={totalRaised} currency="BTC" size="sm" /> raised
+                    <CurrencyDisplay amount={totalRaised} currency={primaryCurrency} size="sm" />{' '}
+                    raised total
                   </div>
                 )}
               </div>
@@ -559,10 +579,11 @@ export default function DashboardPage() {
                 <h3 className="font-semibold text-gray-900 mb-2">Performance</h3>
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="font-medium text-lg text-gray-900">
-                    {Math.round(
-                      (activeProjectsCount > 0 ? totalRaised / activeProjectsCount : 0) * 100000000
-                    )}{' '}
-                    sats
+                    <CurrencyDisplay
+                      amount={activeProjectsCount > 0 ? totalRaised / activeProjectsCount : 0}
+                      currency={primaryCurrency}
+                      size="md"
+                    />
                   </div>
                   <div>Avg per project</div>
                   <div className="text-green-600 font-medium">View analytics</div>
@@ -638,7 +659,7 @@ export default function DashboardPage() {
                         <span>
                           <CurrencyDisplay
                             amount={project.total_funding || 0}
-                            currency="BTC"
+                            currency={project.currency || 'CHF'}
                             size="sm"
                           />{' '}
                           raised

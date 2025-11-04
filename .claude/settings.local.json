@@ -118,7 +118,19 @@
       "Bash(echo:*)",
       "Bash(else)",
       "Bash(fi)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" timeout 120s npx tsc:*)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" timeout 120s npx tsc:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" timeout 120s npm run build:*)",
+      "Bash(timeout 10s curl:*)",
+      "Bash(tail:*)",
+      "mcp__puppeteer-enhanced__puppeteer_navigate",
+      "Bash(./run-migration-psql.sh:*)",
+      "Bash(./apply-via-api.sh:*)",
+      "Bash(export:*)",
+      "Bash(./final-apply-migration.sh:*)",
+      "Bash(./check-schema.sh:*)",
+      "Bash(psql:*)",
+      "Bash(PGPASSWORD=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oa3VlaXNsc3R4b21kamF2eWhzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDU0Nzk1MCwiZXhwIjoyMDYwMTIzOTUwfQ.2a3ACqjfx_ja_ShHySmh8NuVHlF7gD5k3VXNml9CNbM psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c '\\d projects')",
+      "Bash(PGPASSWORD=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oa3VlaXNsc3R4b21kamF2eWhzIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDU0Nzk1MCwiZXhwIjoyMDYwMTIzOTUwfQ.2a3ACqjfx_ja_ShHySmh8NuVHlF7gD5k3VXNml9CNbM\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c \"\\d+ public.projects\")"
     ],
     "deny": [
       "Bash(rm **/.env.local)",

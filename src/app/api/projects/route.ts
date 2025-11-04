@@ -25,9 +25,15 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
+    // Fix N+1 query: Use JOIN to fetch profiles in a single query
     const { data: projects, error } = await supabase
       .from('projects')
-      .select('*')
+      .select(
+        `
+        *,
+        profiles!inner(id, username, name, avatar_url)
+      `
+      )
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -36,26 +42,13 @@ export async function GET(request: NextRequest) {
       return apiInternalError('Failed to fetch projects', { details: error.message });
     }
 
-    // Fetch profiles for all projects
-    const projectsWithProfiles = await Promise.all(
-      (projects || []).map(async project => {
-        let profile = null;
-        if (project.user_id) {
-          const { data: profileData } = await supabase
-            .from('profiles')
-            .select('id, username, name, avatar_url')
-            .eq('id', project.user_id)
-            .single();
-          profile = profileData;
-        }
-
-        return {
-          ...project,
-          raised_amount: project.raised_amount ?? 0,
-          profiles: profile,
-        };
-      })
-    );
+    // Transform response: Supabase returns nested profiles array, flatten it
+    const projectsWithProfiles = (projects || []).map(project => ({
+      ...project,
+      raised_amount: project.raised_amount ?? 0,
+      // Supabase returns profiles as array with JOIN, extract first element
+      profiles: Array.isArray(project.profiles) ? project.profiles[0] : project.profiles,
+    }));
 
     return apiSuccess(projectsWithProfiles);
   } catch (error) {
