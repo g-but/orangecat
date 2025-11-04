@@ -29,6 +29,7 @@ import {
   ArrowLeftRight,
   TrendingUp,
   AlertCircle,
+  ExternalLink,
 } from 'lucide-react';
 import Card from '@/components/ui/Card';
 
@@ -39,6 +40,7 @@ export type FieldType =
   | 'currency'
   | 'fundingPurpose'
   | 'bitcoinAddress'
+  | 'websiteUrl'
   | 'categories'
   | null;
 
@@ -122,6 +124,22 @@ const guidanceContent: Record<
       'Starts with bc1, 1, or 3',
       'Lightning looks like email@domain.com',
       "⚠️ Don't have a wallet? Get one first!",
+    ],
+  },
+  websiteUrl: {
+    icon: <ExternalLink className="w-5 h-5 text-orange-600" />,
+    title: 'Project Website',
+    description: 'Link to your project website or social media page. Helps build credibility.',
+    tips: [
+      'Must be a valid HTTP or HTTPS URL',
+      'Can link to website, Twitter, GitHub, etc.',
+      'Increases trust and transparency',
+      'Optional but recommended',
+    ],
+    examples: [
+      'https://yourproject.com',
+      'https://twitter.com/yourproject',
+      'https://github.com/yourproject',
     ],
   },
   categories: {
