@@ -1,10 +1,10 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import * as z from 'zod'
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 import {
   User,
   Mail,
@@ -13,11 +13,12 @@ import {
   AlertCircle,
   Loader2,
   Sparkles,
-  ChevronRight
-} from 'lucide-react'
-import { motion, AnimatePresence } from 'framer-motion'
+  ChevronRight,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/ui/Button';
+import { satoshisToBitcoin } from '@/utils/currency';
 import {
   Form,
   FormControl,
@@ -26,49 +27,56 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form'
-import { Input } from '@/components/ui/Input'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { toast } from 'sonner'
-import supabase from '@/lib/supabase/browser'
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/Input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import supabase from '@/lib/supabase/browser';
 
 // Login schema
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-})
+});
 
 // Registration schema
-const registerSchema = z.object({
-  email: z.string().email('Please enter a valid email'),
-  username: z.string()
-    .min(3, 'Username must be at least 3 characters')
-    .max(20, 'Username must be less than 20 characters')
-    .regex(/^[a-zA-Z0-9_-]+$/, 'Username can only contain letters, numbers, hyphens, and underscores'),
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-    .regex(/[0-9]/, 'Password must contain at least one number'),
-  confirmPassword: z.string(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-})
+const registerSchema = z
+  .object({
+    email: z.string().email('Please enter a valid email'),
+    username: z
+      .string()
+      .min(3, 'Username must be at least 3 characters')
+      .max(20, 'Username must be less than 20 characters')
+      .regex(
+        /^[a-zA-Z0-9_-]+$/,
+        'Username can only contain letters, numbers, hyphens, and underscores'
+      ),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+      .regex(/[0-9]/, 'Password must contain at least one number'),
+    confirmPassword: z.string(),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
 
-type LoginFormValues = z.infer<typeof loginSchema>
-type RegisterFormValues = z.infer<typeof registerSchema>
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
 interface InlineAuthStepProps {
-  onSuccess: (userId: string) => Promise<void>
-  projectData: any
-  onBack: () => void
+  onSuccess: (userId: string) => Promise<void>;
+  projectData: any;
+  onBack: () => void;
 }
 
 export default function InlineAuthStep({ onSuccess, projectData, onBack }: InlineAuthStepProps) {
-  const router = useRouter()
-  const [mode, setMode] = useState<'login' | 'register'>('login')
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [isLoading, setIsLoading] = useState(false);
 
   // Login form
   const loginForm = useForm<LoginFormValues>({
@@ -77,7 +85,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
       email: '',
       password: '',
     },
-  })
+  });
 
   // Register form
   const registerForm = useForm<RegisterFormValues>({
@@ -88,51 +96,53 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
       password: '',
       confirmPassword: '',
     },
-  })
+  });
 
   // Handle login
   const handleLogin = async (data: LoginFormValues) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
-      })
+      });
 
-      if (error) {throw error}
+      if (error) {
+        throw error;
+      }
 
       if (authData.user) {
         toast.success('Welcome back! 🎉', {
           description: 'Publishing your project...',
-        })
-        await onSuccess(authData.user.id)
+        });
+        await onSuccess(authData.user.id);
       }
     } catch (error: any) {
       toast.error('Login failed', {
         description: error.message || 'Please check your credentials and try again',
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Handle registration
   const handleRegister = async (data: RegisterFormValues) => {
-    setIsLoading(true)
+    setIsLoading(true);
     try {
       // Check if username is available
       const { data: existingUser } = await supabase
         .from('profiles')
         .select('id')
         .eq('username', data.username)
-        .single()
+        .single();
 
       if (existingUser) {
         toast.error('Username taken', {
           description: 'Please choose a different username',
-        })
-        setIsLoading(false)
-        return
+        });
+        setIsLoading(false);
+        return;
       }
 
       // Register user
@@ -144,36 +154,38 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
             username: data.username,
           },
         },
-      })
+      });
 
-      if (signUpError) {throw signUpError}
+      if (signUpError) {
+        throw signUpError;
+      }
 
       if (authData.user) {
         // Create profile
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            username: data.username,
-            email: data.email,
-            name: data.username,
-          })
+        const { error: profileError } = await supabase.from('profiles').insert({
+          id: authData.user.id,
+          username: data.username,
+          email: data.email,
+          name: data.username,
+        });
 
-        if (profileError) {throw profileError}
+        if (profileError) {
+          throw profileError;
+        }
 
         toast.success('Account created! 🎉', {
           description: 'Publishing your project...',
-        })
-        await onSuccess(authData.user.id)
+        });
+        await onSuccess(authData.user.id);
       }
     } catch (error: any) {
       toast.error('Registration failed', {
         description: error.message || 'Please try again',
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -189,9 +201,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Almost there! 🚀
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Almost there! 🚀</h2>
               <p className="text-gray-600">
                 Your project is ready to publish. Just sign in or create a quick account to post it.
               </p>
@@ -201,7 +211,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
 
         {/* Auth Tabs */}
         <div className="p-8">
-          <Tabs value={mode} onValueChange={(v) => setMode(v as 'login' | 'register')}>
+          <Tabs value={mode} onValueChange={v => setMode(v as 'login' | 'register')}>
             <TabsList className="grid w-full grid-cols-2 mb-8">
               <TabsTrigger value="login" className="gap-2">
                 <User className="w-4 h-4" />
@@ -215,10 +225,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
 
             {/* Login Tab */}
             <TabsContent value="login">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-              >
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                 <Form {...loginForm}>
                   <form onSubmit={loginForm.handleSubmit(handleLogin)} className="space-y-6">
                     <FormField
@@ -231,11 +238,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
                             Email
                           </FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="you@example.com"
-                              {...field}
-                              disabled={isLoading}
-                            />
+                            <Input placeholder="you@example.com" {...field} disabled={isLoading} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -265,12 +268,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
                     />
 
                     <div className="flex items-center justify-between pt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={onBack}
-                        disabled={isLoading}
-                      >
+                      <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
                         Back
                       </Button>
                       <Button
@@ -298,10 +296,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
 
             {/* Register Tab */}
             <TabsContent value="register">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-              >
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
                 <Form {...registerForm}>
                   <form onSubmit={registerForm.handleSubmit(handleRegister)} className="space-y-6">
                     <FormField
@@ -314,11 +309,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
                             Email
                           </FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="you@example.com"
-                              {...field}
-                              disabled={isLoading}
-                            />
+                            <Input placeholder="you@example.com" {...field} disabled={isLoading} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -335,15 +326,9 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
                             Username
                           </FormLabel>
                           <FormControl>
-                            <Input
-                              placeholder="your_username"
-                              {...field}
-                              disabled={isLoading}
-                            />
+                            <Input placeholder="your_username" {...field} disabled={isLoading} />
                           </FormControl>
-                          <FormDescription>
-                            This will be your public profile name
-                          </FormDescription>
+                          <FormDescription>This will be your public profile name</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -397,12 +382,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
                     />
 
                     <div className="flex items-center justify-between pt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={onBack}
-                        disabled={isLoading}
-                      >
+                      <Button type="button" variant="outline" onClick={onBack} disabled={isLoading}>
                         Back
                       </Button>
                       <Button
@@ -441,7 +421,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Goal</span>
               <span className="text-sm font-medium text-gray-900">
-                ₿{(projectData.goal_amount / 100000000).toFixed(4)}
+                ₿{satoshisToBitcoin(projectData.goal_amount).toFixed(4)}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -452,5 +432,5 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
         </div>
       </motion.div>
     </div>
-  )
+  );
 }

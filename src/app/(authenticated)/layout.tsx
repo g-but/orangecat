@@ -1,47 +1,52 @@
-'use client'
+'use client';
 
-import React, { useState } from 'react'
-import Link from 'next/link'
-import {
-  Menu,
-  X,
-  ChevronDown,
-  ChevronRight,
-  Sparkles,
-  Bell,
-  Search
-} from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
-import { useNavigation } from '@/hooks/useNavigation'
-import { navigationSections, bottomNavItems, navigationLabels } from '@/config/navigationConfig'
-import Image from 'next/image'
-import DefaultAvatar from '@/components/ui/DefaultAvatar'
-import { DevPerformanceMonitor } from '@/components/dashboard/PerformanceMonitor'
-import { NavigationShortcuts } from '@/components/navigation/NavigationShortcuts'
-import { HeaderCreateButton } from '@/components/dashboard/SmartCreateButton'
-import UserProfileDropdown from '@/components/ui/UserProfileDropdown'
-import Logo from '@/components/layout/Logo'
-import EnhancedSearchBar from '@/components/search/EnhancedSearchBar'
-import MobileSearchModal from '@/components/search/MobileSearchModal'
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Menu, X, ChevronDown, ChevronRight, Sparkles, Bell, Search } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigation } from '@/hooks/useNavigation';
+import { navigationSections, bottomNavItems, navigationLabels } from '@/config/navigationConfig';
+import Image from 'next/image';
+import DefaultAvatar from '@/components/ui/DefaultAvatar';
+import { DevPerformanceMonitor } from '@/components/dashboard/PerformanceMonitor';
+import { NavigationShortcuts } from '@/components/navigation/NavigationShortcuts';
+import { HeaderCreateButton } from '@/components/dashboard/SmartCreateButton';
+import UserProfileDropdown from '@/components/ui/UserProfileDropdown';
+import Logo from '@/components/layout/Logo';
+import EnhancedSearchBar from '@/components/search/EnhancedSearchBar';
+import MobileSearchModal from '@/components/search/MobileSearchModal';
 
 interface AuthenticatedLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
   const { user, profile, hydrated } = useAuth();
-  const { 
-    navigationState, 
-    toggleSidebar, 
-    toggleSection, 
-    isItemActive, 
-    getFilteredSections 
-  } = useNavigation(navigationSections);
+  const { navigationState, toggleSidebar, toggleSection, isItemActive, getFilteredSections } =
+    useNavigation(navigationSections);
 
   // State for hover expansion
-  const [isHovered, setIsHovered] = useState(false)
-  const [avatarError, setAvatarError] = useState(false)
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
+  const [isHovered, setIsHovered] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showExperimentalBanner, setShowExperimentalBanner] = useState(true);
+
+  // Dismiss experimental banner for the current session only
+  useEffect(() => {
+    try {
+      const hidden = sessionStorage.getItem('oc_hide_experimental_banner') === '1';
+      if (hidden) {
+        setShowExperimentalBanner(false);
+      }
+    } catch {}
+  }, []);
+
+  const dismissExperimentalBanner = () => {
+    try {
+      sessionStorage.setItem('oc_hide_experimental_banner', '1');
+    } catch {}
+    setShowExperimentalBanner(false);
+  };
 
   // Wait for hydration before rendering sidebar content
   if (!hydrated) {
@@ -53,7 +58,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
   }
 
   // Determine if sidebar should be expanded (open OR hovered when collapsed)
-  const isExpanded = navigationState.isSidebarOpen || (isHovered && !navigationState.isSidebarOpen)
+  const isExpanded = navigationState.isSidebarOpen || (isHovered && !navigationState.isSidebarOpen);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -76,16 +81,13 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
           {/* Center: Enhanced Search */}
           <div className="hidden md:flex flex-1 max-w-md mx-6">
-            <EnhancedSearchBar 
-              placeholder="Search projects, people..."
-              className="w-full"
-            />
+            <EnhancedSearchBar placeholder="Search projects, people..." className="w-full" />
           </div>
 
           {/* Right: Actions */}
           <div className="flex items-center space-x-3">
             {/* Mobile Search Button */}
-            <button 
+            <button
               onClick={() => setShowMobileSearch(true)}
               className="md:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
               aria-label="Search"
@@ -94,12 +96,12 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
             </button>
 
             <HeaderCreateButton />
-            
+
             <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
               <Bell className="w-5 h-5" />
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
             </button>
-            
+
             <UserProfileDropdown />
           </div>
         </div>
@@ -107,7 +109,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
       {/* Mobile overlay */}
       {navigationState.isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
           onClick={toggleSidebar}
         />
@@ -116,9 +118,10 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       {/* Sidebar - Only for dashboard pages */}
       <aside
         className={`fixed top-16 bottom-0 left-0 z-40 flex flex-col bg-white shadow-lg transition-all duration-300 ease-in-out border-r border-gray-200
-          ${navigationState.isSidebarOpen 
-            ? 'w-64 translate-x-0' 
-            : 'w-64 -translate-x-full lg:w-20 lg:translate-x-0'
+          ${
+            navigationState.isSidebarOpen
+              ? 'w-64 translate-x-0'
+              : 'w-64 -translate-x-full lg:w-20 lg:translate-x-0'
           } 
           ${isHovered && !navigationState.isSidebarOpen ? 'lg:w-64' : ''}
           overflow-y-auto`}
@@ -128,9 +131,11 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
         <div className="flex flex-col h-full">
           {/* User Profile Section */}
           {user && profile && (
-            <div className={`px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-100 ${isExpanded ? 'block' : 'hidden lg:flex lg:flex-col lg:items-center'}`}>
-              <Link 
-                href="/profile/me" 
+            <div
+              className={`px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-100 ${isExpanded ? 'block' : 'hidden lg:flex lg:flex-col lg:items-center'}`}
+            >
+              <Link
+                href="/profile/me"
                 className={`flex items-center hover:bg-gray-50 p-2 sm:p-3 rounded-xl transition-all duration-200 group w-full ${isExpanded ? 'space-x-3' : 'lg:flex-col lg:space-y-2 lg:space-x-0'}`}
                 onClick={() => {
                   // Close sidebar on mobile when navigating
@@ -150,9 +155,9 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                       onError={() => setAvatarError(true)}
                     />
                   ) : (
-                    <DefaultAvatar 
-                      size={isExpanded ? 40 : 36} 
-                      className="transition-all duration-300 group-hover:ring-2 group-hover:ring-tiffany-200 rounded-full" 
+                    <DefaultAvatar
+                      size={isExpanded ? 40 : 36}
+                      className="transition-all duration-300 group-hover:ring-2 group-hover:ring-tiffany-200 rounded-full"
                     />
                   )}
                   <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
@@ -170,15 +175,20 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
           )}
 
           {/* Navigation Sections */}
-          <nav className="flex-1 px-2 py-3 sm:py-4 space-y-4 sm:space-y-6 overflow-y-auto" aria-label={navigationLabels.MAIN_NAVIGATION}>
-            {getFilteredSections().map((section) => {
+          <nav
+            className="flex-1 px-2 py-3 sm:py-4 space-y-4 sm:space-y-6 overflow-y-auto"
+            aria-label={navigationLabels.MAIN_NAVIGATION}
+          >
+            {getFilteredSections().map(section => {
               const isCollapsed = navigationState.collapsedSections.has(section.id);
               const hasActiveItem = section.items.some(item => isItemActive(item.href));
 
               return (
                 <div key={section.id} className="space-y-1 sm:space-y-2">
                   {/* Section Header */}
-                  <div className={`flex items-center justify-between px-3 ${isExpanded ? 'block' : 'hidden lg:hidden'}`}>
+                  <div
+                    className={`flex items-center justify-between px-3 ${isExpanded ? 'block' : 'hidden lg:hidden'}`}
+                  >
                     <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                       {section.title}
                     </h3>
@@ -200,23 +210,24 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                   {/* Section Items */}
                   {(!section.collapsible || !isCollapsed || hasActiveItem) && (
                     <div className="space-y-1">
-                      {section.items.map((item) => {
+                      {section.items.map(item => {
                         const isActive = isItemActive(item.href);
-                        
+
                         return (
                           <Link
                             key={item.name}
                             href={item.comingSoon ? '#' : item.href}
                             className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative min-h-[44px]
-                              ${isActive
-                                ? 'bg-gradient-to-r from-tiffany-100 to-tiffany-50 text-tiffany-700 shadow-sm border border-tiffany-200'
-                                : item.comingSoon
-                                ? 'text-gray-400 cursor-not-allowed'
-                                : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                              ${
+                                isActive
+                                  ? 'bg-gradient-to-r from-tiffany-100 to-tiffany-50 text-tiffany-700 shadow-sm border border-tiffany-200'
+                                  : item.comingSoon
+                                    ? 'text-gray-400 cursor-not-allowed'
+                                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                               }
                               ${isExpanded ? '' : 'lg:justify-center'}`}
                             title={isExpanded ? undefined : item.name}
-                            onClick={(e) => {
+                            onClick={e => {
                               if (item.comingSoon) {
                                 e.preventDefault();
                               } else if (navigationState.isSidebarOpen) {
@@ -224,32 +235,42 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                                 toggleSidebar();
                               }
                             }}
-                            aria-label={item.comingSoon ? `${item.name} - ${navigationLabels.COMING_SOON}` : item.name}
+                            aria-label={
+                              item.comingSoon
+                                ? `${item.name} - ${navigationLabels.COMING_SOON}`
+                                : item.name
+                            }
                           >
-                            <item.icon className={`h-5 w-5 shrink-0 transition-colors ${isExpanded ? 'mr-3' : 'lg:mr-0'} ${
-                              isActive 
-                                ? 'text-tiffany-600' 
-                                : item.comingSoon 
-                                ? 'text-gray-400' 
-                                : 'text-gray-400 group-hover:text-gray-600'
-                            }`} />
-                            
-                            <span className={`transition-all duration-200 ${isExpanded ? 'block' : 'hidden lg:hidden'}`}>
+                            <item.icon
+                              className={`h-5 w-5 shrink-0 transition-colors ${isExpanded ? 'mr-3' : 'lg:mr-0'} ${
+                                isActive
+                                  ? 'text-tiffany-600'
+                                  : item.comingSoon
+                                    ? 'text-gray-400'
+                                    : 'text-gray-400 group-hover:text-gray-600'
+                              }`}
+                            />
+
+                            <span
+                              className={`transition-all duration-200 ${isExpanded ? 'block' : 'hidden lg:hidden'}`}
+                            >
                               {item.name}
                             </span>
-                            
+
                             {/* Active indicator */}
                             {isActive && (
-                              <div className={`absolute right-3 w-2 h-2 bg-tiffany-500 rounded-full ${isExpanded ? 'block' : 'hidden lg:hidden'}`} />
+                              <div
+                                className={`absolute right-3 w-2 h-2 bg-tiffany-500 rounded-full ${isExpanded ? 'block' : 'hidden lg:hidden'}`}
+                              />
                             )}
-                            
+
                             {/* Coming soon badge */}
                             {item.comingSoon && isExpanded && (
                               <span className="ml-auto text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
                                 Soon
                               </span>
                             )}
-                            
+
                             {/* Badge */}
                             {item.badge && !item.comingSoon && isExpanded && (
                               <span className="ml-auto text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-medium">
@@ -269,17 +290,18 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
           {/* Bottom Navigation Items */}
           {bottomNavItems.length > 0 && (
             <div className="border-t border-gray-100 p-2 space-y-1">
-              {bottomNavItems.map((item) => {
+              {bottomNavItems.map(item => {
                 const isActive = isItemActive(item.href);
-                
+
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
                     className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 min-h-[44px]
-                      ${isActive
-                        ? 'bg-gradient-to-r from-tiffany-100 to-tiffany-50 text-tiffany-700 shadow-sm border border-tiffany-200'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ${
+                        isActive
+                          ? 'bg-gradient-to-r from-tiffany-100 to-tiffany-50 text-tiffany-700 shadow-sm border border-tiffany-200'
+                          : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                       }
                       ${isExpanded ? '' : 'lg:justify-center'}`}
                     title={isExpanded ? undefined : item.name}
@@ -289,12 +311,14 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
                       }
                     }}
                   >
-                    <item.icon className={`h-5 w-5 shrink-0 transition-colors ${isExpanded ? 'mr-3' : 'lg:mr-0'} ${
-                      isActive 
-                        ? 'text-tiffany-600' 
-                        : 'text-gray-400 group-hover:text-gray-600'
-                    }`} />
-                    <span className={`transition-all duration-200 ${isExpanded ? 'block' : 'hidden lg:hidden'}`}>
+                    <item.icon
+                      className={`h-5 w-5 shrink-0 transition-colors ${isExpanded ? 'mr-3' : 'lg:mr-0'} ${
+                        isActive ? 'text-tiffany-600' : 'text-gray-400 group-hover:text-gray-600'
+                      }`}
+                    />
+                    <span
+                      className={`transition-all duration-200 ${isExpanded ? 'block' : 'hidden lg:hidden'}`}
+                    >
                       {item.name}
                     </span>
                   </Link>
@@ -308,7 +332,11 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
             <button
               onClick={toggleSidebar}
               className="w-full flex items-center justify-center p-3 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-all duration-200"
-              aria-label={navigationState.isSidebarOpen ? navigationLabels.SIDEBAR_COLLAPSE : navigationLabels.SIDEBAR_EXPAND}
+              aria-label={
+                navigationState.isSidebarOpen
+                  ? navigationLabels.SIDEBAR_COLLAPSE
+                  : navigationLabels.SIDEBAR_EXPAND
+              }
             >
               <Menu className="h-5 w-5" />
             </button>
@@ -316,35 +344,48 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
         </div>
       </aside>
 
-      {/* Experimental Notice */}
-      <div className="bg-gradient-to-r from-orange-100 to-tiffany-100 border-b border-orange-200">
-        <div className={`px-4 py-2 ${navigationState.isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'} transition-all duration-300`}>
-          <div className="flex items-center justify-center gap-2 text-sm">
-            <span className="text-orange-600 font-medium">🚧 Experimental</span>
-            <span className="text-gray-600">•</span>
-            <span className="text-gray-600">Development preview - features may not work as expected</span>
-            <span className="text-gray-600">•</span>
-            <a
-              href="https://github.com/g-but/orangecat"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-orange-600 hover:text-orange-700 font-medium underline"
-            >
-              Source
-            </a>
+      {/* Experimental Notice (dismissible per session) */}
+      {showExperimentalBanner && (
+        <div className="bg-gradient-to-r from-orange-100 to-tiffany-100 border-b border-orange-200">
+          <div
+            className={`px-4 py-2 ${navigationState.isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'} transition-all duration-300`}
+          >
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-orange-600 font-medium">🚧 Experimental</span>
+                <span className="text-gray-600">•</span>
+                <span className="text-gray-600">
+                  Development preview - features may not work as expected
+                </span>
+                <span className="text-gray-600">•</span>
+                <a
+                  href="https://github.com/g-but/orangecat"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-600 hover:text-orange-700 font-medium underline"
+                >
+                  Source
+                </a>
+              </div>
+              <button
+                aria-label="Dismiss experimental notice"
+                onClick={dismissExperimentalBanner}
+                className="ml-4 shrink-0 px-2 py-1 text-gray-500 hover:text-gray-700 hover:bg-white/40 rounded-md"
+              >
+                Dismiss
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Main Content */}
-      <div className={`flex-1 transition-all duration-300 ease-in-out pt-16 ${
-        navigationState.isSidebarOpen
-          ? 'lg:ml-64'
-          : 'lg:ml-20'
-      }`}>
-        <main className="h-full">
-          {children}
-        </main>
+      <div
+        className={`flex-1 transition-all duration-300 ease-in-out pt-16 ${
+          navigationState.isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
+        }`}
+      >
+        <main className="h-full">{children}</main>
       </div>
 
       {/* Development Tools */}
@@ -352,10 +393,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
       <NavigationShortcuts sections={navigationSections} />
 
       {/* Mobile Search Modal */}
-      <MobileSearchModal 
-        isOpen={showMobileSearch}
-        onClose={() => setShowMobileSearch(false)}
-      />
+      <MobileSearchModal isOpen={showMobileSearch} onClose={() => setShowMobileSearch(false)} />
     </div>
   );
-} 
+}

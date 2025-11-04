@@ -2,11 +2,15 @@ import { logger } from '@/utils/logger';
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/db';
 import { TransactionFormData } from '@/types/database';
+import { transactionSchema } from '@/lib/validation';
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
-    const body: TransactionFormData = await request.json();
+    const rawBody = await request.json();
+
+    // Validate input with Zod schema
+    const body = transactionSchema.parse(rawBody);
 
     const {
       data: { user },
@@ -46,6 +50,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate target entity exists and is eligible for transactions
+    if (body.to_entity_type === 'project') {
+      const { data: project, error: projectError } = await supabase
+        .from('projects')
+        .select('id, status')
+        .eq('id', body.to_entity_id)
+        .single();
+
+      if (projectError || !project) {
+        return NextResponse.json({ error: 'Target project not found' }, { status: 404 });
+      }
+
+      if (project.status !== 'active') {
+        return NextResponse.json({ error: 'Cannot donate to inactive project' }, { status: 400 });
+      }
+    }
+
+    if (body.to_entity_type === 'profile') {
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', body.to_entity_id)
+        .single();
+
+      if (profileError || !profile) {
+        return NextResponse.json({ error: 'Target profile not found' }, { status: 404 });
+      }
+    }
+
+    // Additional validation: reasonable amount (prevent absurdly large transactions)
+    if (body.amount_sats > 21000000 * 100000000) {
+      // 21M BTC in sats
+      return NextResponse.json(
+        { error: 'Transaction amount exceeds maximum allowed (21M BTC)' },
+        { status: 400 }
+      );
+    }
+
     // Create the transaction
     const { data: transaction, error: transactionError } = await supabase
       .from('transactions')
@@ -73,6 +115,19 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ data: transaction });
   } catch (error) {
+    // Handle Zod validation errors
+    if (error instanceof Error && error.name === 'ZodError') {
+      const zodError = error as any;
+      logger.warn('Transaction validation failed:', zodError.errors);
+      return NextResponse.json(
+        {
+          error: 'Invalid transaction data',
+          details: zodError.errors || zodError.message,
+        },
+        { status: 400 }
+      );
+    }
+
     logger.error('Transaction API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }

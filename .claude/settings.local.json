@@ -118,7 +118,19 @@
       "Bash(echo:*)",
       "Bash(else)",
       "Bash(fi)",
-      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" timeout 120s npx tsc:*)"
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" timeout 120s npx tsc:*)",
+      "Bash(NODE_OPTIONS=\"--max-old-space-size=2048\" timeout 120s npm run build:*)",
+      "Bash(timeout 10s curl:*)",
+      "Bash(tail:*)",
+      "mcp__puppeteer-enhanced__puppeteer_navigate",
+      "Bash(./run-migration-psql.sh:*)",
+      "Bash(./apply-via-api.sh:*)",
+      "Bash(export:*)",
+      "Bash(./final-apply-migration.sh:*)",
+      "Bash(./check-schema.sh:*)",
+      "Bash(psql:*)",
+      "Bash(PGPASSWORD=REDACTED_SERVICE_KEY psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c '\\d projects')",
+      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c \"\\d+ public.projects\")"
     ],
     "deny": [
       "Bash(rm **/.env.local)",

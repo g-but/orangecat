@@ -9,6 +9,7 @@ import { CurrencyDisplay } from './CurrencyDisplay';
 import BTCAmountDisplay from './BTCAmountDisplay';
 import { SearchFundingPage } from '@/services/search';
 import { useAuth } from '@/hooks/useAuth';
+import { getUniqueCategories } from '@/utils/project';
 
 interface ModernProjectCardProps {
   project: SearchFundingPage;
@@ -36,27 +37,7 @@ const iconColorByCategory: Record<string, string> = {
   default: 'text-slate-600',
 };
 
-function dedupe(values: Array<string | null | undefined>, limit = 3): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
-
-  values.forEach(value => {
-    if (!value) {
-      return;
-    }
-    const normalized = value.trim();
-    if (!normalized) {
-      return;
-    }
-    const key = normalized.toLowerCase();
-    if (!seen.has(key)) {
-      seen.add(key);
-      result.push(normalized);
-    }
-  });
-
-  return result.slice(0, limit);
-}
+// Removed local dedupe function - using centralized utility instead
 
 function getStatusBadge(status: string) {
   const normalized = status?.toLowerCase();
@@ -89,7 +70,8 @@ export default function ModernProjectCard({
 
   const goalAmount = project.goal_amount ?? 0;
   const currentAmount = project.raised_amount ?? 0;
-  const projectCurrency = (project as any).currency || 'SATS';
+  // Get currency from project, default to CHF if not set (more likely for new projects)
+  const projectCurrency = (project as any).currency || project.currency || 'CHF';
   const showProgress = goalAmount > 0;
   const progressPercentage = showProgress ? Math.min((currentAmount / goalAmount) * 100, 100) : 0;
 
@@ -104,10 +86,11 @@ export default function ModernProjectCard({
 
   const categories = useMemo(
     () =>
-      dedupe([
+      getUniqueCategories(
         project.category,
-        ...(Array.isArray((project as any).tags) ? (project as any).tags : []),
-      ]),
+        (project as any).tags,
+        { limit: 10 } // Allow more categories for display
+      ),
     [project.category, (project as any).tags]
   );
 

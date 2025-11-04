@@ -365,6 +365,7 @@ export default function AuthPage() {
                 disabled={loading}
                 placeholder="Enter your email"
                 className="w-full h-12 px-4 rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
+                autoComplete="email"
                 required
               />
             </div>
@@ -383,6 +384,7 @@ export default function AuthPage() {
                     disabled={loading}
                     placeholder="Enter your password"
                     className="w-full h-12 px-4 pr-12 rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
                     required
                   />
                   <button
@@ -413,6 +415,7 @@ export default function AuthPage() {
                     disabled={loading}
                     placeholder="Confirm your password"
                     className="w-full h-12 px-4 pr-12 rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
+                    autoComplete="new-password"
                     required
                   />
                   <button

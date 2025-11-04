@@ -1,98 +1,108 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { motion } from 'framer-motion'
-import { 
-  Heart, 
-  MapPin, 
-  Clock, 
-  Users, 
-  TrendingUp, 
-  Star, 
-  CheckCircle, 
+import { useState } from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { motion } from 'framer-motion';
+import {
+  Heart,
+  MapPin,
+  Clock,
+  Users,
+  TrendingUp,
+  Star,
+  CheckCircle,
   ExternalLink,
   Bitcoin,
   Zap,
   Target,
-  Award
-} from 'lucide-react'
-import { CurrencyDisplay } from './CurrencyDisplay'
-import BitcoinPaymentButton from '../bitcoin/BitcoinPaymentButton'
+  Award,
+} from 'lucide-react';
+import { CurrencyDisplay } from './CurrencyDisplay';
+import BitcoinPaymentButton from '../bitcoin/BitcoinPaymentButton';
 
 interface Campaign {
-  id: string
-  title: string
-  description: string
-  creator: string
-  category: string
-  goal_amount: number
-  current_amount: number
-  supporters_count: number
-  days_left: number
-  image?: string
-  featured?: boolean
-  location?: string
-  created_at: string
-  tags: string[]
-  verified?: boolean
+  id: string;
+  title: string;
+  description: string;
+  creator: string;
+  category: string;
+  goal_amount: number;
+  current_amount: number;
+  supporters_count: number;
+  days_left: number;
+  image?: string;
+  featured?: boolean;
+  location?: string;
+  created_at: string;
+  tags: string[];
+  verified?: boolean;
+  currency?: 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS' | string;
 }
 
 interface ModernCampaignCardProps {
-  project: Campaign
-  viewMode?: 'grid' | 'list'
-  className?: string
+  project: Campaign;
+  viewMode?: 'grid' | 'list';
+  className?: string;
 }
 
-export default function ModernCampaignCard({ 
-  project, 
+export default function ModernCampaignCard({
+  project,
   viewMode = 'grid',
-  className = '' 
+  className = '',
 }: ModernCampaignCardProps) {
-  const [isLiked, setIsLiked] = useState(false)
-  const [imageError, setImageError] = useState(false)
-  
-  const progressPercentage = Math.min((project.current_amount / project.goal_amount) * 100, 100)
-  
+  const [isLiked, setIsLiked] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  const progressPercentage = Math.min((project.current_amount / project.goal_amount) * 100, 100);
+  const projectCurrency = project.currency || 'CHF';
+
   const categoryColors = {
     education: 'from-blue-500/20 to-indigo-500/10',
     animals: 'from-pink-500/20 to-rose-500/10',
     technology: 'from-purple-500/20 to-violet-500/10',
     environment: 'from-green-500/20 to-emerald-500/10',
     business: 'from-orange-500/20 to-amber-500/10',
-    default: 'from-gray-500/20 to-slate-500/10'
-  }
-  
+    default: 'from-gray-500/20 to-slate-500/10',
+  };
+
   const categoryIconColors = {
     education: 'text-blue-600',
     animals: 'text-pink-600',
     technology: 'text-purple-600',
     environment: 'text-green-600',
     business: 'text-orange-600',
-    default: 'text-gray-600'
-  }
+    default: 'text-gray-600',
+  };
 
   const getBadgeStyle = (type: 'featured' | 'verified' | 'trending') => {
     switch (type) {
       case 'featured':
-        return 'bg-gradient-to-r from-bitcoinOrange/90 to-orange-500/90 text-white'
+        return 'bg-gradient-to-r from-bitcoinOrange/90 to-orange-500/90 text-white';
       case 'verified':
-        return 'bg-gradient-to-r from-tiffany-500/90 to-cyan-500/90 text-white'
+        return 'bg-gradient-to-r from-tiffany-500/90 to-cyan-500/90 text-white';
       case 'trending':
-        return 'bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white'
+        return 'bg-gradient-to-r from-purple-500/90 to-pink-500/90 text-white';
       default:
-        return 'bg-white/90 text-gray-700'
+        return 'bg-white/90 text-gray-700';
     }
-  }
+  };
 
   const formatDaysLeft = (days: number) => {
-    if (days <= 0) {return 'Ended'}
-    if (days === 1) {return '1 day left'}
-    if (days <= 7) {return `${days} days left`}
-    if (days <= 30) {return `${Math.ceil(days / 7)} weeks left`}
-    return `${Math.ceil(days / 30)} months left`
-  }
+    if (days <= 0) {
+      return 'Ended';
+    }
+    if (days === 1) {
+      return '1 day left';
+    }
+    if (days <= 7) {
+      return `${days} days left`;
+    }
+    if (days <= 30) {
+      return `${Math.ceil(days / 7)} weeks left`;
+    }
+    return `${Math.ceil(days / 30)} months left`;
+  };
 
   if (viewMode === 'list') {
     return (
@@ -116,21 +126,29 @@ export default function ModernCampaignCard({
                   onError={() => setImageError(true)}
                 />
               ) : (
-                <div className={`w-full h-full bg-gradient-to-br ${categoryColors[project.category as keyof typeof categoryColors] || categoryColors.default} flex items-center justify-center`}>
-                  <Target className={`w-16 h-16 ${categoryIconColors[project.category as keyof typeof categoryIconColors] || categoryIconColors.default}`} />
+                <div
+                  className={`w-full h-full bg-gradient-to-br ${categoryColors[project.category as keyof typeof categoryColors] || categoryColors.default} flex items-center justify-center`}
+                >
+                  <Target
+                    className={`w-16 h-16 ${categoryIconColors[project.category as keyof typeof categoryIconColors] || categoryIconColors.default}`}
+                  />
                 </div>
               )}
-              
+
               {/* Badges */}
               <div className="absolute top-3 left-3 flex gap-2">
                 {project.featured && (
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('featured')}`}>
+                  <div
+                    className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('featured')}`}
+                  >
                     <Star className="w-3 h-3 mr-1 inline" />
                     Featured
                   </div>
                 )}
                 {project.verified && (
-                  <div className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('verified')}`}>
+                  <div
+                    className={`px-2 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('verified')}`}
+                  >
                     <CheckCircle className="w-3 h-3 mr-1 inline" />
                     Verified
                   </div>
@@ -139,7 +157,7 @@ export default function ModernCampaignCard({
 
               {/* Progress Bar */}
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/20">
-                <div 
+                <div
                   className="h-full bg-gradient-to-r from-bitcoinOrange to-orange-500 transition-all duration-700"
                   style={{ width: `${progressPercentage}%` }}
                 />
@@ -154,9 +172,7 @@ export default function ModernCampaignCard({
                     {project.title}
                   </h3>
                   <p className="text-sm text-gray-600 mb-2">by {project.creator}</p>
-                  <p className="text-gray-600 line-clamp-2 mb-4">
-                    {project.description}
-                  </p>
+                  <p className="text-gray-600 line-clamp-2 mb-4">{project.description}</p>
                 </div>
               </div>
 
@@ -180,19 +196,20 @@ export default function ModernCampaignCard({
                 </div>
 
                 <div className="text-right">
-                  <CurrencyDisplay 
+                  <CurrencyDisplay
                     amount={project.current_amount}
-                    currency="CHF"
+                    currency={projectCurrency}
                     className="text-lg font-bold text-gray-900"
                   />
                   <p className="text-sm text-gray-500">
-                    {progressPercentage.toFixed(0)}% of CHF {project.goal_amount.toLocaleString()}
+                    {progressPercentage.toFixed(0)}% of{' '}
+                    <CurrencyDisplay amount={project.goal_amount} currency={projectCurrency} />
                   </p>
                 </div>
               </div>
 
               {/* Bitcoin Payment Button */}
-              <div className="flex justify-end" onClick={(e) => e.preventDefault()}>
+              <div className="flex justify-end" onClick={e => e.preventDefault()}>
                 <BitcoinPaymentButton
                   projectId={project.id}
                   projectTitle={project.title}
@@ -203,7 +220,7 @@ export default function ModernCampaignCard({
           </div>
         </Link>
       </motion.div>
-    )
+    );
   }
 
   return (
@@ -226,18 +243,22 @@ export default function ModernCampaignCard({
               onError={() => setImageError(true)}
             />
           ) : (
-            <div className={`w-full h-full bg-gradient-to-br ${categoryColors[project.category as keyof typeof categoryColors] || categoryColors.default} flex items-center justify-center`}>
-              <Target className={`w-20 h-20 ${categoryIconColors[project.category as keyof typeof categoryIconColors] || categoryIconColors.default}`} />
+            <div
+              className={`w-full h-full bg-gradient-to-br ${categoryColors[project.category as keyof typeof categoryColors] || categoryColors.default} flex items-center justify-center`}
+            >
+              <Target
+                className={`w-20 h-20 ${categoryIconColors[project.category as keyof typeof categoryIconColors] || categoryIconColors.default}`}
+              />
             </div>
           )}
-          
+
           {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
+
           {/* Badges */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">
             {project.featured && (
-              <motion.div 
+              <motion.div
                 className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('featured')}`}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -248,7 +269,7 @@ export default function ModernCampaignCard({
               </motion.div>
             )}
             {project.verified && (
-              <motion.div 
+              <motion.div
                 className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('verified')}`}
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
@@ -265,22 +286,22 @@ export default function ModernCampaignCard({
             className="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors duration-200"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
-            onClick={(e) => {
-              e.preventDefault()
-              setIsLiked(!isLiked)
+            onClick={e => {
+              e.preventDefault();
+              setIsLiked(!isLiked);
             }}
           >
-            <Heart 
+            <Heart
               className={`w-4 h-4 transition-colors duration-200 ${
                 isLiked ? 'text-red-500 fill-red-500' : 'text-white'
-              }`} 
+              }`}
             />
           </motion.button>
 
           {/* Progress Indicator */}
           <div className="absolute bottom-0 left-0 right-0">
             <div className="h-1.5 bg-black/20">
-              <motion.div 
+              <motion.div
                 className="h-full bg-gradient-to-r from-bitcoinOrange to-orange-500"
                 initial={{ width: 0 }}
                 animate={{ width: `${progressPercentage}%` }}
@@ -326,9 +347,9 @@ export default function ModernCampaignCard({
           {/* Funding Progress */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <CurrencyDisplay 
+              <CurrencyDisplay
                 amount={project.current_amount}
-                currency="CHF"
+                currency={projectCurrency}
                 className="text-lg font-bold text-gray-900"
               />
               <span className="text-sm font-semibold text-bitcoinOrange">
@@ -336,14 +357,14 @@ export default function ModernCampaignCard({
               </span>
             </div>
             <p className="text-sm text-gray-500">
-              of CHF {project.goal_amount.toLocaleString()} goal
+              of <CurrencyDisplay amount={project.goal_amount} currency={projectCurrency} /> goal
             </p>
           </div>
 
           {/* Tags */}
           {project.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-4 mb-4">
-              {project.tags.slice(0, 3).map((tag) => (
+              {project.tags.slice(0, 3).map(tag => (
                 <span
                   key={tag}
                   className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full font-medium hover:bg-gray-200 transition-colors duration-200"
@@ -360,7 +381,7 @@ export default function ModernCampaignCard({
           )}
 
           {/* Bitcoin Payment Button */}
-          <div className="mt-4" onClick={(e) => e.preventDefault()}>
+          <div className="mt-4" onClick={e => e.preventDefault()}>
             <BitcoinPaymentButton
               projectId={project.id}
               projectTitle={project.title}
@@ -370,5 +391,5 @@ export default function ModernCampaignCard({
         </div>
       </Link>
     </motion.div>
-  )
-} 
+  );
+}
