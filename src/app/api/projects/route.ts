@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
       funding_purpose: validatedData.funding_purpose ?? null,
       bitcoin_address: validatedData.bitcoin_address ?? null,
       lightning_address: validatedData.lightning_address ?? null,
+      website_url: validatedData.website_url ?? null,
       category: validatedData.category ?? null,
       tags: validatedData.tags ?? [],
       status: 'active',

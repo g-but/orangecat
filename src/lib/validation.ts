@@ -53,6 +53,7 @@ export const projectSchema = z.object({
     .nullable()
     .or(z.literal('')),
   lightning_address: z.string().email().optional().nullable().or(z.literal('')),
+  website_url: z.string().url().optional().nullable().or(z.literal('')),
   category: z.string().optional().nullable().or(z.literal('')),
   tags: z.array(z.string()).optional().nullable().default([]),
   start_date: z.string().optional().nullable().or(z.literal('')),
