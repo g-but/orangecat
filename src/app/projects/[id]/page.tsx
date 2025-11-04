@@ -30,6 +30,7 @@ interface Project {
   funding_purpose: string | null;
   bitcoin_address: string | null;
   lightning_address: string | null;
+  website_url: string | null;
   category: string | null;
   tags: string[] | null;
   status: string;
@@ -260,6 +261,22 @@ export default function PublicProjectPage() {
                   <div>
                     <h3 className="text-lg font-semibold mb-2">What the funds will be used for</h3>
                     <p className="text-gray-700">{project.funding_purpose}</p>
+                  </div>
+                )}
+
+                {/* Website URL */}
+                {project.website_url && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Project Website</h3>
+                    <a
+                      href={project.website_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span className="underline">{project.website_url}</span>
+                    </a>
                   </div>
                 )}
 

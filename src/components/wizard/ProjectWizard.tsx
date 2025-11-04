@@ -36,6 +36,7 @@ interface ProjectFormData {
   goalCurrency: 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS';
   fundingPurpose: string;
   bitcoinAddress: string;
+  websiteUrl: string;
   selectedCategories: string[];
 }
 
@@ -44,6 +45,7 @@ interface FormErrors {
   description?: string;
   goalAmount?: string;
   bitcoinAddress?: string;
+  websiteUrl?: string;
 }
 
 const AVAILABLE_CATEGORIES = [
@@ -112,6 +114,7 @@ export function ProjectWizard({
     goalCurrency: (initialData?.goalCurrency as any) || 'CHF',
     fundingPurpose: initialData?.fundingPurpose || '',
     bitcoinAddress: initialData?.bitcoinAddress || '',
+    websiteUrl: initialData?.websiteUrl || '',
     selectedCategories: initialData?.selectedCategories || [],
   });
 
@@ -170,6 +173,18 @@ export function ProjectWizard({
       case 'bitcoinAddress':
         if (value && !/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/.test(value)) {
           return 'Please enter a valid Bitcoin address';
+        }
+        break;
+      case 'websiteUrl':
+        if (value && value.trim()) {
+          try {
+            const url = new URL(value);
+            if (!['http:', 'https:'].includes(url.protocol)) {
+              return 'Website must be a valid HTTP or HTTPS URL';
+            }
+          } catch {
+            return 'Please enter a valid website URL (e.g., https://example.com)';
+          }
         }
         break;
     }
@@ -264,6 +279,7 @@ export function ProjectWizard({
         goalCurrency: currency,
         fundingPurpose: project.funding_purpose || '',
         bitcoinAddress: project.bitcoin_address || '',
+        websiteUrl: project.website_url || '',
         selectedCategories: project.tags || [],
       });
 
@@ -375,6 +391,7 @@ export function ProjectWizard({
           currency: formData.goalCurrency || 'SATS',
           funding_purpose: formData.fundingPurpose.trim() || null,
           bitcoin_address: formData.bitcoinAddress.trim() || null,
+          website_url: formData.websiteUrl.trim() || null,
           category: formData.selectedCategories[0] || 'other',
           tags: formData.selectedCategories,
         }),
@@ -561,6 +578,25 @@ export function ProjectWizard({
                 Get one <ExternalLink className="w-3 h-3" />
               </Link>
             </div>
+          </div>
+
+          {/* Website URL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Project Website (optional)
+            </label>
+            <Input
+              value={formData.websiteUrl}
+              onChange={e => handleFieldChange('websiteUrl', e.target.value)}
+              onFocus={() => handleFieldFocus('websiteUrl' as FieldType)}
+              onBlur={() => handleFieldBlur('websiteUrl')}
+              placeholder="https://yourproject.com"
+              className={errors.websiteUrl ? 'border-red-500' : ''}
+            />
+            {errors.websiteUrl && <p className="mt-1 text-sm text-red-600">{errors.websiteUrl}</p>}
+            <p className="mt-1 text-xs text-gray-500">
+              Link to your project's website or social media page
+            </p>
           </div>
         </div>
 
