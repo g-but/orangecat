@@ -28,6 +28,7 @@ import {
 } from '@/components/create/templates/ProjectTemplates';
 import type { FieldType } from '@/components/create/DynamicSidebar';
 import { satoshisToBitcoin, bitcoinToSatoshis } from '@/utils/currency';
+import ProjectMediaUpload from '@/components/project/ProjectMediaUpload';
 
 interface ProjectFormData {
   title: string;
@@ -598,6 +599,19 @@ export function ProjectWizard({
               </Link>
             </div>
           </div>
+
+          {/* Project Images - Only in Edit Mode */}
+          {isEditMode && editProjectId && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Project Images (optional)
+              </label>
+              <ProjectMediaUpload projectId={editProjectId} />
+              <p className="mt-2 text-xs text-gray-500">
+                Upload up to 3 images to showcase your project. First image will be the cover.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Submit Button */}
