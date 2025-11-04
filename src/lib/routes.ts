@@ -17,7 +17,7 @@ export const ROUTES = {
     LIST: '/projects',
     CREATE: '/projects/create',
     VIEW: (id: string) => `/projects/${id}`,
-    EDIT: (id: string) => `/project/${id}/edit`, // Note: edit route uses singular /project/
+    EDIT: (id: string) => `/projects/create?edit=${id}`, // Reuse create page with edit param
   },
 
   // Dashboard routes
