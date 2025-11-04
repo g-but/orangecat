@@ -15,6 +15,8 @@ import { getUniqueCategories } from '@/utils/project';
 import Link from 'next/link';
 import Image from 'next/image';
 import CampaignShare from '@/components/sharing/CampaignShare';
+import ProjectMediaGallery from '@/components/project/ProjectMediaGallery';
+import ProjectSummaryRail from '@/components/project/ProjectSummaryRail';
 import { toast } from 'sonner';
 import { ROUTES } from '@/lib/routes';
 
@@ -140,7 +142,7 @@ export default function PublicProjectPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -193,202 +195,225 @@ export default function PublicProjectPage() {
           <MissingWalletBanner projectId={projectId} isOwner={isOwner} className="mb-6" />
         )}
 
-        {/* Main Project Card */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-3xl">{project.title}</CardTitle>
+        {/* Layout: main + rail */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            {/* Gallery */}
+            <ProjectMediaGallery projectId={projectId} className="mb-6" />
+
+            {/* Main Project Card */}
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-3xl">{project.title}</CardTitle>
+                {/* Creator Info */}
+                {project.profiles && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="flex items-center gap-2">
+                      {project.profiles.avatar_url ? (
+                        <Image
+                          src={project.profiles.avatar_url}
+                          alt={project.profiles.name || project.profiles.username || 'Creator'}
+                          width={40}
+                          height={40}
+                          className="rounded-full"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-semibold">
+                          {(project.profiles.name || project.profiles.username || 'A')
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+                      )}
+                      <div>
+                        <p className="text-sm text-gray-500">Created by</p>
+                        <Link
+                          href={`/profile/${project.profiles.username || project.user_id}`}
+                          className="text-sm font-semibold text-gray-900 hover:text-orange-600 transition-colors"
+                        >
+                          {project.profiles.name || project.profiles.username || 'Anonymous'}
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!project.profiles && (
+                  <div className="mt-4 flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-semibold">
+                      M
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Created by</p>
+                      <span className="text-sm font-semibold text-gray-900">mao</span>
+                    </div>
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Description */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">About</h3>
+                  <p className="text-gray-700 whitespace-pre-wrap">{project.description}</p>
+                </div>
+
+                {/* Funding Purpose */}
+                {project.funding_purpose && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">What the funds will be used for</h3>
+                    <p className="text-gray-700">{project.funding_purpose}</p>
+                  </div>
+                )}
+
+                {/* Categories & Tags */}
+                {(project.category || (project.tags && project.tags.length > 0)) && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Categories</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {getUniqueCategories(project.category, project.tags).map((category, idx) => (
+                        <span
+                          key={`${category}-${idx}`}
+                          className={`px-3 py-1 rounded-full text-sm ${
+                            idx === 0 && project.category === category
+                              ? 'bg-blue-100 text-blue-700'
+                              : 'bg-gray-100 text-gray-700'
+                          }`}
+                        >
+                          {category}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Funding Progress */}
+                {project.goal_amount && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold">Funding Progress</h3>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-bitcoinOrange">
+                          <CurrencyDisplay
+                            amount={project.raised_amount || 0}
+                            currency={
+                              (project.currency || 'CHF') as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'
+                            }
+                          />
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          of{' '}
+                          <CurrencyDisplay
+                            amount={project.goal_amount}
+                            currency={
+                              (project.currency || 'CHF') as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'
+                            }
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-4">
+                      <div
+                        className="bg-gradient-to-r from-bitcoinOrange to-orange-500 h-4 rounded-full transition-all duration-500"
+                        style={{ width: `${progressPercentage}%` }}
+                      />
+                    </div>
+                    <div className="text-sm text-gray-600 mt-2">
+                      {progressPercentage.toFixed(1)}% funded
+                    </div>
+                  </div>
+                )}
+
+                {/* Bitcoin Address */}
+                {project.bitcoin_address && (
+                  <div className="border-t pt-6">
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <Bitcoin className="w-5 h-5 text-bitcoinOrange" />
+                      Donate Bitcoin
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <code className="text-sm font-mono text-gray-900 break-all">
+                          {project.bitcoin_address}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(project.bitcoin_address!);
+                            toast.success('Bitcoin address copied to clipboard!');
+                          }}
+                        >
+                          Copy
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Lightning Address */}
+                {project.lightning_address && (
+                  <div>
+                    <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                      <ExternalLink className="w-5 h-5 text-yellow-500" />
+                      Lightning Donation
+                    </h3>
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                      <div className="flex items-center justify-between">
+                        <code className="text-sm font-mono text-gray-900">
+                          {project.lightning_address}
+                        </code>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            navigator.clipboard.writeText(project.lightning_address!);
+                            toast.success('Lightning address copied to clipboard!');
+                          }}
+                        >
+                          Copy
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Creator Info */}
             {project.profiles && (
-              <div className="mt-4 flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  {project.profiles.avatar_url ? (
-                    <Image
-                      src={project.profiles.avatar_url}
-                      alt={project.profiles.name || project.profiles.username || 'Creator'}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-semibold">
-                      {(project.profiles.name || project.profiles.username || 'A')
-                        .charAt(0)
-                        .toUpperCase()}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-bitcoinOrange to-orange-500 rounded-full flex items-center justify-center text-white font-bold">
+                      {project.profiles.name?.[0] || project.profiles.username?.[0] || '?'}
                     </div>
-                  )}
-                  <div>
-                    <p className="text-sm text-gray-500">Created by</p>
-                    <Link
-                      href={`/profile/${project.profiles.username || project.user_id}`}
-                      className="text-sm font-semibold text-gray-900 hover:text-orange-600 transition-colors"
-                    >
-                      {project.profiles.name || project.profiles.username || 'Anonymous'}
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-            {!project.profiles && (
-              <div className="mt-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-semibold">
-                  M
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Created by</p>
-                  <span className="text-sm font-semibold text-gray-900">mao</span>
-                </div>
-              </div>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Description */}
-            <div>
-              <h3 className="text-lg font-semibold mb-2">About</h3>
-              <p className="text-gray-700 whitespace-pre-wrap">{project.description}</p>
-            </div>
-
-            {/* Funding Purpose */}
-            {project.funding_purpose && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">What the funds will be used for</h3>
-                <p className="text-gray-700">{project.funding_purpose}</p>
-              </div>
-            )}
-
-            {/* Categories & Tags */}
-            {(project.category || (project.tags && project.tags.length > 0)) && (
-              <div>
-                <h3 className="text-lg font-semibold mb-2">Categories</h3>
-                <div className="flex flex-wrap gap-2">
-                  {getUniqueCategories(project.category, project.tags).map((category, idx) => (
-                    <span
-                      key={`${category}-${idx}`}
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        idx === 0 && project.category === category
-                          ? 'bg-blue-100 text-blue-700'
-                          : 'bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      {category}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Funding Progress */}
-            {project.goal_amount && (
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-semibold">Funding Progress</h3>
-                  <div className="text-right">
-                    <div className="text-2xl font-bold text-bitcoinOrange">
-                      <CurrencyDisplay
-                        amount={project.raised_amount || 0}
-                        currency={
-                          (project.currency || 'CHF') as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'
-                        }
-                      />
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      of{' '}
-                      <CurrencyDisplay
-                        amount={project.goal_amount}
-                        currency={
-                          (project.currency || 'CHF') as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'
-                        }
-                      />
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {project.profiles.name || 'Anonymous'}
+                      </h3>
+                      {project.profiles.username && (
+                        <p className="text-sm text-gray-600">@{project.profiles.username}</p>
+                      )}
                     </div>
                   </div>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-4">
-                  <div
-                    className="bg-gradient-to-r from-bitcoinOrange to-orange-500 h-4 rounded-full transition-all duration-500"
-                    style={{ width: `${progressPercentage}%` }}
-                  />
-                </div>
-                <div className="text-sm text-gray-600 mt-2">
-                  {progressPercentage.toFixed(1)}% funded
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
-
-            {/* Bitcoin Address */}
-            {project.bitcoin_address && (
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <Bitcoin className="w-5 h-5 text-bitcoinOrange" />
-                  Donate Bitcoin
-                </h3>
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <code className="text-sm font-mono text-gray-900 break-all">
-                      {project.bitcoin_address}
-                    </code>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(project.bitcoin_address!);
-                        toast.success('Bitcoin address copied to clipboard!');
-                      }}
-                    >
-                      Copy
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Lightning Address */}
-            {project.lightning_address && (
-              <div>
-                <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                  <ExternalLink className="w-5 h-5 text-yellow-500" />
-                  Lightning Donation
-                </h3>
-                <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <code className="text-sm font-mono text-gray-900">
-                      {project.lightning_address}
-                    </code>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        navigator.clipboard.writeText(project.lightning_address!);
-                        toast.success('Lightning address copied to clipboard!');
-                      }}
-                    >
-                      Copy
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Creator Info */}
-        {project.profiles && (
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-bitcoinOrange to-orange-500 rounded-full flex items-center justify-center text-white font-bold">
-                  {project.profiles.name?.[0] || project.profiles.username?.[0] || '?'}
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    {project.profiles.name || 'Anonymous'}
-                  </h3>
-                  {project.profiles.username && (
-                    <p className="text-sm text-gray-600">@{project.profiles.username}</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          </div>
+          <div>
+            <ProjectSummaryRail
+              project={{
+                id: project.id,
+                goal_amount: project.goal_amount,
+                currency: project.currency,
+                bitcoin_address: project.bitcoin_address,
+                // these may be null currently; safe defaults
+                bitcoin_balance_btc: (project as any).bitcoin_balance_btc || 0,
+                bitcoin_balance_updated_at: (project as any).bitcoin_balance_updated_at || null,
+                user_id: project.user_id,
+              }}
+              isOwner={isOwner}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Share Dialog */}
