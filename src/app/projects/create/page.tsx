@@ -1,12 +1,16 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ProjectWizard } from '@/components/wizard/ProjectWizard';
 import { DynamicSidebar, type FieldType } from '@/components/create/DynamicSidebar';
 import { Card } from '@/components/ui/Card';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Edit, Rocket } from 'lucide-react';
 
 export default function CreateProjectPage() {
+  const searchParams = useSearchParams();
+  const isEditMode = !!(searchParams.get('edit') || searchParams.get('draft'));
+
   const [focusedField, setFocusedField] = useState<FieldType>('title');
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [goalAmount, setGoalAmount] = useState<number | undefined>();
@@ -15,6 +19,28 @@ export default function CreateProjectPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Page Header */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            {isEditMode ? (
+              <>
+                <Edit className="w-6 h-6 text-orange-600" />
+                <h1 className="text-3xl font-bold text-gray-900">Edit Project</h1>
+              </>
+            ) : (
+              <>
+                <Rocket className="w-6 h-6 text-orange-600" />
+                <h1 className="text-3xl font-bold text-gray-900">Create New Project</h1>
+              </>
+            )}
+          </div>
+          <p className="text-gray-600">
+            {isEditMode
+              ? 'Update your project details below'
+              : 'Share your cause and start accepting Bitcoin donations'}
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
           {/* Main Content - Project Form */}
           <div className="lg:col-span-7">

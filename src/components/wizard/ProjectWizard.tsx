@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { ROUTES } from '@/lib/routes';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -96,8 +97,12 @@ export function ProjectWizard({
   const { user } = useAuth();
   const { loadProjects } = useProjectStore();
 
-  const [isEditMode] = useState(!!projectId);
-  const [editProjectId] = useState<string | null>(projectId || null);
+  // Check both prop and query param for edit mode
+  const editIdFromQuery = searchParams.get('edit') || searchParams.get('draft');
+  const [isEditMode, setIsEditMode] = useState(!!projectId || !!editIdFromQuery);
+  const [editProjectId, setEditProjectId] = useState<string | null>(
+    projectId || editIdFromQuery || null
+  );
   const [loadingProject, setLoadingProject] = useState(false);
 
   const [formData, setFormData] = useState<ProjectFormData>({
@@ -261,11 +266,16 @@ export function ProjectWizard({
         bitcoinAddress: project.bitcoin_address || '',
         selectedCategories: project.tags || [],
       });
+
+      // Set edit mode and project ID when loading from query param
+      setIsEditMode(true);
+      setEditProjectId(projectId);
+
       toast.info('Project loaded for editing');
     } catch (error) {
       logger.error('Failed to load project:', error);
       toast.error('Failed to load project');
-      router.push('/dashboard/projects');
+      router.push(ROUTES.DASHBOARD.PROJECTS);
     } finally {
       setLoadingProject(false);
     }
@@ -387,9 +397,9 @@ export function ProjectWizard({
       if (onSave) {
         onSave();
       } else if (isEditMode && editProjectId) {
-        router.push(`/project/${editProjectId}`);
+        router.push(ROUTES.PROJECTS.VIEW(editProjectId));
       } else {
-        router.push('/dashboard');
+        router.push(ROUTES.DASHBOARD.HOME);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create project';
@@ -558,7 +568,7 @@ export function ProjectWizard({
         <div className="flex justify-end gap-3 mt-8 pt-6 border-t">
           <Button
             variant="outline"
-            onClick={() => (onCancel ? onCancel() : router.push('/dashboard'))}
+            onClick={() => (onCancel ? onCancel() : router.push(ROUTES.DASHBOARD.HOME))}
             disabled={isSubmitting}
           >
             Cancel
