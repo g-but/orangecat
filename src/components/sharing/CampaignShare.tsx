@@ -1,40 +1,40 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { 
-  Share2, 
-  Twitter, 
-  Facebook, 
-  Linkedin, 
-  Mail, 
+import { useState } from 'react';
+import {
+  Share2,
+  Twitter,
+  Facebook,
+  Linkedin,
+  Mail,
   MessageCircle,
   Copy,
   Download,
   QrCode,
-  X
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import { toast } from 'sonner'
-import { trackEvent } from '@/utils/monitoring'
+  X,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { toast } from 'sonner';
+import { trackEvent } from '@/utils/monitoring';
 
 interface CampaignShareProps {
-  projectId: string
-  projectTitle: string
-  projectDescription?: string
-  projectImage?: string
-  currentUrl?: string
-  onClose?: () => void
-  variant?: 'modal' | 'dropdown' | 'inline'
-  className?: string
+  projectId: string;
+  projectTitle: string;
+  projectDescription?: string;
+  projectImage?: string;
+  currentUrl?: string;
+  onClose?: () => void;
+  variant?: 'modal' | 'dropdown' | 'inline';
+  className?: string;
 }
 
 interface SharePlatform {
-  name: string
-  icon: React.ComponentType<any>
-  color: string
-  bgColor: string
-  action: (url: string, title: string, description?: string) => void
+  name: string;
+  icon: React.ComponentType<any>;
+  color: string;
+  bgColor: string;
+  action: (url: string, title: string, description?: string) => void;
 }
 
 export default function CampaignShare({
@@ -44,16 +44,17 @@ export default function CampaignShare({
   currentUrl,
   onClose,
   variant = 'dropdown',
-  className = ''
+  className = '',
 }: CampaignShareProps) {
-  const [copySuccess, setCopySuccess] = useState(false)
+  const [copySuccess, setCopySuccess] = useState(false);
 
   // Construct the project URL
-  const projectUrl = currentUrl || `${window.location.origin}/project/${projectId}`
-  
+  const projectUrl = currentUrl || `${window.location.origin}/projects/${projectId}`;
+
   // Create optimized share text
-  const shareTitle = `Support: ${projectTitle}`
-  const shareDescription = projectDescription || `Check out this amazing Bitcoin fundraising project: ${projectTitle}`
+  const shareTitle = `Support: ${projectTitle}`;
+  const shareDescription =
+    projectDescription || `Check out this amazing Bitcoin fundraising project: ${projectTitle}`;
 
   // Social media sharing platforms
   const platforms: SharePlatform[] = [
@@ -63,10 +64,10 @@ export default function CampaignShare({
       color: 'text-blue-500',
       bgColor: 'bg-blue-50 hover:bg-blue-100',
       action: (url, title, description) => {
-        const text = `${title}\n\n${description}\n\n#Bitcoin #Fundraising #Crowdfunding`
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
-        window.open(twitterUrl, '_blank', 'width=550,height=420')
-      }
+        const text = `${title}\n\n${description}\n\n#Bitcoin #Fundraising #Crowdfunding`;
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        window.open(twitterUrl, '_blank', 'width=550,height=420');
+      },
     },
     {
       name: 'Facebook',
@@ -74,9 +75,9 @@ export default function CampaignShare({
       color: 'text-blue-600',
       bgColor: 'bg-blue-50 hover:bg-blue-100',
       action: (url, title) => {
-        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`
-        window.open(facebookUrl, '_blank', 'width=550,height=420')
-      }
+        const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(title)}`;
+        window.open(facebookUrl, '_blank', 'width=550,height=420');
+      },
     },
     {
       name: 'LinkedIn',
@@ -84,9 +85,9 @@ export default function CampaignShare({
       color: 'text-blue-700',
       bgColor: 'bg-blue-50 hover:bg-blue-100',
       action: (url, title, description) => {
-        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(description || '')}`
-        window.open(linkedinUrl, '_blank', 'width=550,height=420')
-      }
+        const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}&summary=${encodeURIComponent(description || '')}`;
+        window.open(linkedinUrl, '_blank', 'width=550,height=420');
+      },
     },
     {
       name: 'WhatsApp',
@@ -94,10 +95,10 @@ export default function CampaignShare({
       color: 'text-green-600',
       bgColor: 'bg-green-50 hover:bg-green-100',
       action: (url, title, description) => {
-        const text = `${title}\n\n${description}\n\n${url}`
-        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`
-        window.open(whatsappUrl, '_blank')
-      }
+        const text = `${title}\n\n${description}\n\n${url}`;
+        const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+        window.open(whatsappUrl, '_blank');
+      },
     },
     {
       name: 'Email',
@@ -105,34 +106,61 @@ export default function CampaignShare({
       color: 'text-gray-600',
       bgColor: 'bg-gray-50 hover:bg-gray-100',
       action: (url, title, description) => {
-        const subject = encodeURIComponent(`Support this project: ${title}`)
-        const body = encodeURIComponent(`Hi,\n\nI wanted to share this amazing Bitcoin fundraising project with you:\n\n${title}\n\n${description}\n\nCheck it out here: ${url}\n\nBest regards`)
-        window.location.href = `mailto:?subject=${subject}&body=${body}`
-      }
-    }
-  ]
+        const subject = encodeURIComponent(`Support this project: ${title}`);
+        const body = encodeURIComponent(
+          `Hi,\n\nI wanted to share this amazing Bitcoin fundraising project with you:\n\n${title}\n\n${description}\n\nCheck it out here: ${url}\n\nBest regards`
+        );
+        window.location.href = `mailto:?subject=${subject}&body=${body}`;
+      },
+    },
+  ];
 
   const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(projectUrl)
-      setCopySuccess(true)
-      toast.success('Campaign link copied to clipboard!')
-      setTimeout(() => setCopySuccess(false), 2000)
+      await navigator.clipboard.writeText(projectUrl);
+      setCopySuccess(true);
+      toast.success('Campaign link copied to clipboard!');
+      setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
-      toast.error('Failed to copy link')
+      toast.error('Failed to copy link');
     }
-  }
+  };
 
   const trackShareEvent = (platform: string) => {
     // Analytics tracking for share events
-    // Track share event for analytics
-    trackEvent(`project_share_${platform}`, { projectId, projectTitle })
-  }
+    trackEvent(`project_share_${platform}`, { projectId, projectTitle });
+  };
 
   const handlePlatformShare = (platform: SharePlatform) => {
-    trackShareEvent(platform.name)
-    platform.action(projectUrl, shareTitle, shareDescription)
-  }
+    trackShareEvent(platform.name);
+    platform.action(projectUrl, shareTitle, shareDescription);
+  };
+
+  // Native Web Share API for mobile devices
+  const handleNativeShare = async () => {
+    // Check if Web Share API is supported
+    if (!navigator.share) {
+      // Fallback: copy to clipboard
+      await copyToClipboard();
+      return;
+    }
+
+    try {
+      await navigator.share({
+        title: shareTitle,
+        text: shareDescription,
+        url: projectUrl,
+      });
+      trackShareEvent('native');
+      toast.success('Thanks for sharing!');
+    } catch (err) {
+      // User cancelled or error - silently ignore
+      // AbortError is thrown when user cancels the share dialog
+      if ((err as Error).name !== 'AbortError') {
+        console.error('Native share failed:', err);
+      }
+    }
+  };
 
   if (variant === 'modal') {
     return (
@@ -157,8 +185,8 @@ export default function CampaignShare({
 
             {/* Social Platforms Grid */}
             <div className="grid grid-cols-2 gap-3">
-              {platforms.map((platform) => {
-                const Icon = platform.icon
+              {platforms.map(platform => {
+                const Icon = platform.icon;
                 return (
                   <button
                     key={platform.name}
@@ -168,7 +196,7 @@ export default function CampaignShare({
                     <Icon className={`w-4 h-4 ${platform.color}`} />
                     <span className="text-sm font-medium text-gray-900">{platform.name}</span>
                   </button>
-                )
+                );
               })}
             </div>
 
@@ -194,12 +222,17 @@ export default function CampaignShare({
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
+
+  // Check if native share is available
+  const hasNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
   // Default dropdown variant
   return (
-    <div className={`bg-white rounded-lg shadow-lg border border-gray-200 p-4 min-w-80 ${className}`}>
+    <div
+      className={`bg-white rounded-lg shadow-lg border border-gray-200 p-4 min-w-80 ${className}`}
+    >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-gray-900 flex items-center gap-2">
           <Share2 className="w-4 h-4" />
@@ -212,10 +245,21 @@ export default function CampaignShare({
         )}
       </div>
 
+      {/* Native Share (Mobile) - Show as primary option if available */}
+      {hasNativeShare && (
+        <button
+          onClick={handleNativeShare}
+          className="w-full mb-4 flex items-center justify-center gap-2 p-3 rounded-lg bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-medium transition-all"
+        >
+          <Share2 className="w-4 h-4" />
+          Share via...
+        </button>
+      )}
+
       {/* Quick Actions */}
       <div className="grid grid-cols-3 gap-2 mb-4">
-        {platforms.slice(0, 3).map((platform) => {
-          const Icon = platform.icon
+        {platforms.slice(0, 3).map(platform => {
+          const Icon = platform.icon;
           return (
             <button
               key={platform.name}
@@ -225,14 +269,14 @@ export default function CampaignShare({
               <Icon className={`w-5 h-5 ${platform.color}`} />
               <span className="text-xs font-medium text-gray-900">{platform.name}</span>
             </button>
-          )
+          );
         })}
       </div>
 
       {/* More Options */}
       <div className="space-y-2">
-        {platforms.slice(3).map((platform) => {
-          const Icon = platform.icon
+        {platforms.slice(3).map(platform => {
+          const Icon = platform.icon;
           return (
             <button
               key={platform.name}
@@ -242,7 +286,7 @@ export default function CampaignShare({
               <Icon className={`w-4 h-4 ${platform.color}`} />
               <span className="text-sm font-medium text-gray-900">{platform.name}</span>
             </button>
-          )
+          );
         })}
       </div>
 
@@ -268,5 +312,5 @@ export default function CampaignShare({
         </div>
       </div>
     </div>
-  )
-} 
+  );
+}

@@ -152,12 +152,7 @@ export default function AnalyticsPage() {
   const metrics = calculateMetrics();
   const projectPerformance = getCampaignPerformance();
 
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1) {
-      return `₿${amount.toFixed(6)}`;
-    }
-    return `${(amount * 100_000_000).toFixed(0)} sats`;
-  };
+  // REMOVED: Hardcoded currency formatter - use CurrencyDisplay component instead
 
   const getChangeIcon = (changeType?: string) => {
     switch (changeType) {

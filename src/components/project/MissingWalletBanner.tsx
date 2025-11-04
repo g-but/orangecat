@@ -15,6 +15,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { Wallet, AlertCircle, X, ExternalLink } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { ROUTES } from '@/lib/routes';
 
 interface MissingWalletBannerProps {
   projectId: string;
@@ -69,7 +70,7 @@ export function MissingWalletBanner({
 
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center gap-3">
-            <Link href={`/project/${projectId}/edit`}>
+            <Link href={ROUTES.PROJECTS.EDIT(projectId)}>
               <Button className="bg-orange-600 hover:bg-orange-700 text-white">
                 <Wallet className="w-4 h-4 mr-2" />
                 Add Wallet Address

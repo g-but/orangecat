@@ -1,9 +1,9 @@
 /**
  * CurrencyDisplay Component
- * 
+ *
  * Reusable component for displaying currency amounts with appropriate colors.
  * Automatically uses Bitcoin Orange for BTC amounts and neutral colors for others.
- * 
+ *
  * Created: June 5, 2025
  * Last Modified: June 5, 2025
  * Last Modified Summary: Initial creation
@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 
 interface CurrencyDisplayProps {
   amount: number | string;
-  currency: 'BTC' | 'USD' | 'CHF' | 'SATS';
+  currency: 'BTC' | 'USD' | 'CHF' | 'EUR' | 'SATS' | string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   showSymbol?: boolean;
@@ -29,39 +29,68 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   showSymbol = true,
 }) => {
   const colorConfig = componentColors.currencyDisplay(currency);
-  
+
   const sizeClasses = {
     sm: 'text-sm',
     md: 'text-base',
     lg: 'text-lg font-medium',
     xl: 'text-xl font-semibold',
   };
-  
+
   const formatAmount = (amount: number | string, currency: string) => {
     const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    
+
+    // Handle NaN or invalid numbers
+    if (isNaN(numAmount) || !isFinite(numAmount)) {
+      return showSymbol ? `0 ${currency}` : '0';
+    }
+
     switch (currency) {
       case 'BTC':
-        return showSymbol ? `${numAmount.toFixed(8)} BTC` : numAmount.toFixed(8);
+        // BTC: up to 8 decimal places, remove trailing zeros
+        const btcFormatted = numAmount.toFixed(8).replace(/\.?0+$/, '');
+        return showSymbol ? `${btcFormatted} BTC` : btcFormatted;
       case 'SATS':
-        return showSymbol ? `${numAmount.toLocaleString('en-US')} sats` : numAmount.toLocaleString('en-US');
+        // SATS: no decimals, with thousand separators
+        return showSymbol
+          ? `${Math.round(numAmount).toLocaleString('en-US')} sats`
+          : Math.round(numAmount).toLocaleString('en-US');
       case 'USD':
-        return showSymbol ? `$${numAmount.toLocaleString('en-US')}` : numAmount.toLocaleString('en-US');
+        // Fiat currencies: 2 decimal places
+        const usdFormatted = numAmount.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        return showSymbol ? `$${usdFormatted}` : usdFormatted;
       case 'CHF':
-        return showSymbol ? `${numAmount.toLocaleString('en-US')} CHF` : numAmount.toLocaleString('en-US');
+      case 'EUR':
+      case 'GBP':
+      case 'JPY':
+      case 'CAD':
+      case 'AUD':
+      case 'NZD':
+        // Fiat currencies: 2 decimal places (except JPY which is typically 0)
+        const fiatFormatted =
+          currency === 'JPY'
+            ? Math.round(numAmount).toLocaleString('en-US')
+            : numAmount.toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              });
+        return showSymbol ? `${fiatFormatted} ${currency}` : fiatFormatted;
       default:
-        return showSymbol ? `${numAmount} ${currency}` : numAmount.toString();
+        // Unknown currencies: try to format as fiat (2 decimals)
+        const defaultFormatted = numAmount.toLocaleString('en-US', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+        return showSymbol ? `${defaultFormatted} ${currency}` : defaultFormatted;
     }
   };
 
   return (
     <span
-      className={cn(
-        colorConfig.className,
-        sizeClasses[size],
-        'font-mono tabular-nums',
-        className
-      )}
+      className={cn(colorConfig.className, sizeClasses[size], 'font-mono tabular-nums', className)}
       style={colorConfig.style}
     >
       {formatAmount(amount, currency)}
@@ -69,4 +98,4 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   );
 };
 
-export default CurrencyDisplay; 
+export default CurrencyDisplay;

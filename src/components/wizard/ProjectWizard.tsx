@@ -26,6 +26,7 @@ import {
   type ProjectTemplate,
 } from '@/components/create/templates/ProjectTemplates';
 import type { FieldType } from '@/components/create/DynamicSidebar';
+import { satoshisToBitcoin, bitcoinToSatoshis } from '@/utils/currency';
 
 interface ProjectFormData {
   title: string;
@@ -203,36 +204,26 @@ export function ProjectWizard({
   };
 
   useEffect(() => {
-    if (isEditMode && editProjectId) {
-      const editDraft = localStorage.getItem(`project-edit-${editProjectId}`);
-      if (editDraft) {
+    // Only load localStorage drafts when creating NEW projects (not editing)
+    // When editing, we ALWAYS load from the API to ensure data integrity
+    if (!isEditMode && !editProjectId) {
+      const savedDraft = localStorage.getItem('project-draft');
+      if (savedDraft) {
         try {
-          const parsed = JSON.parse(editDraft);
+          const parsed = JSON.parse(savedDraft);
           setFormData(parsed);
-          toast.info('Edit draft loaded');
-          return;
+          toast.info('Draft loaded');
         } catch (error) {
-          logger.error('Failed to parse edit draft:', error);
-          localStorage.removeItem(`project-edit-${editProjectId}`);
+          logger.error('Failed to parse draft:', error);
+          localStorage.removeItem('project-draft');
         }
-      }
-    }
-
-    const savedDraft = localStorage.getItem('project-draft');
-    if (savedDraft) {
-      try {
-        const parsed = JSON.parse(savedDraft);
-        setFormData(parsed);
-        toast.info('Draft loaded');
-      } catch (error) {
-        logger.error('Failed to parse draft:', error);
-        localStorage.removeItem('project-draft');
       }
     }
   }, [isEditMode, editProjectId]);
 
   useEffect(() => {
-    const editId = searchParams.get('edit');
+    // Support both 'edit' and 'draft' query parameters
+    const editId = searchParams.get('edit') || searchParams.get('draft');
     if (editId) {
       loadProjectForEdit(editId);
     }
@@ -250,12 +241,22 @@ export function ProjectWizard({
       }
       const result = await response.json();
       const project = result.data;
-      const goalAmount = project.goal_amount ? (project.goal_amount / 100000000).toString() : '';
+
+      // Only convert from satoshis if currency is BTC or SATS
+      // CHF/USD/EUR are stored as-is in the database
+      const currency = project.currency || 'SATS';
+      const isBitcoinCurrency = currency === 'BTC' || currency === 'SATS';
+      const goalAmount = project.goal_amount
+        ? isBitcoinCurrency
+          ? satoshisToBitcoin(project.goal_amount).toString()
+          : project.goal_amount.toString()
+        : '';
+
       setFormData({
         title: project.title || '',
         description: project.description || '',
         goalAmount,
-        goalCurrency: project.currency || 'SATS',
+        goalCurrency: currency,
         fundingPurpose: project.funding_purpose || '',
         bitcoinAddress: project.bitcoin_address || '',
         selectedCategories: project.tags || [],
@@ -271,14 +272,17 @@ export function ProjectWizard({
   };
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const hasContent = formData.title.trim() || formData.description.trim();
-      if (hasContent) {
-        const key = isEditMode && editProjectId ? `project-edit-${editProjectId}` : 'project-draft';
-        localStorage.setItem(key, JSON.stringify(formData));
-      }
-    }, 10000);
-    return () => clearInterval(interval);
+    // Only auto-save drafts for NEW projects, not when editing
+    // When editing, changes are saved explicitly via the Save button
+    if (!isEditMode && !editProjectId) {
+      const interval = setInterval(() => {
+        const hasContent = formData.title.trim() || formData.description.trim();
+        if (hasContent) {
+          localStorage.setItem('project-draft', JSON.stringify(formData));
+        }
+      }, 10000);
+      return () => clearInterval(interval);
+    }
   }, [formData, isEditMode, editProjectId]);
 
   const updateFormData = (updates: Partial<ProjectFormData>) => {
@@ -347,7 +351,7 @@ export function ProjectWizard({
         const amount = parseFloat(formData.goalAmount);
         goalAmount =
           formData.goalCurrency === 'BTC' || formData.goalCurrency === 'SATS'
-            ? Math.round(amount * 100000000)
+            ? bitcoinToSatoshis(amount)
             : Math.round(amount);
       }
 
@@ -371,11 +375,8 @@ export function ProjectWizard({
         throw new Error(errorData.error?.message || 'Failed to create project');
       }
 
-      if (isEditMode && editProjectId) {
-        localStorage.removeItem(`project-edit-${editProjectId}`);
-      } else {
-        localStorage.removeItem('project-draft');
-      }
+      // Clean up draft after successful save
+      localStorage.removeItem('project-draft');
 
       toast.success(isEditMode ? 'Project updated!' : 'Project created!');
 
