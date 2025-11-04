@@ -38,11 +38,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Fetch profile separately
     let profile = null;
     if (project.user_id) {
-      const { data: profileData } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('id, username, name, avatar_url')
         .eq('id', project.user_id)
-        .single();
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('[API] Error fetching profile for project:', profileError);
+      }
       profile = profileData;
     }
 
