@@ -552,6 +552,25 @@ export function ProjectWizard({
             </div>
           </div>
 
+          {/* Website URL */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Project Website (optional)
+            </label>
+            <Input
+              value={formData.websiteUrl}
+              onChange={e => handleFieldChange('websiteUrl', e.target.value)}
+              onFocus={() => handleFieldFocus('websiteUrl' as FieldType)}
+              onBlur={() => handleFieldBlur('websiteUrl')}
+              placeholder="https://yourproject.com"
+              className={errors.websiteUrl ? 'border-red-500' : ''}
+            />
+            {errors.websiteUrl && <p className="mt-1 text-sm text-red-600">{errors.websiteUrl}</p>}
+            <p className="mt-1 text-xs text-gray-500">
+              Link to your project's website or social media page
+            </p>
+          </div>
+
           {/* Bitcoin Address */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -578,25 +597,6 @@ export function ProjectWizard({
                 Get one <ExternalLink className="w-3 h-3" />
               </Link>
             </div>
-          </div>
-
-          {/* Website URL */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Project Website (optional)
-            </label>
-            <Input
-              value={formData.websiteUrl}
-              onChange={e => handleFieldChange('websiteUrl', e.target.value)}
-              onFocus={() => handleFieldFocus('websiteUrl' as FieldType)}
-              onBlur={() => handleFieldBlur('websiteUrl')}
-              placeholder="https://yourproject.com"
-              className={errors.websiteUrl ? 'border-red-500' : ''}
-            />
-            {errors.websiteUrl && <p className="mt-1 text-sm text-red-600">{errors.websiteUrl}</p>}
-            <p className="mt-1 text-xs text-gray-500">
-              Link to your project's website or social media page
-            </p>
           </div>
         </div>
 
