@@ -32,7 +32,19 @@ export async function GET(request: NextRequest) {
       return apiNotFound('Profile not found');
     }
 
-    return apiSuccess(profile);
+    // Calculate dynamic project count
+    const { count: projectCount } = await supabase
+      .from('projects')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
+
+    // Add computed project_count to profile
+    const profileWithCounts = {
+      ...profile,
+      project_count: projectCount || 0,
+    };
+
+    return apiSuccess(profileWithCounts);
   } catch (error) {
     return handleApiError(error);
   }

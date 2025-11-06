@@ -1,12 +1,12 @@
-'use client'
+'use client';
 
-import { GitBranch, Settings } from 'lucide-react'
-import { Card, CardContent } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import { ProjectData } from '@/types/dashboard'
+import { GitBranch, Settings } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { ProjectData } from '@/types/dashboard';
 
 interface ProjectCardProps {
-  project: ProjectData
+  project: ProjectData;
 }
 
 export default function ProjectCard({ project }: ProjectCardProps) {
@@ -20,15 +20,17 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               {project.type}
             </span>
           </div>
-          <span className={`px-2 py-1 text-xs rounded-full ${
-            project.status === 'Active' 
-              ? 'bg-green-100 text-green-700' 
-              : 'bg-gray-100 text-gray-700'
-          }`}>
+          <span
+            className={`px-2 py-1 text-xs rounded-full ${
+              project.status === 'Published' || project.status === 'published'
+                ? 'bg-orange-100 text-orange-700'
+                : 'bg-gray-100 text-gray-700'
+            }`}
+          >
             {project.role}
           </span>
         </div>
-        
+
         <div className="space-y-3">
           <div>
             <div className="flex justify-between text-sm mb-1">
@@ -36,8 +38,8 @@ export default function ProjectCard({ project }: ProjectCardProps) {
               <span className="font-medium">{project.progress}%</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-purple-600 h-2 rounded-full" 
+              <div
+                className="bg-purple-600 h-2 rounded-full"
                 style={{ width: `${project.progress}%` }}
               ></div>
             </div>
@@ -48,7 +50,7 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Funding</span>
-                          <span className="font-medium">{project.funding.toLocaleString('en-US')} sats</span>
+            <span className="font-medium">{project.funding.toLocaleString('en-US')} sats</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Deadline</span>
@@ -70,5 +72,5 @@ export default function ProjectCard({ project }: ProjectCardProps) {
         </div>
       </CardContent>
     </Card>
-  )
-} 
+  );
+}

@@ -1,12 +1,12 @@
 /**
  * PROFILE MAPPER MODULE
- * 
+ *
  * Created: 2025-01-09
  * Last Modified: 2025-01-09
  * Last Modified Summary: Extracted from profileService.ts for modular architecture - handles schema mapping
  */
 
-import type { ScalableProfile, ScalableProfileFormData } from './types'
+import type { ScalableProfile, ScalableProfileFormData } from './types';
 
 // =====================================================================
 // 🔄 SCHEMA MAPPING UTILITIES
@@ -17,13 +17,15 @@ export class ProfileMapper {
    * Map database row to scalable profile interface
    */
   static mapDatabaseToProfile(dbRow: any): ScalableProfile {
-    if (!dbRow) {return null;}
-    
+    if (!dbRow) {
+      return null;
+    }
+
     return {
       // Core database fields
       id: dbRow.id,
       username: dbRow.username,
-      name: dbRow.name,
+      display_name: dbRow.display_name,
       avatar_url: dbRow.avatar_url,
       banner_url: dbRow.banner_url,
       bio: dbRow.bio,
@@ -32,7 +34,7 @@ export class ProfileMapper {
       lightning_address: dbRow.lightning_address,
       created_at: dbRow.created_at,
       updated_at: dbRow.updated_at,
-      
+
       // Extended fields with defaults
       email: null,
       phone: null,
@@ -40,26 +42,26 @@ export class ProfileMapper {
       timezone: 'UTC',
       language: 'en',
       currency: 'USD',
-      
+
       // Bitcoin-native features
       bitcoin_public_key: null,
       lightning_node_id: null,
       payment_preferences: {},
       bitcoin_balance: 0,
       lightning_balance: 0,
-      
+
       // Analytics & Engagement
       following_count: 0,
       project_count: 0,
       total_raised: 0,
       total_donated: 0,
-      
+
       // Verification & Security
       verification_status: 'unverified',
       verification_level: 0,
-      
+
       // Customization & Branding
-      
+
       // Status & Temporal
       status: 'active',
       last_active_at: null,
@@ -67,13 +69,13 @@ export class ProfileMapper {
       onboarding_completed: false,
       terms_accepted_at: null,
       privacy_policy_accepted_at: null,
-      
+
       // Extensibility (JSON fields)
       social_links: {},
       preferences: {},
       metadata: {},
       verification_data: {},
-      privacy_settings: {}
+      privacy_settings: {},
     };
   }
 
@@ -84,14 +86,14 @@ export class ProfileMapper {
     // Core fields that go directly to database columns
     const coreFields: any = {
       username: profile.username || null,
-      name: profile.name || null,
+      display_name: profile.display_name || null,
       avatar_url: profile.avatar_url || null,
       banner_url: profile.banner_url || null,
       bio: profile.bio || null,
       website: profile.website || null,
       bitcoin_address: profile.bitcoin_address || null,
       lightning_address: profile.lightning_address || null,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
     // Only include fields that are not null/undefined
@@ -101,7 +103,7 @@ export class ProfileMapper {
         cleanFields[key] = coreFields[key];
       }
     });
-    
+
     return cleanFields;
   }
-} 
+}

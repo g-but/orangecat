@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -15,8 +15,7 @@ import {
   Shield,
   Copy,
   ExternalLink,
-  Zap,
-  QrCode,
+  ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ScalableProfile, ProfileFormData } from '@/types/database';
@@ -24,9 +23,10 @@ import Button from '@/components/ui/Button';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { QRCodeSVG } from 'qrcode.react';
-import BitcoinWalletStats from '@/components/bitcoin/BitcoinWalletStats';
-import { satoshisToBitcoin } from '@/utils/currency';
+import BitcoinDonationCard from '@/components/bitcoin/BitcoinDonationCard';
+import BitcoinWalletStatsCompact from '@/components/bitcoin/BitcoinWalletStatsCompact';
+import { ROUTES } from '@/lib/routes';
+import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 
 interface UnifiedProfileLayoutProps {
   profile: ScalableProfile;
@@ -172,112 +172,17 @@ export default function UnifiedProfileLayout({
 
             {/* Bitcoin & Payment Details */}
             {profile.bitcoin_address || profile.lightning_address ? (
-              <div className="space-y-6">
-                {/* Donation Section */}
-                <div className="bg-gradient-to-br from-orange-50 to-amber-50 rounded-2xl shadow-xl border-2 border-orange-200 p-6">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                      <Bitcoin className="w-6 h-6 text-orange-500" />
-                      Accept Donations
-                    </h3>
-                  </div>
+              <div className="space-y-4">
+                {/* Compact Donation Section */}
+                <BitcoinDonationCard
+                  bitcoinAddress={profile.bitcoin_address || undefined}
+                  lightningAddress={profile.lightning_address || undefined}
+                  balance={profile.bitcoin_balance || undefined}
+                />
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Bitcoin Address */}
-                    {profile.bitcoin_address && (
-                      <div className="bg-white rounded-xl p-5 shadow-md border border-orange-100">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Bitcoin className="w-5 h-5 text-orange-500" />
-                          <h4 className="font-semibold text-gray-900">Bitcoin</h4>
-                        </div>
-
-                        {/* QR Code */}
-                        <div className="flex justify-center mb-4">
-                          <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
-                            <QRCodeSVG
-                              value={`bitcoin:${profile.bitcoin_address}`}
-                              size={160}
-                              level="H"
-                              includeMargin={false}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Address */}
-                        <div className="mb-3">
-                          <div className="text-xs text-gray-500 mb-1">Address</div>
-                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                            <code className="text-xs font-mono text-gray-900 break-all">
-                              {profile.bitcoin_address}
-                            </code>
-                          </div>
-                        </div>
-
-                        {/* Copy Button */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            copyToClipboard(profile.bitcoin_address!, 'Bitcoin address')
-                          }
-                          className="w-full"
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy Address
-                        </Button>
-                      </div>
-                    )}
-
-                    {/* Lightning Address */}
-                    {profile.lightning_address && (
-                      <div className="bg-white rounded-xl p-5 shadow-md border border-yellow-100">
-                        <div className="flex items-center gap-2 mb-4">
-                          <Zap className="w-5 h-5 text-yellow-500" />
-                          <h4 className="font-semibold text-gray-900">Lightning</h4>
-                        </div>
-
-                        {/* QR Code */}
-                        <div className="flex justify-center mb-4">
-                          <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
-                            <QRCodeSVG
-                              value={profile.lightning_address}
-                              size={160}
-                              level="H"
-                              includeMargin={false}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Address */}
-                        <div className="mb-3">
-                          <div className="text-xs text-gray-500 mb-1">Address</div>
-                          <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
-                            <code className="text-xs font-mono text-gray-900 break-all">
-                              {profile.lightning_address}
-                            </code>
-                          </div>
-                        </div>
-
-                        {/* Copy Button */}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            copyToClipboard(profile.lightning_address!, 'Lightning address')
-                          }
-                          className="w-full"
-                        >
-                          <Copy className="w-4 h-4 mr-2" />
-                          Copy Address
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Bitcoin Wallet Stats - Only show if Bitcoin address exists */}
+                {/* Wallet Stats - Only show if has bitcoin address */}
                 {profile.bitcoin_address && (
-                  <BitcoinWalletStats address={profile.bitcoin_address} />
+                  <BitcoinWalletStatsCompact address={profile.bitcoin_address} />
                 )}
               </div>
             ) : (
@@ -299,6 +204,9 @@ export default function UnifiedProfileLayout({
                 </div>
               )
             )}
+
+            {/* Projects List */}
+            <ProfileProjectsList userId={profile.id} isOwnProfile={isOwnProfile} />
           </div>
 
           {/* Right Column - Stats & Actions */}
@@ -325,6 +233,7 @@ export default function UnifiedProfileLayout({
 
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Followers</span>
+                  <span className="font-medium">{profile.follower_count || 0}</span>
                 </div>
 
                 <div className="flex justify-between items-center">
@@ -372,6 +281,218 @@ export default function UnifiedProfileLayout({
             )}
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// Component to display user's projects
+function ProfileProjectsList({ userId, isOwnProfile }: { userId: string; isOwnProfile: boolean }) {
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/profiles/${userId}/projects`);
+        const result = await response.json();
+
+        if (result.success && result.data) {
+          setProjects(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (userId) {
+      fetchProjects();
+    }
+  }, [userId]);
+
+  // Helper function to get status display info
+  const getStatusInfo = (status: string) => {
+    const statusMap: Record<string, { label: string; className: string }> = {
+      active: { label: 'Active', className: 'bg-green-100 text-green-700' },
+      draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700' },
+      completed: { label: 'Completed', className: 'bg-blue-100 text-blue-700' },
+      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700' },
+      paused: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700' },
+    };
+    return (
+      statusMap[status?.toLowerCase()] || {
+        label: status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown',
+        className: 'bg-gray-100 text-gray-700',
+      }
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Target className="w-5 h-5 text-orange-500" />
+          Projects
+        </h3>
+        <div className="text-gray-500 text-sm">Loading projects...</div>
+      </div>
+    );
+  }
+
+  if (projects.length === 0) {
+    return (
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <Target className="w-5 h-5 text-orange-500" />
+          Projects
+        </h3>
+        <div className="text-center py-8">
+          <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+          <p className="text-gray-500 mb-4">
+            {isOwnProfile ? "You haven't created any projects yet" : 'No projects yet'}
+          </p>
+          {isOwnProfile && (
+            <Link href="/projects/create">
+              <Button variant="outline" size="sm">
+                <Target className="w-4 h-4 mr-2" />
+                Create Your First Project
+              </Button>
+            </Link>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+          <Target className="w-5 h-5 text-orange-500" />
+          Projects ({projects.length})
+        </h3>
+        {isOwnProfile && (
+          <Link href="/dashboard/projects">
+            <Button variant="ghost" size="sm">
+              View All
+              <ArrowRight className="w-4 h-4 ml-1" />
+            </Button>
+          </Link>
+        )}
+      </div>
+      <div className="space-y-4">
+        {projects.slice(0, 5).map(project => {
+          const statusInfo = getStatusInfo(project.status);
+          const balanceBTC = project.bitcoin_balance_btc || 0;
+          const goalAmount = project.goal_amount || 0;
+          const progress = goalAmount > 0 ? Math.min((balanceBTC / goalAmount) * 100, 100) : 0;
+          const raisedAmount = project.raised_amount || 0;
+          const displayAmount = balanceBTC > 0 ? balanceBTC : raisedAmount;
+
+          return (
+            <Link
+              key={project.id}
+              href={ROUTES.PROJECTS.VIEW(project.id)}
+              className="block p-5 rounded-xl border-2 border-gray-200 hover:border-orange-300 hover:shadow-lg bg-white transition-all duration-200 group"
+            >
+              <div className="space-y-3">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-orange-600 transition-colors">
+                      {project.title}
+                    </h4>
+                    {project.description && (
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                        {project.description}
+                      </p>
+                    )}
+                  </div>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusInfo.className}`}
+                  >
+                    {statusInfo.label}
+                  </span>
+                </div>
+
+                {/* Progress Bar */}
+                {goalAmount > 0 && (
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-600">Progress</span>
+                      <span className="font-semibold text-gray-900">{progress.toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Stats Row */}
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
+                  {/* Balance */}
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Wallet Balance</div>
+                    <div className="flex items-center gap-1.5">
+                      <Bitcoin className="w-4 h-4 text-orange-500" />
+                      <span className="font-semibold text-gray-900">
+                        {balanceBTC > 0 ? formatBitcoinDisplay(balanceBTC, 'BTC') : '—'}
+                      </span>
+                    </div>
+                    {balanceBTC === 0 && raisedAmount > 0 && (
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        <CurrencyDisplay
+                          amount={raisedAmount}
+                          currency={project.currency || 'SATS'}
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Goal */}
+                  {goalAmount > 0 && (
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Goal</div>
+                      <div className="font-semibold text-gray-900">
+                        <CurrencyDisplay
+                          amount={goalAmount}
+                          currency={project.currency || 'SATS'}
+                          size="sm"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
+                  <span>Created {new Date(project.created_at).toLocaleDateString()}</span>
+                  {project.bitcoin_address && (
+                    <span className="flex items-center gap-1">
+                      <Bitcoin className="w-3 h-3" />
+                      Wallet configured
+                    </span>
+                  )}
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+        {projects.length > 5 && (
+          <Link
+            href={isOwnProfile ? '/dashboard/projects' : `#`}
+            className="block text-center text-sm text-orange-600 hover:text-orange-700 font-medium py-3 rounded-lg hover:bg-orange-50 transition-colors"
+          >
+            View {projects.length - 5} more projects →
+          </Link>
+        )}
       </div>
     </div>
   );

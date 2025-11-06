@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import {
   Heart,
   MapPin,
@@ -106,14 +105,10 @@ export default function ModernCampaignCard({
 
   if (viewMode === 'list') {
     return (
-      <motion.div
+      <div
         className={`bg-white rounded-2xl border border-gray-100/50 hover:border-gray-200/80 hover:shadow-xl transition-all duration-300 overflow-hidden group ${className}`}
-        whileHover={{ y: -2 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
       >
-        <Link href={`/project/${project.id}`} className="block">
+        <Link href={`/projects/${project.id}`} className="block">
           <div className="flex flex-col sm:flex-row">
             {/* Image Section */}
             <div className="relative sm:w-80 h-48 sm:h-40 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
@@ -219,19 +214,15 @@ export default function ModernCampaignCard({
             </div>
           </div>
         </Link>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
+    <div
       className={`bg-white rounded-2xl border border-gray-100/50 hover:border-gray-200/80 hover:shadow-2xl transition-all duration-300 overflow-hidden group ${className}`}
-      whileHover={{ y: -5, scale: 1.02 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
     >
-      <Link href={`/project/${project.id}`} className="block">
+      <Link href={`/projects/${project.id}`} className="block">
         {/* Image Section */}
         <div className="relative h-56 overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
           {project.image && !imageError ? (
@@ -258,34 +249,26 @@ export default function ModernCampaignCard({
           {/* Badges */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">
             {project.featured && (
-              <motion.div
+              <div
                 className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('featured')}`}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.2 }}
               >
                 <Star className="w-3 h-3 mr-1 inline" />
                 Featured
-              </motion.div>
+              </div>
             )}
             {project.verified && (
-              <motion.div
+              <div
                 className={`px-3 py-1 rounded-full text-xs font-medium backdrop-blur-sm ${getBadgeStyle('verified')}`}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.3 }}
               >
                 <CheckCircle className="w-3 h-3 mr-1 inline" />
                 Verified
-              </motion.div>
+              </div>
             )}
           </div>
 
           {/* Like Button */}
-          <motion.button
+          <button
             className="absolute top-4 right-4 p-2 rounded-full bg-white/20 backdrop-blur-sm hover:bg-white/30 transition-colors duration-200"
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
             onClick={e => {
               e.preventDefault();
               setIsLiked(!isLiked);
@@ -296,16 +279,14 @@ export default function ModernCampaignCard({
                 isLiked ? 'text-red-500 fill-red-500' : 'text-white'
               }`}
             />
-          </motion.button>
+          </button>
 
           {/* Progress Indicator */}
           <div className="absolute bottom-0 left-0 right-0">
             <div className="h-1.5 bg-black/20">
-              <motion.div
+              <div
                 className="h-full bg-gradient-to-r from-bitcoinOrange to-orange-500"
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercentage}%` }}
-                transition={{ duration: 1, delay: 0.5 }}
+                style={{ width: `${progressPercentage}%` }}
               />
             </div>
           </div>
@@ -390,6 +371,6 @@ export default function ModernCampaignCard({
           </div>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }

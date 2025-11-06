@@ -75,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         case 'INITIAL_SESSION':
           // Initial session load - set state with existing session
           if (session?.user) {
+            // Always clear profile on initial session to prevent stale data
             setInitialAuthState(session.user, session, null);
             // Fetch profile in background
             fetchProfile().catch(err => {
@@ -89,6 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // User just signed in - set user and session
           if (session?.user) {
             logger.info('User signed in', { userId: session.user.id }, 'Auth');
+            // Always clear profile on sign in to prevent stale data from previous user
             setInitialAuthState(session.user, session, null);
             // Fetch profile in background
             fetchProfile().catch(err => {

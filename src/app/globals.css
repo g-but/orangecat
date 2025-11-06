@@ -362,7 +362,6 @@ html {
   .nav-link {
     @apply px-3 py-2 rounded-full text-slate-800 hover:text-tiffany-500 transition-colors duration-150;
     @apply min-h-[44px] flex items-center justify-center;
-    @apply active:scale-95 transform;
     /* Better touch feedback */
     -webkit-tap-highlight-color: transparent;
   }

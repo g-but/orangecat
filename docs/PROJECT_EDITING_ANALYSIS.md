@@ -1,8 +1,8 @@
 # Project Editing Flow - Critical Analysis
 
 **Created:** 2025-11-03
-**Last Modified:** 2025-11-03
-**Last Modified Summary:** Comprehensive analysis of project editing functionality and bugs
+**Last Modified:** 2025-01-30
+**Last Modified Summary:** Updated route references to reflect consolidation to /projects/[id]
 
 ## 🔴 CRITICAL BUGS FOUND
 
@@ -111,32 +111,31 @@ useEffect(() => {
 
 ---
 
-### 4. **Route Inconsistency After Save** ⚠️
+### 4. **Route Inconsistency After Save** ✅ FIXED
 
-**Location:** `src/components/wizard/ProjectWizard.tsx` line 389
+**Status:** ✅ **FIXED** - All routes consolidated to `/projects/[id]` (plural)
 
-**Problem:**
+**Previous Issue:**
 
 ```typescript
 router.push(`/project/${editProjectId}`); // Singular
 ```
 
-**Issue:**
-
-- Uses `/project/` (singular)
+- Used `/project/` (singular)
 - But public route is `/projects/` (plural)
 - This could cause 404 if routes are different
 
-**Current Routes:**
+**Current Routes (After Consolidation):**
 
-- Public: `/projects/[id]` (plural) ✅ exists
-- Authenticated: `/project/[id]` (singular) ✅ exists
-- Edit: `/project/[id]/edit` (singular) ✅ exists
+- Public: `/projects/[id]` (plural) ✅ unified route
+- Old `/project/[id]`: Redirects to `/projects/[id]` ✅ backward compatibility
+- Edit: `/projects/create?edit=[id]` ✅ uses query param
 
-**Impact:**
+**Fix Applied (2025-01-30):**
 
-- Works if redirecting to authenticated route
-- Fails if redirecting to public route
+- All redirects updated to use `ROUTES.PROJECTS.VIEW()` which returns `/projects/[id]`
+- Single unified route provides consistent UX
+- Backward compatibility maintained via redirect
 
 ---
 
@@ -227,11 +226,11 @@ localStorage.getItem('project-draft');
 
 ## 📊 EDITING FLOW ANALYSIS
 
-### Flow A: Using Edit Page Route (`/project/[id]/edit`)
+### Flow A: Using Edit Query Param (`/projects/create?edit=[id]`)
 
 ```
 1. User clicks "Edit Project" button
-2. Navigates to /project/[id]/edit
+2. Navigates to /projects/create?edit=[id]
 3. Edit page fetches project from API
 4. Checks user owns project ✅
 5. Passes projectId + initialData to ProjectWizard
@@ -241,7 +240,7 @@ localStorage.getItem('project-draft');
 9. PUT request sent to /api/projects/[id] ✅
 10. API verifies ownership ✅
 11. Project updated ✅
-12. Redirects to /project/[id] ✅
+12. Redirects to /projects/[id] ✅ (unified route)
 ```
 
 **Status:** Mostly works, but has currency bug
