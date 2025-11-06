@@ -11,6 +11,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import { projectSchema } from '@/lib/validation';
+import { logger } from '@/utils/logger';
 
 // GET /api/projects/[id] - Get specific project
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -22,6 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return apiNotFound('Invalid project ID');
     }
 
+    // Fetch project first
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('*')
@@ -35,19 +37,39 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       return apiNotFound('Project not found');
     }
 
-    // Fetch profile separately
+    // Fetch profile separately (more reliable than JOIN without explicit FK)
     let profile = null;
     if (project.user_id) {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, username, name, avatar_url')
+        .select('id, username, display_name, avatar_url, email')
         .eq('id', project.user_id)
         .maybeSingle();
 
       if (profileError) {
-        console.error('[API] Error fetching profile for project:', profileError);
+        // Log but don't fail - project should still be returned
+        logger.warn(
+          'Error fetching profile for project',
+          {
+            projectId: id,
+            userId: project.user_id,
+            error: profileError,
+          },
+          'GET /api/projects/[id]'
+        );
+      } else if (profileData) {
+        profile = profileData;
+      } else {
+        // Profile doesn't exist - log for debugging
+        logger.warn(
+          'Profile not found for project creator',
+          {
+            projectId: id,
+            userId: project.user_id,
+          },
+          'GET /api/projects/[id]'
+        );
       }
-      profile = profileData;
     }
 
     const projectWithProfile = {
@@ -58,7 +80,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     return apiSuccess(projectWithProfile);
   } catch (error) {
-    console.error('[API] Exception in GET /api/projects/[id]:', error);
+    logger.error(
+      'Exception in GET /api/projects/[id]',
+      { projectId: id, error },
+      'GET /api/projects/[id]'
+    );
     return handleApiError(error);
   }
 }

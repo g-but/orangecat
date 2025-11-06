@@ -3,7 +3,6 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion } from 'framer-motion';
 import { Heart, Clock, Target } from 'lucide-react';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import BTCAmountDisplay from './BTCAmountDisplay';
@@ -42,11 +41,6 @@ const iconColorByCategory: Record<string, string> = {
 function getStatusBadge(status: string) {
   const normalized = status?.toLowerCase();
   switch (normalized) {
-    case 'active':
-      return {
-        label: 'Active',
-        className: 'bg-emerald-100 text-emerald-700 border border-emerald-200',
-      };
     case 'draft':
       return { label: 'Draft', className: 'bg-slate-100 text-slate-600 border border-slate-200' };
     case 'completed':
@@ -55,7 +49,11 @@ function getStatusBadge(status: string) {
         className: 'bg-orange-100 text-orange-600 border border-orange-200',
       };
     default:
-      return null;
+      // For published projects (status is 'active' or anything else), show Published
+      return {
+        label: 'Published',
+        className: 'bg-orange-100 text-orange-700 border border-orange-200',
+      };
   }
 }
 
@@ -95,20 +93,27 @@ export default function ModernProjectCard({
   );
 
   const ownerName = useMemo(() => {
-    if (project.profiles?.name) {
-      return project.profiles.name;
+    if (project.profiles?.display_name) {
+      return project.profiles.display_name;
     }
     if (project.profiles?.username) {
       return project.profiles.username;
     }
     if (project.user_id && project.user_id === (profile?.id || user?.id)) {
-      return profile?.name || profile?.username || 'You';
+      return profile?.display_name || profile?.username || 'You';
     }
     return 'Anonymous';
-  }, [project.profiles, project.user_id, profile?.id, profile?.name, profile?.username, user?.id]);
+  }, [
+    project.profiles,
+    project.user_id,
+    profile?.id,
+    profile?.display_name,
+    profile?.username,
+    user?.id,
+  ]);
 
   const ownerInitial = ownerName ? ownerName.charAt(0).toUpperCase() : 'P';
-  const statusBadge = getStatusBadge(project.status || 'active');
+  const statusBadge = getStatusBadge(project.status || 'published');
 
   const gradient =
     gradientByCategory[categories[0]?.toLowerCase() || 'default'] ?? gradientByCategory.default;
@@ -172,20 +177,16 @@ export default function ModernProjectCard({
 
   if (viewMode === 'list') {
     return (
-      <motion.div
+      <div
         className={`flex w-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white transition-shadow duration-200 hover:border-gray-200 hover:shadow-lg ${className}`}
-        whileHover={{ y: -2 }}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
       >
         <Link href={`/projects/${project.id}`} className="flex w-full flex-col gap-4 sm:flex-row">
           <div className="relative h-48 flex-1 overflow-hidden sm:h-auto">
             {imageElement}
             <div className="absolute inset-x-0 bottom-0 h-1 bg-black/25">
-              <motion.div
+              <div
                 className="h-full bg-gradient-to-r from-bitcoinOrange to-orange-500"
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercentage}%` }}
+                style={{ width: `${progressPercentage}%` }}
               />
             </div>
             {statusBadge && (
@@ -230,25 +231,20 @@ export default function ModernProjectCard({
             {renderMetrics(true)}
           </div>
         </Link>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.div
+    <div
       className={`flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white transition-shadow duration-200 hover:border-gray-200 hover:shadow-xl ${className}`}
-      whileHover={{ y: -4, scale: 1.01 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
     >
       <Link href={`/projects/${project.id}`} className="flex h-full flex-col">
         <div className="relative aspect-[16/10] w-full overflow-hidden">
           {imageElement}
           <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-          <motion.button
+          <button
             className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/30 text-white backdrop-blur transition-colors duration-200 hover:bg-white/40"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.9 }}
             onClick={event => {
               event.preventDefault();
               event.stopPropagation();
@@ -257,7 +253,7 @@ export default function ModernProjectCard({
             aria-label={isLiked ? 'Remove from favourites' : 'Add to favourites'}
           >
             <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`} />
-          </motion.button>
+          </button>
           <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2">
             {statusBadge && (
               <span
@@ -319,6 +315,6 @@ export default function ModernProjectCard({
           {renderMetrics(false)}
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }

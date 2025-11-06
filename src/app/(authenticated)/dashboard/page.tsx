@@ -32,14 +32,7 @@ import { PROFILE_CATEGORIES } from '@/types/profile';
 
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated, session } = useAuth();
-  const {
-    projects,
-    drafts,
-    activeProjects,
-    loadProjects,
-    isLoading: projectLoading,
-    getStats,
-  } = useProjectStore();
+  const { projects, drafts, loadProjects, isLoading: projectLoading, getStats } = useProjectStore();
   const { metrics, isLoading: analyticsLoading } = useAnalytics();
   const router = useRouter();
   const [localLoading, setLocalLoading] = useState(true);
@@ -139,10 +132,8 @@ export default function DashboardPage() {
   // Get project stats - ensure projects is an array before using reduce
   const safeProjects = Array.isArray(projects) ? projects : [];
   const safeDrafts = Array.isArray(drafts) ? drafts : [];
-  const safeActiveProjects = Array.isArray(activeProjects) ? activeProjects : [];
   const stats = getStats();
   const totalProjects = stats.totalProjects;
-  const activeProjectsCount = stats.totalActive;
 
   // Calculate totals by currency to avoid mixing BTC and CHF
   const fundingByCurrency = safeProjects.reduce(
@@ -178,16 +169,20 @@ export default function DashboardPage() {
   const primaryDraft = hasAnyDraft ? safeDrafts[0] : null;
   const totalDrafts = safeDrafts.length;
 
-  // Get featured project (most recent active or highest funded)
+  // Get featured project (most recent published or highest funded)
   // Note: Use spread operator to avoid mutating store state
+  const publishedProjects = safeProjects.filter(p => !p.isDraft);
   const featuredProject =
-    safeActiveProjects.length > 0
-      ? [...safeActiveProjects].sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
+    publishedProjects.length > 0
+      ? [...publishedProjects].sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
       : safeProjects.find(c => c.title?.toLowerCase().includes('orange cat')) || // Specifically look for Orange Cat
         safeProjects[0]; // Fallback to first project
 
-  // Profile category for display (default to individual for now)
-  const profileCategory = PROFILE_CATEGORIES.individual;
+  // Profile category for display (use profile_type if available, default to individual)
+  const profileCategory =
+    profile?.profile_type && profile.profile_type in PROFILE_CATEGORIES
+      ? PROFILE_CATEGORIES[profile.profile_type as keyof typeof PROFILE_CATEGORIES]
+      : PROFILE_CATEGORIES.individual;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
@@ -221,7 +216,7 @@ export default function DashboardPage() {
             </div>
             <p className="text-lg text-gray-600 leading-relaxed">
               {totalProjects > 0
-                ? `Managing ${totalProjects} project${totalProjects !== 1 ? 's' : ''} • ${activeProjectsCount} active`
+                ? `Managing ${totalProjects} project${totalProjects !== 1 ? 's' : ''}${totalDrafts > 0 ? ` • ${totalDrafts} draft${totalDrafts !== 1 ? 's' : ''}` : ''}`
                 : "Welcome! Let's create your first Bitcoin fundraising project."}
             </p>
           </div>
@@ -240,9 +235,11 @@ export default function DashboardPage() {
                     <h2 className="text-lg font-semibold text-gray-900">
                       🎯 Your Featured Project
                     </h2>
-                    <div className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded-full">
-                      {featuredProject.is_active ? 'Active' : 'Draft'}
-                    </div>
+                    {featuredProject.isDraft && (
+                      <div className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
+                        Draft
+                      </div>
+                    )}
                   </div>
 
                   <h3 className="text-xl font-bold text-gray-900 mb-2">{featuredProject.title}</h3>
@@ -290,7 +287,7 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="flex gap-2">
-                    <Link href={`/project/${featuredProject.id}`}>
+                    <Link href={`/projects/${featuredProject.id}`}>
                       <Button size="sm">
                         <Eye className="w-4 h-4 mr-1" />
                         View Project
@@ -509,7 +506,8 @@ export default function DashboardPage() {
               <div className="space-y-1 text-sm text-gray-600">
                 <div className="font-medium text-lg text-gray-900">{totalProjects}</div>
                 <div>
-                  {activeProjectsCount} active • {totalDrafts} drafts
+                  {totalProjects - totalDrafts} published
+                  {totalDrafts > 0 && ` • ${totalDrafts} draft${totalDrafts !== 1 ? 's' : ''}`}
                 </div>
                 {totalRaised > 0 && (
                   <div className="font-medium text-green-600">
@@ -580,7 +578,7 @@ export default function DashboardPage() {
                 <div className="space-y-1 text-sm text-gray-600">
                   <div className="font-medium text-lg text-gray-900">
                     <CurrencyDisplay
-                      amount={activeProjectsCount > 0 ? totalRaised / activeProjectsCount : 0}
+                      amount={totalProjects > 0 ? totalRaised / totalProjects : 0}
                       currency={primaryCurrency}
                       size="md"
                     />
@@ -643,17 +641,15 @@ export default function DashboardPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium text-gray-900">{project.title}</h4>
-                        <div
-                          className={`px-2 py-1 text-xs rounded-full ${
-                            project.is_active
-                              ? 'bg-green-100 text-green-700'
-                              : project.is_public
-                                ? 'bg-orange-100 text-orange-700'
-                                : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {project.is_active ? 'Active' : project.is_public ? 'Published' : 'Draft'}
-                        </div>
+                        {project.isDraft ? (
+                          <div className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
+                            Draft
+                          </div>
+                        ) : (
+                          <div className="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700">
+                            Published
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-gray-500">
                         <span>
@@ -674,7 +670,7 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Link href={`/project/${project.id}`}>
+                      <Link href={`/projects/${project.id}`}>
                         <Button variant="outline" size="sm">
                           <Eye className="w-4 h-4" />
                         </Button>
@@ -736,10 +732,13 @@ export default function DashboardPage() {
             <CardContent className="p-6">
               <div className="text-center py-8 text-gray-500">
                 <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>Activity tracking coming soon</p>
+                <p className="mb-2">Activity tracking coming soon</p>
+                <p className="text-sm text-gray-400 mb-4">
+                  We're building features to show donations, updates, and engagement metrics here.
+                </p>
                 <Link href="/dashboard/projects">
                   <Button variant="outline" className="mt-4">
-                    View Project Details
+                    View All Projects
                   </Button>
                 </Link>
               </div>

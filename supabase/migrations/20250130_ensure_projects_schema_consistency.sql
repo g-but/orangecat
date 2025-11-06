@@ -56,7 +56,39 @@ END $$;
 COMMENT ON COLUMN projects.raised_amount IS 'Total amount raised in sats (or base currency unit)';
 COMMENT ON COLUMN projects.contributor_count IS 'Number of unique contributors to this project';
 
+-- Ensure user_id column exists (rename from creator_id if needed)
+DO $$
+BEGIN
+  -- If creator_id exists but user_id doesn't, rename it
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'projects'
+    AND column_name = 'creator_id'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'projects'
+    AND column_name = 'user_id'
+  ) THEN
+    ALTER TABLE projects RENAME COLUMN creator_id TO user_id;
+    RAISE NOTICE 'Renamed creator_id to user_id for consistency';
+  END IF;
 
+  -- If both exist, copy creator_id to user_id where user_id is NULL
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'projects'
+    AND column_name = 'creator_id'
+  ) AND EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'projects'
+    AND column_name = 'user_id'
+  ) THEN
+    UPDATE projects SET user_id = creator_id WHERE user_id IS NULL AND creator_id IS NOT NULL;
+    RAISE NOTICE 'Copied creator_id to user_id where needed';
+  END IF;
+END $$;
+
+COMMENT ON COLUMN projects.user_id IS 'Owner of the project (references auth.users)';
 
 
 

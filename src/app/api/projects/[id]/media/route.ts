@@ -23,16 +23,42 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
+    // Check current media count - use fresh query to avoid stale data
+    const { count, error: countError } = await supabase
+      .from('project_media')
+      .select('*', { count: 'exact', head: true })
+      .eq('project_id', params.id);
+
+    if (countError) {
+      console.error('Error checking media count:', countError);
+    }
+
+    // Allow insert if count is less than 3 (0, 1, or 2 images)
+    if (count !== null && count >= 3) {
+      return Response.json({ error: 'Maximum 3 images per project' }, { status: 400 });
+    }
+
+    // Find the first available position (0, 1, or 2)
+    // Get all existing positions
     const { data: existing } = await supabase
       .from('project_media')
       .select('position')
-      .eq('project_id', params.id)
-      .order('position', { ascending: false })
-      .limit(1);
+      .eq('project_id', params.id);
 
-    const nextPosition = existing && existing.length > 0 ? existing[0].position + 1 : 0;
-    if (nextPosition >= 3) {
-      return Response.json({ error: 'Maximum 3 images' }, { status: 400 });
+    const existingPositions = (existing || []).map(m => m.position).sort((a, b) => a - b);
+
+    // Find first available position (0, 1, or 2)
+    let nextPosition = 0;
+    for (let i = 0; i < 3; i++) {
+      if (!existingPositions.includes(i)) {
+        nextPosition = i;
+        break;
+      }
+    }
+
+    // Safety check: if somehow all positions are taken (shouldn't happen due to count check)
+    if (nextPosition > 2) {
+      return Response.json({ error: 'Maximum 3 images per project' }, { status: 400 });
     }
 
     const { data: media, error } = await supabase

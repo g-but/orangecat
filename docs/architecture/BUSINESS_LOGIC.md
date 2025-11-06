@@ -395,7 +395,7 @@ CREATE TABLE transactions (
    ↓
 7. Return created project
    ↓
-8. Redirect to /project/[id]
+8. Redirect to /projects/[id] (unified route)
 ```
 
 ### Transaction Creation Workflow

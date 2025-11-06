@@ -18,11 +18,18 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       return Response.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
-    const { count } = await supabase
+    // Check current media count - use fresh query to avoid stale data
+    const { count, error: countError } = await supabase
       .from('project_media')
       .select('*', { count: 'exact', head: true })
       .eq('project_id', params.id);
 
+    if (countError) {
+      // Log error but don't block upload - client-side validation handles this
+      console.error('Error checking media count:', countError);
+    }
+
+    // Allow upload if count is less than 3 (0, 1, or 2 images)
     if (count !== null && count >= 3) {
       return Response.json({ error: 'Maximum 3 images per project' }, { status: 400 });
     }

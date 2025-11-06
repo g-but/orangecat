@@ -128,7 +128,7 @@ const goalAmount = project.goal_amount
 
 ✅ **Test 3**: Edit from project page
 
-- Navigate to `/project/[id]`
+- Navigate to `/projects/[id]` (unified route)
 - Click "Edit Project" button
 - Verify: Loads correct project data
 

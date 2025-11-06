@@ -91,11 +91,15 @@ Creates a new project.
 
 ### Frontend Routes
 
-- `/project/[id]` - View project page (singular "project")
-- `/project/[id]/edit` - Edit project page
-- `/projects/create` - Create new project (plural "projects" for action)
+- `/projects/[id]` - View project page (plural "projects" - unified route for all users)
+- `/projects/create` - Create new project
+- `/projects/create?edit=[id]` - Edit existing project
 
-**Important:** The view route uses singular `/project/` but create uses plural `/projects/create`.
+**Route Consolidation (2025-01-30):**
+
+- All project view routes consolidated to `/projects/[id]` (plural)
+- Old `/project/[id]` route redirects to `/projects/[id]` for backward compatibility
+- Single unified route provides consistent UX for authenticated and public users
 
 ## Status Values
 
