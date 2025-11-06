@@ -5,7 +5,7 @@ import { logger } from '@/utils/logger';
 export interface SearchProfile {
   id: string;
   username: string | null;
-  name: string | null;
+  display_name: string | null;
   bio: string | null;
   avatar_url: string | null;
   created_at: string;
@@ -26,7 +26,7 @@ export interface SearchFundingPage {
   profiles?: {
     id: string;
     username: string | null;
-    name: string | null;
+    display_name: string | null;
     avatar_url: string | null;
   };
 }
@@ -47,7 +47,7 @@ interface RawSearchFundingPage {
   profiles: Array<{
     id: string;
     username: string | null;
-    name: string | null;
+    display_name: string | null;
     avatar_url: string | null;
   }>;
 }
@@ -197,9 +197,9 @@ function calculateRelevanceScore(result: SearchResult, query: string): number {
     }
 
     // Display name matches
-    if (profile.name?.toLowerCase() === lowerQuery) {
+    if (profile.display_name?.toLowerCase() === lowerQuery) {
       score += 80;
-    } else if (profile.name?.toLowerCase().includes(lowerQuery)) {
+    } else if (profile.display_name?.toLowerCase().includes(lowerQuery)) {
       score += 40;
     }
 
@@ -255,14 +255,14 @@ async function searchProfiles(
   // Start with minimal columns for better performance
   let profileQuery = supabase
     .from('profiles')
-    .select('id, username, name, bio, avatar_url, created_at');
+    .select('id, username, display_name, bio, avatar_url, created_at');
 
   if (query) {
     // OPTIMIZATION: Use tsvector for full-text search when available
     // For now, optimize ILIKE queries with proper ordering
     const sanitizedQuery = query.replace(/[%_]/g, '\\$&'); // Escape SQL wildcards
     profileQuery = profileQuery.or(
-      `username.ilike.%${sanitizedQuery}%,name.ilike.%${sanitizedQuery}%,bio.ilike.%${sanitizedQuery}%`
+      `username.ilike.%${sanitizedQuery}%,display_name.ilike.%${sanitizedQuery}%,bio.ilike.%${sanitizedQuery}%`
     );
   }
 
@@ -348,7 +348,7 @@ async function searchFundingPages(
   const userIds = [...new Set(rawProjects.map((p: any) => p.user_id))];
   const { data: profiles } = await supabase
     .from('profiles')
-    .select('id, username, name, avatar_url')
+    .select('id, username, display_name, avatar_url')
     .in('id', userIds);
 
   // Create a map of user_id to profile for quick lookup
@@ -587,7 +587,7 @@ export async function getTrending(): Promise<SearchResponse> {
       // Get recent profiles
       supabase
         .from('profiles')
-        .select('id, username, name, bio, avatar_url, created_at')
+        .select('id, username, display_name, bio, avatar_url, created_at')
         .order('created_at', { ascending: false })
         .limit(10),
     ]);
@@ -659,8 +659,8 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
     const [profileSuggestions, projectSuggestions] = await Promise.all([
       supabase
         .from('profiles')
-        .select('username, name')
-        .or(`username.ilike.%${sanitizedQuery}%,name.ilike.%${sanitizedQuery}%`)
+        .select('username, display_name')
+        .or(`username.ilike.%${sanitizedQuery}%,display_name.ilike.%${sanitizedQuery}%`)
         .not('username', 'is', null)
         .limit(limit),
 
@@ -680,8 +680,8 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
         if (profile.username) {
           suggestions.add(profile.username);
         }
-        if (profile.name) {
-          suggestions.add(profile.name);
+        if (profile.display_name) {
+          suggestions.add(profile.display_name);
         }
       });
     }

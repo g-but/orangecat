@@ -1,29 +1,39 @@
-'use client'
+'use client';
 
-import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
-import Image from 'next/image'
-import { ChevronDown, User, Settings, LogOut, CheckCircle2, Handshake, ExternalLink, BarChart3 } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
-import { useAuthStore } from '@/stores/auth'
-import { useDropdown } from '@/hooks/useDropdown'
-import { toast } from 'sonner'
-import DefaultAvatar from '@/components/ui/DefaultAvatar'
-import { logger } from '@/utils/logger'
+import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import {
+  ChevronDown,
+  User,
+  Settings,
+  LogOut,
+  CheckCircle2,
+  Handshake,
+  ExternalLink,
+  BarChart3,
+} from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useAuthStore } from '@/stores/auth';
+import { useDropdown } from '@/hooks/useDropdown';
+import { toast } from 'sonner';
+import DefaultAvatar from '@/components/ui/DefaultAvatar';
+import { logger } from '@/utils/logger';
 
 export interface UserProfileDropdownProps {
-  variant?: 'simple' | 'advanced'
-  showAvatar?: boolean
-  showDescriptions?: boolean
-  showUserInfo?: boolean
-  className?: string
+  variant?: 'simple' | 'advanced';
+  showAvatar?: boolean;
+  showDescriptions?: boolean;
+  showUserInfo?: boolean;
+  className?: string;
 }
 
 interface MenuItem {
-  label: string
-  icon: React.ComponentType<{ className?: string }>
-  href: string
-  description?: string
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  href: string;
+  description?: string;
 }
 
 export default function UserProfileDropdown({
@@ -31,19 +41,13 @@ export default function UserProfileDropdown({
   showAvatar = true,
   showDescriptions = true,
   showUserInfo = true,
-  className = ''
+  className = '',
 }: UserProfileDropdownProps) {
-  const router = useRouter()
-  const { 
-    user, 
-    profile, 
-    session, 
-    signOut,
-    isAuthenticated
-  } = useAuth()
-  
+  const router = useRouter();
+  const { user, profile, session, signOut, isAuthenticated } = useAuth();
+
   // ✅ FIXED: Call useAuthStore at component top level, not conditionally
-  const { fetchProfile } = useAuthStore()
+  const { fetchProfile } = useAuthStore();
 
   // Menu items configuration
   const menuItems: MenuItem[] = [
@@ -51,21 +55,21 @@ export default function UserProfileDropdown({
       label: 'Dashboard',
       icon: BarChart3,
       href: '/dashboard',
-      description: 'Overview and analytics'
+      description: 'Overview and analytics',
     },
     {
       label: 'Fundraising',
       icon: Handshake,
       href: '/dashboard/projects',
-      description: 'Manage your projects'
+      description: 'Manage your projects',
     },
     {
       label: 'Edit Profile',
       icon: Settings,
       href: '/profile',
-      description: 'Update your information'
-    }
-  ]
+      description: 'Update your information',
+    },
+  ];
 
   const {
     isOpen,
@@ -76,91 +80,98 @@ export default function UserProfileDropdown({
     toggle,
     close,
     setFocusedIndex,
-    handleTriggerKeyDown
+    handleTriggerKeyDown,
   } = useDropdown({
     closeOnRouteChange: true,
     keyboardNavigation: variant === 'advanced',
-    itemCount: menuItems.length
-  })
+    itemCount: menuItems.length,
+  });
 
-  const [avatarError, setAvatarError] = useState(false)
+  const [avatarError, setAvatarError] = useState(false);
 
   // ✅ FIXED: Move useEffect before any conditional returns to follow Rules of Hooks
   useEffect(() => {
     if ((user || session) && !profile) {
-      logger.debug('User exists but no profile, fetching profile', { userId: user?.id || session?.user?.id }, 'UserProfileDropdown');
-      fetchProfile().catch(error => {
-      });
+      logger.debug(
+        'User exists but no profile, fetching profile',
+        { userId: user?.id || session?.user?.id },
+        'UserProfileDropdown'
+      );
+      fetchProfile().catch(error => {});
     }
-  }, [user, session, profile, fetchProfile])
+  }, [user, session, profile, fetchProfile]);
 
   const handleSignOut = async () => {
-    close()
-    
+    close();
+
     if (variant === 'advanced') {
       // Advanced variant - show loading toast
-      const loadingToast = toast.loading('Signing out...')
-      
-      const { error } = await signOut()
-      
+      const loadingToast = toast.loading('Signing out...');
+
+      const { error } = await signOut();
+
       if (error) {
-        toast.dismiss(loadingToast)
-        toast.error('Failed to sign out. Please try again.')
-        logger.error('UserProfileDropdown: Sign out error', { error: error.message }, 'UserProfileDropdown')
+        toast.dismiss(loadingToast);
+        toast.error('Failed to sign out. Please try again.');
+        logger.error(
+          'UserProfileDropdown: Sign out error',
+          { error: error.message },
+          'UserProfileDropdown'
+        );
       } else {
-        toast.dismiss(loadingToast)
-        toast.success('Signed out successfully!')
-        router.push('/')
+        toast.dismiss(loadingToast);
+        toast.success('Signed out successfully!');
+        router.push('/');
       }
     } else {
       // Simple variant - direct signout
-      await signOut()
+      await signOut();
     }
-  }
+  };
 
   const handleNavigation = (path: string) => {
-    close()
-    router.push(path)
-  }
+    close();
+    router.push(path);
+  };
 
   const handlePublicProfileClick = () => {
-    const username = profile?.username
+    const username = profile?.username;
     if (username) {
-      handleNavigation(`/profile/${username}`)
+      handleNavigation(`/profile/${username}`);
     } else {
       if (variant === 'advanced') {
-        toast.error('Please set up your username first')
+        toast.error('Please set up your username first');
       }
-      handleNavigation('/profile')
+      handleNavigation('/profile');
     }
-  }
+  };
 
   // Guard clause - don't render if no user
   if (!user && !session) {
-    return null
+    return null;
   }
 
   // User display logic - prioritize profile data
-  const avatarUrl = profile?.avatar_url
-  const email = user?.email || session?.user?.email || ''
-  
+  const avatarUrl = profile?.avatar_url;
+  const email = user?.email || session?.user?.email || '';
+
   // PRIORITY: Profile data first, then fallback to email
-  let displayName = 'User'
+  let displayName = 'User';
   if (profile?.name) {
-    displayName = profile.name
+    displayName = profile.name;
   } else if (profile?.username) {
-    displayName = profile.username
+    displayName = profile.username;
   } else if (user?.user_metadata?.full_name) {
-    displayName = user.user_metadata.full_name
+    displayName = user.user_metadata.full_name;
   } else if (email) {
     // Extract name from email more intelligently
-    const emailName = email.split('@')[0]
-    displayName = emailName.replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+    const emailName = email.split('@')[0];
+    displayName = emailName.replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
-  
-  const firstName = displayName.split(' ')[0]
-  const username = profile?.username
-  
+
+  const firstName = displayName.split(' ')[0];
+  const username = profile?.username;
+
   // Debug logging (remove in production)
   if (process.env.NODE_ENV === 'development') {
     // REMOVED: console.log statement for security
@@ -182,8 +193,8 @@ export default function UserProfileDropdown({
         {isOpen && (
           <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
             <div className="py-1" role="menu" aria-orientation="vertical">
-              {menuItems.map((item) => {
-                const Icon = item.icon
+              {menuItems.map(item => {
+                const Icon = item.icon;
                 return (
                   <button
                     key={item.label}
@@ -194,7 +205,7 @@ export default function UserProfileDropdown({
                     <Icon className="w-4 h-4 mr-3" />
                     {item.label}
                   </button>
-                )
+                );
               })}
               <hr className="my-1 border-gray-100" />
               <button
@@ -209,7 +220,7 @@ export default function UserProfileDropdown({
           </div>
         )}
       </div>
-    )
+    );
   }
 
   // Advanced variant rendering
@@ -236,17 +247,22 @@ export default function UserProfileDropdown({
                 onError={() => setAvatarError(true)}
               />
             ) : (
-              <DefaultAvatar size={36} className="rounded-full ring-2 ring-orange-200 hover:ring-orange-300 transition-all duration-200" />
+              <DefaultAvatar
+                size={36}
+                className="rounded-full ring-2 ring-orange-200 hover:ring-orange-300 transition-all duration-200"
+              />
             )}
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full shadow-sm"></div>
           </span>
         )}
         <span className="font-medium text-base max-w-[140px] truncate">{firstName}</span>
-        <ChevronDown className={`h-4 w-4 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`h-4 w-4 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
+        />
       </button>
 
       {isOpen && (
-        <div 
+        <div
           className="absolute right-0 mt-3 w-80 rounded-2xl shadow-2xl bg-white border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 origin-top-right overflow-hidden"
           role="menu"
           aria-orientation="vertical"
@@ -256,21 +272,31 @@ export default function UserProfileDropdown({
           {showUserInfo && (
             <div className="p-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
               <div className="flex items-center space-x-4">
-                <div className="relative">
+                <Link
+                  href={username ? `/profile/${username}` : '/profile'}
+                  onClick={e => {
+                    e.stopPropagation();
+                    close();
+                  }}
+                  className="relative hover:opacity-80 transition-opacity"
+                >
                   {avatarUrl && !avatarError ? (
                     <Image
                       src={avatarUrl}
                       alt={displayName}
                       width={56}
                       height={56}
-                      className="rounded-full object-cover ring-4 ring-orange-100"
+                      className="rounded-full object-cover ring-4 ring-orange-100 cursor-pointer"
                       onError={() => setAvatarError(true)}
                     />
                   ) : (
-                    <DefaultAvatar size={56} className="rounded-full ring-4 ring-orange-100" />
+                    <DefaultAvatar
+                      size={56}
+                      className="rounded-full ring-4 ring-orange-100 cursor-pointer"
+                    />
                   )}
                   <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 border-3 border-white rounded-full shadow-sm"></div>
-                </div>
+                </Link>
                 <div className="flex-1 min-w-0">
                   <button
                     onClick={handlePublicProfileClick}
@@ -281,12 +307,8 @@ export default function UserProfileDropdown({
                     </h3>
                     <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-orange-500 transition-all duration-200 opacity-0 group-hover:opacity-100 transform group-hover:scale-110" />
                   </button>
-                  {username && (
-                    <p className="text-sm font-medium text-gray-600">@{username}</p>
-                  )}
-                  {email && (
-                    <p className="text-xs text-gray-500 truncate mt-1">{email}</p>
-                  )}
+                  {username && <p className="text-sm font-medium text-gray-600">@{username}</p>}
+                  {email && <p className="text-xs text-gray-500 truncate mt-1">{email}</p>}
                 </div>
               </div>
             </div>
@@ -295,12 +317,12 @@ export default function UserProfileDropdown({
           {/* Menu Items */}
           <div className="py-2" role="none">
             {menuItems.map((item, index) => {
-              const Icon = item.icon
+              const Icon = item.icon;
               return (
                 <button
                   key={item.label}
-                  ref={(el) => {
-                    itemRefs.current[index] = el
+                  ref={el => {
+                    itemRefs.current[index] = el;
                   }}
                   onClick={() => handleNavigation(item.href)}
                   onFocus={() => setFocusedIndex(index)}
@@ -326,7 +348,7 @@ export default function UserProfileDropdown({
                     )}
                   </div>
                 </button>
-              )
+              );
             })}
           </div>
 
@@ -336,8 +358,8 @@ export default function UserProfileDropdown({
           {/* Sign Out */}
           <div className="py-2">
             <button
-              ref={(el) => {
-                itemRefs.current[menuItems.length] = el
+              ref={el => {
+                itemRefs.current[menuItems.length] = el;
               }}
               onClick={handleSignOut}
               onFocus={() => setFocusedIndex(menuItems.length)}
@@ -367,5 +389,5 @@ export default function UserProfileDropdown({
         </div>
       )}
     </div>
-  )
-} 
+  );
+}

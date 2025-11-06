@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         *,
-        profiles!inner(id, username, name, avatar_url)
+        profiles!inner(id, username, display_name, avatar_url, email)
       `
       )
       .eq('status', 'active')
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       website_url: validatedData.website_url ?? null,
       category: validatedData.category ?? null,
       tags: validatedData.tags ?? [],
-      status: 'active',
+      status: 'draft', // Projects start as draft, must be explicitly published to become 'active'
     };
 
     const { data: project, error } = await supabase

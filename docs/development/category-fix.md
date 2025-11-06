@@ -20,8 +20,8 @@ Categories were being displayed twice when a project's `category` field matched 
 
 Multiple components were displaying `project.category` and `project.tags` separately without deduplication:
 
-- `src/app/projects/[id]/page.tsx` (public project page)
-- `src/app/(authenticated)/project/[id]/page.tsx` (authenticated project page)
+- `src/app/projects/[id]/page.tsx` (unified project page - all users)
+- `src/app/(authenticated)/project/[id]/page.tsx` (redirects to /projects/[id])
 - `src/components/ui/ModernProjectCard.tsx` (had local dedupe, but not reusable)
 
 ---
@@ -94,7 +94,7 @@ Created `getUniqueCategories()` function that:
 1. **Created:** `src/utils/project.ts` - New utility module
 2. **Updated:** `src/components/ui/ModernProjectCard.tsx` - Removed local dedupe, uses utility
 3. **Updated:** `src/app/projects/[id]/page.tsx` - Uses utility, fixed duplication
-4. **Updated:** `src/app/(authenticated)/project/[id]/page.tsx` - Uses utility, fixed duplication
+4. **Updated:** `src/app/(authenticated)/project/[id]/page.tsx` - Redirects to unified route
 
 ### Function Signature
 

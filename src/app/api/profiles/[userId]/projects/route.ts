@@ -2,10 +2,13 @@ import { logger } from '@/utils/logger';
 import { createServerClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(request: NextRequest, { params }: { params: { userId: string } }) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ userId: string }> }
+) {
   try {
     const supabase = await createServerClient();
-    const { userId } = params;
+    const { userId } = await params;
 
     // Get user's projects (simplified MVP - no organizations)
     const { data: projects, error: projectsError } = await supabase
@@ -23,6 +26,8 @@ export async function GET(request: NextRequest, { params }: { params: { userId: 
         goal_amount,
         currency,
         raised_amount,
+        bitcoin_balance_btc,
+        bitcoin_balance_updated_at,
         created_at,
         updated_at
       `

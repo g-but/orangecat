@@ -156,7 +156,7 @@
 ### Pages
 
 - Create: `src/app/projects/create/page.tsx`
-- Project Detail: `src/app/(authenticated)/project/[id]/page.tsx`
+- Project Detail: `src/app/projects/[id]/page.tsx` (unified route)
 - Wallets: `src/app/wallets/page.tsx`
 
 ---

@@ -1,8 +1,8 @@
 # Dashboard Page - Comprehensive Analysis
 
 **Created:** 2025-11-02
-**Last Modified:** 2025-11-02
-**Last Modified Summary:** Complete analysis of dashboard page for errors, engineering issues, design, and best practices
+**Last Modified:** 2025-01-30
+**Last Modified Summary:** Updated route references to reflect consolidation to /projects/[id]
 
 ## 🔴 CRITICAL ERRORS & ISSUES
 
@@ -283,8 +283,8 @@ const fundingByCurrency = useMemo(() => {
 
 - Dashboard uses `/project/${id}` (singular) - Line 285, 668
 - But actual route structure:
-  - Public route: `/projects/[id]` (plural) ✅ exists
-  - Authenticated route: `/project/[id]` (singular) ✅ exists
+  - Public route: `/projects/[id]` (plural) ✅ unified route
+  - Old `/project/[id]`: Redirects to `/projects/[id]` ✅ backward compatibility
 - **VERIFIED:** Both routes exist, but this is confusing!
 
 **Issues:**
@@ -302,7 +302,7 @@ const fundingByCurrency = useMemo(() => {
 **Recommendation:**
 
 - Create route constants file
-- Standardize to one pattern (recommend `/projects/[id]`)
+- Standardize to one pattern ✅ **COMPLETED** - All routes now use `/projects/[id]` (plural)
 - Update all references
 
 ---
