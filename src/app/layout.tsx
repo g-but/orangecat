@@ -1,6 +1,8 @@
 import { Inter, Playfair_Display } from 'next/font/google';
 
-// Font loading with fallback for restricted environments (Vercel build)
+// Font loading with optimized preloading strategy
+// Primary font (Inter) is preloaded for faster FCP
+// Secondary font (Playfair Display) is lazy loaded to reduce initial bundle
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
@@ -13,7 +15,8 @@ const inter = Inter({
     'Roboto',
     'sans-serif',
   ],
-  preload: false, // Disable preload to avoid build issues
+  preload: true, // Enable preload for primary font (critical for FCP)
+  adjustFontFallback: true, // Optimize font fallback rendering
 });
 
 const playfairDisplay = Playfair_Display({
@@ -21,7 +24,8 @@ const playfairDisplay = Playfair_Display({
   variable: '--font-playfair-display',
   display: 'swap',
   fallback: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-  preload: false, // Disable preload to avoid build issues
+  preload: false, // Keep secondary font lazy loaded (not critical for initial render)
+  adjustFontFallback: true,
 });
 import './globals.css';
 import ClientErrorBoundary from '@/components/ClientErrorBoundary';

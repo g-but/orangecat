@@ -21,150 +21,193 @@ import {
   Target,
   Users,
   MapPin,
+  Loader2,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import ModernProjectCard from '@/components/ui/ModernProjectCard';
 import Input from '@/components/ui/Input';
 import { categoryValues, simpleCategories } from '@/config/categories';
 import { useAuth } from '@/hooks/useAuth';
+import { useSearch } from '@/hooks/useSearch';
+import { SearchFundingPage } from '@/services/search';
 
 type ViewMode = 'grid' | 'list';
-
-// Import search functionality
-import { search, getTrending, SearchFundingPage } from '@/services/search';
 
 export default function DiscoverPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
 
-  // State management
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  // Initialize state from URL params
+  const initialSearchTerm = searchParams.get('search') || '';
   const initialCategories = (searchParams.get('category') || '')
     .split(',')
     .map(s => s.trim())
     .filter(Boolean);
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'trending');
+  // Convert 'trending' to 'popular' (closest match) or use provided sort
+  const urlSort = searchParams.get('sort') || 'popular';
+  const initialSort = (urlSort === 'trending' ? 'popular' : urlSort) as
+    | 'relevance'
+    | 'recent'
+    | 'popular'
+    | 'funding';
+  const initialCountry = searchParams.get('country') || '';
+  const initialCity = searchParams.get('city') || '';
+  const initialPostal = searchParams.get('postal') || '';
+  const initialRadiusKm = Number(searchParams.get('radius_km') || 0);
+
+  // Use the optimized useSearch hook with pagination and debouncing
+  const {
+    query: searchTerm,
+    setQuery: setSearchTerm,
+    sortBy,
+    setSortBy,
+    filters,
+    setFilters,
+    results: searchResults,
+    loading,
+    totalResults,
+    hasMore,
+    loadMore,
+    error: searchError,
+  } = useSearch({
+    initialQuery: initialSearchTerm,
+    initialType: 'projects',
+    initialSort: initialSort,
+    initialFilters: {
+      categories: initialCategories.length > 0 ? initialCategories : undefined,
+      country: initialCountry || undefined,
+      city: initialCity || undefined,
+      postal_code: initialPostal || undefined,
+      radius_km: initialRadiusKm || undefined,
+    },
+    autoSearch: true,
+    debounceMs: 300, // 300ms debounce for search input
+  });
+
+  // UI state
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
-  const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [projects, setProjects] = useState<SearchFundingPage[]>([]);
-  // Left-rail geographic filters
-  const [country, setCountry] = useState(searchParams.get('country') || '');
-  const [city, setCity] = useState(searchParams.get('city') || '');
-  const [postal, setPostal] = useState(searchParams.get('postal') || '');
-  const [radiusKm, setRadiusKm] = useState<number>(Number(searchParams.get('radius_km') || 0));
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
+  const [country, setCountry] = useState(initialCountry);
+  const [city, setCity] = useState(initialCity);
+  const [postal, setPostal] = useState(initialPostal);
+  const [radiusKm, setRadiusKm] = useState<number>(initialRadiusKm);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // Load real project data on mount and when search params change
+  // Extract projects from search results
+  const projects = useMemo(() => {
+    return searchResults
+      .filter(result => result.type === 'project')
+      .map(result => result.data as SearchFundingPage);
+  }, [searchResults]);
+
+  // Update search filters when local filter state changes
   useEffect(() => {
-    const loadProjects = async () => {
-      try {
-        setLoading(true);
+    setFilters({
+      categories: selectedCategories.length > 0 ? selectedCategories : undefined,
+      country: country || undefined,
+      city: city || undefined,
+      postal_code: postal || undefined,
+      radius_km: radiusKm || undefined,
+    });
+  }, [selectedCategories, country, city, postal, radiusKm, setFilters]);
 
-        // Always load ALL projects (not just trending) when on projects section
-        const section = searchParams.get('section');
-        const shouldLoadProjects = !section || section === 'projects';
+  // Sync URL params with search state
+  useEffect(() => {
+    const newSearchParams = new URLSearchParams(searchParams.toString());
 
-        if (shouldLoadProjects) {
-          // Always use search to get ALL active projects
-          const searchResults = await search({
-            query: searchTerm || undefined,
-            type: 'projects',
-            sortBy: sortBy as any,
-            limit: 100, // Increase limit to show all projects
-            filters: {
-              categories: selectedCategories.length > 0 ? selectedCategories : undefined,
-              country: country || undefined,
-              city: city || undefined,
-              postal_code: postal || undefined,
-              radius_km: radiusKm || undefined,
-            } as any,
-          });
+    if (searchTerm) {
+      newSearchParams.set('search', searchTerm);
+    } else {
+      newSearchParams.delete('search');
+    }
 
-          const projectResults = searchResults.results
-            .filter(result => result.type === 'project')
-            .map(result => result.data as SearchFundingPage);
-
-          setProjects(projectResults);
-        } else {
-          // For other sections, use trending
-          const trendingResults = await getTrending();
-          const projectResults = trendingResults.results
-            .filter(result => result.type === 'project')
-            .map(result => result.data as SearchFundingPage);
-
-          setProjects(projectResults);
-        }
-      } catch (error) {
-        logger.error('Error loading projects:', error);
-        setProjects([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadProjects();
-  }, [searchTerm, selectedCategories, sortBy, country, city, postal, radiusKm, searchParams]);
-
-  // Filter and search logic (now using real data)
-  const filteredProjects = useMemo(() => {
-    // The search service already handles filtering and sorting
-    // We just need to filter out any results that don't match our current filters
-    const filtered = [...projects];
-
-    // Additional client-side filtering for features not in the search service yet
     if (selectedCategories.length > 0) {
-      // Categories don't exist in current schema, skip filtering
+      newSearchParams.set('category', selectedCategories.join(','));
+    } else {
+      newSearchParams.delete('category');
     }
 
-    if (selectedTags.length > 0) {
-      // Tags don't exist in current schema, skip filtering
+    // Only set sort if it's not the default (popular)
+    if (sortBy !== 'popular') {
+      newSearchParams.set('sort', sortBy);
+    } else {
+      newSearchParams.delete('sort');
     }
 
-    return filtered;
-  }, [projects, selectedCategories, selectedTags]);
+    if (country) {
+      newSearchParams.set('country', country);
+    } else {
+      newSearchParams.delete('country');
+    }
+
+    if (city) {
+      newSearchParams.set('city', city);
+    } else {
+      newSearchParams.delete('city');
+    }
+
+    if (postal) {
+      newSearchParams.set('postal', postal);
+    } else {
+      newSearchParams.delete('postal');
+    }
+
+    if (radiusKm) {
+      newSearchParams.set('radius_km', String(radiusKm));
+    } else {
+      newSearchParams.delete('radius_km');
+    }
+
+    const newUrl = `/discover?${newSearchParams.toString()}`;
+    if (newUrl !== `/discover?${searchParams.toString()}`) {
+      router.replace(newUrl, { scroll: false });
+    }
+  }, [
+    searchTerm,
+    selectedCategories,
+    sortBy,
+    country,
+    city,
+    postal,
+    radiusKm,
+    router,
+    searchParams,
+  ]);
+
+  // Handle load more with loading state
+  const handleLoadMore = useCallback(async () => {
+    if (!hasMore || isLoadingMore) {
+      return;
+    }
+    setIsLoadingMore(true);
+    try {
+      await loadMore();
+    } catch (error) {
+      logger.error('Error loading more projects:', error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [hasMore, isLoadingMore, loadMore]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    updateURL({ search: value });
+    // URL update happens automatically via useEffect
   };
 
-  const updateURL = useCallback(
-    (params: Record<string, string>) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString());
-      Object.entries(params).forEach(([key, value]) => {
-        if (value) {
-          newSearchParams.set(key, value);
-        } else {
-          newSearchParams.delete(key);
-        }
-      });
-      router.push(`/discover?${newSearchParams.toString()}`, { scroll: false });
-    },
-    [router, searchParams]
-  );
-
-  const handleToggleCategory = useCallback(
-    (category: string) => {
-      setSelectedCategories(prev => {
-        const next = prev.includes(category)
-          ? prev.filter(c => c !== category)
-          : [...prev, category];
-        // Update URL after state updates
-        queueMicrotask(() => {
-          updateURL({ category: next.join(',') });
-        });
-        return next;
-      });
-    },
-    [updateURL]
-  );
+  const handleToggleCategory = useCallback((category: string) => {
+    setSelectedCategories(prev => {
+      const next = prev.includes(category) ? prev.filter(c => c !== category) : [...prev, category];
+      return next;
+    });
+    // URL update happens automatically via useEffect
+  }, []);
 
   const handleSortChange = (sort: string) => {
-    setSortBy(sort);
-    updateURL({ sort });
+    setSortBy(sort as any);
+    // URL update happens automatically via useEffect
   };
 
   const toggleTag = (tag: string) => {
@@ -175,7 +218,7 @@ export default function DiscoverPage() {
     setSearchTerm('');
     setSelectedCategories([]);
     setSelectedTags([]);
-    setSortBy('trending');
+    setSortBy('popular' as any);
     setCountry('');
     setCity('');
     setPostal('');
@@ -189,13 +232,13 @@ export default function DiscoverPage() {
   }, []);
 
   const stats = useMemo(() => {
-    const totalProjects = filteredProjects.length;
+    const totalProjects = totalResults; // Use totalResults from search hook
     // For now, we don't have supporter or funding data in the current schema
     // These will be 0 until we add those fields to the database
     const totalSupporters = 0;
     const totalFunding = 0;
     return { totalProjects, totalSupporters, totalFunding };
-  }, [filteredProjects]);
+  }, [totalResults]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/50 via-white to-tiffany-50/30">
@@ -288,6 +331,11 @@ export default function DiscoverPage() {
                       onChange={e => handleSearch(e.target.value)}
                       className="pl-10 pr-4 py-2 text-sm bg-white/80 border-gray-200/80 rounded-xl"
                     />
+                    {loading && (
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                        <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -299,10 +347,10 @@ export default function DiscoverPage() {
                     onChange={e => handleSortChange(e.target.value)}
                     className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                   >
-                    <option value="trending">Trending</option>
-                    <option value="newest">Newest</option>
-                    <option value="ending_soon">Ending Soon</option>
-                    <option value="most_funded">Most Funded</option>
+                    <option value="popular">Popular</option>
+                    <option value="recent">Newest</option>
+                    <option value="funding">Most Funded</option>
+                    <option value="relevance">Relevance</option>
                   </select>
                 </div>
 
@@ -364,28 +412,19 @@ export default function DiscoverPage() {
                   <label className="block text-sm font-medium text-gray-700">Location</label>
                   <input
                     value={country}
-                    onChange={e => {
-                      setCountry(e.target.value);
-                      updateURL({ country: e.target.value });
-                    }}
+                    onChange={e => setCountry(e.target.value)}
                     placeholder="Country"
                     className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                   />
                   <input
                     value={city}
-                    onChange={e => {
-                      setCity(e.target.value);
-                      updateURL({ city: e.target.value });
-                    }}
+                    onChange={e => setCity(e.target.value)}
                     placeholder="City/Region"
                     className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                   />
                   <input
                     value={postal}
-                    onChange={e => {
-                      setPostal(e.target.value);
-                      updateURL({ postal: e.target.value });
-                    }}
+                    onChange={e => setPostal(e.target.value)}
                     placeholder="Postal code"
                     className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                   />
@@ -394,7 +433,6 @@ export default function DiscoverPage() {
                     onChange={e => {
                       const v = Number(e.target.value);
                       setRadiusKm(v);
-                      updateURL({ radius_km: v ? String(v) : '' });
                     }}
                     className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                   >
@@ -413,7 +451,7 @@ export default function DiscoverPage() {
                   city ||
                   postal ||
                   radiusKm ||
-                  sortBy !== 'trending') && (
+                  sortBy !== 'popular') && (
                   <div className="mb-6 pb-6 border-b border-gray-200">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Active filters
@@ -437,7 +475,7 @@ export default function DiscoverPage() {
                           {country || city || postal}
                         </span>
                       )}
-                      {sortBy !== 'trending' && (
+                      {sortBy !== 'popular' && (
                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
                           {sortBy}
                         </span>
@@ -495,6 +533,11 @@ export default function DiscoverPage() {
                           onChange={e => handleSearch(e.target.value)}
                           className="pl-10 pr-4 py-2 text-sm bg-white/80 border-gray-200/80 rounded-xl"
                         />
+                        {loading && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -507,10 +550,10 @@ export default function DiscoverPage() {
                           onChange={e => handleSortChange(e.target.value)}
                           className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                         >
-                          <option value="trending">Trending</option>
-                          <option value="newest">Newest</option>
-                          <option value="ending_soon">Ending Soon</option>
-                          <option value="most_funded">Most Funded</option>
+                          <option value="popular">Popular</option>
+                          <option value="recent">Newest</option>
+                          <option value="funding">Most Funded</option>
+                          <option value="relevance">Relevance</option>
                         </select>
                       </div>
                       <div>
@@ -571,28 +614,19 @@ export default function DiscoverPage() {
                       <label className="block text-sm font-medium text-gray-700">Location</label>
                       <input
                         value={country}
-                        onChange={e => {
-                          setCountry(e.target.value);
-                          updateURL({ country: e.target.value });
-                        }}
+                        onChange={e => setCountry(e.target.value)}
                         placeholder="Country"
                         className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                       />
                       <input
                         value={city}
-                        onChange={e => {
-                          setCity(e.target.value);
-                          updateURL({ city: e.target.value });
-                        }}
+                        onChange={e => setCity(e.target.value)}
                         placeholder="City/Region"
                         className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                       />
                       <input
                         value={postal}
-                        onChange={e => {
-                          setPostal(e.target.value);
-                          updateURL({ postal: e.target.value });
-                        }}
+                        onChange={e => setPostal(e.target.value)}
                         placeholder="Postal code"
                         className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                       />
@@ -601,7 +635,6 @@ export default function DiscoverPage() {
                         onChange={e => {
                           const v = Number(e.target.value);
                           setRadiusKm(v);
-                          updateURL({ radius_km: v ? String(v) : '' });
                         }}
                         className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
                       >
@@ -620,136 +653,113 @@ export default function DiscoverPage() {
                 </motion.div>
               )}
             </AnimatePresence>
-            {/* Project Creation CTA (when no projects exist) */}
-            {filteredProjects.length === 0 &&
-              !searchTerm &&
-              selectedCategories.length === 0 &&
-              selectedTags.length === 0 && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: 1.5 }}
-                  className="mb-8"
-                >
-                  <div className="bg-gradient-to-r from-orange-50 via-tiffany-50 to-orange-50 rounded-2xl border border-orange-200 p-8 text-center">
-                    <div className="max-w-2xl mx-auto">
-                      <div className="w-16 h-16 bg-gradient-to-r from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Target className="w-8 h-8 text-orange-600" />
-                      </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                        Start the Bitcoin Revolution! 🚀
-                      </h3>
-                      <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                        No projects yet? Be the pioneer! Create the first Bitcoin fundraising
-                        project and show the world how easy it is to fund dreams with Bitcoin.
-                      </p>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                        <div className="p-4 bg-white/60 rounded-lg">
-                          <div className="text-2xl font-bold text-orange-600 mb-1">1</div>
-                          <div className="text-sm font-medium">Sign up</div>
-                          <div className="text-xs text-gray-600">Create your account</div>
-                        </div>
-                        <div className="p-4 bg-white/60 rounded-lg">
-                          <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
-                          <div className="text-sm font-medium">Create</div>
-                          <div className="text-xs text-gray-600">Set up your project</div>
-                        </div>
-                        <div className="p-4 bg-white/60 rounded-lg">
-                          <div className="text-2xl font-bold text-green-600 mb-1">3</div>
-                          <div className="text-sm font-medium">Fund</div>
-                          <div className="text-xs text-gray-600">Receive Bitcoin donations</div>
-                        </div>
-                      </div>
-
-                      <Button
-                        href="/projects/create"
-                        size="lg"
-                        className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                      >
-                        🎯 Create the First Project
-                      </Button>
-
-                      <p className="text-sm text-gray-500 mt-4">
-                        Already have an account?{' '}
-                        <a href="/auth" className="text-orange-600 hover:underline font-medium">
-                          Sign in
-                        </a>{' '}
-                        to get started.
-                      </p>
-                    </div>
-                  </div>
-                </motion.div>
-              )}
-            {filteredProjects.length === 0 ? (
+            {/* Error State */}
+            {searchError && (
               <div className="text-center py-16">
-                <div className="max-w-md mx-auto">
-                  <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    {searchTerm || selectedCategories.length > 0 || selectedTags.length > 0
-                      ? 'No projects match your criteria'
-                      : 'Be the first to create a Bitcoin project!'}
-                  </h3>
-                  <p className="text-gray-600 mb-8">
-                    {searchTerm || selectedCategories.length > 0 || selectedTags.length > 0
-                      ? 'Try adjusting your search criteria or browse all projects.'
-                      : 'Start a Bitcoin fundraising project and be part of the revolution. It takes just a few minutes!'}
-                  </p>
+                <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md mx-auto">
+                  <p className="text-red-800 font-medium mb-2">Error loading projects</p>
+                  <p className="text-red-600 text-sm">{searchError}</p>
+                </div>
+              </div>
+            )}
 
-                  <div className="space-y-3">
+            {/* Empty State - Consolidated */}
+            {!loading && !searchError && projects.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                className="text-center py-16"
+              >
+                {!searchTerm && selectedCategories.length === 0 && selectedTags.length === 0 ? (
+                  // No filters - show full CTA
+                  <div className="bg-gradient-to-r from-orange-50 via-tiffany-50 to-orange-50 rounded-2xl border border-orange-200 p-8 text-center max-w-2xl mx-auto">
+                    <div className="w-16 h-16 bg-gradient-to-r from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Target className="w-8 h-8 text-orange-600" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                      Start the Bitcoin Revolution! 🚀
+                    </h3>
+                    <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                      No projects yet? Be the pioneer! Create the first Bitcoin fundraising project
+                      and show the world how easy it is to fund dreams with Bitcoin.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                      <div className="p-4 bg-white/60 rounded-lg">
+                        <div className="text-2xl font-bold text-orange-600 mb-1">1</div>
+                        <div className="text-sm font-medium">Sign up</div>
+                        <div className="text-xs text-gray-600">Create your account</div>
+                      </div>
+                      <div className="p-4 bg-white/60 rounded-lg">
+                        <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
+                        <div className="text-sm font-medium">Create</div>
+                        <div className="text-xs text-gray-600">Set up your project</div>
+                      </div>
+                      <div className="p-4 bg-white/60 rounded-lg">
+                        <div className="text-2xl font-bold text-green-600 mb-1">3</div>
+                        <div className="text-sm font-medium">Fund</div>
+                        <div className="text-xs text-gray-600">Receive Bitcoin donations</div>
+                      </div>
+                    </div>
+
                     <Button
                       href="/projects/create"
-                      className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                      size="lg"
+                      className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 mb-4"
                     >
-                      🚀 Create Your First Project
+                      🎯 Create the First Project
                     </Button>
 
-                    {searchTerm || selectedCategories.length > 0 || selectedTags.length > 0 ? (
+                    <p className="text-sm text-gray-500">
+                      Already have an account?{' '}
+                      <a href="/auth" className="text-orange-600 hover:underline font-medium">
+                        Sign in
+                      </a>{' '}
+                      to get started.
+                    </p>
+                  </div>
+                ) : (
+                  // Has filters - show filtered empty state
+                  <div className="max-w-md mx-auto">
+                    <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      No projects match your criteria
+                    </h3>
+                    <p className="text-gray-600 mb-8">
+                      Try adjusting your search criteria or browse all projects.
+                    </p>
+                    <div className="space-y-3">
                       <Button onClick={clearFilters} variant="outline" className="px-6 py-2">
                         Clear Filters
                       </Button>
-                    ) : (
-                      <div className="text-sm text-gray-500">
-                        <p>
-                          Need inspiration? Check out our{' '}
-                          <a href="/blog" className="text-orange-600 hover:underline">
-                            blog
-                          </a>{' '}
-                          for project ideas.
-                        </p>
-                      </div>
-                    )}
+                      <Button
+                        href="/projects/create"
+                        className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                      >
+                        🚀 Create Your First Project
+                      </Button>
+                    </div>
                   </div>
-
-                  {/* Quick Start Guide */}
-                  <div className="mt-8 p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <h4 className="font-semibold text-orange-800 mb-2">Quick Start:</h4>
-                    <ol className="text-sm text-orange-700 space-y-1 text-left">
-                      <li>1. Sign up (or sign in)</li>
-                      <li>2. Click "Create Project" above</li>
-                      <li>3. Add your Bitcoin address</li>
-                      <li>4. Share your project link</li>
-                    </ol>
-                  </div>
-                </div>
-              </div>
-            ) : filteredProjects.length === 0 &&
-              (searchTerm || selectedCategories.length > 0 || selectedTags.length > 0) ? (
-              <>
-                {/* Filtered Results Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    No projects match your criteria
-                  </h2>
-                </div>
-              </>
+                )}
+              </motion.div>
             ) : (
               <>
                 {/* Results Header */}
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-bold text-gray-900">
-                    {filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}{' '}
-                    found
+                    {totalResults > 0 ? (
+                      <>
+                        {totalResults} project{totalResults !== 1 ? 's' : ''} found
+                        {projects.length < totalResults && (
+                          <span className="text-gray-500 text-lg font-normal ml-2">
+                            (showing {projects.length})
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      'No projects found'
+                    )}
                   </h2>
                 </div>
 
@@ -761,17 +771,42 @@ export default function DiscoverPage() {
                       : 'grid-cols-1'
                   }`}
                 >
-                  {filteredProjects.map((project, index) => (
+                  {projects.map((project, index) => (
                     <motion.div
                       key={project.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                      transition={{ duration: 0.4, delay: index * 0.05 }}
                     >
                       <ModernProjectCard project={project} viewMode={viewMode} />
                     </motion.div>
                   ))}
                 </div>
+
+                {/* Load More Button */}
+                {hasMore && (
+                  <div className="mt-8 flex justify-center">
+                    <Button
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      variant="outline"
+                      size="lg"
+                      className="min-w-[200px]"
+                    >
+                      {isLoadingMore ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          Load More Projects
+                          <ArrowUpDown className="w-4 h-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
               </>
             )}
           </div>
