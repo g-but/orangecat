@@ -15,9 +15,10 @@ import { logger } from '@/utils/logger';
 
 // GET /api/projects/[id] - Get specific project
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   try {
     const supabase = await createServerClient();
-    const { id } = await params;
 
     if (!id || typeof id !== 'string' || id.trim() === '') {
       return apiNotFound('Invalid project ID');
@@ -78,7 +79,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       profiles: profile,
     };
 
-    return apiSuccess(projectWithProfile);
+    // Cache project data for 60 seconds (projects don't change frequently)
+    return apiSuccess(projectWithProfile, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error) {
     logger.error(
       'Exception in GET /api/projects/[id]',

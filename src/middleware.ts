@@ -19,6 +19,18 @@ const publicRoutes = [
 const protectedRoutes = ['/dashboard', '/profile', '/settings'];
 
 export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const url = request.nextUrl;
+
+  // Early return for static assets and API routes (handled by matcher, but double-check)
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/') ||
+    pathname.match(/\.(ico|png|jpg|jpeg|svg|gif|webp|css|js|woff|woff2)$/)
+  ) {
+    return NextResponse.next();
+  }
+
   const response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -26,95 +38,76 @@ export async function middleware(request: NextRequest) {
   });
 
   // Add pathname to headers so layout can access it
-  response.headers.set('x-pathname', request.nextUrl.pathname);
+  response.headers.set('x-pathname', pathname);
 
-  // Handle password reset flow - redirect from root with reset tokens or error params to reset page
-  const url = new URL(request.url);
-
-  // Handle Supabase code exchange links (?code=...) by redirecting to /auth/callback
-  if (url.searchParams.has('code') && url.pathname === '/') {
+  // Handle Supabase code exchange links (?code=...) - early return for performance
+  if (url.searchParams.has('code') && pathname === '/') {
     const callbackUrl = new URL('/auth/callback', request.url);
     url.searchParams.forEach((value, key) => callbackUrl.searchParams.set(key, value));
     return NextResponse.redirect(callbackUrl);
   }
+
+  // Optimized password reset flow check
+  const searchParams = url.searchParams;
+  const hash = url.hash;
   const hasResetTokens =
-    url.searchParams.has('access_token') ||
-    url.searchParams.has('refresh_token') ||
-    url.hash.includes('access_token');
+    searchParams.has('access_token') ||
+    searchParams.has('refresh_token') ||
+    (hash && hash.includes('access_token'));
   const isRecoveryType =
-    url.searchParams.get('type') === 'recovery' || url.hash.includes('type=recovery');
-  // Supabase may redirect with only error params when the link is expired/invalid
+    searchParams.get('type') === 'recovery' || (hash && hash.includes('type=recovery'));
   const hasAuthErrors =
-    url.searchParams.has('error') ||
-    url.searchParams.has('error_code') ||
-    url.hash.includes('error=');
+    searchParams.has('error') ||
+    searchParams.has('error_code') ||
+    (hash && hash.includes('error='));
 
   if (
     ((hasResetTokens && isRecoveryType) || hasAuthErrors) &&
-    url.pathname !== '/auth/reset-password'
+    pathname !== '/auth/reset-password'
   ) {
-    // Redirect to reset password page while preserving all query params and hash
     const resetUrl = new URL('/auth/reset-password', request.url);
-
-    // Copy all query parameters
-    url.searchParams.forEach((value, key) => {
-      resetUrl.searchParams.set(key, value);
-    });
-
-    // Also preserve hash if present (Supabase v2 may use hash for tokens)
-    if (url.hash) {
-      resetUrl.hash = url.hash;
+    searchParams.forEach((value, key) => resetUrl.searchParams.set(key, value));
+    if (hash) {
+      resetUrl.hash = hash;
     }
-
     return NextResponse.redirect(resetUrl);
   }
 
-  try {
-    // Check for authentication by looking for Supabase auth cookies
-    // This is Edge Runtime compatible
-    const allCookies = Array.from(request.cookies.getAll());
+  // Optimized auth check - only check cookies if accessing protected route
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
 
-    // Check for the specific Supabase auth token cookie pattern
-    const supabaseAuthCookie = allCookies.find(
-      cookie => cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')
-    );
+  if (isProtectedRoute) {
+    try {
+      // Optimized cookie check - check most common patterns first
+      const cookies = request.cookies;
+      const accessToken =
+        cookies.get('sb-access-token')?.value ||
+        cookies.get('supabase-auth-token')?.value ||
+        cookies.get('supabase.auth.token')?.value;
 
-    // Also check for legacy formats
-    const accessToken =
-      request.cookies.get('sb-access-token')?.value ||
-      request.cookies.get('supabase-auth-token')?.value ||
-      request.cookies.get('supabase.auth.token')?.value ||
-      supabaseAuthCookie?.value;
+      // Only do expensive cookie iteration if simple checks fail
+      if (!accessToken) {
+        const allCookies = cookies.getAll();
+        const hasAuthCookie = allCookies.some(
+          cookie =>
+            (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) ||
+            (cookie.name.includes('supabase') &&
+              cookie.name.includes('auth') &&
+              cookie.value &&
+              cookie.value.length > 10)
+        );
 
-    // More comprehensive check for any Supabase auth cookies
-    const hasAuthCookie =
-      !!supabaseAuthCookie ||
-      !!accessToken ||
-      allCookies.some(
-        cookie =>
-          cookie.name.includes('supabase') &&
-          cookie.name.includes('auth') &&
-          cookie.value &&
-          cookie.value.length > 10
-      );
-
-    // Extract the path from the URL
-    const path = request.nextUrl.pathname;
-
-    // If user is not authenticated and trying to access a protected route, redirect to /auth
-    if (!accessToken && !hasAuthCookie && protectedRoutes.some(route => path.startsWith(route))) {
-      const redirectUrl = new URL('/auth', request.url);
-      redirectUrl.searchParams.set('mode', 'login');
-      redirectUrl.searchParams.set('from', path);
-      return NextResponse.redirect(redirectUrl);
+        if (!hasAuthCookie) {
+          const redirectUrl = new URL('/auth', request.url);
+          redirectUrl.searchParams.set('mode', 'login');
+          redirectUrl.searchParams.set('from', pathname);
+          return NextResponse.redirect(redirectUrl);
+        }
+      }
+    } catch (error) {
+      // Silently fail - let request proceed (client-side will handle auth)
     }
-
-    // Let client-side handle auth page redirects to avoid loops
-    // The auth page will redirect on the client side after hydration
-    // if ((accessToken || hasAuthCookie) && path === '/auth') {
-    //   return NextResponse.redirect(new URL('/dashboard', request.url))
-    // }
-  } catch (error) {}
+  }
 
   return response;
 }
