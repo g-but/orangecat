@@ -48,9 +48,12 @@ export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse;
  */
 export function apiSuccess<T>(
   data: T,
-  options?: Omit<ApiSuccessResponse['metadata'], 'timestamp'> & { status?: number }
+  options?: Omit<ApiSuccessResponse['metadata'], 'timestamp'> & {
+    status?: number;
+    headers?: HeadersInit;
+  }
 ): NextResponse<ApiSuccessResponse<T>> {
-  const { status, ...metadata } = options || {};
+  const { status, headers, ...metadata } = options || {};
   const response: ApiSuccessResponse<T> = {
     success: true,
     data,
@@ -60,7 +63,10 @@ export function apiSuccess<T>(
     },
   };
 
-  return NextResponse.json(response, status ? { status } : undefined);
+  return NextResponse.json(response, {
+    status: status || 200,
+    headers: headers || {},
+  });
 }
 
 /**

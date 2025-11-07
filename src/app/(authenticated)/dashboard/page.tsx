@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
@@ -37,11 +37,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const [localLoading, setLocalLoading] = useState(true);
   const [hasRedirected, setHasRedirected] = useState(false);
-
-  // Debug logging
-  useEffect(() => {
-    // REMOVED: console.log statement for security
-  }, [user, profile, session, isLoading, hydrated, authError, localLoading]);
 
   useEffect(() => {
     if (hydrated) {
@@ -86,6 +81,89 @@ export default function DashboardPage() {
     }
   }, [user, hydrated, isLoading, router, hasRedirected]);
 
+  // Get project stats - ensure projects is an array before using reduce
+  // IMPORTANT: All hooks must be called before any early returns
+  const safeProjects = useMemo(() => (Array.isArray(projects) ? projects : []), [projects]);
+  const safeDrafts = useMemo(() => (Array.isArray(drafts) ? drafts : []), [drafts]);
+  const stats = useMemo(() => getStats(), [projects, drafts]);
+  const totalProjects = stats.totalProjects;
+
+  // Calculate totals by currency to avoid mixing BTC and CHF - MEMOIZED
+  const fundingByCurrency = useMemo(
+    () =>
+      safeProjects.reduce(
+        (acc, project) => {
+          const currency = project.currency || 'CHF';
+          acc[currency] = (acc[currency] || 0) + (project.total_funding || 0);
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+    [safeProjects]
+  );
+
+  // Use the primary currency (CHF by default, or BTC if that's the only one) - MEMOIZED
+  const primaryCurrency = useMemo(
+    () =>
+      fundingByCurrency['CHF'] !== undefined
+        ? 'CHF'
+        : fundingByCurrency['BTC'] !== undefined
+          ? 'BTC'
+          : 'CHF',
+    [fundingByCurrency]
+  );
+  const totalRaised = useMemo(
+    () => fundingByCurrency[primaryCurrency] || 0,
+    [fundingByCurrency, primaryCurrency]
+  );
+  const totalSupporters = useMemo(
+    () => safeProjects.reduce((sum, c) => sum + (c.contributor_count || 0), 0),
+    [safeProjects]
+  );
+
+  // Profile completion - MEMOIZED
+  const profileCompletion = useMemo(() => {
+    const hasUsername = !!profile?.username;
+    const hasBio = !!profile?.bio;
+    const hasBitcoinAddress = !!profile?.bitcoin_address;
+    const profileFields = [hasUsername, hasBio, hasBitcoinAddress];
+    return Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100);
+  }, [profile?.username, profile?.bio, profile?.bitcoin_address]);
+
+  // Profile completion flags for UI - MEMOIZED
+  const hasUsername = useMemo(() => !!profile?.username, [profile?.username]);
+  const hasBio = useMemo(() => !!profile?.bio, [profile?.bio]);
+  const hasBitcoinAddress = useMemo(() => !!profile?.bitcoin_address, [profile?.bitcoin_address]);
+
+  // Get primary draft for urgent actions - MEMOIZED
+  const hasAnyDraft = useMemo(() => safeDrafts.length > 0, [safeDrafts]);
+  const primaryDraft = useMemo(
+    () => (hasAnyDraft ? safeDrafts[0] : null),
+    [hasAnyDraft, safeDrafts]
+  );
+  const totalDrafts = useMemo(() => safeDrafts.length, [safeDrafts]);
+
+  // Get featured project (most recent published or highest funded) - MEMOIZED
+  const featuredProject = useMemo(() => {
+    const publishedProjects = safeProjects.filter(p => !p.isDraft);
+    if (publishedProjects.length > 0) {
+      // Sort by funding amount (highest first) - use spread to avoid mutation
+      return [...publishedProjects].sort(
+        (a, b) => (b.total_funding || 0) - (a.total_funding || 0)
+      )[0];
+    }
+    // Fallback: look for Orange Cat project or first project
+    return (
+      safeProjects.find(c => c.title?.toLowerCase().includes('orange cat')) ||
+      safeProjects[0] ||
+      null
+    );
+  }, [safeProjects]);
+
+  // Profile category for display (use profile_type if available, default to individual) - MEMOIZED
+  // Note: profile_type may not exist in current schema, default to individual
+  const profileCategory = useMemo(() => PROFILE_CATEGORIES.individual, []);
+
   // Handle loading states - simplified to avoid infinite loading
   if (!hydrated || localLoading) {
     return <Loading fullScreen message="Loading your account..." />;
@@ -122,67 +200,10 @@ export default function DashboardPage() {
     );
   }
 
-  // REMOVED: console.log statement
-
   // Ensure user is authenticated before rendering dashboard content
   if (!user) {
     return null; // Will redirect via useEffect
   }
-
-  // Get project stats - ensure projects is an array before using reduce
-  const safeProjects = Array.isArray(projects) ? projects : [];
-  const safeDrafts = Array.isArray(drafts) ? drafts : [];
-  const stats = getStats();
-  const totalProjects = stats.totalProjects;
-
-  // Calculate totals by currency to avoid mixing BTC and CHF
-  const fundingByCurrency = safeProjects.reduce(
-    (acc, project) => {
-      const currency = project.currency || 'CHF';
-      acc[currency] = (acc[currency] || 0) + (project.total_funding || 0);
-      return acc;
-    },
-    {} as Record<string, number>
-  );
-
-  // Use the primary currency (CHF by default, or BTC if that's the only one)
-  const primaryCurrency =
-    fundingByCurrency['CHF'] !== undefined
-      ? 'CHF'
-      : fundingByCurrency['BTC'] !== undefined
-        ? 'BTC'
-        : 'CHF';
-  const totalRaised = fundingByCurrency[primaryCurrency] || 0;
-  const totalSupporters = safeProjects.reduce((sum, c) => sum + (c.contributor_count || 0), 0);
-
-  // Profile completion
-  const hasUsername = !!profile?.username;
-  const hasBio = !!profile?.bio;
-  const hasBitcoinAddress = !!profile?.bitcoin_address;
-  const profileFields = [hasUsername, hasBio, hasBitcoinAddress];
-  const profileCompletion = Math.round(
-    (profileFields.filter(Boolean).length / profileFields.length) * 100
-  );
-
-  // Get primary draft for urgent actions
-  const hasAnyDraft = safeDrafts.length > 0;
-  const primaryDraft = hasAnyDraft ? safeDrafts[0] : null;
-  const totalDrafts = safeDrafts.length;
-
-  // Get featured project (most recent published or highest funded)
-  // Note: Use spread operator to avoid mutating store state
-  const publishedProjects = safeProjects.filter(p => !p.isDraft);
-  const featuredProject =
-    publishedProjects.length > 0
-      ? [...publishedProjects].sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0]
-      : safeProjects.find(c => c.title?.toLowerCase().includes('orange cat')) || // Specifically look for Orange Cat
-        safeProjects[0]; // Fallback to first project
-
-  // Profile category for display (use profile_type if available, default to individual)
-  const profileCategory =
-    profile?.profile_type && profile.profile_type in PROFILE_CATEGORIES
-      ? PROFILE_CATEGORIES[profile.profile_type as keyof typeof PROFILE_CATEGORIES]
-      : PROFILE_CATEGORIES.individual;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">

@@ -50,7 +50,13 @@ export async function GET(request: NextRequest) {
       profiles: Array.isArray(project.profiles) ? project.profiles[0] : project.profiles,
     }));
 
-    return apiSuccess(projectsWithProfiles);
+    // Add cache headers for GET requests
+    // Cache for 60 seconds, allow stale-while-revalidate for 5 minutes
+    return apiSuccess(projectsWithProfiles, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+      },
+    });
   } catch (error) {
     return handleApiError(error);
   }
