@@ -45,6 +45,8 @@ function AddressCard({ type, address, label, description }: AddressCardProps) {
   return (
     <div
       className={`bg-white rounded-lg border-2 p-5 ${isBitcoin ? 'border-orange-200' : 'border-yellow-200'}`}
+      data-bitcoin-card={isBitcoin ? 'true' : undefined}
+      data-lightning-card={!isBitcoin ? 'true' : undefined}
     >
       {/* Header */}
       <div className="flex items-center gap-2 mb-4">
