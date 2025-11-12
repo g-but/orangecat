@@ -23,6 +23,8 @@ export interface SearchFundingPage {
   raised_amount: number;
   created_at: string;
   updated_at: string;
+  banner_url?: string | null;
+  featured_image_url?: string | null;
   profiles?: {
     id: string;
     username: string | null;
@@ -290,7 +292,8 @@ async function searchFundingPages(
     .select(
       `
       id, user_id, title, description, bitcoin_address,
-      created_at, updated_at, category, status, goal_amount, currency, raised_amount
+      created_at, updated_at, category, status, goal_amount, currency, raised_amount,
+      banner_url, featured_image_url
     `
     )
     .eq('status', 'active'); // Only show active projects in search
