@@ -13,6 +13,7 @@ When users tried to save their profile, they received a validation error toast m
 ### Root Cause
 
 The issue occurred because:
+
 1. Empty form fields (like optional URLs) were sent as **empty strings** `""`
 2. Zod validation schema requires URLs to be valid: `z.string().url().optional()`
 3. Empty strings `""` are **not** valid URLs
@@ -41,23 +42,24 @@ z.string().url().optional()  // ❌ Fails because "" is not a valid URL
 **File:** `src/app/api/profile/route.ts` (lines 43-52)
 
 ```typescript
-const body = await request.json()
+const body = await request.json();
 
 // Normalize empty strings to undefined so optional fields pass validation
 const normalizedBody: Record<string, unknown> = Object.fromEntries(
   Object.entries(body).map(([key, value]) => {
     if (typeof value === 'string') {
-      const trimmed = value.trim()
-      return [key, trimmed === '' ? undefined : trimmed]
+      const trimmed = value.trim();
+      return [key, trimmed === '' ? undefined : trimmed];
     }
-    return [key, value]
+    return [key, value];
   })
-)
+);
 
-const validatedData = profileSchema.parse(normalizedBody)
+const validatedData = profileSchema.parse(normalizedBody);
 ```
 
 **What it does:**
+
 - Takes the request body from the client
 - Trims all string values
 - Converts empty strings `""` to `undefined`
@@ -71,16 +73,17 @@ const validatedData = profileSchema.parse(normalizedBody)
 ```typescript
 // Provide specific error messages for Zod validation errors
 if (error instanceof Error && error.name === 'ZodError') {
-  const zodError = error as any
-  const firstError = zodError.errors?.[0]
-  const fieldName = firstError?.path?.join('.') || 'field'
-  const message = firstError?.message || 'Invalid profile data'
+  const zodError = error as any;
+  const firstError = zodError.errors?.[0];
+  const fieldName = firstError?.path?.join('.') || 'field';
+  const message = firstError?.message || 'Invalid profile data';
 
-  return handleApiError(new ValidationError(`${fieldName}: ${message}`))
+  return handleApiError(new ValidationError(`${fieldName}: ${message}`));
 }
 ```
 
 **What it does:**
+
 - Extracts specific field name from Zod error
 - Provides clear error message like: `"avatar_url: Invalid url"`
 - Helps users understand exactly what field has an issue
@@ -93,15 +96,23 @@ if (error instanceof Error && error.name === 'ZodError') {
 
 ```typescript
 export const profileSchema = z.object({
-  username: z.string().min(3).max(30).regex(/^[a-zA-Z0-9_-]+$/).optional(),
-  display_name: z.string().min(1).max(100).optional(),
+  username: z
+    .string()
+    .min(3)
+    .max(30)
+    .regex(/^[a-zA-Z0-9_-]+$/)
+    .optional(),
+  name: z.string().min(1).max(100).optional(), // Note: Schema standardized to 'name' (was 'display_name')
   bio: z.string().max(500).optional(),
   avatar_url: z.string().url().optional(),
   banner_url: z.string().url().optional(),
   website: z.string().url().optional(),
-  bitcoin_address: z.string().regex(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/).optional(),
+  bitcoin_address: z
+    .string()
+    .regex(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/)
+    .optional(),
   lightning_address: z.string().email().optional(),
-})
+});
 ```
 
 **Note:** Added comment that server-side normalizes empty strings before validation.
@@ -121,17 +132,23 @@ export const profileSchema = z.object({
 ### ❌ Alternative Approaches (Not Used)
 
 **Client-Side Fix Only:**
+
 ```typescript
 // Send undefined instead of empty string
-{ avatar_url: value || undefined }
+{
+  avatar_url: value || undefined;
+}
 ```
+
 - Problem: Requires updating all form submissions
 - Problem: No protection if client is buggy or malicious
 
 **Schema-Level Fix:**
+
 ```typescript
-z.string().url().or(z.literal('')).optional()
+z.string().url().or(z.literal('')).optional();
 ```
+
 - Problem: Schema becomes complex and verbose
 - Problem: Still need to convert `""` to `null` for database
 
@@ -142,6 +159,7 @@ z.string().url().or(z.literal('')).optional()
 ### Manual Test Steps
 
 1. **Test with empty optional fields:**
+
    ```bash
    # Go to profile page
    http://localhost:3003/profile
@@ -153,6 +171,7 @@ z.string().url().or(z.literal('')).optional()
    ```
 
 2. **Test with invalid URL:**
+
    ```bash
    # Enter invalid URL in avatar_url: "not-a-url"
    # Click "Save Profile"
@@ -174,7 +193,7 @@ curl -X PUT http://localhost:3003/api/profile \
   -H "Content-Type: application/json" \
   -H "Cookie: sb-access-token=YOUR_TOKEN" \
   -d '{
-    "display_name": "Test User",
+    "name": "Test User", // Note: Schema standardized to 'name'
     "avatar_url": "",
     "website": "",
     "bio": "My bio"
@@ -187,13 +206,13 @@ curl -X PUT http://localhost:3003/api/profile \
 
 ## Status
 
-| Component | Status | Details |
-|-----------|--------|---------|
+| Component                | Status         | Details                             |
+| ------------------------ | -------------- | ----------------------------------- |
 | **Server Normalization** | ✅ Implemented | Converts empty strings to undefined |
-| **Error Messages** | ✅ Enhanced | Shows specific field and error |
-| **Validation Schema** | ✅ Documented | Added clarifying comment |
-| **Dev Server** | ✅ Running | Changes compiled and active |
-| **Testing** | ⏳ Ready | User should test after login |
+| **Error Messages**       | ✅ Enhanced    | Shows specific field and error      |
+| **Validation Schema**    | ✅ Documented  | Added clarifying comment            |
+| **Dev Server**           | ✅ Running     | Changes compiled and active         |
+| **Testing**              | ⏳ Ready       | User should test after login        |
 
 ---
 
@@ -209,11 +228,13 @@ curl -X PUT http://localhost:3003/api/profile \
 ## Technical Details
 
 ### Before Fix
+
 ```
 Client → Empty String "" → Server → Zod Validation → ❌ FAIL
 ```
 
 ### After Fix
+
 ```
 Client → Empty String "" → Server Normalization → undefined → Zod Validation → ✅ PASS
 ```

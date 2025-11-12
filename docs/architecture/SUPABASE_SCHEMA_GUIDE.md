@@ -7,74 +7,78 @@ This document explains the complete database structure for OrangeCat, how authen
 ## 🗄️ Database Tables
 
 ### 1. `auth.users` (Supabase Built-in)
+
 This is Supabase's built-in authentication table that stores user account information.
 
 **Purpose**: Core authentication and user management
 **Managed by**: Supabase Auth service (automatic)
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key, automatically generated |
-| `email` | text | User's email address |
-| `created_at` | timestamp | When account was created |
-| `last_sign_in_at` | timestamp | Last login time |
-| `email_confirmed_at` | timestamp | Email verification status |
+| Column               | Type      | Description                          |
+| -------------------- | --------- | ------------------------------------ |
+| `id`                 | uuid      | Primary key, automatically generated |
+| `email`              | text      | User's email address                 |
+| `created_at`         | timestamp | When account was created             |
+| `last_sign_in_at`    | timestamp | Last login time                      |
+| `email_confirmed_at` | timestamp | Email verification status            |
 
 ### 2. `public.profiles` (Custom Application Table)
+
 This is our custom table that extends user information beyond what Supabase Auth provides.
 
 **Purpose**: Store user profile information, preferences, and Bitcoin addresses
 **Linked to**: `auth.users` via foreign key relationship
 
-| Column | Type | Nullable | Description |
-|--------|------|----------|-------------|
-| `id` | uuid | ❌ | Primary key, references `auth.users.id` |
-| `username` | text | ✅ | Unique username chosen by user |
-| `display_name` | text | ✅ | Display name shown in UI |
-| `bio` | text | ✅ | User biography/description |
-| `avatar_url` | text | ✅ | Profile picture URL |
-| `banner_url` | text | ✅ | Profile banner image URL |
-| `bitcoin_address` | text | ✅ | Bitcoin address for receiving donations |
-| `lightning_address` | text | ✅ | Lightning address for instant payments |
-| `website` | text | ✅ | User's website URL |
-| `created_at` | timestamp | ❌ | When profile was created |
-| `updated_at` | timestamp | ❌ | Last profile update |
+| Column              | Type      | Nullable | Description                                               |
+| ------------------- | --------- | -------- | --------------------------------------------------------- |
+| `id`                | uuid      | ❌       | Primary key, references `auth.users.id`                   |
+| `username`          | text      | ✅       | Unique username chosen by user                            |
+| `name`              | text      | ✅       | Display name shown in UI (standardized from display_name) |
+| `bio`               | text      | ✅       | User biography/description                                |
+| `avatar_url`        | text      | ✅       | Profile picture URL                                       |
+| `banner_url`        | text      | ✅       | Profile banner image URL                                  |
+| `bitcoin_address`   | text      | ✅       | Bitcoin address for receiving donations                   |
+| `lightning_address` | text      | ✅       | Lightning address for instant payments                    |
+| `website`           | text      | ✅       | User's website URL                                        |
+| `created_at`        | timestamp | ❌       | When profile was created                                  |
+| `updated_at`        | timestamp | ❌       | Last profile update                                       |
 
 ### 3. `public.funding_pages` (Crowdfunding Projects)
+
 Stores information about crowdfunding projects created by users.
 
 **Purpose**: Manage crowdfunding projects and projects
 **Linked to**: `auth.users` via `user_id`
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `user_id` | uuid | References `auth.users.id` |
-| `title` | text | Campaign title |
-| `description` | text | Campaign description |
-| `bitcoin_address` | text | Bitcoin address for donations |
-| `is_active` | boolean | Whether project is active |
-| `is_public` | boolean | Whether project is publicly visible |
-| `total_funding` | decimal | Total amount raised |
-| `contributor_count` | integer | Number of contributors |
-| `created_at` | timestamp | Campaign creation date |
-| `updated_at` | timestamp | Last update |
+| Column              | Type      | Description                         |
+| ------------------- | --------- | ----------------------------------- |
+| `id`                | uuid      | Primary key                         |
+| `user_id`           | uuid      | References `auth.users.id`          |
+| `title`             | text      | Campaign title                      |
+| `description`       | text      | Campaign description                |
+| `bitcoin_address`   | text      | Bitcoin address for donations       |
+| `is_active`         | boolean   | Whether project is active           |
+| `is_public`         | boolean   | Whether project is publicly visible |
+| `total_funding`     | decimal   | Total amount raised                 |
+| `contributor_count` | integer   | Number of contributors              |
+| `created_at`        | timestamp | Campaign creation date              |
+| `updated_at`        | timestamp | Last update                         |
 
 ### 4. `public.transactions` (Payment Records)
+
 Records all donations and transactions made through the platform.
 
 **Purpose**: Track all payments and donations
 **Linked to**: `funding_pages` and `auth.users`
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | uuid | Primary key |
-| `funding_page_id` | uuid | References `funding_pages.id` |
-| `amount` | decimal | Transaction amount |
-| `transaction_hash` | text | Bitcoin transaction hash |
-| `status` | text | Transaction status (pending/confirmed/failed) |
-| `created_at` | timestamp | Transaction timestamp |
-| `updated_at` | timestamp | Last status update |
+| Column             | Type      | Description                                   |
+| ------------------ | --------- | --------------------------------------------- |
+| `id`               | uuid      | Primary key                                   |
+| `funding_page_id`  | uuid      | References `funding_pages.id`                 |
+| `amount`           | decimal   | Transaction amount                            |
+| `transaction_hash` | text      | Bitcoin transaction hash                      |
+| `status`           | text      | Transaction status (pending/confirmed/failed) |
+| `created_at`       | timestamp | Transaction timestamp                         |
+| `updated_at`       | timestamp | Last status update                            |
 
 ## 🔐 Authentication Flow
 
@@ -104,6 +108,7 @@ CREATE TRIGGER on_auth_user_created
 All tables use Supabase's Row Level Security to ensure users can only access their own data.
 
 ### Profiles Policies
+
 ```sql
 -- Anyone can view profiles (for public profile pages)
 CREATE POLICY "Public profiles are viewable by everyone"
@@ -116,6 +121,7 @@ CREATE POLICY "Users can update their own profile"
 ```
 
 ### Funding Pages Policies
+
 ```sql
 -- Public projects are viewable by everyone
 CREATE POLICY "Public funding pages are viewable by everyone"
@@ -131,6 +137,7 @@ CREATE POLICY "Users can manage their own funding pages"
 ## 🔧 Database Functions
 
 ### `handle_new_user()`
+
 **Purpose**: Automatically creates a profile when a new user signs up
 **Trigger**: Runs after INSERT on `auth.users`
 
@@ -138,7 +145,7 @@ CREATE POLICY "Users can manage their own funding pages"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, username, display_name, created_at, updated_at)
+  INSERT INTO public.profiles (id, username, name, created_at, updated_at)
   VALUES (
     new.id,
     split_part(new.email, '@', 1), -- Use email username as initial username
@@ -152,6 +159,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
 ### `update_profile(profile_data jsonb)`
+
 **Purpose**: Safely update user profiles with validation
 **Security**: Only allows users to update their own profile
 
@@ -165,6 +173,7 @@ SELECT update_profile('{
 ```
 
 ### `update_updated_at_column()`
+
 **Purpose**: Automatically updates the `updated_at` timestamp
 **Trigger**: Runs before UPDATE on any table with `updated_at` column
 
@@ -198,12 +207,16 @@ supabase
 ## 🛠️ Recent Schema Issues & Fixes
 
 ### Problem Identified
+
 Your profiles table was missing several expected columns:
-- ❌ Missing: `bio`, `display_name`, `bitcoin_address`, `lightning_address`, `banner_url`
-- ✅ Present: `id`, `username`, `full_name`, `avatar_url`, `website`, `created_at`, `updated_at`
+
+- ❌ Missing: `bio`, `name`, `bitcoin_address`, `lightning_address`, `banner_url`
+- ✅ Present: `id`, `username`, `name`, `avatar_url`, `website`, `created_at`, `updated_at`
 
 ### Solution Applied
+
 Run the migration in `supabase/migrations/20250525000000_fix_profiles_schema.sql` to:
+
 1. Add all missing columns
 2. Create proper constraints and indexes
 3. Add RPC functions for safe updates
@@ -212,6 +225,7 @@ Run the migration in `supabase/migrations/20250525000000_fix_profiles_schema.sql
 ## 📝 Manual Steps Required
 
 ### 1. Apply Database Migration
+
 Go to your Supabase dashboard → SQL Editor and run:
 
 ```sql
@@ -220,11 +234,14 @@ Go to your Supabase dashboard → SQL Editor and run:
 ```
 
 ### 2. Verify Schema
+
 After running the migration, all these columns should exist in `public.profiles`:
-- ✅ `id`, `username`, `display_name`, `bio`, `bitcoin_address`
+
+- ✅ `id`, `username`, `name`, `bio`, `bitcoin_address`
 - ✅ `lightning_address`, `avatar_url`, `banner_url`, `created_at`, `updated_at`
 
 ### 3. Test Profile Updates
+
 Your profile edit form should now work correctly with all fields.
 
 ## 🔍 Troubleshooting
@@ -251,10 +268,7 @@ const { data } = await supabase.from('profiles').select('*').limit(1);
 console.log('Current columns:', Object.keys(data[0]));
 
 // Test profile update
-const { error } = await supabase
-  .from('profiles')
-  .update({ bio: 'test' })
-  .eq('id', userId);
+const { error } = await supabase.from('profiles').update({ bio: 'test' }).eq('id', userId);
 console.log('Update error:', error);
 ```
 
@@ -264,4 +278,4 @@ console.log('Update error:', error);
 - [Row Level Security Guide](https://supabase.com/docs/guides/auth/row-level-security)
 - [Supabase SQL Editor](https://supabase.com/dashboard/project/YOUR_PROJECT/sql)
 
-This documentation should be updated whenever the schema changes to keep it accurate and useful for development and debugging. 
+This documentation should be updated whenever the schema changes to keep it accurate and useful for development and debugging.
