@@ -1,0 +1,119 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
+
+interface ExperimentalBannerProps {
+  /**
+   * Storage type for dismissal persistence
+   * - 'session': Dismissed for current browser session only
+   * - 'local': Dismissed permanently until localStorage is cleared
+   */
+  storageType?: 'session' | 'local';
+  /**
+   * Additional CSS classes
+   */
+  className?: string;
+  /**
+   * Whether to show the dismiss button
+   */
+  dismissible?: boolean;
+  /**
+   * Custom content to show instead of default message
+   */
+  children?: React.ReactNode;
+  /**
+   * Callback when banner is dismissed
+   */
+  onDismiss?: () => void;
+}
+
+/**
+ * Reusable Experimental Banner Component
+ *
+ * DRY-compliant component that handles dismissal persistence.
+ * Supports both session and local storage dismissal.
+ */
+export default function ExperimentalBanner({
+  storageType = 'session',
+  className = '',
+  dismissible = true,
+  children,
+  onDismiss,
+}: ExperimentalBannerProps) {
+  const [isVisible, setIsVisible] = useState(true);
+
+  const storageKey = storageType === 'session'
+    ? 'oc_hide_experimental_banner'
+    : 'experimental-banner-dismissed';
+
+  const storageValue = storageType === 'session' ? '1' : 'true';
+
+  useEffect(() => {
+    try {
+      const storage = storageType === 'session' ? sessionStorage : localStorage;
+      const dismissed = storage.getItem(storageKey) === storageValue;
+      if (dismissed) {
+        setIsVisible(false);
+      }
+    } catch (error) {
+      // Storage not available, show banner
+    }
+  }, [storageKey, storageValue, storageType]);
+
+  const handleDismiss = () => {
+    try {
+      const storage = storageType === 'session' ? sessionStorage : localStorage;
+      storage.setItem(storageKey, storageValue);
+    } catch (error) {
+      // Storage not available, just hide for this session
+    }
+    setIsVisible(false);
+    onDismiss?.();
+  };
+
+  if (!isVisible) {
+    return null;
+  }
+
+  return (
+    <div className={`bg-gradient-to-r from-orange-100 to-tiffany-100 border-b border-orange-200 ${className}`}>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-sm flex-1 justify-center">
+            {children || (
+              <>
+                <span className="text-orange-600 font-medium">🚧 Experimental Version</span>
+                <span className="text-gray-600">•</span>
+                <span className="text-gray-600">
+                  {storageType === 'session'
+                    ? 'Development preview - features may not work as expected'
+                    : 'This is a development preview - features may not work as expected'
+                  }
+                </span>
+                <span className="text-gray-600">•</span>
+                <a
+                  href="https://github.com/g-but/orangecat"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-orange-600 hover:text-orange-700 font-medium underline"
+                >
+                  View Source
+                </a>
+              </>
+            )}
+          </div>
+          {dismissible && (
+            <button
+              onClick={handleDismiss}
+              className="ml-4 p-1 hover:bg-orange-200 rounded-full transition-colors"
+              aria-label="Dismiss banner"
+            >
+              <X className="w-4 h-4 text-orange-600" />
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -151,22 +151,29 @@ export default function UserProfileDropdown({
     return null;
   }
 
-  // User display logic - prioritize profile data
+  // User display logic - prioritize profile data, but show loading state while fetching
   const avatarUrl = profile?.avatar_url;
   const email = user?.email || session?.user?.email || '';
 
-  // PRIORITY: Profile data first, then fallback to email
-  let displayName = 'User';
-  if (profile?.name) {
-    displayName = profile.name;
-  } else if (profile?.username) {
-    displayName = profile.username;
-  } else if (user?.user_metadata?.full_name) {
-    displayName = user.user_metadata.full_name;
-  } else if (email) {
-    // Extract name from email more intelligently
-    const emailName = email.split('@')[0];
-    displayName = emailName.replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  // Show loading state while profile is being fetched
+  const isProfileLoading = user && !profile;
+
+  // PRIORITY: Profile data first, then fallback to user metadata, then email
+  let displayName = 'Loading...';
+  if (!isProfileLoading) {
+    if (profile?.name) {
+      displayName = profile.name;
+    } else if (profile?.username) {
+      displayName = profile.username;
+    } else if (user?.user_metadata?.full_name) {
+      displayName = user.user_metadata.full_name;
+    } else if (email) {
+      // Extract name from email more intelligently
+      const emailName = email.split('@')[0];
+      displayName = emailName.replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    } else {
+      displayName = 'User';
+    }
   }
 
   const firstName = displayName.split(' ')[0];
@@ -184,9 +191,11 @@ export default function UserProfileDropdown({
         <button
           ref={buttonRef}
           onClick={toggle}
-          className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none"
+          disabled={isProfileLoading}
+          className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none disabled:opacity-50"
         >
           <span className="text-sm font-medium">{displayName}</span>
+          {isProfileLoading && <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-2" />}
           <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
@@ -230,7 +239,8 @@ export default function UserProfileDropdown({
         ref={buttonRef}
         onClick={toggle}
         onKeyDown={handleTriggerKeyDown}
-        className="flex items-center space-x-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1 rounded-xl px-3 py-2.5 min-h-[44px]"
+        disabled={isProfileLoading}
+        className="flex items-center space-x-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1 rounded-xl px-3 py-2.5 min-h-[44px] disabled:opacity-50"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label="User menu"
@@ -255,7 +265,10 @@ export default function UserProfileDropdown({
             <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full shadow-sm"></div>
           </span>
         )}
-        <span className="font-medium text-base max-w-[140px] truncate">{firstName}</span>
+        <span className="font-medium text-base max-w-[140px] truncate flex items-center">
+          {firstName}
+          {isProfileLoading && <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-2" />}
+        </span>
         <ChevronDown
           className={`h-4 w-4 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
         />

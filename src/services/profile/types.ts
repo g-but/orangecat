@@ -16,7 +16,7 @@ export interface ScalableProfile extends Profile {
   // Core fields (existing in database)
   id: string;
   username: string | null;
-  display_name: string | null;
+  name: string | null; // Actual database column (renamed from display_name)
   avatar_url: string | null;
   website: string | null;
   created_at: string;

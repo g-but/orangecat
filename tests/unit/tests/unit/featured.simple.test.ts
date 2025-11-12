@@ -46,29 +46,29 @@ jest.mock('@/utils/logger', () => ({
 }))
 
 // Import after mocking
-import { 
-  getFeaturedCampaigns, 
-  getTrendingCampaigns, 
-  getStaffPicks, 
-  getNearlyFundedCampaigns, 
+import {
+  getFeaturedProjects,
+  getTrendingProjects,
+  getStaffPicks,
+  getNearlyFundedProjects,
   getNewAndNoteworthy,
   featureCampaign,
   unfeatureCampaign
-} from '../featured'
-import type { FeaturedType } from '../featured'
+} from '@/services/featured'
+import type { FeaturedType } from '@/services/featured'
 
 describe('⭐ Featured Service - Simple Coverage', () => {
 
   describe('🎯 Featured Campaign Functions', () => {
-    
-    test('should export getFeaturedCampaigns function', () => {
-      expect(typeof getFeaturedCampaigns).toBe('function')
-      expect(getFeaturedCampaigns).toBeDefined()
+
+    test('should export getFeaturedProjects function', () => {
+      expect(typeof getFeaturedProjects).toBe('function')
+      expect(getFeaturedProjects).toBeDefined()
     })
 
-    test('should export getTrendingCampaigns function', () => {
-      expect(typeof getTrendingCampaigns).toBe('function')
-      expect(getTrendingCampaigns).toBeDefined()
+    test('should export getTrendingProjects function', () => {
+      expect(typeof getTrendingProjects).toBe('function')
+      expect(getTrendingProjects).toBeDefined()
     })
 
     test('should export getStaffPicks function', () => {
@@ -76,9 +76,9 @@ describe('⭐ Featured Service - Simple Coverage', () => {
       expect(getStaffPicks).toBeDefined()
     })
 
-    test('should export getNearlyFundedCampaigns function', () => {
-      expect(typeof getNearlyFundedCampaigns).toBe('function')
-      expect(getNearlyFundedCampaigns).toBeDefined()
+    test('should export getNearlyFundedProjects function', () => {
+      expect(typeof getNearlyFundedProjects).toBe('function')
+      expect(getNearlyFundedProjects).toBeDefined()
     })
 
     test('should export getNewAndNoteworthy function', () => {
@@ -99,9 +99,9 @@ describe('⭐ Featured Service - Simple Coverage', () => {
   })
 
   describe('🎬 Featured Campaigns', () => {
-    
+
     test('should get featured campaigns with default limit', async () => {
-      const result = await getFeaturedCampaigns()
+      const result = await getFeaturedProjects()
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeLessThanOrEqual(6) // Default limit
@@ -109,21 +109,21 @@ describe('⭐ Featured Service - Simple Coverage', () => {
 
     test('should get featured campaigns with custom limit', async () => {
       const customLimit = 3
-      const result = await getFeaturedCampaigns(customLimit)
+      const result = await getFeaturedProjects(customLimit)
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeLessThanOrEqual(customLimit)
     })
 
     test('should handle zero limit', async () => {
-      const result = await getFeaturedCampaigns(0)
+      const result = await getFeaturedProjects(0)
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBe(0)
     })
 
     test('should handle large limit values', async () => {
-      const result = await getFeaturedCampaigns(100)
+      const result = await getFeaturedProjects(100)
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeLessThanOrEqual(100)
@@ -132,9 +132,9 @@ describe('⭐ Featured Service - Simple Coverage', () => {
   })
 
   describe('📈 Trending Campaigns', () => {
-    
+
     test('should get trending campaigns with default limit', async () => {
-      const result = await getTrendingCampaigns()
+      const result = await getTrendingProjects()
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeLessThanOrEqual(3) // Default limit
@@ -142,18 +142,18 @@ describe('⭐ Featured Service - Simple Coverage', () => {
 
     test('should get trending campaigns with custom limit', async () => {
       const customLimit = 5
-      const result = await getTrendingCampaigns(customLimit)
+      const result = await getTrendingProjects(customLimit)
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeLessThanOrEqual(customLimit)
     })
 
     test('should return trending featured type', async () => {
-      const result = await getTrendingCampaigns(1)
+      const result = await getTrendingProjects(1)
 
       // Even if empty, the function should work
       expect(Array.isArray(result)).toBe(true)
-      
+
       // If there are results, they should have trending type
       if (result.length > 0) {
         expect(result[0]).toHaveProperty('featured_type', 'trending')
@@ -196,9 +196,9 @@ describe('⭐ Featured Service - Simple Coverage', () => {
   })
 
   describe('🎯 Nearly Funded Campaigns', () => {
-    
+
     test('should get nearly funded campaigns with default limit', async () => {
-      const result = await getNearlyFundedCampaigns()
+      const result = await getNearlyFundedProjects()
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeLessThanOrEqual(3) // Default limit
@@ -206,18 +206,18 @@ describe('⭐ Featured Service - Simple Coverage', () => {
 
     test('should get nearly funded campaigns with custom limit', async () => {
       const customLimit = 4
-      const result = await getNearlyFundedCampaigns(customLimit)
+      const result = await getNearlyFundedProjects(customLimit)
 
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeLessThanOrEqual(customLimit)
     })
 
     test('should return nearly_funded featured type', async () => {
-      const result = await getNearlyFundedCampaigns(1)
+      const result = await getNearlyFundedProjects(1)
 
       // Even if empty, the function should work
       expect(Array.isArray(result)).toBe(true)
-      
+
       // If there are results, they should have nearly_funded type
       if (result.length > 0) {
         expect(result[0]).toHaveProperty('featured_type', 'nearly_funded')
@@ -370,12 +370,12 @@ describe('⭐ Featured Service - Simple Coverage', () => {
   })
 
   describe('📊 Data Structure Validation', () => {
-    
+
     test('should return consistent data structure for featured campaigns', async () => {
-      const result = await getFeaturedCampaigns(1)
+      const result = await getFeaturedProjects(1)
 
       expect(Array.isArray(result)).toBe(true)
-      
+
       // If there are results, validate structure
       if (result.length > 0) {
         const campaign = result[0]
@@ -386,10 +386,10 @@ describe('⭐ Featured Service - Simple Coverage', () => {
     })
 
     test('should return consistent data structure for trending campaigns', async () => {
-      const result = await getTrendingCampaigns(1)
+      const result = await getTrendingProjects(1)
 
       expect(Array.isArray(result)).toBe(true)
-      
+
       // If there are results, validate structure
       if (result.length > 0) {
         const campaign = result[0]
@@ -414,10 +414,10 @@ describe('⭐ Featured Service - Simple Coverage', () => {
   })
 
   describe('🧪 Edge Cases', () => {
-    
+
     test('should handle zero and negative limits gracefully', async () => {
-      const zeroResult = await getFeaturedCampaigns(0)
-      const negativeResult = await getFeaturedCampaigns(-1)
+      const zeroResult = await getFeaturedProjects(0)
+      const negativeResult = await getFeaturedProjects(-1)
 
       expect(Array.isArray(zeroResult)).toBe(true)
       expect(Array.isArray(negativeResult)).toBe(true)
@@ -425,7 +425,7 @@ describe('⭐ Featured Service - Simple Coverage', () => {
     })
 
     test('should handle very large limit values', async () => {
-      const result = await getFeaturedCampaigns(Number.MAX_SAFE_INTEGER)
+      const result = await getFeaturedProjects(Number.MAX_SAFE_INTEGER)
 
       expect(Array.isArray(result)).toBe(true)
       // Should not crash, even with extreme values
@@ -433,10 +433,10 @@ describe('⭐ Featured Service - Simple Coverage', () => {
 
     test('should handle concurrent featured campaign requests', async () => {
       const promises = [
-        getFeaturedCampaigns(2),
-        getTrendingCampaigns(2),
+        getFeaturedProjects(2),
+        getTrendingProjects(2),
         getStaffPicks(2),
-        getNearlyFundedCampaigns(2),
+        getNearlyFundedProjects(2),
         getNewAndNoteworthy(2)
       ]
 

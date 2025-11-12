@@ -85,7 +85,7 @@ const mockSupabaseOperations = {
 }
 
 // Mock the core client
-jest.mock('../core/client', () => ({
+jest.mock('@/services/supabase/core/client', () => ({
   supabase: mockSupabaseOperations
 }))
 
@@ -167,7 +167,7 @@ const createMockOrganization = (overrides = {}) => ({
 // =====================================================================
 
 // Import the service after mocking
-import AssociationService, { type Association, type CreateAssociationInput } from '../associations'
+import AssociationService, { type Association, type CreateAssociationInput } from '@/services/associations'
 
 describe('🎯 Association Service - Foundation Tests', () => {
 

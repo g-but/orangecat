@@ -11,7 +11,7 @@ export interface FavoriteProject extends Project {
   profiles?: {
     id: string;
     username: string | null;
-    display_name: string | null;
+    name: string | null;
     avatar_url: string | null;
   };
 }

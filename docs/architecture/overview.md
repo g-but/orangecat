@@ -2,9 +2,11 @@
 ## Entity Relationships & Data Model
 
 **Created:** 2025-10-13
-**Last Modified:** 2025-12-21
+**Last Modified:** 2025-01-20
 **Status:** Production Ready
 **Purpose:** Define clear boundaries between entities and their relationships in the simplified MVP architecture
+
+> 📖 **Long-Term Vision**: See [LONG_TERM_VISION.md](./LONG_TERM_VISION.md) for the complete vision including Assets, Events, and Organizations with multi-entity associations.
 
 ---
 

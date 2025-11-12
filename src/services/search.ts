@@ -65,7 +65,8 @@ export type SortOption = 'relevance' | 'recent' | 'popular' | 'funding';
 
 export interface SearchFilters {
   categories?: string[];
-  isActive?: boolean;
+  statuses?: ('active' | 'paused' | 'completed' | 'cancelled')[]; // Filter by project status
+  isActive?: boolean; // Deprecated: use statuses instead
   hasGoal?: boolean;
   minFunding?: number;
   maxFunding?: number;
@@ -255,6 +256,7 @@ async function searchProfiles(
   offset: number = 0
 ): Promise<SearchProfile[]> {
   // Start with minimal columns for better performance
+  // Query profiles by name
   let profileQuery = supabase
     .from('profiles')
     .select('id, username, name, bio, avatar_url, created_at');
@@ -276,7 +278,11 @@ async function searchProfiles(
   if (error) {
     throw error;
   }
-  return profiles || [];
+  
+  return (profiles || []).map((p: any) => ({
+    ...p,
+    name: p.name, 
+  }));
 }
 
 // Optimized project search with better query structure
@@ -287,16 +293,18 @@ async function searchFundingPages(
   offset: number = 0
 ): Promise<SearchFundingPage[]> {
   // OPTIMIZATION: Only select necessary columns to reduce payload
+  // Use cover_image_url (actual column name) instead of banner_url/featured_image_url
+  // Also fetch first project_media image as fallback if cover_image_url is not set
   let projectQuery = supabase
     .from('projects')
     .select(
       `
       id, user_id, title, description, bitcoin_address,
       created_at, updated_at, category, status, goal_amount, currency, raised_amount,
-      banner_url, featured_image_url
+      cover_image_url,
+      project_media!left(storage_path, position)
     `
-    )
-    .eq('status', 'active'); // Only show active projects in search
+    );
 
   if (query) {
     const sanitizedQuery = query.replace(/[%_]/g, '\\$&');
@@ -307,20 +315,20 @@ async function searchFundingPages(
 
   // OPTIMIZATION: Apply most selective filters first
   if (filters) {
-    // Most selective filters first for better query performance
-    // Only show 'active' projects in public search (draft, paused, completed, cancelled are excluded)
-    if (filters.isActive !== undefined) {
+    // Status filtering - show active and paused by default, exclude draft/completed/cancelled
+    if (filters.statuses && filters.statuses.length > 0) {
+      // Use the new statuses filter if provided
+      projectQuery = projectQuery.in('status', filters.statuses);
+    } else if (filters.isActive !== undefined) {
+      // Deprecated: backward compatibility for isActive filter
       if (filters.isActive) {
-        // Only show active projects in search results
         projectQuery = projectQuery.eq('status', 'active');
       } else {
-        // For non-active, we might want to show paused/completed, but typically we only search active
-        // This filter is mainly for admin/author views
         projectQuery = projectQuery.neq('status', 'active');
       }
     } else {
-      // Default: only show active projects in public search
-      projectQuery = projectQuery.eq('status', 'active');
+      // DEFAULT: Show active and paused projects (exclude draft, completed, cancelled)
+      projectQuery = projectQuery.in('status', ['active', 'paused']);
     }
 
     if (filters.categories && filters.categories.length > 0) {
@@ -366,14 +374,40 @@ async function searchFundingPages(
     .in('id', userIds);
 
   // Create a map of user_id to profile for quick lookup
-  const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+  
+  const profileMap = new Map(profiles?.map((p: any) => [
+    p.id, 
+    {
+      ...p,
+      name: p.name, 
+    }
+  ]) || []);
 
   // OPTIMIZATION: Minimize data transformation overhead
-  const projects: SearchFundingPage[] = rawProjects.map((project: any) => ({
-    ...project,
-    raised_amount: project.raised_amount || 0, // Use raised_amount directly from database
-    profiles: profileMap.get(project.user_id),
-  }));
+  const projects: SearchFundingPage[] = rawProjects.map((project: any) => {
+    // Get first project_media image as fallback if cover_image_url is not set
+    let coverImageUrl = project.cover_image_url;
+    if (!coverImageUrl && project.project_media && Array.isArray(project.project_media) && project.project_media.length > 0) {
+      // Get first media item (sorted by position)
+      const firstMedia = project.project_media.sort((a: any, b: any) => a.position - b.position)[0];
+      if (firstMedia?.storage_path) {
+        // Generate public URL from storage path
+        const { data: urlData } = supabase.storage.from('project-media').getPublicUrl(firstMedia.storage_path);
+        coverImageUrl = urlData.publicUrl;
+      }
+    }
+
+    return {
+      ...project,
+      raised_amount: project.raised_amount || 0, // Use raised_amount directly from database
+      cover_image_url: coverImageUrl, // Use cover_image_url or first project_media image
+      banner_url: coverImageUrl, // Map cover_image_url to banner_url for compatibility
+      featured_image_url: coverImageUrl, // Map cover_image_url to featured_image_url for compatibility
+      profiles: profileMap.get(project.user_id),
+      // Remove project_media from final object to reduce payload size
+      project_media: undefined,
+    };
+  });
 
   return projects;
 }
@@ -591,14 +625,15 @@ export async function getTrending(): Promise<SearchResponse> {
         .select(
           `
         id, user_id, title, description, bitcoin_address,
-        created_at, updated_at, category, status
+        created_at, updated_at, category, status, goal_amount, raised_amount,
+        cover_image_url
       `
         )
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(10),
 
-      // Get recent profiles
+      // Get recent profiles - use name (actual column name)
       supabase
         .from('profiles')
         .select('id, username, name, bio, avatar_url, created_at')
@@ -606,14 +641,33 @@ export async function getTrending(): Promise<SearchResponse> {
         .limit(10),
     ]);
 
-    // Process projects
+    // Process projects with profile data
     if (!projectsData.error && projectsData.data) {
-      const recentProjects: SearchFundingPage[] = (projectsData.data as RawSearchFundingPage[]).map(
-        project => ({
+      // Get user IDs for profile lookup
+      const userIds = [...new Set(projectsData.data.map((p: any) => p.user_id))];
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, username, name, avatar_url')
+        .in('id', userIds);
+
+      // Create a map of user_id to profile for quick lookup
+      const profileMap = new Map(profiles?.map(p => ({
+        ...p,
+        name: p.name, 
+      })).map(p => [p.id, p]) || []);
+
+      const recentProjects: SearchFundingPage[] = projectsData.data.map((project: any) => {
+        // Use cover_image_url directly (getTrending doesn't fetch project_media to keep it fast)
+        const coverImageUrl = project.cover_image_url;
+        return {
           ...project,
-          profiles: project.profiles?.[0] || undefined,
-        })
-      );
+          raised_amount: project.raised_amount || 0,
+          cover_image_url: coverImageUrl,
+          banner_url: coverImageUrl, // Map cover_image_url to banner_url
+          featured_image_url: coverImageUrl, // Map cover_image_url to featured_image_url
+          profiles: profileMap.get(project.user_id),
+        };
+      });
 
       recentProjects.forEach(project => {
         results.push({ type: 'project', data: project });
@@ -628,8 +682,14 @@ export async function getTrending(): Promise<SearchResponse> {
 
     // Process profiles
     if (!profilesData.error && profilesData.data) {
-      profilesData.data.forEach(profile => {
-        results.push({ type: 'profile', data: profile });
+      profilesData.data.forEach((profile: any) => {
+        results.push({
+          type: 'profile',
+          data: {
+            ...profile,
+            name: profile.name, 
+          },
+        });
       });
     } else if (profilesData.error) {
       logger.warn(
@@ -690,7 +750,7 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
 
     // Add profile suggestions
     if (!profileSuggestions.error && profileSuggestions.data) {
-      profileSuggestions.data.forEach(profile => {
+      profileSuggestions.data.forEach((profile: any) => {
         if (profile.username) {
           suggestions.add(profile.username);
         }

@@ -43,26 +43,99 @@ export function useUnifiedProfile({
 
   // Fetch profile data
   const fetchProfile = useCallback(async () => {
-    if (!user) {return}
-
     setIsLoading(true)
     setError(null)
 
     try {
-      // For now, just use the current user profile from auth store
-      // In the future, we can add username-based profile fetching
-      if (currentUserProfile) {
-        setProfile(currentUserProfile)
+      // If username is provided, fetch that user's profile
+      if (username) {
+        // Handle "me" as a special case - show current user's profile
+        if (username === 'me' || username.toLowerCase() === 'me') {
+          if (user && currentUserProfile) {
+            setProfile(currentUserProfile)
+            return
+          } else if (user) {
+            setError('Profile not found')
+            setProfile(null)
+            return
+          } else {
+            setError('Authentication required')
+            setProfile(null)
+            return
+          }
+        }
+
+        // Next.js route params are already decoded, but we need to encode for the API call
+        // However, if it's already encoded (contains %), decode first then encode
+        let usernameToEncode = username
+        try {
+          // Check if it's already encoded by trying to decode it
+          const decoded = decodeURIComponent(username)
+          // If decoding changes it, it was encoded - use the decoded version
+          if (decoded !== username) {
+            usernameToEncode = decoded
+          }
+        } catch {
+          // If decoding fails, use as-is
+        }
+        const encodedUsername = encodeURIComponent(usernameToEncode)
+        const response = await fetch(`/api/profile/${encodedUsername}`)
+        const result = await response.json()
+
+        if (!response.ok) {
+          // Extract error message from API response
+          const errorMessage = result.error?.message || result.error || 'Profile not found'
+          setError(errorMessage)
+          setProfile(null)
+          return
+        }
+
+        if (result.success && result.data) {
+          setProfile(result.data)
+        } else {
+          setError('Profile not found')
+          setProfile(null)
+        }
       } else {
-        setError('Profile not found')
+        // No username provided - only show current user's profile if we're on /profile (not /profile/[username])
+        // Check if we're on a route that expects a username by checking the URL
+        if (typeof window !== 'undefined') {
+          const pathname = window.location.pathname
+          // If pathname is exactly /profile (not /profile/something), show current user's profile
+          if (pathname === '/profile' && user && currentUserProfile) {
+            setProfile(currentUserProfile)
+          } else if (pathname.startsWith('/profile/') && pathname !== '/profile') {
+            // We're on /profile/[username] but username param is missing - wait for it
+            setIsLoading(true)
+            return
+          } else if (user && currentUserProfile) {
+            // Fallback: show current user's profile
+            setProfile(currentUserProfile)
+          } else if (user) {
+            // User is logged in but no profile yet
+            setError('Profile not found')
+            setProfile(null)
+          } else {
+            // No user and no username - can't fetch
+            setError('Authentication required')
+            setProfile(null)
+          }
+        } else if (user && currentUserProfile) {
+          // Server-side: show current user's profile if no username
+          setProfile(currentUserProfile)
+        } else {
+          setError('Profile not found')
+          setProfile(null)
+        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load profile'
       setError(errorMessage)
+      setProfile(null)
     } finally {
       setIsLoading(false)
     }
-  }, [user, currentUserProfile])
+  }, [user, currentUserProfile, username])
 
   // Handle profile save
   const handleSave = useCallback(async (data: ProfileData) => {

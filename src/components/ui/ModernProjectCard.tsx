@@ -2,8 +2,9 @@
 
 import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Heart, Clock, Target } from 'lucide-react';
+import { Heart, Clock, Target, FolderOpen } from 'lucide-react';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import BTCAmountDisplay from './BTCAmountDisplay';
 import DefaultAvatar from './DefaultAvatar';
@@ -80,6 +81,7 @@ export default function ModernProjectCard({
   className = '',
 }: ModernProjectCardProps) {
   const { user, profile } = useAuth();
+  const router = useRouter();
   const [isLiked, setIsLiked] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -114,14 +116,11 @@ export default function ModernProjectCard({
     if (project.profiles?.name) {
       return project.profiles.name;
     }
-    if (project.profiles?.display_name) {
-      return project.profiles.display_name; // Legacy support
-    }
     if (project.profiles?.username) {
       return project.profiles.username;
     }
     if (project.user_id && project.user_id === (profile?.id || user?.id)) {
-      return profile?.name || profile?.display_name || profile?.username || 'You';
+      return profile?.name || profile?.username || 'You';
     }
     return 'Anonymous';
   }, [
@@ -129,7 +128,6 @@ export default function ModernProjectCard({
     project.user_id,
     profile?.id,
     profile?.name,
-    profile?.display_name,
     profile?.username,
     user?.id,
   ]);
@@ -207,17 +205,54 @@ export default function ModernProjectCard({
   const iconTone =
     iconColorByCategory[categories[0]?.toLowerCase() || 'default'] ?? iconColorByCategory.default;
 
-  const projectImageUrl =
-    (project as any).banner_url ||
-    (project as any).featured_image_url ||
-    project.profiles?.avatar_url;
+  // Image fallback chain: project image → creator avatar → gradient placeholder
+  const getProjectImageUrl = () => {
+    // Check cover_image_url first (the actual database column)
+    const coverImage = (project as any).cover_image_url;
+    if (coverImage && typeof coverImage === 'string' && coverImage.trim() !== '') {
+      return coverImage;
+    }
+
+    // Then check mapped fields (banner_url/featured_image_url are mapped from cover_image_url for compatibility)
+    const bannerUrl = (project as any).banner_url;
+    if (bannerUrl && typeof bannerUrl === 'string' && bannerUrl.trim() !== '') {
+      return bannerUrl;
+    }
+
+    const featuredImageUrl = (project as any).featured_image_url;
+    if (featuredImageUrl && typeof featuredImageUrl === 'string' && featuredImageUrl.trim() !== '') {
+      return featuredImageUrl;
+    }
+
+    // Only fallback to creator avatar if NO project image exists
+    // This ensures project images always take priority
+    if (ownerAvatarUrl && typeof ownerAvatarUrl === 'string' && ownerAvatarUrl.trim() !== '') {
+      return ownerAvatarUrl;
+    }
+
+    return null;
+  };
+
+  const projectImageUrl = getProjectImageUrl();
+  // Check if we're using creator avatar as fallback (no project image but have creator avatar)
+  const coverImage = (project as any).cover_image_url;
+  const bannerUrl = (project as any).banner_url;
+  const featuredImageUrl = (project as any).featured_image_url;
+  const hasProjectImage = 
+    (coverImage && typeof coverImage === 'string' && coverImage.trim() !== '') ||
+    (bannerUrl && typeof bannerUrl === 'string' && bannerUrl.trim() !== '') ||
+    (featuredImageUrl && typeof featuredImageUrl === 'string' && featuredImageUrl.trim() !== '');
+  const hasCreatorAvatarFallback = !hasProjectImage && ownerAvatarUrl && projectImageUrl === ownerAvatarUrl;
+
   const imageElement =
     projectImageUrl && !imageError ? (
       <Image
         src={projectImageUrl}
         alt={project.title}
         fill
-        className="object-cover transition-transform duration-700 group-hover:scale-105"
+        className={`object-cover transition-transform duration-700 group-hover:scale-105 ${
+          hasCreatorAvatarFallback ? 'opacity-40' : ''
+        }`}
         onError={() => setImageError(true)}
         sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
       />
@@ -291,14 +326,24 @@ export default function ModernProjectCard({
           <div className="flex flex-1 flex-col p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-2">
-                <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                  {project.title}
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                    {project.title}
+                  </h3>
+                  <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200 flex-shrink-0">
+                    <FolderOpen className="w-3 h-3 mr-1" />
+                    Project
+                  </div>
+                </div>
                 {creatorProfileUrl ? (
-                  <Link
-                    href={creatorProfileUrl}
-                    onClick={e => e.stopPropagation()}
-                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition-colors"
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      router.push(creatorProfileUrl);
+                    }}
+                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition-colors cursor-pointer"
                   >
                     {ownerAvatarUrl ? (
                       <Image
@@ -312,7 +357,7 @@ export default function ModernProjectCard({
                       <DefaultAvatar size={32} className="rounded-full" />
                     )}
                     <span>{ownerName}</span>
-                  </Link>
+                  </button>
                 ) : (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     {ownerAvatarUrl ? (
@@ -399,15 +444,25 @@ export default function ModernProjectCard({
         <div className="flex flex-1 flex-col gap-4 p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-3">
-              <h3 className="text-xl font-semibold leading-snug text-gray-900 line-clamp-2">
-                {project.title}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-semibold leading-snug text-gray-900 line-clamp-2">
+                  {project.title}
+                </h3>
+                <div className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200 flex-shrink-0">
+                  <FolderOpen className="w-3 h-3 mr-1" />
+                  Project
+                </div>
+              </div>
               <div className="flex items-center gap-3">
                 {creatorProfileUrl ? (
-                  <Link
-                    href={creatorProfileUrl}
-                    onClick={e => e.stopPropagation()}
-                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      router.push(creatorProfileUrl);
+                    }}
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
                   >
                     {ownerAvatarUrl ? (
                       <Image
@@ -426,7 +481,7 @@ export default function ModernProjectCard({
                         {ownerName}
                       </p>
                     </div>
-                  </Link>
+                  </button>
                 ) : (
                   <>
                     {ownerAvatarUrl ? (

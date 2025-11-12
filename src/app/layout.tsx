@@ -64,32 +64,38 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     pathname.startsWith('/projects') ||
     pathname.startsWith('/funding');
 
-  const supabase = await createServerClient();
-
-  // Get user for secure auth state (getUser() validates token with server)
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  // Use null for session - Auth store handles user-only auth state
-  const session = null;
-
-  // Try to get profile data if user exists and is authenticated
+  // PERFORMANCE OPTIMIZATION: Only fetch auth data for authenticated routes
+  // Public pages (homepage, discover, blog, etc.) don't need auth data
+  // This saves 500ms-2s on every public page load
+  let user = null;
   let profile = null;
-  if (user && !userError) {
-    try {
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
 
-      if (!error && profileData) {
-        profile = profileData;
+  if (isAuthenticatedRoute) {
+    const supabase = await createServerClient();
+
+    // Get user for secure auth state (getUser() validates token with server)
+    const {
+      data: { user: userData },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    user = userData;
+
+    // Try to get profile data if user exists and is authenticated
+    if (user && !userError) {
+      try {
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (!error && profileData) {
+          profile = profileData;
+        }
+      } catch (error) {
+        // Profile fetch error in RootLayout - silently handle
       }
-    } catch (error) {
-      // Profile fetch error in RootLayout - silently handle
     }
   }
 

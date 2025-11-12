@@ -48,12 +48,9 @@ export default function PublicProfileClient({
   const isOwnProfile = profile.id === user?.id;
 
   // Convert profile to ScalableProfile format expected by UnifiedProfileLayout
-  // Database Profile type uses 'name', but we query 'display_name' - map it correctly
   const scalableProfile = {
     ...profile,
-    // UnifiedProfileLayout expects 'name' field, map from database 'name' or 'display_name'
-    name: (profile as any).name || (profile as any).display_name || profile.username || '',
-    display_name: (profile as any).display_name || (profile as any).name || profile.username || '',
+    name: profile.name || profile.username || '',
   } as any; // Type assertion needed due to interface differences
 
   // Check if profile has wallet addresses for support
