@@ -1,91 +1,114 @@
-'use client'
-import Link from 'next/link'
-import Image from 'next/image'
-import { useState } from 'react'
-import { Bell, Plus, Search } from 'lucide-react'
-import { useAuth } from '@/hooks/useAuth'
-import DefaultAvatar from '@/components/ui/DefaultAvatar'
-import { HeaderCreateButton } from '@/components/dashboard/SmartCreateButton'
-import EnhancedSearchBar from '@/components/search/EnhancedSearchBar'
-import MobileSearchModal from '@/components/search/MobileSearchModal'
+/**
+ * Authenticated Header Component
+ *
+ * Consistent header for authenticated routes
+ * Always displays: Logo, Dashboard, Discover navigation, Search, Actions
+ *
+ * Created: 2025-01-27
+ * Last Modified: 2025-01-27
+ * Last Modified Summary: Created consistent authenticated header component
+ */
 
-export default function AuthenticatedHeader() {
-  const { user, profile } = useAuth()
-  const [showMobileSearch, setShowMobileSearch] = useState(false)
+'use client';
+
+import { Menu, Bell, Search } from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import { HeaderNavigation } from './HeaderNavigation';
+import { getNavigationItems } from '@/config/navigationConfig';
+import Logo from '@/components/layout/Logo';
+import { HeaderCreateButton } from '@/components/dashboard/SmartCreateButton';
+import EnhancedSearchBar from '@/components/search/EnhancedSearchBar';
+import MobileSearchModal from '@/components/search/MobileSearchModal';
+import UserProfileDropdown from '@/components/ui/UserProfileDropdown';
+import { SIDEBAR_Z_INDEX, SIDEBAR_COLORS } from '@/constants/sidebar';
+
+interface AuthenticatedHeaderProps {
+  onToggleSidebar: () => void;
+  onShowMobileSearch: () => void;
+}
+
+/**
+ * Authenticated Header Component
+ *
+ * Provides consistent header experience for all authenticated routes:
+ * - Logo (always visible on desktop, mobile when sidebar closed)
+ * - Dashboard & Discover navigation links (desktop)
+ * - Search bar (desktop) / Search button (mobile)
+ * - Create button, Notifications, User profile dropdown
+ * - Mobile menu toggle
+ */
+export function AuthenticatedHeader({
+  onToggleSidebar,
+  onShowMobileSearch,
+}: AuthenticatedHeaderProps) {
+  const pathname = usePathname();
+  const { user } = useAuth();
+  const navigation = getNavigationItems(user);
+
+  const isActive = (href: string) => {
+    if (href === '/dashboard') {
+      return pathname === '/dashboard' || pathname.startsWith('/dashboard/');
+    }
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   return (
-    <header className="bg-white border-b border-gray-200 h-12 flex items-center px-4 lg:px-6 sticky top-0 z-30">
-      <div className="flex items-center justify-between w-full max-w-full">
-        {/* Left: Logo */}
-        <Link href="/dashboard" className="flex items-center space-x-2 shrink-0">
-          <Image 
-            src="/images/orange-cat-logo.svg" 
-            alt="Orangecat" 
-            width={24} 
-            height={24}
-            className="shrink-0"
-          />
-          <span className="text-lg font-semibold text-tiffany-600 hidden sm:block">
-            Orangecat
-          </span>
-        </Link>
-
-        {/* Center: Enhanced Search Bar */}
-        <div className="flex-1 max-w-md mx-4 hidden md:block">
-          <EnhancedSearchBar 
-            placeholder="Search projects, people..."
-            className="w-full"
-          />
-        </div>
-
-        {/* Right: Quick Actions & User */}
-        <div className="flex items-center space-x-3">
-          {/* Mobile Search Button */}
-          <button 
-            onClick={() => setShowMobileSearch(true)}
-            className="md:hidden p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <Search className="h-4 w-4" />
-          </button>
-
-          {/* Create Button */}
-          <HeaderCreateButton />
-
-          {/* Notifications */}
-          <button className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
-            <Bell className="h-4 w-4" />
-          </button>
-
-          {/* User Avatar */}
-          {user && profile && (
-            <Link 
-              href="/profile/me"
-              className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-1.5 transition-colors"
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 ${SIDEBAR_Z_INDEX.HEADER} bg-white/95 backdrop-blur-lg shadow-sm border-b ${SIDEBAR_COLORS.BORDER}`}
+      >
+        <div className="flex items-center justify-between h-16 px-4">
+          {/* Left: Logo + Mobile Menu Toggle */}
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onToggleSidebar}
+              className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+              aria-label="Toggle sidebar"
             >
-              {profile.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={profile.name || 'User Avatar'}
-                  width={24}
-                  height={24}
-                  className="rounded-full object-cover"
-                />
-              ) : (
-                <DefaultAvatar size={24} className="rounded-full" />
-              )}
-              <span className="text-sm font-medium text-gray-700 hidden lg:block max-w-20 truncate">
-                {profile.name || profile.username}
-              </span>
-            </Link>
-          )}
-        </div>
-      </div>
+              <Menu className="w-5 h-5" />
+            </button>
 
-      {/* Mobile Search Modal */}
-      <MobileSearchModal 
-        isOpen={showMobileSearch}
-        onClose={() => setShowMobileSearch(false)}
-      />
-    </header>
-  )
-} 
+            {/* Logo - always visible */}
+            <Logo />
+          </div>
+
+          {/* Center: Desktop Navigation + Search */}
+          <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-6 space-x-4">
+            {/* Desktop Navigation Links */}
+            <HeaderNavigation items={navigation} isActive={isActive} />
+
+            {/* Desktop Search */}
+            <div className="flex-1 max-w-md">
+              <EnhancedSearchBar placeholder="Search projects, people..." className="w-full" />
+            </div>
+          </div>
+
+          {/* Right: Actions */}
+          <div className="flex items-center space-x-3">
+            {/* Mobile Search Button */}
+            <button
+              onClick={onShowMobileSearch}
+              className="md:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+              aria-label="Search"
+            >
+              <Search className="w-5 h-5" />
+            </button>
+
+            {/* Create Button */}
+            <HeaderCreateButton />
+
+            {/* Notifications */}
+            <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+            </button>
+
+            {/* User Profile Dropdown */}
+            <UserProfileDropdown />
+          </div>
+        </div>
+      </header>
+    </>
+  );
+}

@@ -1,20 +1,25 @@
 /**
  * SocialMetaTags Component
  *
- * Reusable component for adding Open Graph and Twitter Card meta tags
- * for rich social media previews. Follows DRY principles.
+ * ⚠️ DEPRECATED: This component uses Pages Router API (next/head) and does not work
+ * properly with Next.js App Router. Use `generateMetadata` function instead.
  *
- * Usage:
+ * For App Router pages, use:
  * ```tsx
- * <SocialMetaTags
- *   title="Project Title"
- *   description="Project description"
- *   image="/path/to/image.jpg"
- *   url="https://example.com/project/123"
- * />
+ * export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+ *   return {
+ *     title: 'Page Title',
+ *     description: 'Page description',
+ *     openGraph: { ... },
+ *     twitter: { ... },
+ *   };
+ * }
  * ```
  *
+ * This component is kept for reference only and should not be used in new code.
+ *
  * Created: 2025-11-03
+ * Deprecated: 2025-01-30 - Replaced with generateMetadata API
  */
 
 'use client';

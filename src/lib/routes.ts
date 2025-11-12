@@ -27,10 +27,15 @@ export const ROUTES = {
     ANALYTICS: '/dashboard/analytics',
   },
 
-  // Profile routes
+  // Profile routes (authenticated - own profile)
   PROFILE: {
     VIEW: (username: string) => `/profile/${username}`,
     SETTINGS: '/profile/settings',
+  },
+
+  // Public profile routes (shareable)
+  PROFILES: {
+    VIEW: (username: string) => `/profiles/${username}`,
   },
 } as const;
 

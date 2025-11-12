@@ -5,23 +5,32 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import EntityListPage from '@/components/entities/EntityListPage';
-import { Target, Trash2, CheckSquare, Square } from 'lucide-react';
+import { Target, Trash2, CheckSquare, Square, Heart, Search, X } from 'lucide-react';
 import { useProjectStore, Project } from '@/stores/projectStore';
 import Button from '@/components/ui/Button';
 import { ProjectTile } from '@/components/projects/ProjectTile';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
+import { FavoriteProject } from '@/types/favorite';
+import { ProjectsGridSkeleton } from '@/components/projects/ProjectSkeletons';
+import Input from '@/components/ui/Input';
 
 export default function ProjectsDashboardPage() {
   const { user, isLoading, hydrated, session } = useAuth();
   const router = useRouter();
-  const { projects, loadProjects, deleteProject } = useProjectStore();
+  const { projects, loadProjects, deleteProject, isLoading: projectsLoading } = useProjectStore();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [projectToDelete, setProjectToDelete] = useState<Project | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
+  const [activeTab, setActiveTab] = useState<'my-projects' | 'favorites'>('my-projects');
+  const [favorites, setFavorites] = useState<FavoriteProject[]>([]);
+  const [favoritesLoading, setFavoritesLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   // Load projects when user is available (hook must be called before any returns)
   useEffect(() => {
@@ -30,8 +39,81 @@ export default function ProjectsDashboardPage() {
     }
   }, [user?.id, loadProjects]);
 
-  // Memoize items (hook must be called before any returns)
-  const items = useMemo(() => projects, [projects]);
+  // Load favorites when user is available and favorites tab is active
+  useEffect(() => {
+    if (user?.id && activeTab === 'favorites') {
+      const loadFavorites = async () => {
+        setFavoritesLoading(true);
+        try {
+          const response = await fetch('/api/projects/favorites');
+          if (response.ok) {
+            const result = await response.json();
+            setFavorites(result.data || []);
+          } else {
+            logger.error(
+              'Failed to load favorites',
+              { status: response.status },
+              'ProjectsDashboardPage'
+            );
+            toast.error('Failed to load favorites');
+          }
+        } catch (error) {
+          logger.error('Failed to load favorites', { error }, 'ProjectsDashboardPage');
+          toast.error('Failed to load favorites');
+        } finally {
+          setFavoritesLoading(false);
+        }
+      };
+      loadFavorites();
+    } else if (activeTab === 'my-projects' && user?.id) {
+      // Reload projects when switching back to my-projects tab
+      loadProjects(user.id);
+    }
+  }, [user?.id, activeTab, loadProjects]);
+
+  // Memoize items based on active tab with search and filter
+  const filteredItems = useMemo(() => {
+    let items = activeTab === 'favorites' ? favorites : projects;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      items = items.filter(
+        p =>
+          p.title?.toLowerCase().includes(query) ||
+          p.description?.toLowerCase().includes(query) ||
+          p.category?.toLowerCase().includes(query) ||
+          p.tags?.some(tag => tag.toLowerCase().includes(query))
+      );
+    }
+
+    // Apply status filter
+    if (statusFilter !== 'all') {
+      items = items.filter(p => {
+        if (statusFilter === 'draft') {
+          return p.isDraft;
+        }
+        if (statusFilter === 'active') {
+          return p.isActive;
+        }
+        if (statusFilter === 'paused') {
+          return p.isPaused;
+        }
+        if (statusFilter === 'completed') {
+          return p.status === 'completed';
+        }
+        if (statusFilter === 'cancelled') {
+          return p.status === 'cancelled';
+        }
+        return true;
+      });
+    }
+
+    return items;
+  }, [activeTab, projects, favorites, searchQuery, statusFilter]);
+
+  // Use filtered items for display
+  const items = filteredItems;
 
   const handleDeleteClick = (project: Project) => {
     setProjectToDelete(project);
@@ -49,7 +131,11 @@ export default function ProjectsDashboardPage() {
       setShowDeleteConfirm(false);
       setProjectToDelete(null);
     } catch (error) {
-      console.error('Failed to delete project:', error);
+      logger.error(
+        'Failed to delete project',
+        { projectId: projectToDelete.id, error },
+        'ProjectsDashboardPage'
+      );
       toast.error('Failed to delete project. Please try again.');
     } finally {
       setDeletingId(null);
@@ -112,7 +198,7 @@ export default function ProjectsDashboardPage() {
         } catch (error) {
           results.failed++;
           results.failedIds.push(id);
-          console.error(`Failed to delete project ${id}:`, error);
+          logger.error(`Failed to delete project ${id}`, { error }, 'ProjectsDashboardPage');
         }
       }
 
@@ -132,7 +218,7 @@ export default function ProjectsDashboardPage() {
       setShowDeleteConfirm(false);
       setProjectToDelete(null);
     } catch (error) {
-      console.error('Unexpected error during bulk delete:', error);
+      logger.error('Unexpected error during bulk delete', { error }, 'ProjectsDashboardPage');
       toast.error('An unexpected error occurred. Please try again.');
     } finally {
       setIsDeleting(false);
@@ -167,6 +253,9 @@ export default function ProjectsDashboardPage() {
     router.push('/auth?from=projects');
     return <Loading fullScreen />;
   }
+
+  // Show loading skeleton while projects are loading (only for my-projects tab)
+  const isLoadingProjects = activeTab === 'my-projects' && projectsLoading;
 
   return (
     <>
@@ -213,58 +302,198 @@ export default function ProjectsDashboardPage() {
         </div>
       )}
 
-      <EntityListPage<Project>
-        title="Projects"
-        description="Manage your projects and initiatives."
-        icon={<Target className="w-5 h-5" />}
-        primaryHref="/projects/create"
-        primaryLabel="Create New Project"
-        secondaryHref="/discover?section=projects"
-        secondaryLabel="Explore community projects"
-        items={items}
-        emptyTitle="No projects yet"
-        emptyDescription="Create your first project to start accepting Bitcoin donations and building support for your cause."
-        explanation="A project is any initiative, cause, or endeavor that needs funding. From personal projects to organizations and community efforts - accept Bitcoin donations directly to your wallet."
-        examples={[
-          {
-            title: 'Community Garden Project',
-            description:
-              'Creating a shared community space with raised garden beds and educational workshops.',
-          },
-          {
-            title: 'Local Animal Shelter',
-            description:
-              'Supporting animal rescue operations and veterinary care for abandoned pets.',
-          },
-          {
-            title: 'Art Exhibition Fundraiser',
-            description:
-              'Organizing a traveling art show featuring local artists and cultural exhibits.',
-          },
-        ]}
-        headerActions={
-          items.length > 0 ? (
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={selectedIds.size === items.length && items.length > 0}
-                onChange={toggleSelectAll}
-                className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-400"
+      {/* Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <div className="flex items-center justify-between mb-4">
+          <nav className="flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('my-projects')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'my-projects'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Target className="w-4 h-4" />
+                My Projects ({projects.length})
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('favorites')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'favorites'
+                  ? 'border-orange-500 text-orange-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Heart className="w-4 h-4" />
+                Favorites ({favorites.length})
+              </div>
+            </button>
+          </nav>
+
+          {/* Search and Filter */}
+          <div className="flex items-center gap-3">
+            {/* Search Input */}
+            <div className="relative">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
+                aria-hidden="true"
               />
-              <span>{selectedIds.size === items.length ? 'Deselect All' : 'Select All'}</span>
-            </label>
-          ) : null
-        }
-        renderItem={c => (
-          <ProjectTile
-            project={c}
-            isSelected={selectedIds.has(c.id)}
-            onToggleSelect={toggleSelect}
-            onDelete={handleDeleteClick}
-            isDeleting={deletingId === c.id}
-          />
-        )}
-      />
+              <Input
+                type="text"
+                placeholder="Search projects..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10 w-64"
+                aria-label="Search projects by title, description, category, or tags"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label="Clear search"
+                >
+                  <X className="w-4 h-4" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+
+            {/* Status Filter */}
+            {activeTab === 'my-projects' && (
+              <select
+                value={statusFilter}
+                onChange={e => setStatusFilter(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                aria-label="Filter projects by status"
+              >
+                <option value="all">All Status</option>
+                <option value="draft">Draft</option>
+                <option value="active">Active</option>
+                <option value="paused">Paused</option>
+                <option value="completed">Completed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {activeTab === 'my-projects' ? (
+        <>
+          {/* Search Results Info */}
+          {(searchQuery || statusFilter !== 'all') && items.length > 0 && !isLoadingProjects && (
+            <div className="mb-4 text-sm text-gray-600">
+              Showing {items.length} of {projects.length} projects
+            </div>
+          )}
+          {isLoadingProjects ? (
+            <ProjectsGridSkeleton count={6} />
+          ) : (
+            <EntityListPage<Project>
+              title="My Projects"
+              description="Projects you've created and manage."
+              icon={<Target className="w-5 h-5" />}
+              primaryHref="/projects/create"
+              primaryLabel="Create New Project"
+              secondaryHref="/discover?section=projects"
+              secondaryLabel="Discover Projects"
+              items={items}
+              emptyTitle="No projects yet"
+              emptyDescription="Create your first project to start accepting Bitcoin donations and building support for your cause."
+              explanation="A project is any initiative, cause, or endeavor that needs funding. From personal projects to organizations and community efforts - accept Bitcoin donations directly to your wallet."
+              examples={[
+                {
+                  title: 'Community Garden Project',
+                  description:
+                    'Creating a shared community space with raised garden beds and educational workshops.',
+                },
+                {
+                  title: 'Local Animal Shelter',
+                  description:
+                    'Supporting animal rescue operations and veterinary care for abandoned pets.',
+                },
+                {
+                  title: 'Art Exhibition Fundraiser',
+                  description:
+                    'Organizing a traveling art show featuring local artists and cultural exhibits.',
+                },
+              ]}
+              headerActions={
+                items.length > 0 ? (
+                  <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.size === items.length && items.length > 0}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-gray-400"
+                    />
+                    <span>{selectedIds.size === items.length ? 'Deselect All' : 'Select All'}</span>
+                  </label>
+                ) : null
+              }
+              renderItem={c => (
+                <ProjectTile
+                  project={c}
+                  isSelected={selectedIds.has(c.id)}
+                  onToggleSelect={toggleSelect}
+                  onDelete={handleDeleteClick}
+                  isDeleting={deletingId === c.id}
+                />
+              )}
+            />
+          )}
+        </>
+      ) : (
+        <>
+          {/* Search Results Info */}
+          {(searchQuery || statusFilter !== 'all') && items.length > 0 && !favoritesLoading && (
+            <div className="mb-4 text-sm text-gray-600">
+              Showing {items.length} of {favorites.length} favorites
+            </div>
+          )}
+          {favoritesLoading ? (
+            <ProjectsGridSkeleton count={6} />
+          ) : (
+            <EntityListPage<FavoriteProject>
+              title="Favorites"
+              description="Projects you've saved to your favorites"
+              icon={<Heart className="w-5 h-5" />}
+              primaryHref="/discover?section=projects"
+              primaryLabel="Discover More Projects"
+              secondaryHref="/dashboard/projects"
+              secondaryLabel="My Projects"
+              items={items}
+              emptyTitle="No favorites yet"
+              emptyDescription="Start exploring projects and save your favorites to see them here."
+              explanation="Favorites help you keep track of projects you're interested in. You can favorite projects to donate later or follow their progress."
+              renderItem={(project: FavoriteProject) => {
+                // Convert FavoriteProject to Project format for ProjectTile
+                // FavoriteProject from API has status and raised_amount fields
+                const projectStatus = (project as any).status || 'draft';
+                const raisedAmount = (project as any).raised_amount ?? project.total_funding ?? 0;
+                const projectForTile: Project = {
+                  ...project,
+                  isDraft: projectStatus === 'draft',
+                  isActive: projectStatus === 'active',
+                  isPaused: projectStatus === 'paused',
+                  total_funding: raisedAmount,
+                  current_amount: raisedAmount,
+                };
+                return (
+                  <ProjectTile
+                    project={projectForTile}
+                    // No selection or delete for favorites
+                    isSelected={false}
+                  />
+                );
+              }}
+            />
+          )}
+        </>
+      )}
 
       {/* Delete Confirmation Dialog */}
       {showDeleteConfirm && projectToDelete && (

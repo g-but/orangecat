@@ -103,10 +103,33 @@ Creates a new project.
 
 ## Status Values
 
-- `draft` - Project is not yet published
-- `active` - Project is live and accepting donations
-- `paused` - Project is temporarily paused
-- `completed` - Project has finished (optional)
+The `status` column uses a CHECK constraint to enforce valid values:
+
+- `draft` - Project is not yet published (visible only to author, not in search results)
+- `active` - Project is published and actively accepting donations (visible to everyone, appears in search)
+- `paused` - Project is published but temporarily paused (visible to everyone via direct link, not in search, not accepting donations)
+- `completed` - Project has finished (visible to everyone via direct link, not in search, not accepting donations)
+- `cancelled` - Project was cancelled (visible to everyone via direct link, not in search, not accepting donations)
+
+### Status Transitions
+
+Valid status transitions:
+
+- `draft` → `active` (publish)
+- `active` → `paused` (pause donations)
+- `active` → `completed` (mark as done)
+- `active` → `cancelled` (cancel project)
+- `active` → `draft` (unpublish)
+- `paused` → `active` (resume donations)
+- `paused` → `draft` (unpublish)
+- `completed` → `draft` (unpublish/archive)
+- `cancelled` → `draft` (unpublish/archive)
+
+### Visibility Rules
+
+- **Draft projects**: Only visible to the author
+- **Active projects**: Visible to everyone, appear in search results
+- **Paused/Completed/Cancelled projects**: Visible to everyone via direct link, but do NOT appear in search results
 
 ## Field Mapping Summary
 

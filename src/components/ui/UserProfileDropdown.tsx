@@ -58,7 +58,7 @@ export default function UserProfileDropdown({
       description: 'Overview and analytics',
     },
     {
-      label: 'Fundraising',
+      label: 'My Projects',
       icon: Handshake,
       href: '/dashboard/projects',
       description: 'Manage your projects',
