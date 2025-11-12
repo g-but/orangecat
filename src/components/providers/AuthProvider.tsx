@@ -92,10 +92,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             logger.info('User signed in', { userId: session.user.id }, 'Auth');
             // Always clear profile on sign in to prevent stale data from previous user
             setInitialAuthState(session.user, session, null);
-            // Fetch profile in background
-            fetchProfile().catch(err => {
-              logger.warn('Failed to fetch profile after sign in', { error: err }, 'Auth');
-            });
+            // Fetch profile in background (only once - AuthStore signIn no longer fetches)
+            // Use a small delay to ensure state is set before fetching
+            setTimeout(() => {
+              fetchProfile().catch(err => {
+                logger.warn('Failed to fetch profile after sign in', { error: err }, 'Auth');
+              });
+            }, 100);
           }
           break;
 

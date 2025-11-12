@@ -32,7 +32,8 @@ interface Project {
   updated_at: string;
   profiles?: {
     username: string | null;
-    display_name: string | null;
+    name: string | null;
+    display_name?: string | null; // Legacy support
     avatar_url: string | null;
   };
 }
