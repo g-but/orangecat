@@ -62,10 +62,25 @@ const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
   // Fixed: Increased timeout to match auth operations (20s)
   global: {
     fetch: (url, options = {}) => {
+      // Create timeout controller
+      const timeoutController = new AbortController();
+      const timeoutId = setTimeout(() => timeoutController.abort(), 20000);
+
+      // Combine with existing signal if present
+      let combinedSignal = timeoutController.signal;
+      if (options.signal) {
+        // If there's an existing signal, abort our timeout when the existing signal aborts
+        options.signal.addEventListener('abort', () => {
+          clearTimeout(timeoutId);
+          timeoutController.abort();
+        });
+      }
+
       return fetch(url, {
         ...options,
-        // Fixed: Set timeout to 20 seconds to match auth operations
-        signal: AbortSignal.timeout(20000),
+        signal: combinedSignal,
+      }).finally(() => {
+        clearTimeout(timeoutId);
       });
     },
   },
@@ -114,9 +129,25 @@ export const createSupabaseClient = () =>
     },
     global: {
       fetch: (url, options = {}) => {
+        // Create timeout controller
+        const timeoutController = new AbortController();
+        const timeoutId = setTimeout(() => timeoutController.abort(), 20000);
+
+        // Combine with existing signal if present
+        let combinedSignal = timeoutController.signal;
+        if (options.signal) {
+          // If there's an existing signal, abort our timeout when the existing signal aborts
+          options.signal.addEventListener('abort', () => {
+            clearTimeout(timeoutId);
+            timeoutController.abort();
+          });
+        }
+
         return fetch(url, {
           ...options,
-          signal: AbortSignal.timeout(20000),
+          signal: combinedSignal,
+        }).finally(() => {
+          clearTimeout(timeoutId);
         });
       },
     },

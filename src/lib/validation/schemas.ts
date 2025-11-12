@@ -26,7 +26,7 @@ export interface ValidationResult {
 // User profile validation schema
 export interface ProfileUpdateData {
   username?: string;
-  displayName?: string;
+  name?: string;
   bio?: string;
   bitcoinAddress?: string;
   lightningAddress?: string;
@@ -48,12 +48,12 @@ export function validateProfileUpdate(data: ProfileUpdateData): ValidationResult
     }
   }
 
-  // Display name validation
-  if (data.displayName !== undefined) {
-    if (!data.displayName.trim()) {
-      errors.displayName = 'Display name is required';
-    } else if (data.displayName.length > 100) {
-      errors.displayName = 'Display name must be 100 characters or less';
+  // Name validation
+  if (data.name !== undefined) {
+    if (!data.name.trim()) {
+      errors.name = 'Name is required';
+    } else if (data.name.length > 100) {
+      errors.name = 'Name must be 100 characters or less';
     }
   }
 

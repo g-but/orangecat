@@ -30,12 +30,6 @@ module.exports = {
     '<rootDir>/playwright-report/',
     '<rootDir>/test-results/'
   ],
-  // Add global test environment variables
-  globals: {
-    'ts-jest': {
-      useESM: true
-    }
-  },
   // Mock Next.js modules that cause issues in Jest
   moduleNameMapper: {
     '^@/components/ui/tabs$': '<rootDir>/__mocks__/ui-tabs.js',
@@ -43,7 +37,6 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^next/navigation$': '<rootDir>/__mocks__/next-navigation.js',
     '^next/server$': '<rootDir>/__mocks__/next-server.js',
-    '^lucide-react$': '<rootDir>/__mocks__/lucide-react.js',
     '^react-router-dom$': '<rootDir>/__mocks__/react-router-dom.js',
     '^vitest$': '<rootDir>/__mocks__/vitest.js',
     '^isows/(.*)$': '<rootDir>/__mocks__/isows.js'

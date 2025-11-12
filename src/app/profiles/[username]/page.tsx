@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const displayName =
-    (profile as any).name || (profile as any).display_name || profile.username || username;
+    profile.name || profile.username || username;
   const description =
     profile.bio ||
     `View ${displayName}'s profile on OrangeCat. Support their Bitcoin fundraising projects.`;
@@ -114,7 +114,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: (profile as any).name || (profile as any).display_name || profile.username || username,
+    name: profile.name || profile.username || username,
     alternateName: profile.username || undefined,
     description: profile.bio || undefined,
     image: profile.avatar_url || undefined,

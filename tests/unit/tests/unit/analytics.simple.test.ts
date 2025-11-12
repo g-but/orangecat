@@ -9,7 +9,7 @@
  * Last Modified Summary: Initial creation of simple Analytics Service tests
  */
 
-import { analyticsService } from '../analytics'
+import { analyticsService } from '@/services/analytics'
 
 describe('📊 Analytics Service - Simple Coverage', () => {
   
@@ -25,9 +25,9 @@ describe('📊 Analytics Service - Simple Coverage', () => {
       const metrics = analyticsService.getOrganizationsMetrics()
 
       expect(metrics.isEnabled).toBe(false)
-      expect(metrics.isDemo).toBe(true)
-      expect(metrics.stats.totalOrganizations.value).toBeGreaterThan(0)
-      expect(metrics.stats.totalMembers.value).toBeGreaterThan(0)
+      expect(metrics.isDemo).toBe(false) // Organizations are not implemented, so not demo
+      expect(metrics.stats.totalOrganizations.value).toBe(0)
+      expect(metrics.stats.totalMembers.value).toBe(0)
       expect(typeof metrics.stats.combinedTreasury.value).toBe('string')
       expect(metrics.stats.combinedTreasury.value).toContain('BTC')
       expect(metrics.stats.activeProposals.value).toBeGreaterThanOrEqual(0)

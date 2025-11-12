@@ -25,7 +25,7 @@ jest.mock('next/link', () => {
 });
 
 // Mock Logo component
-jest.mock('../Logo', () => {
+jest.mock('@/components/layout/Logo', () => {
   return function MockLogo({ className }: { className?: string }) {
     return <div data-testid="logo" className={className}>OrangeCat Logo</div>;
   };

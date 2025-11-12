@@ -53,8 +53,59 @@ export default function UnifiedProfileLayout({
   // UI states
   const [showQR, setShowQR] = useState<'bitcoin' | 'lightning' | null>(null);
   const [showShare, setShowShare] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowLoading, setIsFollowLoading] = useState(false);
   const shareButtonRef = useRef<HTMLDivElement>(null);
   const shareDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Check follow status on mount
+  useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!user?.id || isOwnProfile || !profile.id) return;
+
+      try {
+        const response = await fetch(`/api/social/following/${user.id}`);
+        const data = await response.json();
+        if (data.success && Array.isArray(data.data)) {
+          const following = data.data.some((f: any) => f.following_id === profile.id);
+          setIsFollowing(following);
+        }
+      } catch (error) {
+        // Silently fail - follow status check is not critical
+        console.error('Failed to check follow status:', error);
+      }
+    };
+
+    checkFollowStatus();
+  }, [user?.id, profile.id, isOwnProfile]);
+
+  // Handle follow/unfollow
+  const handleFollowToggle = async () => {
+    if (!user?.id || !profile.id || isFollowLoading) return;
+
+    setIsFollowLoading(true);
+    try {
+      const endpoint = isFollowing ? '/api/social/unfollow' : '/api/social/follow';
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ following_id: profile.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setIsFollowing(!isFollowing);
+        toast.success(isFollowing ? 'Unfollowed' : 'Followed');
+      } else {
+        throw new Error(data.error || 'Failed to update follow status');
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update follow status');
+    } finally {
+      setIsFollowLoading(false);
+    }
+  };
 
   // Close share dropdown when clicking outside
   useEffect(() => {
@@ -160,7 +211,7 @@ export default function UnifiedProfileLayout({
                 <div ref={shareDropdownRef} className="absolute top-full right-0 mt-2 z-50">
                   <ProfileShare
                     username={profile.username || ''}
-                    profileName={profile.name || profile.display_name || profile.username || 'User'}
+                    profileName={profile.name || profile.username || 'User'}
                     profileBio={profile.bio || undefined}
                     onClose={() => setShowShare(false)}
                   />
@@ -180,9 +231,18 @@ export default function UnifiedProfileLayout({
             )}
 
             {!isOwnProfile && (
-              <Button className="bg-orange-600 hover:bg-orange-700 text-white shadow-lg">
+              <Button
+                onClick={handleFollowToggle}
+                disabled={isFollowLoading}
+                className={cn(
+                  'shadow-lg',
+                  isFollowing
+                    ? 'bg-gray-600 hover:bg-gray-700 text-white'
+                    : 'bg-orange-600 hover:bg-orange-700 text-white'
+                )}
+              >
                 <Users className="w-4 h-4 mr-2" />
-                Follow
+                {isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
               </Button>
             )}
           </div>

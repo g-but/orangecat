@@ -25,11 +25,15 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import ModernProjectCard from '@/components/ui/ModernProjectCard';
+import ProfileCard from '@/components/ui/ProfileCard';
 import Input from '@/components/ui/Input';
 import { categoryValues, simpleCategories } from '@/config/categories';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearch } from '@/hooks/useSearch';
-import { SearchFundingPage } from '@/services/search';
+import { SearchFundingPage, SearchProfile } from '@/services/search';
+import supabase from '@/lib/supabase/browser';
+import DiscoverTabs, { DiscoverTabType } from '@/components/discover/DiscoverTabs';
+import ResultsSection from '@/components/discover/ResultsSection';
 
 type ViewMode = 'grid' | 'list';
 
@@ -51,6 +55,8 @@ export default function DiscoverPage() {
     | 'recent'
     | 'popular'
     | 'funding';
+  const urlType = (searchParams.get('type') || 'all') as DiscoverTabType;
+  const initialType = ['all', 'projects', 'profiles'].includes(urlType) ? urlType : 'all';
   const initialCountry = searchParams.get('country') || '';
   const initialCity = searchParams.get('city') || '';
   const initialPostal = searchParams.get('postal') || '';
@@ -60,6 +66,8 @@ export default function DiscoverPage() {
   const {
     query: searchTerm,
     setQuery: setSearchTerm,
+    searchType,
+    setSearchType,
     sortBy,
     setSortBy,
     filters,
@@ -72,10 +80,11 @@ export default function DiscoverPage() {
     error: searchError,
   } = useSearch({
     initialQuery: initialSearchTerm,
-    initialType: 'projects',
+    initialType: initialType === 'all' ? 'all' : initialType === 'profiles' ? 'profiles' : 'projects',
     initialSort: initialSort,
     initialFilters: {
       categories: initialCategories.length > 0 ? initialCategories : undefined,
+      statuses: ['active', 'paused'], // Default status filter
       country: initialCountry || undefined,
       city: initialCity || undefined,
       postal_code: initialPostal || undefined,
@@ -86,37 +95,85 @@ export default function DiscoverPage() {
   });
 
   // UI state
+  const [activeTab, setActiveTab] = useState<DiscoverTabType>(initialType);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
+  const [selectedStatuses, setSelectedStatuses] = useState<('active' | 'paused' | 'completed' | 'cancelled')[]>(['active', 'paused']); // Default: show active and paused
   const [country, setCountry] = useState(initialCountry);
   const [city, setCity] = useState(initialCity);
   const [postal, setPostal] = useState(initialPostal);
   const [radiusKm, setRadiusKm] = useState<number>(initialRadiusKm);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  // Total counts from database (for stats display)
+  const [totalProjectsCount, setTotalProjectsCount] = useState(0);
+  const [totalProfilesCount, setTotalProfilesCount] = useState(0);
 
-  // Extract projects from search results
+  // Fetch total counts from database
+  useEffect(() => {
+    const fetchTotalCounts = async () => {
+      try {
+        const [projectsResult, profilesResult] = await Promise.all([
+          supabase
+            .from('projects')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'active'),
+          supabase
+            .from('profiles')
+            .select('*', { count: 'exact', head: true }),
+        ]);
+
+        if (projectsResult.count !== null && projectsResult.count !== undefined) {
+          setTotalProjectsCount(projectsResult.count);
+        }
+        if (profilesResult.count !== null && profilesResult.count !== undefined) {
+          setTotalProfilesCount(profilesResult.count);
+        }
+      } catch (error) {
+        logger.error('Error fetching total counts', error, 'Discover');
+      }
+    };
+
+    fetchTotalCounts();
+  }, []);
+
+  // Extract projects and profiles from search results
   const projects = useMemo(() => {
     return searchResults
       .filter(result => result.type === 'project')
       .map(result => result.data as SearchFundingPage);
   }, [searchResults]);
 
+  const profiles = useMemo(() => {
+    return searchResults
+      .filter(result => result.type === 'profile')
+      .map(result => result.data as SearchProfile);
+  }, [searchResults]);
+
   // Update search filters when local filter state changes
   useEffect(() => {
     setFilters({
       categories: selectedCategories.length > 0 ? selectedCategories : undefined,
+      statuses: selectedStatuses.length > 0 ? selectedStatuses : undefined,
       country: country || undefined,
       city: city || undefined,
       postal_code: postal || undefined,
       radius_km: radiusKm || undefined,
     });
-  }, [selectedCategories, country, city, postal, radiusKm, setFilters]);
+  }, [selectedCategories, selectedStatuses, country, city, postal, radiusKm, setFilters]);
 
   // Sync URL params with search state
   useEffect(() => {
     const newSearchParams = new URLSearchParams(searchParams.toString());
+
+    // Tab/type parameter
+    if (activeTab !== 'all') {
+      newSearchParams.set('type', activeTab);
+    } else {
+      newSearchParams.delete('type');
+    }
 
     if (searchTerm) {
       newSearchParams.set('search', searchTerm);
@@ -166,6 +223,7 @@ export default function DiscoverPage() {
       router.replace(newUrl, { scroll: false });
     }
   }, [
+    activeTab,
     searchTerm,
     selectedCategories,
     sortBy,
@@ -214,10 +272,25 @@ export default function DiscoverPage() {
     setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));
   };
 
+  const handleToggleStatus = useCallback((status: 'active' | 'paused' | 'completed' | 'cancelled') => {
+    setSelectedStatuses(prev => {
+      const next = prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status];
+      return next.length > 0 ? next : ['active', 'paused']; // Always have at least one status selected
+    });
+  }, []);
+
+  const handleTabChange = useCallback((tab: DiscoverTabType) => {
+    setActiveTab(tab);
+    // Convert tab to search type
+    const newSearchType = tab === 'all' ? 'all' : tab === 'profiles' ? 'profiles' : 'projects';
+    setSearchType(newSearchType as any);
+  }, [setSearchType]);
+
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategories([]);
     setSelectedTags([]);
+    setSelectedStatuses(['active', 'paused']); // Reset to default statuses
     setSortBy('popular' as any);
     setCountry('');
     setCity('');
@@ -232,13 +305,15 @@ export default function DiscoverPage() {
   }, []);
 
   const stats = useMemo(() => {
-    const totalProjects = totalResults; // Use totalResults from search hook
+    // Use total counts from database, not filtered results
+    const totalProjects = totalProjectsCount;
+    const totalProfiles = totalProfilesCount;
     // For now, we don't have supporter or funding data in the current schema
     // These will be 0 until we add those fields to the database
     const totalSupporters = 0;
     const totalFunding = 0;
-    return { totalProjects, totalSupporters, totalFunding };
-  }, [totalResults]);
+    return { totalProjects, totalProfiles, totalSupporters, totalFunding };
+  }, [totalProjectsCount, totalProfilesCount]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/50 via-white to-tiffany-50/30">
@@ -289,11 +364,11 @@ export default function DiscoverPage() {
                 <div className="text-xs text-gray-600">Active Projects</div>
               </div>
               <div className="bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-white/50">
-                <div className="text-xl font-bold text-bitcoinOrange">{stats.totalSupporters}</div>
-                <div className="text-xs text-gray-600">Total Supporters</div>
+                <div className="text-xl font-bold text-tiffany-600">{stats.totalProfiles}</div>
+                <div className="text-xs text-gray-600">People</div>
               </div>
               <div className="bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-white/50">
-                <div className="text-xl font-bold text-tiffany-600">0 BTC</div>
+                <div className="text-xl font-bold text-bitcoinOrange">0 BTC</div>
                 <div className="text-xs text-gray-600">Funds Raised</div>
               </div>
             </motion.div>
@@ -378,9 +453,40 @@ export default function DiscoverPage() {
                   </div>
                 </div>
 
-                {/* Categories */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Categories</label>
+                {/* Project Status - Only show for projects */}
+                {activeTab !== 'profiles' && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Project Status</label>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { value: 'active' as const, label: 'Active', color: 'green' },
+                        { value: 'paused' as const, label: 'Paused', color: 'yellow' },
+                        { value: 'completed' as const, label: 'Completed', color: 'blue' },
+                        { value: 'cancelled' as const, label: 'Cancelled', color: 'gray' },
+                      ].map(status => (
+                        <button
+                          key={status.value}
+                          onClick={() => handleToggleStatus(status.value)}
+                          className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                            selectedStatuses.includes(status.value)
+                              ? `bg-${status.color}-100 border-${status.color}-300 text-${status.color}-700`
+                              : 'bg-white/80 border-gray-200 text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          {status.label}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Draft projects are not shown in search results
+                    </p>
+                  </div>
+                )}
+
+                {/* Categories - Only show for projects */}
+                {activeTab !== 'profiles' && (
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Categories</label>
                   <div className="flex flex-wrap gap-2">
                     {[
                       'technology',
@@ -404,7 +510,8 @@ export default function DiscoverPage() {
                       </button>
                     ))}
                   </div>
-                </div>
+                  </div>
+                )}
 
                 {/* Geography */}
                 <div className="space-y-3 mb-6">
@@ -494,17 +601,27 @@ export default function DiscoverPage() {
 
           {/* Content column */}
           <div className="w-full lg:col-span-9">
-            {/* Mobile Filter Button */}
-            <div className="lg:hidden mb-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-full"
-              >
-                <SlidersHorizontal className="w-4 h-4 mr-2" />
-                {showFilters ? 'Hide Filters' : 'Show Filters'}
-              </Button>
-            </div>
+            {/* Tabs */}
+            <DiscoverTabs
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              projectCount={projects.length}
+              profileCount={profiles.length}
+              loading={loading}
+            />
+
+            <div className="bg-white/70 backdrop-blur-sm rounded-b-2xl border border-gray-200/60 border-t-0 p-6">
+              {/* Mobile Filter Button */}
+              <div className="lg:hidden mb-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="w-full"
+                >
+                  <SlidersHorizontal className="w-4 h-4 mr-2" />
+                  {showFilters ? 'Hide Filters' : 'Show Filters'}
+                </Button>
+              </div>
 
             {/* Mobile Filter Panel */}
             <AnimatePresence>
@@ -578,11 +695,42 @@ export default function DiscoverPage() {
                       </div>
                     </div>
 
-                    {/* Categories */}
-                    <div className="mb-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Categories
-                      </label>
+                    {/* Project Status - Only show for projects */}
+                    {activeTab !== 'profiles' && (
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Project Status</label>
+                        <div className="flex flex-wrap gap-2">
+                          {[
+                            { value: 'active' as const, label: 'Active', color: 'green' },
+                            { value: 'paused' as const, label: 'Paused', color: 'yellow' },
+                            { value: 'completed' as const, label: 'Completed', color: 'blue' },
+                            { value: 'cancelled' as const, label: 'Cancelled', color: 'gray' },
+                          ].map(status => (
+                            <button
+                              key={status.value}
+                              onClick={() => handleToggleStatus(status.value)}
+                              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
+                                selectedStatuses.includes(status.value)
+                                  ? `bg-${status.color}-100 border-${status.color}-300 text-${status.color}-700`
+                                  : 'bg-white/80 border-gray-200 text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              {status.label}
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Draft projects are not shown in search results
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Categories - Only show for projects */}
+                    {activeTab !== 'profiles' && (
+                      <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Categories
+                        </label>
                       <div className="flex flex-wrap gap-2">
                         {[
                           'technology',
@@ -606,7 +754,8 @@ export default function DiscoverPage() {
                           </button>
                         ))}
                       </div>
-                    </div>
+                      </div>
+                    )}
 
                     {/* Geography */}
                     <div className="space-y-3 mb-6">
@@ -663,7 +812,10 @@ export default function DiscoverPage() {
             )}
 
             {/* Empty State - Consolidated */}
-            {!loading && !searchError && projects.length === 0 ? (
+            {!loading && !searchError && 
+             ((activeTab === 'projects' && projects.length === 0) ||
+              (activeTab === 'profiles' && profiles.length === 0) ||
+              (activeTab === 'all' && projects.length === 0 && profiles.length === 0)) ? (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -674,69 +826,87 @@ export default function DiscoverPage() {
                   // No filters - show full CTA
                   <div className="bg-gradient-to-r from-orange-50 via-tiffany-50 to-orange-50 rounded-2xl border border-orange-200 p-8 text-center max-w-2xl mx-auto">
                     <div className="w-16 h-16 bg-gradient-to-r from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Target className="w-8 h-8 text-orange-600" />
+                      {activeTab === 'profiles' ? (
+                        <Users className="w-8 h-8 text-orange-600" />
+                      ) : (
+                        <Target className="w-8 h-8 text-orange-600" />
+                      )}
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                      Be the First to Launch
+                      {activeTab === 'profiles' 
+                        ? 'No People Found' 
+                        : 'Be the First to Launch'}
                     </h3>
                     <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                      No projects here yet—which means you could be the first! Whether you're
-                      funding a creative project, community initiative, or passion project, this is
-                      your chance to lead the way.
+                      {activeTab === 'profiles' 
+                        ? 'No profiles match your search criteria. Try adjusting your filters or browse all people.'
+                        : 'No projects here yet—which means you could be the first! Whether you\'re funding a creative project, community initiative, or passion project, this is your chance to lead the way.'}
                     </p>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                      <div className="p-4 bg-white/60 rounded-lg">
-                        <div className="text-2xl font-bold text-orange-600 mb-1">1</div>
-                        <div className="text-sm font-medium">Create</div>
-                        <div className="text-xs text-gray-600">Set up your project page</div>
-                      </div>
-                      <div className="p-4 bg-white/60 rounded-lg">
-                        <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
-                        <div className="text-sm font-medium">Share</div>
-                        <div className="text-xs text-gray-600">Tell your story and set a goal</div>
-                      </div>
-                      <div className="p-4 bg-white/60 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600 mb-1">3</div>
-                        <div className="text-sm font-medium">Receive</div>
-                        <div className="text-xs text-gray-600">Accept Bitcoin donations</div>
-                      </div>
-                    </div>
+                    {activeTab !== 'profiles' && (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                          <div className="p-4 bg-white/60 rounded-lg">
+                            <div className="text-2xl font-bold text-orange-600 mb-1">1</div>
+                            <div className="text-sm font-medium">Create</div>
+                            <div className="text-xs text-gray-600">Set up your project page</div>
+                          </div>
+                          <div className="p-4 bg-white/60 rounded-lg">
+                            <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
+                            <div className="text-sm font-medium">Share</div>
+                            <div className="text-xs text-gray-600">Tell your story and set a goal</div>
+                          </div>
+                          <div className="p-4 bg-white/60 rounded-lg">
+                            <div className="text-2xl font-bold text-green-600 mb-1">3</div>
+                            <div className="text-sm font-medium">Receive</div>
+                            <div className="text-xs text-gray-600">Accept Bitcoin donations</div>
+                          </div>
+                        </div>
 
-                    <Button
-                      href="/projects/create"
-                      size="lg"
-                      className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 mb-4"
-                    >
-                      Launch Your Project
-                    </Button>
+                        <Button
+                          href="/projects/create"
+                          size="lg"
+                          className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 mb-4"
+                        >
+                          Launch Your Project
+                        </Button>
 
-                    <p className="text-sm text-gray-500">
-                      Already have an account?{' '}
-                      <a href="/auth" className="text-orange-600 hover:underline font-medium">
-                        Sign in
-                      </a>{' '}
-                      to get started.
-                    </p>
+                        <p className="text-sm text-gray-500">
+                          Already have an account?{' '}
+                          <a href="/auth" className="text-orange-600 hover:underline font-medium">
+                            Sign in
+                          </a>{' '}
+                          to get started.
+                        </p>
+                      </>
+                    )}
                   </div>
                 ) : (
                   // Has filters - show filtered empty state
                   <div className="max-w-md mx-auto">
-                    <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
+                    {activeTab === 'profiles' ? (
+                      <Users className="w-16 h-16 text-orange-300 mx-auto mb-4" />
+                    ) : (
+                      <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
+                    )}
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">No matches found</h3>
                     <p className="text-gray-600 mb-8">
-                      Try different filters or browse all projects to discover something new.
+                      {activeTab === 'profiles' 
+                        ? 'Try different filters or browse all people to discover someone new.'
+                        : 'Try different filters or browse all projects to discover something new.'}
                     </p>
                     <div className="space-y-3">
                       <Button onClick={clearFilters} variant="outline" className="px-6 py-2">
                         Clear Filters
                       </Button>
-                      <Button
-                        href="/projects/create"
-                        className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                      >
-                        Or launch your own project →
-                      </Button>
+                      {activeTab !== 'profiles' && (
+                        <Button
+                          href="/projects/create"
+                          className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
+                        >
+                          Or launch your own project →
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
@@ -748,65 +918,183 @@ export default function DiscoverPage() {
                   <h2 className="text-2xl font-bold text-gray-900">
                     {totalResults > 0 ? (
                       <>
-                        {totalResults} project{totalResults !== 1 ? 's' : ''} found
-                        {projects.length < totalResults && (
+                        {totalResults} result{totalResults !== 1 ? 's' : ''} found
+                        {(projects.length + profiles.length) < totalResults && (
                           <span className="text-gray-500 text-lg font-normal ml-2">
-                            (showing {projects.length})
+                            (showing {projects.length + profiles.length})
                           </span>
                         )}
                       </>
                     ) : (
-                      'No projects found'
+                      'No results found'
                     )}
                   </h2>
                 </div>
 
-                {/* Project Grid */}
-                <div
-                  className={`grid gap-6 ${
-                    viewMode === 'grid'
-                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                      : 'grid-cols-1'
-                  }`}
-                >
-                  {projects.map((project, index) => (
-                    <motion.div
-                      key={project.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.4, delay: index * 0.05 }}
-                    >
-                      <ModernProjectCard project={project} viewMode={viewMode} />
-                    </motion.div>
-                  ))}
-                </div>
+                {/* Tab-Specific Content */}
+                {activeTab === 'all' ? (
+                  // ALL TAB: Separated sections for projects and profiles
+                  <div className="space-y-8">
+                    {/* Projects Section */}
+                    {projects.length > 0 && (
+                      <ResultsSection
+                        title="Projects"
+                        count={projects.length}
+                        icon={<Target className="w-5 h-5" />}
+                        onViewAll={() => handleTabChange('projects')}
+                        showViewAll={profiles.length > 0}
+                        viewAllLabel="View All Projects"
+                      >
+                        <div
+                          className={`grid gap-6 ${
+                            viewMode === 'grid'
+                              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                              : 'grid-cols-1'
+                          }`}
+                        >
+                          {projects.slice(0, 6).map((project, index) => (
+                            <motion.div
+                              key={project.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.4, delay: index * 0.05 }}
+                            >
+                              <ModernProjectCard project={project} viewMode={viewMode} />
+                            </motion.div>
+                          ))}
+                        </div>
+                      </ResultsSection>
+                    )}
 
-                {/* Load More Button */}
-                {hasMore && (
-                  <div className="mt-8 flex justify-center">
-                    <Button
-                      onClick={handleLoadMore}
-                      disabled={isLoadingMore}
-                      variant="outline"
-                      size="lg"
-                      className="min-w-[200px]"
-                    >
-                      {isLoadingMore ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Loading...
-                        </>
-                      ) : (
-                        <>
-                          Load More Projects
-                          <ArrowUpDown className="w-4 h-4 ml-2" />
-                        </>
-                      )}
-                    </Button>
+                    {/* People Section */}
+                    {profiles.length > 0 && (
+                      <ResultsSection
+                        title="People"
+                        count={profiles.length}
+                        icon={<Users className="w-5 h-5" />}
+                        onViewAll={() => handleTabChange('profiles')}
+                        showViewAll={projects.length > 0}
+                        viewAllLabel="View All People"
+                      >
+                        <div
+                          className={`grid gap-6 ${
+                            viewMode === 'grid'
+                              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                              : 'grid-cols-1'
+                          }`}
+                        >
+                          {profiles.slice(0, 6).map((profile, index) => (
+                            <motion.div
+                              key={profile.id}
+                              initial={{ opacity: 0, y: 20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.4, delay: index * 0.05 }}
+                            >
+                              <ProfileCard profile={profile} viewMode={viewMode} />
+                            </motion.div>
+                          ))}
+                        </div>
+                      </ResultsSection>
+                    )}
                   </div>
+                ) : activeTab === 'projects' ? (
+                  // PROJECTS TAB: Only projects
+                  <>
+                    <div
+                      className={`grid gap-6 ${
+                        viewMode === 'grid'
+                          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                          : 'grid-cols-1'
+                      }`}
+                    >
+                      {projects.map((project, index) => (
+                        <motion.div
+                          key={project.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: index * 0.05 }}
+                        >
+                          <ModernProjectCard project={project} viewMode={viewMode} />
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Load More for Projects */}
+                    {hasMore && (
+                      <div className="mt-8 flex justify-center">
+                        <Button
+                          onClick={handleLoadMore}
+                          disabled={isLoadingMore}
+                          variant="outline"
+                          size="lg"
+                          className="min-w-[200px]"
+                        >
+                          {isLoadingMore ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            <>
+                              Load More Projects
+                              <ArrowUpDown className="w-4 h-4 ml-2" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  // PEOPLE TAB: Only profiles
+                  <>
+                    <div
+                      className={`grid gap-6 ${
+                        viewMode === 'grid'
+                          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                          : 'grid-cols-1'
+                      }`}
+                    >
+                      {profiles.map((profile, index) => (
+                        <motion.div
+                          key={profile.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.4, delay: index * 0.05 }}
+                        >
+                          <ProfileCard profile={profile} viewMode={viewMode} />
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Load More for People */}
+                    {hasMore && (
+                      <div className="mt-8 flex justify-center">
+                        <Button
+                          onClick={handleLoadMore}
+                          disabled={isLoadingMore}
+                          variant="outline"
+                          size="lg"
+                          className="min-w-[200px]"
+                        >
+                          {isLoadingMore ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            <>
+                              Load More People
+                              <ArrowUpDown className="w-4 h-4 ml-2" />
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
+            </div>
           </div>
         </motion.div>
       </div>

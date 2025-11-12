@@ -133,8 +133,13 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
       
       let response: SearchResponse
       
-      // Show trending content when no search query and no filters
-      if (!debouncedQuery && searchType === 'all' && Object.keys(filters).length === 0) {
+      // Show trending content when no search query and no active filters
+      const hasActiveFilters = Object.values(filters).some(value =>
+        value !== undefined && value !== null && value !== '' &&
+        !(Array.isArray(value) && value.length === 0)
+      );
+
+      if (!debouncedQuery && searchType === 'all' && !hasActiveFilters) {
         response = await getTrending()
       } else {
         // Perform search

@@ -101,10 +101,10 @@ export function isValidUsername(username: string | undefined | null): Validation
 }
 
 /**
- * Display name validation
+ * Name validation
  */
-export function isValidDisplayName(displayName: string | undefined | null): ValidationResult {
-  return validateField(displayName, 'Display name', {
+export function isValidName(name: string | undefined | null): ValidationResult {
+  return validateField(name, 'Name', {
     required: true,
     minLength: 1,
     maxLength: 50,
@@ -235,7 +235,7 @@ export function createValidationMiddleware(
  */
 export const profileValidationSchema = {
   username: isValidUsername,
-  name: isValidDisplayName,
+  name: isValidName,
   bio: isValidBio,
   bitcoin_address: isValidBitcoinAddress,
   avatar_url: isValidUrl

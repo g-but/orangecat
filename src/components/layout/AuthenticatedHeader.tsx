@@ -13,6 +13,7 @@
 
 import { Menu, Bell, Search } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { HeaderNavigation } from './HeaderNavigation';
 import { getNavigationItems } from '@/config/navigationConfig';
@@ -60,7 +61,7 @@ export function AuthenticatedHeader({
       >
         <div className="flex items-center justify-between h-16 px-4">
           {/* Left: Logo + Mobile Menu Toggle */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             <button
               onClick={onToggleSidebar}
               className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
@@ -71,6 +72,23 @@ export function AuthenticatedHeader({
 
             {/* Logo - always visible */}
             <Logo />
+
+            {/* Mobile Navigation Links - Compact */}
+            <div className="lg:hidden flex items-center space-x-1 ml-2">
+              {navigation.map(item => (
+                <Link
+                  key={item.name}
+                  href={item.href || '#'}
+                  className={`px-2 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+                    isActive(item.href || '')
+                      ? 'text-orange-600 bg-orange-50'
+                      : 'text-gray-600 hover:text-orange-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Center: Desktop Navigation + Search */}

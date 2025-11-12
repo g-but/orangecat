@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigation } from '@/hooks/useNavigation';
 import { navigationSections, bottomNavItems } from '@/config/navigationConfig';
@@ -10,6 +10,7 @@ import { AuthenticatedHeader } from '@/components/layout/AuthenticatedHeader';
 import { DevPerformanceMonitor } from '@/components/dashboard/PerformanceMonitor';
 import { NavigationShortcuts } from '@/components/navigation/NavigationShortcuts';
 import MobileSearchModal from '@/components/search/MobileSearchModal';
+import ExperimentalBanner from '@/components/ui/ExperimentalBanner';
 
 interface AuthenticatedLayoutProps {
   children: React.ReactNode;
@@ -21,24 +22,6 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
     useNavigation(navigationSections);
 
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [showExperimentalBanner, setShowExperimentalBanner] = useState(true);
-
-  // Dismiss experimental banner for the current session only
-  useEffect(() => {
-    try {
-      const hidden = sessionStorage.getItem('oc_hide_experimental_banner') === '1';
-      if (hidden) {
-        setShowExperimentalBanner(false);
-      }
-    } catch {}
-  }, []);
-
-  const dismissExperimentalBanner = () => {
-    try {
-      sessionStorage.setItem('oc_hide_experimental_banner', '1');
-    } catch {}
-    setShowExperimentalBanner(false);
-  };
 
   // Wait for hydration before rendering sidebar content
   if (!hydrated) {
@@ -89,40 +72,11 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
         />
       )}
 
-      {/* Experimental Notice (dismissible per session) */}
-      {showExperimentalBanner && (
-        <div className="bg-gradient-to-r from-orange-100 to-tiffany-100 border-b border-orange-200">
-          <div
-            className={`px-4 py-2 ${navigationState.isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'} transition-all ${SIDEBAR_TRANSITIONS.DURATION}`}
-          >
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <span className="text-orange-600 font-medium">🚧 Experimental</span>
-                <span className="text-gray-600">•</span>
-                <span className="text-gray-600">
-                  Development preview - features may not work as expected
-                </span>
-                <span className="text-gray-600">•</span>
-                <a
-                  href="https://github.com/g-but/orangecat"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-orange-600 hover:text-orange-700 font-medium underline"
-                >
-                  Source
-                </a>
-              </div>
-              <button
-                aria-label="Dismiss experimental notice"
-                onClick={dismissExperimentalBanner}
-                className="ml-4 shrink-0 px-2 py-1 text-gray-500 hover:text-gray-700 hover:bg-white/40 rounded-md"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Experimental Notice */}
+      <ExperimentalBanner
+        storageType="session"
+        className={`${navigationState.isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'} transition-all ${SIDEBAR_TRANSITIONS.DURATION}`}
+      />
 
       {/* Main Content */}
       <div

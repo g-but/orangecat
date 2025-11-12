@@ -41,3 +41,7 @@ COMMENT ON COLUMN public.project_favorites.project_id IS 'Project that was favor
 
 COMMIT;
 
+
+
+
+

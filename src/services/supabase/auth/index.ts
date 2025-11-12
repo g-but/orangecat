@@ -11,15 +11,15 @@
 
 import supabase from '../client'
 import { logger, logAuth } from '@/utils/logger'
-import type { 
-  AuthResponse, 
-  SignInRequest, 
-  SignUpRequest, 
+import type {
+  AuthResponse,
+  SignInRequest,
+  SignUpRequest,
   PasswordResetRequest,
   PasswordUpdateRequest,
-  AuthError,
-  isAuthError
+  AuthError
 } from '../types'
+import { isAuthError } from '../types'
 
 /**
  * Enhanced error handling with timeout detection for authentication operations
@@ -441,6 +441,21 @@ export async function getCurrentUserId(): Promise<string | null> {
 }
 
 // ==================== EXPORTS ====================
+
+// Export all functions as a default object for backwards compatibility
+export default {
+  signIn,
+  signUp,
+  signOut,
+  resetPassword,
+  updatePassword,
+  getSession,
+  getUser,
+  onAuthStateChange,
+  isAuthenticated,
+  getCurrentUserId,
+  isAuthError
+}
 
 export {
   type AuthResponse,
