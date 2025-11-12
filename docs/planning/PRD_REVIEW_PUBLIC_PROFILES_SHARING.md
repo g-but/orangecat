@@ -139,7 +139,7 @@ export default async function PublicProjectPage({ params }: { params: Promise<{ 
 **Current State:**
 
 - ✅ `username` field exists and is **UNIQUE** (verified via migrations)
-- ✅ `display_name` exists
+- ✅ `name` exists (standardized from `display_name` - see SCHEMA_CONSISTENCY_FIX.md)
 - ✅ `bio` exists
 - ✅ `avatar_url` exists
 - ✅ `banner_url` exists
@@ -299,7 +299,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('display_name, bio, avatar_url')
+    .select('name, bio, avatar_url') // Note: Schema uses 'name' field
     .eq('username', username)
     .single();
 
@@ -310,18 +310,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   return {
-    title: `${profile.display_name || username} | OrangeCat`,
-    description: profile.bio || `View ${profile.display_name || username}'s profile on OrangeCat`,
+    title: `${profile.name || username} | OrangeCat`,
+    description: profile.bio || `View ${profile.name || username}'s profile on OrangeCat`,
     openGraph: {
-      title: `${profile.display_name || username} on OrangeCat`,
-      description: profile.bio || `Support ${profile.display_name || username}'s work`,
+      title: `${profile.name || username} on OrangeCat`,
+      description: profile.bio || `Support ${profile.name || username}'s work`,
       images: profile.avatar_url ? [profile.avatar_url] : ['/og-default.png'],
       url: `https://orangecat.ch/profiles/${username}`,
       type: 'profile',
     },
     twitter: {
       card: 'summary',
-      title: `${profile.display_name || username}`,
+      title: `${profile.name || username}`,
       description: profile.bio || '',
     },
   };
@@ -375,7 +375,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       raised_amount,
       currency,
       bitcoin_address,
-      profiles:user_id (username, display_name)
+      profiles:user_id (username, name) // Note: Schema uses 'name' field
     `)
     .eq('id', id)
     .single();
@@ -494,7 +494,7 @@ export const ROUTES = {
 
 ## ✅ What Already Exists (Good News!)
 
-1. ✅ **Database Schema:** All required fields exist (username, display_name, bio, avatar_url, etc.)
+1. ✅ **Database Schema:** All required fields exist (username, name, bio, avatar_url, etc.) - Note: `name` standardized from `display_name`
 2. ✅ **Sharing Components:** `CampaignShare` and `ShareButton` exist (need integration)
 3. ✅ **Route Constants:** System exists, just needs extension
 4. ✅ **Profile Components:** `UnifiedProfileLayout` exists (can be reused)

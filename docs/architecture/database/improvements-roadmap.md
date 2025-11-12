@@ -29,11 +29,13 @@ Low Impact, Quick Win   │  Low Impact, Complex
 ## 🔥 High Priority (0-1 Month)
 
 ### 1. Add Missing Index on transactions.status ✅ DONE
+
 **Priority:** P0 - Critical
 **Complexity:** Low (5 mins)
 **Impact:** High (frequent filtering)
 
 **Problem:**
+
 ```sql
 -- This query is slow without index
 SELECT * FROM transactions
@@ -42,11 +44,13 @@ ORDER BY created_at DESC;
 ```
 
 **Solution:**
+
 ```sql
 CREATE INDEX idx_transactions_status ON transactions(status);
 ```
 
 **Expected improvement:**
+
 - Query time: 500ms → 50ms (10x faster)
 - Helps dashboard, admin tools, payment processing
 
@@ -55,17 +59,20 @@ CREATE INDEX idx_transactions_status ON transactions(status);
 ---
 
 ### 2. Create Audit Logs Table
+
 **Priority:** P0 - Critical (Compliance)
 **Complexity:** Medium (2-3 hours)
 **Impact:** High (Security, Compliance, Debugging)
 
 **Why we need this:**
+
 - Regulatory compliance (financial transactions)
 - Security investigations (who did what, when)
 - Debugging complex state changes
 - User support (trace profile/payment issues)
 
 **Design:**
+
 ```sql
 CREATE TABLE audit_logs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -104,6 +111,7 @@ WHERE created_at < NOW() - INTERVAL '1 year';
 ```
 
 **What to log:**
+
 - ✅ Profile updates (especially verification status)
 - ✅ Financial transactions (all state changes)
 - ✅ Organization membership changes
@@ -113,6 +121,7 @@ WHERE created_at < NOW() - INTERVAL '1 year';
 - ❌ Automated trigger updates (unless critical)
 
 **Implementation:**
+
 1. Create table migration
 2. Add trigger function for auto-logging
 3. Add manual logging to critical operations
@@ -126,12 +135,14 @@ WHERE created_at < NOW() - INTERVAL '1 year';
 ## 📊 High Priority (1-3 Months)
 
 ### 3. Table Partitioning for Transactions
+
 **Priority:** P1 - Important
 **Complexity:** High (1 week)
 **Impact:** High (Scalability)
 
 **Problem:**
 The `transactions` table will grow indefinitely:
+
 - 1000 transactions/day = 365K/year
 - 5 years = 1.8M rows
 - Query performance degrades
@@ -157,12 +168,14 @@ CREATE TABLE transactions_2025_11 PARTITION OF transactions_partitioned
 ```
 
 **Benefits:**
+
 - Query only relevant partitions (10x faster)
 - Drop old partitions instantly (vs slow DELETE)
 - Easier backups (partition-level)
 - Better vacuum performance
 
 **Migration strategy:**
+
 1. **Phase 1:** Create partitioned table (empty)
 2. **Phase 2:** Copy data in batches (off-peak)
 3. **Phase 3:** Swap tables (minimal downtime)
@@ -170,6 +183,7 @@ CREATE TABLE transactions_2025_11 PARTITION OF transactions_partitioned
 5. **Phase 5:** Automate partition creation
 
 **Automation:**
+
 ```sql
 -- Monthly cron job
 CREATE OR REPLACE FUNCTION create_next_partition()
@@ -194,6 +208,7 @@ $$ LANGUAGE plpgsql;
 ---
 
 ### 4. Archival Strategy for Old Data
+
 **Priority:** P1 - Important
 **Complexity:** Medium (3-4 days)
 **Impact:** Medium (Performance, Cost)
@@ -201,6 +216,7 @@ $$ LANGUAGE plpgsql;
 **Tables to archive:**
 
 #### notifications (archive after 90 days)
+
 ```sql
 CREATE TABLE notifications_archive (
   LIKE notifications INCLUDING ALL
@@ -217,6 +233,7 @@ WHERE id IN (SELECT id FROM notifications_archive);
 ```
 
 #### audit_logs (archive after 1 year)
+
 ```sql
 CREATE TABLE audit_logs_archive_2024 (
   LIKE audit_logs INCLUDING ALL
@@ -230,11 +247,13 @@ WHERE created_at >= '2024-01-01'
 ```
 
 **Benefits:**
+
 - Smaller active tables (faster queries)
 - Lower storage costs (compress archives)
 - Maintain history (compliance)
 
 **Archive storage options:**
+
 1. **Same DB, different schema** - Easy, same queries
 2. **S3 + Parquet** - Cheap, queryable with Athena
 3. **Data warehouse** - Snowflake/BigQuery for analytics
@@ -246,6 +265,7 @@ WHERE created_at >= '2024-01-01'
 ## 🚀 Medium Priority (3-6 Months)
 
 ### 5. Materialized Views for Analytics
+
 **Priority:** P2 - Nice to have
 **Complexity:** Medium (1 week)
 **Impact:** Medium (Performance)
@@ -253,6 +273,7 @@ WHERE created_at >= '2024-01-01'
 **Use cases:**
 
 #### Campaign Leaderboard
+
 ```sql
 CREATE MATERIALIZED VIEW project_leaderboard AS
 SELECT
@@ -276,6 +297,7 @@ CREATE INDEX ON project_leaderboard(current_amount DESC);
 ```
 
 #### User Contribution Stats
+
 ```sql
 CREATE MATERIALIZED VIEW user_contribution_stats AS
 SELECT
@@ -293,11 +315,13 @@ GROUP BY p.id;
 ```
 
 **Refresh strategy:**
+
 - **Real-time views**: Refresh on every write (slow)
 - **Near real-time**: Refresh every 5-15 minutes
 - **Batch**: Refresh nightly (2am)
 
 **Implementation:**
+
 ```sql
 -- Option 1: Manual refresh
 REFRESH MATERIALIZED VIEW CONCURRENTLY project_leaderboard;
@@ -312,6 +336,7 @@ SELECT cron.schedule('refresh-leaderboard', '*/15 * * * *',
 ---
 
 ### 6. Covering Indexes
+
 **Priority:** P2 - Nice to have
 **Complexity:** Low (2-3 hours)
 **Impact:** Low-Medium (Performance)
@@ -320,12 +345,13 @@ SELECT cron.schedule('refresh-leaderboard', '*/15 * * * *',
 Include all columns needed by query → no table lookup needed
 
 **Example:**
+
 ```sql
 -- Current: Index only on username
 CREATE INDEX idx_profiles_username ON profiles(username);
 
--- Query needs username + display_name + avatar_url
-SELECT username, display_name, avatar_url
+-- Query needs username + name + avatar_url
+SELECT username, name, avatar_url
 FROM profiles
 WHERE username = 'orangecat';
 
@@ -333,22 +359,25 @@ WHERE username = 'orangecat';
 
 -- Solution: Covering index
 CREATE INDEX idx_profiles_username_covering ON profiles(username)
-INCLUDE (display_name, avatar_url);
+INCLUDE (name, avatar_url);
 
 -- Now: Index-only scan (1 I/O operation) ✅
 ```
 
 **Candidates:**
-1. Profile search: `username INCLUDE (display_name, avatar_url, is_verified)`
+
+1. Profile search: `username INCLUDE (name, avatar_url, is_verified)`
 2. Campaign list: `status INCLUDE (title, slug, current_amount, goal_amount)`
 3. Notifications: `user_id, is_read INCLUDE (type, title, created_at)`
 
 **Trade-off:**
+
 - ✅ Faster reads (index-only scans)
 - ❌ Slower writes (larger index to maintain)
 - ❌ More storage (duplicated data)
 
 **When to use:**
+
 - ✅ Read-heavy tables
 - ✅ Hot queries with limited columns
 - ❌ Wide tables (many columns)
@@ -361,6 +390,7 @@ INCLUDE (display_name, avatar_url);
 ## 🔮 Future Considerations (6+ Months)
 
 ### 7. Read Replicas
+
 **When needed:** > 10K users, heavy analytics load
 
 ```
@@ -370,11 +400,13 @@ Primary (Write) ──→ Replica 1 (Analytics)
 ```
 
 **Use cases:**
+
 - Analytics queries don't impact production
 - Geo-distributed reads (lower latency)
 - Zero-downtime migrations
 
 **Supabase setup:**
+
 - Supabase Pro: Read replicas available
 - Configure in dashboard
 - Update connection strings
@@ -382,14 +414,17 @@ Primary (Write) ──→ Replica 1 (Analytics)
 ---
 
 ### 8. TimescaleDB Extension
+
 **When needed:** Heavy time-series analytics
 
 **Benefits:**
+
 - Automatic partitioning (time-based)
 - Compression (10x storage savings)
 - Continuous aggregates (faster queries)
 
 **Ideal for:**
+
 - Bitcoin price history
 - Transaction volume tracking
 - User activity patterns
@@ -408,14 +443,17 @@ ALTER TABLE transactions SET (
 ---
 
 ### 9. Connection Pooling (PgBouncer)
+
 **When needed:** > 100 concurrent users
 
 **Why:**
+
 - PostgreSQL has max connections limit
 - Each connection has overhead
 - Pooler reuses connections
 
 **Setup:**
+
 ```bash
 # Supabase provides PgBouncer
 # Use pooled connection string for:
@@ -429,16 +467,19 @@ ALTER TABLE transactions SET (
 ## 📈 Success Metrics
 
 ### Performance
+
 - ✅ 95th percentile query time < 100ms
 - ✅ Dashboard loads in < 1s
 - ✅ Search response < 200ms
 
 ### Scalability
+
 - ✅ Handle 10K concurrent users
 - ✅ 100K transactions/day
 - ✅ 1M+ profiles
 
 ### Observability
+
 - ✅ All critical operations logged
 - ✅ Slow queries identified
 - ✅ Index usage monitored
@@ -473,6 +514,7 @@ Month 7-12 (Q2-Q3 2026)
 ## How to Contribute
 
 ### Adding New Improvements
+
 1. Identify the problem
 2. Quantify impact (query times, storage)
 3. Design solution with trade-offs
@@ -481,6 +523,7 @@ Month 7-12 (Q2-Q3 2026)
 6. Document in this roadmap
 
 ### Testing Strategy
+
 ```sql
 -- Before
 EXPLAIN ANALYZE

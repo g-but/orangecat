@@ -23,7 +23,7 @@ The database consists of three main tables:
 1. **profiles**
    - Stores user profile information
    - Links to auth.users via user_id
-   - Contains optional fields like username, display_name, website, etc.
+   - Contains optional fields like username, name, website, etc. (Note: `name` standardized from `display_name`)
 
 2. **funding_pages**
    - Stores crowdfunding project information
@@ -59,4 +59,4 @@ npx tsx src/scripts/apply-migrations.ts
 2. Never modify existing migration files
 3. Test migrations in a development environment before applying to production
 4. Keep migrations atomic and focused on a single change
-5. Document any complex changes in the migration file comments 
+5. Document any complex changes in the migration file comments
