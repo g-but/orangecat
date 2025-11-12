@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { computeAmountRaised } from '@/lib/projectGoal';
 import Button from '@/components/ui/Button';
+import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
+import { Bitcoin } from 'lucide-react';
 
 interface Props {
   project: {
@@ -49,11 +52,31 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
       const res = await fetch(`/api/projects/${project.id}/refresh-balance`, { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
-        // simplest path: reload to pick up new server state elsewhere
-        window.location.reload();
+        // Update local state instead of full page reload
+        if (data.bitcoin_balance_btc !== undefined) {
+          // Trigger a re-fetch of project data by updating the component
+          // For now, we'll still reload but show a toast first
+          toast.success('Balance refreshed successfully');
+          // TODO: Replace with proper state update when project data is available via props/context
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        }
       } else {
-        alert(data.error || 'Failed to refresh');
+        toast.error(data.error || 'Failed to refresh balance');
+        logger.error(
+          'Failed to refresh balance',
+          { projectId: project.id, error: data.error },
+          'ProjectSummaryRail'
+        );
       }
+    } catch (error) {
+      toast.error('Failed to refresh balance. Please try again.');
+      logger.error(
+        'Failed to refresh balance',
+        { projectId: project.id, error },
+        'ProjectSummaryRail'
+      );
     } finally {
       setRefreshing(false);
     }
@@ -77,12 +100,35 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
       <div className="w-full bg-gray-200 rounded-full h-3">
         <div className="bg-orange-500 h-3 rounded-full" style={{ width: `${progress}%` }} />
       </div>
+      {/* Owner Actions */}
       {isOwner && project.bitcoin_address && (
         <Button onClick={onRefresh} disabled={refreshing} variant="outline" className="w-full">
           {refreshing ? 'Refreshing…' : 'Refresh Balance'}
         </Button>
       )}
-      <Button className="w-full">Donate Bitcoin</Button>
+
+      {/* Quick Action - Scroll to Support Section */}
+      {project.bitcoin_address && (
+        <Button
+          onClick={() => {
+            // Scroll to Support this Project section in main content
+            const supportSection = document.getElementById('support-heading');
+            if (supportSection) {
+              supportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            } else {
+              // Fallback: scroll to donation section
+              const bitcoinSection = document.getElementById('bitcoin-donation-section');
+              if (bitcoinSection) {
+                bitcoinSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            }
+          }}
+          className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+        >
+          <Bitcoin className="w-4 h-4 mr-2" aria-hidden="true" />
+          Support this Project
+        </Button>
+      )}
     </aside>
   );
 }

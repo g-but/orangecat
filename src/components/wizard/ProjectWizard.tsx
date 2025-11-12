@@ -21,7 +21,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
-import { Rocket, X, Loader2, ExternalLink } from 'lucide-react';
+import { Rocket, X, Loader2, ExternalLink, Pause, Play, EyeOff, CheckCircle2 } from 'lucide-react';
 import {
   ProjectTemplates,
   type ProjectTemplate,
@@ -98,7 +98,7 @@ export function ProjectWizard({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuth();
-  const { loadProjects } = useProjectStore();
+  const { loadProjects, updateProjectStatus } = useProjectStore();
 
   // Check both prop and query param for edit mode
   const editIdFromQuery = searchParams.get('edit') || searchParams.get('draft');
@@ -122,6 +122,10 @@ export function ProjectWizard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
+  const [projectStatus, setProjectStatus] = useState<
+    'draft' | 'active' | 'paused' | 'completed' | 'cancelled'
+  >('draft');
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Notify parent of progress changes
   useEffect(() => {
@@ -294,6 +298,9 @@ export function ProjectWizard({
         selectedCategories: project.tags || [],
       });
 
+      // Set project status
+      setProjectStatus((project.status || 'draft') as typeof projectStatus);
+
       // Set edit mode and project ID when loading from query param
       setIsEditMode(true);
       setEditProjectId(projectId);
@@ -444,6 +451,119 @@ export function ProjectWizard({
     }
   };
 
+  // Handle status change
+  const handleStatusChange = async (newStatus: typeof projectStatus) => {
+    if (!editProjectId || !user) {
+      return;
+    }
+
+    setIsUpdatingStatus(true);
+    try {
+      const response = await fetch(`/api/projects/${editProjectId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update status');
+      }
+
+      setProjectStatus(newStatus);
+      toast.success(`Project status updated to ${newStatus}`);
+
+      // Update project store
+      if (editProjectId) {
+        await updateProjectStatus(editProjectId, newStatus);
+      }
+
+      // Reload projects to reflect status change
+      if (user.id) {
+        loadProjects(user.id);
+      }
+    } catch (error) {
+      logger.error('Failed to update project status:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to update status');
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  // Get available status actions based on current status
+  const getStatusActions = () => {
+    switch (projectStatus) {
+      case 'draft':
+        return [
+          {
+            label: 'Publish Project',
+            status: 'active' as const,
+            icon: Rocket,
+            variant: 'primary' as const,
+          },
+        ];
+      case 'active':
+        return [
+          {
+            label: 'Pause Donations',
+            status: 'paused' as const,
+            icon: Pause,
+            variant: 'outline' as const,
+          },
+          {
+            label: 'Unpublish',
+            status: 'draft' as const,
+            icon: EyeOff,
+            variant: 'outline' as const,
+          },
+          {
+            label: 'Mark as Completed',
+            status: 'completed' as const,
+            icon: CheckCircle2,
+            variant: 'outline' as const,
+          },
+        ];
+      case 'paused':
+        return [
+          {
+            label: 'Resume Donations',
+            status: 'active' as const,
+            icon: Play,
+            variant: 'primary' as const,
+          },
+          {
+            label: 'Unpublish',
+            status: 'draft' as const,
+            icon: EyeOff,
+            variant: 'outline' as const,
+          },
+        ];
+      case 'completed':
+      case 'cancelled':
+        return [
+          {
+            label: 'Unpublish',
+            status: 'draft' as const,
+            icon: EyeOff,
+            variant: 'outline' as const,
+          },
+        ];
+      default:
+        return [];
+    }
+  };
+
+  const getStatusBadge = (status: typeof projectStatus) => {
+    const badges = {
+      draft: { label: 'Draft', className: 'bg-slate-100 text-slate-700 border-slate-200' },
+      active: { label: 'Active', className: 'bg-green-100 text-green-700 border-green-200' },
+      paused: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
+      completed: { label: 'Completed', className: 'bg-blue-100 text-blue-700 border-blue-200' },
+      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700 border-red-200' },
+    };
+    return badges[status];
+  };
+
   if (loadingProject) {
     return (
       <div className="flex justify-center items-center min-h-[200px]">
@@ -454,6 +574,44 @@ export function ProjectWizard({
 
   return (
     <div className="space-y-6">
+      {/* Project Status Controls - Only show in edit mode */}
+      {isEditMode && editProjectId && (
+        <Card className="p-6 bg-gradient-to-r from-orange-50/50 to-tiffany-50/50 border-orange-200">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-gray-700">Current Status:</span>
+              <span
+                className={`px-3 py-1.5 rounded-full text-sm font-medium border ${getStatusBadge(projectStatus).className}`}
+              >
+                {getStatusBadge(projectStatus).label}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {getStatusActions().map(action => {
+                const Icon = action.icon;
+                return (
+                  <Button
+                    key={action.status}
+                    variant={action.variant}
+                    size="sm"
+                    onClick={() => handleStatusChange(action.status)}
+                    disabled={isUpdatingStatus}
+                    className="flex items-center gap-2"
+                  >
+                    {isUpdatingStatus ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Icon className="w-4 h-4" />
+                    )}
+                    {action.label}
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+        </Card>
+      )}
+
       <Card className="p-6">
         <div className="space-y-6">
           {/* Title */}

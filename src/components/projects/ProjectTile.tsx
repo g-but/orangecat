@@ -73,10 +73,30 @@ export function ProjectTile({
         <div className="flex items-start gap-2 flex-shrink-0">
           <span
             className={`text-xs px-2 py-1 rounded-full whitespace-nowrap ${
-              project.isDraft ? 'bg-gray-100 text-gray-700' : 'bg-orange-100 text-orange-700'
+              project.isDraft
+                ? 'bg-slate-100 text-slate-700'
+                : project.isPaused
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : project.isActive
+                    ? 'bg-green-100 text-green-700'
+                    : project.status === 'completed'
+                      ? 'bg-blue-100 text-blue-700'
+                      : project.status === 'cancelled'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-gray-100 text-gray-700'
             }`}
           >
-            {project.isDraft ? 'Draft' : 'Published'}
+            {project.isDraft
+              ? 'Draft'
+              : project.isPaused
+                ? 'Paused'
+                : project.isActive
+                  ? 'Active'
+                  : project.status === 'completed'
+                    ? 'Completed'
+                    : project.status === 'cancelled'
+                      ? 'Cancelled'
+                      : 'Unknown'}
           </span>
 
           {onDelete && (

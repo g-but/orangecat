@@ -1,0 +1,167 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import Button from '@/components/ui/Button';
+import { ArrowLeft } from 'lucide-react';
+import { MissingWalletBanner } from '@/components/project/MissingWalletBanner';
+import CampaignShare from '@/components/sharing/CampaignShare';
+import ProjectMediaGallery from '@/components/project/ProjectMediaGallery';
+import ProjectSummaryRail from '@/components/project/ProjectSummaryRail';
+import { ProjectHeader } from '@/components/project/ProjectHeader';
+import { ProjectContent } from '@/components/project/ProjectContent';
+import { ROUTES } from '@/lib/routes';
+import { useState } from 'react';
+
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  user_id: string;
+  goal_amount: number | null;
+  currency: string;
+  funding_purpose: string | null;
+  bitcoin_address: string | null;
+  lightning_address: string | null;
+  website_url: string | null;
+  category: string | null;
+  tags: string[] | null;
+  status: string;
+  raised_amount: number | null;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    username: string | null;
+    display_name: string | null;
+    avatar_url: string | null;
+  };
+}
+
+interface ProjectPageClientProps {
+  project: Project;
+}
+
+/**
+ * Project Page Client Component
+ *
+ * Handles all client-side interactivity for project pages.
+ * The server component handles data fetching and SEO metadata.
+ */
+export default function ProjectPageClient({ project }: ProjectPageClientProps) {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [showShareDialog, setShowShareDialog] = useState(false);
+
+  const isOwner = project.user_id === user?.id;
+  const projectId = project.id;
+
+  // Get status display info helper
+  const getStatusInfo = (status: string) => {
+    const normalized = status?.toLowerCase();
+    const statusMap: Record<string, { label: string; className: string }> = {
+      draft: { label: 'Draft', className: 'bg-slate-100 text-slate-700' },
+      active: { label: 'Active', className: 'bg-green-100 text-green-700' },
+      paused: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700' },
+      completed: { label: 'Completed', className: 'bg-blue-100 text-blue-700' },
+      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700' },
+    };
+    return (
+      statusMap[normalized] || {
+        label: status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown',
+        className: 'bg-gray-100 text-gray-700',
+      }
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Header with Back Button */}
+        <div className="mb-6">
+          <Button
+            onClick={() => router.back()}
+            variant="ghost"
+            size="sm"
+            className="mb-6"
+            aria-label="Go back to previous page"
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                router.back();
+              }
+            }}
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+            Back
+          </Button>
+        </div>
+
+        {/* Layout: main + rail */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            {/* Project Header */}
+            <ProjectHeader
+              project={project}
+              isOwner={isOwner}
+              onShare={() => setShowShareDialog(true)}
+              getStatusInfo={getStatusInfo}
+            />
+
+            {/* Missing Wallet Banner */}
+            {!project.bitcoin_address && !project.lightning_address && (
+              <MissingWalletBanner projectId={projectId} isOwner={isOwner} className="mb-6" />
+            )}
+
+            {/* Gallery */}
+            <ProjectMediaGallery projectId={projectId} className="mb-6" />
+
+            {/* Project Content */}
+            <ProjectContent
+              project={{
+                ...project,
+                id: project.id,
+                bitcoin_address: project.bitcoin_address,
+                lightning_address: project.lightning_address,
+                isOwner,
+              }}
+            />
+          </div>
+          <div>
+            <ProjectSummaryRail
+              project={{
+                id: project.id,
+                goal_amount: project.goal_amount,
+                currency: project.currency,
+                bitcoin_address: project.bitcoin_address,
+                bitcoin_balance_btc: (project as any).bitcoin_balance_btc || 0,
+                bitcoin_balance_updated_at: (project as any).bitcoin_balance_updated_at || null,
+                user_id: project.user_id,
+              }}
+              isOwner={isOwner}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Share Dialog */}
+      {showShareDialog && project && (
+        <div className="fixed inset-0 z-50 flex items-start justify-end p-4 pointer-events-none">
+          <div className="pointer-events-auto mt-20 mr-4">
+            <CampaignShare
+              projectId={project.id}
+              projectTitle={project.title}
+              projectDescription={project.description}
+              currentUrl={
+                typeof window !== 'undefined'
+                  ? `${window.location.origin}${ROUTES.PROJECTS.VIEW(project.id)}`
+                  : ''
+              }
+              onClose={() => setShowShareDialog(false)}
+              variant="dropdown"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

@@ -1,14 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Heart, Clock, Target } from 'lucide-react';
 import { CurrencyDisplay } from './CurrencyDisplay';
 import BTCAmountDisplay from './BTCAmountDisplay';
+import DefaultAvatar from './DefaultAvatar';
 import { SearchFundingPage } from '@/services/search';
 import { useAuth } from '@/hooks/useAuth';
 import { getUniqueCategories } from '@/utils/project';
+import { ROUTES } from '@/lib/routes';
 
 interface ModernProjectCardProps {
   project: SearchFundingPage;
@@ -43,16 +45,31 @@ function getStatusBadge(status: string) {
   switch (normalized) {
     case 'draft':
       return { label: 'Draft', className: 'bg-slate-100 text-slate-600 border border-slate-200' };
+    case 'active':
+      return {
+        label: 'Active',
+        className: 'bg-green-100 text-green-700 border border-green-200',
+      };
+    case 'paused':
+      return {
+        label: 'Paused',
+        className: 'bg-yellow-100 text-yellow-700 border border-yellow-200',
+      };
     case 'completed':
       return {
         label: 'Completed',
-        className: 'bg-orange-100 text-orange-600 border border-orange-200',
+        className: 'bg-blue-100 text-blue-700 border border-blue-200',
+      };
+    case 'cancelled':
+      return {
+        label: 'Cancelled',
+        className: 'bg-red-100 text-red-700 border border-red-200',
       };
     default:
-      // For published projects (status is 'active' or anything else), show Published
+      // Fallback for unknown statuses
       return {
-        label: 'Published',
-        className: 'bg-orange-100 text-orange-700 border border-orange-200',
+        label: normalized || 'Unknown',
+        className: 'bg-gray-100 text-gray-700 border border-gray-200',
       };
   }
 }
@@ -64,6 +81,7 @@ export default function ModernProjectCard({
 }: ModernProjectCardProps) {
   const { user, profile } = useAuth();
   const [isLiked, setIsLiked] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   const goalAmount = project.goal_amount ?? 0;
@@ -112,8 +130,73 @@ export default function ModernProjectCard({
     user?.id,
   ]);
 
+  const ownerUsername = useMemo(() => {
+    if (project.profiles?.username) {
+      return project.profiles.username;
+    }
+    if (project.user_id && project.user_id === (profile?.id || user?.id)) {
+      return profile?.username;
+    }
+    return null;
+  }, [project.profiles?.username, project.user_id, profile?.id, profile?.username, user?.id]);
+
+  const ownerAvatarUrl = useMemo(() => {
+    return project.profiles?.avatar_url || null;
+  }, [project.profiles?.avatar_url]);
+
   const ownerInitial = ownerName ? ownerName.charAt(0).toUpperCase() : 'P';
-  const statusBadge = getStatusBadge(project.status || 'published');
+  const creatorProfileUrl = ownerUsername ? ROUTES.PROFILE.VIEW(ownerUsername) : null;
+  const statusBadge = getStatusBadge(project.status || 'draft');
+
+  // Check favorite status when component mounts or project changes
+  useEffect(() => {
+    if (!project.id || !user) {
+      setIsLiked(false);
+      return;
+    }
+
+    const checkFavoriteStatus = async () => {
+      try {
+        const response = await fetch(`/api/projects/${project.id}/favorite`);
+        if (response.ok) {
+          const result = await response.json();
+          setIsLiked(result.isFavorited || false);
+        }
+      } catch (error) {
+        // Silently fail - favorite status is optional
+      }
+    };
+
+    checkFavoriteStatus();
+  }, [project.id, user]);
+
+  const handleToggleFavorite = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!user) {
+      return;
+    }
+
+    setIsTogglingFavorite(true);
+    try {
+      const method = isLiked ? 'DELETE' : 'POST';
+      const response = await fetch(`/api/projects/${project.id}/favorite`, {
+        method,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle favorite');
+      }
+
+      const result = await response.json();
+      setIsLiked(result.isFavorited);
+    } catch (error) {
+      // Silently fail - user can try again
+    } finally {
+      setIsTogglingFavorite(false);
+    }
+  };
 
   const gradient =
     gradientByCategory[categories[0]?.toLowerCase() || 'default'] ?? gradientByCategory.default;
@@ -203,12 +286,41 @@ export default function ModernProjectCard({
                 <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
                   {project.title}
                 </h3>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-orange-100 text-xs font-semibold text-orange-600">
-                    {ownerInitial}
+                {creatorProfileUrl ? (
+                  <Link
+                    href={creatorProfileUrl}
+                    onClick={e => e.stopPropagation()}
+                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition-colors"
+                  >
+                    {ownerAvatarUrl ? (
+                      <Image
+                        src={ownerAvatarUrl}
+                        alt={ownerName}
+                        width={32}
+                        height={32}
+                        className="rounded-full object-cover"
+                      />
+                    ) : (
+                      <DefaultAvatar size={32} className="rounded-full" />
+                    )}
+                    <span>{ownerName}</span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    {ownerAvatarUrl ? (
+                      <Image
+                        src={ownerAvatarUrl}
+                        alt={ownerName}
+                        width={32}
+                        height={32}
+                        className="rounded-full object-cover"
+                      />
+                    ) : (
+                      <DefaultAvatar size={32} className="rounded-full" />
+                    )}
+                    <span>{ownerName}</span>
                   </div>
-                  <span>{ownerName}</span>
-                </div>
+                )}
               </div>
               <div className="flex items-center gap-1 text-xs font-medium text-orange-600">
                 <Clock className="h-3.5 w-3.5" />
@@ -243,17 +355,20 @@ export default function ModernProjectCard({
         <div className="relative aspect-[16/10] w-full overflow-hidden">
           {imageElement}
           <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-black/0 to-black/0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-          <button
-            className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/30 text-white backdrop-blur transition-colors duration-200 hover:bg-white/40"
-            onClick={event => {
-              event.preventDefault();
-              event.stopPropagation();
-              setIsLiked(prev => !prev);
-            }}
-            aria-label={isLiked ? 'Remove from favourites' : 'Add to favourites'}
-          >
-            <Heart className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`} />
-          </button>
+          {/* Favorites button */}
+          {user && (
+            <button
+              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/30 text-white backdrop-blur transition-colors duration-200 hover:bg-white/40 disabled:opacity-50"
+              onClick={handleToggleFavorite}
+              disabled={isTogglingFavorite}
+              aria-label={isLiked ? 'Remove from favourites' : 'Add to favourites'}
+              title={isLiked ? 'Remove from favourites' : 'Add to favourites'}
+            >
+              <Heart
+                className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`}
+              />
+            </button>
+          )}
           <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2">
             {statusBadge && (
               <span
@@ -280,13 +395,49 @@ export default function ModernProjectCard({
                 {project.title}
               </h3>
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600">
-                  {ownerInitial}
-                </div>
-                <div className="leading-tight">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Created by</p>
-                  <p className="text-sm font-medium text-gray-900">{ownerName}</p>
-                </div>
+                {creatorProfileUrl ? (
+                  <Link
+                    href={creatorProfileUrl}
+                    onClick={e => e.stopPropagation()}
+                    className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+                  >
+                    {ownerAvatarUrl ? (
+                      <Image
+                        src={ownerAvatarUrl}
+                        alt={ownerName}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover"
+                      />
+                    ) : (
+                      <DefaultAvatar size={40} className="rounded-full" />
+                    )}
+                    <div className="leading-tight">
+                      <p className="text-xs uppercase tracking-wide text-gray-500">Created by</p>
+                      <p className="text-sm font-medium text-gray-900 hover:text-orange-600 transition-colors">
+                        {ownerName}
+                      </p>
+                    </div>
+                  </Link>
+                ) : (
+                  <>
+                    {ownerAvatarUrl ? (
+                      <Image
+                        src={ownerAvatarUrl}
+                        alt={ownerName}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover"
+                      />
+                    ) : (
+                      <DefaultAvatar size={40} className="rounded-full" />
+                    )}
+                    <div className="leading-tight">
+                      <p className="text-xs uppercase tracking-wide text-gray-500">Created by</p>
+                      <p className="text-sm font-medium text-gray-900">{ownerName}</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2 rounded-full bg-orange-50 px-3 py-1 text-xs font-medium text-orange-600">

@@ -35,6 +35,10 @@ export interface ProjectState {
   // ACTIONS
   loadProjects: (userId: string) => Promise<void>;
   deleteProject: (id: string) => Promise<void>;
+  updateProjectStatus: (
+    id: string,
+    status: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled'
+  ) => Promise<void>;
   getProjectById: (id: string) => Project | undefined;
   getStats: () => { totalProjects: number; totalActive: number };
 
@@ -124,6 +128,56 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to delete project';
       logger.error('Failed to delete project:', error);
+      set({ error: message, isLoading: false });
+      throw error; // Re-throw so the UI can handle it
+    }
+  },
+
+  updateProjectStatus: async (
+    id: string,
+    status: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled'
+  ) => {
+    set({ isLoading: true, error: null });
+
+    try {
+      const response = await fetch(`/api/projects/${id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to update project status');
+      }
+
+      const { data: updatedProject } = await response.json();
+
+      // Update the project in the store
+      set(state => ({
+        projects: state.projects.map(p =>
+          p.id === id
+            ? {
+                ...p,
+                ...updatedProject,
+                status: updatedProject.status,
+                isDraft: updatedProject.status === 'draft',
+                isActive: updatedProject.status === 'active',
+                isPaused: updatedProject.status === 'paused',
+                is_active: updatedProject.status === 'active',
+                is_public: updatedProject.status !== 'draft',
+              }
+            : p
+        ),
+        isLoading: false,
+      }));
+
+      logger.info(`Updated project ${id} status to ${status}`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to update project status';
+      logger.error('Failed to update project status:', error);
       set({ error: message, isLoading: false });
       throw error; // Re-throw so the UI can handle it
     }
