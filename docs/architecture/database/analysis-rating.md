@@ -11,6 +11,7 @@ This is a **well-architected, production-ready Bitcoin crowdfunding platform** w
 ## 📊 Database Overview
 
 ### Tables (10 total)
+
 1. **profiles** - User profiles with Bitcoin features
 2. **funding_pages** - Crowdfunding projects
 3. **transactions** - Bitcoin transaction tracking
@@ -23,6 +24,7 @@ This is a **well-architected, production-ready Bitcoin crowdfunding platform** w
 10. **transparency_scores** - Trust & transparency metrics
 
 ### Functions (6 total)
+
 - `handle_new_user()` - Auto profile creation
 - `handle_updated_at()` - Timestamp automation
 - `increment_profile_views()` - Analytics tracking
@@ -37,6 +39,7 @@ This is a **well-architected, production-ready Bitcoin crowdfunding platform** w
 ### 1. Schema Design: **9/10** ⭐⭐⭐⭐⭐
 
 **Strengths:**
+
 - ✅ **Excellent normalization** - Proper separation of concerns
 - ✅ **Bitcoin-native design** - Bitcoin addresses, Lightning support, sats precision (20,8)
 - ✅ **Flexible relationships** - `profile_associations` table supports multiple entity types
@@ -46,10 +49,12 @@ This is a **well-architected, production-ready Bitcoin crowdfunding platform** w
 - ✅ **Transparency system** - Dedicated scoring mechanism
 
 **Areas for improvement:**
+
 - ⚠️ Consider partitioning for `transactions` table as it grows
 - ⚠️ Missing audit log table for critical operations
 
 **Key Design Patterns:**
+
 ```sql
 -- Bitcoin precision: numeric(20,8) for up to 21M BTC with 8 decimals
 bitcoin_balance numeric(20,8) DEFAULT 0
@@ -66,6 +71,7 @@ permissions jsonb DEFAULT '{}'
 ### 2. Data Integrity: **9.5/10** ⭐⭐⭐⭐⭐
 
 **Strengths:**
+
 - ✅ **Strong constraints** - CHECK constraints for enums, valid ranges, formats
 - ✅ **Referential integrity** - Proper foreign keys with cascade deletes
 - ✅ **Unique constraints** - Username, slug, composite keys
@@ -73,6 +79,7 @@ permissions jsonb DEFAULT '{}'
 - ✅ **Business rules** - Self-follow prevention, reward percentage limits (0-100%)
 
 **Examples:**
+
 ```sql
 -- Bitcoin address validation
 CONSTRAINT profiles_bitcoin_address_format
@@ -93,6 +100,7 @@ CONSTRAINT valid_reward_percentage
 ### 3. Security (RLS Policies): **8.5/10** ⭐⭐⭐⭐⭐
 
 **Strengths:**
+
 - ✅ **RLS enabled on all tables** - Defense in depth
 - ✅ **Principle of least privilege** - Users can only access their own data
 - ✅ **Public read policies** - Proper separation of public/private data
@@ -100,12 +108,14 @@ CONSTRAINT valid_reward_percentage
 - ✅ **SECURITY DEFINER functions** - Controlled privilege escalation
 
 **Policies implemented (24 total):**
+
 - Public viewing (profiles, funding pages, follows)
 - Self-service CRUD (users manage own data)
 - Organization admin controls
 - Conditional visibility (public vs private associations)
 
 **Security concerns addressed:**
+
 ```sql
 -- Users can only update their own profile
 CREATE POLICY "Users can update own profile" ON profiles
@@ -128,15 +138,17 @@ CREATE POLICY "Org admins can manage questions" ON organization_application_ques
 ### 4. Performance Optimization: **8/10** ⭐⭐⭐⭐
 
 **Strengths:**
+
 - ✅ **Strategic indexing** - 20+ indexes on hot columns
 - ✅ **Composite indexes** - For complex queries (entity_id + entity_type)
 - ✅ **Partial indexes** - Only index WHERE conditions met (unread notifications)
-- ✅ **GIN trigram indexes** - Fast fuzzy search on username/display_name
+- ✅ **GIN trigram indexes** - Fast fuzzy search on username/name
 - ✅ **Denormalized counters** - follower_count, following_count (with triggers)
 
 **Key indexes:**
+
 ```sql
--- Trigram search for username/display_name
+-- Trigram search for username/name
 CREATE INDEX idx_profiles_username_trgm ON profiles
   USING gin(username gin_trgm_ops) WHERE username IS NOT NULL
 
@@ -154,6 +166,7 @@ CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read)
 ```
 
 **Room for improvement:**
+
 - ⚠️ Missing index on `transactions.status` for filtering
 - ⚠️ Could use covering indexes for common query patterns
 - ⚠️ Consider materialized views for complex analytics
@@ -161,6 +174,7 @@ CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read)
 ### 5. Business Logic: **9/10** ⭐⭐⭐⭐⭐
 
 **Strengths:**
+
 - ✅ **Automated user onboarding** - Profile auto-creation with sensible defaults
 - ✅ **Counter maintenance** - Triggers keep follower/following counts accurate
 - ✅ **Timestamp automation** - updated_at always current
@@ -170,12 +184,13 @@ CREATE INDEX idx_notifications_user_unread ON notifications(user_id, is_read)
 **Critical functions:**
 
 1. **Auto Profile Creation** (handle_new_user):
+
 ```sql
 -- Extracts name from multiple sources with fallbacks
 COALESCE(
-  new.raw_user_meta_data->>'full_name',
-  new.raw_user_meta_data->>'name',
-  new.raw_user_meta_data->>'display_name',
+      new.raw_user_meta_data->>'full_name',
+      new.raw_user_meta_data->>'name',
+      new.raw_user_meta_data->>'display_name', -- Legacy support
   split_part(new.email, '@', 1),
   'User'
 )
@@ -184,6 +199,7 @@ ON CONFLICT (id) DO NOTHING
 ```
 
 2. **Follow Count Maintenance** (update_follow_counts):
+
 ```sql
 -- Automatically updates denormalized counters
 IF TG_OP = 'INSERT' THEN
@@ -196,6 +212,7 @@ END IF
 ```
 
 3. **Profile Views** (increment_profile_views):
+
 ```sql
 -- Tracks analytics with SECURITY DEFINER
 UPDATE profiles
@@ -207,6 +224,7 @@ WHERE id = profile_id
 ### 6. Data Types & Modeling: **9/10** ⭐⭐⭐⭐⭐
 
 **Strengths:**
+
 - ✅ **Custom ENUMs** - Type-safe governance, roles, statuses
 - ✅ **UUID primary keys** - Distributed system ready
 - ✅ **Numeric for Bitcoin** - Precise decimal handling (20,8)
@@ -215,6 +233,7 @@ WHERE id = profile_id
 - ✅ **Text arrays** - Tags, achievements
 
 **Examples:**
+
 ```sql
 -- Custom ENUM types
 CREATE TYPE organization_type_enum AS ENUM (
@@ -237,18 +256,21 @@ settings jsonb DEFAULT '{}'
 ### 7. Scalability Considerations: **7.5/10** ⭐⭐⭐⭐
 
 **Current strengths:**
+
 - ✅ **Proper indexing** - Query performance optimized
 - ✅ **Denormalization** - Reduced joins for hot paths (follower counts)
 - ✅ **JSONB usage** - Schema evolution without migrations
 - ✅ **Partial indexes** - Reduced index size
 
 **Missing for massive scale:**
+
 - ⚠️ No table partitioning (transactions could grow large)
 - ⚠️ No archival strategy for old data
 - ⚠️ Missing read replicas consideration
 - ⚠️ No caching layer documented
 
 **Recommended for scale:**
+
 ```sql
 -- Partition transactions by created_at
 CREATE TABLE transactions_2024_01 PARTITION OF transactions
@@ -261,6 +283,7 @@ CREATE TABLE notifications_archive (LIKE notifications INCLUDING ALL)
 ### 8. Relationships & Associations: **10/10** ⭐⭐⭐⭐⭐
 
 **Exceptional design:**
+
 - ✅ **Polymorphic associations** - One table for all entity relationships
 - ✅ **Temporal relationships** - starts_at, ends_at for time-bound associations
 - ✅ **Versioning support** - version column for change tracking
@@ -269,6 +292,7 @@ CREATE TABLE notifications_archive (LIKE notifications INCLUDING ALL)
 - ✅ **Visibility control** - public, members_only, private, confidential
 
 **Brilliant association pattern:**
+
 ```sql
 CREATE TABLE profile_associations (
   source_profile_id uuid,
@@ -289,6 +313,7 @@ CREATE TABLE profile_associations (
 ### 9. Bitcoin-Native Features: **9/10** ⭐⭐⭐⭐⭐
 
 **Excellent implementation:**
+
 - ✅ **Multiple payment methods** - Bitcoin on-chain, Lightning Network
 - ✅ **Address validation** - Regex for bc1, legacy addresses
 - ✅ **Lightning addresses** - Email-style Lightning support
@@ -298,6 +323,7 @@ CREATE TABLE profile_associations (
 - ✅ **Revenue sharing** - reward_percentage for contributors
 
 **Bitcoin fields:**
+
 ```sql
 -- On profiles
 bitcoin_address text
@@ -321,23 +347,24 @@ reward_percentage numeric(5,2)
 
 ## 📈 Scoring Breakdown
 
-| Category | Score | Weight | Weighted |
-|----------|-------|--------|----------|
-| Schema Design | 9.0/10 | 20% | 1.80 |
-| Data Integrity | 9.5/10 | 15% | 1.43 |
-| Security (RLS) | 8.5/10 | 20% | 1.70 |
-| Performance | 8.0/10 | 15% | 1.20 |
-| Business Logic | 9.0/10 | 10% | 0.90 |
-| Data Types | 9.0/10 | 5% | 0.45 |
-| Scalability | 7.5/10 | 10% | 0.75 |
-| Relationships | 10.0/10 | 5% | 0.50 |
-| **TOTAL** | **8.73/10** | **100%** | **8.73** |
+| Category       | Score       | Weight   | Weighted |
+| -------------- | ----------- | -------- | -------- |
+| Schema Design  | 9.0/10      | 20%      | 1.80     |
+| Data Integrity | 9.5/10      | 15%      | 1.43     |
+| Security (RLS) | 8.5/10      | 20%      | 1.70     |
+| Performance    | 8.0/10      | 15%      | 1.20     |
+| Business Logic | 9.0/10      | 10%      | 0.90     |
+| Data Types     | 9.0/10      | 5%       | 0.45     |
+| Scalability    | 7.5/10      | 10%      | 0.75     |
+| Relationships  | 10.0/10     | 5%       | 0.50     |
+| **TOTAL**      | **8.73/10** | **100%** | **8.73** |
 
 ---
 
 ## ✅ Strengths
 
 ### 🏆 Exceptional Features
+
 1. **Polymorphic association system** - Industry-leading flexibility
 2. **Bitcoin-native architecture** - Proper precision, multiple payment methods
 3. **Comprehensive RLS policies** - Production-grade security
@@ -348,6 +375,7 @@ reward_percentage numeric(5,2)
 8. **GIN trigram indexes** - Fast fuzzy search
 
 ### 💪 Strong Foundations
+
 - Clean separation of concerns
 - Proper foreign keys and cascade rules
 - Format validation at DB level
@@ -360,16 +388,19 @@ reward_percentage numeric(5,2)
 ## ⚠️ Areas for Improvement
 
 ### High Priority
+
 1. **Table Partitioning** - transactions will grow, needs partitioning strategy
 2. **Audit Log Table** - Critical operations should be logged separately
 3. **Missing Indexes** - transactions.status, some composite indexes
 
 ### Medium Priority
+
 4. **Archival Strategy** - Old notifications, completed transactions
 5. **Materialized Views** - Complex analytics queries
 6. **Caching Documentation** - No evidence of caching strategy
 
 ### Low Priority
+
 7. **Read Replicas** - Future consideration for read scaling
 8. **Connection Pooling** - PgBouncer or similar (may already exist)
 
@@ -378,6 +409,7 @@ reward_percentage numeric(5,2)
 ## 🎯 Recommendations
 
 ### Immediate (0-1 month)
+
 ```sql
 -- Add missing index
 CREATE INDEX idx_transactions_status ON transactions(status);
@@ -396,6 +428,7 @@ CREATE TABLE audit_logs (
 ```
 
 ### Short-term (1-3 months)
+
 ```sql
 -- Implement table partitioning for transactions
 CREATE TABLE transactions_partitioned (
@@ -409,6 +442,7 @@ CREATE TABLE notifications_archive (
 ```
 
 ### Long-term (3-6 months)
+
 - Implement read replicas for analytics
 - Set up materialized views for dashboards
 - Consider TimescaleDB for time-series data (Bitcoin prices, transaction volumes)
@@ -419,6 +453,7 @@ CREATE TABLE notifications_archive (
 ## 🚀 Production Readiness: **READY** ✅
 
 **Deployment Checklist:**
+
 - ✅ RLS enabled on all tables
 - ✅ Indexes in place
 - ✅ Triggers working
@@ -431,6 +466,7 @@ CREATE TABLE notifications_archive (
 **Final Verdict:**
 
 > This is a **production-ready, well-architected database** that demonstrates:
+>
 > - Deep understanding of PostgreSQL features
 > - Bitcoin-native design patterns
 > - Security-first approach

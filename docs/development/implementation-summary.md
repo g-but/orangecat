@@ -7,20 +7,25 @@ Your profile editing functionality is now fully working with consistent naming t
 ### 🔧 Core Fixes
 
 #### 1. **Validation Schema** (`src/lib/validation.ts`)
+
 Fixed the Zod schema to properly handle optional URL fields:
+
 ```typescript
-avatar_url: z.string().url().optional().or(z.literal(''))
-banner_url: z.string().url().optional().or(z.literal(''))
+avatar_url: z.string().url().optional().or(z.literal(''));
+banner_url: z.string().url().optional().or(z.literal(''));
 ```
+
 This allows empty strings while still validating URLs when they're provided.
 
 #### 2. **Field Naming Consistency**
-- **Database**: Uses `display_name` (migrated from legacy `full_name`)
+
+- **Database**: Uses `name` (standardized from `display_name` in 2025-01-30 - see SCHEMA_CONSISTENCY_FIX.md)
 - **Frontend**: Shows "Name" as the label (user-friendly)
-- **Backend**: Consistently uses `display_name` everywhere
-- **Tests**: Updated all mocks to use `display_name`
+- **Backend**: Consistently uses `name` field everywhere
+- **Tests**: Updated all mocks to use `name`
 
 #### 3. **Documentation**
+
 - ✅ Updated `docs/features/profile.md` with correct validation rules
 - ✅ Verified `docs/architecture/database-schema.md` is correct
 - ✅ All references now use consistent terminology
@@ -28,12 +33,14 @@ This allows empty strings while still validating URLs when they're provided.
 ### 📋 How It Works Now
 
 #### Username Field
+
 - **Required** - Must have 3-30 characters
 - **Unique** - Checked server-side
 - **Format** - Alphanumeric, underscores, hyphens only
 - **Display** - Shown with @ prefix (like Twitter)
 
-#### Name Field (display_name)
+#### Name Field (standardized to `name` - was `display_name`)
+
 - **Optional** - Can be left empty
 - **Max Length** - 100 characters
 - **Auto-fill** - Uses username if empty
@@ -41,7 +48,9 @@ This allows empty strings while still validating URLs when they're provided.
 - **Description** - "This is how others will see you"
 
 #### Other Fields
+
 All optional fields work correctly:
+
 - Bio (max 500 chars)
 - Location (max 100 chars)
 - Website (validated URL)
@@ -68,12 +77,14 @@ All optional fields work correctly:
 ### ✅ Verification
 
 **Build Status**: ✅ Successful
+
 ```bash
 npm run build
 # Completed with only minor warnings (unrelated to profile)
 ```
 
 **Test Script**: ✅ Passes
+
 ```bash
 node test-profile-edit.mjs
 # All validations correct
@@ -82,6 +93,7 @@ node test-profile-edit.mjs
 ### 🎯 What This Means
 
 Your users can now:
+
 - ✅ Edit their username (required)
 - ✅ Edit their name/display name (optional)
 - ✅ Leave optional fields empty
@@ -111,6 +123,7 @@ Your users can now:
 ## Next Steps
 
 Everything is working! Your profile save functionality is:
+
 - ✅ Fully functional
 - ✅ Properly validated
 - ✅ Consistently named
@@ -118,6 +131,7 @@ Everything is working! Your profile save functionality is:
 - ✅ Production ready
 
 You can now:
+
 1. Test it in your development environment
 2. Deploy to production
 3. Users can edit their profiles without issues

@@ -21,7 +21,7 @@ OrangeCat's database is designed with three core principles:
        ▼
 ┌─────────────────────────────────────────────────────┐
 │                    profiles                         │
-│  • Core user data (username, display_name, bio)     │
+│  • Core user data (username, name, bio)     │
 │  • Bitcoin addresses (on-chain + Lightning)         │
 │  • Social stats (followers, views)                  │
 │  • Verification status                              │
@@ -68,10 +68,12 @@ OrangeCat's database is designed with three core principles:
 ### 1. User & Identity
 
 #### **profiles** (40+ fields)
+
 The central user entity, created automatically on signup.
 
 **Categories of fields:**
-- **Identity**: username, display_name, bio, avatar_url, banner_url
+
+- **Identity**: username, name, bio, avatar_url, banner_url
 - **Bitcoin**: bitcoin_address, lightning_address, balances, node_id
 - **Social**: follower_count, following_count, profile_views
 - **Verification**: is_verified, verification_type, verified_at
@@ -79,6 +81,7 @@ The central user entity, created automatically on signup.
 - **Metadata**: created_at, updated_at, last_active_at
 
 **Key features:**
+
 - Auto-created on signup via `handle_new_user()` trigger
 - Username must be unique (3-30 chars, alphanumeric + `_-`)
 - GIN trigram index for fuzzy username search
@@ -87,9 +90,11 @@ The central user entity, created automatically on signup.
 ### 2. Crowdfunding
 
 #### **funding_pages**
+
 Individual crowdfunding projects.
 
 **Fields:**
+
 - Basic: title, description, slug
 - Financial: goal_amount, current_amount (numeric 20,8)
 - Bitcoin: bitcoin_address, lightning_address
@@ -98,15 +103,18 @@ Individual crowdfunding projects.
 - Analytics: view_count, unique_donors
 
 **Key features:**
+
 - Belongs to profile or organization
 - Bitcoin precision for all amounts
 - Transparent fund tracking
 - RLS: Public read, owner/org-admin update
 
 #### **transactions**
+
 All Bitcoin/Lightning payments.
 
 **Fields:**
+
 - amount (numeric 20,8)
 - type: 'donation', 'pledge', 'withdrawal', 'refund'
 - method: 'bitcoin_onchain', 'lightning_invoice', 'lightning_address'
@@ -115,6 +123,7 @@ All Bitcoin/Lightning payments.
 - metadata (JSONB) - flexible data storage
 
 **Key features:**
+
 - Immutable record (no updates after completion)
 - Links to funding_page_id
 - ⚠️ **Needs partitioning** as volume grows
@@ -123,9 +132,11 @@ All Bitcoin/Lightning payments.
 ### 3. Organizations
 
 #### **organizations**
+
 Multi-user entities (non-profits, DAOs, businesses).
 
 **Fields:**
+
 - Basic: name, description, slug, org_type
 - Bitcoin: treasury_address
 - Governance: governance_model (ENUM), voting_threshold
@@ -133,6 +144,7 @@ Multi-user entities (non-profits, DAOs, businesses).
 - Metadata: permissions, settings (JSONB)
 
 **Types:**
+
 ```sql
 CREATE TYPE organization_type_enum AS ENUM (
   'non_profit', 'business', 'dao',
@@ -141,9 +153,11 @@ CREATE TYPE organization_type_enum AS ENUM (
 ```
 
 #### **memberships**
+
 Links profiles to organizations with roles.
 
 **Roles hierarchy:**
+
 ```sql
 CREATE TYPE membership_role_enum AS ENUM (
   'owner',      -- Full control
@@ -155,6 +169,7 @@ CREATE TYPE membership_role_enum AS ENUM (
 ```
 
 **Features:**
+
 - contribution_address per member
 - total_contributions tracking
 - reward_percentage (revenue sharing)
@@ -163,9 +178,11 @@ CREATE TYPE membership_role_enum AS ENUM (
 ### 4. Relationships & Social
 
 #### **profile_associations** ⭐ Exceptional Design
+
 The star of the schema - polymorphic associations.
 
 **Why this is brilliant:**
+
 ```sql
 -- One table handles ALL relationships
 source_profile_id → target_entity_id + target_entity_type
@@ -179,6 +196,7 @@ source_profile_id → target_entity_id + target_entity_type
 ```
 
 **Advanced features:**
+
 - **Temporal**: starts_at, ends_at (time-bound relationships)
 - **Versioning**: version column for change tracking
 - **Visibility**: public, members_only, private, confidential
@@ -186,51 +204,63 @@ source_profile_id → target_entity_id + target_entity_type
 - **Revenue**: reward_percentage for profit sharing
 
 **Unique constraint:**
+
 ```sql
 UNIQUE(source_profile_id, target_entity_id, relationship_type, target_entity_type)
 ```
+
 Prevents duplicate relationships.
 
 #### **follows**
+
 Simple social following (like Twitter).
 
 **Features:**
+
 - Prevents self-following via CHECK constraint
 - Triggers update denormalized counters on profiles
 - Indexed on both follower_id and following_id
 
 #### **notifications**
+
 Multi-type notification system.
 
 **Types:**
+
 - follow, mention, comment, donation
 - project_milestone, organization_invite
 - system_announcement
 
 **Optimization:**
+
 - Partial index: `WHERE is_read = false` (only unread)
 - Auto-cleanup: Could archive old notifications
 
 ### 5. Transparency & Trust
 
 #### **transparency_scores**
+
 Trust metrics for entities.
 
 **Scored categories:**
+
 - financial_transparency
 - impact_reporting
 - community_engagement
 - governance_clarity
 
 **Features:**
+
 - Links to any entity (polymorphic)
 - Detailed breakdown in JSONB
 - Historical tracking
 
 #### **organization_application_questions**
+
 Dynamic forms for org membership.
 
 **Why JSONB:**
+
 ```sql
 question_data jsonb -- Flexible question types:
 {
@@ -245,23 +275,28 @@ Allows custom applications per organization.
 ## Design Patterns Explained
 
 ### 1. Polymorphic Associations
+
 **Problem:** How to link different entity types without explosion of join tables?
 
 **Solution:** Generic association table with type discriminator
+
 ```sql
 target_entity_type text  -- 'profile', 'project', 'organization'
 target_entity_id uuid    -- The actual entity's ID
 ```
 
 **Benefits:**
+
 - One table instead of N² join tables
 - Easy to add new entity types
 - Queryable with simple WHERE clauses
 
 ### 2. Denormalized Counters
+
 **Problem:** `COUNT(*)` queries are slow on large tables.
 
 **Solution:** Store counts on parent record, update via triggers
+
 ```sql
 -- On profiles table
 follower_count integer DEFAULT 0
@@ -275,9 +310,11 @@ WHERE id = NEW.following_id
 **Trade-off:** Slight write overhead for massive read performance.
 
 ### 3. Bitcoin Precision
+
 **Problem:** JavaScript numbers lose precision with Bitcoin amounts.
 
 **Solution:** PostgreSQL `numeric(20,8)` type
+
 - 20 total digits
 - 8 decimal places (satoshi precision)
 - Max: 21,000,000 BTC (Bitcoin's max supply)
@@ -285,9 +322,11 @@ WHERE id = NEW.following_id
 **Always use:** String or BigInt in JavaScript, numeric in DB.
 
 ### 4. JSONB for Flexibility
+
 **Problem:** Schema changes require migrations and downtime.
 
 **Solution:** JSONB fields for extensible data
+
 ```sql
 settings jsonb DEFAULT '{}'::jsonb
 metadata jsonb DEFAULT '{}'::jsonb
@@ -295,15 +334,18 @@ permissions jsonb DEFAULT '{}'::jsonb
 ```
 
 **When to use:**
+
 - ✅ Configuration that changes often
 - ✅ User preferences
 - ✅ Feature flags
 - ❌ Queryable/indexed data (use columns)
 
 ### 5. Temporal Data
+
 **Problem:** Relationships change over time.
 
 **Solution:** starts_at, ends_at timestamps
+
 ```sql
 -- "Alice worked at OrangeCat from Jan-June 2025"
 starts_at: '2025-01-01'
@@ -316,17 +358,19 @@ WHERE NOW() BETWEEN starts_at AND COALESCE(ends_at, 'infinity')
 ## Data Flow Examples
 
 ### User Signup Flow
+
 ```sql
 1. User signs up → Supabase Auth creates auth.users record
 2. Trigger fires → handle_new_user()
 3. Function inserts into profiles:
    - id = auth.uid()
    - username from email or metadata
-   - display_name with smart fallbacks
+   - name with smart fallbacks (standardized from display_name)
 4. Profile ready for use
 ```
 
 ### Donation Flow
+
 ```sql
 1. User donates to project
 2. INSERT into transactions:
@@ -341,6 +385,7 @@ WHERE NOW() BETWEEN starts_at AND COALESCE(ends_at, 'infinity')
 ```
 
 ### Follow Flow
+
 ```sql
 1. User A follows User B
 2. INSERT into follows (follower_id, following_id)
@@ -353,15 +398,18 @@ WHERE NOW() BETWEEN starts_at AND COALESCE(ends_at, 'infinity')
 ## Performance Characteristics
 
 ### Read-Heavy Tables
+
 - **profiles**: Heavy reads, GIN trigram + follower_count indexes
 - **funding_pages**: Heavy reads, partial indexes on status
 - **follows**: Read-heavy, indexed both directions
 
 ### Write-Heavy Tables
+
 - **transactions**: High write volume → **needs partitioning**
 - **notifications**: High write → partial index on unread only
 
 ### Hot Queries
+
 ```sql
 -- Profile search (GIN trigram)
 SELECT * FROM profiles
@@ -379,14 +427,18 @@ WHERE user_id = ? AND is_read = false
 ## Security Model
 
 ### Row Level Security (RLS)
+
 **Every table has policies:**
+
 1. **Public read**: Profiles, projects (non-sensitive data)
 2. **Owner write**: Users can only modify their own records
 3. **Role-based**: Org admins can manage org data
 4. **Conditional**: Associations respect visibility settings
 
 ### SECURITY DEFINER Functions
+
 Used when users need elevated privileges:
+
 ```sql
 -- Users can't directly update other profiles
 -- But increment_profile_views() can (for analytics)
@@ -395,11 +447,13 @@ SECURITY DEFINER  -- Runs as creator, not caller
 ```
 
 **When to use:**
+
 - Cross-user updates (like view counts)
 - Complex business logic
 - Audit trail insertion
 
 **Security checklist:**
+
 - ✅ Validate all inputs
 - ✅ Limit scope (WHERE clauses)
 - ✅ Log usage
@@ -408,11 +462,13 @@ SECURITY DEFINER  -- Runs as creator, not caller
 ## Migration Strategy
 
 ### Current State
+
 - All migrations in `/supabase/migrations/`
 - Applied in order by timestamp
 - Production is at: `20251013072134_fix_profiles_complete.sql`
 
 ### Best Practices
+
 1. **Never modify existing migrations** - Create new ones
 2. **Test locally first** - `supabase db reset`
 3. **Backup before production** - `pg_dump` before deploy
@@ -420,7 +476,9 @@ SECURITY DEFINER  -- Runs as creator, not caller
 5. **Small, focused changes** - One logical change per migration
 
 ### Upcoming Migrations
+
 See [Improvements Roadmap](./improvements-roadmap.md):
+
 - Add transactions.status index
 - Create audit_logs table
 - Partition transactions by month
@@ -429,6 +487,7 @@ See [Improvements Roadmap](./improvements-roadmap.md):
 ---
 
 **Next Steps:**
+
 - [Security Policies →](./security-policies.md) - Deep dive into RLS
 - [Performance →](./performance.md) - Indexing strategies
 - [Functions & Triggers →](./functions-and-triggers.md) - Business logic

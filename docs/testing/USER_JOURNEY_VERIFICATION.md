@@ -8,6 +8,7 @@
 ## 🎯 What We're Testing
 
 Can users:
+
 1. ✅ **Sign in** successfully?
 2. ✅ **Navigate** to their profile?
 3. ✅ **Edit** their profile easily?
@@ -31,11 +32,12 @@ Can users:
 ```
 
 **Auto-created profile fields:**
+
 ```sql
 -- From handle_new_user() trigger
 id: auth.uid()
 username: extracted from email or metadata
-display_name: full_name || name || email username
+name: full_name || display_name || email username (Note: Schema standardized to `name` field)
 created_at: now()
 updated_at: now()
 ```
@@ -61,24 +63,27 @@ updated_at: now()
 ```
 
 **Current Implementation Status:**
+
 - ✅ Authentication: Working (Supabase Auth)
 - ✅ Profile creation: Automatic via trigger
 - ✅ Profile page: `/profile` (loads current user)
 - ✅ Edit mode: ModernProfileEditor component
 - ✅ Save API: `/api/profile` PUT endpoint
 - ✅ Validation: Zod schema with proper URL handling
-- ✅ Field naming: Consistent (display_name)
+- ✅ Field naming: Consistent (name - standardized from display_name)
 
 ---
 
 ## 🔍 Detailed Flow Analysis
 
 ### Step 1: Authentication ✅
+
 **Location:** `/auth` page
 **Component:** AuthForm
 **Backend:** Supabase Auth
 
 **How it works:**
+
 ```typescript
 // Login
 const { data, error } = await supabase.auth.signInWithPassword({
@@ -97,22 +102,25 @@ const { data, error } = await supabase.auth.signInWithPassword({
 ---
 
 ### Step 2: Navigate to Profile ✅
+
 **Location:** `/profile`
 **Component:** ProfilePage
 **Hook:** useUnifiedProfile
 
 **How it works:**
+
 ```typescript
 // On /profile page
 const { profile, mode, setMode } = useUnifiedProfile({
-  username: 'me',  // 'me' = current user
-  autoFetch: true
-})
+  username: 'me', // 'me' = current user
+  autoFetch: true,
+});
 
 // Mode can be 'view' or 'edit'
 ```
 
 **Features:**
+
 - Loads current user's profile
 - Shows view mode by default
 - Has "Edit Profile" button
@@ -123,11 +131,13 @@ const { profile, mode, setMode } = useUnifiedProfile({
 ---
 
 ### Step 3: Edit Mode ✅
+
 **Location:** Same `/profile` page
 **Component:** ModernProfileEditor
 **When shown:** `mode === 'edit' && isOwnProfile`
 
 **How it works:**
+
 ```typescript
 // When edit button clicked
 setMode('edit')
@@ -143,7 +153,8 @@ setMode('edit')
 ```
 
 **Fields shown:**
-1. **Name** (display_name) - Optional, auto-fills from username
+
+1. **Name** - Optional, auto-fills from username (database field: `name`)
 2. **Username** - Required, unique, 3-30 chars
 3. **Bio** - Optional, max 500 chars
 4. **Location** - Optional, max 100 chars
@@ -154,6 +165,7 @@ setMode('edit')
 9. **Lightning Address** - Optional
 
 **Validation:**
+
 - Real-time via Zod schema
 - Shows errors inline
 - Save button disabled until valid
@@ -163,22 +175,24 @@ setMode('edit')
 ---
 
 ### Step 4: Save Changes ✅
+
 **Location:** ModernProfileEditor
 **API:** PUT `/api/profile`
 **Backend:** Supabase + Validation
 
 **How it works:**
+
 ```typescript
 // User clicks "Save"
-const handleSave = async (data) => {
+const handleSave = async data => {
   // 1. Validate client-side (Zod)
-  const validated = profileSchema.parse(data)
+  const validated = profileSchema.parse(data);
 
   // 2. Send to API
   const response = await fetch('/api/profile', {
     method: 'PUT',
-    body: JSON.stringify(validated)
-  })
+    body: JSON.stringify(validated),
+  });
 
   // 3. API validates again (server-side)
   // 4. Checks username uniqueness
@@ -186,58 +200,59 @@ const handleSave = async (data) => {
   // 6. Returns updated profile
 
   // 7. Success toast
-  toast.success('Profile updated!')
+  toast.success('Profile updated!');
 
   // 8. Switch back to view mode
-  setMode('view')
-}
+  setMode('view');
+};
 ```
 
 **Server-side validation:**
+
 ```typescript
 // /api/profile/route.ts
 export async function PUT(request: NextRequest) {
   // 1. Authenticate
-  const { user } = await supabase.auth.getUser()
+  const { user } = await supabase.auth.getUser();
 
   // 2. Validate data
-  const validatedData = profileSchema.parse(normalizedBody)
+  const validatedData = profileSchema.parse(normalizedBody);
 
   // 3. Check username uniqueness
   const { data: existingProfile } = await supabase
     .from('profiles')
     .select('id')
     .eq('username', username)
-    .neq('id', user.id)
+    .neq('id', user.id);
 
   if (existingProfile) {
-    throw new ValidationError('Username taken')
+    throw new ValidationError('Username taken');
   }
 
   // 4. Update database
-  const { data: profile } = await supabase
-    .from('profiles')
-    .update(validatedData)
-    .eq('id', user.id)
+  const { data: profile } = await supabase.from('profiles').update(validatedData).eq('id', user.id);
 
-  return { success: true, data: profile }
+  return { success: true, data: profile };
 }
 ```
 
 **Status:** ✅ Working
 
 **Recent fixes:**
+
 - ✅ URL validation allows empty strings
-- ✅ display_name field naming consistent
+- ✅ name field naming consistent (standardized from display_name)
 - ✅ Optional fields work correctly
 
 ---
 
 ### Step 5: View Updated Profile ✅
+
 **Location:** Back on `/profile`
 **Mode:** Switches to 'view'
 
 **How it works:**
+
 ```typescript
 // After save
 setMode('view')  // Exit edit mode
@@ -258,6 +273,7 @@ setMode('view')  // Exit edit mode
 ### Manual Testing Steps
 
 #### Test 1: New User Signup
+
 - [ ] Go to `/auth`
 - [ ] Click "Sign Up"
 - [ ] Enter email: test@example.com
@@ -267,6 +283,7 @@ setMode('view')  // Exit edit mode
 - **Expected:** Profile auto-created with username from email
 
 #### Test 2: Login Flow
+
 - [ ] Go to `/auth`
 - [ ] Enter existing credentials
 - [ ] Click "Sign In"
@@ -274,12 +291,14 @@ setMode('view')  // Exit edit mode
 - **Expected:** User session active
 
 #### Test 3: Navigate to Profile
+
 - [ ] From dashboard, click profile link/icon
 - [ ] Should land on `/profile`
 - **Expected:** See your profile in view mode
 - **Expected:** "Edit Profile" button visible
 
 #### Test 4: Edit Profile - Username
+
 - [ ] Click "Edit Profile"
 - [ ] Change username to something unique
 - [ ] Click "Save"
@@ -288,9 +307,10 @@ setMode('view')  // Exit edit mode
 - **Expected:** No errors
 
 #### Test 5: Edit Profile - Optional Fields
+
 - [ ] Enter edit mode
 - [ ] Fill in:
-  - Name (display_name)
+  - Name (database field: `name`)
   - Bio
   - Location
   - Website (valid URL)
@@ -300,6 +320,7 @@ setMode('view')  // Exit edit mode
 - **Expected:** Empty URLs work (no validation error)
 
 #### Test 6: Edit Profile - Validation
+
 - [ ] Enter edit mode
 - [ ] Try invalid username (< 3 chars)
 - **Expected:** Save button disabled
@@ -310,6 +331,7 @@ setMode('view')  // Exit edit mode
 - **Expected:** Can clear it (empty = valid)
 
 #### Test 7: Username Uniqueness
+
 - [ ] Enter edit mode
 - [ ] Change username to existing username
 - [ ] Click "Save"
@@ -317,6 +339,7 @@ setMode('view')  // Exit edit mode
 - **Expected:** Profile not saved
 
 #### Test 8: Bitcoin Addresses
+
 - [ ] Enter edit mode
 - [ ] Add Bitcoin address
 - [ ] Add Lightning address
@@ -325,6 +348,7 @@ setMode('view')  // Exit edit mode
 - **Expected:** Visible on profile view
 
 #### Test 9: Image URLs
+
 - [ ] Enter edit mode
 - [ ] Add avatar URL: https://example.com/avatar.jpg
 - [ ] Add banner URL: https://example.com/banner.jpg
@@ -386,6 +410,7 @@ setMode('view')  // Exit edit mode
 ### Ease of Use: **9/10** ✅
 
 **Strengths:**
+
 - ✅ **Automatic profile creation** - No setup required
 - ✅ **Clear edit mode** - Obvious when editing
 - ✅ **Real-time validation** - Immediate feedback
@@ -393,6 +418,7 @@ setMode('view')  // Exit edit mode
 - ✅ **Cancel option** - Easy to back out
 
 **Minor improvements possible:**
+
 - ⚠️ Could add profile completion percentage
 - ⚠️ Could add avatar upload (currently just URL)
 - ⚠️ Could add image preview in edit mode
@@ -402,6 +428,7 @@ setMode('view')  // Exit edit mode
 ### Transparency: **10/10** ✅
 
 **Excellent transparency:**
+
 - ✅ **Clear error messages** - "Username must be at least 3 characters"
 - ✅ **Success feedback** - Toast notifications
 - ✅ **Loading states** - "Saving..." indicators
@@ -410,21 +437,22 @@ setMode('view')  // Exit edit mode
 - ✅ **No hidden magic** - User always knows what's happening
 
 **Examples of transparency:**
+
 ```typescript
 // Clear error messages
-"Username must be at least 3 characters"
-"Username is already taken"
-"Website must be a valid URL"
+'Username must be at least 3 characters';
+'Username is already taken';
+'Website must be a valid URL';
 
 // Success feedback
-"Profile updated successfully!"
+'Profile updated successfully!';
 
 // Loading states
-isSubmitting ? "Saving..." : "Save Profile"
+isSubmitting ? 'Saving...' : 'Save Profile';
 
 // Field hints
-"This is how others will see you"
-"Must be unique, 3-30 characters"
+('This is how others will see you');
+('Must be unique, 3-30 characters');
 ```
 
 ---
@@ -434,6 +462,7 @@ isSubmitting ? "Saving..." : "Save Profile"
 ### Code Quality: **9/10** ✅
 
 **Strengths:**
+
 - ✅ **Proper separation** - UI, hooks, API separated
 - ✅ **Type safety** - TypeScript throughout
 - ✅ **Validation** - Both client and server
@@ -441,6 +470,7 @@ isSubmitting ? "Saving..." : "Save Profile"
 - ✅ **Security** - RLS + auth checks
 
 **Architecture:**
+
 ```
 User Input
   ↓
@@ -462,14 +492,16 @@ Supabase (Database + RLS)
 ### Current Issues: **None** ✅
 
 The recent fixes resolved all known issues:
+
 - ✅ Fixed: URL validation now allows empty strings
-- ✅ Fixed: Field naming consistent (display_name)
+- ✅ Fixed: Field naming consistent (name - standardized from display_name)
 - ✅ Fixed: Optional fields work correctly
 - ✅ Fixed: Validation schema matches database
 
 ### Previous Issues (Now Fixed)
+
 - ~~Avatar/banner URL validation failing on empty strings~~ ✅ Fixed
-- ~~Inconsistent field naming (full_name vs display_name)~~ ✅ Fixed
+- ~~Inconsistent field naming (full_name vs display_name)~~ ✅ Fixed (now standardized to `name`)
 - ~~Optional fields requiring values~~ ✅ Fixed
 
 ---
@@ -534,7 +566,7 @@ const response = await fetch('/api/profile', {
   method: 'PUT',
   body: JSON.stringify({
     username: 'newusername',
-    display_name: 'New Name',
+    name: 'New Name', // Note: Schema standardized to 'name' field
     bio: 'My new bio!',
     avatar_url: '',  // Empty = valid!
     banner_url: ''   // Empty = valid!
@@ -553,12 +585,15 @@ setMode('view')
 ## ✅ Final Verdict
 
 ### Can users log in and edit profiles successfully?
+
 **YES!** ✅
 
 ### Is the process easy?
+
 **YES!** ✅ (9/10)
 
 ### Is it transparent?
+
 **YES!** ✅ (10/10)
 
 ---
