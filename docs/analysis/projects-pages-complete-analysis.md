@@ -472,3 +472,7 @@ const [favorites, setFavorites] = useState<FavoriteProject[]>([]);
 - [ ] Add React Query
 - [ ] Add unit tests
 - [ ] Improve accessibility
+
+
+
+

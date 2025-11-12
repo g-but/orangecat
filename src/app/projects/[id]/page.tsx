@@ -50,7 +50,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const creatorName =
     (creatorProfile as any)?.name ||
-    (creatorProfile as any)?.display_name ||
     creatorProfile?.username ||
     'Creator';
   const title = `${project.title} | OrangeCat`;
@@ -130,7 +129,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
 
   // Generate JSON-LD structured data for SEO
   const creatorName =
-    (profile as any)?.name || (profile as any)?.display_name || profile?.username || 'Creator';
+    (profile as any)?.name || profile?.username || 'Creator';
   const progress = project.goal_amount
     ? Math.round((Number(project.raised_amount || 0) / Number(project.goal_amount)) * 100)
     : 0;

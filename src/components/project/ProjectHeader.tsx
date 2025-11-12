@@ -25,7 +25,6 @@ interface ProjectHeaderProps {
     profiles?: {
       username: string | null;
       name: string | null;
-      display_name?: string | null; // Legacy support
       avatar_url: string | null;
       id?: string;
     };
@@ -53,37 +52,35 @@ export function ProjectHeader({ project, isOwner, onShare, getStatusInfo }: Proj
           {project.profiles ? (
             <div className="flex items-center gap-3 mb-3">
               <div className="flex items-center gap-2">
-                <Link
-                  href={creatorProfileUrl}
-                  className="hover:opacity-80 transition-opacity"
-                  aria-label={`View ${project.profiles.name || project.profiles.display_name || project.profiles.username || 'creator'}'s profile`}
-                >
-                  {project.profiles.avatar_url ? (
-                    <Image
-                      src={project.profiles.avatar_url}
-                      alt={
-                        project.profiles.name ||
-                        project.profiles.display_name ||
-                        project.profiles.username ||
-                        'Creator'
-                      }
-                      width={32}
-                      height={32}
-                      className="rounded-full cursor-pointer"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-semibold text-sm cursor-pointer hover:opacity-80 transition-opacity">
-                      {(
-                        project.profiles.name ||
-                        project.profiles.display_name ||
-                        project.profiles.username ||
-                        project.profiles.id?.substring(0, 1) ||
-                        'A'
-                      )
-                        .charAt(0)
-                        .toUpperCase()}
-                    </div>
-                  )}
+                  <Link
+                    href={creatorProfileUrl}
+                    className="hover:opacity-80 transition-opacity"
+                    aria-label={`View ${project.profiles.name || project.profiles.username || 'creator'}'s profile`}
+                  >
+                    {project.profiles.avatar_url ? (
+                      <Image
+                        src={project.profiles.avatar_url}
+                        alt={
+                          project.profiles.name ||
+                          project.profiles.username ||
+                          'Creator'
+                        }
+                        width={32}
+                        height={32}
+                        className="rounded-full cursor-pointer"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center text-orange-600 font-semibold text-sm cursor-pointer hover:opacity-80 transition-opacity">
+                        {(
+                          project.profiles.name ||
+                          project.profiles.username ||
+                          project.profiles.id?.substring(0, 1) ||
+                          'A'
+                        )
+                          .charAt(0)
+                          .toUpperCase()}
+                      </div>
+                    )}
                 </Link>
                 <div>
                   <p className="text-sm text-gray-500">Created by</p>
@@ -92,7 +89,6 @@ export function ProjectHeader({ project, isOwner, onShare, getStatusInfo }: Proj
                     className="text-sm font-semibold text-gray-900 hover:text-orange-600 transition-colors"
                   >
                     {project.profiles.name ||
-                      project.profiles.display_name ||
                       project.profiles.username ||
                       `User ${project.profiles.id?.substring(0, 8) || 'Unknown'}`}
                   </Link>

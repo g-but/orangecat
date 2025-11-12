@@ -10,15 +10,16 @@
 
 import { ComponentType, SVGProps } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Home, Users, Rocket, Settings, User } from 'lucide-react';
+import { Home, Users, Rocket, Settings, User, Compass } from 'lucide-react';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
 
 export interface NavigationItem {
   name: string;
-  href: string;
+  href?: string;
   requiresAuth?: boolean;
   icon?: ComponentType<SVGProps<SVGSVGElement>>;
   description?: string;
+  children?: NavigationItem[]; // For dropdown menus
 }
 
 /**
@@ -37,7 +38,14 @@ export function getNavigationItems(user: User | null): NavigationItem[] {
 
   return [
     { name: 'Discover', href: '/discover' },
-    { name: 'About', href: '/about' },
+    {
+      name: 'About',
+      children: [
+        { name: 'Stories', href: '/stories', description: 'Real success stories from our users' },
+        { name: 'Technology', href: '/technology', description: 'Our tech stack and approach' },
+        { name: 'FAQ', href: '/faq', description: 'Frequently asked questions' },
+      ],
+    },
     { name: 'Blog', href: '/blog' },
   ];
 }
@@ -57,8 +65,9 @@ export function shouldShowNavigationItem(item: NavigationItem, user: User | null
  *
  * Simplified navigation with only essential items:
  * - Dashboard (main dashboard overview)
- * - Projects (projects management dashboard)
- * - People (people we are connected to)
+ * - My Projects (projects management dashboard)
+ * - My People (people we are connected to)
+ * - Discover (separated section for exploring)
  * - Settings (at bottom)
  */
 export const navigationSections: NavSection[] = [
@@ -77,18 +86,34 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        name: 'Projects',
+        name: 'My Projects',
         href: '/dashboard/projects',
         icon: Rocket,
         description: 'Your projects dashboard',
         requiresAuth: true,
       },
       {
-        name: 'People',
+        name: 'My People',
         href: '/dashboard/people',
         icon: Users,
         description: 'People you are connected to',
         requiresAuth: true,
+      },
+    ],
+  },
+  {
+    id: 'explore',
+    title: 'Explore',
+    priority: 2,
+    defaultExpanded: true,
+    requiresAuth: false,
+    items: [
+      {
+        name: 'Discover',
+        href: '/discover',
+        icon: Compass,
+        description: 'Discover projects and people',
+        requiresAuth: false,
       },
     ],
   },

@@ -81,11 +81,11 @@ export default function DashboardPage() {
     }
   }, [user, hydrated, isLoading, router, hasRedirected]);
 
+  // CRITICAL: All hooks must be called before any early returns (Rules of Hooks)
   // Get project stats - ensure projects is an array before using reduce
-  // IMPORTANT: All hooks must be called before any early returns
-  const safeProjects = useMemo(() => (Array.isArray(projects) ? projects : []), [projects]);
-  const safeDrafts = useMemo(() => (Array.isArray(drafts) ? drafts : []), [drafts]);
-  const stats = useMemo(() => getStats(), [projects, drafts]);
+  const safeProjects = useMemo(() => Array.isArray(projects) ? projects : [], [projects]);
+  const safeDrafts = useMemo(() => Array.isArray(drafts) ? drafts : [], [drafts]);
+  const stats = useMemo(() => getStats(), [projects, drafts, getStats]);
   const totalProjects = stats.totalProjects;
 
   // Calculate totals by currency to avoid mixing BTC and CHF - MEMOIZED
@@ -137,32 +137,28 @@ export default function DashboardPage() {
 
   // Get primary draft for urgent actions - MEMOIZED
   const hasAnyDraft = useMemo(() => safeDrafts.length > 0, [safeDrafts]);
-  const primaryDraft = useMemo(
-    () => (hasAnyDraft ? safeDrafts[0] : null),
-    [hasAnyDraft, safeDrafts]
-  );
+  const primaryDraft = useMemo(() => (hasAnyDraft ? safeDrafts[0] : null), [hasAnyDraft, safeDrafts]);
   const totalDrafts = useMemo(() => safeDrafts.length, [safeDrafts]);
 
-  // Get featured project (most recent active or highest funded) - MEMOIZED
+  // Get featured project (most recent published or highest funded) - MEMOIZED
   const featuredProject = useMemo(() => {
-    const publishedProjects = safeProjects.filter(p => p.status === 'active');
+    const publishedProjects = safeProjects.filter(p => !p.isDraft);
     if (publishedProjects.length > 0) {
       // Sort by funding amount (highest first) - use spread to avoid mutation
-      return [...publishedProjects].sort(
-        (a, b) => (b.total_funding || 0) - (a.total_funding || 0)
-      )[0];
+      return [...publishedProjects].sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0];
     }
     // Fallback: look for Orange Cat project or first project
-    return (
-      safeProjects.find(c => c.title?.toLowerCase().includes('orange cat')) ||
-      safeProjects[0] ||
-      null
-    );
+    return safeProjects.find(c => c.title?.toLowerCase().includes('orange cat')) || safeProjects[0] || null;
   }, [safeProjects]);
 
   // Profile category for display (use profile_type if available, default to individual) - MEMOIZED
-  // Note: profile_type may not exist in current schema, default to individual
-  const profileCategory = useMemo(() => PROFILE_CATEGORIES.individual, []);
+  const profileCategory = useMemo(
+    () =>
+      profile?.profile_type && profile.profile_type in PROFILE_CATEGORIES
+        ? PROFILE_CATEGORIES[profile.profile_type as keyof typeof PROFILE_CATEGORIES]
+        : PROFILE_CATEGORIES.individual,
+    [profile?.profile_type]
+  );
 
   // Handle loading states - simplified to avoid infinite loading
   if (!hydrated || localLoading) {
@@ -527,7 +523,7 @@ export default function DashboardPage() {
               <div className="space-y-1 text-sm text-gray-600">
                 <div className="font-medium text-lg text-gray-900">{totalProjects}</div>
                 <div>
-                  {safeProjects.filter(p => p.status === 'active').length} active
+                  {totalProjects - totalDrafts} published
                   {totalDrafts > 0 && ` • ${totalDrafts} draft${totalDrafts !== 1 ? 's' : ''}`}
                 </div>
                 {totalRaised > 0 && (
@@ -654,72 +650,117 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="grid gap-4">
-                {safeProjects.slice(0, 3).map(project => (
-                  <div
-                    key={project.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-medium text-gray-900">{project.title}</h4>
-                        {project.isDraft ? (
-                          <div className="px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">
-                            Draft
+                {safeProjects.slice(0, 3).map(project => {
+                  const goalAmount = project.goal_amount || 0;
+                  const totalFunding = project.total_funding || 0;
+                  const progressPercentage =
+                    goalAmount > 0 ? Math.min((totalFunding / goalAmount) * 100, 100) : 0;
+                  const projectCurrency = project.currency || 'CHF';
+
+                  return (
+                    <div
+                      key={project.id}
+                      className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg hover:border-gray-300 transition-all duration-200 group"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-3 mb-3 flex-wrap">
+                            <Link href={`/projects/${project.id}`} className="flex-1 min-w-0">
+                              <h4 className="font-bold text-lg text-gray-900 hover:text-bitcoinOrange transition-colors duration-200 cursor-pointer group-hover:underline truncate">
+                                {project.title}
+                              </h4>
+                            </Link>
+                            {project.isDraft ? (
+                              <div className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
+                                Draft
+                              </div>
+                            ) : project.isPaused ? (
+                              <div className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200 whitespace-nowrap">
+                                Paused
+                              </div>
+                            ) : project.isActive ? (
+                              <div className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 border border-green-200 whitespace-nowrap">
+                                Active
+                              </div>
+                            ) : (
+                              <div className="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap">
+                                Inactive
+                              </div>
+                            )}
                           </div>
-                        ) : project.isPaused ? (
-                          <div className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
-                            Paused
+
+                          {/* Progress Bar */}
+                          {goalAmount > 0 ? (
+                            <div className="mb-3">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="text-sm font-medium text-gray-900">
+                                  <CurrencyDisplay
+                                    amount={totalFunding}
+                                    currency={projectCurrency}
+                                    size="sm"
+                                  />
+                                  {' '}raised
+                                </span>
+                                <span className="text-sm font-medium text-bitcoinOrange">
+                                  {progressPercentage.toFixed(0)}%
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
+                                <div
+                                  className="bg-gradient-to-r from-bitcoinOrange to-orange-500 h-2 rounded-full transition-all duration-500"
+                                  style={{ width: `${progressPercentage}%` }}
+                                />
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                of <CurrencyDisplay
+                                  amount={goalAmount}
+                                  currency={projectCurrency}
+                                  size="sm"
+                                /> goal
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="mb-3">
+                              <div className="text-sm font-medium text-gray-900">
+                                <CurrencyDisplay
+                                  amount={totalFunding}
+                                  currency={projectCurrency}
+                                  size="sm"
+                                />
+                                {' '}raised
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Stats Row */}
+                          <div className="flex items-center gap-6 text-sm text-gray-600">
+                            <div className="flex items-center gap-1">
+                              <Users className="w-4 h-4" />
+                              <span className="font-medium">{project.contributor_count || 0}</span>
+                              <span>supporters</span>
+                            </div>
                           </div>
-                        ) : project.isActive ? (
-                          <div className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
-                            Active
-                          </div>
-                        ) : project.status === 'completed' ? (
-                          <div className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
-                            Completed
-                          </div>
-                        ) : project.status === 'cancelled' ? (
-                          <div className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">
-                            Cancelled
-                          </div>
-                        ) : (
-                          <div className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
-                            Unknown
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-4 text-sm text-gray-500">
-                        <span>
-                          <CurrencyDisplay
-                            amount={project.total_funding || 0}
-                            currency={project.currency || 'CHF'}
-                            size="sm"
-                          />{' '}
-                          raised
-                        </span>
-                        <span>{project.contributor_count || 0} supporters</span>
-                        {project.goal_amount && (
-                          <span>
-                            {Math.round(((project.total_funding || 0) / project.goal_amount) * 100)}
-                            % of goal
-                          </span>
-                        )}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 flex-shrink-0">
+                          <Link href={`/projects/${project.id}`}>
+                            <Button variant="outline" size="sm" className="hover:bg-bitcoinOrange/10 hover:border-bitcoinOrange">
+                              <Eye className="w-4 h-4 mr-1" />
+                              View
+                            </Button>
+                          </Link>
+                          <Link href={`/projects/create?draft=${project.id}`}>
+                            <Button variant="outline" size="sm" className="hover:bg-gray-100">
+                              <Edit3 className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          </Link>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Link href={`/projects/${project.id}`}>
-                        <Button variant="outline" size="sm">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                      <Link href={`/projects/create?draft=${project.id}`}>
-                        <Button variant="outline" size="sm">
-                          <Edit3 className="w-4 h-4" />
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>

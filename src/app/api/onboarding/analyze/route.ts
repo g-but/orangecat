@@ -7,15 +7,12 @@ interface AnalysisRequest {
 }
 
 interface AnalysisResponse {
-  isOrganization: boolean;
   isPersonal: boolean;
-  needsCollective: boolean;
   isBusiness: boolean;
   isCharity: boolean;
   needsFunding: boolean;
   confidence: number;
   recommendation: string;
-  suggestedSetup: 'personal' | 'organization';
 }
 
 // Comprehensive keyword sets for analysis
@@ -116,7 +113,6 @@ const KEYWORDS = {
 function analyzeDescription(description: string): AnalysisResponse {
   const text = description.toLowerCase();
   const scores = {
-    organization: 0,
     personal: 0,
     charity: 0,
     business: 0,
@@ -134,12 +130,10 @@ function analyzeDescription(description: string): AnalysisResponse {
     });
   });
 
-  // Determine setup type
-  const isOrganization = scores.organization > scores.personal;
+  // Determine project characteristics
   const isCharity = scores.charity > 0;
   const isBusiness = scores.business > 0;
-  const isPersonal = !isOrganization;
-  const needsCollective = scores.community > 0 || scores.organization > 0;
+  const isPersonal = true; // All projects are personal projects now
   const isOpenSource = scores.openSource > 0;
   const needsFunding = scores.funding > 0;
 
@@ -147,11 +141,11 @@ function analyzeDescription(description: string): AnalysisResponse {
   let confidence = 0;
 
   // Base confidence from keyword matches
-  confidence += Math.min(scores.organization, 50); // Cap at 50
   confidence += Math.min(scores.personal, 30);
   confidence += Math.min(scores.charity, 20);
   confidence += Math.min(scores.business, 20);
-  confidence += Math.min(scores.community, 30);
+  confidence += Math.min(scores.community, 20);
+  confidence += Math.min(scores.openSource, 20);
 
   // Boost confidence based on description quality
   if (description.length > 100) {
@@ -168,48 +162,29 @@ function analyzeDescription(description: string): AnalysisResponse {
   confidence = Math.min(confidence, 100);
 
   // Generate recommendation
-  let suggestedSetup: 'personal' | 'organization' = 'personal';
   let recommendation = '';
 
-  if (isOrganization) {
-    suggestedSetup = 'organization';
-    if (isCharity) {
-      recommendation =
-        "Based on your description, you're working with a charitable cause that involves multiple people or a community. An organization setup would allow collective management of funds and transparent governance.";
-    } else if (isOpenSource) {
-      recommendation =
-        'Your open source project would benefit from an organization structure to manage collective contributions and shared decision-making among developers.';
-    } else if (isBusiness && needsCollective) {
-      recommendation =
-        'Your business venture involves a team or group. An organization allows shared management of the Bitcoin treasury with role-based access control.';
-    } else {
-      recommendation =
-        'Your described need suggests a collective approach. An organization setup enables multiple people to manage funds together with transparent governance.';
-    }
+  if (isCharity) {
+    recommendation =
+      'Your charitable cause can be effectively managed through a personal project. This allows you to directly control how funds are used while maintaining transparency with your supporters.';
+  } else if (isBusiness) {
+    recommendation =
+      'A personal project is perfect for your business venture. You maintain full control while being transparent with your supporters about how funds are used.';
+  } else if (isOpenSource) {
+    recommendation =
+      'Your open source project is a great fit for a personal fundraising campaign. You can share your vision and get direct support from the Bitcoin community.';
   } else {
-    suggestedSetup = 'personal';
-    if (isCharity) {
-      recommendation =
-        'Your charitable cause can be effectively managed through a personal project. This allows you to directly control how funds are used while maintaining transparency.';
-    } else if (isBusiness) {
-      recommendation =
-        'A personal project is perfect for your business or project. You maintain full control while being transparent with your supporters about how funds are used.';
-    } else {
-      recommendation =
-        "A personal project is the ideal fit for your needs. It's quick to set up and gives you direct control over your Bitcoin fundraising.";
-    }
+    recommendation =
+      "A personal project is the ideal fit for your needs. It's quick to set up and gives you direct control over your Bitcoin fundraising.";
   }
 
   return {
-    isOrganization,
     isPersonal,
-    needsCollective,
     isBusiness,
     isCharity,
     needsFunding,
     confidence: Math.round(confidence),
     recommendation,
-    suggestedSetup,
   };
 }
 
