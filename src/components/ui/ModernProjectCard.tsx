@@ -207,10 +207,14 @@ export default function ModernProjectCard({
   const iconTone =
     iconColorByCategory[categories[0]?.toLowerCase() || 'default'] ?? iconColorByCategory.default;
 
+  const projectImageUrl =
+    (project as any).banner_url ||
+    (project as any).featured_image_url ||
+    project.profiles?.avatar_url;
   const imageElement =
-    ((project as any).banner_url || project.profiles?.avatar_url) && !imageError ? (
+    projectImageUrl && !imageError ? (
       <Image
-        src={(project as any).banner_url || project.profiles!.avatar_url!}
+        src={projectImageUrl}
         alt={project.title}
         fill
         className="object-cover transition-transform duration-700 group-hover:scale-105"
