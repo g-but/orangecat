@@ -63,6 +63,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title,
     description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title: project.title,
       description,
@@ -125,6 +128,56 @@ export default async function PublicProjectPage({ params }: PageProps) {
     profiles: profile,
   };
 
+  // Generate JSON-LD structured data for SEO
+  const creatorName =
+    (profile as any)?.name || (profile as any)?.display_name || profile?.username || 'Creator';
+  const progress = project.goal_amount
+    ? Math.round((Number(project.raised_amount || 0) / Number(project.goal_amount)) * 100)
+    : 0;
+
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'CreativeWork',
+    name: project.title,
+    description: project.description || `Support ${project.title} on OrangeCat`,
+    url: `https://orangecat.ch/projects/${id}`,
+    creator: {
+      '@type': 'Person',
+      name: creatorName,
+      ...(profile?.username && { url: `https://orangecat.ch/profiles/${profile.username}` }),
+    },
+    ...(project.goal_amount && {
+      funding: {
+        '@type': 'MonetaryGrant',
+        amount: {
+          '@type': 'MonetaryAmount',
+          value: project.goal_amount,
+          currency: project.currency || 'SATS',
+        },
+        ...(project.raised_amount && {
+          amountRaised: {
+            '@type': 'MonetaryAmount',
+            value: project.raised_amount,
+            currency: project.currency || 'SATS',
+          },
+        }),
+      },
+    }),
+    ...(project.bitcoin_address && {
+      paymentAccepted: 'Bitcoin',
+      bitcoinAddress: project.bitcoin_address,
+    }),
+  };
+
   // Pass data to client component for interactivity
-  return <ProjectPageClient project={projectWithProfile} />;
+  return (
+    <>
+      {/* JSON-LD Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <ProjectPageClient project={projectWithProfile} />
+    </>
+  );
 }

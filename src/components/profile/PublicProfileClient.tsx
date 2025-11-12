@@ -5,7 +5,7 @@ import UnifiedProfileLayout from '@/components/profile/UnifiedProfileLayout';
 import { Profile } from '@/types/database';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { ArrowLeft, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Bitcoin, Zap } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/routes';
@@ -56,10 +56,62 @@ export default function PublicProfileClient({
     display_name: (profile as any).display_name || (profile as any).name || profile.username || '',
   } as any; // Type assertion needed due to interface differences
 
+  // Check if profile has wallet addresses for support
+  const hasWallet = !!(profile.bitcoin_address || profile.lightning_address);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
       {/* Use UnifiedProfileLayout for consistent UI */}
       <UnifiedProfileLayout profile={scalableProfile} isOwnProfile={isOwnProfile} mode="view" />
+
+      {/* Support CTA for non-own profiles with wallets */}
+      {!isOwnProfile && hasWallet && (
+        <div className="max-w-7xl mx-auto px-4 pb-8">
+          <Card className="bg-gradient-to-r from-orange-50 to-teal-50 border-2 border-orange-200">
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+                    Support {scalableProfile.name || profile.username}
+                  </h3>
+                  <p className="text-gray-600">
+                    Send Bitcoin directly to support their work and projects
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  {profile.bitcoin_address && (
+                    <Button
+                      onClick={() => {
+                        // Scroll to Bitcoin donation card
+                        const element = document.querySelector('[data-bitcoin-card]');
+                        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }}
+                      className="bg-orange-600 hover:bg-orange-700 text-white"
+                    >
+                      <Bitcoin className="w-4 h-4 mr-2" />
+                      Send Bitcoin
+                    </Button>
+                  )}
+                  {profile.lightning_address && (
+                    <Button
+                      onClick={() => {
+                        // Scroll to Lightning donation card
+                        const element = document.querySelector('[data-lightning-card]');
+                        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }}
+                      variant="outline"
+                      className="border-yellow-400 hover:bg-yellow-50"
+                    >
+                      <Zap className="w-4 h-4 mr-2" />
+                      Send Lightning
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {/* Projects Section */}
       <div className="max-w-7xl mx-auto px-4 py-8">
