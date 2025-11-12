@@ -135,7 +135,8 @@
       "Bash(./apply-fk-via-curl.sh)",
       "Bash(git log:*)",
       "Bash(git -C /home/g/dev/orangecat add -A)",
-      "Bash(git -C /home/g/dev/orangecat push origin main)"
+      "Bash(git -C /home/g/dev/orangecat push origin main)",
+      "Bash(git -C /home/g/dev/orangecat branch:*)"
     ],
     "deny": [
       "Bash(rm **/.env.local)",

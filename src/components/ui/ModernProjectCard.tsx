@@ -111,20 +111,24 @@ export default function ModernProjectCard({
   );
 
   const ownerName = useMemo(() => {
+    if (project.profiles?.name) {
+      return project.profiles.name;
+    }
     if (project.profiles?.display_name) {
-      return project.profiles.display_name;
+      return project.profiles.display_name; // Legacy support
     }
     if (project.profiles?.username) {
       return project.profiles.username;
     }
     if (project.user_id && project.user_id === (profile?.id || user?.id)) {
-      return profile?.display_name || profile?.username || 'You';
+      return profile?.name || profile?.display_name || profile?.username || 'You';
     }
     return 'Anonymous';
   }, [
     project.profiles,
     project.user_id,
     profile?.id,
+    profile?.name,
     profile?.display_name,
     profile?.username,
     user?.id,

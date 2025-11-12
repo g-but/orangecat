@@ -15,7 +15,7 @@ import { logger } from '@/utils/logger';
 interface Profile {
   id: string;
   username: string | null;
-  display_name: string | null;
+  name: string | null;
   avatar_url: string | null;
   bio: string | null;
   bitcoin_address: string | null;
@@ -80,7 +80,7 @@ export default function PeoplePage() {
                 profile: {
                   id: profileData.id || item.following_id,
                   username: profileData.username,
-                  display_name: profileData.display_name,
+                  name: profileData.name,
                   avatar_url: profileData.avatar_url,
                   bio: profileData.bio,
                   bitcoin_address: profileData.bitcoin_address,
@@ -111,7 +111,7 @@ export default function PeoplePage() {
                 profile: {
                   id: profileData.id || item.follower_id,
                   username: profileData.username,
-                  display_name: profileData.display_name,
+                  name: profileData.name,
                   avatar_url: profileData.avatar_url,
                   bio: profileData.bio,
                   bitcoin_address: profileData.bitcoin_address,
@@ -277,7 +277,7 @@ export default function PeoplePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {connections.map(connection => {
               const profile = connection.profile;
-              const displayName = profile.display_name || profile.username || 'Anonymous';
+              const displayName = profile.name || profile.username || 'Anonymous';
               const isUserFollowing = isFollowing(profile.id);
               const isLoading = followingLoading === profile.id;
 

@@ -25,7 +25,7 @@ export class ProfileMapper {
       // Core database fields
       id: dbRow.id,
       username: dbRow.username,
-      display_name: dbRow.display_name,
+      display_name: dbRow.name || dbRow.display_name, // Support both for migration period
       avatar_url: dbRow.avatar_url,
       banner_url: dbRow.banner_url,
       bio: dbRow.bio,
@@ -86,7 +86,7 @@ export class ProfileMapper {
     // Core fields that go directly to database columns
     const coreFields: any = {
       username: profile.username || null,
-      display_name: profile.display_name || null,
+      name: profile.display_name || profile.name || null, // Map display_name to name for database
       avatar_url: profile.avatar_url || null,
       banner_url: profile.banner_url || null,
       bio: profile.bio || null,

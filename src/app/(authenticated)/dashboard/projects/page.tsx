@@ -39,9 +39,29 @@ export default function ProjectsDashboardPage() {
     }
   }, [user?.id, loadProjects]);
 
-  // Load favorites when user is available and favorites tab is active
+  // Preload favorites count on mount, then load full list when tab is active
   useEffect(() => {
-    if (user?.id && activeTab === 'favorites') {
+    if (user?.id) {
+      // Always preload favorites count for the tab badge
+      const loadFavoritesCount = async () => {
+        try {
+          const response = await fetch('/api/projects/favorites');
+          if (response.ok) {
+            const result = await response.json();
+            setFavorites(result.data || []);
+          }
+        } catch (error) {
+          // Silently fail - favorites will load when tab is clicked
+          logger.debug('Failed to preload favorites count', { error }, 'ProjectsDashboardPage');
+        }
+      };
+      loadFavoritesCount();
+    }
+  }, [user?.id]);
+
+  // Load favorites when favorites tab becomes active (if not already loaded)
+  useEffect(() => {
+    if (user?.id && activeTab === 'favorites' && favorites.length === 0 && !favoritesLoading) {
       const loadFavorites = async () => {
         setFavoritesLoading(true);
         try {
@@ -69,7 +89,7 @@ export default function ProjectsDashboardPage() {
       // Reload projects when switching back to my-projects tab
       loadProjects(user.id);
     }
-  }, [user?.id, activeTab, loadProjects]);
+  }, [user?.id, activeTab, loadProjects, favorites.length, favoritesLoading]);
 
   // Memoize items based on active tab with search and filter
   const filteredItems = useMemo(() => {

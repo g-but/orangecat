@@ -71,7 +71,7 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     if (userIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id, username, display_name, avatar_url')
+        .select('id, username, name, avatar_url')
         .in('id', userIds);
 
       if (!profilesError && profiles) {
