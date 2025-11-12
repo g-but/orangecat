@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       .select(
         `
         *,
-        profiles!inner(id, username, display_name, avatar_url, email)
+        profiles!inner(id, username, name, avatar_url, email)
       `
       )
       .eq('status', 'active')

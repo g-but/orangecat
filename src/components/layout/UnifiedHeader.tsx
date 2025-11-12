@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Menu, X, Bell, Search } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -57,6 +57,30 @@ export default function UnifiedHeader({
   const mobileMenu = useMobileMenu();
   const { isActive } = useActiveRoute();
   const navigation = getNavigationItems(user);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Close mobile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        mobileMenu.isOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node) &&
+        mobileMenuButtonRef.current &&
+        !mobileMenuButtonRef.current.contains(event.target as Node)
+      ) {
+        mobileMenu.close();
+      }
+    };
+
+    if (mobileMenu.isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
+  }, [mobileMenu.isOpen, mobileMenu.close]);
 
   // Hide UnifiedHeader for routes that have their own header (like AuthenticatedLayout)
   // Use precise route matching to prevent false positives
@@ -161,6 +185,7 @@ export default function UnifiedHeader({
 
               {/* Mobile Menu Button */}
               <button
+                ref={mobileMenuButtonRef}
                 onClick={mobileMenu.toggle}
                 className="lg:hidden p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors duration-150 ml-2"
                 aria-label="Toggle mobile menu"
@@ -173,7 +198,10 @@ export default function UnifiedHeader({
 
         {/* Mobile Menu */}
         {mobileMenu.isOpen && (
-          <div className="lg:hidden bg-white border-t border-gray-200 shadow-lg">
+          <div
+            ref={mobileMenuRef}
+            className="lg:hidden bg-white border-t border-gray-200 shadow-lg"
+          >
             <div className="px-4 py-6 space-y-4">
               {/* Mobile Navigation */}
               <div className="space-y-2">
