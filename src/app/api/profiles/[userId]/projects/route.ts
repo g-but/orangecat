@@ -17,6 +17,7 @@ export async function GET(
     const { userId } = await params;
 
     // Get user's projects (simplified MVP - no organizations)
+    // Exclude draft projects from public profiles - drafts should only show in dashboards
     const { data: projects, error: projectsError } = await supabase
       .from('projects')
       .select(
@@ -40,6 +41,7 @@ export async function GET(
       `
       )
       .eq('user_id', userId)
+      .neq('status', 'draft') // Exclude drafts from public profile view
       .order('created_at', { ascending: false });
 
     if (projectsError) {

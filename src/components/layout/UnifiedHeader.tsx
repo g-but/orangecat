@@ -1,10 +1,16 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Menu, X, Bell, Search } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/useAuth';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
+import { useMobileMenu } from '@/hooks/useMobileMenu';
+import { useActiveRoute } from '@/hooks/useActiveRoute';
+import { HeaderNavigation } from './HeaderNavigation';
+import { isAuthenticatedRoute } from '@/config/headerRoutes';
+import { getNavigationItems } from '@/config/navigationConfig';
 import Logo from './Logo';
 import AuthButtons from './AuthButtons';
 import { HeaderCreateButton } from '@/components/dashboard/SmartCreateButton';
@@ -12,85 +18,54 @@ import EnhancedSearchBar from '@/components/search/EnhancedSearchBar';
 import MobileSearchModal from '@/components/search/MobileSearchModal';
 import UserProfileDropdown from '@/components/ui/UserProfileDropdown';
 
-// Navigation items that adapt based on auth state
-const getNavigation = (user: any) => {
-  if (user) {
-    return [
-      { name: 'Dashboard', href: '/dashboard' },
-      { name: 'Discover', href: '/discover' },
-    ];
-  }
-
-  return [
-    { name: 'Discover', href: '/discover' },
-    { name: 'About', href: '/about' },
-    { name: 'Blog', href: '/blog' },
-  ];
-};
-
 interface UnifiedHeaderProps {
   showSearch?: boolean;
   variant?: 'default' | 'minimal';
   className?: string;
+  hideForRoutes?: string[]; // Routes that have their own header
 }
+
+/**
+ * Routes that use AuthenticatedLayout and have their own header
+ * UnifiedHeader should be hidden for these routes to avoid duplicate headers
+ *
+ * Note: Only routes that are in the (authenticated) folder should be listed here
+ *
+ * @deprecated Use isAuthenticatedRoute() from '@/config/headerRoutes' instead
+ */
+const AUTHENTICATED_ROUTES_WITH_OWN_HEADER = [
+  '/dashboard',
+  '/profile',
+  '/settings',
+  '/assets',
+  '/people',
+  '/events',
+  '/organizations',
+  '/funding',
+];
 
 export default function UnifiedHeader({
   showSearch = true,
   variant = 'default',
   className = '',
+  hideForRoutes = AUTHENTICATED_ROUTES_WITH_OWN_HEADER,
 }: UnifiedHeaderProps) {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showMobileSearch, setShowMobileSearch] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isHidden, setIsHidden] = useState(false);
-  const lastScrollRef = useRef<number>(0);
   const pathname = usePathname();
-  const { user, profile } = useAuth();
-  const navigation = getNavigation(user);
+  const { user } = useAuth();
+  const { isScrolled, isHidden } = useHeaderScroll();
+  const mobileMenu = useMobileMenu();
+  const { isActive } = useActiveRoute();
+  const navigation = getNavigationItems(user);
 
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-  }, [pathname]);
+  // Hide UnifiedHeader for routes that have their own header (like AuthenticatedLayout)
+  // Use precise route matching to prevent false positives
+  const shouldHide = isAuthenticatedRoute(pathname);
 
-  // Handle scroll for backdrop blur effect and hide-on-scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      const current = window.scrollY;
-      setIsScrolled(current > 0);
-      const isScrollingDown = current > lastScrollRef.current && current > 80;
-      const isScrollingUp = current < lastScrollRef.current;
-      // Hide on scroll down, show when scrolling up
-      if (isScrollingDown) {
-        setIsHidden(true);
-      }
-      if (isScrollingUp) {
-        setIsHidden(false);
-      }
-      lastScrollRef.current = current;
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  // Lock body scroll when mobile menu is open
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isMobileMenuOpen]);
-
-  const isActive = (href: string) => {
-    if (href === '/') {
-      return pathname === '/';
-    }
-    return pathname.startsWith(href);
-  };
+  if (shouldHide) {
+    // Still render spacer to prevent layout shift
+    return <div className="h-16" />;
+  }
 
   // Build header classes
   const headerClasses = [
@@ -112,35 +87,42 @@ export default function UnifiedHeader({
               <Logo />
             </div>
 
-            {/* Center: Search (Desktop) */}
-            {showSearch && (
-              <div className="flex-1 max-w-md mx-6 hidden md:block">
-                <EnhancedSearchBar placeholder="Search projects, people..." className="w-full" />
+            {/* Center: Navigation + Search (Desktop) - Match AuthenticatedHeader layout for consistency */}
+            {user ? (
+              // Authenticated users: Navigation links + Search (like AuthenticatedHeader)
+              <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-6 space-x-4">
+                {/* Desktop Navigation Links */}
+                <HeaderNavigation items={navigation} isActive={isActive} />
+
+                {/* Desktop Search */}
+                {showSearch && (
+                  <div className="flex-1 max-w-md">
+                    <EnhancedSearchBar
+                      placeholder="Search projects, people..."
+                      className="w-full"
+                    />
+                  </div>
+                )}
               </div>
+            ) : (
+              // Public users: Search only (center)
+              showSearch && (
+                <div className="flex-1 max-w-md mx-6 hidden md:block">
+                  <EnhancedSearchBar placeholder="Search projects, people..." className="w-full" />
+                </div>
+              )
             )}
 
-            {/* Right: Navigation + Actions */}
+            {/* Right: Navigation (public) + Actions */}
             <div className="flex items-center space-x-1">
-              {/* Desktop Navigation */}
-              <div className="hidden lg:flex items-center space-x-1 mr-4">
-                {navigation.map(item => {
-                  const linkClasses = [
-                    'px-4 py-2.5 text-sm font-medium rounded-xl transition-all duration-150 relative',
-                    isActive(item.href)
-                      ? 'text-orange-600 bg-orange-50 shadow-sm'
-                      : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50',
-                  ].join(' ');
-
-                  return (
-                    <Link key={item.name} href={item.href} className={linkClasses}>
-                      {item.name}
-                      {isActive(item.href) && (
-                        <div className="absolute inset-x-0 bottom-0 h-0.5 bg-orange-500 rounded-full" />
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
+              {/* Desktop Navigation for Public Users */}
+              {!user && (
+                <HeaderNavigation
+                  items={navigation}
+                  isActive={isActive}
+                  className="hidden lg:flex items-center space-x-1 mr-4"
+                />
+              )}
 
               {/* Search Button (Mobile) */}
               {showSearch && (
@@ -179,18 +161,18 @@ export default function UnifiedHeader({
 
               {/* Mobile Menu Button */}
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                onClick={mobileMenu.toggle}
                 className="lg:hidden p-2.5 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors duration-150 ml-2"
                 aria-label="Toggle mobile menu"
               >
-                {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {mobileMenu.isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
             </div>
           </div>
         </div>
 
         {/* Mobile Menu */}
-        {isMobileMenuOpen && (
+        {mobileMenu.isOpen && (
           <div className="lg:hidden bg-white border-t border-gray-200 shadow-lg">
             <div className="px-4 py-6 space-y-4">
               {/* Mobile Navigation */}
@@ -208,7 +190,7 @@ export default function UnifiedHeader({
                       key={item.name}
                       href={item.href}
                       className={mobileClasses}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={mobileMenu.close}
                     >
                       {item.name}
                     </Link>

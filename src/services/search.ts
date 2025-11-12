@@ -305,8 +305,19 @@ async function searchFundingPages(
   // OPTIMIZATION: Apply most selective filters first
   if (filters) {
     // Most selective filters first for better query performance
+    // Only show 'active' projects in public search (draft, paused, completed, cancelled are excluded)
     if (filters.isActive !== undefined) {
-      projectQuery = projectQuery.eq('status', filters.isActive ? 'active' : 'draft');
+      if (filters.isActive) {
+        // Only show active projects in search results
+        projectQuery = projectQuery.eq('status', 'active');
+      } else {
+        // For non-active, we might want to show paused/completed, but typically we only search active
+        // This filter is mainly for admin/author views
+        projectQuery = projectQuery.neq('status', 'active');
+      }
+    } else {
+      // Default: only show active projects in public search
+      projectQuery = projectQuery.eq('status', 'active');
     }
 
     if (filters.categories && filters.categories.length > 0) {

@@ -342,7 +342,10 @@ function ProfileProjectsList({ userId, isOwnProfile }: { userId: string; isOwnPr
     );
   }
 
-  if (projects.length === 0) {
+  // Filter out drafts for public display
+  const publicProjects = projects.filter(project => project.status?.toLowerCase() !== 'draft');
+
+  if (publicProjects.length === 0) {
     return (
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
@@ -352,7 +355,7 @@ function ProfileProjectsList({ userId, isOwnProfile }: { userId: string; isOwnPr
         <div className="text-center py-8">
           <Target className="w-12 h-12 mx-auto mb-3 text-gray-300" />
           <p className="text-gray-500 mb-4">
-            {isOwnProfile ? "You haven't created any projects yet" : 'No projects yet'}
+            {isOwnProfile ? "You haven't published any projects yet" : 'No projects yet'}
           </p>
           {isOwnProfile && (
             <Link href="/projects/create">
@@ -372,7 +375,7 @@ function ProfileProjectsList({ userId, isOwnProfile }: { userId: string; isOwnPr
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
           <Target className="w-5 h-5 text-orange-500" />
-          Projects ({projects.length})
+          Projects ({publicProjects.length})
         </h3>
         {isOwnProfile && (
           <Link href="/dashboard/projects">
@@ -384,113 +387,166 @@ function ProfileProjectsList({ userId, isOwnProfile }: { userId: string; isOwnPr
         )}
       </div>
       <div className="space-y-4">
-        {projects.slice(0, 5).map(project => {
+        {publicProjects.slice(0, 5).map(project => {
           const statusInfo = getStatusInfo(project.status);
           const balanceBTC = project.bitcoin_balance_btc || 0;
           const goalAmount = project.goal_amount || 0;
-          const progress = goalAmount > 0 ? Math.min((balanceBTC / goalAmount) * 100, 100) : 0;
           const raisedAmount = project.raised_amount || 0;
-          const displayAmount = balanceBTC > 0 ? balanceBTC : raisedAmount;
+          const currentAmount = balanceBTC > 0 ? balanceBTC * 100_000_000 : raisedAmount;
+          const progress = goalAmount > 0 ? Math.min((currentAmount / goalAmount) * 100, 100) : 0;
+
+          // Only show status badge for non-default statuses (hide 'active' and 'draft')
+          const showStatusBadge =
+            project.status && !['active', 'draft'].includes(project.status.toLowerCase());
+
+          // Format relative time
+          const getRelativeTime = (date: string) => {
+            const created = new Date(date);
+            const now = new Date();
+            const days = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+            if (days === 0) {
+              return 'Today';
+            }
+            if (days === 1) {
+              return 'Yesterday';
+            }
+            if (days < 7) {
+              return `${days}d ago`;
+            }
+            if (days < 30) {
+              return `${Math.floor(days / 7)}w ago`;
+            }
+            return created.toLocaleDateString();
+          };
 
           return (
             <Link
               key={project.id}
               href={ROUTES.PROJECTS.VIEW(project.id)}
-              className="block p-5 rounded-xl border-2 border-gray-200 hover:border-orange-300 hover:shadow-lg bg-white transition-all duration-200 group"
+              className="block overflow-hidden rounded-xl border-2 border-gray-200 hover:border-orange-300 hover:shadow-lg bg-white transition-all duration-200 group"
             >
-              <div className="space-y-3">
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-orange-600 transition-colors">
+              <div className="flex flex-col sm:flex-row">
+                {/* Thumbnail Image */}
+                <div className="relative w-full sm:w-32 h-48 sm:h-auto flex-shrink-0 bg-gradient-to-br from-orange-100 to-amber-100">
+                  {(project as any).thumbnail_url ? (
+                    <Image
+                      src={(project as any).thumbnail_url}
+                      alt={project.title}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Target className="w-12 h-12 text-orange-400" />
+                    </div>
+                  )}
+                  {/* Category Badge */}
+                  {project.category && (
+                    <div className="absolute top-2 left-2">
+                      <span className="px-2 py-1 bg-white/90 backdrop-blur-sm rounded-md text-xs font-medium text-gray-700">
+                        {project.category}
+                      </span>
+                    </div>
+                  )}
+                  {/* Status Badge - Only show non-default */}
+                  {showStatusBadge && (
+                    <div className="absolute top-2 right-2">
+                      <span
+                        className={`px-2 py-1 rounded-md text-xs font-medium ${statusInfo.className}`}
+                      >
+                        {statusInfo.label}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 p-4 sm:p-5 flex flex-col">
+                  {/* Header */}
+                  <div className="flex-1">
+                    <h4 className="font-bold text-gray-900 text-lg mb-1.5 group-hover:text-orange-600 transition-colors line-clamp-1">
                       {project.title}
                     </h4>
                     {project.description && (
-                      <p className="text-sm text-gray-600 line-clamp-2 mb-2">
+                      <p className="text-sm text-gray-600 line-clamp-2 mb-3">
                         {project.description}
                       </p>
                     )}
                   </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusInfo.className}`}
-                  >
-                    {statusInfo.label}
-                  </span>
-                </div>
 
-                {/* Progress Bar */}
-                {goalAmount > 0 && (
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-gray-600">Progress</span>
-                      <span className="font-semibold text-gray-900">{progress.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${progress}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Stats Row */}
-                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
-                  {/* Balance */}
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">Wallet Balance</div>
-                    <div className="flex items-center gap-1.5">
-                      <Bitcoin className="w-4 h-4 text-orange-500" />
-                      <span className="font-semibold text-gray-900">
-                        {balanceBTC > 0 ? formatBitcoinDisplay(balanceBTC, 'BTC') : '—'}
-                      </span>
-                    </div>
-                    {balanceBTC === 0 && raisedAmount > 0 && (
-                      <div className="text-xs text-gray-500 mt-0.5">
-                        <CurrencyDisplay
-                          amount={raisedAmount}
-                          currency={project.currency || 'SATS'}
-                          size="sm"
+                  {/* Progress Section */}
+                  {goalAmount > 0 ? (
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-600">Progress</span>
+                        <span className="font-semibold text-gray-900">{progress.toFixed(1)}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${progress}%` }}
                         />
                       </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-gray-500">
+                          <CurrencyDisplay
+                            amount={currentAmount}
+                            currency={project.currency || 'SATS'}
+                            size="sm"
+                          />
+                        </span>
+                        <span className="text-gray-500">
+                          of{' '}
+                          <CurrencyDisplay
+                            amount={goalAmount}
+                            currency={project.currency || 'SATS'}
+                            size="sm"
+                          />
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-3">
+                      <div className="flex items-center gap-2">
+                        <Bitcoin className="w-4 h-4 text-orange-500" />
+                        <span className="text-sm font-semibold text-gray-900">
+                          {balanceBTC > 0 ? (
+                            formatBitcoinDisplay(balanceBTC, 'BTC')
+                          ) : raisedAmount > 0 ? (
+                            <CurrencyDisplay
+                              amount={raisedAmount}
+                              currency={project.currency || 'SATS'}
+                              size="sm"
+                            />
+                          ) : (
+                            'No funds yet'
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
+                    <span>{getRelativeTime(project.created_at)}</span>
+                    {project.bitcoin_address && (
+                      <span className="flex items-center gap-1 text-orange-600">
+                        <Bitcoin className="w-3 h-3" />
+                        Wallet
+                      </span>
                     )}
                   </div>
-
-                  {/* Goal */}
-                  {goalAmount > 0 && (
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">Goal</div>
-                      <div className="font-semibold text-gray-900">
-                        <CurrencyDisplay
-                          amount={goalAmount}
-                          currency={project.currency || 'SATS'}
-                          size="sm"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-gray-100">
-                  <span>Created {new Date(project.created_at).toLocaleDateString()}</span>
-                  {project.bitcoin_address && (
-                    <span className="flex items-center gap-1">
-                      <Bitcoin className="w-3 h-3" />
-                      Wallet configured
-                    </span>
-                  )}
                 </div>
               </div>
             </Link>
           );
         })}
-        {projects.length > 5 && (
+        {publicProjects.length > 5 && (
           <Link
             href={isOwnProfile ? '/dashboard/projects' : `#`}
             className="block text-center text-sm text-orange-600 hover:text-orange-700 font-medium py-3 rounded-lg hover:bg-orange-50 transition-colors"
           >
-            View {projects.length - 5} more projects →
+            View {publicProjects.length - 5} more projects →
           </Link>
         )}
       </div>

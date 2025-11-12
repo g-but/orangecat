@@ -45,24 +45,28 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
       // Build OR filter for multiple project IDs
       const projectFilters = projectIds.map(id => `to_entity_id.eq.${id}`).join(',');
 
-      const { data: transactions, error: transactionsError } = await supabase
-        .from('transactions')
-        .select('amount_sats, from_entity_id, to_entity_id, from_entity_type')
-        .eq('to_entity_type', 'project')
-        .or(projectFilters)
-        .eq('status', 'confirmed');
+      // Only query transactions if we have valid project IDs
+      if (projectFilters) {
+        const { data: transactions, error: transactionsError } = await supabase
+          .from('transactions')
+          .select('amount_sats, from_entity_id, to_entity_id, from_entity_type')
+          .eq('to_entity_type', 'project')
+          .or(projectFilters)
+          .eq('status', 'confirmed');
 
-      if (transactionsError) {
-        throw transactionsError;
+        if (transactionsError) {
+          throw transactionsError;
+        }
+
+        totalRaised = transactions?.reduce((sum, t) => sum + (t.amount_sats || 0), 0) || 0;
+
+        // Count unique donors (from_entity_id where from_entity_type = 'profile')
+        const uniqueDonors = new Set(
+          transactions?.filter(t => t.from_entity_type === 'profile').map(t => t.from_entity_id) ||
+            []
+        );
+        totalSupporters = uniqueDonors.size;
       }
-
-      totalRaised = transactions?.reduce((sum, t) => sum + (t.amount_sats || 0), 0) || 0;
-
-      // Count unique donors (from_entity_id where from_entity_type = 'profile')
-      const uniqueDonors = new Set(
-        transactions?.filter(t => t.from_entity_type === 'profile').map(t => t.from_entity_id) || []
-      );
-      totalSupporters = uniqueDonors.size;
     }
 
     const totalProjects = uniqueProjects.length;

@@ -13,10 +13,13 @@ const publicRoutes = [
   '/terms',
   '/about',
   '/blog',
+  '/profiles', // Public profile pages (shareable)
+  '/projects', // Public project pages (shareable)
 ];
 
 // Routes that should redirect to /auth if user is not logged in
-const protectedRoutes = ['/dashboard', '/profile', '/settings'];
+// Note: /profiles/ is public, /profile/ is protected (own profile)
+const protectedRoutes = ['/dashboard', '/profile/', '/settings'];
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -74,7 +77,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // Optimized auth check - only check cookies if accessing protected route
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route));
+  // Exclude public routes first
+  const isPublicRoute = publicRoutes.some(
+    route => pathname === route || pathname.startsWith(route + '/')
+  );
+  const isProtectedRoute =
+    !isPublicRoute && protectedRoutes.some(route => pathname.startsWith(route));
 
   if (isProtectedRoute) {
     try {

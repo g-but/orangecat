@@ -143,9 +143,9 @@ export default function DashboardPage() {
   );
   const totalDrafts = useMemo(() => safeDrafts.length, [safeDrafts]);
 
-  // Get featured project (most recent published or highest funded) - MEMOIZED
+  // Get featured project (most recent active or highest funded) - MEMOIZED
   const featuredProject = useMemo(() => {
-    const publishedProjects = safeProjects.filter(p => !p.isDraft);
+    const publishedProjects = safeProjects.filter(p => p.status === 'active');
     if (publishedProjects.length > 0) {
       // Sort by funding amount (highest first) - use spread to avoid mutation
       return [...publishedProjects].sort(
@@ -527,7 +527,7 @@ export default function DashboardPage() {
               <div className="space-y-1 text-sm text-gray-600">
                 <div className="font-medium text-lg text-gray-900">{totalProjects}</div>
                 <div>
-                  {totalProjects - totalDrafts} published
+                  {safeProjects.filter(p => p.status === 'active').length} active
                   {totalDrafts > 0 && ` • ${totalDrafts} draft${totalDrafts !== 1 ? 's' : ''}`}
                 </div>
                 {totalRaised > 0 && (
@@ -663,12 +663,28 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium text-gray-900">{project.title}</h4>
                         {project.isDraft ? (
-                          <div className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
+                          <div className="px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">
                             Draft
                           </div>
+                        ) : project.isPaused ? (
+                          <div className="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
+                            Paused
+                          </div>
+                        ) : project.isActive ? (
+                          <div className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700">
+                            Active
+                          </div>
+                        ) : project.status === 'completed' ? (
+                          <div className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                            Completed
+                          </div>
+                        ) : project.status === 'cancelled' ? (
+                          <div className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-700">
+                            Cancelled
+                          </div>
                         ) : (
-                          <div className="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-700">
-                            Published
+                          <div className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-700">
+                            Unknown
                           </div>
                         )}
                       </div>

@@ -1,20 +1,66 @@
-import {
-  LayoutDashboard,
-  UserCircle,
-  Handshake,
-  Briefcase,
-  Settings,
-  Edit3,
-  Users,
-  Home,
-  TrendingUp,
-  Zap,
-  Sparkles,
-  Rocket,
-} from 'lucide-react';
-import { NavSection, NavItem } from '@/hooks/useNavigation';
+/**
+ * Centralized navigation configuration
+ *
+ * Single source of truth for all navigation items across the application
+ *
+ * Created: 2025-01-07
+ * Last Modified: 2025-01-07
+ * Last Modified Summary: Added sidebar navigation config (navigationSections, bottomNavItems, navigationLabels)
+ */
 
-// Enhanced navigation structure with better UX flow and information architecture
+import { ComponentType, SVGProps } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { Home, Users, Rocket, Settings, User } from 'lucide-react';
+import type { NavSection, NavItem } from '@/hooks/useNavigation';
+
+export interface NavigationItem {
+  name: string;
+  href: string;
+  requiresAuth?: boolean;
+  icon?: ComponentType<SVGProps<SVGSVGElement>>;
+  description?: string;
+}
+
+/**
+ * Get navigation items based on authentication state
+ *
+ * @param user - Supabase User object or null
+ * @returns Array of navigation items appropriate for the auth state
+ */
+export function getNavigationItems(user: User | null): NavigationItem[] {
+  if (user) {
+    return [
+      { name: 'Dashboard', href: '/dashboard' },
+      { name: 'Discover', href: '/discover' },
+    ];
+  }
+
+  return [
+    { name: 'Discover', href: '/discover' },
+    { name: 'About', href: '/about' },
+    { name: 'Blog', href: '/blog' },
+  ];
+}
+
+/**
+ * Check if a navigation item should be shown based on auth state
+ */
+export function shouldShowNavigationItem(item: NavigationItem, user: User | null): boolean {
+  if (item.requiresAuth) {
+    return user !== null;
+  }
+  return true;
+}
+
+/**
+ * Sidebar navigation sections for authenticated users
+ *
+ * Simplified navigation with only essential items:
+ * - Dashboard (main dashboard overview)
+ * - Projects (projects management dashboard)
+ * - People (people we are connected to)
+ * - Settings (at bottom)
+ */
 export const navigationSections: NavSection[] = [
   {
     id: 'main',
@@ -24,92 +70,61 @@ export const navigationSections: NavSection[] = [
     requiresAuth: true,
     items: [
       {
-        name: 'Home',
+        name: 'Dashboard',
         href: '/dashboard',
         icon: Home,
-        description: 'Your main home overview',
+        description: 'Your main dashboard',
         requiresAuth: true,
       },
       {
         name: 'Projects',
         href: '/dashboard/projects',
-        icon: Handshake,
-        description: 'Manage your Bitcoin projects and initiatives',
+        icon: Rocket,
+        description: 'Your projects dashboard',
         requiresAuth: true,
       },
-    ],
-  },
-  {
-    id: 'social',
-    title: 'Social & Collaboration',
-    priority: 2,
-    defaultExpanded: true,
-    requiresAuth: true,
-    items: [
       {
         name: 'People',
         href: '/dashboard/people',
         icon: Users,
-        description: 'Connect with Bitcoin enthusiasts',
+        description: 'People you are connected to',
         requiresAuth: true,
       },
     ],
   },
-  {
-    id: 'upcoming',
-    title: 'Coming Soon',
-    priority: 3,
-    defaultExpanded: false,
-    collapsible: true,
-    requiresAuth: true,
-    items: [],
-  },
 ];
 
-// Bottom navigation items for account management
+/**
+ * Bottom navigation items for account management
+ *
+ * These appear at the bottom of the sidebar
+ */
 export const bottomNavItems: NavItem[] = [
   {
-    name: 'Edit Profile',
+    name: 'Profile',
     href: '/profile',
-    icon: Edit3,
-    description: 'Update your profile information',
+    icon: User,
+    description: 'View and edit your profile',
     requiresAuth: true,
   },
   {
     name: 'Settings',
     href: '/settings',
     icon: Settings,
-    description: 'Account and security settings',
+    description: 'Account settings and preferences',
     requiresAuth: true,
   },
 ];
 
-// Navigation analytics events for tracking user behavior
-export const navigationEvents = {
-  SIDEBAR_TOGGLE: 'navigation_sidebar_toggle',
-  SECTION_TOGGLE: 'navigation_section_toggle',
-  ITEM_CLICK: 'navigation_item_click',
-  COMING_SOON_CLICK: 'navigation_coming_soon_click',
-} as const;
-
-// Navigation accessibility labels
+/**
+ * Navigation labels for accessibility and internationalization
+ *
+ * Used for ARIA labels and screen reader announcements
+ */
 export const navigationLabels = {
-  SIDEBAR_TOGGLE: 'Toggle navigation sidebar',
-  SIDEBAR_EXPAND: 'Expand navigation sidebar',
-  SIDEBAR_COLLAPSE: 'Collapse navigation sidebar',
-  SECTION_TOGGLE: 'Toggle navigation section',
   MAIN_NAVIGATION: 'Main navigation',
-  BOTTOM_NAVIGATION: 'Account navigation',
-  COMING_SOON: 'Feature coming soon',
-} as const;
-
-// Navigation keyboard shortcuts
-export const navigationShortcuts = {
-  TOGGLE_SIDEBAR: 'cmd+b',
-  GO_TO_HOME: 'cmd+1',
-  GO_TO_CAMPAIGNS: 'cmd+2',
-  GO_TO_PROJECTS: 'cmd+3',
-  GO_TO_PEOPLE: 'cmd+4',
-  GO_TO_ORGANIZATIONS: 'cmd+5',
-  GO_TO_SETTINGS: 'cmd+,',
+  SECTION_TOGGLE: 'Toggle section',
+  COMING_SOON: 'Coming soon',
+  SIDEBAR_EXPAND: 'Expand sidebar',
+  SIDEBAR_COLLAPSE: 'Collapse sidebar',
 } as const;

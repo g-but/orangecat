@@ -22,9 +22,15 @@ export default function ProjectCard({ project }: ProjectCardProps) {
           </div>
           <span
             className={`px-2 py-1 text-xs rounded-full ${
-              project.status === 'Published' || project.status === 'published'
-                ? 'bg-orange-100 text-orange-700'
-                : 'bg-gray-100 text-gray-700'
+              project.status === 'active'
+                ? 'bg-green-100 text-green-700'
+                : project.status === 'paused'
+                  ? 'bg-yellow-100 text-yellow-700'
+                  : project.status === 'completed'
+                    ? 'bg-blue-100 text-blue-700'
+                    : project.status === 'cancelled'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-gray-100 text-gray-700'
             }`}
           >
             {project.role}
