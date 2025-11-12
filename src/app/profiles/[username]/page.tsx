@@ -39,6 +39,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: `${displayName} | OrangeCat`,
     description,
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
       title: `${displayName} on OrangeCat`,
       description,
@@ -107,15 +110,38 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const projectCount = projects?.length || 0;
   const totalRaised = projects?.reduce((sum, p) => sum + (Number(p.raised_amount) || 0), 0) || 0;
 
+  // Generate JSON-LD structured data for SEO
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Person',
+    name: (profile as any).name || (profile as any).display_name || profile.username || username,
+    alternateName: profile.username || undefined,
+    description: profile.bio || undefined,
+    image: profile.avatar_url || undefined,
+    url: `https://orangecat.ch/profiles/${username}`,
+    sameAs: profile.website ? [profile.website] : undefined,
+    ...(profile.bitcoin_address && {
+      paymentAccepted: 'Bitcoin',
+      bitcoinAddress: profile.bitcoin_address,
+    }),
+  };
+
   // Pass data to client component for interactivity
   return (
-    <PublicProfileClient
-      profile={profile}
-      projects={projects || []}
-      stats={{
-        projectCount,
-        totalRaised,
-      }}
-    />
+    <>
+      {/* JSON-LD Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <PublicProfileClient
+        profile={profile}
+        projects={projects || []}
+        stats={{
+          projectCount,
+          totalRaised,
+        }}
+      />
+    </>
   );
 }
