@@ -43,7 +43,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (project.user_id) {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
-        .select('id, username, display_name, avatar_url, email')
+        .select('id, username, name, avatar_url, email')
         .eq('id', project.user_id)
         .maybeSingle();
 

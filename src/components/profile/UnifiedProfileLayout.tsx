@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -16,6 +16,7 @@ import {
   Copy,
   ExternalLink,
   ArrowRight,
+  Share2,
 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { ScalableProfile, ProfileFormData } from '@/types/database';
@@ -27,6 +28,7 @@ import BitcoinDonationCard from '@/components/bitcoin/BitcoinDonationCard';
 import BitcoinWalletStatsCompact from '@/components/bitcoin/BitcoinWalletStatsCompact';
 import { ROUTES } from '@/lib/routes';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
+import ProfileShare from '@/components/sharing/ProfileShare';
 
 interface UnifiedProfileLayoutProps {
   profile: ScalableProfile;
@@ -50,6 +52,29 @@ export default function UnifiedProfileLayout({
 
   // UI states
   const [showQR, setShowQR] = useState<'bitcoin' | 'lightning' | null>(null);
+  const [showShare, setShowShare] = useState(false);
+  const shareButtonRef = useRef<HTMLDivElement>(null);
+  const shareDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close share dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showShare &&
+        shareDropdownRef.current &&
+        !shareDropdownRef.current.contains(event.target as Node) &&
+        shareButtonRef.current &&
+        !shareButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowShare(false);
+      }
+    };
+
+    if (showShare) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showShare]);
 
   // Calculate profile completion
   const calculateCompletion = () => {
@@ -121,6 +146,28 @@ export default function UnifiedProfileLayout({
 
           {/* Action Buttons */}
           <div className="absolute top-6 right-6 flex gap-3">
+            {/* Share Button - Always visible */}
+            <div className="relative" ref={shareButtonRef}>
+              <Button
+                onClick={() => setShowShare(!showShare)}
+                variant="outline"
+                className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+              {showShare && (
+                <div ref={shareDropdownRef} className="absolute top-full right-0 mt-2 z-50">
+                  <ProfileShare
+                    username={profile.username || ''}
+                    profileName={profile.name || profile.display_name || profile.username || 'User'}
+                    profileBio={profile.bio || undefined}
+                    onClose={() => setShowShare(false)}
+                  />
+                </div>
+              )}
+            </div>
+
             {isOwnProfile && (
               <Button
                 onClick={() => onModeChange?.('edit')}

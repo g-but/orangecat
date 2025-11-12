@@ -262,9 +262,9 @@ export default function DiscoverPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
             >
-              <span className="block">Discover</span>
+              <span className="block">Discover Projects</span>
               <span className="block bg-gradient-to-r from-tiffany-600 via-bitcoinOrange to-orange-500 bg-clip-text text-transparent">
-                Bitcoin Projects
+                You Care About
               </span>
             </motion.h1>
 
@@ -274,8 +274,7 @@ export default function DiscoverPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.7 }}
             >
-              Support innovative projects, help local communities, and be part of the Bitcoin
-              revolution.
+              Support creative projects, community initiatives, and bold ideas—using Bitcoin.
             </motion.p>
 
             {/* Stats - Compact */}
@@ -678,28 +677,29 @@ export default function DiscoverPage() {
                       <Target className="w-8 h-8 text-orange-600" />
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                      Start the Bitcoin Revolution! 🚀
+                      Be the First to Launch
                     </h3>
                     <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                      No projects yet? Be the pioneer! Create the first Bitcoin fundraising project
-                      and show the world how easy it is to fund dreams with Bitcoin.
+                      No projects here yet—which means you could be the first! Whether you're
+                      funding a creative project, community initiative, or passion project, this is
+                      your chance to lead the way.
                     </p>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                       <div className="p-4 bg-white/60 rounded-lg">
                         <div className="text-2xl font-bold text-orange-600 mb-1">1</div>
-                        <div className="text-sm font-medium">Sign up</div>
-                        <div className="text-xs text-gray-600">Create your account</div>
+                        <div className="text-sm font-medium">Create</div>
+                        <div className="text-xs text-gray-600">Set up your project page</div>
                       </div>
                       <div className="p-4 bg-white/60 rounded-lg">
                         <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
-                        <div className="text-sm font-medium">Create</div>
-                        <div className="text-xs text-gray-600">Set up your project</div>
+                        <div className="text-sm font-medium">Share</div>
+                        <div className="text-xs text-gray-600">Tell your story and set a goal</div>
                       </div>
                       <div className="p-4 bg-white/60 rounded-lg">
                         <div className="text-2xl font-bold text-green-600 mb-1">3</div>
-                        <div className="text-sm font-medium">Fund</div>
-                        <div className="text-xs text-gray-600">Receive Bitcoin donations</div>
+                        <div className="text-sm font-medium">Receive</div>
+                        <div className="text-xs text-gray-600">Accept Bitcoin donations</div>
                       </div>
                     </div>
 
@@ -708,7 +708,7 @@ export default function DiscoverPage() {
                       size="lg"
                       className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 mb-4"
                     >
-                      🎯 Create the First Project
+                      Launch Your Project
                     </Button>
 
                     <p className="text-sm text-gray-500">
@@ -723,11 +723,9 @@ export default function DiscoverPage() {
                   // Has filters - show filtered empty state
                   <div className="max-w-md mx-auto">
                     <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      No projects match your criteria
-                    </h3>
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No matches found</h3>
                     <p className="text-gray-600 mb-8">
-                      Try adjusting your search criteria or browse all projects.
+                      Try different filters or browse all projects to discover something new.
                     </p>
                     <div className="space-y-3">
                       <Button onClick={clearFilters} variant="outline" className="px-6 py-2">
@@ -737,7 +735,7 @@ export default function DiscoverPage() {
                         href="/projects/create"
                         className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                       >
-                        🚀 Create Your First Project
+                        Or launch your own project →
                       </Button>
                     </div>
                   </div>

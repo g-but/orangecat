@@ -174,8 +174,8 @@ export const useAuthStore = create<AuthState>()(
               error: null,
             });
 
-            // Fetch profile after successful auth
-            await get().fetchProfile();
+            // Don't fetch profile here - AuthProvider will handle it via onAuthStateChange
+            // This prevents duplicate profile fetches during login
 
             return { data, error: null };
           } else {
