@@ -6,7 +6,7 @@ import {
   sanitizeWalletInput,
   validateAddressOrXpub,
   detectWalletType,
-} from '@/types/wallet-fixed';
+} from '@/types/wallet';
 
 interface ErrorResponse {
   error: string;
@@ -33,7 +33,10 @@ export async function GET(request: NextRequest) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const idToValidate = profileId || projectId;
     if (idToValidate && !uuidRegex.test(idToValidate)) {
-      return NextResponse.json<ErrorResponse>({ error: 'Invalid ID format', code: 'INVALID_ID' }, { status: 400 });
+      return NextResponse.json<ErrorResponse>(
+        { error: 'Invalid ID format', code: 'INVALID_ID' },
+        { status: 400 }
+      );
     }
 
     let query = supabase
@@ -78,10 +81,16 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json<ErrorResponse>({ error: 'Unauthorized', code: 'UNAUTHORIZED' }, { status: 401 });
+      return NextResponse.json<ErrorResponse>(
+        { error: 'Unauthorized', code: 'UNAUTHORIZED' },
+        { status: 401 }
+      );
     }
 
-    const body = (await request.json()) as WalletFormData & { profile_id?: string; project_id?: string };
+    const body = (await request.json()) as WalletFormData & {
+      profile_id?: string;
+      project_id?: string;
+    };
 
     // Validate entity ownership
     if (!body.profile_id && !body.project_id) {
@@ -126,7 +135,10 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (!profile || profile.user_id !== user.id) {
-        return NextResponse.json<ErrorResponse>({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
+        return NextResponse.json<ErrorResponse>(
+          { error: 'Forbidden', code: 'FORBIDDEN' },
+          { status: 403 }
+        );
       }
     } else if (body.project_id) {
       const { data: project } = await supabase
@@ -136,7 +148,10 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (!project || project.user_id !== user.id) {
-        return NextResponse.json<ErrorResponse>({ error: 'Forbidden', code: 'FORBIDDEN' }, { status: 403 });
+        return NextResponse.json<ErrorResponse>(
+          { error: 'Forbidden', code: 'FORBIDDEN' },
+          { status: 403 }
+        );
       }
     }
 
@@ -150,7 +165,11 @@ export async function POST(request: NextRequest) {
     const addressValidation = validateAddressOrXpub(sanitized.address_or_xpub);
     if (!addressValidation.valid) {
       return NextResponse.json<ErrorResponse>(
-        { error: addressValidation.error || 'Invalid address/xpub', code: 'INVALID_ADDRESS', field: 'address_or_xpub' },
+        {
+          error: addressValidation.error || 'Invalid address/xpub',
+          code: 'INVALID_ADDRESS',
+          field: 'address_or_xpub',
+        },
         { status: 400 }
       );
     }
@@ -166,7 +185,10 @@ export async function POST(request: NextRequest) {
 
     if (existingWallet) {
       return NextResponse.json<ErrorResponse>(
-        { error: 'This address/xpub is already added to this profile/project', code: 'DUPLICATE_ADDRESS' },
+        {
+          error: 'This address/xpub is already added to this profile/project',
+          code: 'DUPLICATE_ADDRESS',
+        },
         { status: 409 }
       );
     }
