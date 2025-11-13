@@ -475,6 +475,7 @@ class TimelineService {
 
   /**
    * Get public community timeline (posts from all users and projects)
+   * OPTIMIZED: Uses enriched_timeline_events VIEW to eliminate N+1 queries
    */
   async getCommunityFeed(
     filters?: Partial<TimelineFilters>,
@@ -487,86 +488,99 @@ class TimelineService {
 
       const sortBy = filters?.sortBy || 'recent';
 
-      let events: any[] = [];
-      let totalEvents = 0;
+      // Query enriched VIEW - all JOINs pre-computed at database level
+      const {
+        data: enrichedEvents,
+        error,
+        count,
+      } = await supabase
+        .from('enriched_timeline_events')
+        .select('*', { count: 'exact' })
+        .eq('visibility', 'public')
+        .order('event_timestamp', { ascending: false })
+        .range(offset, offset + limit - 1);
 
-      try {
-        const {
-          data: communityEvents,
-          error,
-          count,
-        } = await supabase.rpc('get_community_timeline', {
-          p_limit: limit,
-          p_offset: offset,
-          p_sort_by: sortBy,
-        });
-
-        if (error) {
-          logger.warn('Community timeline not available, using empty feed', error, 'Timeline');
-          events = [];
-          totalEvents = 0;
-        } else {
-          events = communityEvents || [];
-          totalEvents = count || events.length;
-        }
-      } catch (dbError) {
-        logger.warn('Database function not available for community timeline', dbError, 'Timeline');
-        events = [];
-        totalEvents = 0;
+      if (error) {
+        logger.error('Failed to fetch community feed from enriched VIEW', error, 'Timeline');
+        throw error;
       }
 
-      // Transform to display events
-      const displayEvents = await Promise.all(
-        events.map(async (event: any) => {
-          const timelineEvent = this.mapDbEventToTimelineEvent(event);
+      // Transform enriched VIEW data to display events (no N+1 queries needed!)
+      const displayEvents = (enrichedEvents || []).map((event: any) => {
+        const timelineEvent = this.mapDbEventToTimelineEvent(event);
 
-          // Enrich with actor info
-          const actor = await this.getActorInfo(timelineEvent.actorId);
-          const subject = timelineEvent.subjectId
-            ? await this.getSubjectInfo(timelineEvent.subjectType, timelineEvent.subjectId)
-            : undefined;
-          const target = timelineEvent.targetId
-            ? await this.getSubjectInfo(timelineEvent.targetType!, timelineEvent.targetId)
-            : undefined;
+        return {
+          ...timelineEvent,
+          eventType: undefined as any,
+          eventSubtype: undefined as any,
+          icon: this.getEventIcon(timelineEvent.eventType),
+          iconColor: this.getEventColor(timelineEvent.eventType),
+          displayType: this.getEventDisplayType(timelineEvent.eventType),
+          displaySubtype: timelineEvent.eventSubtype,
+          // Actor, subject, target data already pre-joined in VIEW
+          actor: event.actor_data
+            ? {
+                id: event.actor_data.id,
+                name: event.actor_data.display_name || event.actor_data.username || 'Unknown',
+                username: event.actor_data.username,
+                avatar: event.actor_data.avatar_url,
+                type: 'user' as TimelineActorType,
+              }
+            : undefined,
+          subject: event.subject_data
+            ? {
+                id: event.subject_data.id,
+                name:
+                  event.subject_data.type === 'profile'
+                    ? event.subject_data.display_name || event.subject_data.username
+                    : event.subject_data.title,
+                type: event.subject_data.type,
+                url:
+                  event.subject_data.type === 'profile'
+                    ? `/profiles/${event.subject_data.username || event.subject_data.id}`
+                    : `/projects/${event.subject_data.id}`,
+              }
+            : undefined,
+          target: event.target_data
+            ? {
+                id: event.target_data.id,
+                name:
+                  event.target_data.type === 'profile'
+                    ? event.target_data.display_name || event.target_data.username
+                    : event.target_data.title,
+                type: event.target_data.type,
+                url:
+                  event.target_data.type === 'profile'
+                    ? `/profiles/${event.target_data.username || event.target_data.id}`
+                    : `/projects/${event.target_data.id}`,
+              }
+            : undefined,
+          formattedAmount: this.formatAmount(timelineEvent),
+          timeAgo: this.getTimeAgo(timelineEvent.eventTimestamp),
+          isRecent: this.isEventRecent(timelineEvent.eventTimestamp),
 
-          return {
-            ...timelineEvent,
-            eventType: undefined as any,
-            eventSubtype: undefined as any,
-            icon: this.getEventIcon(timelineEvent.eventType),
-            iconColor: this.getEventColor(timelineEvent.eventType),
-            displayType: this.getEventDisplayType(timelineEvent.eventType),
-            displaySubtype: timelineEvent.eventSubtype,
-            actor,
-            subject,
-            target,
-            formattedAmount: this.formatAmount(timelineEvent),
-            timeAgo: this.getTimeAgo(timelineEvent.eventTimestamp),
-            isRecent: this.isEventRecent(timelineEvent.eventTimestamp),
-
-            // Social interaction data
-            likesCount: event.like_count || 0,
-            sharesCount: event.share_count || 0,
-            commentsCount: event.comment_count || 0,
-            userLiked: event.user_liked || false,
-            userShared: event.user_shared || false,
-            userCommented: event.user_commented || false,
-          } as TimelineDisplayEvent;
-        })
-      );
+          // Social interaction data (placeholder counts from VIEW)
+          likesCount: event.like_count || 0,
+          sharesCount: event.share_count || 0,
+          commentsCount: event.comment_count || 0,
+          userLiked: false,
+          userShared: false,
+          userCommented: false,
+        } as TimelineDisplayEvent;
+      });
 
       return {
         events: displayEvents,
         pagination: {
           page,
           limit,
-          total: totalEvents,
-          hasNext: offset + limit < totalEvents,
+          total: count || 0,
+          hasNext: offset + limit < (count || 0),
           hasPrev: page > 1,
         },
         filters: this.buildDefaultFilters(filters),
         metadata: {
-          totalEvents,
+          totalEvents: count || 0,
           featuredEvents: displayEvents.filter(e => e.isFeatured).length,
           lastUpdated: new Date().toISOString(),
         },
@@ -1244,9 +1258,7 @@ class TimelineService {
     return enrichedEvents;
   }
 
-  private async getActorInfo(
-    actorId: string
-  ): Promise<{
+  private async getActorInfo(actorId: string): Promise<{
     id: string;
     name: string;
     username?: string;
