@@ -166,18 +166,8 @@ export default function TwitterTimeline({
     }
   }, [hydrated, user?.id, loadTimelineFeed]);
 
-  // Early return for loading state
-  if (!hydrated || isLoading) {
-    return (
-      <Loading
-        fullScreen
-        message={`Loading ${mode === 'journey' ? 'your journey' : 'community'}...`}
-      />
-    );
-  }
-
-  // Early return for unauthenticated users
-  if (!user) {
+  // Early return for unauthenticated users (show immediately, no double loading)
+  if (hydrated && !isLoading && !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/20 flex items-center justify-center">
         <div className="text-center">
@@ -188,6 +178,9 @@ export default function TwitterTimeline({
       </div>
     );
   }
+
+  // Show layout immediately with loading state in feed (no double loading screen)
+  const isInitialLoad = !hydrated || isLoading;
 
   // Sorting controls component
   const SortingControls = () => (
@@ -402,37 +395,38 @@ export default function TwitterTimeline({
     metadata: { totalEvents: 0, featuredEvents: 0, lastUpdated: new Date().toISOString() },
   };
 
-  // Single, clean empty state
-  const emptyState = loading ? (
-    <div className="text-center py-16">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto mb-4"></div>
-      <p className="text-gray-500 text-lg">
-        Loading {mode === 'journey' ? 'your journey' : 'community'}...
-      </p>
-    </div>
-  ) : error ? (
-    <div className="text-center py-16">
-      <div className="mb-4">
-        <Icon className="w-16 h-16 text-red-300 mx-auto mb-4" />
-        <p className="text-red-600 text-lg mb-4">{error}</p>
-        <Button variant="outline" onClick={() => loadTimelineFeed(sortBy)}>
-          Try Again
-        </Button>
+  // Single, clean empty state (no double loading)
+  const emptyState =
+    isInitialLoad || loading ? (
+      <div className="text-center py-16">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto mb-4"></div>
+        <p className="text-gray-500 text-lg">
+          Loading {mode === 'journey' ? 'your journey' : 'community'}...
+        </p>
       </div>
-    </div>
-  ) : timelineFeed?.events.length === 0 ? (
-    <div className="text-center py-16">
-      <Icon className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-      <h3 className="text-xl font-semibold text-gray-900 mb-2">
-        {mode === 'journey' ? 'No posts yet' : 'No posts yet'}
-      </h3>
-      <p className="text-gray-600 max-w-md mx-auto">
-        {mode === 'journey'
-          ? "Share your first update about what you're working on!"
-          : 'Be the first to share something productive with the community!'}
-      </p>
-    </div>
-  ) : null;
+    ) : error ? (
+      <div className="text-center py-16">
+        <div className="mb-4">
+          <Icon className="w-16 h-16 text-red-300 mx-auto mb-4" />
+          <p className="text-red-600 text-lg mb-4">{error}</p>
+          <Button variant="outline" onClick={() => loadTimelineFeed(sortBy)}>
+            Try Again
+          </Button>
+        </div>
+      </div>
+    ) : timelineFeed?.events.length === 0 ? (
+      <div className="text-center py-16">
+        <Icon className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {mode === 'journey' ? 'No posts yet' : 'No posts yet'}
+        </h3>
+        <p className="text-gray-600 max-w-md mx-auto">
+          {mode === 'journey'
+            ? "Share your first update about what you're working on!"
+            : 'Be the first to share something productive with the community!'}
+        </p>
+      </div>
+    ) : null;
 
   // Header content (sorting controls for community)
   const headerContent = showSortingControls ? <SortingControls /> : undefined;
