@@ -1,4 +1,7 @@
-// Wallet system types - works for both profiles and projects
+// Fixed wallet types with proper validation
+
+import { validate as validateBitcoinAddress } from 'bitcoin-address-validation';
+import bs58check from 'bs58check';
 
 export type WalletType = 'address' | 'xpub';
 
@@ -13,7 +16,15 @@ export type WalletCategory =
   | 'utilities'
   | 'custom';
 
-export const WALLET_CATEGORIES: Record<WalletCategory, { label: string; icon: string; description: string }> = {
+// Constants for validation
+const MAX_LABEL_LENGTH = 100;
+const MAX_DESCRIPTION_LENGTH = 500;
+const SATS_PER_BTC = 100_000_000;
+
+export const WALLET_CATEGORIES: Record<
+  WalletCategory,
+  { label: string; icon: string; description: string }
+> = {
   general: {
     label: 'General',
     icon: '💰',
@@ -61,33 +72,41 @@ export const WALLET_CATEGORIES: Record<WalletCategory, { label: string; icon: st
   },
 };
 
+// Allowed emojis for icons (whitelist for security)
+export const ALLOWED_CATEGORY_ICONS = [
+  '💰',
+  '🏠',
+  '🍔',
+  '💊',
+  '🎓',
+  '🚨',
+  '🚗',
+  '💡',
+  '📦',
+] as const;
+
 export interface Wallet {
   id: string;
   profile_id: string | null;
   project_id: string | null;
+  user_id: string | null;
 
-  // Wallet info
   label: string;
   description: string | null;
 
-  // Bitcoin
   address_or_xpub: string;
   wallet_type: WalletType;
 
-  // Category
   category: WalletCategory;
   category_icon: string;
 
-  // Optional goal
   goal_amount: number | null;
   goal_currency: string | null;
   goal_deadline: string | null;
 
-  // Balance
   balance_btc: number;
   balance_updated_at: string | null;
 
-  // Display
   is_active: boolean;
   display_order: number;
   is_primary: boolean;
@@ -107,7 +126,6 @@ export interface WalletAddress {
   discovered_at: string;
 }
 
-// Form data for creating/editing wallets
 export interface WalletFormData {
   label: string;
   description?: string;
@@ -120,69 +138,208 @@ export interface WalletFormData {
   is_primary?: boolean;
 }
 
-// Helper to detect wallet type from address/xpub string
+export interface ValidationResult {
+  valid: boolean;
+  error: string | null;
+  type?: WalletType;
+}
+
+/**
+ * Detect wallet type from address/xpub string
+ */
 export function detectWalletType(addressOrXpub: string): WalletType {
   const input = addressOrXpub.trim();
 
-  // Check for xpub/ypub/zpub
-  if (
-    input.startsWith('xpub') ||
-    input.startsWith('ypub') ||
-    input.startsWith('zpub') ||
-    input.startsWith('tpub') || // testnet
-    input.startsWith('upub') || // testnet
-    input.startsWith('vpub') // testnet
-  ) {
+  // Check for xpub/ypub/zpub prefixes
+  const xpubPrefixes = ['xpub', 'ypub', 'zpub', 'tpub', 'upub', 'vpub'];
+  if (xpubPrefixes.some(prefix => input.startsWith(prefix))) {
     return 'xpub';
   }
 
-  // Otherwise assume it's an address
   return 'address';
 }
 
-// Validate Bitcoin address format (basic)
-export function isValidBitcoinAddress(address: string): boolean {
-  const patterns = {
-    // Legacy P2PKH
-    legacy: /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/,
-    // SegWit P2SH
-    segwit: /^3[a-km-zA-HJ-NP-Z1-9]{25,34}$/,
-    // Native SegWit (Bech32)
-    bech32: /^(bc1|tb1)[a-z0-9]{39,87}$/i,
-  };
-
-  return Object.values(patterns).some((pattern) => pattern.test(address));
+/**
+ * Validate Bitcoin address using proper checksum validation
+ * Supports: P2PKH, P2SH, P2WPKH (bech32), P2TR (taproot)
+ */
+export function isValidBitcoinAddress(
+  address: string,
+  network: 'mainnet' | 'testnet' = 'mainnet'
+): boolean {
+  try {
+    return validateBitcoinAddress(address, network);
+  } catch {
+    return false;
+  }
 }
 
-// Validate xpub format (basic)
+/**
+ * Validate xpub/ypub/zpub with proper base58check verification
+ */
 export function isValidXpub(xpub: string): boolean {
-  const prefixes = ['xpub', 'ypub', 'zpub', 'tpub', 'upub', 'vpub'];
-  return prefixes.some((prefix) => xpub.startsWith(prefix)) && xpub.length > 100;
+  try {
+    const validPrefixes = ['xpub', 'ypub', 'zpub', 'tpub', 'upub', 'vpub'];
+
+    // Check prefix
+    if (!validPrefixes.some(prefix => xpub.startsWith(prefix))) {
+      return false;
+    }
+
+    // Verify base58check encoding and checksum
+    const decoded = bs58check.decode(xpub);
+
+    // Extended public keys should be 78 bytes when decoded
+    if (decoded.length !== 78) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-// Validate address or xpub
-export function validateAddressOrXpub(input: string): { valid: boolean; type: WalletType | null; error: string | null } {
+/**
+ * Comprehensive validation for address or xpub
+ */
+export function validateAddressOrXpub(
+  input: string,
+  network: 'mainnet' | 'testnet' = 'mainnet'
+): ValidationResult {
   const trimmed = input.trim();
 
   if (!trimmed) {
-    return { valid: false, type: null, error: 'Address or xpub is required' };
+    return { valid: false, error: 'Address or xpub is required' };
   }
 
   const type = detectWalletType(trimmed);
 
   if (type === 'xpub') {
     if (!isValidXpub(trimmed)) {
-      return { valid: false, type: null, error: 'Invalid xpub format' };
+      return {
+        valid: false,
+        error: 'Invalid xpub format or checksum. Please verify your extended public key.',
+      };
     }
     return { valid: true, type: 'xpub', error: null };
   }
 
-  if (type === 'address') {
-    if (!isValidBitcoinAddress(trimmed)) {
-      return { valid: false, type: null, error: 'Invalid Bitcoin address format' };
-    }
-    return { valid: true, type: 'address', error: null };
+  // Validate Bitcoin address
+  if (!isValidBitcoinAddress(trimmed, network)) {
+    return {
+      valid: false,
+      error:
+        'Invalid Bitcoin address format or checksum. Supported: Legacy (1...), SegWit (3... or bc1q...), Taproot (bc1p...)',
+    };
   }
 
-  return { valid: false, type: null, error: 'Unknown format' };
+  return { valid: true, type: 'address', error: null };
+}
+
+/**
+ * Validate wallet form data
+ */
+export function validateWalletFormData(data: WalletFormData): ValidationResult {
+  // Validate label
+  if (!data.label || !data.label.trim()) {
+    return { valid: false, error: 'Wallet name is required' };
+  }
+
+  if (data.label.length > MAX_LABEL_LENGTH) {
+    return { valid: false, error: `Wallet name must be ${MAX_LABEL_LENGTH} characters or less` };
+  }
+
+  // Validate description
+  if (data.description && data.description.length > MAX_DESCRIPTION_LENGTH) {
+    return {
+      valid: false,
+      error: `Description must be ${MAX_DESCRIPTION_LENGTH} characters or less`,
+    };
+  }
+
+  // Validate address/xpub
+  const addressValidation = validateAddressOrXpub(data.address_or_xpub);
+  if (!addressValidation.valid) {
+    return addressValidation;
+  }
+
+  // Validate category
+  if (!Object.keys(WALLET_CATEGORIES).includes(data.category)) {
+    return { valid: false, error: 'Invalid category' };
+  }
+
+  // Validate category icon (whitelist for security)
+  if (data.category_icon && !ALLOWED_CATEGORY_ICONS.includes(data.category_icon as any)) {
+    return { valid: false, error: 'Invalid category icon' };
+  }
+
+  // Validate goal amount
+  if (data.goal_amount !== undefined && data.goal_amount !== null) {
+    if (data.goal_amount <= 0) {
+      return { valid: false, error: 'Goal amount must be greater than 0' };
+    }
+    if (data.goal_amount > 1_000_000_000) {
+      // 1 billion max
+      return { valid: false, error: 'Goal amount too large' };
+    }
+  }
+
+  // Validate goal currency
+  const validCurrencies = ['USD', 'EUR', 'BTC', 'SATS', 'CHF'];
+  if (data.goal_currency && !validCurrencies.includes(data.goal_currency)) {
+    return { valid: false, error: 'Invalid goal currency' };
+  }
+
+  return { valid: true, error: null };
+}
+
+/**
+ * Sanitize user input for safe storage
+ */
+export function sanitizeWalletInput(data: WalletFormData): WalletFormData {
+  return {
+    ...data,
+    label: data.label.trim().slice(0, MAX_LABEL_LENGTH),
+    description: data.description?.trim().slice(0, MAX_DESCRIPTION_LENGTH) || undefined,
+    address_or_xpub: data.address_or_xpub.trim(),
+    category_icon: ALLOWED_CATEGORY_ICONS.includes(data.category_icon as any)
+      ? data.category_icon
+      : WALLET_CATEGORIES[data.category].icon,
+    goal_amount:
+      data.goal_amount && data.goal_amount > 0
+        ? Math.min(data.goal_amount, 1_000_000_000)
+        : undefined,
+  };
+}
+
+/**
+ * Convert satoshis to BTC
+ */
+export function satoshisToBTC(satoshis: number): number {
+  return satoshis / SATS_PER_BTC;
+}
+
+/**
+ * Convert BTC to satoshis
+ */
+export function btcToSatoshis(btc: number): number {
+  return Math.round(btc * SATS_PER_BTC);
+}
+
+/**
+ * Format BTC amount for display
+ */
+export function formatBTC(btc: number, decimals: number = 8): string {
+  return btc.toFixed(decimals);
+}
+
+/**
+ * Calculate progress percentage
+ */
+export function calculateProgress(current: number, goal: number): number {
+  if (!goal || goal <= 0) {
+    return 0;
+  }
+  return Math.min((current / goal) * 100, 100);
 }
