@@ -1,21 +1,31 @@
-'use client'
+'use client';
 
-import { useState, useRef, useEffect } from 'react'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import * as z from 'zod'
-import { Save, X, MapPin, Link as LinkIcon, User, Camera, Bitcoin, Zap } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
+import { Save, X, MapPin, Link as LinkIcon, User, Camera, Bitcoin, Zap } from 'lucide-react';
 
-import { Button } from '@/components/ui/Button'
-import { Input } from '@/components/ui/Input'
-import { Textarea } from '@/components/ui/Textarea'
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { toast } from 'sonner'
-import { Profile, ProfileFormData } from '@/types/database'
-import { ProfileStorageService } from '@/services/profile/storage'
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { toast } from 'sonner';
+import { Profile, ProfileFormData } from '@/types/database';
+import { ProfileStorageService } from '@/services/profile/storage';
+import { WalletManager } from '@/components/wallets/WalletManager';
+import { Wallet, WalletFormData } from '@/types/wallet';
 
 // Import server-side schema to keep validation consistent
-import { profileSchema as serverProfileSchema, normalizeProfileData } from '@/lib/validation'
+import { profileSchema as serverProfileSchema, normalizeProfileData } from '@/lib/validation';
 
 // Profile Images Section Component
 function ProfileImagesSection({
@@ -24,14 +34,14 @@ function ProfileImagesSection({
   bannerPreview,
   avatarInputRef,
   bannerInputRef,
-  handleFileUpload
+  handleFileUpload,
 }: {
-  profile: Profile
-  avatarPreview: string | null
-  bannerPreview: string | null
-  avatarInputRef: React.RefObject<HTMLInputElement>
-  bannerInputRef: React.RefObject<HTMLInputElement>
-  handleFileUpload: (file: File, type: 'avatar' | 'banner') => Promise<void>
+  profile: Profile;
+  avatarPreview: string | null;
+  bannerPreview: string | null;
+  avatarInputRef: React.RefObject<HTMLInputElement>;
+  bannerInputRef: React.RefObject<HTMLInputElement>;
+  handleFileUpload: (file: File, type: 'avatar' | 'banner') => Promise<void>;
 }) {
   return (
     <div className="space-y-4">
@@ -60,7 +70,7 @@ function ProfileImagesSection({
           ref={bannerInputRef}
           type="file"
           accept="image/*"
-          onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'banner')}
+          onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'banner')}
           className="hidden"
         />
       </div>
@@ -90,25 +100,25 @@ function ProfileImagesSection({
           ref={avatarInputRef}
           type="file"
           accept="image/*"
-          onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'avatar')}
+          onChange={e => e.target.files?.[0] && handleFileUpload(e.target.files[0], 'avatar')}
           className="hidden"
         />
       </div>
     </div>
-  )
+  );
 }
 
 // Use server-side schema for consistency
-const profileSchema = serverProfileSchema
+const profileSchema = serverProfileSchema;
 
-type ProfileFormValues = z.infer<typeof profileSchema>
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface ModernProfileEditorProps {
-  profile: Profile
-  userId: string
-  userEmail?: string
-  onSave: (data: ProfileFormData) => Promise<void>
-  onCancel: () => void
+  profile: Profile;
+  userId: string;
+  userEmail?: string;
+  onSave: (data: ProfileFormData) => Promise<void>;
+  onCancel: () => void;
 }
 
 export default function ModernProfileEditor({
@@ -116,14 +126,15 @@ export default function ModernProfileEditor({
   userId,
   userEmail,
   onSave,
-  onCancel
+  onCancel,
 }: ModernProfileEditorProps) {
-  const [isSaving, setIsSaving] = useState(false)
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
 
-  const avatarInputRef = useRef<HTMLInputElement>(null)
-  const bannerInputRef = useRef<HTMLInputElement>(null)
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   // Form setup with default values
   const form = useForm<ProfileFormValues>({
@@ -140,85 +151,180 @@ export default function ModernProfileEditor({
       bitcoin_address: profile.bitcoin_address || '',
       lightning_address: profile.lightning_address || '',
     },
-  })
+  });
 
   // Watch for username changes to auto-update display name if empty
-  const watchedUsername = form.watch('username')
-  const watchedDisplayName = form.watch('name')
+  const watchedUsername = form.watch('username');
+  const watchedDisplayName = form.watch('name');
 
   useEffect(() => {
     if (watchedUsername && !watchedDisplayName) {
-      form.setValue('name', watchedUsername)
+      form.setValue('name', watchedUsername);
     }
-  }, [watchedUsername, watchedDisplayName, form])
+  }, [watchedUsername, watchedDisplayName, form]);
 
   // Handle ESC key to close modal
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !isSaving) {
-        onCancel()
+        onCancel();
       }
-    }
+    };
 
-    window.addEventListener('keydown', handleEscape)
-    return () => window.removeEventListener('keydown', handleEscape)
-  }, [onCancel, isSaving])
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onCancel, isSaving]);
 
   // Handle file upload
   const handleFileUpload = async (file: File, type: 'avatar' | 'banner') => {
     if (!userId) {
-      toast.error('You must be logged in to upload files')
-      return
+      toast.error('You must be logged in to upload files');
+      return;
     }
 
-    const setPreview = type === 'avatar' ? setAvatarPreview : setBannerPreview
+    const setPreview = type === 'avatar' ? setAvatarPreview : setBannerPreview;
 
     try {
       // Create preview
-      const previewUrl = URL.createObjectURL(file)
-      setPreview(previewUrl)
+      const previewUrl = URL.createObjectURL(file);
+      setPreview(previewUrl);
 
       // Upload file using ProfileStorageService
-      const result = await ProfileStorageService.uploadAvatar(userId, file)
+      const result = await ProfileStorageService.uploadAvatar(userId, file);
 
       if (result.success && result.url) {
         // Update form data with new URL
-        form.setValue(`${type}_url` as keyof ProfileFormValues, result.url)
-        setPreview(result.url)
+        form.setValue(`${type}_url` as keyof ProfileFormValues, result.url);
+        setPreview(result.url);
 
         // Note: Success toast will be shown when profile is saved
       } else {
-        throw new Error(result.error || 'Upload failed')
+        throw new Error(result.error || 'Upload failed');
+      }
+    } catch (error) {
+      setPreview(null);
+      toast.error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  // Fetch wallets on component mount
+  useEffect(() => {
+    if (profile.id) {
+      fetch(`/api/wallets?profile_id=${profile.id}`)
+        .then(res => res.json())
+        .then(data => setWallets(data.wallets || []))
+        .catch(err => {
+          console.error('Failed to fetch wallets:', err);
+        });
+    }
+  }, [profile.id]);
+
+  // Wallet CRUD handlers
+  const handleAddWallet = async (data: WalletFormData) => {
+    try {
+      const res = await fetch('/api/wallets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...data, profile_id: profile.id }),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to add wallet');
       }
 
+      const { wallet } = await res.json();
+      setWallets([...wallets, wallet]);
+      toast.success('Wallet added successfully');
     } catch (error) {
-      setPreview(null)
-      toast.error(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      toast.error(error instanceof Error ? error.message : 'Failed to add wallet');
+      throw error;
     }
-  }
+  };
+
+  const handleUpdateWallet = async (walletId: string, data: Partial<WalletFormData>) => {
+    try {
+      const res = await fetch(`/api/wallets/${walletId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to update wallet');
+      }
+
+      const { wallet } = await res.json();
+      setWallets(wallets.map(w => (w.id === walletId ? wallet : w)));
+      toast.success('Wallet updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update wallet');
+      throw error;
+    }
+  };
+
+  const handleDeleteWallet = async (walletId: string) => {
+    try {
+      const res = await fetch(`/api/wallets/${walletId}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to delete wallet');
+      }
+
+      setWallets(wallets.filter(w => w.id !== walletId));
+      toast.success('Wallet deleted');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete wallet');
+      throw error;
+    }
+  };
+
+  const handleRefreshWallet = async (walletId: string) => {
+    try {
+      const res = await fetch(`/api/wallets/${walletId}/refresh`, {
+        method: 'POST',
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || 'Failed to refresh balance');
+      }
+
+      const { wallet } = await res.json();
+      setWallets(wallets.map(w => (w.id === walletId ? wallet : w)));
+      toast.success('Balance updated');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to refresh balance');
+      throw error;
+    }
+  };
 
   // Handle form submission
   const onSubmit = async (data: ProfileFormValues) => {
-    setIsSaving(true)
+    setIsSaving(true);
 
     try {
       // Normalize the data using our helper function
-      const normalizedData = normalizeProfileData(data)
-      const formData: ProfileFormData = normalizedData
+      const normalizedData = normalizeProfileData(data);
+      const formData: ProfileFormData = normalizedData;
 
-      await onSave(formData)
+      await onSave(formData);
       // Success toast is shown by useUnifiedProfile hook
 
       // Close modal after successful save
-      onCancel()
+      onCancel();
     } catch (error) {
       toast.error('Failed to save profile', {
         description: error instanceof Error ? error.message : 'Please try again',
-      })
+      });
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
-  }
+  };
 
   return (
     <div
@@ -227,7 +333,7 @@ export default function ModernProfileEditor({
     >
       <div
         className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         <div className="p-6">
           {/* Header */}
@@ -246,7 +352,6 @@ export default function ModernProfileEditor({
 
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-
               {/* Profile Images Section */}
               <ProfileImagesSection
                 profile={profile}
@@ -259,7 +364,6 @@ export default function ModernProfileEditor({
 
               {/* Form Fields */}
               <div className="space-y-4">
-
                 {/* Name - Main field like X */}
                 <FormField
                   control={form.control}
@@ -268,11 +372,7 @@ export default function ModernProfileEditor({
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-gray-700">Name</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Your display name"
-                          className="text-lg"
-                          {...field}
-                        />
+                        <Input placeholder="Your display name" className="text-lg" {...field} />
                       </FormControl>
                       <FormDescription className="text-xs text-gray-500">
                         This is how others will see you
@@ -315,10 +415,7 @@ export default function ModernProfileEditor({
                         Location
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="Where are you based?"
-                          {...field}
-                        />
+                        <Input placeholder="Where are you based?" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -336,10 +433,7 @@ export default function ModernProfileEditor({
                         Website
                       </FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="https://your-website.com"
-                          {...field}
-                        />
+                        <Input placeholder="https://your-website.com" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -357,12 +451,10 @@ export default function ModernProfileEditor({
                       </FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">@</span>
-                          <Input
-                            placeholder="your_unique_username"
-                            className="pl-8"
-                            {...field}
-                          />
+                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            @
+                          </span>
+                          <Input placeholder="your_unique_username" className="pl-8" {...field} />
                         </div>
                       </FormControl>
                       <FormMessage />
@@ -370,62 +462,25 @@ export default function ModernProfileEditor({
                   )}
                 />
 
-                {/* Payment Details Section */}
+                {/* Multi-Wallet System */}
                 <div className="pt-4 border-t border-gray-200">
                   <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <Bitcoin className="w-4 h-4 text-orange-500" />
-                    Payment Details
+                    Bitcoin Wallets
                   </h3>
 
-                  {/* Bitcoin Address */}
-                  <FormField
-                    control={form.control}
-                    name="bitcoin_address"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                          <Bitcoin className="w-4 h-4" />
-                          Bitcoin Address
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="bc1q... or 1... or 3..."
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription className="text-xs text-gray-500">
-                          Your Bitcoin address for receiving payments
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-
-                  {/* Lightning Address */}
-                  <FormField
-                    control={form.control}
-                    name="lightning_address"
-                    render={({ field }) => (
-                      <FormItem className="mt-4">
-                        <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                          <Zap className="w-4 h-4" />
-                          Lightning Address
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="you@getalby.com"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormDescription className="text-xs text-gray-500">
-                          Your Lightning address for instant payments
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                  <WalletManager
+                    wallets={wallets}
+                    entityType="profile"
+                    entityId={profile.id}
+                    onAdd={handleAddWallet}
+                    onUpdate={handleUpdateWallet}
+                    onDelete={handleDeleteWallet}
+                    onRefresh={handleRefreshWallet}
+                    maxWallets={10}
+                    isOwner={true}
                   />
                 </div>
-
               </div>
 
               {/* Action Buttons */}
@@ -462,5 +517,5 @@ export default function ModernProfileEditor({
         </div>
       </div>
     </div>
-  )
+  );
 }
