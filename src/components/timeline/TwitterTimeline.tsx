@@ -31,6 +31,11 @@ export interface TwitterTimelineProps {
   // Data source
   mode: 'journey' | 'community';
 
+  // Timeline ownership (for cross-posting)
+  timelineOwnerId?: string; // Whose timeline posts appear on
+  timelineOwnerType?: 'profile' | 'project'; // Type of timeline owner
+  timelineOwnerName?: string; // Display name for context
+
   // Header customization
   showShareButton?: boolean;
   shareButtonText?: string;
@@ -66,6 +71,9 @@ export default function TwitterTimeline({
   gradientVia,
   gradientTo,
   mode,
+  timelineOwnerId,
+  timelineOwnerType = 'profile',
+  timelineOwnerName,
   showShareButton = false,
   shareButtonText = 'Share Update',
   shareButtonIcon: ShareIcon = Plus,
@@ -222,13 +230,24 @@ export default function TwitterTimeline({
     const [error, setError] = useState<string | null>(null);
     const [postSuccess, setPostSuccess] = useState(false);
 
+    // Determine whose timeline we're posting on
+    const postingOnOwnTimeline = !timelineOwnerId || timelineOwnerId === user?.id;
+    const targetName =
+      timelineOwnerName || (postingOnOwnTimeline ? 'your timeline' : 'this timeline');
+
     // Simple, frictionless prompts
-    const helpfulPrompts = [
-      "What's on your mind?",
-      'Share an update...',
-      'What are you working on?',
-      'Share your progress...',
-    ];
+    const helpfulPrompts = postingOnOwnTimeline
+      ? [
+          "What's on your mind?",
+          'Share an update...',
+          'What are you working on?',
+          'Share your progress...',
+        ]
+      : [
+          `Write on ${targetName}...`,
+          `Share your thoughts on ${targetName}...`,
+          `What would you like to say?`,
+        ];
     const [currentPrompt] = useState(
       helpfulPrompts[Math.floor(Math.random() * helpfulPrompts.length)]
     );
@@ -243,17 +262,20 @@ export default function TwitterTimeline({
       setPostSuccess(false);
 
       try {
+        // Cross-timeline posting: actor is YOU, subject is WHOSE timeline it appears on
         const result = await timelineService.createEvent({
           eventType: 'status_update',
-          actorId: user.id,
-          subjectType: 'profile',
-          subjectId: user.id,
-          title: 'Shared an update',
+          actorId: user.id, // WHO is writing (always the authenticated user)
+          subjectType: timelineOwnerType, // WHOSE timeline it appears on
+          subjectId: timelineOwnerId || user.id, // Default to own timeline if not specified
+          title: postingOnOwnTimeline ? 'Shared an update' : `Posted on ${targetName}`,
           description: content.trim(),
           visibility: 'public',
           metadata: {
             content: content.trim(),
             is_user_post: true,
+            cross_posted: !postingOnOwnTimeline,
+            timeline_owner: timelineOwnerName,
           },
         });
 
@@ -285,6 +307,16 @@ export default function TwitterTimeline({
     return (
       <Card className="mb-4 border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50/30 via-white to-yellow-50/20 shadow-sm hover:shadow-md transition-shadow">
         <CardContent className="p-4">
+          {/* Timeline Context Banner */}
+          {!postingOnOwnTimeline && (
+            <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2 text-sm">
+              <span className="text-blue-700 font-medium">✍️ Posting on {targetName}</span>
+              <span className="text-blue-500 text-xs">
+                (Your post will appear on their timeline)
+              </span>
+            </div>
+          )}
+
           <div className="flex gap-3">
             {/* User Avatar */}
             <div className="flex-shrink-0">
