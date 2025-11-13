@@ -431,7 +431,7 @@ BEGIN
     p_tags,
     p_parent_event_id,
     p_thread_id,
-    COALESCE(p_metadata->>'event_timestamp', now())
+    COALESCE((p_metadata->>'event_timestamp')::timestamptz, now())
   )
   RETURNING id INTO v_event_id;
 

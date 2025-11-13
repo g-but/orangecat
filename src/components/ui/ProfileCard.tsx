@@ -28,15 +28,10 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
     return (
       <Card className="p-4 hover:shadow-lg transition-shadow">
         <div className="flex items-center gap-4">
-          <Link href={`/profile/${profile.username || profile.id}`}>
+          <Link href={`/profiles/${profile.username || profile.id}`}>
             <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-tiffany-100 to-tiffany-200 flex-shrink-0">
               {profile.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={displayName}
-                  fill
-                  className="object-cover"
-                />
+                <Image src={profile.avatar_url} alt={displayName} fill className="object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-tiffany-600 font-semibold">
                   {displayName.charAt(0).toUpperCase()}
@@ -47,7 +42,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Link href={`/profile/${profile.username || profile.id}`}>
+              <Link href={`/profiles/${profile.username || profile.id}`}>
                 <h3 className="font-semibold text-gray-900 hover:text-tiffany-600 transition-colors truncate">
                   {displayName}
                 </h3>
@@ -63,7 +58,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
           </div>
 
           <div className="flex-shrink-0">
-            <Link href={`/profile/${profile.username || profile.id}`}>
+            <Link href={`/profiles/${profile.username || profile.id}`}>
               <Button size="sm" variant="outline">
                 <ExternalLink className="w-3 h-3 mr-1" />
                 View Profile
@@ -82,12 +77,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
         <Link href={`/profile/${profile.username || profile.id}`}>
           <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-tiffany-100 to-tiffany-200 mx-auto mb-4">
             {profile.avatar_url ? (
-              <Image
-                src={profile.avatar_url}
-                alt={displayName}
-                fill
-                className="object-cover"
-              />
+              <Image src={profile.avatar_url} alt={displayName} fill className="object-cover" />
             ) : (
               <DefaultAvatar size={80} className="rounded-full" />
             )}
@@ -95,7 +85,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
         </Link>
 
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Link href={`/profile/${profile.username || profile.id}`}>
+          <Link href={`/profiles/${profile.username || profile.id}`}>
             <h3 className="font-semibold text-gray-900 hover:text-tiffany-600 transition-colors">
               {displayName}
             </h3>
@@ -103,13 +93,9 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
           <TypeBadge />
         </div>
 
-        {profile.username && (
-          <p className="text-sm text-gray-500 mb-3">@{profile.username}</p>
-        )}
+        {profile.username && <p className="text-sm text-gray-500 mb-3">@{profile.username}</p>}
 
-        {profile.bio && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-3">{profile.bio}</p>
-        )}
+        {profile.bio && <p className="text-sm text-gray-600 mb-4 line-clamp-3">{profile.bio}</p>}
 
         <Link href={`/profile/${profile.username || profile.id}`}>
           <Button size="sm" variant="outline" className="w-full">
