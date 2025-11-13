@@ -229,16 +229,12 @@ export default function TwitterTimeline({
     const [error, setError] = useState<string | null>(null);
     const [postSuccess, setPostSuccess] = useState(false);
 
-    // Prompts that encourage sharing useful, actionable information
+    // Simple, frictionless prompts
     const helpfulPrompts = [
-      "What are you working on? Share what you're building and what would help you most...",
-      'What challenge are you facing? Others might have solutions or want to help...',
-      'What did you learn today that could help others? Share your insights...',
-      'What progress did you make? Include details so others can understand and support you...',
-      'What do you need help with? Be specific so people know how to assist...',
-      'What resource or tool did you discover? Share it so others can benefit...',
-      'What problem are you solving? Explain it clearly so others can contribute...',
-      "What milestone did you reach? Share the context and what's next...",
+      "What's on your mind?",
+      'Share an update...',
+      'What are you working on?',
+      'Share your progress...',
     ];
     const [currentPrompt] = useState(
       helpfulPrompts[Math.floor(Math.random() * helpfulPrompts.length)]

@@ -14,6 +14,9 @@ export type WalletCategory =
   | 'emergency'
   | 'transportation'
   | 'utilities'
+  | 'projects'
+  | 'legal'
+  | 'entertainment'
   | 'custom';
 
 // Constants for validation
@@ -65,6 +68,21 @@ export const WALLET_CATEGORIES: Record<
     icon: '💡',
     description: 'Power, water, internet bills',
   },
+  projects: {
+    label: 'Projects & Initiatives',
+    icon: '🚀',
+    description: 'Fund specific projects or initiatives',
+  },
+  legal: {
+    label: 'Legal & Advocacy',
+    icon: '⚖️',
+    description: 'Legal fees and advocacy work',
+  },
+  entertainment: {
+    label: 'Entertainment & Arts',
+    icon: '🎭',
+    description: 'Arts, entertainment, and creative projects',
+  },
   custom: {
     label: 'Other',
     icon: '📦',
@@ -82,6 +100,9 @@ export const ALLOWED_CATEGORY_ICONS = [
   '🚨',
   '🚗',
   '💡',
+  '🚀',
+  '⚖️',
+  '🎭',
   '📦',
 ] as const;
 

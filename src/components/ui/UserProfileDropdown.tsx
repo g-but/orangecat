@@ -137,7 +137,7 @@ export default function UserProfileDropdown({
   const handlePublicProfileClick = () => {
     const username = profile?.username;
     if (username) {
-      handleNavigation(`/profile/${username}`);
+      handleNavigation('/profile');
     } else {
       if (variant === 'advanced') {
         toast.error('Please set up your username first');
@@ -195,7 +195,9 @@ export default function UserProfileDropdown({
           className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 focus:outline-none disabled:opacity-50"
         >
           <span className="text-sm font-medium">{displayName}</span>
-          {isProfileLoading && <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-2" />}
+          {isProfileLoading && (
+            <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-2" />
+          )}
           <ChevronDown className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
@@ -267,7 +269,9 @@ export default function UserProfileDropdown({
         )}
         <span className="font-medium text-base max-w-[140px] truncate flex items-center">
           {firstName}
-          {isProfileLoading && <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-2" />}
+          {isProfileLoading && (
+            <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-2" />
+          )}
         </span>
         <ChevronDown
           className={`h-4 w-4 transition-transform duration-300 ease-out ${isOpen ? 'rotate-180' : ''}`}
@@ -286,7 +290,7 @@ export default function UserProfileDropdown({
             <div className="p-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
               <div className="flex items-center space-x-4">
                 <Link
-                  href={username ? `/profile/${username}` : '/profile'}
+                  href="/profile"
                   onClick={e => {
                     e.stopPropagation();
                     close();

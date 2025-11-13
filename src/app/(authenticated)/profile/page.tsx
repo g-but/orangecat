@@ -84,6 +84,7 @@ export default function ProfilePage() {
           userEmail={user.email}
           onSave={handleSave}
           onCancel={() => setMode('view')}
+          useWizard={true} // Use the step-by-step wizard for better UX
         />
       )}
     </>

@@ -156,7 +156,17 @@
       "Bash(git -C /home/g/dev/orangecat commit -m \"$(cat <<''EOF''\nfeat: Integrate multi-wallet system into profile pages\n\nChanges:\n- Add WalletManager to ModernProfileEditor for wallet management\n- Display categorized wallets on public profile pages with goals\n- Fetch wallets via /api/wallets endpoint\n- Add CRUD handlers (add, update, delete, refresh)\n- Keep legacy Bitcoin address display for backward compatibility\n- Install bitcoin-address-validation and bs58check for validation\n- Fix missing Clock import in TimelineComponent\n\nFeatures:\n- Users can manage up to 10 wallets per profile\n- Each wallet has category (🏠 Rent, 🍔 Food, etc.)\n- Goal tracking with progress bars\n- Balance display with refresh capability\n- Copy address to clipboard\n- Empty state prompts users to add wallets\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
       "Bash(git -C /home/g/dev/orangecat add:*)",
       "Bash(git -C /home/g/dev/orangecat commit -m \"docs: Update wallet integration plan - profile integration complete\")",
-      "Bash(git -C /home/g/dev/orangecat commit -m \"docs: Document project wallet integration approach for future implementation\")"
+      "Bash(git -C /home/g/dev/orangecat commit -m \"docs: Document project wallet integration approach for future implementation\")",
+      "Bash(git -C /home/g/dev/orangecat commit -m \"docs: Add comprehensive wallet system deployment guide\")",
+      "Bash(./apply-wallet-migration.sh:*)",
+      "Bash(git -C /home/g/dev/orangecat commit -m \"docs: Add step-by-step migration guide for manual execution\")",
+      "Bash(supabase link --project-ref ohkueislstxomdjavyhs)",
+      "Bash(tee:*)",
+      "Bash(npx next build:*)",
+      "Bash(git -C /home/g/dev/orangecat log --all --full-history --oneline -- src/chatbot src/components/ui/Chatbot.tsx)",
+      "Bash(git -C /home/g/dev/orangecat show HEAD~1:src/components/ui/Chatbot.tsx)",
+      "Bash(git -C /home/g/dev/orangecat log --all --pretty=format:\"%h %s\" --name-only)",
+      "Bash(PGPASSWORD=postgres psql:*)"
     ],
     "deny": [
       "Bash(rm **/.env.local)",
@@ -168,5 +178,7 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": ["shadcn"]
+  "enabledMcpjsonServers": [
+    "shadcn"
+  ]
 }
