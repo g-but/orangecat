@@ -10,7 +10,7 @@
 
 import { ComponentType, SVGProps } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Home, Users, Rocket, Settings, User, Compass } from 'lucide-react';
+import { Home, Users, Rocket, Settings, User, Compass, BookOpen, Globe } from 'lucide-react';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
 
 export interface NavigationItem {
@@ -33,11 +33,13 @@ export function getNavigationItems(user: User | null): NavigationItem[] {
     return [
       { name: 'Dashboard', href: '/dashboard' },
       { name: 'Discover', href: '/discover' },
+      { name: 'Community', href: '/community' },
     ];
   }
 
   return [
     { name: 'Discover', href: '/discover' },
+    { name: 'Community', href: '/community' },
     {
       name: 'About',
       children: [
@@ -86,6 +88,13 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
+        name: 'My Journey',
+        href: '/journey',
+        icon: BookOpen,
+        description: 'Your personal timeline and posts',
+        requiresAuth: true,
+      },
+      {
         name: 'My Projects',
         href: '/dashboard/projects',
         icon: Rocket,
@@ -113,6 +122,13 @@ export const navigationSections: NavSection[] = [
         href: '/discover',
         icon: Compass,
         description: 'Discover projects and people',
+        requiresAuth: false,
+      },
+      {
+        name: 'Community',
+        href: '/community',
+        icon: Globe,
+        description: 'Public timeline and community posts',
         requiresAuth: false,
       },
     ],

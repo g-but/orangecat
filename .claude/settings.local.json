@@ -144,7 +144,16 @@
       "Bash(printf:*)",
       "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c \"SELECT table_name, column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = ''public'' AND table_name IN (''profiles'', ''projects'', ''transactions'') ORDER BY table_name, ordinal_position;\")",
       "Bash(./apply-critical-fix.sh:*)",
-      "Bash(timeout 120s npm run build:*)"
+      "Bash(timeout 120s npm run build:*)",
+      "Bash(if [ -z \"$DATABASE_URL\" ])",
+      "Bash(then echo \"❌ DATABASE_URL not set. Checking .env.local...\")",
+      "Bash(else echo \"✅ DATABASE_URL is set\")",
+      "Bash(if [ -f .env.local ])",
+      "Bash(then grep -E \"DATABASE_URL|SUPABASE_DB\" .env.local)",
+      "Bash(else echo \"No .env.local file found\")",
+      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -f supabase/migrations/20251112000000_create_wallets_system_fixed.sql)",
+      "Bash(git -C /home/g/dev/orangecat commit -m \"$(cat <<''EOF''\nfeat: Integrate multi-wallet system into profile pages\n\nChanges:\n- Add WalletManager to ModernProfileEditor for wallet management\n- Display categorized wallets on public profile pages with goals\n- Fetch wallets via /api/wallets endpoint\n- Add CRUD handlers (add, update, delete, refresh)\n- Keep legacy Bitcoin address display for backward compatibility\n- Install bitcoin-address-validation and bs58check for validation\n\nFeatures:\n- Users can manage up to 10 wallets per profile\n- Each wallet has category (🏠 Rent, 🍔 Food, etc.)\n- Goal tracking with progress bars\n- Balance display with refresh capability\n- Copy address to clipboard\n- Empty state prompts users to add wallets\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git -C /home/g/dev/orangecat commit -m \"$(cat <<''EOF''\nfeat: Integrate multi-wallet system into profile pages\n\nChanges:\n- Add WalletManager to ModernProfileEditor for wallet management\n- Display categorized wallets on public profile pages with goals\n- Fetch wallets via /api/wallets endpoint\n- Add CRUD handlers (add, update, delete, refresh)\n- Keep legacy Bitcoin address display for backward compatibility\n- Install bitcoin-address-validation and bs58check for validation\n- Fix missing Clock import in TimelineComponent\n\nFeatures:\n- Users can manage up to 10 wallets per profile\n- Each wallet has category (🏠 Rent, 🍔 Food, etc.)\n- Goal tracking with progress bars\n- Balance display with refresh capability\n- Copy address to clipboard\n- Empty state prompts users to add wallets\n\n🤖 Generated with Claude Code\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [
       "Bash(rm **/.env.local)",
@@ -156,7 +165,5 @@
     ]
   },
   "enableAllProjectMcpServers": true,
-  "enabledMcpjsonServers": [
-    "shadcn"
-  ]
+  "enabledMcpjsonServers": ["shadcn"]
 }

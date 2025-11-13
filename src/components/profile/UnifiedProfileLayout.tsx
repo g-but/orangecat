@@ -29,6 +29,7 @@ import BitcoinWalletStatsCompact from '@/components/bitcoin/BitcoinWalletStatsCo
 import { ROUTES } from '@/lib/routes';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import ProfileShare from '@/components/sharing/ProfileShare';
+import { Wallet, WALLET_CATEGORIES } from '@/types/wallet';
 
 interface UnifiedProfileLayoutProps {
   profile: ScalableProfile;
@@ -55,13 +56,17 @@ export default function UnifiedProfileLayout({
   const [showShare, setShowShare] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [walletsLoading, setWalletsLoading] = useState(true);
   const shareButtonRef = useRef<HTMLDivElement>(null);
   const shareDropdownRef = useRef<HTMLDivElement>(null);
 
   // Check follow status on mount
   useEffect(() => {
     const checkFollowStatus = async () => {
-      if (!user?.id || isOwnProfile || !profile.id) return;
+      if (!user?.id || isOwnProfile || !profile.id) {
+        return;
+      }
 
       try {
         const response = await fetch(`/api/social/following/${user.id}`);
@@ -79,9 +84,36 @@ export default function UnifiedProfileLayout({
     checkFollowStatus();
   }, [user?.id, profile.id, isOwnProfile]);
 
+  // Fetch wallets for this profile
+  useEffect(() => {
+    const fetchWallets = async () => {
+      if (!profile.id) {
+        return;
+      }
+
+      try {
+        setWalletsLoading(true);
+        const response = await fetch(`/api/wallets?profile_id=${profile.id}`);
+        const data = await response.json();
+
+        if (response.ok && data.wallets) {
+          setWallets(data.wallets);
+        }
+      } catch (error) {
+        console.error('Failed to fetch wallets:', error);
+      } finally {
+        setWalletsLoading(false);
+      }
+    };
+
+    fetchWallets();
+  }, [profile.id]);
+
   // Handle follow/unfollow
   const handleFollowToggle = async () => {
-    if (!user?.id || !profile.id || isFollowLoading) return;
+    if (!user?.id || !profile.id || isFollowLoading) {
+      return;
+    }
 
     setIsFollowLoading(true);
     try {
@@ -277,40 +309,143 @@ export default function UnifiedProfileLayout({
               </div>
             </div>
 
-            {/* Bitcoin & Payment Details */}
-            {profile.bitcoin_address || profile.lightning_address ? (
+            {/* Bitcoin Wallets Section - Multi-Wallet System */}
+            {!walletsLoading && wallets.length > 0 && (
               <div className="space-y-4">
-                {/* Compact Donation Section */}
-                <BitcoinDonationCard
-                  bitcoinAddress={profile.bitcoin_address || undefined}
-                  lightningAddress={profile.lightning_address || undefined}
-                  balance={profile.bitcoin_balance || undefined}
-                />
+                <h3 className="text-lg font-bold flex items-center gap-2">
+                  <Bitcoin className="w-5 h-5 text-orange-500" />
+                  Support This Profile
+                </h3>
 
-                {/* Wallet Stats - Only show if has bitcoin address */}
-                {profile.bitcoin_address && (
-                  <BitcoinWalletStatsCompact address={profile.bitcoin_address} />
-                )}
-              </div>
-            ) : (
-              isOwnProfile && (
-                <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
-                  <div className="text-center text-gray-500 py-8">
-                    <Bitcoin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                    <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                      Accept Bitcoin Donations
-                    </h3>
-                    <p className="text-sm mb-4">
-                      Add your Bitcoin or Lightning address to start receiving donations
-                    </p>
-                    <Button variant="outline" onClick={() => onModeChange?.('edit')}>
-                      <Bitcoin className="w-4 h-4 mr-2" />
-                      Add Payment Details
-                    </Button>
-                  </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {wallets
+                    .filter(w => w.is_active)
+                    .map(wallet => {
+                      const categoryInfo = WALLET_CATEGORIES[wallet.category];
+                      const progressPercent = wallet.goal_amount
+                        ? (wallet.balance_btc / wallet.goal_amount) * 100
+                        : 0;
+
+                      return (
+                        <div
+                          key={wallet.id}
+                          className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6 hover:shadow-2xl transition-shadow"
+                        >
+                          <div className="flex items-start gap-3 mb-4">
+                            <span className="text-3xl">
+                              {wallet.category_icon || categoryInfo.icon}
+                            </span>
+                            <div className="flex-1">
+                              <h4 className="font-semibold flex items-center gap-2">
+                                {wallet.label}
+                                {wallet.is_primary && (
+                                  <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">
+                                    Primary
+                                  </span>
+                                )}
+                              </h4>
+                              {wallet.description && (
+                                <p className="text-sm text-gray-600 mt-1">{wallet.description}</p>
+                              )}
+                              <p className="text-xs text-gray-500 mt-1">{categoryInfo.label}</p>
+                            </div>
+                          </div>
+
+                          {/* Balance */}
+                          <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                            <div className="text-sm text-gray-600 mb-1">Current Balance</div>
+                            <div className="text-xl font-bold text-orange-600">
+                              {wallet.balance_btc.toFixed(8)} BTC
+                            </div>
+                          </div>
+
+                          {/* Goal progress */}
+                          {wallet.goal_amount && (
+                            <div className="mb-3">
+                              <div className="flex justify-between text-sm mb-1">
+                                <span className="text-gray-600">Goal</span>
+                                <span className="font-medium">
+                                  {wallet.balance_btc.toFixed(4)} / {wallet.goal_amount}{' '}
+                                  {wallet.goal_currency}
+                                </span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-2">
+                                <div
+                                  className="bg-orange-500 h-2 rounded-full transition-all"
+                                  style={{ width: `${Math.min(progressPercent, 100)}%` }}
+                                />
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                {progressPercent.toFixed(1)}% funded
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Address with copy button */}
+                          <div className="pt-3 border-t">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-gray-500">
+                                {wallet.wallet_type === 'xpub'
+                                  ? 'Extended Public Key'
+                                  : 'Bitcoin Address'}
+                              </span>
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(wallet.address_or_xpub);
+                                  toast.success('Address copied to clipboard');
+                                }}
+                                className="text-xs text-orange-600 hover:text-orange-700 font-medium"
+                              >
+                                <Copy className="w-3 h-3 inline mr-1" />
+                                Copy
+                              </button>
+                            </div>
+                            <code className="text-xs text-gray-700 block font-mono break-all bg-gray-50 p-2 rounded">
+                              {wallet.address_or_xpub.slice(0, 20)}...
+                              {wallet.address_or_xpub.slice(-10)}
+                            </code>
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
-              )
+              </div>
             )}
+
+            {/* Empty state for own profile */}
+            {!walletsLoading && wallets.length === 0 && isOwnProfile && (
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
+                <div className="text-center text-gray-500 py-8">
+                  <Bitcoin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                    Accept Bitcoin Donations
+                  </h3>
+                  <p className="text-sm mb-4">
+                    Add Bitcoin wallets to start receiving donations from supporters
+                  </p>
+                  <Button variant="outline" onClick={() => onModeChange?.('edit')}>
+                    <Bitcoin className="w-4 h-4 mr-2" />
+                    Add Wallets
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Legacy Bitcoin Address - Keep for backward compatibility */}
+            {!walletsLoading &&
+              wallets.length === 0 &&
+              (profile.bitcoin_address || profile.lightning_address) && (
+                <div className="space-y-4">
+                  <BitcoinDonationCard
+                    bitcoinAddress={profile.bitcoin_address || undefined}
+                    lightningAddress={profile.lightning_address || undefined}
+                    balance={profile.bitcoin_balance || undefined}
+                  />
+                  {profile.bitcoin_address && (
+                    <BitcoinWalletStatsCompact address={profile.bitcoin_address} />
+                  )}
+                </div>
+              )}
 
             {/* Projects List */}
             <ProfileProjectsList userId={profile.id} isOwnProfile={isOwnProfile} />

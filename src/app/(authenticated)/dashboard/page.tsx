@@ -5,6 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
 import { useAnalytics } from '@/hooks/useAnalytics';
+import { timelineService } from '@/services/timeline';
+import TimelineComponent from '@/components/timeline/TimelineComponent';
+import { TimelineFeedResponse } from '@/types/timeline';
+import { useTimelineEvents } from '@/hooks/useTimelineEvents';
 import { logger } from '@/utils/logger';
 import Loading from '@/components/Loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -26,6 +30,7 @@ import {
   ExternalLink,
   Edit3,
   Zap,
+  RefreshCw,
 } from 'lucide-react';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PROFILE_CATEGORIES } from '@/types/profile';
@@ -34,9 +39,13 @@ export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated, session } = useAuth();
   const { projects, drafts, loadProjects, isLoading: projectLoading, getStats } = useProjectStore();
   const { metrics, isLoading: analyticsLoading } = useAnalytics();
+  const { dispatchProjectCreated } = useTimelineEvents(); // Enable automatic timeline event creation
   const router = useRouter();
   const [localLoading, setLocalLoading] = useState(true);
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [timelineFeed, setTimelineFeed] = useState<TimelineFeedResponse | null>(null);
+  const [timelineLoading, setTimelineLoading] = useState(false);
+  const [timelineError, setTimelineError] = useState<string | null>(null);
 
   useEffect(() => {
     if (hydrated) {
@@ -54,6 +63,13 @@ export default function DashboardPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, hydrated]);
 
+  // Load timeline feed when user is available
+  useEffect(() => {
+    if (user?.id && hydrated) {
+      loadTimelineFeed(user.id);
+    }
+  }, [user?.id, hydrated]);
+
   // Reload projects when returning to dashboard (e.g., after creating a project)
   useEffect(() => {
     const handleFocus = () => {
@@ -61,6 +77,8 @@ export default function DashboardPage() {
         loadProjects(user.id).catch(error => {
           logger.error('Failed to reload projects on focus', { error }, 'Dashboard');
         });
+        // Also reload timeline
+        loadTimelineFeed(user.id);
       }
     };
 
@@ -68,6 +86,20 @@ export default function DashboardPage() {
     return () => window.removeEventListener('focus', handleFocus);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, hydrated]);
+
+  const loadTimelineFeed = async (userId: string) => {
+    setTimelineLoading(true);
+    setTimelineError(null);
+    try {
+      const feed = await timelineService.getEnrichedUserFeed(userId);
+      setTimelineFeed(feed);
+    } catch (error) {
+      logger.error('Failed to load timeline feed', error, 'Dashboard');
+      setTimelineError('Failed to load timeline');
+    } finally {
+      setTimelineLoading(false);
+    }
+  };
 
   // FIXED: Handle authentication redirect with proper client-side check
   useEffect(() => {
@@ -83,8 +115,8 @@ export default function DashboardPage() {
 
   // CRITICAL: All hooks must be called before any early returns (Rules of Hooks)
   // Get project stats - ensure projects is an array before using reduce
-  const safeProjects = useMemo(() => Array.isArray(projects) ? projects : [], [projects]);
-  const safeDrafts = useMemo(() => Array.isArray(drafts) ? drafts : [], [drafts]);
+  const safeProjects = useMemo(() => (Array.isArray(projects) ? projects : []), [projects]);
+  const safeDrafts = useMemo(() => (Array.isArray(drafts) ? drafts : []), [drafts]);
   const stats = useMemo(() => getStats(), [projects, drafts, getStats]);
   const totalProjects = stats.totalProjects;
 
@@ -137,7 +169,10 @@ export default function DashboardPage() {
 
   // Get primary draft for urgent actions - MEMOIZED
   const hasAnyDraft = useMemo(() => safeDrafts.length > 0, [safeDrafts]);
-  const primaryDraft = useMemo(() => (hasAnyDraft ? safeDrafts[0] : null), [hasAnyDraft, safeDrafts]);
+  const primaryDraft = useMemo(
+    () => (hasAnyDraft ? safeDrafts[0] : null),
+    [hasAnyDraft, safeDrafts]
+  );
   const totalDrafts = useMemo(() => safeDrafts.length, [safeDrafts]);
 
   // Get featured project (most recent published or highest funded) - MEMOIZED
@@ -145,10 +180,16 @@ export default function DashboardPage() {
     const publishedProjects = safeProjects.filter(p => !p.isDraft);
     if (publishedProjects.length > 0) {
       // Sort by funding amount (highest first) - use spread to avoid mutation
-      return [...publishedProjects].sort((a, b) => (b.total_funding || 0) - (a.total_funding || 0))[0];
+      return [...publishedProjects].sort(
+        (a, b) => (b.total_funding || 0) - (a.total_funding || 0)
+      )[0];
     }
     // Fallback: look for Orange Cat project or first project
-    return safeProjects.find(c => c.title?.toLowerCase().includes('orange cat')) || safeProjects[0] || null;
+    return (
+      safeProjects.find(c => c.title?.toLowerCase().includes('orange cat')) ||
+      safeProjects[0] ||
+      null
+    );
   }, [safeProjects]);
 
   // Profile category for display (use profile_type if available, default to individual) - MEMOIZED
@@ -698,8 +739,8 @@ export default function DashboardPage() {
                                     amount={totalFunding}
                                     currency={projectCurrency}
                                     size="sm"
-                                  />
-                                  {' '}raised
+                                  />{' '}
+                                  raised
                                 </span>
                                 <span className="text-sm font-medium text-bitcoinOrange">
                                   {progressPercentage.toFixed(0)}%
@@ -712,11 +753,13 @@ export default function DashboardPage() {
                                 />
                               </div>
                               <div className="text-xs text-gray-500">
-                                of <CurrencyDisplay
+                                of{' '}
+                                <CurrencyDisplay
                                   amount={goalAmount}
                                   currency={projectCurrency}
                                   size="sm"
-                                /> goal
+                                />{' '}
+                                goal
                               </div>
                             </div>
                           ) : (
@@ -726,8 +769,8 @@ export default function DashboardPage() {
                                   amount={totalFunding}
                                   currency={projectCurrency}
                                   size="sm"
-                                />
-                                {' '}raised
+                                />{' '}
+                                raised
                               </div>
                             </div>
                           )}
@@ -745,7 +788,11 @@ export default function DashboardPage() {
                         {/* Action Buttons */}
                         <div className="flex gap-2 flex-shrink-0">
                           <Link href={`/projects/${project.id}`}>
-                            <Button variant="outline" size="sm" className="hover:bg-bitcoinOrange/10 hover:border-bitcoinOrange">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="hover:bg-bitcoinOrange/10 hover:border-bitcoinOrange"
+                            >
                               <Eye className="w-4 h-4 mr-1" />
                               View
                             </Button>
@@ -800,29 +847,60 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Recent Activity */}
-        {totalProjects > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
-              <CardDescription>Latest updates from your projects</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
+        {/* Timeline Activity Feed */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Activity Feed</CardTitle>
+            <CardDescription>Your timeline of activities, donations, and updates</CardDescription>
+          </CardHeader>
+          <CardContent className="p-6">
+            {timelineLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading your activity feed...</p>
+              </div>
+            ) : timelineError ? (
+              <div className="text-center py-8 text-red-600">
+                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+                <p className="mb-2">Failed to load timeline</p>
+                <p className="text-sm text-gray-500 mb-4">{timelineError}</p>
+                <Button variant="outline" onClick={() => user?.id && loadTimelineFeed(user.id)}>
+                  Try Again
+                </Button>
+              </div>
+            ) : timelineFeed ? (
+              <TimelineComponent
+                feed={timelineFeed}
+                onLoadMore={() => {
+                  // TODO: Implement pagination loading
+                  logger.info('Load more timeline events requested', {}, 'Dashboard');
+                }}
+                showFilters={true}
+                compact={false}
+              />
+            ) : (
               <div className="text-center py-8 text-gray-500">
                 <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p className="mb-2">Activity tracking coming soon</p>
+                <p className="mb-2">No activity yet</p>
                 <p className="text-sm text-gray-400 mb-4">
-                  We're building features to show donations, updates, and engagement metrics here.
+                  Your timeline will show activities as you interact with projects and other users.
                 </p>
-                <Link href="/dashboard/projects">
-                  <Button variant="outline" className="mt-4">
-                    View All Projects
-                  </Button>
-                </Link>
+                <div className="flex gap-2 justify-center">
+                  <Link href="/projects/create">
+                    <Button variant="outline" size="sm">
+                      Create Project
+                    </Button>
+                  </Link>
+                  <Link href="/discover">
+                    <Button variant="outline" size="sm">
+                      Explore Projects
+                    </Button>
+                  </Link>
+                </div>
               </div>
-            </CardContent>
-          </Card>
-        )}
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
