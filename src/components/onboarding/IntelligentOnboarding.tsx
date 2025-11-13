@@ -14,6 +14,7 @@ import {
   DollarSign,
   Globe,
   Zap,
+  Building,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
@@ -315,7 +316,8 @@ export default function IntelligentOnboarding() {
             <h3 className="text-xl font-semibold text-orange-800">Create Your Personal Project</h3>
           </div>
           <p className="text-orange-700 mb-4">
-            Start your Bitcoin fundraising journey with a personal project. Full control, transparency, and direct connection with supporters.
+            Start your Bitcoin fundraising journey with a personal project. Full control,
+            transparency, and direct connection with supporters.
           </p>
           <Button
             data-testid="onboarding-create-personal"
@@ -336,7 +338,9 @@ export default function IntelligentOnboarding() {
             <Globe className="w-6 h-6 text-gray-600" />
             <h3 className="text-lg font-semibold text-gray-800">Explore Existing Projects</h3>
           </div>
-          <p className="text-sm text-gray-600">See how others are using OrangeCat for Bitcoin fundraising.</p>
+          <p className="text-sm text-gray-600">
+            See how others are using OrangeCat for Bitcoin fundraising.
+          </p>
         </Card>
 
         <Card
@@ -347,7 +351,9 @@ export default function IntelligentOnboarding() {
             <Sparkles className="w-6 h-6 text-gray-600" />
             <h3 className="text-lg font-semibold text-gray-800">Learn About Bitcoin</h3>
           </div>
-          <p className="text-sm text-gray-600">New to Bitcoin? Get started with our educational resources.</p>
+          <p className="text-sm text-gray-600">
+            New to Bitcoin? Get started with our educational resources.
+          </p>
         </Card>
       </div>
     </div>
