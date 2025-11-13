@@ -214,13 +214,39 @@ PGPASSWORD="..." psql ... -c "\d public.wallets"
 
 ---
 
-## 📋 Step 3: Project Integration (Later)
+## 📋 Step 3: Project Integration (Future Phase)
 
-Same pattern as profiles:
+**Status:** Documented, ready for implementation
 
-- Add WalletManager to project edit forms
-- Display wallets on project detail pages
-- Use `?project_id=` instead of `?profile_id=`
+Project integration will follow the same pattern as profiles:
+
+### A. Project Edit/Creation
+
+**Target Files:**
+
+- `src/components/create/CreateCampaignForm.tsx` - Project creation form
+- Or create a `ProjectEditor` component similar to `ModernProfileEditor`
+
+**Changes:**
+
+1. Replace single `bitcoin_address` field with `WalletManager`
+2. Add wallet state and CRUD handlers (same as profiles)
+3. Use `?project_id=` instead of `?profile_id=` in API calls
+
+### B. Project Detail Page
+
+**Target Files:**
+
+- `src/components/project/ProjectPageClient.tsx` - Main project display
+- `src/app/projects/[id]/page.tsx` - Server component
+
+**Changes:**
+
+1. Fetch wallets with `?project_id=${projectId}`
+2. Display wallet cards (same UI as profiles)
+3. Keep `MissingWalletBanner` for backward compatibility
+
+**Note:** Project integration is deferred to focus on profile functionality first. The API and database already support projects via the `project_id` field.
 
 ---
 
