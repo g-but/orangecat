@@ -11,15 +11,33 @@ export const profileSchema = z.object({
     .regex(
       /^[a-zA-Z0-9_-]+$/,
       'Username can only contain letters, numbers, underscores, and hyphens'
-    )
+    ), // Required field - no optional/nullable
+  name: z.string().max(100).optional().nullable().or(z.literal('')),
+  bio: z.string().max(500).optional().nullable().or(z.literal('')),
+  // Structured location fields for better search functionality
+  location_country: z
+    .string()
+    .max(2)
     .optional()
-    .nullable(),
-  name: z.string().max(100).optional().nullable(),
-  bio: z.string().max(500).optional().nullable(),
-  location: z.string().max(100).optional().nullable(),
+    .nullable()
+    .refine(val => !val || val.length === 2, {
+      message: 'Country code must be 2 characters (ISO 3166-1 alpha-2)',
+    })
+    .or(z.literal('')),
+  location_city: z.string().max(100).optional().nullable().or(z.literal('')),
+  location_zip: z.string().max(20).optional().nullable().or(z.literal('')),
+  location_search: z.string().optional().nullable().or(z.literal('')),
+  latitude: z.number().optional().nullable(),
+  longitude: z.number().optional().nullable(),
+  // Extended transparency fields
+  background: z.string().max(1000).optional().nullable().or(z.literal('')),
+  inspiration_statement: z.string().max(500).optional().nullable().or(z.literal('')),
+  location_context: z.string().max(300).optional().nullable().or(z.literal('')),
+  // Legacy location field (deprecated but kept for backward compatibility)
+  location: z.string().max(100).optional().nullable().or(z.literal('')),
   avatar_url: z.string().url().optional().nullable().or(z.literal('')),
   banner_url: z.string().url().optional().nullable().or(z.literal('')),
-  website: z.string().max(200).optional().nullable(),
+  website: z.string().max(200).optional().nullable().or(z.literal('')),
   bitcoin_address: z
     .string()
     .regex(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/, 'Invalid Bitcoin address format')
@@ -91,6 +109,20 @@ export function normalizeProfileData(data: any): ProfileData {
     if (website && !website.match(/^https?:\/\//i)) {
       normalized.website = `https://${website}`;
     }
+  }
+
+  // Normalize country code to uppercase if provided
+  if (normalized.location_country && typeof normalized.location_country === 'string') {
+    normalized.location_country = normalized.location_country.trim().toUpperCase();
+  }
+
+  // Trim and clean location fields
+  if (normalized.location_city && typeof normalized.location_city === 'string') {
+    normalized.location_city = normalized.location_city.trim();
+  }
+
+  if (normalized.location_zip && typeof normalized.location_zip === 'string') {
+    normalized.location_zip = normalized.location_zip.trim();
   }
 
   // Normalize empty strings to undefined for optional fields

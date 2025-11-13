@@ -47,6 +47,9 @@ const DynamicSpeedInsights = lazy(() =>
 );
 const DynamicUnifiedHeader = lazy(() => import('@/components/layout/UnifiedHeader'));
 const DynamicFooter = lazy(() => import('@/components/layout/Footer'));
+const DynamicChatbot = lazy(() =>
+  import('@/components/ui/SimpleChatbot').then(module => ({ default: module.SimpleChatbot }))
+);
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers();
@@ -279,6 +282,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {/* Speed Insights */}
             <Suspense fallback={null}>
               <DynamicSpeedInsights />
+            </Suspense>
+
+            {/* Simple Chatbot Assistant - Lazy loaded */}
+            <Suspense fallback={null}>
+              <DynamicChatbot />
             </Suspense>
           </ClientErrorBoundary>
         </div>

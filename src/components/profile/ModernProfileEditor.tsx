@@ -4,7 +4,20 @@ import { useState, useRef, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import { Save, X, MapPin, Link as LinkIcon, User, Camera, Bitcoin, Zap } from 'lucide-react';
+import {
+  Save,
+  X,
+  MapPin,
+  Link as LinkIcon,
+  User,
+  Camera,
+  Bitcoin,
+  Zap,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+} from 'lucide-react';
+import { LocationAutocomplete } from '@/components/ui/LocationAutocomplete';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -19,10 +32,12 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { toast } from 'sonner';
-import { Profile, ProfileFormData } from '@/types/database';
+import { Profile } from '@/types/profile';
+import { ProfileFormData } from '@/types/database';
 import { ProfileStorageService } from '@/services/profile/storage';
 import { WalletManager } from '@/components/wallets/WalletManager';
 import { Wallet, WalletFormData } from '@/types/wallet';
+import ProfileWizard from './ProfileWizard';
 
 // Import server-side schema to keep validation consistent
 import { profileSchema as serverProfileSchema, normalizeProfileData } from '@/lib/validation';
@@ -119,6 +134,7 @@ interface ModernProfileEditorProps {
   userEmail?: string;
   onSave: (data: ProfileFormData) => Promise<void>;
   onCancel: () => void;
+  useWizard?: boolean; // Whether to use the step-by-step wizard
 }
 
 export default function ModernProfileEditor({
@@ -127,6 +143,7 @@ export default function ModernProfileEditor({
   userEmail,
   onSave,
   onCancel,
+  useWizard = false,
 }: ModernProfileEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -136,6 +153,9 @@ export default function ModernProfileEditor({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
 
+  // Get user from auth context or props
+  const user = { id: userId };
+
   // Form setup with default values
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -144,6 +164,13 @@ export default function ModernProfileEditor({
       username: profile.username || userEmail?.split('@')[0] || '',
       name: profile.name || '',
       bio: profile.bio || '',
+      location_country: profile.location_country || '',
+      location_city: profile.location_city || '',
+      location_zip: profile.location_zip || '',
+      location_search: profile.location_search || '',
+      latitude: profile.latitude || undefined,
+      longitude: profile.longitude || undefined,
+      // Keep legacy location for backward compatibility
       location: profile.location || '',
       avatar_url: profile.avatar_url || '',
       banner_url: profile.banner_url || '',
@@ -326,6 +353,19 @@ export default function ModernProfileEditor({
     }
   };
 
+  // Use wizard if requested
+  if (useWizard) {
+    return (
+      <ProfileWizard
+        profile={profile}
+        userId={userId}
+        userEmail={userEmail}
+        onSave={onSave}
+        onCancel={onCancel}
+      />
+    );
+  }
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
@@ -372,7 +412,12 @@ export default function ModernProfileEditor({
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-gray-700">Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="Your display name" className="text-lg" {...field} />
+                        <Input
+                          placeholder="Your display name"
+                          className="text-lg"
+                          {...field}
+                          value={field.value || ''}
+                        />
                       </FormControl>
                       <FormDescription className="text-xs text-gray-500">
                         This is how others will see you
@@ -394,6 +439,7 @@ export default function ModernProfileEditor({
                           placeholder="Tell your story..."
                           className="min-h-[80px] resize-none"
                           {...field}
+                          value={field.value || ''}
                         />
                       </FormControl>
                       <FormDescription className="text-xs text-gray-500">
@@ -404,10 +450,10 @@ export default function ModernProfileEditor({
                   )}
                 />
 
-                {/* Location */}
+                {/* Location - Smart autocomplete */}
                 <FormField
                   control={form.control}
-                  name="location"
+                  name="location_search"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-2">
@@ -415,12 +461,49 @@ export default function ModernProfileEditor({
                         Location
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="Where are you based?" {...field} />
+                        <LocationAutocomplete
+                          value={field.value || ''}
+                          onChange={locationData => {
+                            if (locationData) {
+                              // Update the structured location fields
+                              form.setValue('location_country', locationData.country);
+                              form.setValue('location_city', locationData.city);
+                              form.setValue('location_zip', locationData.zipCode);
+                              form.setValue('location_search', locationData.formattedAddress);
+
+                              // Store coordinates if available (for future use)
+                              if (locationData.latitude && locationData.longitude) {
+                                form.setValue('latitude', locationData.latitude);
+                                form.setValue('longitude', locationData.longitude);
+                              }
+                            } else {
+                              // Clear location data
+                              form.setValue('location_country', '');
+                              form.setValue('location_city', '');
+                              form.setValue('location_zip', '');
+                              form.setValue('location_search', '');
+                              form.setValue('latitude', undefined);
+                              form.setValue('longitude', undefined);
+                            }
+                          }}
+                          placeholder="Search for your city or address..."
+                        />
                       </FormControl>
+                      <FormDescription className="text-xs text-gray-500">
+                        Start typing to find your location. This helps local people and projects
+                        find you.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {/* Hidden fields for structured location data */}
+                <input type="hidden" {...form.register('location_country')} />
+                <input type="hidden" {...form.register('location_city')} />
+                <input type="hidden" {...form.register('location_zip')} />
+                <input type="hidden" {...form.register('latitude')} />
+                <input type="hidden" {...form.register('longitude')} />
 
                 {/* Website */}
                 <FormField
@@ -433,7 +516,11 @@ export default function ModernProfileEditor({
                         Website
                       </FormLabel>
                       <FormControl>
-                        <Input placeholder="https://your-website.com" {...field} />
+                        <Input
+                          placeholder="https://your-website.com"
+                          {...field}
+                          value={field.value || ''}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -444,22 +531,30 @@ export default function ModernProfileEditor({
                 <FormField
                   control={form.control}
                   name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">
-                        Username <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                            @
-                          </span>
-                          <Input placeholder="your_unique_username" className="pl-8" {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const { value, ...rest } = field;
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          Username <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                              @
+                            </span>
+                            <Input
+                              placeholder="your_unique_username"
+                              className="pl-8"
+                              {...rest}
+                              value={value || ''}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 {/* Multi-Wallet System */}
