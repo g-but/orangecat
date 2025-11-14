@@ -5,9 +5,10 @@ import TimelineLayout from './TimelineLayout';
 import { TimelineFeedResponse } from '@/types/timeline';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
-import { LucideIcon, TrendingUp, Clock, Flame, Plus } from 'lucide-react';
+import { LucideIcon, TrendingUp, Clock, Flame, Plus, Globe, Lock } from 'lucide-react';
 import { logger } from '@/utils/logger';
 import { Card, CardContent } from '@/components/ui/Card';
+import supabase from '@/lib/supabase/browser';
 
 /**
  * TwitterTimeline Component - Unified Twitter-like Timeline
@@ -229,6 +230,10 @@ export default function TwitterTimeline({
     const [isPosting, setIsPosting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [postSuccess, setPostSuccess] = useState(false);
+    const [visibility, setVisibility] = useState<'public' | 'private'>('public');
+    const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+    const [userProjects, setUserProjects] = useState<any[]>([]);
+    const [loadingProjects, setLoadingProjects] = useState(false);
 
     // Determine whose timeline we're posting on
     const postingOnOwnTimeline = !timelineOwnerId || timelineOwnerId === user?.id;
@@ -252,6 +257,37 @@ export default function TwitterTimeline({
       helpfulPrompts[Math.floor(Math.random() * helpfulPrompts.length)]
     );
 
+    // Load user's projects for cross-posting (only for journey mode)
+    useEffect(() => {
+      const loadUserProjects = async () => {
+        if (mode !== 'journey' || !user?.id) {
+          return;
+        }
+
+        setLoadingProjects(true);
+        try {
+          const { data, error } = await supabase
+            .from('projects')
+            .select('id, title')
+            .eq('creator_id', user.id)
+            .eq('status', 'published')
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+          if (error) {
+            throw error;
+          }
+          setUserProjects(data || []);
+        } catch (err) {
+          logger.error('Failed to load user projects', err, 'InlinePostComposer');
+        } finally {
+          setLoadingProjects(false);
+        }
+      };
+
+      loadUserProjects();
+    }, [mode, user?.id]);
+
     const handlePost = async () => {
       if (!content.trim() || isPosting || !user?.id) {
         return;
@@ -268,14 +304,14 @@ export default function TwitterTimeline({
           actorId: user.id, // WHO is writing (always the authenticated user)
           subjectType: timelineOwnerType, // WHOSE timeline it appears on
           subjectId: timelineOwnerId || user.id, // Default to own timeline if not specified
-          title: postingOnOwnTimeline ? 'Shared an update' : `Posted on ${targetName}`,
+          title: '', // No title for user posts (Twitter/X style)
           description: content.trim(),
-          visibility: 'public',
+          visibility: visibility,
           metadata: {
-            content: content.trim(),
             is_user_post: true,
             cross_posted: !postingOnOwnTimeline,
             timeline_owner: timelineOwnerName,
+            cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
           },
         });
 
@@ -283,7 +319,30 @@ export default function TwitterTimeline({
           throw new Error(result.error || 'Failed to create post');
         }
 
+        // Cross-post to selected projects
+        if (selectedProjects.length > 0) {
+          await Promise.all(
+            selectedProjects.map(projectId =>
+              timelineService.createEvent({
+                eventType: 'status_update',
+                actorId: user.id,
+                subjectType: 'project',
+                subjectId: projectId,
+                title: '', // No title for user posts
+                description: content.trim(),
+                visibility: visibility, // Use same visibility
+                metadata: {
+                  is_user_post: true,
+                  cross_posted_from_journey: true,
+                },
+              })
+            )
+          );
+        }
+
         setContent('');
+        setSelectedProjects([]);
+        setVisibility('public'); // Reset visibility
         setPostSuccess(true);
         setTimeout(() => setPostSuccess(false), 3000);
 
@@ -351,6 +410,44 @@ export default function TwitterTimeline({
                 disabled={isPosting}
               />
 
+              {/* Project Selection - Only for journey mode */}
+              {mode === 'journey' && userProjects.length > 0 && (
+                <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Also post to projects (optional):
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {userProjects.map(project => (
+                      <button
+                        key={project.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedProjects(prev =>
+                            prev.includes(project.id)
+                              ? prev.filter(id => id !== project.id)
+                              : [...prev, project.id]
+                          );
+                        }}
+                        className={`px-3 py-1 text-sm rounded-full border transition-colors ${
+                          selectedProjects.includes(project.id)
+                            ? 'bg-orange-500 text-white border-orange-500'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-orange-300'
+                        }`}
+                        disabled={isPosting}
+                      >
+                        {project.title}
+                      </button>
+                    ))}
+                  </div>
+                  {selectedProjects.length > 0 && (
+                    <p className="mt-2 text-xs text-gray-600">
+                      This post will appear on {selectedProjects.length} project timeline
+                      {selectedProjects.length > 1 ? 's' : ''}
+                    </p>
+                  )}
+                </div>
+              )}
+
               {/* Error/Success Messages */}
               {error && (
                 <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
@@ -365,15 +462,43 @@ export default function TwitterTimeline({
 
               {/* Post Actions */}
               <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
-                <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap">
+                  {/* Visibility Toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setVisibility(visibility === 'public' ? 'private' : 'public')}
+                    disabled={isPosting}
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-medium transition-colors border disabled:opacity-50 disabled:cursor-not-allowed"
+                    style={{
+                      backgroundColor:
+                        visibility === 'public' ? 'rgb(254 249 195)' : 'rgb(243 244 246)',
+                      borderColor: visibility === 'public' ? 'rgb(251 191 36)' : 'rgb(209 213 219)',
+                      color: visibility === 'public' ? 'rgb(146 64 14)' : 'rgb(75 85 99)',
+                    }}
+                    title={visibility === 'public' ? 'Everyone can see' : 'Only you can see'}
+                  >
+                    {visibility === 'public' ? (
+                      <>
+                        <Globe className="w-3.5 h-3.5" />
+                        <span>Public</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-3.5 h-3.5" />
+                        <span>Private</span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Character Count */}
                   <div
                     className={`text-sm font-medium ${content.length > 450 ? 'text-red-500' : content.length > 400 ? 'text-orange-500' : 'text-gray-500'}`}
                   >
                     {content.length}/500
                   </div>
-                  <div className="text-xs text-gray-400 hidden sm:block">
-                    Press Ctrl+Enter to post
-                  </div>
+
+                  {/* Keyboard Hint */}
+                  <div className="text-xs text-gray-400 hidden sm:block">Ctrl+Enter to post</div>
                 </div>
                 <Button
                   onClick={handlePost}
