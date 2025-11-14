@@ -1025,6 +1025,54 @@ class TimelineService {
     }
   }
 
+  /**
+   * Update event content (title, description, metadata)
+   */
+  async updateEvent(
+    eventId: string,
+    updates: {
+      title?: string;
+      description?: string;
+      visibility?: TimelineVisibility;
+      metadata?: Record<string, any>;
+    }
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const updateData: any = {};
+
+      if (updates.title !== undefined) {
+        updateData.title = updates.title;
+      }
+
+      if (updates.description !== undefined) {
+        updateData.description = updates.description;
+      }
+
+      if (updates.visibility !== undefined) {
+        updateData.visibility = updates.visibility;
+      }
+
+      if (updates.metadata !== undefined) {
+        updateData.metadata = updates.metadata;
+      }
+
+      updateData.updated_at = new Date().toISOString();
+
+      const { error } = await supabase.from('timeline_events').update(updateData).eq('id', eventId);
+
+      if (error) {
+        logger.error('Failed to update timeline event', error, 'Timeline');
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating timeline event', error, 'Timeline');
+      return { success: false, error: errorMessage };
+    }
+  }
+
   // ==================== DEMO DATA METHODS ====================
 
   /**

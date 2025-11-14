@@ -1,8 +1,8 @@
--- Migration: Create Enriched Timeline View to Eliminate N+1 Queries
+-- Migration: Create Enriched Timeline View to Eliminate N+1 Queries (PRODUCTION VERSION)
 -- Created: 2025-11-13
 -- Purpose: Pre-join actor and subject data to avoid N+1 query hell
 -- Performance: 20-50x faster feed loads (2000ms → 100ms)
--- Note: Counts will be added later when social features tables are created
+-- Note: Uses only columns that exist in production schema
 
 BEGIN;
 
@@ -43,10 +43,8 @@ SELECT
   jsonb_build_object(
     'id', actor.id,
     'username', actor.username,
-    'full_name', actor.full_name,
     'avatar_url', actor.avatar_url,
     'display_name', actor.display_name,
-    'bio', actor.bio,
     'created_at', actor.created_at
   ) as actor_data,
 
@@ -55,10 +53,8 @@ SELECT
     WHEN 'profile' THEN jsonb_build_object(
       'id', subject_profile.id,
       'username', subject_profile.username,
-      'full_name', subject_profile.full_name,
       'avatar_url', subject_profile.avatar_url,
       'display_name', subject_profile.display_name,
-      'bio', subject_profile.bio,
       'type', 'profile'
     )
     WHEN 'project' THEN jsonb_build_object(

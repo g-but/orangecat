@@ -28,6 +28,7 @@ docs/
 ├── getting-started/     # 🚀 Onboarding & setup
 ├── architecture/        # 🏗️ System design & architecture
 ├── development/         # 💻 Development guides & workflows
+├── workflows/           # 🔄 Proven operational workflows
 ├── features/            # ✨ Feature documentation
 ├── operations/          # 🔧 Operations & maintenance
 ├── deployment/          # 🚢 Deployment guides
@@ -57,6 +58,12 @@ docs/
 - **[Hooks Guide](./development/hooks-guide.md)** - Custom React hooks
 - **[Utils Guide](./development/utils-guide.md)** - Utility functions
 - **[Types Guide](./development/types-guide.md)** - TypeScript types
+
+### **Workflows**
+
+- **[Supabase Migration Workflow](./workflows/SUPABASE_MIGRATION_WORKFLOW.md)** - Complete migration guide
+- **[Migration Quick Reference](./workflows/MIGRATION_QUICK_REFERENCE.md)** - Fast lookup for common tasks
+- **[Migration Lessons Learned](./workflows/MIGRATION_LESSONS_LEARNED.md)** - What we learned from failures
 
 ### **Database**
 
@@ -91,7 +98,7 @@ docs/
 ### Development
 
 - **Setting up local environment**: See [Development Setup](./development/SETUP.md)
-- **Running migrations**: See [Migrations Guide](./supabase/migrations-guide.md)
+- **Running migrations**: See [Migration Workflow](./workflows/SUPABASE_MIGRATION_WORKFLOW.md) or [Quick Reference](./workflows/MIGRATION_QUICK_REFERENCE.md)
 - **Creating components**: See [Component Architecture](./components/component-architecture.md)
 - **Writing tests**: See [Test Guide](./testing/test-guide.md)
 
@@ -134,10 +141,11 @@ Use your IDE's search (Ctrl+Shift+F) to search across all documentation files.
 
 ### **Recently Updated**
 
+- **[Supabase Migration Workflow](./workflows/SUPABASE_MIGRATION_WORKFLOW.md)** - 2025-11-14 ⭐ NEW
+- **[Migration Quick Reference](./workflows/MIGRATION_QUICK_REFERENCE.md)** - 2025-11-14 ⭐ NEW
+- **[Migration Lessons Learned](./workflows/MIGRATION_LESSONS_LEARNED.md)** - 2025-11-14 ⭐ NEW
 - **[Technical Debt](./development/technical-debt.md)** - 2025-11-03
 - **[Dashboard Analysis](./development/dashboard-analysis.md)** - 2025-11-03
-- **[UX/UI Fixes](./development/ux-ui-fixes.md)** - 2025-11-03
-- **[Category Fix](./development/category-fix.md)** - 2025-11-03
 
 ---
 
@@ -184,6 +192,6 @@ When contributing documentation:
 
 ---
 
-**Last Updated:** 2025-11-03
-**Version:** 2.0.0
+**Last Updated:** 2025-11-14
+**Version:** 2.1.0
 **Maintainers:** Development Team

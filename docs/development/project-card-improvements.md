@@ -127,7 +127,3 @@ When favorites API is ready:
 - [ ] Heart icon toggles visual state on click
 - [ ] Clicking heart doesn't navigate to project page
 - [ ] Projects dashboard shows "My Projects" title
-
-
-
-
