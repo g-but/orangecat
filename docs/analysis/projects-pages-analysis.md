@@ -237,6 +237,7 @@ if (process.env.NODE_ENV === 'development') {
    - Should use state update instead
 
 4. **Missing Type Safety**
+
    ```typescript
    const goalCurrency = (project as any).goal_currency || project.currency || 'CHF';
    ```
@@ -380,7 +381,3 @@ if (process.env.NODE_ENV === 'development') {
 - Functional but needs improvements
 - Good foundation, needs polish
 - Critical fixes needed before scaling
-
-
-
-

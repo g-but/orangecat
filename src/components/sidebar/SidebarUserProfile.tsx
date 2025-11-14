@@ -36,7 +36,7 @@ export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarU
       }`}
     >
       <Link
-        href="/profile/me"
+        href="/profiles/me"
         className={`flex items-center hover:bg-gray-50 p-2 sm:p-3 rounded-xl transition-all duration-200 group w-full ${
           isExpanded ? 'space-x-3' : 'lg:flex-col lg:space-y-2 lg:space-x-0'
         }`}

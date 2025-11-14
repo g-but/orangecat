@@ -64,7 +64,3 @@ async function handleFollow(request: AuthenticatedRequest) {
 }
 
 export const POST = withAuth(handleFollow);
-
-
-
-

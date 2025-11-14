@@ -46,6 +46,46 @@ AS $$
   );
 $$;
 
+-- ==================== DISLIKES SYSTEM ====================
+
+-- Dislikes table for timeline events (separate from likes for wisdom of crowds / scam detection)
+CREATE TABLE IF NOT EXISTS timeline_dislikes (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id uuid NOT NULL REFERENCES timeline_events(id) ON DELETE CASCADE,
+  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now() NOT NULL,
+
+  UNIQUE(event_id, user_id) -- Prevent duplicate dislikes
+);
+
+-- Indexes for dislikes
+CREATE INDEX idx_timeline_dislikes_event ON timeline_dislikes(event_id);
+CREATE INDEX idx_timeline_dislikes_user ON timeline_dislikes(user_id, created_at DESC);
+CREATE INDEX idx_timeline_dislikes_created_at ON timeline_dislikes(created_at DESC);
+
+-- Function to get dislike count for an event
+CREATE OR REPLACE FUNCTION get_event_dislike_count(event_id uuid)
+RETURNS integer
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT COUNT(*)::integer FROM timeline_dislikes WHERE timeline_dislikes.event_id = $1;
+$$;
+
+-- Function to check if user disliked an event
+CREATE OR REPLACE FUNCTION has_user_disliked_event(p_event_id uuid, p_user_id uuid)
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS(
+    SELECT 1 FROM timeline_dislikes
+    WHERE event_id = p_event_id AND user_id = p_user_id
+  );
+$$;
+
 -- ==================== SHARES SYSTEM ====================
 
 -- Shares/reposts table for timeline events
@@ -119,8 +159,9 @@ CREATE TABLE IF NOT EXISTS timeline_comments (
 CREATE INDEX idx_timeline_comments_event ON timeline_comments(event_id, created_at DESC);
 CREATE INDEX idx_timeline_comments_user ON timeline_comments(user_id, created_at DESC);
 CREATE INDEX idx_timeline_comments_parent ON timeline_comments(parent_comment_id) WHERE parent_comment_id IS NOT NULL;
+-- Expression index for thread grouping (top-level comments and their replies)
 CREATE INDEX idx_timeline_comments_thread ON timeline_comments(
-  CASE WHEN parent_comment_id IS NULL THEN id ELSE parent_comment_id END,
+  (CASE WHEN parent_comment_id IS NULL THEN id ELSE parent_comment_id END),
   created_at DESC
 );
 
@@ -163,11 +204,12 @@ $$;
 
 -- ==================== EVENT STATS AGGREGATION ====================
 
--- Event stats view for efficient queries
+-- Event stats view for efficient queries (includes dislikes for scam detection)
 CREATE OR REPLACE VIEW timeline_event_stats AS
 SELECT
   te.id as event_id,
   COALESCE(tl.like_count, 0) as like_count,
+  COALESCE(td.dislike_count, 0) as dislike_count,
   COALESCE(ts.share_count, 0) as share_count,
   COALESCE(tc.comment_count, 0) as comment_count,
   COALESCE(tc.top_level_comment_count, 0) as top_level_comment_count
@@ -177,6 +219,11 @@ LEFT JOIN (
   FROM timeline_likes
   GROUP BY event_id
 ) tl ON te.id = tl.event_id
+LEFT JOIN (
+  SELECT event_id, COUNT(*) as dislike_count
+  FROM timeline_dislikes
+  GROUP BY event_id
+) td ON te.id = td.event_id
 LEFT JOIN (
   SELECT original_event_id, COUNT(*) as share_count
   FROM timeline_shares
@@ -207,6 +254,21 @@ CREATE POLICY "Users can create their own likes"
 
 CREATE POLICY "Users can delete their own likes"
   ON timeline_likes FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- Timeline Dislikes RLS
+ALTER TABLE timeline_dislikes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view all timeline dislikes"
+  ON timeline_dislikes FOR SELECT
+  USING (true);
+
+CREATE POLICY "Users can create their own dislikes"
+  ON timeline_dislikes FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own dislikes"
+  ON timeline_dislikes FOR DELETE
   USING (auth.uid() = user_id);
 
 -- Timeline Shares RLS
@@ -336,6 +398,73 @@ BEGIN
 END;
 $$;
 
+-- Dislike an event (for scam detection and wisdom of crowds)
+CREATE OR REPLACE FUNCTION dislike_timeline_event(p_event_id uuid, p_user_id uuid DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_user_id uuid;
+  v_result jsonb;
+BEGIN
+  -- Set user_id if not provided
+  v_user_id := COALESCE(p_user_id, auth.uid());
+  IF v_user_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Authentication required');
+  END IF;
+
+  -- Check if event exists
+  IF NOT EXISTS(SELECT 1 FROM timeline_events WHERE id = p_event_id AND NOT is_deleted) THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Event not found');
+  END IF;
+
+  -- Insert dislike (ON CONFLICT DO NOTHING prevents duplicates)
+  INSERT INTO timeline_dislikes (event_id, user_id)
+  VALUES (p_event_id, v_user_id)
+  ON CONFLICT (event_id, user_id) DO NOTHING;
+
+  -- Get updated stats
+  SELECT jsonb_build_object(
+    'success', true,
+    'disliked', true,
+    'dislike_count', get_event_dislike_count(p_event_id)
+  ) INTO v_result;
+
+  RETURN v_result;
+END;
+$$;
+
+-- Undislike an event
+CREATE OR REPLACE FUNCTION undislike_timeline_event(p_event_id uuid, p_user_id uuid DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_user_id uuid;
+BEGIN
+  -- Set user_id if not provided
+  v_user_id := COALESCE(p_user_id, auth.uid());
+  IF v_user_id IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'Authentication required');
+  END IF;
+
+  -- Delete dislike
+  DELETE FROM timeline_dislikes
+  WHERE event_id = p_event_id AND user_id = v_user_id;
+
+  -- Return updated stats
+  RETURN jsonb_build_object(
+    'success', true,
+    'disliked', false,
+    'dislike_count', get_event_dislike_count(p_event_id)
+  );
+END;
+$$;
+
 -- Share an event
 CREATE OR REPLACE FUNCTION share_timeline_event(
   p_original_event_id uuid,
@@ -377,8 +506,8 @@ $$;
 -- Add a comment
 CREATE OR REPLACE FUNCTION add_timeline_comment(
   p_event_id uuid,
-  p_user_id uuid DEFAULT NULL,
   p_content text,
+  p_user_id uuid DEFAULT NULL,
   p_parent_comment_id uuid DEFAULT NULL
 )
 RETURNS jsonb
@@ -459,12 +588,14 @@ RETURNS TABLE (
 
   -- Social interaction stats
   like_count integer,
+  dislike_count integer,
   share_count integer,
   comment_count integer,
   top_level_comment_count integer,
 
   -- User's interaction state
   user_liked boolean,
+  user_disliked boolean,
   user_shared boolean,
   user_commented boolean
 )
@@ -490,14 +621,16 @@ BEGIN
     te.metadata,
     te.tags,
 
-    -- Social stats
+    -- Social stats (includes dislikes for scam detection & wisdom of crowds)
     COALESCE(tes.like_count, 0) as like_count,
+    COALESCE(tes.dislike_count, 0) as dislike_count,
     COALESCE(tes.share_count, 0) as share_count,
     COALESCE(tes.comment_count, 0) as comment_count,
     COALESCE(tes.top_level_comment_count, 0) as top_level_comment_count,
 
     -- User's interactions
     has_user_liked_event(te.id, p_user_id) as user_liked,
+    has_user_disliked_event(te.id, p_user_id) as user_disliked,
     has_user_shared_event(te.id, p_user_id) as user_shared,
     EXISTS(
       SELECT 1 FROM timeline_comments tc
@@ -626,6 +759,7 @@ $$;
 DO $$
 DECLARE
   v_likes_table boolean;
+  v_dislikes_table boolean;
   v_shares_table boolean;
   v_comments_table boolean;
   v_stats_view boolean;
@@ -636,6 +770,11 @@ BEGIN
     SELECT FROM information_schema.tables
     WHERE table_schema = 'public' AND table_name = 'timeline_likes'
   ) INTO v_likes_table;
+
+  SELECT EXISTS (
+    SELECT FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'timeline_dislikes'
+  ) INTO v_dislikes_table;
 
   SELECT EXISTS (
     SELECT FROM information_schema.tables
@@ -655,31 +794,35 @@ BEGIN
   -- Check key functions exist
   SELECT EXISTS (
     SELECT FROM pg_proc
-    WHERE proname IN ('like_timeline_event', 'share_timeline_event', 'add_timeline_comment', 'get_enriched_timeline_feed')
+    WHERE proname IN ('like_timeline_event', 'dislike_timeline_event', 'share_timeline_event', 'add_timeline_comment', 'get_enriched_timeline_feed')
   ) INTO v_functions_exist;
 
-  IF v_likes_table AND v_shares_table AND v_comments_table AND v_stats_view AND v_functions_exist THEN
+  IF v_likes_table AND v_dislikes_table AND v_shares_table AND v_comments_table AND v_stats_view AND v_functions_exist THEN
     RAISE NOTICE 'SUCCESS: Timeline social features created successfully';
-    RAISE NOTICE '  ✓ Tables: timeline_likes, timeline_shares, timeline_comments';
-    RAISE NOTICE '  ✓ View: timeline_event_stats';
-    RAISE NOTICE '  ✓ Functions: like_timeline_event, share_timeline_event, add_timeline_comment, get_enriched_timeline_feed';
+    RAISE NOTICE '  ✓ Tables: timeline_likes, timeline_dislikes, timeline_shares, timeline_comments';
+    RAISE NOTICE '  ✓ View: timeline_event_stats (with dislikes for scam detection)';
+    RAISE NOTICE '  ✓ Functions: like/dislike/share/comment timeline events';
     RAISE NOTICE '  ✓ RLS: Policies enabled for all social interaction tables';
     RAISE NOTICE '  ✓ Indexes: Optimized for performance and queries';
+    RAISE NOTICE '  ✓ Wisdom of crowds: Dislikes enabled for community moderation';
   ELSE
     RAISE EXCEPTION 'FAILED: Timeline social features incomplete';
   END IF;
 END $$;
 
 COMMENT ON TABLE timeline_likes IS 'User likes on timeline events';
+COMMENT ON TABLE timeline_dislikes IS 'User dislikes on timeline events (for scam detection and wisdom of crowds)';
 COMMENT ON TABLE timeline_shares IS 'User shares/reposts of timeline events';
 COMMENT ON TABLE timeline_comments IS 'Comments and replies on timeline events';
-COMMENT ON VIEW timeline_event_stats IS 'Aggregated social interaction statistics for timeline events';
+COMMENT ON VIEW timeline_event_stats IS 'Aggregated social interaction statistics for timeline events (includes dislikes)';
 
 COMMENT ON FUNCTION like_timeline_event IS 'Like a timeline event and return updated stats';
 COMMENT ON FUNCTION unlike_timeline_event IS 'Unlike a timeline event and return updated stats';
+COMMENT ON FUNCTION dislike_timeline_event IS 'Dislike a timeline event (for scam detection/community moderation) and return updated stats';
+COMMENT ON FUNCTION undislike_timeline_event IS 'Remove dislike from a timeline event and return updated stats';
 COMMENT ON FUNCTION share_timeline_event IS 'Share a timeline event with optional text';
 COMMENT ON FUNCTION add_timeline_comment IS 'Add a comment or reply to a timeline event';
-COMMENT ON FUNCTION get_enriched_timeline_feed IS 'Get timeline feed with social interaction stats and user state';
+COMMENT ON FUNCTION get_enriched_timeline_feed IS 'Get timeline feed with social interaction stats (likes, dislikes, shares, comments) and user state';
 COMMENT ON FUNCTION get_event_comments IS 'Get comments for a timeline event';
 COMMENT ON FUNCTION get_comment_replies IS 'Get replies to a specific comment';
 
@@ -690,14 +833,17 @@ COMMIT;
 -- 1. Like an event:
 --    SELECT like_timeline_event('event-uuid', 'user-uuid');
 --
--- 2. Share an event:
+-- 2. Dislike an event (scam detection):
+--    SELECT dislike_timeline_event('event-uuid', 'user-uuid');
+--
+-- 3. Share an event:
 --    SELECT share_timeline_event('original-event-uuid', 'user-uuid', 'Check this out!');
 --
--- 3. Add a comment:
+-- 4. Add a comment:
 --    SELECT add_timeline_comment('event-uuid', 'user-uuid', 'Great project!');
 --
--- 4. Get enriched timeline feed:
+-- 5. Get enriched timeline feed (with likes AND dislikes):
 --    SELECT * FROM get_enriched_timeline_feed('user-uuid', 20, 0);
 --
--- 5. Get event comments:
+-- 6. Get event comments:
 --    SELECT * FROM get_event_comments('event-uuid', 10, 0);
