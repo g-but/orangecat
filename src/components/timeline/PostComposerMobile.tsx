@@ -1,12 +1,11 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Globe, Lock, X, ChevronDown, Check } from 'lucide-react';
 import { usePostComposer, type PostComposerOptions } from '@/hooks/usePostComposerNew';
-import BottomSheet from '@/components/ui/BottomSheet';
 
 /**
  * MOBILE-FIRST Post Composer Component
@@ -44,6 +43,10 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
+
+  const LazyPostOptionsSheet = lazy(() =>
+    import('./PostOptionsSheet').then(module => ({ default: module.PostOptionsSheet }))
+  );
 
   // Auto-focus on mount (mobile-friendly)
   useEffect(() => {
@@ -157,108 +160,17 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
           </div>
         </div>
 
-        {/* Options moved to BottomSheet */}
-        <BottomSheet
-          id="post-options-sheet"
-          isOpen={isOptionsSheetOpen}
-          onClose={() => setIsOptionsSheetOpen(false)}
-          title="Post Options"
-        >
-          <div className="p-4 space-y-4">
-            {/* Visibility Toggle */}
-            {showVisibilityToggle && (
-              <div className="space-y-2">
-                <span className="text-sm font-medium text-gray-700">Visibility</span>
-                <div className="flex bg-gray-100 rounded-lg p-1 border">
-                  <button
-                    onClick={() => composer.setVisibility('public')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors min-h-[44px] ${
-                      composer.visibility === 'public'
-                        ? 'bg-orange-100 text-orange-800 shadow-sm'
-                        : 'text-gray-600 hover:bg-white'
-                    }`}
-                    aria-pressed={composer.visibility === 'public'}
-                  >
-                    <Globe className="w-4 h-4" />
-                    Public
-                  </button>
-                  <button
-                    onClick={() => composer.setVisibility('private')}
-                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors min-h-[44px] ${
-                      composer.visibility === 'private'
-                        ? 'bg-gray-800 text-white shadow-sm'
-                        : 'text-gray-600 hover:bg-white'
-                    }`}
-                    aria-pressed={composer.visibility === 'private'}
-                  >
-                    <Lock className="w-4 h-4" />
-                    Private
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Project Selection */}
-            {showProjectSelection && composer.userProjects.length > 0 && (
-              <div className="space-y-2 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => setShowProjectSelector(!showProjectSelector)}
-                  className="flex items-center justify-between w-full text-sm font-medium text-gray-700 min-h-[44px]"
-                  aria-expanded={showProjectSelector}
-                >
-                  Also post to projects{' '}
-                  {composer.selectedProjects.length > 0 && `(${composer.selectedProjects.length})`}
-                  <ChevronDown
-                    className={`w-4 h-4 transition-transform ${showProjectSelector ? 'rotate-180' : ''}`}
-                  />
-                </button>
-
-                {showProjectSelector && (
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {composer.userProjects.map(project => (
-                      <button
-                        key={project.id}
-                        onClick={() => composer.toggleProjectSelection(project.id)}
-                        className={`
-                          flex items-center gap-3 w-full p-3 rounded-lg border transition-colors
-                          ${
-                            composer.selectedProjects.includes(project.id)
-                              ? 'bg-orange-50 border-orange-200'
-                              : 'bg-white border-gray-200 hover:border-orange-300'
-                          }
-                        `}
-                        disabled={composer.isPosting}
-                      >
-                        <div
-                          className={`
-                          w-5 h-5 rounded border-2 flex items-center justify-center
-                          ${
-                            composer.selectedProjects.includes(project.id)
-                              ? 'bg-orange-500 border-orange-500'
-                              : 'border-gray-300'
-                          }
-                        `}
-                        >
-                          {composer.selectedProjects.includes(project.id) && (
-                            <Check className="w-3 h-3 text-white" />
-                          )}
-                        </div>
-                        <div className="flex-1 text-left">
-                          <div className="text-sm font-medium text-gray-900">{project.title}</div>
-                          {project.description && (
-                            <div className="text-xs text-gray-700 truncate">
-                              {project.description}
-                            </div>
-                          )}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </BottomSheet>
+        {/* Options moved to PostOptionsSheet (lazy loaded) */}
+        {isOptionsSheetOpen && (
+          <Suspense fallback={null}>
+            <LazyPostOptionsSheet
+              isOpen={isOptionsSheetOpen}
+              onClose={() => setIsOptionsSheetOpen(false)}
+              showVisibilityToggle={showVisibilityToggle}
+              showProjectSelection={showProjectSelection}
+            />
+          </Suspense>
+        )}
 
         {/* Error/Success Messages */}
         {composer.error && (
