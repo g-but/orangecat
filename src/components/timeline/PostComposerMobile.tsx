@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Globe, Lock, X, ChevronDown, Check } from 'lucide-react';
 import { usePostComposer, type PostComposerOptions } from '@/hooks/usePostComposerNew';
+import BottomSheet from '@/components/ui/BottomSheet';
 
 /**
  * MOBILE-FIRST Post Composer Component
@@ -41,7 +42,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
   });
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const [showOptions, setShowOptions] = useState(false);
+  const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
 
   // Auto-focus on mount (mobile-friendly)
@@ -105,16 +106,14 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
               </div>
               {showVisibilityToggle && (
                 <button
-                  onClick={() => setShowOptions(!showOptions)}
-                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 mt-1 min-h-[44px] px-2"
-                  aria-expanded={showOptions}
-                  aria-controls="post-options"
+                  onClick={() => setIsOptionsSheetOpen(true)}
+                  className="flex items-center gap-1 text-xs text-gray-700 hover:text-gray-700 mt-1 min-h-[44px] px-2"
+                  aria-expanded={isOptionsSheetOpen}
+                  aria-controls="post-options-sheet"
                 >
                   <Globe className="w-3 h-3" />
                   {composer.visibility === 'public' ? 'Public' : 'Private'}
-                  <ChevronDown
-                    className={`w-3 h-3 transition-transform ${showOptions ? 'rotate-180' : ''}`}
-                  />
+                  <ChevronDown className={`w-3 h-3 transition-transform`} />
                 </button>
               )}
             </div>
@@ -158,20 +157,25 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
           </div>
         </div>
 
-        {/* Options Panel (collapsible on mobile) */}
-        {showOptions && (
-          <div id="post-options" className="mt-4 p-3 bg-gray-50 rounded-lg space-y-3">
+        {/* Options moved to BottomSheet */}
+        <BottomSheet
+          id="post-options-sheet"
+          isOpen={isOptionsSheetOpen}
+          onClose={() => setIsOptionsSheetOpen(false)}
+          title="Post Options"
+        >
+          <div className="p-4 space-y-4">
             {/* Visibility Toggle */}
             {showVisibilityToggle && (
-              <div className="flex items-center justify-between">
+              <div className="space-y-2">
                 <span className="text-sm font-medium text-gray-700">Visibility</span>
-                <div className="flex bg-white rounded-lg p-1 border">
+                <div className="flex bg-gray-100 rounded-lg p-1 border">
                   <button
                     onClick={() => composer.setVisibility('public')}
-                    className={`flex items-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors min-h-[44px] ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors min-h-[44px] ${
                       composer.visibility === 'public'
-                        ? 'bg-orange-100 text-orange-800'
-                        : 'text-gray-600 hover:bg-gray-50'
+                        ? 'bg-orange-100 text-orange-800 shadow-sm'
+                        : 'text-gray-600 hover:bg-white'
                     }`}
                     aria-pressed={composer.visibility === 'public'}
                   >
@@ -180,10 +184,10 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
                   </button>
                   <button
                     onClick={() => composer.setVisibility('private')}
-                    className={`flex items-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors min-h-[44px] ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-3 rounded-md text-sm font-medium transition-colors min-h-[44px] ${
                       composer.visibility === 'private'
-                        ? 'bg-gray-800 text-white'
-                        : 'text-gray-600 hover:bg-gray-50'
+                        ? 'bg-gray-800 text-white shadow-sm'
+                        : 'text-gray-600 hover:bg-white'
                     }`}
                     aria-pressed={composer.visibility === 'private'}
                   >
@@ -196,10 +200,10 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
 
             {/* Project Selection */}
             {showProjectSelection && composer.userProjects.length > 0 && (
-              <div className="space-y-2">
+              <div className="space-y-2 pt-4 border-t border-gray-200">
                 <button
                   onClick={() => setShowProjectSelector(!showProjectSelector)}
-                  className="flex items-center justify-between w-full text-sm font-medium text-gray-700 min-h-[44px] py-3"
+                  className="flex items-center justify-between w-full text-sm font-medium text-gray-700 min-h-[44px]"
                   aria-expanded={showProjectSelector}
                 >
                   Also post to projects{' '}
@@ -242,7 +246,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
                         <div className="flex-1 text-left">
                           <div className="text-sm font-medium text-gray-900">{project.title}</div>
                           {project.description && (
-                            <div className="text-xs text-gray-500 truncate">
+                            <div className="text-xs text-gray-700 truncate">
                               {project.description}
                             </div>
                           )}
@@ -254,7 +258,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
               </div>
             )}
           </div>
-        )}
+        </BottomSheet>
 
         {/* Error/Success Messages */}
         {composer.error && (
@@ -270,12 +274,14 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
               </button>
             </div>
             {composer.retryCount < 3 && (
-              <button
-                onClick={composer.retry}
-                className="mt-2 text-sm text-red-600 hover:text-red-800 underline"
-              >
-                Try again
-              </button>
+              <div className="mt-2">
+                <button
+                  onClick={composer.retry}
+                  className="text-sm text-red-600 hover:text-red-800 underline rounded-md min-h-[44px] px-2 flex items-center"
+                >
+                  Try again
+                </button>
+              </div>
             )}
           </div>
         )}
@@ -290,10 +296,10 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
         <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200">
           <div className="flex items-center gap-2">
             {/* Options toggle (mobile) */}
-            {!compact && !showOptions && (
+            {!compact && (
               <button
-                onClick={() => setShowOptions(true)}
-                className="text-gray-500 hover:text-gray-700 p-3 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                onClick={() => setIsOptionsSheetOpen(true)}
+                className="text-gray-700 hover:text-gray-700 p-3 min-h-[44px] min-w-[44px] flex items-center justify-center"
                 aria-label="Show post options"
               >
                 <ChevronDown className="w-5 h-5" />
@@ -352,7 +358,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
 
         {/* Loading state for projects */}
         {composer.loadingProjects && (
-          <div className="mt-2 text-xs text-gray-500">Loading your projects...</div>
+          <div className="mt-2 text-xs text-gray-700">Loading your projects...</div>
         )}
 
         {/* Keyboard hint (desktop only) */}
