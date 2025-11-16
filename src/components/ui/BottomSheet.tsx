@@ -3,8 +3,10 @@
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import FocusTrap from 'focus-trap-react';
 
 export interface BottomSheetProps {
+  id?: string;
   isOpen: boolean;
   onClose: () => void;
   title?: string;
@@ -27,6 +29,7 @@ export interface BottomSheetProps {
  * - iOS safe area support
  */
 export default function BottomSheet({
+  id,
   isOpen,
   onClose,
   title,
@@ -111,69 +114,72 @@ export default function BottomSheet({
   }
 
   const sheet = (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? 'bottom-sheet-title' : undefined}
-    >
-      {/* Backdrop */}
+    <FocusTrap active={isOpen}>
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
-        onClick={closeOnOverlayClick ? onClose : undefined}
-        aria-hidden="true"
-      />
-
-      {/* Sheet */}
-      <div
-        ref={sheetRef}
-        className="relative w-full bg-white rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out"
-        style={{
-          maxHeight,
-          transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
-        }}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
+        id={id}
+        className="fixed inset-0 z-50 flex items-end justify-center"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title ? 'bottom-sheet-title' : undefined}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full" aria-hidden="true" />
-        </div>
-
-        {/* Header */}
-        {(title || showCloseButton) && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-            <h2 id="bottom-sheet-title" className="text-lg font-semibold text-gray-900">
-              {title || ''}
-            </h2>
-
-            {showCloseButton && (
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                aria-label="Close"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Content */}
+        {/* Backdrop */}
         <div
-          className="overflow-y-auto overscroll-contain"
-          style={{
-            maxHeight: title || showCloseButton ? `calc(${maxHeight} - 60px)` : maxHeight,
-          }}
-        >
-          {children}
-        </div>
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity"
+          onClick={closeOnOverlayClick ? onClose : undefined}
+          aria-hidden="true"
+        />
 
-        {/* iOS safe area padding */}
-        <div className="h-[env(safe-area-inset-bottom)]" />
+        {/* Sheet */}
+        <div
+          ref={sheetRef}
+          className="relative w-full bg-white rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out"
+          style={{
+            maxHeight,
+            transform: isOpen ? 'translateY(0)' : 'translateY(100%)',
+          }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-2">
+            <div className="w-12 h-1.5 bg-gray-300 rounded-full" aria-hidden="true" />
+          </div>
+
+          {/* Header */}
+          {(title || showCloseButton) && (
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+              <h2 id="bottom-sheet-title" className="text-lg font-semibold text-gray-900">
+                {title || ''}
+              </h2>
+
+              {showCloseButton && (
+                <button
+                  onClick={onClose}
+                  className="text-gray-400 hover:text-gray-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Content */}
+          <div
+            className="overflow-y-auto overscroll-contain"
+            style={{
+              maxHeight: title || showCloseButton ? `calc(${maxHeight} - 60px)` : maxHeight,
+            }}
+          >
+            {children}
+          </div>
+
+          {/* iOS safe area padding */}
+          <div className="h-[env(safe-area-inset-bottom)]" />
+        </div>
       </div>
-    </div>
+    </FocusTrap>
   );
 
   // Render in portal for z-index safety
