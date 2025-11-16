@@ -38,6 +38,7 @@ export interface TimelineViewProps {
 
   // Callbacks
   onPostCreated?: () => void;
+  onOptimisticEvent?: (event: any) => void; // Add optimistic event to UI immediately
 }
 
 /**
@@ -55,11 +56,41 @@ export default function TimelineView({
   emptyStateTitle,
   emptyStateDescription,
   onPostCreated,
+  onOptimisticEvent,
 }: TimelineViewProps) {
   const { user, isLoading: authLoading, hydrated } = useAuth();
   const [feed, setFeed] = useState<TimelineFeedResponse | null>(null);
+  const [optimisticEvents, setOptimisticEvents] = useState<TimelineDisplayEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Handle optimistic event updates
+  const handleOptimisticEvent = useCallback((event: any) => {
+    // Add optimistic event to the beginning of the list
+    setOptimisticEvents(prev => [event, ...prev]);
+    onOptimisticEvent?.(event);
+  }, [onOptimisticEvent]);
+
+  // Remove optimistic event when real event arrives
+  const removeOptimisticEvent = useCallback((optimisticId: string) => {
+    setOptimisticEvents(prev => prev.filter(event => event.id !== optimisticId));
+  }, []);
+
+  // Merge optimistic events with real feed
+  const mergedEvents = React.useMemo(() => {
+    if (!feed?.events) return optimisticEvents;
+
+    // Remove optimistic events that have been replaced by real events
+    const filteredOptimistic = optimisticEvents.filter(optEvent =>
+      !feed.events.some(realEvent => {
+        // Match by content and timestamp (simple heuristic)
+        return realEvent.description === optEvent.description &&
+               Math.abs(new Date(realEvent.eventTimestamp).getTime() - new Date(optEvent.eventTimestamp).getTime()) < 5000; // 5 second window
+      })
+    );
+
+    return [...filteredOptimistic, ...feed.events];
+  }, [feed?.events, optimisticEvents]);
 
   // Validate required props
   useEffect(() => {
@@ -239,12 +270,25 @@ export default function TimelineView({
     );
   }
 
+  // Create merged feed for rendering
+  const mergedFeed = React.useMemo(() => {
+    if (!feed) return null;
+    return {
+      ...feed,
+      events: mergedEvents,
+      metadata: {
+        ...feed.metadata,
+        totalEvents: mergedEvents.length,
+      }
+    };
+  }, [feed, mergedEvents]);
+
   // Render timeline
   return (
     <div className="space-y-4">
-      {feed && (
+      {mergedFeed && (
         <TimelineComponent
-          feed={feed}
+          feed={mergedFeed}
           onEventUpdate={handleEventUpdate}
           onLoadMore={handleLoadMore}
           showFilters={showFilters}

@@ -96,7 +96,9 @@ export async function getAddressStats(address: string): Promise<AddressStats | n
  */
 export async function getAddressBalance(address: string): Promise<number | null> {
   const stats = await getAddressStats(address)
-  if (!stats) return null
+  if (!stats) {
+    return null
+  }
 
   const chainBalance = stats.chain_stats.funded_txo_sum - stats.chain_stats.spent_txo_sum
   const mempoolBalance = stats.mempool_stats.funded_txo_sum - stats.mempool_stats.spent_txo_sum

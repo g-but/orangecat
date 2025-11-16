@@ -380,8 +380,40 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       }, 3000);
 
       return true;
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create post';
+    } catch (err: any) {
+      let errorMessage = 'An unexpected error occurred.';
+
+      // Check for a response object, common in HTTP client errors
+      if (err.response && err.response.status) {
+        switch (err.response.status) {
+          case 400:
+            errorMessage = 'Invalid post content. Please review your post.';
+            break;
+          case 401:
+            errorMessage = 'You must be logged in to post. Please refresh and try again.';
+            break;
+          case 403:
+            errorMessage = "You don't have permission to perform this action.";
+            break;
+          case 500:
+          case 502:
+          case 503:
+          case 504:
+            errorMessage = 'A server error occurred. Our team has been notified. Please try again later.';
+            break;
+          default:
+            errorMessage = `An error occurred (code: ${err.response.status}). Please try again.`;
+            break;
+        }
+      } else if (err instanceof Error) {
+        // Handle specific known error messages
+        if (err.message.includes('Unable to verify your profile')) {
+          errorMessage = err.message;
+        } else {
+          errorMessage = 'A network error occurred. Please check your connection.';
+        }
+      }
+
       setError(errorMessage);
       logger.error('Failed to create post', err, 'usePostComposer');
       return false;

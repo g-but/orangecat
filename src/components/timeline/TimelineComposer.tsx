@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -28,7 +28,8 @@ export interface TimelineComposerProps {
   allowProjectSelection?: boolean; // Allow selecting additional projects to cross-post
 
   // Callbacks
-  onPostCreated?: () => void;
+  onPostCreated?: (event?: any) => void;
+  onOptimisticUpdate?: (event: any) => void; // For immediate UI feedback
   onCancel?: () => void;
 
   // UI customization
@@ -39,13 +40,16 @@ export interface TimelineComposerProps {
 
 /**
  * TimelineComposer - Universal Post Creation Component
+ *
+ * Optimized with React.memo for performance and proper accessibility.
  */
-export default function TimelineComposer({
+const TimelineComposer = React.memo(function TimelineComposer({
   targetOwnerId,
   targetOwnerType = 'profile',
   targetOwnerName,
   allowProjectSelection = false,
   onPostCreated,
+  onOptimisticUpdate,
   onCancel,
   placeholder,
   buttonText = 'Share',
@@ -59,16 +63,42 @@ export default function TimelineComposer({
     subjectId: targetOwnerId,
     allowProjectSelection,
     onSuccess: onPostCreated,
+    onOptimisticUpdate,
+    targetOwnerName,
   });
 
-  // Determine if posting to own timeline
-  const postingToOwnTimeline = !targetOwnerId || targetOwnerId === user?.id;
-  const targetName = targetOwnerName || (postingToOwnTimeline ? 'your timeline' : 'this timeline');
+  // Memoized computations to prevent unnecessary recalculations
+  const postingToOwnTimeline = useMemo(
+    () => !targetOwnerId || targetOwnerId === user?.id,
+    [targetOwnerId, user?.id]
+  );
 
-  // Default placeholder
-  const defaultPlaceholder = postingToOwnTimeline
-    ? "What's on your mind?"
-    : `Write on ${targetName}...`;
+  const targetName = useMemo(
+    () => targetOwnerName || (postingToOwnTimeline ? 'your timeline' : 'this timeline'),
+    [targetOwnerName, postingToOwnTimeline]
+  );
+
+  const defaultPlaceholder = useMemo(
+    () => postingToOwnTimeline
+      ? "What's on your mind?"
+      : `Write on ${targetName}...`,
+    [postingToOwnTimeline, targetName]
+  );
+
+  // Memoized character count color
+  const characterCountColor = useMemo(() => {
+    if (postComposer.content.length > 450) return 'text-red-500';
+    if (postComposer.content.length > 400) return 'text-orange-500';
+    return 'text-gray-500';
+  }, [postComposer.content.length]);
+
+  // Memoized button disabled state
+  const isButtonDisabled = useMemo(() =>
+    !postComposer.content.trim() ||
+    postComposer.isPosting ||
+    postComposer.content.length > 500,
+    [postComposer.content, postComposer.isPosting]
+  );
 
   // Project loading is now handled by the usePostComposer hook
 
@@ -124,7 +154,7 @@ export default function TimelineComposer({
               className="w-full border-0 resize-none text-lg placeholder-gray-500 focus:outline-none bg-transparent"
               rows={3}
               maxLength={500}
-              disabled={isPosting}
+              disabled={postComposer.isPosting}
             />
 
             {/* Project Selection */}
@@ -183,44 +213,29 @@ export default function TimelineComposer({
                     )
                   }
                   disabled={postComposer.isPosting}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-medium transition-colors border disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor:
-                      postComposer.visibility === 'public'
-                        ? 'rgb(254 249 195)'
-                        : 'rgb(243 244 246)',
-                    borderColor:
-                      postComposer.visibility === 'public' ? 'rgb(251 191 36)' : 'rgb(209 213 219)',
-                    color:
-                      postComposer.visibility === 'public' ? 'rgb(146 64 14)' : 'rgb(75 85 99)',
-                  }}
-                  title={
-                    postComposer.visibility === 'public' ? 'Everyone can see' : 'Only you can see'
-                  }
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-medium transition-colors border disabled:opacity-50 disabled:cursor-not-allowed ${
+                    postComposer.visibility === 'public'
+                      ? 'bg-yellow-50 border-yellow-300 text-yellow-800 hover:bg-yellow-100'
+                      : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+                  }`}
+                  aria-label={`Post visibility: ${postComposer.visibility === 'public' ? 'Public - everyone can see this post' : 'Private - only you can see this post'}`}
+                  aria-pressed={postComposer.visibility === 'public'}
                 >
                   {postComposer.visibility === 'public' ? (
                     <>
-                      <Globe className="w-3.5 h-3.5" />
+                      <Globe className="w-3.5 h-3.5" aria-hidden="true" />
                       <span>Public</span>
                     </>
                   ) : (
                     <>
-                      <Lock className="w-3.5 h-3.5" />
+                      <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                       <span>Private</span>
                     </>
                   )}
                 </button>
 
                 {/* Character Count */}
-                <div
-                  className={`text-sm font-medium ${
-                    postComposer.content.length > 450
-                      ? 'text-red-500'
-                      : postComposer.content.length > 400
-                        ? 'text-orange-500'
-                        : 'text-gray-500'
-                  }`}
-                >
+                <div className={`text-sm font-medium ${characterCountColor}`}>
                   {postComposer.content.length}/500
                 </div>
 
@@ -241,13 +256,10 @@ export default function TimelineComposer({
                 )}
                 <Button
                   onClick={postComposer.handlePost}
-                  disabled={
-                    !postComposer.content.trim() ||
-                    postComposer.isPosting ||
-                    postComposer.content.length > 500
-                  }
+                  disabled={isButtonDisabled}
                   className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 disabled:from-gray-300 disabled:to-gray-300 text-white px-6 py-2 rounded-full font-semibold transition-all shadow-sm hover:shadow-md disabled:shadow-none"
                   size="sm"
+                  aria-label={postComposer.isPosting ? "Posting..." : `Post ${buttonText}`}
                 >
                   {postComposer.isPosting ? (
                     <span className="flex items-center gap-2">
@@ -265,4 +277,8 @@ export default function TimelineComposer({
       </CardContent>
     </Card>
   );
-}
+});
+
+TimelineComposer.displayName = 'TimelineComposer';
+
+export default TimelineComposer;
