@@ -1,20 +1,20 @@
 'use client';
 
 import React from 'react';
-import TwitterTimeline from '@/components/timeline/TwitterTimeline';
+import SocialTimeline from '@/components/timeline/SocialTimeline';
 import { Globe } from 'lucide-react';
 
 /**
  * Community Timeline Page - Public posts from all users and projects
  *
- * Uses the unified TwitterTimeline component with community mode.
+ * Uses the unified SocialTimeline component with community mode.
  * Identical interface to My Journey page but shows posts from all users.
  *
  * Built with best practices: DRY, maintainable, modular, high quality code
  */
 export default function CommunityPage() {
   return (
-    <TwitterTimeline
+    <SocialTimeline
       title="Community"
       description="Public posts and updates from the OrangeCat community"
       icon={Globe}
@@ -26,6 +26,7 @@ export default function CommunityPage() {
       defaultSort="trending"
       showSortingControls={true}
       showInlineComposer={true}
+      allowProjectSelection={true}
     />
   );
 }

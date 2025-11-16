@@ -117,57 +117,8 @@ class TimelineService {
 
         eventId = data;
       } catch (dbError) {
-        // Database function doesn't exist - simulate success for demo purposes
-        logger.warn(
-          'Database function create_timeline_event not available, simulating success',
-          dbError,
-          'Timeline'
-        );
-
-        // Simulate a successful response
-        const mockEventId = `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const mockEvent: TimelineEvent = {
-          id: mockEventId,
-          eventType: request.eventType,
-          eventSubtype: request.eventSubtype,
-          actorId: actorId,
-          actorType: 'user',
-          subjectType: request.subjectType,
-          subjectId: request.subjectId,
-          targetType: request.targetType,
-          targetId: request.targetId,
-          title: request.title,
-          description: request.description,
-          content: request.content,
-          amountSats: request.amountSats,
-          amountBtc: request.amountBtc,
-          quantity: request.quantity,
-          visibility: request.visibility || 'public',
-          isFeatured: request.isFeatured || false,
-          metadata: request.metadata,
-          tags: request.tags,
-          parentEventId: request.parentEventId,
-          threadId: request.threadId,
-          eventTimestamp: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          isDeleted: false,
-          deletionReason: undefined,
-        };
-
-        // Store mock event in localStorage for persistence
-        const storedPosts = JSON.parse(localStorage.getItem('mock_timeline_posts') || '[]');
-        storedPosts.unshift(mockEvent); // Add to beginning
-        // Keep only last 50 posts
-        if (storedPosts.length > 50) {
-          storedPosts.splice(50);
-        }
-        localStorage.setItem('mock_timeline_posts', JSON.stringify(storedPosts));
-
-        return {
-          success: true,
-          event: mockEvent,
-        };
+        logger.error('Failed to execute timeline creation RPC', dbError, 'Timeline');
+        return { success: false, error: 'Timeline service unavailable' };
       }
 
       // Fetch the created event (only if database function succeeded)
@@ -382,24 +333,288 @@ class TimelineService {
   }
 
   /**
-   * Get project timeline
+   * Get project timeline feed
    */
-  async getProjectTimeline(projectId: string, limit: number = 50): Promise<TimelineDisplayEvent[]> {
+  async getProjectFeed(
+    projectId: string,
+    filters?: Partial<TimelineFilters>,
+    pagination?: Partial<TimelinePagination>
+  ): Promise<TimelineFeedResponse> {
     try {
-      const { data: events, error } = await supabase.rpc('get_project_timeline', {
-        p_project_id: projectId,
-        p_limit: Math.min(limit, this.MAX_PAGE_SIZE),
-      });
+      const page = pagination?.page || 1;
+      const limit = Math.min(pagination?.limit || this.DEFAULT_PAGE_SIZE, this.MAX_PAGE_SIZE);
+      const offset = (page - 1) * limit;
+
+      const sortBy = filters?.sortBy || 'recent';
+
+      // Query events where subject_type = 'project' and subject_id = projectId
+      const {
+        data: events,
+        error,
+        count,
+      } = await supabase
+        .from('enriched_timeline_events')
+        .select('*', { count: 'exact' })
+        .eq('subject_type', 'project')
+        .eq('subject_id', projectId)
+        .eq('visibility', 'public')
+        .order('event_timestamp', { ascending: false })
+        .range(offset, offset + limit - 1);
 
       if (error) {
-        logger.error('Failed to fetch project timeline', error, 'Timeline');
+        logger.error('Failed to fetch project timeline feed', error, 'Timeline');
         throw error;
       }
 
-      return this.enrichEventsForDisplay(events || []);
+      // Transform enriched VIEW data to display events
+      const displayEvents = (events || []).map((event: any) => {
+        const timelineEvent = this.mapDbEventToTimelineEvent(event);
+
+        return {
+          ...timelineEvent,
+          eventType: undefined as any,
+          eventSubtype: undefined as any,
+          icon: this.getEventIcon(timelineEvent.eventType),
+          iconColor: this.getEventColor(timelineEvent.eventType),
+          displayType: this.getEventDisplayType(timelineEvent.eventType),
+          displaySubtype: timelineEvent.eventSubtype,
+          // Actor, subject, target data already pre-joined in VIEW
+          actor: event.actor_data
+            ? {
+                id: event.actor_data.id,
+                name: event.actor_data.display_name || event.actor_data.username || 'Unknown',
+                username: event.actor_data.username,
+                avatar: event.actor_data.avatar_url,
+                type: 'user' as TimelineActorType,
+              }
+            : undefined,
+          subject: event.subject_data
+            ? {
+                id: event.subject_data.id,
+                name:
+                  event.subject_data.type === 'profile'
+                    ? event.subject_data.display_name || event.subject_data.username
+                    : event.subject_data.title,
+                type: event.subject_data.type,
+                url:
+                  event.subject_data.type === 'profile'
+                    ? `/profiles/${event.subject_data.username || event.subject_data.id}`
+                    : `/projects/${event.subject_data.id}`,
+              }
+            : undefined,
+          target: event.target_data
+            ? {
+                id: event.target_data.id,
+                name:
+                  event.target_data.type === 'profile'
+                    ? event.target_data.display_name || event.target_data.username
+                    : event.target_data.title,
+                type: event.target_data.type,
+                url:
+                  event.target_data.type === 'profile'
+                    ? `/profiles/${event.target_data.username || event.target_data.id}`
+                    : `/projects/${event.target_data.id}`,
+              }
+            : undefined,
+          formattedAmount: this.formatAmount(timelineEvent),
+          timeAgo: this.getTimeAgo(timelineEvent.eventTimestamp),
+          isRecent: this.isEventRecent(timelineEvent.eventTimestamp),
+
+          // Social interaction data
+          likesCount: event.like_count || 0,
+          sharesCount: event.share_count || 0,
+          commentsCount: event.comment_count || 0,
+          userLiked: false,
+          userShared: false,
+          userCommented: false,
+        } as TimelineDisplayEvent;
+      });
+
+      return {
+        events: displayEvents,
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          hasNext: offset + limit < (count || 0),
+          hasPrev: page > 1,
+        },
+        filters: this.buildDefaultFilters(filters),
+        metadata: {
+          totalEvents: count || 0,
+          featuredEvents: displayEvents.filter(e => e.isFeatured).length,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    } catch (error) {
+      logger.error('Error fetching project timeline feed', error, 'Timeline');
+      // Return empty feed instead of throwing
+      return {
+        events: [],
+        pagination: {
+          page: 1,
+          limit: this.DEFAULT_PAGE_SIZE,
+          total: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+        filters: this.buildDefaultFilters(filters),
+        metadata: {
+          totalEvents: 0,
+          featuredEvents: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  /**
+   * Get profile timeline feed
+   */
+  async getProfileFeed(
+    profileId: string,
+    filters?: Partial<TimelineFilters>,
+    pagination?: Partial<TimelinePagination>
+  ): Promise<TimelineFeedResponse> {
+    try {
+      const page = pagination?.page || 1;
+      const limit = Math.min(pagination?.limit || this.DEFAULT_PAGE_SIZE, this.MAX_PAGE_SIZE);
+      const offset = (page - 1) * limit;
+
+      const sortBy = filters?.sortBy || 'recent';
+
+      // Query events where subject_type = 'profile' and subject_id = profileId
+      const {
+        data: events,
+        error,
+        count,
+      } = await supabase
+        .from('enriched_timeline_events')
+        .select('*', { count: 'exact' })
+        .eq('subject_type', 'profile')
+        .eq('subject_id', profileId)
+        .eq('visibility', 'public')
+        .order('event_timestamp', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        logger.error('Failed to fetch profile timeline feed', error, 'Timeline');
+        throw error;
+      }
+
+      // Transform enriched VIEW data to display events
+      const displayEvents = (events || []).map((event: any) => {
+        const timelineEvent = this.mapDbEventToTimelineEvent(event);
+
+        return {
+          ...timelineEvent,
+          eventType: undefined as any,
+          eventSubtype: undefined as any,
+          icon: this.getEventIcon(timelineEvent.eventType),
+          iconColor: this.getEventColor(timelineEvent.eventType),
+          displayType: this.getEventDisplayType(timelineEvent.eventType),
+          displaySubtype: timelineEvent.eventSubtype,
+          // Actor, subject, target data already pre-joined in VIEW
+          actor: event.actor_data
+            ? {
+                id: event.actor_data.id,
+                name: event.actor_data.display_name || event.actor_data.username || 'Unknown',
+                username: event.actor_data.username,
+                avatar: event.actor_data.avatar_url,
+                type: 'user' as TimelineActorType,
+              }
+            : undefined,
+          subject: event.subject_data
+            ? {
+                id: event.subject_data.id,
+                name:
+                  event.subject_data.type === 'profile'
+                    ? event.subject_data.display_name || event.subject_data.username
+                    : event.subject_data.title,
+                type: event.subject_data.type,
+                url:
+                  event.subject_data.type === 'profile'
+                    ? `/profiles/${event.subject_data.username || event.subject_data.id}`
+                    : `/projects/${event.subject_data.id}`,
+              }
+            : undefined,
+          target: event.target_data
+            ? {
+                id: event.target_data.id,
+                name:
+                  event.target_data.type === 'profile'
+                    ? event.target_data.display_name || event.target_data.username
+                    : event.target_data.title,
+                type: event.target_data.type,
+                url:
+                  event.target_data.type === 'profile'
+                    ? `/profiles/${event.target_data.username || event.target_data.id}`
+                    : `/projects/${event.target_data.id}`,
+              }
+            : undefined,
+          formattedAmount: this.formatAmount(timelineEvent),
+          timeAgo: this.getTimeAgo(timelineEvent.eventTimestamp),
+          isRecent: this.isEventRecent(timelineEvent.eventTimestamp),
+
+          // Social interaction data
+          likesCount: event.like_count || 0,
+          sharesCount: event.share_count || 0,
+          commentsCount: event.comment_count || 0,
+          userLiked: false,
+          userShared: false,
+          userCommented: false,
+        } as TimelineDisplayEvent;
+      });
+
+      return {
+        events: displayEvents,
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          hasNext: offset + limit < (count || 0),
+          hasPrev: page > 1,
+        },
+        filters: this.buildDefaultFilters(filters),
+        metadata: {
+          totalEvents: count || 0,
+          featuredEvents: displayEvents.filter(e => e.isFeatured).length,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    } catch (error) {
+      logger.error('Error fetching profile timeline feed', error, 'Timeline');
+      // Return empty feed instead of throwing
+      return {
+        events: [],
+        pagination: {
+          page: 1,
+          limit: this.DEFAULT_PAGE_SIZE,
+          total: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+        filters: this.buildDefaultFilters(filters),
+        metadata: {
+          totalEvents: 0,
+          featuredEvents: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  /**
+   * Get project timeline
+   * @deprecated Use getProjectFeed instead. This method is kept for backward compatibility only.
+   */
+  async getProjectTimeline(projectId: string, limit: number = 50): Promise<TimelineDisplayEvent[]> {
+    try {
+      const feed = await this.getProjectFeed(projectId, {}, { limit });
+      return feed.events;
     } catch (error) {
       logger.error('Error fetching project timeline', error, 'Timeline');
-      throw error;
+      return [];
     }
   }
 
