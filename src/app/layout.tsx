@@ -35,6 +35,8 @@ import { createServerClient } from '@/lib/supabase/server';
 import { headers } from 'next/headers';
 import Script from 'next/script';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { SyncManagerInitializer } from '@/components/SyncManagerInitializer';
+import { OfflineQueueIndicator } from '@/components/ui/OfflineQueueIndicator';
 
 // Dynamic imports for non-critical components
 const DynamicToaster = lazy(() => import('sonner').then(module => ({ default: module.Toaster })));
@@ -244,6 +246,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       >
         <div id="__next">
           <ClientErrorBoundary>
+            <SyncManagerInitializer />
             <AuthProvider>
               <div className="relative min-h-screen flex flex-col">
                 {/* Global Auth Loader - temporarily disabled for debugging */}
@@ -288,6 +291,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Suspense fallback={null}>
               <DynamicChatbot />
             </Suspense>
+
+            {/* Offline Queue Indicator */}
+            <OfflineQueueIndicator />
           </ClientErrorBoundary>
         </div>
       </body>
