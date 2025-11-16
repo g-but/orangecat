@@ -161,6 +161,46 @@ git push origin main  # 🚀 Goes live
 
 ---
 
+## 🎬 Example Session Flow
+
+**User:** "Add a dark mode toggle"
+
+**Gemini:** _Creates `feature/dark-mode` branch, implements toggle_
+
+> "Dark mode toggle implemented and working! Should I **commit** this? (Local save only)"
+
+**User:** "Yes"
+
+**Gemini:** _Commits with message `feat: add dark mode toggle component`_
+
+**User:** "Add it to settings too"
+
+**Gemini:** _Updates settings page_
+
+> "Settings page updated with dark mode! Should I **commit** again?"
+
+**User:** "Yes and test"
+
+**Gemini:** _Commits, runs `npm run build`_
+
+> "Build successful! We have 2 commits on `feature/dark-mode`. Should I **push** to create a preview deployment?"
+
+**User:** "Yes"
+
+**Gemini:** _Pushes to GitHub_
+
+> "Pushed to GitHub! Preview deployment available at: `orangecat-git-feature-dark-mode.vercel.app`
+>
+> Want to test the preview, or ready to **deploy to production**?"
+
+**User:** "Deploy to production"
+
+**Gemini:** _Merges `feature/dark-mode` to `develop`, then `develop` to `main`_
+
+> "Deploying to production! Vercel is building... Should be live in ~2 minutes at orangecat.fun"
+
+---
+
 ## 🔧 Development Commands
 
 ### Build:
