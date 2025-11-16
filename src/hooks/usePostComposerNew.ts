@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import supabase from '@/lib/supabase/browser';
+import { offlineQueueService } from '@/lib/offline-queue';
 import { timelineService } from '@/services/timeline';
 import { logger } from '@/utils/logger';
 import { useAuth } from '@/hooks/useAuth';
@@ -399,7 +400,8 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
           case 502:
           case 503:
           case 504:
-            errorMessage = 'A server error occurred. Our team has been notified. Please try again later.';
+            errorMessage =
+              'A server error occurred. Our team has been notified. Please try again later.';
             break;
           default:
             errorMessage = `An error occurred (code: ${err.response.status}). Please try again.`;
@@ -435,10 +437,42 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
 
   // Public API methods
   const handlePost = useCallback(async () => {
-    if (!canPost) {
+    if (!canPost || !user?.id) {
       return;
     }
 
+    // Offline handling: queue the post instead of sending
+    if (!navigator.onLine) {
+      try {
+        const postPayload = {
+          eventType: 'status_update',
+          actorId: user.id,
+          subjectType,
+          subjectId: subjectId || user.id,
+          title:
+            content.trim().length > 50 ? content.trim().substring(0, 47) + '...' : content.trim(),
+          description: content.trim(),
+          visibility,
+          metadata: {
+            is_user_post: true,
+            cross_posted: subjectId && subjectId !== user.id,
+            cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
+          },
+        };
+        await offlineQueueService.addToQueue(postPayload);
+
+        // Provide feedback and reset form
+        setError("You're offline. Your post has been saved and will be sent later.");
+        setPostSuccess(true); // Use success state to show a confirmation message
+        reset();
+      } catch (err) {
+        setError('Failed to save post for offline sending.');
+        logger.error('Failed to add to offline queue', err, 'usePostComposer');
+      }
+      return; // Stop execution
+    }
+
+    // Online posting logic
     setIsPosting(true);
     setError(null);
     setRetryCount(0);
@@ -459,7 +493,19 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         RETRY_DELAY * (retryCount + 1)
       ); // Exponential backoff
     }
-  }, [canPost, performPost, enableRetry, retryCount]);
+  }, [
+    canPost,
+    performPost,
+    enableRetry,
+    retryCount,
+    user,
+    content,
+    visibility,
+    selectedProjects,
+    subjectType,
+    subjectId,
+    reset,
+  ]);
 
   const retry = useCallback(async () => {
     if (isPosting) {
