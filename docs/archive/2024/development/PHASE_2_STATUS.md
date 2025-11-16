@@ -39,4 +39,3 @@
 1. Implement transaction history API
 2. Add transaction display component
 3. Generate sitemap for profiles
-

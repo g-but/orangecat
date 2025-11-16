@@ -164,9 +164,9 @@ metadata: {
 
 ---
 
-### **3. Journey Inline Composer (TwitterTimeline.tsx)**
+### **3. Journey Inline Composer (SocialTimeline.tsx)**
 
-**File:** `src/components/timeline/TwitterTimeline.tsx`
+**File:** `src/components/timeline/SocialTimeline.tsx`
 
 **Changes:** Same as TimelineComposer
 
