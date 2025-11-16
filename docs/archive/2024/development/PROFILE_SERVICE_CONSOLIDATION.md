@@ -15,6 +15,7 @@ Currently have **3 different profile service implementations** doing the same th
 3. **`src/services/supabase/profiles.ts`** - Legacy (463 lines)
 
 **Impact:**
+
 - ❌ Violates DRY principle
 - ❌ Maintenance nightmare (3 places to fix bugs)
 - ❌ Inconsistent behavior
@@ -27,6 +28,7 @@ Currently have **3 different profile service implementations** doing the same th
 ### Option 1: `src/services/profile/index.ts` ⭐ RECOMMENDED
 
 **Pros:**
+
 - ✅ **Modular architecture** (Reader, Writer, Mapper)
 - ✅ **Under 400 lines** (follows guidelines)
 - ✅ **Single Responsibility** (each module focused)
@@ -35,10 +37,12 @@ Currently have **3 different profile service implementations** doing the same th
 - ✅ **Class-based API** (consistent with rest of codebase)
 
 **Cons:**
+
 - ⚠️ Only 3 consumers currently
 - ⚠️ Needs migration from other implementations
 
 **API:**
+
 ```typescript
 import { ProfileService } from '@/services/profile';
 
@@ -57,11 +61,13 @@ const created = await ProfileService.createProfile(userId, formData);
 ### Option 2: `src/services/supabase/profiles/index.ts`
 
 **Pros:**
+
 - ✅ Comprehensive error handling
 - ✅ Good validation
 - ✅ Well-documented
 
 **Cons:**
+
 - ❌ **474 lines** (19% over 400-line limit)
 - ❌ All-in-one file (hard to test)
 - ❌ Mixed concerns (validation + data access)
@@ -71,9 +77,11 @@ const created = await ProfileService.createProfile(userId, formData);
 ### Option 3: `src/services/supabase/profiles.ts` (LEGACY)
 
 **Pros:**
+
 - ✅ Simple, straightforward
 
 **Cons:**
+
 - ❌ **463 lines** (16% over 400-line limit)
 - ❌ Uses `getSupabaseClient()` (non-standard)
 - ❌ Manual schema mapping
@@ -92,12 +100,14 @@ const created = await ProfileService.createProfile(userId, formData);
 ### Phase 1: Enhance Option 1 (Current Service)
 
 **Tasks:**
+
 1. Add missing methods from other implementations
 2. Add comprehensive error handling
 3. Add validation
 4. Add tests
 
 **Missing Methods to Add:**
+
 ```typescript
 // From profiles/index.ts
 - createProfile (exists but enhance error handling)
@@ -116,23 +126,25 @@ const created = await ProfileService.createProfile(userId, formData);
 **Current Consumers (3 files):**
 
 1. `src/types/social.ts`
+
    ```typescript
    // BEFORE
-   import { getProfile } from '@/services/supabase/profiles'
+   import { getProfile } from '@/services/supabase/profiles';
 
    // AFTER
-   import { ProfileService } from '@/services/profile'
-   const profile = await ProfileService.getProfile(userId)
+   import { ProfileService } from '@/services/profile';
+   const profile = await ProfileService.getProfile(userId);
    ```
 
 2. `src/components/profile/ModernProfileEditor.tsx`
+
    ```typescript
    // BEFORE
-   import { updateProfile } from '@/services/supabase/profiles'
+   import { updateProfile } from '@/services/supabase/profiles';
 
    // AFTER
-   import { ProfileService } from '@/services/profile'
-   const result = await ProfileService.updateProfile(userId, data)
+   import { ProfileService } from '@/services/profile';
+   const result = await ProfileService.updateProfile(userId, data);
    ```
 
 3. `src/components/profile/ProfileUploadSection.tsx`
@@ -145,6 +157,7 @@ const created = await ProfileService.createProfile(userId, formData);
 Add to legacy files:
 
 **`src/services/supabase/profiles.ts`:**
+
 ```typescript
 /**
  * @deprecated Use ProfileService from '@/services/profile' instead
@@ -162,6 +175,7 @@ Add to legacy files:
 ### Phase 4: Remove Legacy Files
 
 After all consumers migrated:
+
 1. Delete `src/services/supabase/profiles.ts`
 2. Delete `src/services/supabase/profiles/index.ts`
 3. Update imports in any remaining files
@@ -217,27 +231,29 @@ if (formData.username) {
 **File:** `src/components/profile/ModernProfileEditor.tsx`
 
 **Before:**
+
 ```typescript
-import { updateProfile } from '@/services/supabase/profiles'
+import { updateProfile } from '@/services/supabase/profiles';
 
 const handleSave = async () => {
   const result = await updateProfile(userId, formData);
   if (result.error) {
     toast.error(result.error);
   }
-}
+};
 ```
 
 **After:**
+
 ```typescript
-import { ProfileService } from '@/services/profile'
+import { ProfileService } from '@/services/profile';
 
 const handleSave = async () => {
   const result = await ProfileService.updateProfile(userId, formData);
   if (!result.success) {
     toast.error(result.error);
   }
-}
+};
 ```
 
 ---
@@ -245,6 +261,7 @@ const handleSave = async () => {
 ### Step 3: Update Remaining Consumers
 
 Repeat for:
+
 - `src/types/social.ts`
 - `src/components/profile/ProfileUploadSection.tsx`
 
@@ -273,7 +290,7 @@ describe('ProfileService', () => {
     it('should update profile successfully', async () => {
       const result = await ProfileService.updateProfile('user-123', {
         name: 'New Name',
-        bio: 'New bio'
+        bio: 'New bio',
       });
 
       expect(result.success).toBe(true);
@@ -282,7 +299,7 @@ describe('ProfileService', () => {
 
     it('should reject duplicate username', async () => {
       const result = await ProfileService.updateProfile('user-123', {
-        username: 'taken-username'
+        username: 'taken-username',
       });
 
       expect(result.success).toBe(false);
@@ -352,6 +369,7 @@ git rm src/services/supabase/profiles/index.ts
 
 **Risk:** Breaking existing functionality
 **Mitigation:**
+
 - Comprehensive tests before migration
 - Migrate one file at a time
 - Keep legacy files until 100% migrated
@@ -359,6 +377,7 @@ git rm src/services/supabase/profiles/index.ts
 
 **Risk:** Missing edge cases
 **Mitigation:**
+
 - Review all legacy code for special handling
 - Add extensive tests
 - Monitor error logs after migration

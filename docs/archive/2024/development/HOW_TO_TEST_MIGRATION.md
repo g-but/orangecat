@@ -26,6 +26,7 @@ npm run dev
 **What to expect:** You should see deprecation warnings in the browser console (this is normal and expected).
 
 **Steps:**
+
 1. Open browser console (F12)
 2. Look for yellow warning messages
 3. You should see warnings like:
@@ -35,10 +36,12 @@ npm run dev
    ```
 
 **Expected Result:**
+
 - ⚠️ Deprecation warnings appear (GOOD - shows old files are still loaded)
 - ❌ No red errors should appear
 
 **If you see errors:**
+
 - Copy the error message
 - Check which file is causing it
 - Report the error
@@ -48,6 +51,7 @@ npm run dev
 ## Test 2: Authentication - Sign Up ✅
 
 **Steps:**
+
 1. Go to http://localhost:3000
 2. Click "Sign Up" or navigate to sign-up page
 3. Fill in:
@@ -56,12 +60,14 @@ npm run dev
 4. Click "Sign Up"
 
 **Expected Result:**
+
 - ✅ Sign-up succeeds
 - ✅ Email confirmation sent (check logs)
 - ✅ No console errors
 - ✅ Redirected to appropriate page
 
 **If it fails:**
+
 - Check browser console for errors
 - Check terminal for server errors
 - Note: Email might not send in dev mode (that's OK)
@@ -71,6 +77,7 @@ npm run dev
 ## Test 3: Authentication - Sign In ✅
 
 **Steps:**
+
 1. If you have an existing test account, use it
 2. Otherwise, use:
    - Email: Your test email
@@ -78,6 +85,7 @@ npm run dev
 3. Click "Sign In"
 
 **Expected Result:**
+
 - ✅ Sign-in succeeds
 - ✅ User session created
 - ✅ Redirected to dashboard/home
@@ -85,10 +93,11 @@ npm run dev
 
 **Check Session:**
 Open browser console and run:
+
 ```javascript
 // Get current session
-const session = await supabase.auth.getSession()
-console.log('Session:', session.data.session ? 'Active' : 'None')
+const session = await supabase.auth.getSession();
+console.log('Session:', session.data.session ? 'Active' : 'None');
 ```
 
 ---
@@ -96,6 +105,7 @@ console.log('Session:', session.data.session ? 'Active' : 'None')
 ## Test 4: Profile Operations 👤
 
 **Steps:**
+
 1. Make sure you're signed in
 2. Navigate to profile page (usually `/settings` or `/profile`)
 3. Try to edit your profile:
@@ -105,15 +115,17 @@ console.log('Session:', session.data.session ? 'Active' : 'None')
 4. Click "Save"
 
 **Expected Result:**
+
 - ✅ Profile loads correctly
 - ✅ Changes save successfully
 - ✅ Success message appears
 - ✅ No console errors
 
 **Verify in Console:**
+
 ```javascript
 // Check if profile data loaded
-console.log('Profile loaded:', document.querySelector('[data-profile]') ? 'Yes' : 'No')
+console.log('Profile loaded:', document.querySelector('[data-profile]') ? 'Yes' : 'No');
 ```
 
 ---
@@ -121,20 +133,24 @@ console.log('Profile loaded:', document.querySelector('[data-profile]') ? 'Yes' 
 ## Test 5: Database Operations 📊
 
 **Test Read Operation:**
+
 1. Navigate to any page that shows data (e.g., projects, campaigns)
 2. Check if data loads
 
 **Expected Result:**
+
 - ✅ Data loads successfully
 - ✅ No "loading forever" state
 - ✅ No console errors
 
 **Test Write Operation:**
+
 1. Try to create a new item (project, campaign, etc.)
 2. Fill in the form
 3. Submit
 
 **Expected Result:**
+
 - ✅ Item creates successfully
 - ✅ Shows in list
 - ✅ No console errors
@@ -144,20 +160,23 @@ console.log('Profile loaded:', document.querySelector('[data-profile]') ? 'Yes' 
 ## Test 6: Sign Out 🚪
 
 **Steps:**
+
 1. Click "Sign Out" button (usually in header or settings)
 2. Wait for sign out to complete
 
 **Expected Result:**
+
 - ✅ Signs out successfully
 - ✅ Redirected to home/login page
 - ✅ Session cleared
 - ✅ No console errors
 
 **Verify in Console:**
+
 ```javascript
 // Check session is cleared
-const session = await supabase.auth.getSession()
-console.log('Session after logout:', session.data.session ? 'ERROR: Still active' : 'OK: Cleared')
+const session = await supabase.auth.getSession();
+console.log('Session after logout:', session.data.session ? 'ERROR: Still active' : 'OK: Cleared');
 ```
 
 ---
@@ -165,12 +184,14 @@ console.log('Session after logout:', session.data.session ? 'ERROR: Still active
 ## Test 7: Page Refresh (Session Persistence) 🔄
 
 **Steps:**
+
 1. Sign in again
 2. Wait for page to fully load
 3. Press F5 (refresh page)
 4. Wait for page to reload
 
 **Expected Result:**
+
 - ✅ Still signed in after refresh
 - ✅ No need to sign in again
 - ✅ Session persisted correctly
@@ -181,21 +202,24 @@ console.log('Session after logout:', session.data.session ? 'ERROR: Still active
 ## Test 8: Check Storage (Advanced) 💾
 
 **Steps:**
+
 1. Open browser console (F12)
 2. Go to "Application" tab (Chrome) or "Storage" tab (Firefox)
 3. Look at Local Storage and Session Storage
 4. Find entries with "supabase" in the name
 
 **Expected Result:**
+
 - ✅ Supabase auth data present
 - ✅ Session token stored
 - ✅ Storage entries look valid (JSON format)
 
 **Verify Storage in Console:**
+
 ```javascript
 // Check what's in storage
-console.log('LocalStorage:', localStorage.getItem('sb-project-auth-token'))
-console.log('SessionStorage:', sessionStorage.getItem('sb-project-auth-token'))
+console.log('LocalStorage:', localStorage.getItem('sb-project-auth-token'));
+console.log('SessionStorage:', sessionStorage.getItem('sb-project-auth-token'));
 ```
 
 ---
@@ -203,16 +227,19 @@ console.log('SessionStorage:', sessionStorage.getItem('sb-project-auth-token'))
 ## Test 9: API Routes (Server Client) 🔌
 
 **Steps:**
+
 1. Open browser console
 2. Make a direct API call:
+
 ```javascript
 // Test API route
 fetch('/api/profile')
   .then(r => r.json())
-  .then(data => console.log('API Response:', data))
+  .then(data => console.log('API Response:', data));
 ```
 
 **Expected Result:**
+
 - ✅ API responds successfully
 - ✅ Returns valid JSON
 - ✅ No 500 errors
@@ -223,21 +250,25 @@ fetch('/api/profile')
 ## Test 10: Error Handling 🛡️
 
 **Test Invalid Credentials:**
+
 1. Try to sign in with wrong password
 2. Observe error message
 
 **Expected Result:**
+
 - ✅ Shows clear error message
 - ✅ No console errors (errors should be handled)
 - ✅ User can try again
 
 **Test Network Error:**
+
 1. Open browser DevTools
 2. Go to Network tab
 3. Enable "Offline" mode
 4. Try to perform an action
 
 **Expected Result:**
+
 - ✅ Shows appropriate error message
 - ✅ Graceful degradation
 - ✅ No crashes
@@ -249,6 +280,7 @@ fetch('/api/profile')
 Use this for a fast verification:
 
 **Basic Flow (5 minutes):**
+
 - [ ] Start dev server
 - [ ] Open browser
 - [ ] Check console for warnings (should see deprecation warnings)
@@ -257,6 +289,7 @@ Use this for a fast verification:
 - [ ] Sign out
 
 **Full Flow (15 minutes):**
+
 - [ ] All basic flow tests
 - [ ] Create new item
 - [ ] Edit item
@@ -264,6 +297,7 @@ Use this for a fast verification:
 - [ ] Test error handling
 
 **Comprehensive Flow (30 minutes):**
+
 - [ ] All full flow tests
 - [ ] Test all auth flows (sign up, password reset)
 - [ ] Test all CRUD operations
@@ -275,6 +309,7 @@ Use this for a fast verification:
 ## What to Look For
 
 ### ✅ Good Signs
+
 - Deprecation warnings in console (expected)
 - All features work as before
 - No red errors in console
@@ -282,6 +317,7 @@ Use this for a fast verification:
 - Session persists across refresh
 
 ### 🚨 Bad Signs (Report These)
+
 - Red errors in console
 - Features broken that worked before
 - Authentication fails
@@ -317,14 +353,17 @@ If you find any issues, report them with:
 While testing, also note:
 
 **Page Load Time:**
+
 - Should be same as before (or better)
 - No noticeable slowdown
 
 **Auth Operations:**
+
 - Sign in: Should be fast (< 2 seconds)
 - Sign out: Should be instant
 
 **Database Queries:**
+
 - Data should load quickly
 - No "loading forever" states
 
@@ -333,15 +372,19 @@ While testing, also note:
 ## Common Issues & Solutions
 
 ### Issue: "supabase is not defined"
+
 **Solution:** Check that the import is correct in the file causing the error
 
 ### Issue: Deprecation warnings everywhere
+
 **Solution:** This is expected! Old files still work and show warnings
 
 ### Issue: Auth not working
+
 **Solution:** Check environment variables in `.env.local`
 
 ### Issue: 500 errors on API routes
+
 **Solution:** Check terminal for server errors, may need to restart dev server
 
 ---
@@ -349,11 +392,13 @@ While testing, also note:
 ## Success Criteria
 
 **Minimum Success (Required):**
+
 - ✅ Can sign in and out
 - ✅ Can view profile
 - ✅ No blocking errors
 
 **Full Success (Ideal):**
+
 - ✅ All auth flows work
 - ✅ All CRUD operations work
 - ✅ Session persists
@@ -365,11 +410,13 @@ While testing, also note:
 ## Next Steps After Testing
 
 **If all tests pass:**
+
 1. Update this document with ✅ checkmarks
 2. Proceed to staging deployment (if applicable)
 3. Schedule legacy file removal (after 1-2 weeks)
 
 **If issues found:**
+
 1. Document the issues
 2. Determine if they're blocking
 3. Fix issues or rollback if critical
