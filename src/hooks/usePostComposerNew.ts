@@ -1,0 +1,487 @@
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import supabase from '@/lib/supabase/browser';
+import { timelineService } from '@/services/timeline';
+import { logger } from '@/utils/logger';
+import { useAuth } from '@/hooks/useAuth';
+
+export interface PostComposerOptions {
+  subjectType?: 'profile' | 'project';
+  subjectId?: string;
+  allowProjectSelection?: boolean;
+  defaultVisibility?: 'public' | 'private';
+  onSuccess?: (event?: any) => void;
+  onOptimisticUpdate?: (event: any) => void;
+  debounceMs?: number;
+  enableDrafts?: boolean;
+  enableRetry?: boolean;
+  maxLength?: number;
+}
+
+export interface PostComposerState {
+  // Form state
+  content: string;
+  setContent: (content: string) => void;
+  visibility: 'public' | 'private';
+  setVisibility: (visibility: 'public' | 'private') => void;
+  selectedProjects: string[];
+  setSelectedProjects: (projects: string[]) => void;
+
+  // UI state
+  userProjects: any[];
+  loadingProjects: boolean;
+  isPosting: boolean;
+  error: string | null;
+  postSuccess: boolean;
+  retryCount: number;
+
+  // Computed values
+  characterCount: number;
+  isValid: boolean;
+  canPost: boolean;
+
+  // Actions
+  handlePost: () => Promise<void>;
+  toggleProjectSelection: (projectId: string) => void;
+  reset: () => void;
+  clearError: () => void;
+  retry: () => Promise<void>;
+}
+
+/**
+ * Mobile-first, robust posting hook
+ * Features: Drafts, retry logic, optimistic updates, offline support
+ */
+export function usePostComposer(options: PostComposerOptions = {}): PostComposerState {
+  const { user } = useAuth();
+  const {
+    subjectType = 'profile',
+    subjectId,
+    allowProjectSelection = false,
+    defaultVisibility = 'public',
+    onSuccess,
+    onOptimisticUpdate,
+    debounceMs = 300,
+    enableDrafts = true,
+    enableRetry = true,
+    maxLength = 500,
+  } = options;
+
+  // Core state - simple and clear
+  const [content, setContent] = useState('');
+  const [visibility, setVisibility] = useState<'public' | 'private'>(defaultVisibility);
+  const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  const [userProjects, setUserProjects] = useState<any[]>([]);
+  const [loadingProjects, setLoadingProjects] = useState(false);
+  const [isPosting, setIsPosting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [postSuccess, setPostSuccess] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Refs for timers and caching
+  const debounceTimer = useRef<NodeJS.Timeout>();
+  const successTimer = useRef<NodeJS.Timeout>();
+  const retryTimer = useRef<NodeJS.Timeout>();
+  const profileCheckCache = useRef<Map<string, { exists: boolean; timestamp: number }>>(new Map());
+
+  // Constants
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+  const MAX_RETRY_ATTEMPTS = 3;
+  const RETRY_DELAY = 2000; // 2 seconds
+
+  // Draft management
+  const draftKey = `post-draft-${subjectType}-${subjectId || 'general'}`;
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      [debounceTimer, successTimer, retryTimer].forEach(timer => {
+        if (timer.current) {
+          clearTimeout(timer.current);
+        }
+      });
+    };
+  }, []);
+
+  // Computed values
+  const characterCount = content.length;
+  const isValid = content.trim().length > 0 && characterCount <= maxLength;
+  const canPost = isValid && !isPosting && !loadingProjects;
+
+  // Draft management functions
+  const saveDraft = useCallback(
+    (draftContent: string) => {
+      if (!enableDrafts || !draftContent.trim()) {
+        return;
+      }
+
+      try {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify({
+            content: draftContent,
+            visibility,
+            selectedProjects,
+            timestamp: Date.now(),
+            subjectType,
+            subjectId,
+          })
+        );
+      } catch (err) {
+        logger.warn('Failed to save draft', err, 'usePostComposer');
+      }
+    },
+    [enableDrafts, draftKey, visibility, selectedProjects, subjectType, subjectId]
+  );
+
+  const loadDraft = useCallback(() => {
+    if (!enableDrafts) {
+      return;
+    }
+
+    try {
+      const draft = localStorage.getItem(draftKey);
+      if (draft) {
+        const parsed = JSON.parse(draft);
+        // Only load if draft is recent (last 24 hours)
+        if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+          setContent(parsed.content || '');
+          setVisibility(parsed.visibility || defaultVisibility);
+          setSelectedProjects(parsed.selectedProjects || []);
+        } else {
+          // Clear old draft
+          localStorage.removeItem(draftKey);
+        }
+      }
+    } catch (err) {
+      logger.warn('Failed to load draft', err, 'usePostComposer');
+    }
+  }, [enableDrafts, draftKey, defaultVisibility]);
+
+  const clearDraft = useCallback(() => {
+    try {
+      localStorage.removeItem(draftKey);
+    } catch (err) {
+      logger.warn('Failed to clear draft', err, 'usePostComposer');
+    }
+  }, [draftKey]);
+
+  // Load draft on mount
+  useEffect(() => {
+    loadDraft();
+  }, [loadDraft]);
+
+  // Auto-save drafts (debounced)
+  useEffect(() => {
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    debounceTimer.current = setTimeout(() => {
+      saveDraft(content);
+    }, debounceMs);
+
+    return () => {
+      if (debounceTimer.current) {
+        clearTimeout(debounceTimer.current);
+      }
+    };
+  }, [content, visibility, selectedProjects, saveDraft, debounceMs]);
+
+  // Content setter (clears errors)
+  const handleSetContent = useCallback(
+    (newContent: string) => {
+      setContent(newContent);
+      if (error) {
+        setError(null);
+      } // Clear errors when user types
+    },
+    [error]
+  );
+
+  // Load user projects
+  const loadUserProjects = useCallback(async () => {
+    if (!allowProjectSelection || !user?.id) {
+      return;
+    }
+
+    setLoadingProjects(true);
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id, title, description')
+        .eq('creator_id', user.id)
+        .eq('status', 'published')
+        .order('updated_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        throw error;
+      }
+      setUserProjects(data || []);
+    } catch (err) {
+      logger.error('Failed to load user projects', err, 'usePostComposer');
+      setError('Failed to load your projects. You can still post without selecting projects.');
+    } finally {
+      setLoadingProjects(false);
+    }
+  }, [allowProjectSelection, user?.id]);
+
+  // Load projects on mount
+  useEffect(() => {
+    loadUserProjects();
+  }, [loadUserProjects]);
+
+  // Cached profile check
+  const ensureProfile = useCallback(async (): Promise<boolean> => {
+    if (!user?.id) {
+      return false;
+    }
+
+    const cached = profileCheckCache.current.get(user.id);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      return cached.exists;
+    }
+
+    try {
+      const response = await fetch('/api/profile');
+      const exists = response.ok || response.status === 404;
+      profileCheckCache.current.set(user.id, { exists, timestamp: Date.now() });
+      return exists;
+    } catch (err) {
+      logger.error('Failed to ensure profile exists', err, 'usePostComposer');
+      return false;
+    }
+  }, [user?.id]);
+
+  // Create optimistic event
+  const createOptimisticEvent = useCallback(
+    (postContent: string) => {
+      if (!user?.id) {
+        return null;
+      }
+
+      const optimisticId = `optimistic-${Date.now()}-${Math.random()}`;
+      const now = new Date().toISOString();
+
+      return {
+        id: optimisticId,
+        eventType: 'status_update',
+        actorId: user.id,
+        subjectType,
+        subjectId: subjectId || user.id,
+        title: postContent.length > 50 ? postContent.substring(0, 47) + '...' : postContent,
+        description: postContent,
+        visibility,
+        metadata: {
+          is_user_post: true,
+          cross_posted: subjectId && subjectId !== user.id,
+          cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
+          is_optimistic: true,
+        },
+        eventTimestamp: now,
+        actor_data: {
+          id: user.id,
+          display_name: user.user_metadata?.name || user.email?.split('@')[0] || 'You',
+          username: user.email?.split('@')[0] || user.id,
+          avatar_url: user.user_metadata?.avatar_url,
+        },
+        like_count: 0,
+        share_count: 0,
+        comment_count: 0,
+      };
+    },
+    [user, subjectType, subjectId, visibility, selectedProjects]
+  );
+
+  // Main posting logic
+  const performPost = useCallback(async (): Promise<boolean> => {
+    if (!canPost || !user?.id) {
+      return false;
+    }
+
+    try {
+      // Ensure profile exists
+      const profileExists = await ensureProfile();
+      if (!profileExists) {
+        throw new Error('Unable to verify your profile. Please refresh and try again.');
+      }
+
+      const postContent = content.trim();
+      const title = postContent.length > 50 ? postContent.substring(0, 47) + '...' : postContent;
+
+      // Create optimistic event immediately
+      const optimisticEvent = createOptimisticEvent(postContent);
+      if (optimisticEvent && onOptimisticUpdate) {
+        onOptimisticUpdate(optimisticEvent);
+      }
+
+      // Create main post
+      const mainPostResult = await timelineService.createEvent({
+        eventType: 'status_update',
+        actorId: user.id,
+        subjectType,
+        subjectId: subjectId || user.id,
+        title,
+        description: postContent,
+        visibility,
+        metadata: {
+          is_user_post: true,
+          cross_posted: subjectId && subjectId !== user.id,
+          cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
+        },
+      });
+
+      if (!mainPostResult.success) {
+        throw new Error(mainPostResult.error || 'Failed to create post');
+      }
+
+      // Cross-post to selected projects
+      if (selectedProjects.length > 0) {
+        const crossPostPromises = selectedProjects.map(projectId =>
+          timelineService.createEvent({
+            eventType: 'status_update',
+            actorId: user.id,
+            subjectType: 'project',
+            subjectId: projectId,
+            title,
+            description: postContent,
+            visibility,
+            metadata: {
+              is_user_post: true,
+              cross_posted_from_main: true,
+              original_post_id: mainPostResult.event?.id,
+            },
+          })
+        );
+
+        const crossPostResults = await Promise.allSettled(crossPostPromises);
+        const failedPosts = crossPostResults.filter(
+          result =>
+            result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success)
+        );
+
+        if (failedPosts.length > 0) {
+          logger.warn(`${failedPosts.length} cross-posts failed`, failedPosts, 'usePostComposer');
+          setError(`${failedPosts.length} cross-posts failed, but main post was successful`);
+        }
+      }
+
+      // Success
+      clearDraft();
+      setPostSuccess(true);
+      onSuccess?.(mainPostResult.event);
+
+      // Auto-hide success message
+      if (successTimer.current) {
+        clearTimeout(successTimer.current);
+      }
+      successTimer.current = setTimeout(() => {
+        setPostSuccess(false);
+      }, 3000);
+
+      return true;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to create post';
+      setError(errorMessage);
+      logger.error('Failed to create post', err, 'usePostComposer');
+      return false;
+    }
+  }, [
+    canPost,
+    user?.id,
+    ensureProfile,
+    content,
+    createOptimisticEvent,
+    onOptimisticUpdate,
+    subjectType,
+    subjectId,
+    visibility,
+    selectedProjects,
+    onSuccess,
+    clearDraft,
+  ]);
+
+  // Public API methods
+  const handlePost = useCallback(async () => {
+    if (!canPost) {
+      return;
+    }
+
+    setIsPosting(true);
+    setError(null);
+    setRetryCount(0);
+
+    const success = await performPost();
+    setIsPosting(false);
+
+    // Auto-retry logic
+    if (!success && enableRetry && retryCount < MAX_RETRY_ATTEMPTS && navigator.onLine) {
+      setRetryCount(prev => prev + 1);
+      if (retryTimer.current) {
+        clearTimeout(retryTimer.current);
+      }
+      retryTimer.current = setTimeout(
+        () => {
+          handlePost();
+        },
+        RETRY_DELAY * (retryCount + 1)
+      ); // Exponential backoff
+    }
+  }, [canPost, performPost, enableRetry, retryCount]);
+
+  const retry = useCallback(async () => {
+    if (isPosting) {
+      return;
+    }
+    await handlePost();
+  }, [handlePost, isPosting]);
+
+  const toggleProjectSelection = useCallback((projectId: string) => {
+    setSelectedProjects(prev =>
+      prev.includes(projectId) ? prev.filter(id => id !== projectId) : [...prev, projectId]
+    );
+  }, []);
+
+  const reset = useCallback(() => {
+    setContent('');
+    setSelectedProjects([]);
+    setError(null);
+    setPostSuccess(false);
+    setRetryCount(0);
+    clearDraft();
+  }, [clearDraft]);
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, []);
+
+  return {
+    // Form state
+    content,
+    setContent: handleSetContent,
+    visibility,
+    setVisibility,
+    selectedProjects,
+    setSelectedProjects,
+
+    // UI state
+    userProjects,
+    loadingProjects,
+    isPosting,
+    error,
+    postSuccess,
+    retryCount,
+
+    // Computed values
+    characterCount,
+    isValid,
+    canPost,
+
+    // Actions
+    handlePost,
+    toggleProjectSelection,
+    reset,
+    clearError,
+    retry,
+  };
+}

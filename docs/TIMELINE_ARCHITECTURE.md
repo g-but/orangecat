@@ -1,6 +1,8 @@
 # Timeline Architecture Documentation
 
-**Last Updated:** 2025-11-13
+**created_date:** 2025-11-13
+**last_modified_date:** 2025-11-14
+**last_modified_summary:** Renamed SocialTimeline component and aligned documentation with new posting flow.
 **Version:** 2.0 (Modular Architecture)
 
 ## Table of Contents
@@ -78,11 +80,11 @@ All posts appear in the **Community** feed if visibility is `public`.
 │  ├─ TimelineView                    → Fetches & displays    │
 │  ├─ TimelineComposer                → Creates posts         │
 │  ├─ TimelineComponent               → Renders events        │
-│  └─ TwitterTimeline                 → Full-page timeline    │
+│  └─ SocialTimeline                  → Full-page timeline    │
 │                                                              │
 │  📄 PAGE LAYER (Configuration)                              │
-│  ├─ /journey                        → TwitterTimeline       │
-│  ├─ /community                      → TwitterTimeline       │
+│  ├─ /journey                        → SocialTimeline        │
+│  ├─ /community                      → SocialTimeline        │
 │  ├─ /profiles/:id (Timeline Tab)   → TimelineView          │
 │  └─ /projects/:id                   → TimelineView          │
 │                                                              │
@@ -147,14 +149,14 @@ All posts appear in the **Community** feed if visibility is `public`.
 
 ---
 
-### 📱 `TwitterTimeline`
+### 📱 `SocialTimeline`
 
 **Purpose**: Full-page timeline with header, stats, and composer
-**Location**: `src/components/timeline/TwitterTimeline.tsx`
+**Location**: `src/components/timeline/SocialTimeline.tsx`
 **Usage**: Journey and Community pages
 
 ```tsx
-<TwitterTimeline
+<SocialTimeline
   title="My Journey"
   description="Your personal timeline"
   icon={BookOpen}
@@ -177,7 +179,7 @@ All posts appear in the **Community** feed if visibility is `public`.
 
 **Purpose**: Renders timeline events (cards)
 **Location**: `src/components/timeline/TimelineComponent.tsx`
-**Usage**: Used by TimelineView and TwitterTimeline
+**Usage**: Used by TimelineView and SocialTimeline
 
 ```tsx
 <TimelineComponent
@@ -334,7 +336,7 @@ export default function ProfileTimelineTab({ profile }: Props) {
 
 ```tsx
 export default function JourneyPage() {
-  return <TwitterTimeline title="My Journey" mode="journey" showInlineComposer={true} />;
+  return <SocialTimeline title="My Journey" mode="journey" showInlineComposer={true} />;
 }
 ```
 
@@ -385,10 +387,10 @@ CREATE POLICY "Anyone can view public timeline events"
 
 ### Old Architecture → New Architecture
 
-**Before (TwitterTimeline everywhere):**
+**Before (SocialTimeline everywhere):**
 
 ```tsx
-<TwitterTimeline timelineOwnerId={profile.id} showComposer={true} defaultFilter="all" />
+<SocialTimeline timelineOwnerId={profile.id} showInlineComposer={true} defaultSort="trending" />
 ```
 
 **After (Modular components):**
