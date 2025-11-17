@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Bitcoin } from 'lucide-react';
 import { MissingWalletBanner } from '@/components/project/MissingWalletBanner';
 import CampaignShare from '@/components/sharing/CampaignShare';
 import ProjectMediaGallery from '@/components/project/ProjectMediaGallery';
@@ -12,7 +12,7 @@ import { ProjectHeader } from '@/components/project/ProjectHeader';
 import { ProjectContent } from '@/components/project/ProjectContent';
 import ProjectTimeline from '@/components/project/ProjectTimeline';
 import { ROUTES } from '@/lib/routes';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Project {
   id: string;
@@ -52,9 +52,33 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
   const router = useRouter();
   const { user } = useAuth();
   const [showShareDialog, setShowShareDialog] = useState(false);
+  const [showFloatingCTA, setShowFloatingCTA] = useState(false);
 
   const isOwner = project.user_id === user?.id;
   const projectId = project.id;
+
+  // Show floating CTA on mobile after scrolling past 300px
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowFloatingCTA(window.scrollY > 300);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll to donation section
+  const scrollToDonation = () => {
+    const donationSection = document.getElementById('bitcoin-donation-section');
+    if (donationSection) {
+      donationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Calculate progress for mobile CTA
+  const progressPercentage = project.goal_amount
+    ? Math.min(((project.raised_amount || 0) / project.goal_amount) * 100, 100)
+    : 0;
 
   // Get status display info helper
   const getStatusInfo = (status: string) => {
@@ -145,6 +169,8 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
                 bitcoin_address: project.bitcoin_address,
                 bitcoin_balance_btc: (project as any).bitcoin_balance_btc || 0,
                 bitcoin_balance_updated_at: (project as any).bitcoin_balance_updated_at || null,
+                supporters_count: (project as any).supporters_count || 0,
+                last_donation_at: (project as any).last_donation_at || null,
                 user_id: project.user_id,
               }}
               isOwner={isOwner}
@@ -172,6 +198,59 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
           </div>
         </div>
       )}
+
+      {/* Floating CTA - Mobile Only */}
+      {!isOwner && project.bitcoin_address && showFloatingCTA && (
+        <div
+          className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-2xl transition-transform duration-300 ${
+            showFloatingCTA ? 'translate-y-0' : 'translate-y-full'
+          }`}
+        >
+          <div className="max-w-lg mx-auto px-4 py-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-gray-500">
+                  Goal: {formatCurrency(project.goal_amount, project.currency)}
+                </div>
+                <div className="text-lg font-bold text-gray-900 truncate">
+                  {formatCurrency(project.raised_amount || 0, project.currency)}
+                </div>
+                <div className="h-1.5 bg-gray-200 rounded-full mt-1">
+                  <div
+                    className="h-1.5 bg-orange-500 rounded-full transition-all duration-300"
+                    style={{ width: `${progressPercentage}%` }}
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={scrollToDonation}
+                className="flex-shrink-0 bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 shadow-lg"
+              >
+                <Bitcoin className="w-4 h-4 mr-2" aria-hidden="true" />
+                Donate
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
+}
+
+// Helper function to format currency
+function formatCurrency(amount: number | null, currency: string): string {
+  if (!amount) return `0 ${currency}`;
+
+  if (currency === 'BTC') {
+    return `${amount.toFixed(8)} BTC`;
+  }
+
+  try {
+    return new Intl.NumberFormat(undefined, {
+      style: 'currency',
+      currency: currency || 'CHF',
+    }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
 }
