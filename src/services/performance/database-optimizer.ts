@@ -13,7 +13,7 @@
  * Last Modified Summary: Database optimization for Option B performance improvements
  */
 
-import { supabase } from '@/services/supabase/client';
+import supabase from '@/lib/supabase/browser';
 
 // ==================== QUERY CACHE SYSTEM ====================
 
