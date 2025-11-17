@@ -31,9 +31,13 @@ import {
   Edit3,
   Zap,
   RefreshCw,
+  Compass,
+  MessageSquare,
+  BookOpen,
 } from 'lucide-react';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PROFILE_CATEGORIES } from '@/types/profile';
+import { QuickPostWidget } from '@/components/dashboard/QuickPostWidget';
 
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated, session } = useAuth();
@@ -280,90 +284,89 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Featured Project Spotlight */}
-        {featuredProject && (
-          <Card className="border-orange-200 bg-gradient-to-r from-orange-50 via-yellow-50 to-amber-50">
+        {/* Quick Post Widget - Prominent placement for easy timeline posting */}
+        <QuickPostWidget
+          onPostSuccess={() => {
+            // Reload timeline feed when a post is created
+            if (user?.id) {
+              loadTimelineFeed(user.id);
+            }
+          }}
+          className="animate-fadeIn"
+        />
+
+        {/* Urgent Actions */}
+        {(totalDrafts > 0 || profileCompletion < 100) && (
+          <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <div className="p-2 bg-orange-100 rounded-lg">
-                  <Rocket className="w-6 h-6 text-orange-600" />
-                </div>
+                <AlertCircle className="w-6 h-6 text-orange-600 mt-1 flex-shrink-0" />
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h2 className="text-lg font-semibold text-gray-900">
-                      🎯 Your Featured Project
-                    </h2>
-                    {featuredProject.isDraft && (
-                      <div className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full">
-                        Draft
+                  <h2 className="text-lg font-semibold text-gray-900 mb-3">Action Required</h2>
+
+                  {/* Profile completion */}
+                  {profileCompletion < 100 && (
+                    <div className="mb-4 p-3 bg-white rounded-lg border border-orange-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-gray-900">Complete your profile</span>
+                        <span className="text-sm text-orange-600">
+                          {profileCompletion}% complete
+                        </span>
                       </div>
-                    )}
-                  </div>
+                      <div className="flex items-center gap-2 mb-2">
+                        {!hasUsername && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                            Username needed
+                          </span>
+                        )}
+                        {!hasBitcoinAddress && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                            Bitcoin address needed
+                          </span>
+                        )}
+                        {!hasBio && (
+                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
+                            Bio needed
+                          </span>
+                        )}
+                      </div>
+                      <Link href="/profile">
+                        <Button size="sm" variant="outline">
+                          <Star className="w-4 h-4 mr-1" />
+                          Complete Profile
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
 
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">{featuredProject.title}</h3>
-                  <p className="text-gray-600 mb-4 line-clamp-2">{featuredProject.description}</p>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Raised</p>
-                      <p className="font-semibold text-green-600">
-                        <CurrencyDisplay
-                          amount={featuredProject.total_funding || 0}
-                          currency={featuredProject.currency || 'CHF'}
-                          size="sm"
-                        />
-                      </p>
+                  {/* Draft projects */}
+                  {totalDrafts > 0 && (
+                    <div className="p-3 bg-white rounded-lg border border-orange-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-gray-900">
+                          {totalDrafts} draft project{totalDrafts > 1 ? 's' : ''} waiting
+                        </span>
+                        {primaryDraft && (
+                          <span className="text-sm text-orange-600">
+                            &ldquo;{primaryDraft.title}&rdquo;
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Link href="/projects/create">
+                          <Button size="sm" variant="outline">
+                            <FileText className="w-4 h-4 mr-1" />
+                            Continue Editing
+                          </Button>
+                        </Link>
+                        <Link href="/dashboard/projects">
+                          <Button size="sm" variant="outline">
+                            View All Drafts
+                          </Button>
+                        </Link>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Goal</p>
-                      <p className="font-semibold text-blue-600">
-                        <CurrencyDisplay
-                          amount={featuredProject.goal_amount || 0}
-                          currency={featuredProject.currency || 'CHF'}
-                          size="sm"
-                        />
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Supporters</p>
-                      <p className="font-semibold text-purple-600">
-                        {featuredProject.contributor_count || 0}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Progress</p>
-                      <p className="font-semibold text-orange-600">
-                        {featuredProject.goal_amount
-                          ? Math.round(
-                              ((featuredProject.total_funding || 0) / featuredProject.goal_amount) *
-                                100
-                            )
-                          : 0}
-                        %
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Link href={`/projects/${featuredProject.id}`}>
-                      <Button size="sm">
-                        <Eye className="w-4 h-4 mr-1" />
-                        View Project
-                      </Button>
-                    </Link>
-                    <Link href={`/projects/create?draft=${featuredProject.id}`}>
-                      <Button size="sm" variant="outline">
-                        <Edit3 className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                    </Link>
-                    <Link href="/dashboard/projects">
-                      <Button size="sm" variant="outline">
-                        <BarChart3 className="w-4 h-4 mr-1" />
-                        Analytics
-                      </Button>
-                    </Link>
-                  </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -465,84 +468,6 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </Link>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Urgent Actions */}
-        {(totalDrafts > 0 || profileCompletion < 100) && (
-          <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <AlertCircle className="w-6 h-6 text-orange-600 mt-1 flex-shrink-0" />
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-3">Action Required</h2>
-
-                  {/* Profile completion */}
-                  {profileCompletion < 100 && (
-                    <div className="mb-4 p-3 bg-white rounded-lg border border-orange-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900">Complete your profile</span>
-                        <span className="text-sm text-orange-600">
-                          {profileCompletion}% complete
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        {!hasUsername && (
-                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                            Username needed
-                          </span>
-                        )}
-                        {!hasBitcoinAddress && (
-                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                            Bitcoin address needed
-                          </span>
-                        )}
-                        {!hasBio && (
-                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                            Bio needed
-                          </span>
-                        )}
-                      </div>
-                      <Link href="/profile">
-                        <Button size="sm" variant="outline">
-                          <Star className="w-4 h-4 mr-1" />
-                          Complete Profile
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-
-                  {/* Draft projects */}
-                  {totalDrafts > 0 && (
-                    <div className="p-3 bg-white rounded-lg border border-orange-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900">
-                          {totalDrafts} draft project{totalDrafts > 1 ? 's' : ''} waiting
-                        </span>
-                        {primaryDraft && (
-                          <span className="text-sm text-orange-600">
-                            &ldquo;{primaryDraft.title}&rdquo;
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Link href="/projects/create">
-                          <Button size="sm" variant="outline">
-                            <FileText className="w-4 h-4 mr-1" />
-                            Continue Editing
-                          </Button>
-                        </Link>
-                        <Link href="/dashboard/projects">
-                          <Button size="sm" variant="outline">
-                            View All Drafts
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </CardContent>
           </Card>
@@ -671,6 +596,75 @@ export default function DashboardPage() {
             </Card>
           )}
         </div>
+
+        {/* Timeline Activity Feed - Promoted for better visibility */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Your Journey</CardTitle>
+                <CardDescription>Recent activities, posts, and updates from your timeline</CardDescription>
+              </div>
+              <Link href="/journey">
+                <Button variant="outline" size="sm">
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  View Full Timeline
+                </Button>
+              </Link>
+            </div>
+          </CardHeader>
+          <CardContent className="p-6">
+            {timelineLoading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
+                <p className="text-gray-500">Loading your activity feed...</p>
+              </div>
+            ) : timelineError ? (
+              <div className="text-center py-8 text-red-600">
+                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+                <p className="mb-2">Failed to load timeline</p>
+                <p className="text-sm text-gray-500 mb-4">{timelineError}</p>
+                <Button variant="outline" onClick={() => user?.id && loadTimelineFeed(user.id)}>
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Try Again
+                </Button>
+              </div>
+            ) : timelineFeed && timelineFeed.events.length > 0 ? (
+              <TimelineComponent
+                feed={timelineFeed}
+                onLoadMore={() => {
+                  // TODO: Implement pagination loading
+                  logger.info('Load more timeline events requested', {}, 'Dashboard');
+                }}
+                showFilters={false}
+                compact={true}
+              />
+            ) : (
+              <div className="text-center py-12 text-gray-500">
+                <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Start Your Journey</h3>
+                <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
+                  Share your first update! Your timeline will show your posts, project updates, and interactions with the community.
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    onClick={() => router.push('/journey?compose=true')}
+                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
+                  >
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    Share Your First Post
+                  </Button>
+                  <Link href="/discover">
+                    <Button variant="outline">
+                      <Compass className="w-4 h-4 mr-2" />
+                      Explore Community
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* My Projects Section */}
         {safeProjects.length > 0 && (
@@ -844,61 +838,6 @@ export default function DashboardPage() {
                 </Button>
               </Link>
             </div>
-          </CardContent>
-        </Card>
-
-        {/* Timeline Activity Feed */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Activity Feed</CardTitle>
-            <CardDescription>Your timeline of activities, donations, and updates</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            {timelineLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading your activity feed...</p>
-              </div>
-            ) : timelineError ? (
-              <div className="text-center py-8 text-red-600">
-                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
-                <p className="mb-2">Failed to load timeline</p>
-                <p className="text-sm text-gray-500 mb-4">{timelineError}</p>
-                <Button variant="outline" onClick={() => user?.id && loadTimelineFeed(user.id)}>
-                  Try Again
-                </Button>
-              </div>
-            ) : timelineFeed ? (
-              <TimelineComponent
-                feed={timelineFeed}
-                onLoadMore={() => {
-                  // TODO: Implement pagination loading
-                  logger.info('Load more timeline events requested', {}, 'Dashboard');
-                }}
-                showFilters={true}
-                compact={false}
-              />
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p className="mb-2">No activity yet</p>
-                <p className="text-sm text-gray-400 mb-4">
-                  Your timeline will show activities as you interact with projects and other users.
-                </p>
-                <div className="flex gap-2 justify-center">
-                  <Link href="/projects/create">
-                    <Button variant="outline" size="sm">
-                      Create Project
-                    </Button>
-                  </Link>
-                  <Link href="/discover">
-                    <Button variant="outline" size="sm">
-                      Explore Projects
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>
