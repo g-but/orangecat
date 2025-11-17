@@ -9,8 +9,7 @@
  * Last Modified Summary: Enhanced timeout handling and error messages for better UX
  */
 
-import { createBrowserClient } from '@/lib/supabase/browser'
-const supabase = createBrowserClient()
+import supabase from '@/lib/supabase/browser'
 import { logger, logAuth } from '@/utils/logger'
 import type {
   AuthResponse,
