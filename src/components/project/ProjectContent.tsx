@@ -13,6 +13,7 @@ import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { ExternalLink } from 'lucide-react';
 import { getUniqueCategories } from '@/utils/project';
 import { ProjectDonationSection } from './ProjectDonationSection';
+import { ProjectUpdatesTimeline } from './ProjectUpdatesTimeline';
 
 interface ProjectContentProps {
   project: {
@@ -37,6 +38,7 @@ export function ProjectContent({ project }: ProjectContentProps) {
     : 0;
 
   return (
+    <>
     <Card className="mb-6">
       <CardContent className="space-y-6 pt-6">
         {/* Description */}
@@ -147,5 +149,9 @@ export function ProjectContent({ project }: ProjectContentProps) {
         />
       </CardContent>
     </Card>
+
+    {/* Project Updates Timeline - Separate card for better visual separation */}
+    <ProjectUpdatesTimeline projectId={project.id} />
+    </>
   );
 }

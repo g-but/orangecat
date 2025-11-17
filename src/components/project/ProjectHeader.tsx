@@ -14,6 +14,7 @@ import Image from 'next/image';
 import { Edit, Share2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/lib/routes';
+import { getUniqueCategories } from '@/utils/project';
 
 interface ProjectHeaderProps {
   project: {
@@ -22,6 +23,8 @@ interface ProjectHeaderProps {
     status: string;
     created_at: string;
     user_id: string;
+    category?: string | null;
+    tags?: string[] | null;
     profiles?: {
       username: string | null;
       name: string | null;
@@ -47,6 +50,23 @@ export function ProjectHeader({ project, isOwner, onShare, getStatusInfo }: Proj
       <div className="flex items-start justify-between gap-4 mb-4">
         <div className="flex-1">
           <h1 className="text-4xl font-bold text-gray-900 mb-3">{project.title}</h1>
+
+          {/* Categories - Show prominently for quick project understanding */}
+          {(project.category || (project.tags && project.tags.length > 0)) && (
+            <div className="flex flex-wrap gap-2 mb-4" role="list">
+              {getUniqueCategories(project.category, project.tags, { limit: 5 }).map(
+                (category, idx) => (
+                  <span
+                    key={`${category}-${idx}`}
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700 border border-orange-200"
+                    role="listitem"
+                  >
+                    {category}
+                  </span>
+                )
+              )}
+            </div>
+          )}
 
           {/* Creator Info */}
           {project.profiles ? (
@@ -125,14 +145,13 @@ export function ProjectHeader({ project, isOwner, onShare, getStatusInfo }: Proj
 
           {/* Status and Date */}
           <div className="flex items-center gap-3 flex-wrap">
-            {project.status !== 'draft' && project.status !== 'active' && (
-              <span
-                className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.className}`}
-                aria-label={`Project status: ${statusInfo.label}`}
-              >
-                {statusInfo.label}
-              </span>
-            )}
+            {/* Always show status badge - it's an important trust signal */}
+            <span
+              className={`px-3 py-1 rounded-full text-sm font-medium ${statusInfo.className}`}
+              aria-label={`Project status: ${statusInfo.label}`}
+            >
+              {statusInfo.label}
+            </span>
             <time dateTime={project.created_at} className="text-sm text-gray-500">
               Created {formatDistanceToNow(new Date(project.created_at), { addSuffix: true })}
             </time>
