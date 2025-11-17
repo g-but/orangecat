@@ -4,18 +4,33 @@ const https = require('https');
 const fs = require('fs');
 
 const PROJECT_REF = 'ohkueislstxomdjavyhs';
-const ACCESS_TOKEN =
-  process.env.SUPABASE_ACCESS_TOKEN || 'sbp_8a9797e27e1e7b1819c04ce9e2ccee0cfb9ed85b';
 
-// Read the migration file
+// Read token from .env.local if available
+let envToken = null;
+try {
+  const envContent = fs.readFileSync('.env.local', 'utf8');
+  const match = envContent.match(/SUPABASE_ACCESS_TOKEN=(.+)/);
+  if (match) {
+    envToken = match[1].trim();
+  }
+} catch (e) {
+  // .env.local not found, will use environment variable
+}
+
+const ACCESS_TOKEN =
+  process.env.SUPABASE_ACCESS_TOKEN || envToken || 'sbp_8a9797e27e1e7b1819c04ce9e2ccee0cfb9ed85b';
+
+// Read the social features migration file
 const migrationSQL = fs.readFileSync(
-  './supabase/migrations/20251113140000_enable_open_timeline_posting.sql',
+  './supabase/migrations/20251113000001_timeline_social_features.sql',
   'utf8'
 );
 
-const data = JSON.stringify({
+// Properly structure the data object - JSON.stringify will handle escaping
+const dataObj = {
   query: migrationSQL,
-});
+};
+const data = JSON.stringify(dataObj);
 
 const options = {
   hostname: 'api.supabase.com',
@@ -29,7 +44,8 @@ const options = {
   },
 };
 
-console.log('Applying timeline migration to production...');
+console.log('Applying timeline SOCIAL FEATURES migration to production...');
+console.log('This will enable: likes, comments, shares on timeline posts');
 console.log('Project:', PROJECT_REF);
 
 const req = https.request(options, res => {

@@ -28,13 +28,16 @@ docs/
 ├── getting-started/     # 🚀 Onboarding & setup
 ├── architecture/        # 🏗️ System design & architecture
 ├── development/         # 💻 Development guides & workflows
+├── workflows/           # 🔄 Proven operational workflows
 ├── features/            # ✨ Feature documentation
+│   └── posting/         # 📝 Posting system (mobile-first)
 ├── operations/          # 🔧 Operations & maintenance
 ├── deployment/          # 🚢 Deployment guides
 ├── security/            # 🔒 Security practices
 ├── testing/             # 🧪 Testing guides
 ├── changelog/           # 📝 Release notes
-└── standards/           # 📏 Standards & conventions
+├── standards/           # 📏 Standards & conventions
+└── archive/             # 🗄️ Historical docs (2024)
 ```
 
 ---
@@ -57,6 +60,18 @@ docs/
 - **[Hooks Guide](./development/hooks-guide.md)** - Custom React hooks
 - **[Utils Guide](./development/utils-guide.md)** - Utility functions
 - **[Types Guide](./development/types-guide.md)** - TypeScript types
+
+### **Features**
+
+- **[Posting System](./features/posting/README.md)** ⭐ NEW - Twitter/X-style posting with mobile-first design
+- **[Bitcoin Wallet](./features/bitcoin-wallet-guide.md)** - Bitcoin wallet integration
+- **[Intelligent Onboarding](./features/INTELLIGENT_ONBOARDING.md)** - Smart user onboarding
+
+### **Workflows**
+
+- **[Supabase Migration Workflow](./workflows/SUPABASE_MIGRATION_WORKFLOW.md)** - Complete migration guide
+- **[Migration Quick Reference](./workflows/MIGRATION_QUICK_REFERENCE.md)** - Fast lookup for common tasks
+- **[Migration Lessons Learned](./workflows/MIGRATION_LESSONS_LEARNED.md)** - What we learned from failures
 
 ### **Database**
 
@@ -91,7 +106,7 @@ docs/
 ### Development
 
 - **Setting up local environment**: See [Development Setup](./development/SETUP.md)
-- **Running migrations**: See [Migrations Guide](./supabase/migrations-guide.md)
+- **Running migrations**: See [Migration Workflow](./workflows/SUPABASE_MIGRATION_WORKFLOW.md) or [Quick Reference](./workflows/MIGRATION_QUICK_REFERENCE.md)
 - **Creating components**: See [Component Architecture](./components/component-architecture.md)
 - **Writing tests**: See [Test Guide](./testing/test-guide.md)
 
@@ -134,10 +149,11 @@ Use your IDE's search (Ctrl+Shift+F) to search across all documentation files.
 
 ### **Recently Updated**
 
-- **[Technical Debt](./development/technical-debt.md)** - 2025-11-03
-- **[Dashboard Analysis](./development/dashboard-analysis.md)** - 2025-11-03
-- **[UX/UI Fixes](./development/ux-ui-fixes.md)** - 2025-11-03
-- **[Category Fix](./development/category-fix.md)** - 2025-11-03
+- **[Documentation Audit](./DOCUMENTATION_AUDIT_2025-11-16.md)** - 2025-11-16 ⭐ NEW
+- **[Posting System](./features/posting/README.md)** - 2025-11-16 ⭐ NEW
+- **[Supabase Migration Workflow](./workflows/SUPABASE_MIGRATION_WORKFLOW.md)** - 2025-11-14
+- **[Migration Quick Reference](./workflows/MIGRATION_QUICK_REFERENCE.md)** - 2025-11-14
+- **[Migration Lessons Learned](./workflows/MIGRATION_LESSONS_LEARNED.md)** - 2025-11-14
 
 ---
 
@@ -184,6 +200,19 @@ When contributing documentation:
 
 ---
 
-**Last Updated:** 2025-11-03
-**Version:** 2.0.0
+**Last Updated:** 2025-11-16
+**Version:** 2.2.0
 **Maintainers:** Development Team
+
+---
+
+## 🗄️ Archive
+
+Historical documentation has been moved to preserve git history while keeping active docs clean:
+
+- **[Archive 2024](./archive/2024/)** - Completed analyses, fixes, and development logs
+  - 13 analysis documents
+  - 4 fix documentation files
+  - 22 development progress logs
+
+See **[Documentation Audit](./DOCUMENTATION_AUDIT_2025-11-16.md)** for cleanup details.

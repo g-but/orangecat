@@ -117,57 +117,8 @@ class TimelineService {
 
         eventId = data;
       } catch (dbError) {
-        // Database function doesn't exist - simulate success for demo purposes
-        logger.warn(
-          'Database function create_timeline_event not available, simulating success',
-          dbError,
-          'Timeline'
-        );
-
-        // Simulate a successful response
-        const mockEventId = `mock-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        const mockEvent: TimelineEvent = {
-          id: mockEventId,
-          eventType: request.eventType,
-          eventSubtype: request.eventSubtype,
-          actorId: actorId,
-          actorType: 'user',
-          subjectType: request.subjectType,
-          subjectId: request.subjectId,
-          targetType: request.targetType,
-          targetId: request.targetId,
-          title: request.title,
-          description: request.description,
-          content: request.content,
-          amountSats: request.amountSats,
-          amountBtc: request.amountBtc,
-          quantity: request.quantity,
-          visibility: request.visibility || 'public',
-          isFeatured: request.isFeatured || false,
-          metadata: request.metadata,
-          tags: request.tags,
-          parentEventId: request.parentEventId,
-          threadId: request.threadId,
-          eventTimestamp: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          isDeleted: false,
-          deletionReason: undefined,
-        };
-
-        // Store mock event in localStorage for persistence
-        const storedPosts = JSON.parse(localStorage.getItem('mock_timeline_posts') || '[]');
-        storedPosts.unshift(mockEvent); // Add to beginning
-        // Keep only last 50 posts
-        if (storedPosts.length > 50) {
-          storedPosts.splice(50);
-        }
-        localStorage.setItem('mock_timeline_posts', JSON.stringify(storedPosts));
-
-        return {
-          success: true,
-          event: mockEvent,
-        };
+        logger.error('Failed to execute timeline creation RPC', dbError, 'Timeline');
+        return { success: false, error: 'Timeline service unavailable' };
       }
 
       // Fetch the created event (only if database function succeeded)
@@ -382,24 +333,288 @@ class TimelineService {
   }
 
   /**
-   * Get project timeline
+   * Get project timeline feed
    */
-  async getProjectTimeline(projectId: string, limit: number = 50): Promise<TimelineDisplayEvent[]> {
+  async getProjectFeed(
+    projectId: string,
+    filters?: Partial<TimelineFilters>,
+    pagination?: Partial<TimelinePagination>
+  ): Promise<TimelineFeedResponse> {
     try {
-      const { data: events, error } = await supabase.rpc('get_project_timeline', {
-        p_project_id: projectId,
-        p_limit: Math.min(limit, this.MAX_PAGE_SIZE),
-      });
+      const page = pagination?.page || 1;
+      const limit = Math.min(pagination?.limit || this.DEFAULT_PAGE_SIZE, this.MAX_PAGE_SIZE);
+      const offset = (page - 1) * limit;
+
+      const sortBy = filters?.sortBy || 'recent';
+
+      // Query events where subject_type = 'project' and subject_id = projectId
+      const {
+        data: events,
+        error,
+        count,
+      } = await supabase
+        .from('enriched_timeline_events')
+        .select('*', { count: 'exact' })
+        .eq('subject_type', 'project')
+        .eq('subject_id', projectId)
+        .or(`visibility.eq.public,actor_id.eq.${await this.getCurrentUserId()}`)
+        .order('event_timestamp', { ascending: false })
+        .range(offset, offset + limit - 1);
 
       if (error) {
-        logger.error('Failed to fetch project timeline', error, 'Timeline');
+        logger.error('Failed to fetch project timeline feed', error, 'Timeline');
         throw error;
       }
 
-      return this.enrichEventsForDisplay(events || []);
+      // Transform enriched VIEW data to display events
+      const displayEvents = (events || []).map((event: any) => {
+        const timelineEvent = this.mapDbEventToTimelineEvent(event);
+
+        return {
+          ...timelineEvent,
+          eventType: undefined as any,
+          eventSubtype: undefined as any,
+          icon: this.getEventIcon(timelineEvent.eventType),
+          iconColor: this.getEventColor(timelineEvent.eventType),
+          displayType: this.getEventDisplayType(timelineEvent.eventType),
+          displaySubtype: timelineEvent.eventSubtype,
+          // Actor, subject, target data already pre-joined in VIEW
+          actor: event.actor_data
+            ? {
+                id: event.actor_data.id,
+                name: event.actor_data.display_name || event.actor_data.username || 'Unknown',
+                username: event.actor_data.username,
+                avatar: event.actor_data.avatar_url,
+                type: 'user' as TimelineActorType,
+              }
+            : undefined,
+          subject: event.subject_data
+            ? {
+                id: event.subject_data.id,
+                name:
+                  event.subject_data.type === 'profile'
+                    ? event.subject_data.display_name || event.subject_data.username
+                    : event.subject_data.title,
+                type: event.subject_data.type,
+                url:
+                  event.subject_data.type === 'profile'
+                    ? `/profiles/${event.subject_data.username || event.subject_data.id}`
+                    : `/projects/${event.subject_data.id}`,
+              }
+            : undefined,
+          target: event.target_data
+            ? {
+                id: event.target_data.id,
+                name:
+                  event.target_data.type === 'profile'
+                    ? event.target_data.display_name || event.target_data.username
+                    : event.target_data.title,
+                type: event.target_data.type,
+                url:
+                  event.target_data.type === 'profile'
+                    ? `/profiles/${event.target_data.username || event.target_data.id}`
+                    : `/projects/${event.target_data.id}`,
+              }
+            : undefined,
+          formattedAmount: this.formatAmount(timelineEvent),
+          timeAgo: this.getTimeAgo(timelineEvent.eventTimestamp),
+          isRecent: this.isEventRecent(timelineEvent.eventTimestamp),
+
+          // Social interaction data
+          likesCount: event.like_count || 0,
+          sharesCount: event.share_count || 0,
+          commentsCount: event.comment_count || 0,
+          userLiked: false,
+          userShared: false,
+          userCommented: false,
+        } as TimelineDisplayEvent;
+      });
+
+      return {
+        events: displayEvents,
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          hasNext: offset + limit < (count || 0),
+          hasPrev: page > 1,
+        },
+        filters: this.buildDefaultFilters(filters),
+        metadata: {
+          totalEvents: count || 0,
+          featuredEvents: displayEvents.filter(e => e.isFeatured).length,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    } catch (error) {
+      logger.error('Error fetching project timeline feed', error, 'Timeline');
+      // Return empty feed instead of throwing
+      return {
+        events: [],
+        pagination: {
+          page: 1,
+          limit: this.DEFAULT_PAGE_SIZE,
+          total: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+        filters: this.buildDefaultFilters(filters),
+        metadata: {
+          totalEvents: 0,
+          featuredEvents: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  /**
+   * Get profile timeline feed
+   */
+  async getProfileFeed(
+    profileId: string,
+    filters?: Partial<TimelineFilters>,
+    pagination?: Partial<TimelinePagination>
+  ): Promise<TimelineFeedResponse> {
+    try {
+      const page = pagination?.page || 1;
+      const limit = Math.min(pagination?.limit || this.DEFAULT_PAGE_SIZE, this.MAX_PAGE_SIZE);
+      const offset = (page - 1) * limit;
+
+      const sortBy = filters?.sortBy || 'recent';
+
+      // Query events where subject_type = 'profile' and subject_id = profileId
+      const {
+        data: events,
+        error,
+        count,
+      } = await supabase
+        .from('enriched_timeline_events')
+        .select('*', { count: 'exact' })
+        .eq('subject_type', 'profile')
+        .eq('subject_id', profileId)
+        .or(`visibility.eq.public,actor_id.eq.${await this.getCurrentUserId()}`)
+        .order('event_timestamp', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        logger.error('Failed to fetch profile timeline feed', error, 'Timeline');
+        throw error;
+      }
+
+      // Transform enriched VIEW data to display events
+      const displayEvents = (events || []).map((event: any) => {
+        const timelineEvent = this.mapDbEventToTimelineEvent(event);
+
+        return {
+          ...timelineEvent,
+          eventType: undefined as any,
+          eventSubtype: undefined as any,
+          icon: this.getEventIcon(timelineEvent.eventType),
+          iconColor: this.getEventColor(timelineEvent.eventType),
+          displayType: this.getEventDisplayType(timelineEvent.eventType),
+          displaySubtype: timelineEvent.eventSubtype,
+          // Actor, subject, target data already pre-joined in VIEW
+          actor: event.actor_data
+            ? {
+                id: event.actor_data.id,
+                name: event.actor_data.display_name || event.actor_data.username || 'Unknown',
+                username: event.actor_data.username,
+                avatar: event.actor_data.avatar_url,
+                type: 'user' as TimelineActorType,
+              }
+            : undefined,
+          subject: event.subject_data
+            ? {
+                id: event.subject_data.id,
+                name:
+                  event.subject_data.type === 'profile'
+                    ? event.subject_data.display_name || event.subject_data.username
+                    : event.subject_data.title,
+                type: event.subject_data.type,
+                url:
+                  event.subject_data.type === 'profile'
+                    ? `/profiles/${event.subject_data.username || event.subject_data.id}`
+                    : `/projects/${event.subject_data.id}`,
+              }
+            : undefined,
+          target: event.target_data
+            ? {
+                id: event.target_data.id,
+                name:
+                  event.target_data.type === 'profile'
+                    ? event.target_data.display_name || event.target_data.username
+                    : event.target_data.title,
+                type: event.target_data.type,
+                url:
+                  event.target_data.type === 'profile'
+                    ? `/profiles/${event.target_data.username || event.target_data.id}`
+                    : `/projects/${event.target_data.id}`,
+              }
+            : undefined,
+          formattedAmount: this.formatAmount(timelineEvent),
+          timeAgo: this.getTimeAgo(timelineEvent.eventTimestamp),
+          isRecent: this.isEventRecent(timelineEvent.eventTimestamp),
+
+          // Social interaction data
+          likesCount: event.like_count || 0,
+          sharesCount: event.share_count || 0,
+          commentsCount: event.comment_count || 0,
+          userLiked: false,
+          userShared: false,
+          userCommented: false,
+        } as TimelineDisplayEvent;
+      });
+
+      return {
+        events: displayEvents,
+        pagination: {
+          page,
+          limit,
+          total: count || 0,
+          hasNext: offset + limit < (count || 0),
+          hasPrev: page > 1,
+        },
+        filters: this.buildDefaultFilters(filters),
+        metadata: {
+          totalEvents: count || 0,
+          featuredEvents: displayEvents.filter(e => e.isFeatured).length,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    } catch (error) {
+      logger.error('Error fetching profile timeline feed', error, 'Timeline');
+      // Return empty feed instead of throwing
+      return {
+        events: [],
+        pagination: {
+          page: 1,
+          limit: this.DEFAULT_PAGE_SIZE,
+          total: 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+        filters: this.buildDefaultFilters(filters),
+        metadata: {
+          totalEvents: 0,
+          featuredEvents: 0,
+          lastUpdated: new Date().toISOString(),
+        },
+      };
+    }
+  }
+
+  /**
+   * Get project timeline
+   * @deprecated Use getProjectFeed instead. This method is kept for backward compatibility only.
+   */
+  async getProjectTimeline(projectId: string, limit: number = 50): Promise<TimelineDisplayEvent[]> {
+    try {
+      const feed = await this.getProjectFeed(projectId, {}, { limit });
+      return feed.events;
     } catch (error) {
       logger.error('Error fetching project timeline', error, 'Timeline');
-      throw error;
+      return [];
     }
   }
 
@@ -649,8 +864,21 @@ class TimelineService {
             likeCount: data.like_count || 0,
           };
         } catch (dbError) {
-          logger.warn('Database function not available for unlike', dbError, 'Timeline');
-          return { success: false, liked: false, likeCount: 0, error: 'Feature not available' };
+          logger.warn('Database function not available for unlike, using fallback', dbError, 'Timeline');
+          const { error: delErr } = await supabase
+            .from('timeline_likes')
+            .delete()
+            .eq('event_id', eventId)
+            .eq('user_id', targetUserId);
+          if (delErr) {
+            logger.error('Fallback unlike failed', delErr, 'Timeline');
+            return { success: false, liked: false, likeCount: 0, error: delErr.message };
+          }
+          const { count } = await supabase
+            .from('timeline_likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', eventId);
+          return { success: true, liked: false, likeCount: count || 0 };
         }
       } else {
         // Like the event
@@ -671,8 +899,20 @@ class TimelineService {
             likeCount: data.like_count || 0,
           };
         } catch (dbError) {
-          logger.warn('Database function not available for like', dbError, 'Timeline');
-          return { success: false, liked: false, likeCount: 0, error: 'Feature not available' };
+          logger.warn('Database function not available for like, using fallback', dbError, 'Timeline');
+          // Fallback: insert into timeline_likes and return new count
+          const { error: insertErr } = await supabase
+            .from('timeline_likes')
+            .insert({ event_id: eventId, user_id: targetUserId });
+          if (insertErr) {
+            logger.error('Fallback like failed', insertErr, 'Timeline');
+            return { success: false, liked: false, likeCount: 0, error: insertErr.message };
+          }
+          const { count } = await supabase
+            .from('timeline_likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', eventId);
+          return { success: true, liked: true, likeCount: count || 0 };
         }
       }
     } catch (error) {
@@ -713,8 +953,25 @@ class TimelineService {
           shareCount: data.share_count || 0,
         };
       } catch (dbError) {
-        logger.warn('Database function not available for share', dbError, 'Timeline');
-        return { success: false, shareCount: 0, error: 'Feature not available' };
+        logger.warn('Database function not available for share, using fallback', dbError, 'Timeline');
+        // Fallback: create a simple share event referencing the original
+        const fallback = await this.createEvent({
+          eventType: 'post_shared',
+          subjectType: 'profile',
+          title: 'Shared a post',
+          description: shareText || 'Shared from timeline',
+          metadata: { original_event_id: originalEventId },
+          visibility,
+        });
+        if (!fallback.success) {
+          return { success: false, shareCount: 0, error: fallback.error || 'Share failed' };
+        }
+        // Attempt to count share events referencing this original
+        const { count } = await supabase
+          .from('timeline_events')
+          .select('id', { count: 'exact', head: true })
+          .contains('metadata', { original_event_id: originalEventId });
+        return { success: true, shareCount: count || 0 };
       }
     } catch (error) {
       logger.error('Error sharing timeline event', error, 'Timeline');
@@ -755,12 +1012,72 @@ class TimelineService {
           commentCount: data.comment_count || 0,
         };
       } catch (dbError) {
-        logger.warn('Database function not available for comments', dbError, 'Timeline');
-        return { success: false, commentCount: 0, error: 'Feature not available' };
+        logger.warn('Database function not available for comments, using fallback', dbError, 'Timeline');
+        // Fallback: insert directly into timeline_comments
+        const { data: inserted, error: iErr } = await supabase
+          .from('timeline_comments')
+          .insert({ event_id: eventId, user_id: userId, content, parent_comment_id: parentCommentId })
+          .select('id')
+          .single();
+        if (iErr || !inserted) {
+          logger.error('Fallback add comment failed', iErr, 'Timeline');
+          return { success: false, commentCount: 0, error: iErr?.message || 'Add comment failed' };
+        }
+        const { count } = await supabase
+          .from('timeline_comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_id', eventId);
+        return { success: true, commentId: inserted.id, commentCount: count || 0 };
       }
     } catch (error) {
       logger.error('Error adding timeline comment', error, 'Timeline');
       return { success: false, commentCount: 0, error: 'Internal server error' };
+    }
+  }
+
+  /**
+   * Get like/comment counts for an event (fallback for feeds lacking counts)
+   */
+  async getEventCounts(eventId: string): Promise<{ likeCount: number; commentCount: number }> {
+    try {
+      const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
+        supabase.from('timeline_likes').select('*', { count: 'exact', head: true }).eq('event_id', eventId),
+        supabase.from('timeline_comments').select('*', { count: 'exact', head: true }).eq('event_id', eventId),
+      ]);
+      return { likeCount: likeCount || 0, commentCount: commentCount || 0 };
+    } catch (error) {
+      logger.error('Failed to get event counts', error, 'Timeline');
+      return { likeCount: 0, commentCount: 0 };
+    }
+  }
+
+  /**
+   * Update event visibility (owner only) and cascade effect handled by queries
+   */
+  async updateEventVisibility(
+    eventId: string,
+    visibility: 'public' | 'private',
+    userId?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const actorId = userId || (await this.getCurrentUserId());
+      if (!actorId) {
+        return { success: false, error: 'Authentication required' };
+      }
+      // Update visibility; RLS should ensure only owner can update
+      const { error } = await supabase
+        .from('timeline_events')
+        .update({ visibility })
+        .eq('id', eventId)
+        .eq('actor_id', actorId);
+      if (error) {
+        logger.error('Failed to update event visibility', error, 'Timeline');
+        return { success: false, error: error.message };
+      }
+      return { success: true };
+    } catch (error) {
+      logger.error('Error updating event visibility', error, 'Timeline');
+      return { success: false, error: 'Internal server error' };
     }
   }
 
@@ -783,8 +1100,40 @@ class TimelineService {
 
         return data || [];
       } catch (dbError) {
-        logger.warn('Database function not available for comments', dbError, 'Timeline');
-        return [];
+        logger.warn('Database function not available for comments, using fallback', dbError, 'Timeline');
+        // Fallback: query comments table directly and enrich with profile info
+        const { data: comments, error: cErr } = await supabase
+          .from('timeline_comments')
+          .select('id, event_id, user_id, content, created_at, parent_comment_id')
+          .eq('event_id', eventId)
+          .order('created_at', { ascending: true })
+          .range(offset, offset + limit - 1);
+        if (cErr || !comments) {
+          logger.error('Fallback comments query failed', cErr, 'Timeline');
+          return [];
+        }
+        const userIds = Array.from(new Set(comments.map(c => c.user_id).filter(Boolean)));
+        let profilesMap: Record<string, { display_name: string; avatar_url: string | null }> = {};
+        if (userIds.length > 0) {
+          const { data: profiles, error: pErr } = await supabase
+            .from('profiles')
+            .select('id, display_name, avatar_url')
+            .in('id', userIds as string[]);
+          if (!pErr && profiles) {
+            profilesMap = Object.fromEntries(
+              profiles.map((p: any) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url }])
+            );
+          }
+        }
+        return comments.map(c => ({
+          id: c.id,
+          content: c.content,
+          created_at: c.created_at,
+          user_id: c.user_id,
+          user_name: profilesMap[c.user_id]?.display_name || 'User',
+          user_avatar: profilesMap[c.user_id]?.avatar_url || null,
+          reply_count: 0,
+        }));
       }
     } catch (error) {
       logger.error('Error getting event comments', error, 'Timeline');
@@ -810,8 +1159,39 @@ class TimelineService {
 
         return data || [];
       } catch (dbError) {
-        logger.warn('Database function not available for comment replies', dbError, 'Timeline');
-        return [];
+        logger.warn('Database function not available for comment replies, using fallback', dbError, 'Timeline');
+        const { data: replies, error: rErr } = await supabase
+          .from('timeline_comments')
+          .select('id, event_id, user_id, content, created_at, parent_comment_id')
+          .eq('parent_comment_id', commentId)
+          .order('created_at', { ascending: true })
+          .limit(limit);
+        if (rErr || !replies) {
+          logger.error('Fallback replies query failed', rErr, 'Timeline');
+          return [];
+        }
+        const userIds = Array.from(new Set(replies.map(c => c.user_id).filter(Boolean)));
+        let profilesMap: Record<string, { display_name: string; avatar_url: string | null }> = {};
+        if (userIds.length > 0) {
+          const { data: profiles, error: pErr } = await supabase
+            .from('profiles')
+            .select('id, display_name, avatar_url')
+            .in('id', userIds as string[]);
+          if (!pErr && profiles) {
+            profilesMap = Object.fromEntries(
+              profiles.map((p: any) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url }])
+            );
+          }
+        }
+        return replies.map(c => ({
+          id: c.id,
+          content: c.content,
+          created_at: c.created_at,
+          user_id: c.user_id,
+          user_name: profilesMap[c.user_id]?.display_name || 'User',
+          user_avatar: profilesMap[c.user_id]?.avatar_url || null,
+          reply_count: 0,
+        }));
       }
     } catch (error) {
       logger.error('Error getting comment replies', error, 'Timeline');
@@ -1022,6 +1402,54 @@ class TimelineService {
     } catch (error) {
       logger.error('Error updating event visibility', error, 'Timeline');
       return false;
+    }
+  }
+
+  /**
+   * Update event content (title, description, metadata)
+   */
+  async updateEvent(
+    eventId: string,
+    updates: {
+      title?: string;
+      description?: string;
+      visibility?: TimelineVisibility;
+      metadata?: Record<string, any>;
+    }
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const updateData: any = {};
+
+      if (updates.title !== undefined) {
+        updateData.title = updates.title;
+      }
+
+      if (updates.description !== undefined) {
+        updateData.description = updates.description;
+      }
+
+      if (updates.visibility !== undefined) {
+        updateData.visibility = updates.visibility;
+      }
+
+      if (updates.metadata !== undefined) {
+        updateData.metadata = updates.metadata;
+      }
+
+      updateData.updated_at = new Date().toISOString();
+
+      const { error } = await supabase.from('timeline_events').update(updateData).eq('id', eventId);
+
+      if (error) {
+        logger.error('Failed to update timeline event', error, 'Timeline');
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Error updating timeline event', error, 'Timeline');
+      return { success: false, error: errorMessage };
     }
   }
 

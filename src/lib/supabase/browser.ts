@@ -67,7 +67,7 @@ const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
       const timeoutId = setTimeout(() => timeoutController.abort(), 20000);
 
       // Combine with existing signal if present
-      let combinedSignal = timeoutController.signal;
+      const combinedSignal = timeoutController.signal;
       if (options.signal) {
         // If there's an existing signal, abort our timeout when the existing signal aborts
         options.signal.addEventListener('abort', () => {

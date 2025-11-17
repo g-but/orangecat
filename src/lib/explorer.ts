@@ -8,7 +8,9 @@ export async function fetchAddressSummary(address: string): Promise<AddressSumma
   try {
     const base = getExplorerBase()
     const res = await fetch(`${base}/api/address/${address}`, { cache: 'no-store' as any })
-    if (!res.ok) return null
+    if (!res.ok) {
+      return null
+    }
     const data = (await res.json()) as any
     const chain = data.chain_stats || {}
     const balance = (chain.funded_txo_sum || 0) - (chain.spent_txo_sum || 0)

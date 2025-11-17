@@ -5,6 +5,12 @@ import bs58check from 'bs58check';
 
 export type WalletType = 'address' | 'xpub';
 
+export type WalletBehaviorType = 'general' | 'recurring_budget' | 'one_time_goal';
+
+export type BudgetPeriod = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
+
+export type GoalStatus = 'active' | 'paused' | 'reached' | 'purchased' | 'cancelled' | 'archived';
+
 export type WalletCategory =
   | 'general'
   | 'rent'
@@ -121,13 +127,50 @@ export interface Wallet {
   category: WalletCategory;
   category_icon: string;
 
+  // Behavior type determines how this wallet works
+  behavior_type: WalletBehaviorType;
+
+  // For recurring budgets
+  budget_amount: number | null;
+  budget_currency: string | null;
+  budget_period: BudgetPeriod | null;
+  budget_period_start_day: number | null;
+  budget_reset_day: number | null;
+  current_period_start: string | null;
+  current_period_end: string | null;
+  current_period_spent: number | null;
+  alert_threshold_percent: number | null;
+  alert_sent_at: string | null;
+
+  // For one-time goals (replaces old goal_* fields)
   goal_amount: number | null;
   goal_currency: string | null;
   goal_deadline: string | null;
+  goal_status: GoalStatus | null;
+  goal_reached_at: string | null;
+  goal_purchased_at: string | null;
+  purchase_notes: string | null;
+  milestone_25_reached_at: string | null;
+  milestone_50_reached_at: string | null;
+  milestone_75_reached_at: string | null;
+  milestone_100_reached_at: string | null;
 
+  // Social features for goals
+  is_public_goal: boolean;
+  allow_contributions: boolean;
+  contribution_count: number;
+
+  // Balance tracking
   balance_btc: number;
   balance_updated_at: string | null;
 
+  // Analytics
+  last_transaction_at: string | null;
+  transaction_count: number;
+  total_received: number;
+  total_spent: number;
+
+  // Display settings
   is_active: boolean;
   display_order: number;
   is_primary: boolean;
@@ -145,6 +188,56 @@ export interface WalletAddress {
   tx_count: number;
   last_tx_at: string | null;
   discovered_at: string;
+  is_used: boolean;
+  first_tx_at: string | null;
+  watch_status: 'active' | 'paused' | 'archived';
+}
+
+export interface BudgetPeriodRecord {
+  id: string;
+  wallet_id: string;
+  period_start: string;
+  period_end: string;
+  period_type: BudgetPeriod;
+  budget_amount: number;
+  budget_currency: string;
+  amount_spent: number;
+  transaction_count: number;
+  average_transaction: number | null;
+  largest_transaction: number | null;
+  status: 'active' | 'completed' | 'rolled_over' | 'cancelled';
+  completion_rate: number | null;
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface GoalMilestone {
+  id: string;
+  wallet_id: string;
+  milestone_percent: number;
+  milestone_amount: number;
+  reached_at: string | null;
+  was_celebrated: boolean;
+  shared_publicly: boolean;
+  transaction_id: string | null;
+  notes: string | null;
+  created_at: string;
+}
+
+export interface WalletContribution {
+  id: string;
+  wallet_id: string;
+  contributor_profile_id: string | null;
+  contributor_name: string | null;
+  is_anonymous: boolean;
+  amount_btc: number;
+  amount_usd: number | null;
+  message: string | null;
+  transaction_hash: string | null;
+  confirmed_at: string | null;
+  thanked: boolean;
+  public_visibility: boolean;
+  created_at: string;
 }
 
 export interface WalletFormData {
@@ -153,10 +246,36 @@ export interface WalletFormData {
   address_or_xpub: string;
   category: WalletCategory;
   category_icon?: string;
+  behavior_type: WalletBehaviorType;
+
+  // For recurring budgets
+  budget_amount?: number;
+  budget_currency?: string;
+  budget_period?: BudgetPeriod;
+  alert_threshold_percent?: number;
+
+  // For one-time goals
   goal_amount?: number;
   goal_currency?: string;
   goal_deadline?: string;
+  is_public_goal?: boolean;
+  allow_contributions?: boolean;
+
   is_primary?: boolean;
+}
+
+export interface RecurringBudgetFormData extends WalletFormData {
+  behavior_type: 'recurring_budget';
+  budget_amount: number;
+  budget_currency: string;
+  budget_period: BudgetPeriod;
+}
+
+export interface OneTimeGoalFormData extends WalletFormData {
+  behavior_type: 'one_time_goal';
+  goal_amount: number;
+  goal_currency: string;
+  goal_deadline?: string;
 }
 
 export interface ValidationResult {
@@ -363,4 +482,194 @@ export function calculateProgress(current: number, goal: number): number {
     return 0;
   }
   return Math.min((current / goal) * 100, 100);
+}
+
+/**
+ * Get wallet behavior display info
+ */
+export function getWalletBehaviorInfo(behaviorType: WalletBehaviorType): {
+  label: string;
+  description: string;
+  icon: string;
+} {
+  switch (behaviorType) {
+    case 'recurring_budget':
+      return {
+        label: 'Recurring Budget',
+        description: 'For ongoing expenses that repeat monthly',
+        icon: '🔄',
+      };
+    case 'one_time_goal':
+      return {
+        label: 'One-Time Savings Goal',
+        description: 'For specific purchases or projects',
+        icon: '🎯',
+      };
+    case 'general':
+    default:
+      return {
+        label: 'General Wallet',
+        description: 'No specific budget or goal',
+        icon: '💰',
+      };
+  }
+}
+
+/**
+ * Get budget period display info
+ */
+export function getBudgetPeriodInfo(period: BudgetPeriod): {
+  label: string;
+  description: string;
+} {
+  switch (period) {
+    case 'daily':
+      return { label: 'Daily', description: 'Resets every day' };
+    case 'weekly':
+      return { label: 'Weekly', description: 'Resets every week' };
+    case 'biweekly':
+      return { label: 'Bi-weekly', description: 'Resets every 2 weeks' };
+    case 'monthly':
+      return { label: 'Monthly', description: 'Resets every month' };
+    case 'quarterly':
+      return { label: 'Quarterly', description: 'Resets every 3 months' };
+    case 'yearly':
+      return { label: 'Yearly', description: 'Resets every year' };
+    case 'custom':
+    default:
+      return { label: 'Custom', description: 'Custom period' };
+  }
+}
+
+/**
+ * Calculate days remaining in a period
+ */
+export function getDaysRemaining(endDate: string | Date): number {
+  const end = typeof endDate === 'string' ? new Date(endDate) : endDate;
+  const now = new Date();
+  const diffTime = end.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+}
+
+/**
+ * Calculate daily amount needed to reach goal
+ */
+export function getDailyAmountNeeded(
+  currentAmount: number,
+  goalAmount: number,
+  deadline: string | Date
+): number | null {
+  const daysLeft = getDaysRemaining(deadline);
+  if (daysLeft <= 0 || goalAmount <= currentAmount) {
+    return null;
+  }
+  const remaining = goalAmount - currentAmount;
+  return remaining / daysLeft;
+}
+
+/**
+ * Check if wallet is over budget
+ */
+export function isOverBudget(spent: number, budget: number): boolean {
+  return spent > budget;
+}
+
+/**
+ * Check if wallet reached alert threshold
+ */
+export function reachedAlertThreshold(
+  spent: number,
+  budget: number,
+  threshold: number = 80
+): boolean {
+  if (budget <= 0) return false;
+  const percentUsed = (spent / budget) * 100;
+  return percentUsed >= threshold;
+}
+
+/**
+ * Get goal status display info
+ */
+export function getGoalStatusInfo(status: GoalStatus): {
+  label: string;
+  color: string;
+  description: string;
+} {
+  switch (status) {
+    case 'active':
+      return {
+        label: 'Active',
+        color: 'blue',
+        description: 'Currently saving toward this goal',
+      };
+    case 'paused':
+      return {
+        label: 'Paused',
+        color: 'gray',
+        description: 'Temporarily paused',
+      };
+    case 'reached':
+      return {
+        label: 'Goal Reached',
+        color: 'green',
+        description: 'Target amount reached!',
+      };
+    case 'purchased':
+      return {
+        label: 'Purchased',
+        color: 'purple',
+        description: 'Goal completed and purchased',
+      };
+    case 'cancelled':
+      return {
+        label: 'Cancelled',
+        color: 'red',
+        description: 'Goal was cancelled',
+      };
+    case 'archived':
+      return {
+        label: 'Archived',
+        color: 'gray',
+        description: 'Moved to archives',
+      };
+    default:
+      return {
+        label: 'Unknown',
+        color: 'gray',
+        description: 'Status unknown',
+      };
+  }
+}
+
+/**
+ * Format currency amount
+ */
+export function formatCurrency(amount: number, currency: string): string {
+  if (currency === 'BTC') {
+    return `${formatBTC(amount)} BTC`;
+  } else if (currency === 'SATS') {
+    return `${Math.round(amount).toLocaleString()} sats`;
+  } else {
+    // Fiat currencies
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  }
+}
+
+/**
+ * Check if a milestone has been reached
+ */
+export function checkMilestone(
+  current: number,
+  goal: number,
+  milestonePercent: number
+): boolean {
+  if (goal <= 0) return false;
+  const progress = (current / goal) * 100;
+  return progress >= milestonePercent;
 }

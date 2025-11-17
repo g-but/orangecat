@@ -140,7 +140,7 @@ export const cardStyles = {
     iconGradient: 'bg-gradient-to-r from-blue-100 to-indigo-100',
     iconColor: 'text-blue-600'
   },
-  project: {
+  projectAlt: {
     iconGradient: 'bg-gradient-to-r from-orange-100 to-red-100',
     iconColor: 'text-orange-600'
   }

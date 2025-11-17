@@ -29,24 +29,75 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (error) {
-      return apiNotFound('Profile not found');
+      // Attempt to bootstrap the missing profile and re-fetch
+      await ensureProfileRecord(supabase, user);
+      const { data: bootstrappedProfile, error: retryError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (retryError || !bootstrappedProfile) {
+        return apiNotFound('Profile not found');
+      }
+
+      return respondWithProfile(supabase, user, bootstrappedProfile);
     }
 
-    // Calculate dynamic project count
-    const { count: projectCount } = await supabase
-      .from('projects')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
-
-    // Add computed project_count to profile
-    const profileWithCounts = {
-      ...profile,
-      project_count: projectCount || 0,
-    };
-
-    return apiSuccess(profileWithCounts);
+    return respondWithProfile(supabase, user, profile);
   } catch (error) {
     return handleApiError(error);
+  }
+}
+
+type SupabaseServer = Awaited<ReturnType<typeof createServerClient>>;
+
+async function respondWithProfile(
+  supabase: SupabaseServer,
+  user: any,
+  profile: any
+) {
+  const { count: projectCount } = await supabase
+    .from('projects')
+    .select('*', { count: 'exact', head: true })
+    .eq('user_id', user.id);
+
+  const profileWithCounts = {
+    ...profile,
+    project_count: projectCount || 0,
+  };
+
+  return apiSuccess(profileWithCounts);
+}
+
+async function ensureProfileRecord(supabase: SupabaseServer, user: any) {
+  const username =
+    user.email && user.email.includes('@')
+      ? user.email.split('@')[0]
+      : `user_${user.id?.toString().slice(0, 8) || 'unknown'}`;
+
+  const name =
+    user.user_metadata?.full_name ||
+    user.user_metadata?.name ||
+    user.user_metadata?.display_name ||
+    (user.email && user.email.split('@')[0]) ||
+    'User';
+
+  try {
+    await supabase.from('profiles').insert({
+      id: user.id,
+      username,
+      name,
+      email: user.email,
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+  } catch (error: any) {
+    if (error.code === '23505') {
+      return;
+    }
+    throw error;
   }
 }
 
