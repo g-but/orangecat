@@ -138,7 +138,8 @@ function formatCurrency(amount: number, currency: string) {
     return `${amount.toFixed(8)} BTC`;
   }
   try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+    // Use a stable locale to avoid SSR/CSR hydration mismatches
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
   } catch {
     return `${amount.toFixed(2)} ${currency}`;
   }

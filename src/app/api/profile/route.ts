@@ -50,8 +50,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
+type SupabaseServer = Awaited<ReturnType<typeof createServerClient>>;
+
 async function respondWithProfile(
-  supabase: ReturnType<typeof createServerClient>,
+  supabase: SupabaseServer,
   user: any,
   profile: any
 ) {
@@ -68,7 +70,7 @@ async function respondWithProfile(
   return apiSuccess(profileWithCounts);
 }
 
-async function ensureProfileRecord(supabase: ReturnType<typeof createServerClient>, user: any) {
+async function ensureProfileRecord(supabase: SupabaseServer, user: any) {
   const username =
     user.email && user.email.includes('@')
       ? user.email.split('@')[0]

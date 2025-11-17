@@ -357,7 +357,7 @@ class TimelineService {
         .select('*', { count: 'exact' })
         .eq('subject_type', 'project')
         .eq('subject_id', projectId)
-        .eq('visibility', 'public')
+        .or(`visibility.eq.public,actor_id.eq.${await this.getCurrentUserId()}`)
         .order('event_timestamp', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -493,7 +493,7 @@ class TimelineService {
         .select('*', { count: 'exact' })
         .eq('subject_type', 'profile')
         .eq('subject_id', profileId)
-        .eq('visibility', 'public')
+        .or(`visibility.eq.public,actor_id.eq.${await this.getCurrentUserId()}`)
         .order('event_timestamp', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -864,8 +864,21 @@ class TimelineService {
             likeCount: data.like_count || 0,
           };
         } catch (dbError) {
-          logger.warn('Database function not available for unlike', dbError, 'Timeline');
-          return { success: false, liked: false, likeCount: 0, error: 'Feature not available' };
+          logger.warn('Database function not available for unlike, using fallback', dbError, 'Timeline');
+          const { error: delErr } = await supabase
+            .from('timeline_likes')
+            .delete()
+            .eq('event_id', eventId)
+            .eq('user_id', targetUserId);
+          if (delErr) {
+            logger.error('Fallback unlike failed', delErr, 'Timeline');
+            return { success: false, liked: false, likeCount: 0, error: delErr.message };
+          }
+          const { count } = await supabase
+            .from('timeline_likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', eventId);
+          return { success: true, liked: false, likeCount: count || 0 };
         }
       } else {
         // Like the event
@@ -886,8 +899,20 @@ class TimelineService {
             likeCount: data.like_count || 0,
           };
         } catch (dbError) {
-          logger.warn('Database function not available for like', dbError, 'Timeline');
-          return { success: false, liked: false, likeCount: 0, error: 'Feature not available' };
+          logger.warn('Database function not available for like, using fallback', dbError, 'Timeline');
+          // Fallback: insert into timeline_likes and return new count
+          const { error: insertErr } = await supabase
+            .from('timeline_likes')
+            .insert({ event_id: eventId, user_id: targetUserId });
+          if (insertErr) {
+            logger.error('Fallback like failed', insertErr, 'Timeline');
+            return { success: false, liked: false, likeCount: 0, error: insertErr.message };
+          }
+          const { count } = await supabase
+            .from('timeline_likes')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', eventId);
+          return { success: true, liked: true, likeCount: count || 0 };
         }
       }
     } catch (error) {
@@ -928,8 +953,25 @@ class TimelineService {
           shareCount: data.share_count || 0,
         };
       } catch (dbError) {
-        logger.warn('Database function not available for share', dbError, 'Timeline');
-        return { success: false, shareCount: 0, error: 'Feature not available' };
+        logger.warn('Database function not available for share, using fallback', dbError, 'Timeline');
+        // Fallback: create a simple share event referencing the original
+        const fallback = await this.createEvent({
+          eventType: 'post_shared',
+          subjectType: 'profile',
+          title: 'Shared a post',
+          description: shareText || 'Shared from timeline',
+          metadata: { original_event_id: originalEventId },
+          visibility,
+        });
+        if (!fallback.success) {
+          return { success: false, shareCount: 0, error: fallback.error || 'Share failed' };
+        }
+        // Attempt to count share events referencing this original
+        const { count } = await supabase
+          .from('timeline_events')
+          .select('id', { count: 'exact', head: true })
+          .contains('metadata', { original_event_id: originalEventId });
+        return { success: true, shareCount: count || 0 };
       }
     } catch (error) {
       logger.error('Error sharing timeline event', error, 'Timeline');
@@ -970,12 +1012,72 @@ class TimelineService {
           commentCount: data.comment_count || 0,
         };
       } catch (dbError) {
-        logger.warn('Database function not available for comments', dbError, 'Timeline');
-        return { success: false, commentCount: 0, error: 'Feature not available' };
+        logger.warn('Database function not available for comments, using fallback', dbError, 'Timeline');
+        // Fallback: insert directly into timeline_comments
+        const { data: inserted, error: iErr } = await supabase
+          .from('timeline_comments')
+          .insert({ event_id: eventId, user_id: userId, content, parent_comment_id: parentCommentId })
+          .select('id')
+          .single();
+        if (iErr || !inserted) {
+          logger.error('Fallback add comment failed', iErr, 'Timeline');
+          return { success: false, commentCount: 0, error: iErr?.message || 'Add comment failed' };
+        }
+        const { count } = await supabase
+          .from('timeline_comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_id', eventId);
+        return { success: true, commentId: inserted.id, commentCount: count || 0 };
       }
     } catch (error) {
       logger.error('Error adding timeline comment', error, 'Timeline');
       return { success: false, commentCount: 0, error: 'Internal server error' };
+    }
+  }
+
+  /**
+   * Get like/comment counts for an event (fallback for feeds lacking counts)
+   */
+  async getEventCounts(eventId: string): Promise<{ likeCount: number; commentCount: number }> {
+    try {
+      const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
+        supabase.from('timeline_likes').select('*', { count: 'exact', head: true }).eq('event_id', eventId),
+        supabase.from('timeline_comments').select('*', { count: 'exact', head: true }).eq('event_id', eventId),
+      ]);
+      return { likeCount: likeCount || 0, commentCount: commentCount || 0 };
+    } catch (error) {
+      logger.error('Failed to get event counts', error, 'Timeline');
+      return { likeCount: 0, commentCount: 0 };
+    }
+  }
+
+  /**
+   * Update event visibility (owner only) and cascade effect handled by queries
+   */
+  async updateEventVisibility(
+    eventId: string,
+    visibility: 'public' | 'private',
+    userId?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const actorId = userId || (await this.getCurrentUserId());
+      if (!actorId) {
+        return { success: false, error: 'Authentication required' };
+      }
+      // Update visibility; RLS should ensure only owner can update
+      const { error } = await supabase
+        .from('timeline_events')
+        .update({ visibility })
+        .eq('id', eventId)
+        .eq('actor_id', actorId);
+      if (error) {
+        logger.error('Failed to update event visibility', error, 'Timeline');
+        return { success: false, error: error.message };
+      }
+      return { success: true };
+    } catch (error) {
+      logger.error('Error updating event visibility', error, 'Timeline');
+      return { success: false, error: 'Internal server error' };
     }
   }
 
@@ -998,8 +1100,40 @@ class TimelineService {
 
         return data || [];
       } catch (dbError) {
-        logger.warn('Database function not available for comments', dbError, 'Timeline');
-        return [];
+        logger.warn('Database function not available for comments, using fallback', dbError, 'Timeline');
+        // Fallback: query comments table directly and enrich with profile info
+        const { data: comments, error: cErr } = await supabase
+          .from('timeline_comments')
+          .select('id, event_id, user_id, content, created_at, parent_comment_id')
+          .eq('event_id', eventId)
+          .order('created_at', { ascending: true })
+          .range(offset, offset + limit - 1);
+        if (cErr || !comments) {
+          logger.error('Fallback comments query failed', cErr, 'Timeline');
+          return [];
+        }
+        const userIds = Array.from(new Set(comments.map(c => c.user_id).filter(Boolean)));
+        let profilesMap: Record<string, { display_name: string; avatar_url: string | null }> = {};
+        if (userIds.length > 0) {
+          const { data: profiles, error: pErr } = await supabase
+            .from('profiles')
+            .select('id, display_name, avatar_url')
+            .in('id', userIds as string[]);
+          if (!pErr && profiles) {
+            profilesMap = Object.fromEntries(
+              profiles.map((p: any) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url }])
+            );
+          }
+        }
+        return comments.map(c => ({
+          id: c.id,
+          content: c.content,
+          created_at: c.created_at,
+          user_id: c.user_id,
+          user_name: profilesMap[c.user_id]?.display_name || 'User',
+          user_avatar: profilesMap[c.user_id]?.avatar_url || null,
+          reply_count: 0,
+        }));
       }
     } catch (error) {
       logger.error('Error getting event comments', error, 'Timeline');
@@ -1025,8 +1159,39 @@ class TimelineService {
 
         return data || [];
       } catch (dbError) {
-        logger.warn('Database function not available for comment replies', dbError, 'Timeline');
-        return [];
+        logger.warn('Database function not available for comment replies, using fallback', dbError, 'Timeline');
+        const { data: replies, error: rErr } = await supabase
+          .from('timeline_comments')
+          .select('id, event_id, user_id, content, created_at, parent_comment_id')
+          .eq('parent_comment_id', commentId)
+          .order('created_at', { ascending: true })
+          .limit(limit);
+        if (rErr || !replies) {
+          logger.error('Fallback replies query failed', rErr, 'Timeline');
+          return [];
+        }
+        const userIds = Array.from(new Set(replies.map(c => c.user_id).filter(Boolean)));
+        let profilesMap: Record<string, { display_name: string; avatar_url: string | null }> = {};
+        if (userIds.length > 0) {
+          const { data: profiles, error: pErr } = await supabase
+            .from('profiles')
+            .select('id, display_name, avatar_url')
+            .in('id', userIds as string[]);
+          if (!pErr && profiles) {
+            profilesMap = Object.fromEntries(
+              profiles.map((p: any) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url }])
+            );
+          }
+        }
+        return replies.map(c => ({
+          id: c.id,
+          content: c.content,
+          created_at: c.created_at,
+          user_id: c.user_id,
+          user_name: profilesMap[c.user_id]?.display_name || 'User',
+          user_avatar: profilesMap[c.user_id]?.avatar_url || null,
+          reply_count: 0,
+        }));
       }
     } catch (error) {
       logger.error('Error getting comment replies', error, 'Timeline');

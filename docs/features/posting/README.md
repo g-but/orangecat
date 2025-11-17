@@ -64,6 +64,7 @@ Twitter/X-style posting system with mobile-first design, robust error handling, 
 - `src/components/timeline/PostComposerMobile.tsx` - **Primary mobile composer.**
 - `src/components/ui/BottomSheet.tsx` - **New reusable component.**
 - `src/components/ui/OfflineQueueIndicator.tsx` - **New UI for offline queue status.**
+- `src/components/ui/OfflineQueueManager.tsx` - **New bottom sheet to view/remove/retry queued posts.**
 - `src/components/SyncManagerInitializer.tsx` - **New component for initializing sync.**
 - `src/components/timeline/PostingErrorBoundary.tsx` - Error recovery wrapper.
 
@@ -87,7 +88,7 @@ Twitter/X-style posting system with mobile-first design, robust error handling, 
 2.  **Final Polish:**
     - Comprehensive mobile device testing.
     - Refine animations and user feedback.
-    - Implement a full modal for viewing and managing queued posts (UI enhancement).
+    - Offline Queue Manager: bottom sheet added with remove/retry controls.
 
 **Timeline:** ~1 week
 
