@@ -15,10 +15,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { username } = await params;
   const supabase = await createServerClient();
 
+  // Support both username and UUID lookups
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(username);
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('name, bio, avatar_url, username')
-    .eq('username', username)
+    .eq(isUUID ? 'id' : 'username', username)
     .single();
 
   if (!profile) {
@@ -93,10 +96,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
   }
 
   // Fetch profile data server-side
+  // Support both username and UUID lookups
+  const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(targetUsername);
+
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
-    .eq('username', targetUsername)
+    .eq(isUUID ? 'id' : 'username', targetUsername)
     .single();
 
   if (profileError || !profile) {

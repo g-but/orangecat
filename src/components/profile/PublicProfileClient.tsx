@@ -14,6 +14,7 @@ import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab';
 import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
 import ProfileTimelineTab from '@/components/profile/ProfileTimelineTab';
 import ProfileProjectsTab from '@/components/profile/ProfileProjectsTab';
+import ProfilePeopleTab from '@/components/profile/ProfilePeopleTab';
 import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
 import {
   Bitcoin,
@@ -160,17 +161,18 @@ export default function PublicProfileClient({
       badge: stats?.projectCount,
       content: <ProfileProjectsTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
-    // Wallets tab - only show for own profile
-    ...(isOwnProfile
-      ? [
-          {
-            id: 'wallets',
-            label: 'Wallets',
-            icon: <Wallet className="w-4 h-4" />,
-            content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
-          },
-        ]
-      : []),
+    {
+      id: 'people',
+      label: 'People',
+      icon: <Users className="w-4 h-4" />,
+      content: <ProfilePeopleTab profile={profile} isOwnProfile={isOwnProfile} />,
+    },
+    {
+      id: 'wallets',
+      label: 'Wallets',
+      icon: <Wallet className="w-4 h-4" />,
+      content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
+    },
   ];
 
   return (
