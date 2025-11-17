@@ -10,7 +10,7 @@
 
 import { ComponentType, SVGProps } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Home, Users, Rocket, Settings, User, Compass, BookOpen, Globe } from 'lucide-react';
+import { Home, Users, Rocket, Settings, User, Compass, BookOpen, Globe, Wallet } from 'lucide-react';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
 
 export interface NavigationItem {
@@ -92,6 +92,13 @@ export const navigationSections: NavSection[] = [
         href: '/journey',
         icon: BookOpen,
         description: 'Your personal timeline and posts',
+        requiresAuth: true,
+      },
+      {
+        name: 'My Wallets',
+        href: '/dashboard/wallets',
+        icon: Wallet,
+        description: 'Manage your Bitcoin wallets and transfers',
         requiresAuth: true,
       },
       {
