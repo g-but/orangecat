@@ -1,6 +1,6 @@
 import { logger } from '@/utils/logger';
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/db';
+import { createServerClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 // Validation schema for internal transfers
