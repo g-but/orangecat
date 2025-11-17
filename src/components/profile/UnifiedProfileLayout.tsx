@@ -30,6 +30,7 @@ import { ROUTES } from '@/lib/routes';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import ProfileShare from '@/components/sharing/ProfileShare';
 import { Wallet, WALLET_CATEGORIES } from '@/types/wallet';
+import { WalletsSkeleton, ProfileStatsSkeleton, ProjectsSkeleton } from '@/components/profile/ProfileSkeleton';
 
 interface UnifiedProfileLayoutProps {
   profile: ScalableProfile;
@@ -139,7 +140,7 @@ export default function UnifiedProfileLayout({
     }
   };
 
-  // Close share dropdown when clicking outside
+  // Close share dropdown when clicking outside or pressing ESC
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -153,9 +154,19 @@ export default function UnifiedProfileLayout({
       }
     };
 
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && showShare) {
+        setShowShare(false);
+      }
+    };
+
     if (showShare) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscapeKey);
+      };
     }
   }, [showShare]);
 
@@ -200,11 +211,17 @@ export default function UnifiedProfileLayout({
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header Banner Section */}
         <div className="relative mb-8">
-          {/* Banner */}
-          <div className="relative h-80 bg-gradient-to-r from-orange-400 via-orange-500 to-teal-500 rounded-2xl shadow-xl overflow-hidden">
+          {/* Banner - Responsive height: 192px mobile → 256px tablet → 320px desktop */}
+          <div className="relative h-48 sm:h-64 lg:h-80 bg-gradient-to-r from-orange-400 via-orange-500 to-teal-500 rounded-2xl shadow-xl overflow-hidden">
             {/* Banner Image */}
             {profile.banner_url && (
-              <Image src={profile.banner_url} alt="Profile banner" fill className="object-cover" />
+              <Image
+                src={profile.banner_url}
+                alt="Profile banner"
+                fill
+                className="object-cover"
+                priority
+              />
             )}
 
             {/* Banner Overlay */}
@@ -212,32 +229,38 @@ export default function UnifiedProfileLayout({
             <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
           </div>
 
-          {/* Avatar */}
-          <div className="absolute -bottom-16 left-8">
+          {/* Avatar - Responsive positioning and sizing */}
+          <div className="absolute -bottom-12 sm:-bottom-16 left-4 sm:left-8">
             {profile.avatar_url ? (
               <Image
                 src={profile.avatar_url}
                 alt={profile.name || 'User'}
-                width={128}
-                height={128}
-                className="rounded-2xl object-cover border-4 border-white shadow-2xl"
+                width={96}
+                height={96}
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl object-cover border-4 border-white shadow-2xl"
+                priority
               />
             ) : (
-              <DefaultAvatar size={128} className="rounded-2xl border-4 border-white shadow-2xl" />
+              <DefaultAvatar
+                size={128}
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl border-4 border-white shadow-2xl"
+              />
             )}
           </div>
 
-          {/* Action Buttons */}
-          <div className="absolute top-6 right-6 flex gap-3">
+          {/* Action Buttons - Responsive layout */}
+          <div className="absolute top-4 right-4 sm:top-6 sm:right-6 flex flex-col sm:flex-row gap-2 sm:gap-3">
             {/* Share Button - Always visible */}
             <div className="relative" ref={shareButtonRef}>
               <Button
                 onClick={() => setShowShare(!showShare)}
                 variant="outline"
-                className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg"
+                className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg min-h-[44px]"
+                aria-label="Share profile"
+                aria-expanded={showShare}
               >
                 <Share2 className="w-4 h-4 mr-2" />
-                Share
+                <span>Share</span>
               </Button>
               {showShare && (
                 <div ref={shareDropdownRef} className="absolute top-full right-0 mt-2 z-50">
@@ -255,10 +278,11 @@ export default function UnifiedProfileLayout({
               <Button
                 onClick={() => onModeChange?.('edit')}
                 variant="outline"
-                className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg"
+                className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg min-h-[44px]"
+                aria-label="Edit profile"
               >
                 <Edit className="w-4 h-4 mr-2" />
-                Edit Profile
+                <span>Edit Profile</span>
               </Button>
             )}
 
@@ -267,21 +291,23 @@ export default function UnifiedProfileLayout({
                 onClick={handleFollowToggle}
                 disabled={isFollowLoading}
                 className={cn(
-                  'shadow-lg',
+                  'shadow-lg min-h-[44px]',
                   isFollowing
                     ? 'bg-gray-600 hover:bg-gray-700 text-white'
                     : 'bg-orange-600 hover:bg-orange-700 text-white'
                 )}
+                aria-label={isFollowing ? 'Unfollow user' : 'Follow user'}
+                aria-busy={isFollowLoading}
               >
                 <Users className="w-4 h-4 mr-2" />
-                {isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
+                <span>{isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}</span>
               </Button>
             )}
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-20">
+        {/* Main Content - Responsive spacing for avatar overlap */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-16 sm:mt-20">
           {/* Left Column - Profile Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Basic Info Card */}
@@ -310,14 +336,15 @@ export default function UnifiedProfileLayout({
             </div>
 
             {/* Bitcoin Wallets Section - Multi-Wallet System */}
+            {walletsLoading && <WalletsSkeleton />}
             {!walletsLoading && wallets.length > 0 && (
-              <div className="space-y-4">
+              <div className="space-y-4" data-wallet-section>
                 <h3 className="text-lg font-bold flex items-center gap-2">
                   <Bitcoin className="w-5 h-5 text-orange-500" />
                   Support This Profile
                 </h3>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-4 lg:grid-cols-2">
                   {wallets
                     .filter(w => w.is_active)
                     .map(wallet => {
@@ -573,15 +600,7 @@ function ProfileProjectsList({ userId, isOwnProfile }: { userId: string; isOwnPr
   };
 
   if (loading) {
-    return (
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <Target className="w-5 h-5 text-orange-500" />
-          Projects
-        </h3>
-        <div className="text-gray-500 text-sm">Loading projects...</div>
-      </div>
-    );
+    return <ProjectsSkeleton />;
   }
 
   // Filter out drafts for public display
@@ -716,20 +735,25 @@ function ProfileProjectsList({ userId, isOwnProfile }: { userId: string; isOwnPr
                     )}
                   </div>
 
-                  {/* Progress Section */}
+                  {/* Progress Section - Improved mobile visibility */}
                   {goalAmount > 0 ? (
                     <div className="space-y-2 mb-3">
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center justify-between text-xs sm:text-sm">
                         <span className="text-gray-600">Progress</span>
                         <span className="font-semibold text-gray-900">{progress.toFixed(1)}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div className="w-full bg-gray-200 rounded-full h-2.5 sm:h-3 overflow-hidden">
                         <div
-                          className="bg-gradient-to-r from-orange-500 to-amber-500 h-2 rounded-full transition-all duration-300"
+                          className="bg-gradient-to-r from-orange-500 to-amber-500 h-2.5 sm:h-3 rounded-full transition-all duration-300"
                           style={{ width: `${progress}%` }}
+                          role="progressbar"
+                          aria-valuenow={progress}
+                          aria-valuemin={0}
+                          aria-valuemax={100}
+                          aria-label={`Project funding progress: ${progress.toFixed(1)}%`}
                         />
                       </div>
-                      <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center justify-between text-xs sm:text-sm">
                         <span className="text-gray-500">
                           <CurrencyDisplay
                             amount={currentAmount}

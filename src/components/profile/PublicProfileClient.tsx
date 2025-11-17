@@ -61,48 +61,36 @@ export default function PublicProfileClient({
       {/* Use UnifiedProfileLayout for consistent UI */}
       <UnifiedProfileLayout profile={scalableProfile} isOwnProfile={isOwnProfile} mode="view" />
 
-      {/* Support CTA for non-own profiles with wallets */}
+      {/* Support CTA for non-own profiles with wallets - Simplified single action */}
       {!isOwnProfile && hasWallet && (
         <div className="max-w-7xl mx-auto px-4 pb-8">
           <Card className="bg-gradient-to-r from-orange-50 to-teal-50 border-2 border-orange-200">
-            <CardContent className="p-6">
-              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-2">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="text-center sm:text-left">
+                  <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">
                     Support {scalableProfile.name || profile.username}
                   </h3>
-                  <p className="text-gray-600">
+                  <p className="text-sm sm:text-base text-gray-600">
                     Send Bitcoin directly to support their work and projects
                   </p>
                 </div>
-                <div className="flex gap-3">
-                  {profile.bitcoin_address && (
-                    <Button
-                      onClick={() => {
-                        // Scroll to Bitcoin donation card
-                        const element = document.querySelector('[data-bitcoin-card]');
-                        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }}
-                      className="bg-orange-600 hover:bg-orange-700 text-white"
-                    >
-                      <Bitcoin className="w-4 h-4 mr-2" />
-                      Send Bitcoin
-                    </Button>
-                  )}
-                  {profile.lightning_address && (
-                    <Button
-                      onClick={() => {
-                        // Scroll to Lightning donation card
-                        const element = document.querySelector('[data-lightning-card]');
-                        element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }}
-                      variant="outline"
-                      className="border-yellow-400 hover:bg-yellow-50"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Send Lightning
-                    </Button>
-                  )}
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+                  <Button
+                    onClick={() => {
+                      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                      const element = document.querySelector('[data-wallet-section], [data-bitcoin-card]');
+                      element?.scrollIntoView({
+                        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+                        block: 'center'
+                      });
+                    }}
+                    className="bg-orange-600 hover:bg-orange-700 text-white min-h-[44px] w-full sm:w-auto"
+                    aria-label="View donation options"
+                  >
+                    <Bitcoin className="w-4 h-4 mr-2" />
+                    <span>Support with Bitcoin</span>
+                  </Button>
                 </div>
               </div>
             </CardContent>
@@ -159,21 +147,26 @@ export default function PublicProfileClient({
                   </CardHeader>
                   <CardContent>
                     {project.description && (
-                      <p className="text-sm text-gray-600 mb-4 line-clamp-3">
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2 sm:line-clamp-3">
                         {project.description}
                       </p>
                     )}
 
                     {project.goal_amount && (
                       <div className="mb-4">
-                        <div className="flex justify-between text-sm mb-1">
+                        <div className="flex justify-between text-xs sm:text-sm mb-1">
                           <span className="text-gray-600">Progress</span>
                           <span className="font-medium">{progress}%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-2.5 sm:h-3">
                           <div
-                            className="bg-gradient-to-r from-orange-500 to-teal-500 h-2 rounded-full transition-all"
+                            className="bg-gradient-to-r from-orange-500 to-teal-500 h-2.5 sm:h-3 rounded-full transition-all"
                             style={{ width: `${Math.min(progress, 100)}%` }}
+                            role="progressbar"
+                            aria-valuenow={progress}
+                            aria-valuemin={0}
+                            aria-valuemax={100}
+                            aria-label={`Project funding progress: ${progress}%`}
                           />
                         </div>
                         <div className="flex justify-between text-xs text-gray-500 mt-1">
