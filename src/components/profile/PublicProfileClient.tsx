@@ -11,8 +11,10 @@ import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import ProfileShare from '@/components/sharing/ProfileShare';
 import ProfileViewTabs from '@/components/profile/ProfileViewTabs';
 import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab';
+import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
 import ProfileTimelineTab from '@/components/profile/ProfileTimelineTab';
 import ProfileProjectsTab from '@/components/profile/ProfileProjectsTab';
+import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
 import {
   Bitcoin,
   Zap,
@@ -24,6 +26,8 @@ import {
   Target,
   Globe,
   ExternalLink,
+  Info,
+  Wallet,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -138,6 +142,12 @@ export default function PublicProfileClient({
       content: <ProfileOverviewTab profile={profile} stats={stats} />,
     },
     {
+      id: 'info',
+      label: 'Info',
+      icon: <Info className="w-4 h-4" />,
+      content: <ProfileInfoTab profile={profile} isOwnProfile={isOwnProfile} />,
+    },
+    {
       id: 'timeline',
       label: 'Timeline',
       icon: <MessageSquare className="w-4 h-4" />,
@@ -150,6 +160,17 @@ export default function PublicProfileClient({
       badge: stats?.projectCount,
       content: <ProfileProjectsTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
+    // Wallets tab - only show for own profile
+    ...(isOwnProfile
+      ? [
+          {
+            id: 'wallets',
+            label: 'Wallets',
+            icon: <Wallet className="w-4 h-4" />,
+            content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
+          },
+        ]
+      : []),
   ];
 
   return (
