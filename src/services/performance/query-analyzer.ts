@@ -8,7 +8,7 @@
  * Last Modified: 2025-10-17
  */
 
-import { supabase } from '@/services/supabase/client'
+import supabase from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
 
 interface SlowQuery {
