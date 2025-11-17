@@ -181,7 +181,18 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
       return;
     }
 
+    // Check if already reposted
+    if (event.userReposted) {
+      alert('You have already reposted this');
+      return;
+    }
+
     setIsReposting(true);
+    // Optimistic update
+    const originalReposted = !!event.userReposted;
+    const originalCount = event.repostsCount || 0;
+    onUpdate({ userReposted: true, repostsCount: originalCount + 1 });
+
     try {
       // Create a repost - essentially a new status update that references the original
       const result = await timelineService.createEvent({
@@ -192,7 +203,7 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
         title: `Repost from ${event.actor.name}`,
         description:
           event.description
-            ? `“${String(event.description).slice(0, 120)}”`
+            ? `"${String(event.description).slice(0, 120)}"`
             : 'Shared a post',
         visibility: 'public',
         metadata: {
@@ -205,20 +216,24 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
       });
 
       if (result.success) {
-        // Note: We don't update the current event's repost count here
-        // since reposts are separate timeline events
         logger.info('Successfully reposted event', null, 'Timeline');
+        // Keep optimistic update
+        onUpdate({ userReposted: true, repostsCount: originalCount + 1 });
       } else {
         logger.error('Failed to repost event', result.error, 'Timeline');
+        // Revert optimistic update
+        onUpdate({ userReposted: originalReposted, repostsCount: originalCount });
         alert(result.error || 'Failed to repost');
       }
     } catch (error) {
       logger.error('Error reposting event', error, 'Timeline');
+      // Revert optimistic update
+      onUpdate({ userReposted: originalReposted, repostsCount: originalCount });
       alert('Failed to repost');
     } finally {
       setIsReposting(false);
     }
-  }, [event.id, event.actor.id, event.actor.name, event.description, isReposting, user?.id]);
+  }, [event.id, event.actor.id, event.actor.name, event.description, event.userReposted, event.repostsCount, isReposting, user?.id, onUpdate]);
 
   const loadComments = useCallback(async () => {
     try {
@@ -536,8 +551,13 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
             {/* Repost Button */}
             <button
               onClick={handleRepost}
-              disabled={isReposting}
-              className="group flex items-center gap-2 px-2 py-1 rounded-full text-gray-500 hover:text-green-600 hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isReposting || event.userReposted}
+              className={`group flex items-center gap-2 px-2 py-1 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                event.userReposted
+                  ? 'text-green-600 bg-green-50'
+                  : 'text-gray-500 hover:text-green-600 hover:bg-green-50'
+              }`}
+              title={event.userReposted ? 'You reposted this' : 'Repost'}
             >
               <svg
                 className="w-5 h-5 transition-transform group-hover:scale-110"
@@ -552,7 +572,9 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              <span className="text-sm font-medium">Repost</span>
+              <span className="text-sm font-medium min-w-[1.5rem] text-left">
+                {(event.repostsCount || 0) > 0 ? event.repostsCount : ''}
+              </span>
             </button>
           </div>
 
