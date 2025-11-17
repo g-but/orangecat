@@ -46,34 +46,34 @@ const featuredStories = [
 
 export default function ProofSection() {
   return (
-    <section className="py-16 sm:py-20 lg:py-24 bg-white">
+    <section className="py-12 sm:py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4">
+        <div className="text-center mb-8 sm:mb-10 lg:mb-12">
+          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
             Real People. Real Projects. Real Transparency.
           </h2>
-          <p className="text-lg sm:text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
             Creators share their work, show how they use support, and build trust through transparency.
           </p>
         </div>
 
         {/* Story Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-10 lg:mb-12">
           {featuredStories.map((story, index) => (
             <CompactStoryCard key={story.name} {...story} index={index} />
           ))}
         </div>
 
         {/* CTA Row */}
-        <div className="text-center space-y-4">
-          <p className="text-gray-600">
+        <div className="text-center space-y-3 sm:space-y-4">
+          <p className="text-sm sm:text-base text-gray-600">
             These are real stories from people using OrangeCat. No charities. No fees. No guessing where your help goes.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Button size="lg" className="w-full sm:w-auto" href="/discover">
               Browse All Projects
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
             <Button variant="outline" size="lg" className="w-full sm:w-auto" href="/stories">
               Read All Stories

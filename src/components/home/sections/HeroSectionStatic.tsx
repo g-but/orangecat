@@ -14,8 +14,8 @@ export default function HeroSectionStatic() {
       {/* Background decoration */}
       <div className="absolute inset-0 bg-gradient-to-t from-white/20 via-transparent to-transparent" />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-28">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-28">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* Left Column - Content */}
           <div>
             {/* Trust Badge */}
@@ -31,7 +31,7 @@ export default function HeroSectionStatic() {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-4 sm:mb-6">
               Fund People. Support Projects.{' '}
               <span className="bg-gradient-to-r from-bitcoinOrange to-orange-600 bg-clip-text text-transparent">
                 Total Transparency.
@@ -39,35 +39,35 @@ export default function HeroSectionStatic() {
             </h1>
 
             {/* Subheadline */}
-            <p className="text-xl sm:text-2xl text-gray-600 leading-relaxed mb-4">
+            <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 leading-relaxed mb-3 sm:mb-4">
               Support creators directly with Bitcoin, or fund their specific projects. All transactions visible. Zero fees.
             </p>
 
             {/* Supporting text */}
-            <p className="text-lg text-gray-600 leading-relaxed mb-8">
+            <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8">
               Create your profile. Add projects. Link your Bitcoin wallet.
               Receive support from people who believe in your work. Show how you spend it.
             </p>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-8">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
               <Link href="/discover" className="w-full sm:w-auto">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto text-lg px-8 py-4 min-h-[56px] bg-gradient-to-r from-bitcoinOrange to-orange-500 hover:from-orange-600 hover:to-orange-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 min-h-[48px] sm:min-h-[56px] bg-gradient-to-r from-bitcoinOrange to-orange-500 hover:from-orange-600 hover:to-orange-600 transition-all duration-200 shadow-lg hover:shadow-xl"
                 >
-                  <TrendingUp className="mr-2 h-5 w-5" />
+                  <TrendingUp className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   Discover
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
                 </Button>
               </Link>
               <Link href="/auth" className="w-full sm:w-auto">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="w-full sm:w-auto text-lg px-8 py-4 min-h-[56px] border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
+                  className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 min-h-[48px] sm:min-h-[56px] border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
                 >
-                  <Bitcoin className="mr-2 h-5 w-5" />
+                  <Bitcoin className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
                   Start Your Project
                 </Button>
               </Link>
@@ -94,45 +94,45 @@ export default function HeroSectionStatic() {
           {/* Right Column - Visual Demo */}
           <div className="relative">
             {/* Demo Card - Real Orange Cat Project */}
-            <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            <div className="relative bg-white rounded-xl sm:rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
               {/* Card Header */}
-              <div className="p-6 border-b border-gray-100">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-bitcoinOrange to-orange-500 flex items-center justify-center text-2xl">
+              <div className="p-4 sm:p-6 border-b border-gray-100">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-bitcoinOrange to-orange-500 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
                     🐈
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900">Orange Cat</h3>
-                    <p className="text-sm text-gray-600">Transparent Bitcoin Fundraising Platform</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-sm sm:text-base">Orange Cat</h3>
+                    <p className="text-xs sm:text-sm text-gray-600">Transparent Bitcoin Fundraising Platform</p>
                   </div>
                 </div>
               </div>
 
               {/* Card Content */}
-              <div className="p-6 space-y-4">
+              <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
                 {/* Progress Bar */}
                 <div>
-                  <div className="flex justify-between text-sm mb-2">
+                  <div className="flex justify-between text-xs sm:text-sm mb-2">
                     <span className="font-semibold text-gray-900">69,420 CHF</span>
                     <span className="text-gray-600">goal</span>
                   </div>
-                  <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2 sm:h-3 bg-gray-100 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-bitcoinOrange to-orange-500 rounded-full"
                       style={{ width: '2%' }}
                     />
                   </div>
-                  <p className="text-xs text-gray-600 mt-2">Just getting started - be an early supporter!</p>
+                  <p className="text-xs text-gray-600 mt-1 sm:mt-2">Just getting started - be an early supporter!</p>
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 gap-4 pt-2">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-1 sm:pt-2">
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">0%</div>
+                    <div className="text-xl sm:text-2xl font-bold text-gray-900">0%</div>
                     <div className="text-xs text-gray-600">Platform Fees</div>
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-900">100%</div>
+                    <div className="text-xl sm:text-2xl font-bold text-gray-900">100%</div>
                     <div className="text-xs text-gray-600">To Creator</div>
                   </div>
                 </div>
@@ -140,19 +140,19 @@ export default function HeroSectionStatic() {
                 {/* CTA Button in Demo */}
                 <a
                   href="/discover"
-                  className="block w-full px-4 py-3 bg-gradient-to-r from-bitcoinOrange to-orange-500 text-white font-semibold rounded-lg hover:from-orange-600 hover:to-orange-600 transition-all duration-200 flex items-center justify-center gap-2"
+                  className="block w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gradient-to-r from-bitcoinOrange to-orange-500 text-white text-sm sm:text-base font-semibold rounded-lg hover:from-orange-600 hover:to-orange-600 transition-all duration-200 flex items-center justify-center gap-2"
                 >
-                  <Bitcoin className="w-5 h-5" />
+                  <Bitcoin className="w-4 h-4 sm:w-5 sm:h-5" />
                   View Project
                 </a>
               </div>
 
               {/* Floating badges */}
-              <div className="absolute -top-3 -right-3 px-3 py-1.5 bg-green-500 text-white text-xs font-semibold rounded-full shadow-lg">
+              <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-green-500 text-white text-[10px] sm:text-xs font-semibold rounded-full shadow-lg">
                 ✓ 0% Fees
               </div>
 
-              <div className="absolute -bottom-3 -left-3 px-3 py-1.5 bg-tiffany-500 text-white text-xs font-semibold rounded-full shadow-lg">
+              <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-tiffany-500 text-white text-[10px] sm:text-xs font-semibold rounded-full shadow-lg">
                 ⚡ Instant
               </div>
             </div>
