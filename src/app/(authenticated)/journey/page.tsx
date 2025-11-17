@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
-import TwitterTimeline from '@/components/timeline/TwitterTimeline';
+import SocialTimeline from '@/components/timeline/SocialTimeline';
 import { BookOpen, Plus } from 'lucide-react';
 
 /**
  * My Journey Page - Personal Timeline
  *
- * Uses the unified TwitterTimeline component with personal mode.
+ * Uses the unified SocialTimeline component with personal mode.
  * Identical interface to Community page but shows user's own posts.
  *
  * Handles URL params:
@@ -33,7 +33,7 @@ export default function MyJourneyPage() {
   }, [searchParams]);
 
   return (
-    <TwitterTimeline
+    <SocialTimeline
       title="My Journey"
       description="Your personal timeline and story"
       icon={BookOpen}
@@ -47,6 +47,7 @@ export default function MyJourneyPage() {
       defaultSort="recent"
       showSortingControls={false}
       showInlineComposer={true}
+      allowProjectSelection={true}
     />
   );
 }

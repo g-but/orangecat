@@ -10,6 +10,7 @@ import ProjectMediaGallery from '@/components/project/ProjectMediaGallery';
 import ProjectSummaryRail from '@/components/project/ProjectSummaryRail';
 import { ProjectHeader } from '@/components/project/ProjectHeader';
 import { ProjectContent } from '@/components/project/ProjectContent';
+import ProjectTimeline from '@/components/project/ProjectTimeline';
 import { ROUTES } from '@/lib/routes';
 import { useState } from 'react';
 
@@ -125,6 +126,15 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
                 isOwner,
               }}
             />
+
+            {/* Project Timeline */}
+            <div className="mt-8">
+              <ProjectTimeline
+                projectId={project.id}
+                projectTitle={project.title}
+                isOwner={isOwner}
+              />
+            </div>
           </div>
           <div>
             <ProjectSummaryRail

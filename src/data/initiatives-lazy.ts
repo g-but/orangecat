@@ -84,8 +84,8 @@ let iconMapCache: Record<string, LucideIcon> | null = null
 
 export async function loadIconComponent(iconName: string): Promise<LucideIcon> {
   if (!iconMapCache) {
-    const module = await import('./initiatives')
-    iconMapCache = module.ICON_MAP
+    const initiativesModule = await import('./initiatives')
+    iconMapCache = initiativesModule.ICON_MAP
   }
   
   const icon = iconMapCache[iconName]

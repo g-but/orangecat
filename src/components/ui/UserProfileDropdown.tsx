@@ -66,7 +66,7 @@ export default function UserProfileDropdown({
     {
       label: 'Edit Profile',
       icon: Settings,
-      href: '/profile',
+      href: '/profiles/me',
       description: 'Update your information',
     },
   ];
@@ -290,7 +290,7 @@ export default function UserProfileDropdown({
             <div className="p-6 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
               <div className="flex items-center space-x-4">
                 <Link
-                  href="/profile"
+                  href="/profiles/me"
                   onClick={e => {
                     e.stopPropagation();
                     close();

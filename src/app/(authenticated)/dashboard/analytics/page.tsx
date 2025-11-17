@@ -25,6 +25,7 @@ import {
   Heart,
 } from 'lucide-react';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
+import { formatCurrency } from '@/utils/currency';
 
 interface AnalyticsMetric {
   label: string;

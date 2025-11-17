@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
+
 const nextConfig = {
   // Externalize Supabase packages for server-side rendering
   // Note: 'standalone' output is REMOVED - it's incompatible with Vercel
@@ -167,7 +171,7 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withBundleAnalyzer(nextConfig);
 
 // Performance monitoring
 if (process.env.NODE_ENV === 'production') {

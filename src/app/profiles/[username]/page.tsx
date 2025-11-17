@@ -28,8 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const displayName =
-    profile.name || profile.username || username;
+  const displayName = profile.name || profile.username || username;
   const description =
     profile.bio ||
     `View ${displayName}'s profile on OrangeCat. Support their Bitcoin fundraising projects.`;
@@ -66,16 +65,38 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * - SEO optimization
  * - Social media preview cards
  * - Fast initial page load
+ * - Supports /profiles/me for current user's profile
  */
 export default async function PublicProfilePage({ params }: PageProps) {
   const { username } = await params;
   const supabase = await createServerClient();
 
+  // Handle /profiles/me → load current user
+  let targetUsername = username;
+  if (username === 'me') {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      // Not authenticated, redirect to login
+      return notFound();
+    }
+
+    // Get username for current user
+    const { data: userProfile } = await supabase
+      .from('profiles')
+      .select('username')
+      .eq('id', user.id)
+      .single();
+
+    targetUsername = userProfile?.username || user.id;
+  }
+
   // Fetch profile data server-side
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
-    .eq('username', username)
+    .eq('username', targetUsername)
     .single();
 
   if (profileError || !profile) {

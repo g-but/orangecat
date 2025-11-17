@@ -64,6 +64,8 @@
     "optimize:images": "node scripts/optimize-images.js",
     "security:scan": "npm audit && npm run test:security",
     "performance:check": "node scripts/performance-check.js",
+    "ts:report": "node scripts/report-ts-errors.js",
+    "ci:quality": "npm run ts:report && npm run bundle:monitor || true",
     "deployment:verify": "node scripts/verify-deployment-setup.js",
     "deployment:setup": "node scripts/verify-deployment-setup.js",
     "w": "./w",
@@ -121,6 +123,7 @@
     "clsx": "^2.1.1",
     "critters": "^0.0.23",
     "date-fns": "^4.1.0",
+    "focus-trap-react": "^11.0.4",
     "framer-motion": "^12.20.1",
     "glob": "^11.0.3",
     "gray-matter": "^4.0.3",
@@ -149,6 +152,7 @@
     "zustand": "^5.0.4"
   },
   "devDependencies": {
+    "@next/bundle-analyzer": "^16.0.3",
     "@playwright/test": "^1.53.0",
     "@swc/core": "^1.13.5",
     "@testing-library/jest-dom": "^6.6.3",
