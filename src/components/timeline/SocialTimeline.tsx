@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { timelineService } from '@/services/timeline';
 import TimelineLayout from './TimelineLayout';
@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import { LucideIcon, TrendingUp, Clock, Flame, Plus } from 'lucide-react';
 import { logger } from '@/utils/logger';
 import TimelineComposer from './TimelineComposer';
+import { deduplicateCrossPosts, filterOptimisticEvents } from '@/utils/timeline';
 
 export interface SocialTimelineProps {
   // Page identity
@@ -83,77 +84,17 @@ export default function SocialTimeline({
   }, [onOptimisticUpdate]);
 
   // Merge optimistic events with real feed and deduplicate cross-posts
-  const mergedFeed = React.useMemo(() => {
+  const mergedFeed = useMemo(() => {
     if (!timelineFeed) return null;
 
-    // Remove optimistic events that have been replaced by real events
-    const filteredOptimistic = optimisticEvents.filter(optEvent =>
-      !timelineFeed.events.some((realEvent: any) => {
-        // Match by content and timestamp (simple heuristic)
-        return realEvent.description === optEvent.description &&
-               Math.abs(new Date(realEvent.eventTimestamp).getTime() - new Date(optEvent.eventTimestamp).getTime()) < 5000; // 5 second window
-      })
-    );
+    // Filter out optimistic events that have been replaced by real events
+    const filteredOptimistic = filterOptimisticEvents(optimisticEvents, timelineFeed.events);
 
     let events = [...filteredOptimistic, ...timelineFeed.events];
 
     // Deduplicate cross-posts in community mode
     if (mode === 'community') {
-      // Group events by original_post_id
-      const eventGroups = new Map<string, any[]>();
-      const standaloneEvents: any[] = [];
-
-      events.forEach(event => {
-        const originalPostId = event.metadata?.original_post_id;
-        if (originalPostId) {
-          // This is a cross-post
-          if (!eventGroups.has(originalPostId)) {
-            eventGroups.set(originalPostId, []);
-          }
-          eventGroups.get(originalPostId)!.push(event);
-        } else if (event.metadata?.cross_posted_projects) {
-          // This is the main post with cross-posts
-          if (!eventGroups.has(event.id)) {
-            eventGroups.set(event.id, []);
-          }
-          eventGroups.get(event.id)!.push(event);
-        } else {
-          // Regular standalone event
-          standaloneEvents.push(event);
-        }
-      });
-
-      // Process grouped events
-      const deduplicatedEvents: any[] = [];
-      eventGroups.forEach((group, mainPostId) => {
-        // Find the main post (the one without cross_posted_from_main flag)
-        const mainPost = group.find(e => !e.metadata?.cross_posted_from_main);
-
-        if (mainPost) {
-          // Collect all cross-posted project info
-          const crossPosts = group.filter(e => e.metadata?.cross_posted_from_main);
-
-          // Add cross-post information to the main post
-          deduplicatedEvents.push({
-            ...mainPost,
-            metadata: {
-              ...mainPost.metadata,
-              cross_posts: crossPosts.map(cp => ({
-                id: cp.id,
-                project_id: cp.subjectId,
-                project_name: cp.metadata?.project_name, // This would need to be added
-              })),
-            },
-          });
-        } else if (group.length > 0) {
-          // If no main post found, just use the first one
-          deduplicatedEvents.push(group[0]);
-        }
-      });
-
-      events = [...standaloneEvents, ...deduplicatedEvents].sort((a, b) => {
-        return new Date(b.eventTimestamp).getTime() - new Date(a.eventTimestamp).getTime();
-      });
+      events = deduplicateCrossPosts(events);
     }
 
     return {

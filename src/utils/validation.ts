@@ -42,6 +42,22 @@ const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,30}$/
 // URL validation pattern
 const URL_PATTERN = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/
 
+// UUID validation pattern
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * Validate UUID format
+ * @param value - String to validate as UUID
+ * @returns boolean indicating if value is a valid UUID
+ */
+export function isValidUUID(value: string): boolean {
+  if (!value || typeof value !== 'string') {
+    return false
+  }
+
+  return UUID_PATTERN.test(value.trim())
+}
+
 /**
  * Validate Bitcoin address format
  * @param address - Bitcoin address to validate

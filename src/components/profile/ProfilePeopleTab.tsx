@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { Profile } from '@/types/database';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -32,38 +33,62 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
   const [activeView, setActiveView] = useState<'followers' | 'following'>('followers');
   const [followers, setFollowers] = useState<FollowUser[]>([]);
   const [following, setFollowing] = useState<FollowUser[]>([]);
+  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadConnections();
-  }, [profile.id]);
+  // Load followers when viewing followers tab
+  const loadFollowers = useCallback(async () => {
+    if (loadedTabs.has('followers')) return;
 
-  const loadConnections = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Load followers
-      const followersResponse = await fetch(`/api/social/followers/${profile.id}`);
-      if (followersResponse.ok) {
-        const followersData = await followersResponse.json();
-        setFollowers(followersData.data || []);
-      }
-
-      // Load following
-      const followingResponse = await fetch(`/api/social/following/${profile.id}`);
-      if (followingResponse.ok) {
-        const followingData = await followingResponse.json();
-        setFollowing(followingData.data || []);
+      const response = await fetch(`/api/social/followers/${profile.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFollowers(data.data || []);
+        setLoadedTabs(prev => new Set(prev).add('followers'));
       }
     } catch (err) {
-      logger.error('Error loading connections', err, 'ProfilePeopleTab');
-      setError('Failed to load connections');
+      logger.error('Error loading followers', err, 'ProfilePeopleTab');
+      setError('Failed to load followers');
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile.id, loadedTabs]);
+
+  // Load following when viewing following tab
+  const loadFollowing = useCallback(async () => {
+    if (loadedTabs.has('following')) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await fetch(`/api/social/following/${profile.id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFollowing(data.data || []);
+        setLoadedTabs(prev => new Set(prev).add('following'));
+      }
+    } catch (err) {
+      logger.error('Error loading following', err, 'ProfilePeopleTab');
+      setError('Failed to load following');
+    } finally {
+      setLoading(false);
+    }
+  }, [profile.id, loadedTabs]);
+
+  // Load appropriate data based on active view
+  useEffect(() => {
+    if (activeView === 'followers') {
+      loadFollowers();
+    } else {
+      loadFollowing();
+    }
+  }, [activeView, loadFollowers, loadFollowing]);
 
   if (loading) {
     return (
@@ -159,7 +184,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   {/* Avatar */}
-                  <a
+                  <Link
                     href={`/profiles/${user.username || user.id}`}
                     className="flex-shrink-0"
                   >
@@ -174,16 +199,16 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
                     ) : (
                       <DefaultAvatar size={48} className="rounded-full" />
                     )}
-                  </a>
+                  </Link>
 
                   {/* User Info */}
                   <div className="flex-1 min-w-0">
-                    <a
+                    <Link
                       href={`/profiles/${user.username || user.id}`}
                       className="font-semibold text-gray-900 hover:text-orange-600 transition-colors block truncate"
                     >
                       {user.name || 'Anonymous'}
-                    </a>
+                    </Link>
                     {user.username && (
                       <p className="text-sm text-gray-500 truncate">@{user.username}</p>
                     )}
@@ -195,17 +220,16 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
 
                 {/* Action Button */}
                 <div className="mt-3">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => {
-                      window.location.href = `/profiles/${user.username || user.id}`;
-                    }}
-                  >
-                    <User className="w-4 h-4 mr-2" />
-                    View Profile
-                  </Button>
+                  <Link href={`/profiles/${user.username || user.id}`}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      View Profile
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
