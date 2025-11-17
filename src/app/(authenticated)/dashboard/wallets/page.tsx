@@ -25,7 +25,7 @@ export default function WalletsPage() {
         setLoading(true);
         setError(null);
 
-        const response = await fetch('/api/wallets');
+        const response = await fetch(`/api/wallets?profile_id=${user.id}`);
         if (!response.ok) {
           throw new Error('Failed to load wallets');
         }
