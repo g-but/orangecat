@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { Bitcoin } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface Props {
   project: {
@@ -16,6 +17,8 @@ interface Props {
     bitcoin_address?: string | null;
     bitcoin_balance_btc?: number;
     bitcoin_balance_updated_at?: string | null;
+    supporters_count?: number;
+    last_donation_at?: string | null;
     user_id?: string;
   };
   isOwner?: boolean;
@@ -92,14 +95,48 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
           </div>
         )}
         {project.bitcoin_address && (
-          <div className="text-xs text-gray-500 mt-1">
-            BTC: {(project.bitcoin_balance_btc || 0).toFixed(8)} BTC
+          <div className="mt-3 p-3 bg-orange-50 rounded-lg border border-orange-100">
+            <div className="flex items-center gap-2 mb-1">
+              <Bitcoin className="w-4 h-4 text-orange-600" />
+              <span className="text-xs font-medium text-orange-700 uppercase tracking-wide">
+                Bitcoin Balance
+              </span>
+            </div>
+            <div className="text-base font-semibold text-gray-900">
+              {(project.bitcoin_balance_btc || 0).toFixed(8)} BTC
+            </div>
+            {project.bitcoin_balance_updated_at && (
+              <div className="text-xs text-gray-500 mt-1">
+                Updated {formatDistanceToNow(new Date(project.bitcoin_balance_updated_at), { addSuffix: true })}
+              </div>
+            )}
           </div>
         )}
       </div>
       <div className="w-full bg-gray-200 rounded-full h-3">
         <div className="bg-orange-500 h-3 rounded-full" style={{ width: `${progress}%` }} />
       </div>
+
+      {/* Social Proof - Supporters Count */}
+      {(project.supporters_count || project.last_donation_at) && (
+        <div className="space-y-2 text-sm border-t pt-4">
+          {project.supporters_count !== undefined && project.supporters_count > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600">Supporters</span>
+              <span className="font-semibold text-gray-900">
+                {project.supporters_count} {project.supporters_count === 1 ? 'person' : 'people'}
+              </span>
+            </div>
+          )}
+          {project.last_donation_at && (
+            <div className="text-xs text-green-600 flex items-center gap-1">
+              <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
+              Last donation {formatDistanceToNow(new Date(project.last_donation_at), { addSuffix: true })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Owner Actions */}
       {isOwner && project.bitcoin_address && (
         <Button onClick={onRefresh} disabled={refreshing} variant="outline" className="w-full">
@@ -138,7 +175,8 @@ function formatCurrency(amount: number, currency: string) {
     return `${amount.toFixed(8)} BTC`;
   }
   try {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency }).format(amount);
+    // Use a stable locale to avoid SSR/CSR hydration mismatches
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
   } catch {
     return `${amount.toFixed(2)} ${currency}`;
   }

@@ -11,6 +11,7 @@ import { DevPerformanceMonitor } from '@/components/dashboard/PerformanceMonitor
 import { NavigationShortcuts } from '@/components/navigation/NavigationShortcuts';
 import MobileSearchModal from '@/components/search/MobileSearchModal';
 import ExperimentalBanner from '@/components/ui/ExperimentalBanner';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 
 interface AuthenticatedLayoutProps {
   children: React.ReactNode;
@@ -80,7 +81,7 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
       {/* Main Content */}
       <div
-        className={`flex-1 transition-all ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} pt-16 ${
+        className={`flex-1 transition-all ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} pt-16 pb-20 md:pb-0 ${
           navigationState.isSidebarOpen ? 'lg:ml-64' : 'lg:ml-20'
         }`}
       >
@@ -93,6 +94,9 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
 
       {/* Mobile Search Modal */}
       <MobileSearchModal isOpen={showMobileSearch} onClose={() => setShowMobileSearch(false)} />
+
+      {/* Mobile Bottom Navigation - Context-aware for authenticated routes */}
+      <MobileBottomNav />
     </div>
   );
 }

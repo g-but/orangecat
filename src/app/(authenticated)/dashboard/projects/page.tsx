@@ -120,10 +120,10 @@ export default function ProjectsDashboardPage() {
           return p.isPaused;
         }
         if (statusFilter === 'completed') {
-          return p.status === 'completed';
+          return (p as any).status === 'completed';
         }
         if (statusFilter === 'cancelled') {
-          return p.status === 'cancelled';
+          return (p as any).status === 'cancelled';
         }
         return true;
       });

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Shield, CheckCircle, Circle, TrendingUp, Info } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
-import { Progress } from '@/components/ui/Progress'
+import { Progress } from '@/components/ui/progress'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
@@ -97,25 +97,47 @@ export function TransparencyScore({
   const percentage = Math.round((score / maxScore) * 100)
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-600'
-    if (score >= 60) return 'text-blue-600'
-    if (score >= 40) return 'text-orange-600'
+    if (score >= 80) {
+      return 'text-green-600'
+    }
+    if (score >= 60) {
+      return 'text-blue-600'
+    }
+    if (score >= 40) {
+      return 'text-orange-600'
+    }
     return 'text-red-600'
   }
 
   const getScoreBgColor = (score: number) => {
-    if (score >= 80) return 'bg-green-50 border-green-200'
-    if (score >= 60) return 'bg-blue-50 border-blue-200'
-    if (score >= 40) return 'bg-orange-50 border-orange-200'
+    if (score >= 80) {
+      return 'bg-green-50 border-green-200'
+    }
+    if (score >= 60) {
+      return 'bg-blue-50 border-blue-200'
+    }
+    if (score >= 40) {
+      return 'bg-orange-50 border-orange-200'
+    }
     return 'bg-red-50 border-red-200'
   }
 
   const getScoreLabel = (score: number) => {
-    if (score >= 90) return 'Excellent'
-    if (score >= 80) return 'Very Good'
-    if (score >= 70) return 'Good'
-    if (score >= 60) return 'Fair'
-    if (score >= 40) return 'Needs Improvement'
+    if (score >= 90) {
+      return 'Excellent'
+    }
+    if (score >= 80) {
+      return 'Very Good'
+    }
+    if (score >= 70) {
+      return 'Good'
+    }
+    if (score >= 60) {
+      return 'Fair'
+    }
+    if (score >= 40) {
+      return 'Needs Improvement'
+    }
     return 'Incomplete'
   }
 

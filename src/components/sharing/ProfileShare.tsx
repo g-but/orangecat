@@ -159,10 +159,10 @@ export default function ProfileShare({
   // Check if native share is available
   const hasNativeShare = typeof navigator !== 'undefined' && !!navigator.share;
 
-  // Default dropdown variant
+  // Default dropdown variant - Responsive width
   return (
     <div
-      className={`bg-white rounded-lg shadow-lg border border-gray-200 p-4 min-w-80 ${className}`}
+      className={`bg-white rounded-lg shadow-lg border border-gray-200 p-4 w-screen max-w-[calc(100vw-2rem)] sm:w-80 sm:max-w-none ${className}`}
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-gray-900 flex items-center gap-2">

@@ -11,17 +11,31 @@ interface ProfileProgressProps {
 
 export function ProfileProgress({ percentage, className }: ProfileProgressProps) {
   const getCompletionMessage = () => {
-    if (percentage === 100) return "Amazing profile! You're all set! 🌟"
-    if (percentage >= 80) return "Almost perfect! Just a few more details! 🚀"
-    if (percentage >= 60) return "Looking great! Keep it up! 💪"
-    if (percentage >= 40) return "Nice start! Add more to stand out! ✨"
+    if (percentage === 100) {
+      return "Amazing profile! You're all set! 🌟"
+    }
+    if (percentage >= 80) {
+      return "Almost perfect! Just a few more details! 🚀"
+    }
+    if (percentage >= 60) {
+      return "Looking great! Keep it up! 💪"
+    }
+    if (percentage >= 40) {
+      return "Nice start! Add more to stand out! ✨"
+    }
     return "Let's make your profile awesome! 🎨"
   }
 
   const getCompletionColor = () => {
-    if (percentage >= 80) return 'bg-gradient-to-r from-green-400 to-green-600'
-    if (percentage >= 60) return 'bg-gradient-to-r from-yellow-400 to-orange-500'
-    if (percentage >= 40) return 'bg-gradient-to-r from-orange-400 to-orange-600'
+    if (percentage >= 80) {
+      return 'bg-gradient-to-r from-green-400 to-green-600'
+    }
+    if (percentage >= 60) {
+      return 'bg-gradient-to-r from-yellow-400 to-orange-500'
+    }
+    if (percentage >= 40) {
+      return 'bg-gradient-to-r from-orange-400 to-orange-600'
+    }
     return 'bg-gradient-to-r from-gray-400 to-gray-600'
   }
 
