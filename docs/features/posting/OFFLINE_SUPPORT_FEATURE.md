@@ -16,7 +16,8 @@
   - `removeFromQueue(id)`: Removes a post from the queue after successful sync.
   - `incrementAttemptCount(id)`: Tracks sync attempts for each post.
   - `clearQueue()`: Empties the entire queue.
-- **Integration:** Dispatches `offline-queue-updated` custom events to notify UI components of changes.
+- **Integration:** Dispatches namespaced custom events to notify UI components of changes.
+  - `offline-queue:updated` (and legacy `offline-queue-updated` for back-compat)
 
 ---
 
@@ -39,15 +40,17 @@
 
 - **Purpose:** Orchestrates the background synchronization of queued posts.
 - **Key Functionality:**
-  - `init()`: Initializes the manager, listening for the browser's `online` event.
+  - `init()`: Initializes the manager, listening for `online` and `visibilitychange` events.
+  - `setCurrentUser(userId)`: Limits syncing to the active user's queued posts.
   - `processQueue()`:
-    - Executed when the browser comes online or on initial load (with a delay).
-    - Retrieves posts from `offlineQueueService`.
+    - Executed when the browser comes online, tab becomes visible, or on initial load (delayed).
+    - Retrieves posts by user from `offlineQueueService`.
     - Attempts to send each post to `timelineService.createEvent()`.
     - Removes successfully sent posts from the queue.
-    - Increments `attempts` for failed posts and removes posts exceeding `MAX_SYNC_ATTEMPTS`.
-    - Dispatches `offline-queue-updated` events after processing.
-- **Resilience:** Includes retry logic and handles max attempt limits to prevent stuck posts.
+    - Error classification: drops 4xx failures, retries 429/5xx/network failures.
+    - Schedules exponential backoff with jitter if items remain.
+    - Emits lifecycle events: `offline-queue:sync-start`, `offline-queue:sync-progress`, `offline-queue:sync-complete`.
+- **Resilience:** Backoff + jitter, user scoping, and max attempt limits to prevent stuck posts.
 
 ---
 
@@ -57,9 +60,9 @@
 
 - **Purpose:** A React hook to provide real-time status of the offline queue to UI components.
 - **Key Functionality:**
-  - Monitors `offline-queue-updated` events and `online`/`offline` browser events.
-  - Provides `queueLength` and `isOnline` state.
-  - Exports `dispatchQueueUpdatedEvent()` for other services to trigger UI updates.
+  - Monitors namespaced lifecycle events (`offline-queue:updated`, `offline-queue:sync-*`) and `online`/`offline` browser events.
+  - Provides `queueLength`, `isOnline`, `isSyncing`, and progress `{ processed, total }`.
+  - Filters queue by current user for accuracy.
 
 ### `src/components/ui/OfflineQueueIndicator.tsx`
 
@@ -67,9 +70,10 @@
 - **Key Functionality:**
   - Uses `useOfflineQueue` to get status.
   - Renders a small, fixed-position button in the bottom-left corner.
-  - Conditionally visible if `!isOnline` or `queueLength > 0`.
-  - Displays different icons and text for "Offline Mode", "Syncing...", and "X posts pending".
-  - Provides basic `onClick` feedback (future enhancement: open queue management modal).
+  - Visible if offline, syncing, or items are queued.
+  - Displays icons and text for "Offline Mode", "Syncing A/B", and "X posts pending".
+  - Announces updates with `aria-live="polite"`.
+  - On click: opens Queue Manager (bottom sheet) to view/remove queued posts (rolling out).
 
 ### `src/components/SyncManagerInitializer.tsx`
 

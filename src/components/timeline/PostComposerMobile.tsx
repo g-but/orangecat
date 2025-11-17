@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -34,7 +35,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
   compact = false,
   ...composerOptions
 }) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const composer = usePostComposer({
     ...composerOptions,
     allowProjectSelection: showProjectSelection,
@@ -44,8 +45,10 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
 
-  const LazyPostOptionsSheet = lazy(() =>
-    import('./PostOptionsSheet').then(module => ({ default: module.PostOptionsSheet }))
+  // Lazy-load options sheet using next/dynamic to avoid hydration issues
+  const LazyPostOptionsSheet = dynamic(
+    () => import('./PostOptionsSheet').then(module => ({ default: module.PostOptionsSheet })),
+    { ssr: false, loading: () => null }
   );
 
   // Auto-focus on mount (mobile-friendly)
@@ -89,11 +92,12 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
         {!compact && (
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-shrink-0">
-              {user?.user_metadata?.avatar_url ? (
+              {profile?.avatar_url || user?.user_metadata?.avatar_url ? (
                 <img
-                  src={user.user_metadata.avatar_url}
+                  src={(profile as any)?.avatar_url || user?.user_metadata?.avatar_url}
                   alt={user.user_metadata.name || 'User avatar'}
                   className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                 />
               ) : (
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
@@ -162,14 +166,12 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
 
         {/* Options moved to PostOptionsSheet (lazy loaded) */}
         {isOptionsSheetOpen && (
-          <Suspense fallback={null}>
-            <LazyPostOptionsSheet
-              isOpen={isOptionsSheetOpen}
-              onClose={() => setIsOptionsSheetOpen(false)}
-              showVisibilityToggle={showVisibilityToggle}
-              showProjectSelection={showProjectSelection}
-            />
-          </Suspense>
+          <LazyPostOptionsSheet
+            isOpen={isOptionsSheetOpen}
+            onClose={() => setIsOptionsSheetOpen(false)}
+            showVisibilityToggle={showVisibilityToggle}
+            showProjectSelection={showProjectSelection}
+          />
         )}
 
         {/* Error/Success Messages */}

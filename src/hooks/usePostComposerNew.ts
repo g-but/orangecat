@@ -209,19 +209,19 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title, description')
+        .select('id, title, description, status')
         .eq('creator_id', user.id)
-        .eq('status', 'published')
+        .neq('status', 'draft')
         .order('updated_at', { ascending: false })
-        .limit(20);
+        .limit(50);
 
       if (error) {
         throw error;
       }
       setUserProjects(data || []);
     } catch (err) {
-      logger.error('Failed to load user projects', err, 'usePostComposer');
-      setError('Failed to load your projects. You can still post without selecting projects.');
+      logger.warn('Failed to load user projects (non-blocking)', err, 'usePostComposer');
+      setUserProjects([]);
     } finally {
       setLoadingProjects(false);
     }
@@ -435,6 +435,16 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     clearDraft,
   ]);
 
+  // Reset function (placed before handlers that depend on it to avoid TDZ)
+  const reset = useCallback(() => {
+    setContent('');
+    setSelectedProjects([]);
+    setError(null);
+    setPostSuccess(false);
+    setRetryCount(0);
+    clearDraft();
+  }, [clearDraft]);
+
   // Public API methods
   const handlePost = useCallback(async () => {
     if (!canPost || !user?.id) {
@@ -459,10 +469,10 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
             cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
           },
         };
-        await offlineQueueService.addToQueue(postPayload);
+        await offlineQueueService.addToQueue(postPayload, user.id);
 
         // Provide feedback and reset form
-        setError("You're offline. Your post has been saved and will be sent later.");
+        setError(null);
         setPostSuccess(true); // Use success state to show a confirmation message
         reset();
       } catch (err) {
@@ -520,14 +530,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     );
   }, []);
 
-  const reset = useCallback(() => {
-    setContent('');
-    setSelectedProjects([]);
-    setError(null);
-    setPostSuccess(false);
-    setRetryCount(0);
-    clearDraft();
-  }, [clearDraft]);
+  
 
   const clearError = useCallback(() => {
     setError(null);

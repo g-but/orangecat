@@ -24,6 +24,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { logger } from '@/utils/logger';
+import { ShareModal } from '@/components/timeline/ShareModal';
 import { formatDistanceToNow } from 'date-fns';
 
 interface TimelineComponentProps {
@@ -48,11 +49,14 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
   const { user } = useAuth();
   const [isLiking, setIsLiking] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const [isReposting, setIsReposting] = useState(false);
   const [isCommenting, setIsCommenting] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<any[]>([]);
+  const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
+  const [replies, setReplies] = useState<Record<string, any[]>>({});
 
   // Edit/Delete state
   const [showMenu, setShowMenu] = useState(false);
@@ -65,42 +69,27 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
   const [editVisibility, setEditVisibility] = useState<'public' | 'private'>(
     event.visibility || 'public'
   );
+  // Local counts fallback (for reload cases)
+  useEffect(() => {
+    if ((event.likesCount ?? 0) === 0 || (event.commentsCount ?? 0) === 0) {
+      (async () => {
+        const counts = await timelineService.getEventCounts(event.id);
+        if (counts.likeCount !== (event.likesCount || 0) || counts.commentCount !== (event.commentsCount || 0)) {
+          onUpdate({ likesCount: counts.likeCount, commentsCount: counts.commentCount });
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [event.id]);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // Check if current user is the owner
   const isOwner = user?.id === event.actor.id;
 
   const metadataDisplayEntries = useMemo(() => {
-    if (!event.metadata) {
-      return [];
-    }
-    const whitelist: Record<string, string> = {
-      timeline_owner: 'timeline owner',
-      cross_posted: 'cross-posted',
-      cross_posted_from_main: 'cross-posted from main',
-      cross_posted_projects: 'cross-posted projects',
-      original_actor_name: 'original actor',
-    };
-
-    // Filter out internal/technical metadata keys
-    const blacklist = ['content', 'is_user_post', 'cross_posted_from_main'];
-
-    return Object.entries(event.metadata)
-      .filter(
-        ([key, value]) =>
-          !blacklist.includes(key) &&
-          whitelist[key] &&
-          value !== null &&
-          value !== undefined &&
-          !(Array.isArray(value) && value.length === 0) &&
-          value !== false &&
-          value !== ''
-      )
-      .map(([key, value]) => ({
-        label: whitelist[key],
-        value: Array.isArray(value) ? value.join(', ') : String(value),
-      }));
-  }, [event.metadata]);
+    // Temporarily suppress verbose metadata until mapped to human-friendly context
+    return [] as { label: string; value: string }[];
+  }, []);
 
   // Update edit form when event changes
   useEffect(() => {
@@ -129,50 +118,63 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
     if (isLiking) {
       return;
     }
+    // Optimistic UI toggle
+    const originalLiked = !!event.userLiked;
+    const originalCount = event.likesCount || 0;
+    const nextLiked = !originalLiked;
+    const nextCount = Math.max(0, originalCount + (nextLiked ? 1 : -1));
+    onUpdate({ userLiked: nextLiked, likesCount: nextCount });
 
     setIsLiking(true);
     try {
       const result = await timelineService.toggleLike(event.id);
       if (result.success) {
-        onUpdate({
-          userLiked: result.liked,
-          likesCount: result.likeCount,
-        });
+        onUpdate({ userLiked: result.liked, likesCount: result.likeCount });
+      } else {
+        // Revert on failure
+        onUpdate({ userLiked: originalLiked, likesCount: originalCount });
       }
     } catch (error) {
       logger.error('Failed to toggle like', error, 'Timeline');
+      onUpdate({ userLiked: originalLiked, likesCount: originalCount });
     } finally {
       setIsLiking(false);
     }
   }, [event.id, isLiking, onUpdate]);
 
-  const handleShare = useCallback(async () => {
-    if (isSharing) {
-      return;
-    }
+  const handleShareOpen = useCallback(() => {
+    setShareOpen(true);
+  }, []);
 
-    // Prompt for custom share text
-    const shareText = prompt('Add a comment to your share (optional):', '');
+  const handleShareConfirm = useCallback(
+    async (shareText: string) => {
+      if (isSharing) return;
+      // Optimistic share count update
+      const originalCount = event.sharesCount || 0;
+      onUpdate({ userShared: true, sharesCount: originalCount + 1 });
 
-    setIsSharing(true);
-    try {
-      const result = await timelineService.shareEvent(
-        event.id,
-        shareText?.trim() || 'Shared from timeline',
-        'public'
-      );
-      if (result.success) {
-        onUpdate({
-          userShared: true,
-          sharesCount: result.shareCount,
-        });
+      setIsSharing(true);
+      try {
+        const result = await timelineService.shareEvent(
+          event.id,
+          shareText?.trim() || 'Shared from timeline',
+          'public'
+        );
+        if (result.success) {
+          onUpdate({ userShared: true, sharesCount: result.shareCount });
+        } else {
+          onUpdate({ userShared: false, sharesCount: originalCount });
+        }
+      } catch (error) {
+        logger.error('Failed to share event', error, 'Timeline');
+        onUpdate({ userShared: false, sharesCount: originalCount });
+      } finally {
+        setIsSharing(false);
+        setShareOpen(false);
       }
-    } catch (error) {
-      logger.error('Failed to share event', error, 'Timeline');
-    } finally {
-      setIsSharing(false);
-    }
-  }, [event.id, isSharing, onUpdate]);
+    },
+    [event.id, isSharing, onUpdate]
+  );
 
   const handleRepost = useCallback(async () => {
     if (isReposting || !user?.id) {
@@ -187,8 +189,11 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
         actorId: user.id,
         subjectType: 'profile',
         subjectId: user.id,
-        title: '',
-        description: `Reposted from ${event.actor.name}: "${event.description}"`,
+        title: `Repost from ${event.actor.name}`,
+        description:
+          event.description
+            ? `“${String(event.description).slice(0, 120)}”`
+            : 'Shared a post',
         visibility: 'public',
         metadata: {
           is_repost: true,
@@ -223,6 +228,18 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
       logger.error('Failed to load comments', error, 'Timeline');
     }
   }, [event.id]);
+
+  const loadReplies = useCallback(
+    async (parentId: string) => {
+      try {
+        const list = await timelineService.getCommentReplies(parentId, 20);
+        setReplies(prev => ({ ...prev, [parentId]: list }));
+      } catch (error) {
+        logger.error('Failed to load replies', error, 'Timeline');
+      }
+    },
+    []
+  );
 
   const handleComment = useCallback(async () => {
     if (!commentText.trim() || isCommenting) {
@@ -502,7 +519,7 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
 
             {/* Share Button - Enhanced */}
             <button
-              onClick={handleShare}
+              onClick={handleShareOpen}
               disabled={isSharing}
               className={`group flex items-center gap-2 px-2 py-1 rounded-full transition-all ${
                 event.userShared
@@ -549,8 +566,38 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
               <span className="w-3 h-3 bg-gray-400 rounded-full" />
             )}
             <span className="capitalize">{event.visibility}</span>
+            {isOwner && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-gray-500 ml-2"
+                onClick={async () => {
+                  const next = (event.visibility || 'public') === 'public' ? 'private' : 'public';
+                  // Optimistic toggle
+                  onUpdate({ visibility: next });
+                  const res = await timelineService.updateEventVisibility(event.id, next);
+                  if (!res.success) {
+                    logger.error('Failed to update visibility', res.error, 'Timeline');
+                    // Revert on failure
+                    onUpdate({ visibility: event.visibility });
+                  }
+                }}
+                aria-label="Toggle visibility"
+              >
+                {event.visibility === 'public' ? 'Make Private' : 'Make Public'}
+              </Button>
+            )}
           </div>
         </div>
+
+        {/* Share Modal */}
+        <ShareModal
+          isOpen={shareOpen}
+          onClose={() => setShareOpen(false)}
+          onShare={handleShareConfirm}
+          defaultText={''}
+          isSubmitting={isSharing}
+        />
 
         {/* Comments Section */}
         {showComments && (
@@ -595,9 +642,47 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
                         <p className="text-sm text-gray-700">{comment.content}</p>
                       </div>
                       {comment.reply_count > 0 && (
-                        <Button variant="ghost" size="sm" className="text-xs text-gray-500 mt-1">
-                          {comment.reply_count} repl{comment.reply_count === 1 ? 'y' : 'ies'}
-                        </Button>
+                        <div className="mt-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs text-gray-500"
+                            onClick={async () => {
+                              const next = !expandedReplies[comment.id];
+                              setExpandedReplies(prev => ({ ...prev, [comment.id]: next }));
+                              if (next && !replies[comment.id]) {
+                                await loadReplies(comment.id);
+                              }
+                            }}
+                          >
+                            {expandedReplies[comment.id] ? 'Hide' : 'View'} {comment.reply_count}{' '}
+                            repl{comment.reply_count === 1 ? 'y' : 'ies'}
+                          </Button>
+                          {expandedReplies[comment.id] && replies[comment.id] && (
+                            <div className="mt-2 space-y-2 ml-8">
+                              {replies[comment.id].map(reply => (
+                                <div key={reply.id} className="flex gap-2">
+                                  <img
+                                    src={reply.user_avatar}
+                                    alt={reply.user_name}
+                                    className="w-5 h-5 rounded-full flex-shrink-0"
+                                  />
+                                  <div className="flex-1">
+                                    <div className="bg-gray-50 rounded-lg px-3 py-2">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span className="font-medium text-xs">{reply.user_name}</span>
+                                        <span className="text-[10px] text-gray-500">
+                                          {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true })}
+                                        </span>
+                                      </div>
+                                      <p className="text-sm text-gray-700">{reply.content}</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>

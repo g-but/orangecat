@@ -1,7 +1,7 @@
 // src/lib/offline-queue.ts
 
 import { logger } from '@/utils/logger';
-import { dispatchQueueUpdatedEvent } from '@/hooks/useOfflineQueue';
+import { queueUpdated } from '@/lib/offline-queue-events';
 
 const DB_NAME = 'OrangeCatDB';
 const DB_VERSION = 1;
@@ -12,6 +12,7 @@ interface QueuedPost {
   payload: any;
   createdAt: number;
   attempts: number;
+  userId: string;
 }
 
 let db: IDBDatabase | null = null;
@@ -50,7 +51,7 @@ function getDB(): Promise<IDBDatabase> {
  * Adds a post to the offline queue.
  * @param payload - The data required to make the post API call.
  */
-export async function addToQueue(payload: any): Promise<void> {
+export async function addToQueue(payload: any, userId: string): Promise<void> {
   const db = await getDB();
   const transaction = db.transaction(STORE_NAME, 'readwrite');
   const store = transaction.objectStore(STORE_NAME);
@@ -60,13 +61,14 @@ export async function addToQueue(payload: any): Promise<void> {
     payload,
     createdAt: Date.now(),
     attempts: 0,
+    userId,
   };
 
   return new Promise((resolve, reject) => {
     const request = store.add(post);
     request.onsuccess = () => {
       logger.info('Post added to offline queue', post.id, 'OfflineQueue');
-      dispatchQueueUpdatedEvent();
+      queueUpdated();
       resolve();
     };
     request.onerror = () => {
@@ -111,7 +113,7 @@ export async function removeFromQueue(id: string): Promise<void> {
     const request = store.delete(id);
     request.onsuccess = () => {
       logger.info('Post removed from offline queue', id, 'OfflineQueue');
-      dispatchQueueUpdatedEvent();
+      queueUpdated();
       resolve();
     };
     request.onerror = () => {
@@ -136,6 +138,7 @@ export async function incrementAttemptCount(id: string): Promise<void> {
     if (post) {
       post.attempts += 1;
       store.put(post);
+      queueUpdated();
     }
   };
 }
@@ -152,7 +155,7 @@ export async function clearQueue(): Promise<void> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => {
       logger.info('Offline queue cleared', 'OfflineQueue');
-      dispatchQueueUpdatedEvent();
+      queueUpdated();
       resolve();
     };
     request.onerror = () => {
@@ -162,9 +165,18 @@ export async function clearQueue(): Promise<void> {
   });
 }
 
+/**
+ * Retrieves all posts for a specific user.
+ */
+export async function getQueueByUser(userId: string): Promise<QueuedPost[]> {
+  const all = await getQueue();
+  return all.filter(item => item.userId === userId);
+}
+
 export const offlineQueueService = {
   addToQueue,
   getQueue,
+  getQueueByUser,
   removeFromQueue,
   incrementAttemptCount,
   clearQueue,

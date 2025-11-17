@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Shield, CheckCircle, Circle, TrendingUp, Info } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
-import { Progress } from '@/components/ui/Progress'
+import { Progress } from '@/components/ui/progress'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/Tooltip'
 import { cn } from '@/lib/utils'
 
