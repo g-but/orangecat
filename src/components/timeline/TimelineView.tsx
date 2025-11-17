@@ -92,6 +92,19 @@ export default function TimelineView({
     return [...filteredOptimistic, ...feed.events];
   }, [feed?.events, optimisticEvents]);
 
+  // Create merged feed for rendering (must be declared before any early returns)
+  const mergedFeed = React.useMemo(() => {
+    if (!feed) return null;
+    return {
+      ...feed,
+      events: mergedEvents,
+      metadata: {
+        ...feed.metadata,
+        totalEvents: mergedEvents.length,
+      },
+    } as TimelineFeedResponse;
+  }, [feed, mergedEvents]);
+
   // Validate required props
   useEffect(() => {
     if ((feedType === 'profile' || feedType === 'project') && !ownerId) {
@@ -269,19 +282,6 @@ export default function TimelineView({
       </div>
     );
   }
-
-  // Create merged feed for rendering
-  const mergedFeed = React.useMemo(() => {
-    if (!feed) return null;
-    return {
-      ...feed,
-      events: mergedEvents,
-      metadata: {
-        ...feed.metadata,
-        totalEvents: mergedEvents.length,
-      }
-    };
-  }, [feed, mergedEvents]);
 
   // Render timeline
   return (

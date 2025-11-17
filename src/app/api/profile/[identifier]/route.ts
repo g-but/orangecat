@@ -57,42 +57,19 @@ export async function GET(
               }
             });
             
-            // Use getUserByEmail if available (more efficient than listing all users)
-            // Note: This method might not be available in all Supabase versions
-            try {
-              const { data: userData, error: getUserError } = await adminClient.auth.admin.getUserByEmail(trimmedIdentifier);
-              
-              if (!getUserError && userData?.user?.id) {
-                userId = userData.user.id;
-              } else {
-                // Fallback: list users and find by email (less efficient but works)
-                const { data: usersData, error: listError } = await adminClient.auth.admin.listUsers();
-                
-                if (!listError && usersData?.users) {
-                  const user = usersData.users.find(u => u.email?.toLowerCase() === trimmedIdentifier.toLowerCase());
-                  if (user?.id) {
-                    userId = user.id;
-                  } else {
-                    return apiNotFound('Profile not found');
-                  }
-                } else {
-                  return apiNotFound('Profile not found');
-                }
-              }
-            } catch (getUserByEmailError) {
-              // Fallback: list users and find by email
-              const { data: usersData, error: listError } = await adminClient.auth.admin.listUsers();
-              
-              if (!listError && usersData?.users) {
-                const user = usersData.users.find(u => u.email?.toLowerCase() === trimmedIdentifier.toLowerCase());
-                if (user?.id) {
-                  userId = user.id;
-                } else {
-                  return apiNotFound('Profile not found');
-                }
+            // List users and find by email (compatible across versions)
+            const { data: usersData, error: listError } = await adminClient.auth.admin.listUsers();
+            if (!listError && usersData?.users) {
+              const user = usersData.users.find(
+                u => u.email?.toLowerCase() === trimmedIdentifier.toLowerCase()
+              );
+              if (user?.id) {
+                userId = user.id;
               } else {
                 return apiNotFound('Profile not found');
               }
+            } else {
+              return apiNotFound('Profile not found');
             }
             
             // Now fetch the profile by user ID
@@ -157,4 +134,3 @@ export async function GET(
     return handleApiError(error);
   }
 }
-

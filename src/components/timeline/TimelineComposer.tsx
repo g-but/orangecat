@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { Globe, Lock } from 'lucide-react';
-import { usePostComposer } from '@/hooks/usePostComposer';
+import { usePostComposer } from '@/hooks/usePostComposerNew';
 
 /**
  * TimelineComposer Component - Modular Post Creation
@@ -55,7 +55,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
   buttonText = 'Share',
   showBanner = true,
 }: TimelineComposerProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   // Use the post composer hook
   const postComposer = usePostComposer({
@@ -126,11 +126,12 @@ const TimelineComposer = React.memo(function TimelineComposer({
         <div className="flex gap-3">
           {/* User Avatar */}
           <div className="flex-shrink-0">
-            {user?.user_metadata?.avatar_url ? (
+            {profile?.avatar_url || user?.user_metadata?.avatar_url ? (
               <img
-                src={user.user_metadata.avatar_url}
+                src={(profile as any)?.avatar_url || user?.user_metadata?.avatar_url}
                 alt={user.user_metadata.name || 'User'}
                 className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
+                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
               />
             ) : (
               <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">

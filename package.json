@@ -64,6 +64,8 @@
     "optimize:images": "node scripts/optimize-images.js",
     "security:scan": "npm audit && npm run test:security",
     "performance:check": "node scripts/performance-check.js",
+    "ts:report": "node scripts/report-ts-errors.js",
+    "ci:quality": "npm run ts:report && npm run bundle:monitor || true",
     "deployment:verify": "node scripts/verify-deployment-setup.js",
     "deployment:setup": "node scripts/verify-deployment-setup.js",
     "w": "./w",

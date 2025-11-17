@@ -193,13 +193,12 @@ export default function DashboardPage() {
   }, [safeProjects]);
 
   // Profile category for display (use profile_type if available, default to individual) - MEMOIZED
-  const profileCategory = useMemo(
-    () =>
-      profile?.profile_type && profile.profile_type in PROFILE_CATEGORIES
-        ? PROFILE_CATEGORIES[profile.profile_type as keyof typeof PROFILE_CATEGORIES]
-        : PROFILE_CATEGORIES.individual,
-    [profile?.profile_type]
-  );
+  const profileCategory = useMemo(() => {
+    const profileType = (profile as any)?.profile_type as string | undefined;
+    return profileType && profileType in PROFILE_CATEGORIES
+      ? PROFILE_CATEGORIES[profileType as keyof typeof PROFILE_CATEGORIES]
+      : PROFILE_CATEGORIES.individual;
+  }, [profile]);
 
   // Handle loading states - simplified to avoid infinite loading
   if (!hydrated || localLoading) {

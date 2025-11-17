@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/Button'
-import { Camera, X, FlashOn, FlashOff, Upload, AlertCircle } from 'lucide-react'
+import { Camera, X, Flashlight, FlashlightOff, Upload, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { logger } from '@/utils/logger'
 
@@ -221,7 +221,11 @@ export function QRScanner({
               onClick={toggleFlash}
               className="text-white hover:bg-white/20 p-2"
             >
-              {flashEnabled ? <FlashOff className="w-5 h-5" /> : <FlashOn className="w-5 h-5" />}
+              {flashEnabled ? (
+                <FlashlightOff className="w-5 h-5" />
+              ) : (
+                <Flashlight className="w-5 h-5" />
+              )}
             </Button>
           )}
           <Button

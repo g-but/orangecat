@@ -8,7 +8,8 @@ import { logger } from '@/utils/logger'
 
 interface PWAInstallButtonProps {
   className?: string
-  variant?: 'default' | 'outline' | 'ghost' | 'banner'
+  // Keep public API, map to Button variants internally
+  variant?: 'default' | 'outline' | 'ghost' | 'banner' | 'primary' | 'secondary'
   size?: 'sm' | 'md' | 'lg'
   showBanner?: boolean
 }
@@ -195,10 +196,26 @@ export function PWAInstallButton({
     lg: 'text-base px-6 py-3'
   }
 
+  // Map external variants to Button variants
+  const mapVariant = (v: PWAInstallButtonProps['variant']): 'primary' | 'secondary' | 'outline' | 'ghost' => {
+    switch (v) {
+      case 'secondary':
+        return 'secondary'
+      case 'outline':
+        return 'outline'
+      case 'ghost':
+        return 'ghost'
+      case 'banner':
+      case 'default':
+      default:
+        return 'primary'
+    }
+  }
+
   return (
     <Button
       id="pwa-install-btn"
-      variant={variant === 'banner' ? 'default' : variant}
+      variant={mapVariant(variant)}
       size={size}
       onClick={handleInstallClick}
       disabled={isInstalling}

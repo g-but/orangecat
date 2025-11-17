@@ -19,7 +19,7 @@ import {
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';
-import { Progress } from '@/components/ui/Progress';
+import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 
