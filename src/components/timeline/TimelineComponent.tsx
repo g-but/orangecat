@@ -22,6 +22,7 @@ import {
   X,
   Globe,
   Lock,
+  Target,
 } from 'lucide-react';
 import { logger } from '@/utils/logger';
 import { ShareModal } from '@/components/timeline/ShareModal';
@@ -423,6 +424,27 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
                 </p>
               )}
             </div>
+
+            {/* Cross-Post Indicators */}
+            {event.metadata?.cross_posts && event.metadata.cross_posts.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                <span className="text-xs text-gray-500 flex items-center gap-1">
+                  <Share2 className="w-3 h-3" />
+                  Also posted to:
+                </span>
+                {event.metadata.cross_posts.map((cp: any) => (
+                  <a
+                    key={cp.id}
+                    href={`/projects/${cp.project_id}`}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-xs rounded-full hover:bg-blue-100 transition-colors"
+                    title="View post on project timeline"
+                  >
+                    <Target className="w-3 h-3" />
+                    Project
+                  </a>
+                ))}
+              </div>
+            )}
 
             {/* Formatted Amount for Financial Events */}
             {event.formattedAmount && (

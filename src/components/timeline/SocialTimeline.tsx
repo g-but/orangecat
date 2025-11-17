@@ -82,7 +82,7 @@ export default function SocialTimeline({
     onOptimisticUpdate?.(event);
   }, [onOptimisticUpdate]);
 
-  // Merge optimistic events with real feed
+  // Merge optimistic events with real feed and deduplicate cross-posts
   const mergedFeed = React.useMemo(() => {
     if (!timelineFeed) return null;
 
@@ -95,15 +95,76 @@ export default function SocialTimeline({
       })
     );
 
+    let events = [...filteredOptimistic, ...timelineFeed.events];
+
+    // Deduplicate cross-posts in community mode
+    if (mode === 'community') {
+      // Group events by original_post_id
+      const eventGroups = new Map<string, any[]>();
+      const standaloneEvents: any[] = [];
+
+      events.forEach(event => {
+        const originalPostId = event.metadata?.original_post_id;
+        if (originalPostId) {
+          // This is a cross-post
+          if (!eventGroups.has(originalPostId)) {
+            eventGroups.set(originalPostId, []);
+          }
+          eventGroups.get(originalPostId)!.push(event);
+        } else if (event.metadata?.cross_posted_projects) {
+          // This is the main post with cross-posts
+          if (!eventGroups.has(event.id)) {
+            eventGroups.set(event.id, []);
+          }
+          eventGroups.get(event.id)!.push(event);
+        } else {
+          // Regular standalone event
+          standaloneEvents.push(event);
+        }
+      });
+
+      // Process grouped events
+      const deduplicatedEvents: any[] = [];
+      eventGroups.forEach((group, mainPostId) => {
+        // Find the main post (the one without cross_posted_from_main flag)
+        const mainPost = group.find(e => !e.metadata?.cross_posted_from_main);
+
+        if (mainPost) {
+          // Collect all cross-posted project info
+          const crossPosts = group.filter(e => e.metadata?.cross_posted_from_main);
+
+          // Add cross-post information to the main post
+          deduplicatedEvents.push({
+            ...mainPost,
+            metadata: {
+              ...mainPost.metadata,
+              cross_posts: crossPosts.map(cp => ({
+                id: cp.id,
+                project_id: cp.subjectId,
+                project_name: cp.metadata?.project_name, // This would need to be added
+              })),
+            },
+          });
+        } else if (group.length > 0) {
+          // If no main post found, just use the first one
+          deduplicatedEvents.push(group[0]);
+        }
+      });
+
+      events = [...standaloneEvents, ...deduplicatedEvents].sort((a, b) => {
+        return new Date(b.eventTimestamp).getTime() - new Date(a.eventTimestamp).getTime();
+      });
+    }
+
     return {
       ...timelineFeed,
-      events: [...filteredOptimistic, ...timelineFeed.events],
+      events,
       metadata: {
         ...timelineFeed.metadata,
-        totalEvents: filteredOptimistic.length + timelineFeed.events.length,
+        totalEvents: events.length,
       }
     };
-  }, [timelineFeed, optimisticEvents]);
+  }, [timelineFeed, optimisticEvents, mode]);
   const [sortBy, setSortBy] = useState<'recent' | 'trending' | 'popular'>(defaultSort);
   const composerRef = useRef<HTMLDivElement | null>(null);
 
@@ -287,6 +348,26 @@ export default function SocialTimeline({
       </div>
     ) : undefined;
 
+  // Fetch actual follower count for journey mode
+  const [followerCount, setFollowerCount] = useState<number | undefined>(undefined);
+
+  useEffect(() => {
+    if (mode === 'journey' && user?.id) {
+      const fetchFollowerCount = async () => {
+        try {
+          const response = await fetch(`/api/social/followers/${user.id}`);
+          if (response.ok) {
+            const data = await response.json();
+            setFollowerCount(data.data?.length || 0);
+          }
+        } catch (err) {
+          logger.error('Failed to fetch follower count', err, 'SocialTimeline');
+        }
+      };
+      fetchFollowerCount();
+    }
+  }, [mode, user?.id]);
+
   // Calculate stats
   const timelineStats =
     customStats ||
@@ -295,8 +376,7 @@ export default function SocialTimeline({
           totalPosts: timelineFeed.events.length,
           totalLikes: timelineFeed.events.reduce((sum, e) => sum + (e.likesCount || 0), 0),
           totalComments: timelineFeed.events.reduce((sum, e) => sum + (e.commentsCount || 0), 0),
-          totalFollowers:
-            mode === 'journey' ? timelineFeed.events.filter(e => e.isRecent).length : undefined,
+          totalFollowers: mode === 'journey' ? followerCount : undefined,
         }
       : undefined);
 
