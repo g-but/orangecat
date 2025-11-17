@@ -91,12 +91,15 @@ SELECT
     ELSE NULL
   END as target_data,
 
-  -- Placeholder counts (will be replaced when social tables are created)
-  0::integer as like_count,
-  0::integer as comment_count,
-  0::integer as share_count
+  -- Social interaction counts from timeline_event_stats
+  COALESCE(tes.like_count, 0)::integer as like_count,
+  COALESCE(tes.comment_count, 0)::integer as comment_count,
+  COALESCE(tes.share_count, 0)::integer as share_count
 
 FROM timeline_events te
+
+-- Join social interaction stats
+LEFT JOIN timeline_event_stats tes ON te.id = tes.event_id
 
 -- Join actor (always a profile)
 LEFT JOIN profiles actor ON te.actor_id = actor.id

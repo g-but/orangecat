@@ -149,10 +149,14 @@ export class ApplicationMonitor {
 
     // Process metrics
     for (const [name, points] of this.metrics) {
-      if (points.length === 0) continue
+      if (points.length === 0) {
+        continue
+      }
 
       const recent = points.filter(p => Date.now() - p.timestamp < 300000) // Last 5 minutes
-      if (recent.length === 0) continue
+      if (recent.length === 0) {
+        continue
+      }
 
       summary[name] = {
         current: recent[recent.length - 1].value,
@@ -240,13 +244,23 @@ export class ApplicationMonitor {
     let healthScore = 100
 
     // Deduct points for errors
-    if (errors.bySeverity.critical > 0) healthScore -= 50
-    if (errors.bySeverity.high > 0) healthScore -= 20
-    if (errors.bySeverity.medium > 5) healthScore -= 10
+    if (errors.bySeverity.critical > 0) {
+      healthScore -= 50
+    }
+    if (errors.bySeverity.high > 0) {
+      healthScore -= 20
+    }
+    if (errors.bySeverity.medium > 5) {
+      healthScore -= 10
+    }
 
     // Deduct points for performance issues
-    if (performance.slowRequestsPercentage > 10) healthScore -= 15
-    if (performance.averageDuration > 500) healthScore -= 10
+    if (performance.slowRequestsPercentage > 10) {
+      healthScore -= 15
+    }
+    if (performance.averageDuration > 500) {
+      healthScore -= 10
+    }
 
     // Deduct points for missing key metrics
     const requiredMetrics = ['api_requests', 'database_queries', 'error_rate']

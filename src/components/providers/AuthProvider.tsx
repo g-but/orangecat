@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/auth';
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
+import { offlineQueueService } from '@/lib/offline-queue';
 
 /**
  * AuthProvider - Syncs Supabase auth state with Zustand store
@@ -105,6 +106,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         case 'SIGNED_OUT':
           // User signed out or session expired
           logger.info('User signed out', undefined, 'Auth');
+          // Clear any queued offline posts to prevent cross-user leakage
+          try {
+            await offlineQueueService.clearQueue();
+          } catch (e) {
+            logger.warn('Failed to clear offline queue on sign out', { error: e }, 'Auth');
+          }
           clear();
           break;
 

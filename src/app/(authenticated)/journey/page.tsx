@@ -1,20 +1,20 @@
 'use client';
 
 import React from 'react';
-import TwitterTimeline from '@/components/timeline/TwitterTimeline';
+import SocialTimeline from '@/components/timeline/SocialTimeline';
 import { BookOpen, Plus } from 'lucide-react';
 
 /**
  * My Journey Page - Personal Timeline
  *
- * Uses the unified TwitterTimeline component with personal mode.
+ * Uses the unified SocialTimeline component with personal mode.
  * Identical interface to Community page but shows user's own posts.
  *
  * Built with best practices: DRY, maintainable, modular, high quality code
  */
 export default function MyJourneyPage() {
   return (
-    <TwitterTimeline
+    <SocialTimeline
       title="My Journey"
       description="Your personal timeline and story"
       icon={BookOpen}
@@ -28,6 +28,7 @@ export default function MyJourneyPage() {
       defaultSort="recent"
       showSortingControls={false}
       showInlineComposer={true}
+      allowProjectSelection={true}
     />
   );
 }

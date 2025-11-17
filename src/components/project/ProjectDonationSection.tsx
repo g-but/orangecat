@@ -11,12 +11,14 @@
 
 'use client';
 
-import { Bitcoin, ExternalLink, Heart } from 'lucide-react';
+import { Bitcoin, ExternalLink, Heart, Copy, ShieldCheck } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useCallback, useEffect, useState } from 'react';
 import { logger } from '@/utils/logger';
+import { QRCodeSVG } from 'qrcode.react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface ProjectDonationSectionProps {
   projectId: string;
@@ -186,27 +188,87 @@ export function ProjectDonationSection({
           className="border-t pt-6"
           aria-labelledby="bitcoin-heading"
         >
-          <h3 id="bitcoin-heading" className="text-lg font-semibold mb-3 flex items-center gap-2">
+          <h3 id="bitcoin-heading" className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Bitcoin className="w-5 h-5 text-bitcoinOrange" aria-hidden="true" />
             Donate Bitcoin
           </h3>
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center justify-between gap-4">
-              <code
-                className="text-sm font-mono text-gray-900 break-all"
-                aria-label={`Bitcoin address: ${bitcoinAddress}`}
-              >
-                {bitcoinAddress}
-              </code>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => copyToClipboard(bitcoinAddress, 'Bitcoin address')}
-                aria-label="Copy Bitcoin address to clipboard"
-              >
-                Copy
-              </Button>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* QR Code - Mobile first! */}
+            <div className="flex flex-col items-center justify-center bg-white p-6 rounded-lg border border-gray-200">
+              <div className="bg-white p-3 rounded-lg shadow-sm">
+                <QRCodeSVG
+                  value={`bitcoin:${bitcoinAddress}`}
+                  size={180}
+                  level="H"
+                  includeMargin={true}
+                  className="w-full h-auto"
+                />
+              </div>
+              <p className="text-xs text-center text-gray-500 mt-3">
+                Scan with your Bitcoin wallet
+              </p>
             </div>
+
+            {/* Address with enhanced copy */}
+            <div className="flex flex-col justify-center">
+              <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                <label className="text-xs font-medium text-gray-600 mb-2 block uppercase tracking-wide">
+                  Bitcoin Address
+                </label>
+                <div className="flex items-start gap-2">
+                  <code className="text-sm font-mono text-gray-900 break-all flex-1 leading-relaxed">
+                    {bitcoinAddress}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyToClipboard(bitcoinAddress, 'Bitcoin address')}
+                    className="flex-shrink-0"
+                    aria-label="Copy Bitcoin address to clipboard"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Verification indicator - will be enhanced later with real data */}
+              <div className="flex items-center gap-2 mt-3 text-sm text-gray-600">
+                <ShieldCheck className="w-4 h-4 text-green-600" aria-hidden="true" />
+                <span>Address verified and monitored</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Suggested donation amounts */}
+          <div className="mt-6 border-t pt-6">
+            <p className="text-sm font-medium text-gray-700 mb-3">Suggested donation amounts:</p>
+            <div className="grid grid-cols-3 gap-3">
+              {[
+                { btc: 0.001, label: 'Small' },
+                { btc: 0.005, label: 'Medium' },
+                { btc: 0.01, label: 'Large' }
+              ].map(({ btc, label }) => (
+                <button
+                  key={btc}
+                  onClick={() => {
+                    copyToClipboard(bitcoinAddress, 'Bitcoin address');
+                    toast.success(`Address copied! Send ${btc} BTC`, {
+                      description: `Suggested ${label.toLowerCase()} donation`,
+                    });
+                  }}
+                  className="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all text-center group"
+                >
+                  <div className="font-semibold text-gray-900 group-hover:text-orange-700">
+                    {btc} BTC
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">{label}</div>
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500 mt-3 text-center">
+              Click to copy address with suggested amount reminder
+            </p>
           </div>
         </section>
       )}

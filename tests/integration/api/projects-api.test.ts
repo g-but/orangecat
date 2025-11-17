@@ -5,12 +5,12 @@
  * Ensures end-to-end functionality between frontend and backend.
  */
 
-import { createServerClient } from '@/lib/db'
+import { createServerClient } from '@/lib/supabase/server'
 import { projectSchema } from '@/lib/validation'
 import type { Database } from '@/types/database'
 
 // Mock Supabase client for testing
-jest.mock('@/lib/db', () => ({
+jest.mock('@/lib/supabase/server', () => ({
   createServerClient: jest.fn()
 }))
 
