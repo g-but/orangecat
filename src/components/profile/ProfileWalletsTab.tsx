@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Profile } from '@/types/database';
 import { Wallet, WalletFormData } from '@/types/wallet';
 import { WalletManager } from '@/components/wallets/WalletManager';
+import PublicWalletDisplay from '@/components/wallets/PublicWalletDisplay';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Wallet as WalletIcon, Info } from 'lucide-react';
 import { logger } from '@/utils/logger';
@@ -164,30 +165,23 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
     );
   }
 
+  // Show public wallet display for non-own profiles
   if (!isOwnProfile) {
-    return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="text-center text-gray-500">
-            <WalletIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Wallet information is private</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <PublicWalletDisplay wallets={wallets} profileName={profile.name || profile.username || 'This user'} />;
   }
 
+  // Show wallet manager for own profile
   return (
     <div className="space-y-6">
       {/* Info Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
         <div className="flex gap-3">
           <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-blue-900 mb-1">Manage Your Wallets</h3>
-            <p className="text-sm text-blue-800">
+            <h3 className="font-semibold text-blue-900 mb-1 text-sm sm:text-base">Manage Your Wallets</h3>
+            <p className="text-xs sm:text-sm text-blue-800">
               Add and manage your Bitcoin wallets. You can categorize them, set goals, and track balances.
-              Wallets added here will also appear in "My Wallets" from the sidebar.
+              These wallets will be visible on your public profile.
             </p>
           </div>
         </div>
@@ -195,7 +189,7 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
 
       {/* Wallet Manager */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <WalletManager
             wallets={wallets}
             entityType="profile"
