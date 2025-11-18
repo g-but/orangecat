@@ -7,7 +7,7 @@
  * Helps prevent bundle bloat and tracks performance regression.
  * 
  * Created: 2025-06-30
- * Usage: npm run build:analyze && node scripts/bundle-size-monitor.js
+ * Usage: npm run build:analyze && node scripts/monitoring/bundle-size-monitor.js
  */
 
 const fs = require('fs');
