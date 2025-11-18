@@ -17,7 +17,7 @@ interface QuickPostWidgetProps {
 /**
  * QuickPostWidget - Inline timeline posting from dashboard
  *
- * Provides a quick way to share updates without navigating to Journey page.
+ * Provides a quick way to share updates without navigating to Timeline page.
  * Compact by default, expands when focused.
  */
 export function QuickPostWidget({ onPostSuccess, className = '' }: QuickPostWidgetProps) {
