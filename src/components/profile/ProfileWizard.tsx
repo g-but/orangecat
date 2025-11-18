@@ -495,13 +495,19 @@ export default function ProfileWizard({
               )}
             />
 
-            <div className="mt-8">
-              <WalletManager
-                profileId={userId}
-                onWalletUpdate={() => {
-                  // Refresh wallet data if needed
-                }}
-              />
+            <div className="mt-8 bg-gray-50 rounded-lg p-6 border border-gray-200">
+              <div className="text-center text-gray-600 py-8">
+                <Wallet className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Manage Wallets Later
+                </h3>
+                <p className="text-sm mb-4">
+                  You can add and manage multiple Bitcoin wallets from your profile page or dashboard after completing setup.
+                </p>
+                <p className="text-xs text-gray-500">
+                  Go to Profile → Wallets tab or Dashboard → My Wallets
+                </p>
+              </div>
             </div>
           </div>
         );
