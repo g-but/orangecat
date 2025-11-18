@@ -1,5 +1,9 @@
 # 🌿 OrangeCat Git Workflow Guide
 
+> **⚠️ NOTE:** This document describes traditional Git Flow patterns. For the **current** OrangeCat workflow, see:
+> - **[Branch Strategy](../contributing/BRANCH_STRATEGY.md)** ← Current trunk-based development workflow
+> - **[Branch Status Report](../contributing/BRANCH_STATUS_REPORT.md)** ← Repository health and status
+
 **Complete guide to the Git workflow, branching strategy, and collaboration patterns for OrangeCat development.**
 
 ## 🎯 Git Workflow Philosophy
