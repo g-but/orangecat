@@ -287,9 +287,11 @@ export interface TimelineDisplayEvent extends Omit<TimelineEvent, 'eventType' | 
   likesCount?: number;
   commentsCount?: number;
   sharesCount?: number;
+  repostsCount?: number;
   userLiked?: boolean;
   userShared?: boolean;
   userCommented?: boolean;
+  userReposted?: boolean;
 
   // Threading
   replies?: TimelineDisplayEvent[];
