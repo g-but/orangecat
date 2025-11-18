@@ -13,6 +13,8 @@ import ProfileViewTabs from '@/components/profile/ProfileViewTabs';
 import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab';
 import ProfileTimelineTab from '@/components/profile/ProfileTimelineTab';
 import ProfileProjectsTab from '@/components/profile/ProfileProjectsTab';
+import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
+import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
 import {
   Bitcoin,
   Zap,
@@ -24,6 +26,8 @@ import {
   Target,
   Globe,
   ExternalLink,
+  Info,
+  Wallet,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -149,6 +153,18 @@ export default function PublicProfileClient({
       icon: <Target className="w-4 h-4" />,
       badge: stats?.projectCount,
       content: <ProfileProjectsTab profile={profile} isOwnProfile={isOwnProfile} />,
+    },
+    {
+      id: 'info',
+      label: 'Info',
+      icon: <Info className="w-4 h-4" />,
+      content: <ProfileInfoTab profile={profile} />,
+    },
+    {
+      id: 'wallets',
+      label: 'Wallets',
+      icon: <Wallet className="w-4 h-4" />,
+      content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
   ];
 
