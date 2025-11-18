@@ -8,7 +8,7 @@ import { Globe } from 'lucide-react';
  * Community Timeline Page - Public posts from all users and projects
  *
  * Uses the unified SocialTimeline component with community mode.
- * Identical interface to My Journey page but shows posts from all users.
+ * Identical interface to My Timeline page but shows posts from all users.
  *
  * Built with best practices: DRY, maintainable, modular, high quality code
  */

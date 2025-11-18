@@ -88,7 +88,7 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        name: 'My Journey',
+        name: 'My Timeline',
         href: '/journey',
         icon: BookOpen,
         description: 'Your personal timeline and posts',
@@ -109,7 +109,7 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        name: 'Wallets',
+        name: 'My Wallets',
         href: '/dashboard/wallets',
         icon: Wallet,
         description: 'Manage your Bitcoin wallets',

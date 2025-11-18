@@ -58,6 +58,6 @@ echo "🎉 Timeline system ready!"
 echo ""
 echo "📝 Next steps:"
 echo "   1. Test posting from Community page"
-echo "   2. Test posting from My Journey page"
+echo "   2. Test posting from My Timeline page"
 echo "   3. Verify posts appear in timeline"
 
