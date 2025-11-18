@@ -108,12 +108,12 @@ node apply-migration.js migration.sql
 
 ## 🔧 Essential Scripts
 
-### Migration Scripts (Project Root)
+### Migration Scripts
 
 **Primary script:**
 
 ```bash
-apply-social-features-migration.js
+node scripts/migrations/apply-social-features-migration.js
 ```
 
 - Auto-reads token from `.env.local`
@@ -123,7 +123,7 @@ apply-social-features-migration.js
 **Alternative script:**
 
 ```bash
-apply-timeline-migration.js
+node scripts/migrations/apply-timeline-migration.js
 ```
 
 - Same functionality as above
@@ -337,8 +337,8 @@ sed -n '163p' migration.sql
 
 - `../architecture/` - System architecture and design decisions
 - `../analysis/` - Code analysis and performance reviews
-- `../../MIGRATION_SUCCESS.md` - Latest migration success summary
-- `../../apply-social-features-migration.js` - Working migration script
+- `../archive/2025-11/MIGRATION_SUCCESS.md` - Latest migration success summary
+- `../../scripts/migrations/apply-social-features-migration.js` - Working migration script
 
 ---
 
@@ -351,7 +351,7 @@ sed -n '163p' migration.sql
 grep -q SUPABASE_ACCESS_TOKEN .env.local && echo "✅ Token found" || echo "❌ Token missing"
 
 # 2. Check migration script exists
-test -f apply-social-features-migration.js && echo "✅ Script found" || echo "❌ Script missing"
+test -f scripts/migrations/apply-social-features-migration.js && echo "✅ Script found" || echo "❌ Script missing"
 
 # 3. Check Node.js installed
 node --version && echo "✅ Node.js ready" || echo "❌ Node.js missing"
