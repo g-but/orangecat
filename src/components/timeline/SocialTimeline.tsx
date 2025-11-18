@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { timelineService } from '@/services/timeline';
 import TimelineLayout from './TimelineLayout';
@@ -7,6 +8,7 @@ import Button from '@/components/ui/Button';
 import { LucideIcon, TrendingUp, Clock, Flame, Plus } from 'lucide-react';
 import { logger } from '@/utils/logger';
 import TimelineComposer from './TimelineComposer';
+import { deduplicateCrossPosts, filterOptimisticEvents } from '@/utils/timeline';
 
 export interface SocialTimelineProps {
   // Page identity
@@ -82,28 +84,29 @@ export default function SocialTimeline({
     onOptimisticUpdate?.(event);
   }, [onOptimisticUpdate]);
 
-  // Merge optimistic events with real feed
-  const mergedFeed = React.useMemo(() => {
+  // Merge optimistic events with real feed and deduplicate cross-posts
+  const mergedFeed = useMemo(() => {
     if (!timelineFeed) return null;
 
     // Remove optimistic events that have been replaced by real events
-    const filteredOptimistic = optimisticEvents.filter(optEvent =>
-      !timelineFeed.events.some((realEvent: any) => {
-        // Match by content and timestamp (simple heuristic)
-        return realEvent.description === optEvent.description &&
-               Math.abs(new Date(realEvent.eventTimestamp).getTime() - new Date(optEvent.eventTimestamp).getTime()) < 5000; // 5 second window
-      })
-    );
+    const filteredOptimistic = filterOptimisticEvents(optimisticEvents, timelineFeed.events);
+
+    let events = [...filteredOptimistic, ...timelineFeed.events];
+
+    // Deduplicate cross-posts in community mode
+    if (mode === 'community') {
+      events = deduplicateCrossPosts(events);
+    }
 
     return {
       ...timelineFeed,
-      events: [...filteredOptimistic, ...timelineFeed.events],
+      events,
       metadata: {
         ...timelineFeed.metadata,
-        totalEvents: filteredOptimistic.length + timelineFeed.events.length,
+        totalEvents: events.length,
       }
     };
-  }, [timelineFeed, optimisticEvents]);
+  }, [timelineFeed, optimisticEvents, mode]);
   const [sortBy, setSortBy] = useState<'recent' | 'trending' | 'popular'>(defaultSort);
   const composerRef = useRef<HTMLDivElement | null>(null);
 
@@ -212,7 +215,9 @@ export default function SocialTimeline({
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Please sign in</h2>
           <p className="text-gray-600 mb-6">You need to be signed in to view this page.</p>
-          <Button onClick={() => (window.location.href = '/auth')}>Sign In</Button>
+          <Link href="/auth">
+            <Button>Sign In</Button>
+          </Link>
         </div>
       </div>
     );

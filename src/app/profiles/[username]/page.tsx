@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import PublicProfileClient from '@/components/profile/PublicProfileClient';
 import { notFound } from 'next/navigation';
+import { isValidUUID } from '@/utils/validation';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -15,10 +16,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { username } = await params;
   const supabase = await createServerClient();
 
+  // Support both username and UUID lookups
   const { data: profile } = await supabase
     .from('profiles')
     .select('name, bio, avatar_url, username')
-    .eq('username', username)
+    .eq(isValidUUID(username) ? 'id' : 'username', username)
     .single();
 
   if (!profile) {
@@ -92,11 +94,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
     targetUsername = userProfile?.username || user.id;
   }
 
-  // Fetch profile data server-side
+  // Fetch profile data server-side (supports both username and UUID lookups)
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
-    .eq('username', targetUsername)
+    .eq(isValidUUID(targetUsername) ? 'id' : 'username', targetUsername)
     .single();
 
   if (profileError || !profile) {
