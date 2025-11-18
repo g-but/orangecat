@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+
+echo "🚀 Running pre-push checks..."
+
+# Run tests before pushing (target: ≤30s)
+
+echo "🧪 Running unit tests..."
+npm run test:unit || { echo "❌ Unit tests failed"; exit 1; }
+echo "✅ Unit tests passed"
+
+echo "🎭 Running fast E2E tests..."
+npm run test:e2e:node || { echo "❌ E2E tests failed"; exit 1; }
+echo "✅ E2E tests passed"
+
+echo "🎉 All pre-push checks passed! Safe to push."
