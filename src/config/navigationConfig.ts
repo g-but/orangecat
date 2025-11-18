@@ -109,7 +109,7 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        name: 'My Wallets',
+        name: 'Wallets',
         href: '/dashboard/wallets',
         icon: Wallet,
         description: 'Manage your Bitcoin wallets',

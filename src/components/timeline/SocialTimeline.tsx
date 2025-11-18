@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { timelineService } from '@/services/timeline';
 import TimelineLayout from './TimelineLayout';
@@ -214,7 +215,9 @@ export default function SocialTimeline({
         <div className="text-center">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Please sign in</h2>
           <p className="text-gray-600 mb-6">You need to be signed in to view this page.</p>
-          <Button onClick={() => (window.location.href = '/auth')}>Sign In</Button>
+          <Link href="/auth">
+            <Button>Sign In</Button>
+          </Link>
         </div>
       </div>
     );
