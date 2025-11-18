@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import PublicProfileClient from '@/components/profile/PublicProfileClient';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { isValidUUID } from '@/utils/validation';
 
 interface PageProps {
@@ -79,8 +79,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      // Not authenticated, redirect to login
-      return notFound();
+      // Not authenticated, redirect to login with return URL
+      redirect('/login?redirect=/profiles/me');
     }
 
     // Get username for current user
