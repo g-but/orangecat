@@ -10,7 +10,18 @@
 
 import { ComponentType, SVGProps } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Home, Users, Rocket, Settings, User, Compass, BookOpen, Globe, Wallet } from 'lucide-react';
+import {
+  Home,
+  Users,
+  Rocket,
+  Settings,
+  User,
+  Compass,
+  BookOpen,
+  Globe,
+  Wallet,
+  Info,
+} from 'lucide-react';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
 
 export interface NavigationItem {
@@ -65,12 +76,13 @@ export function shouldShowNavigationItem(item: NavigationItem, user: User | null
 /**
  * Sidebar navigation sections for authenticated users
  *
- * Simplified navigation with only essential items:
+ * Navigation items with "My" prefix for personal items:
  * - Dashboard (main dashboard overview)
+ * - My Timeline (personal timeline and posts)
  * - My Projects (projects management dashboard)
- * - My People (people we are connected to)
- * - Discover (separated section for exploring)
- * - Settings (at bottom)
+ * - My People (people connections)
+ * - My Wallets (Bitcoin wallets)
+ * - My Info (profile information)
  */
 export const navigationSections: NavSection[] = [
   {
@@ -88,8 +100,8 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        name: 'My Journey',
-        href: '/journey',
+        name: 'My Timeline',
+        href: '/timeline',
         icon: BookOpen,
         description: 'Your personal timeline and posts',
         requiresAuth: true,
@@ -109,10 +121,17 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        name: 'Wallets',
+        name: 'My Wallets',
         href: '/dashboard/wallets',
         icon: Wallet,
         description: 'Manage your Bitcoin wallets',
+        requiresAuth: true,
+      },
+      {
+        name: 'My Info',
+        href: '/profile',
+        icon: Info,
+        description: 'Your profile information',
         requiresAuth: true,
       },
     ],

@@ -1,0 +1,14 @@
+# CODEOWNERS assigns required reviewers by path.
+# Update these to your actual GitHub handles/teams.
+
+# Default owners for all files
+* @g-but
+
+# Critical areas
+supabase/** @g-but
+src/services/security/** @g-but
+src/middleware/** @g-but
+scripts/deployment/** @g-but
+
+# Documentation (optional different owners)
+docs/** @g-but

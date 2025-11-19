@@ -6,24 +6,9 @@
     "auditLog": "/home/g/dev/orangecat/logs/.988a9e615c70cb8f387540c142c015feefe8a176-audit.json",
     "files": [
         {
-            "date": 1762944938933,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-12.log",
-            "hash": "5cb865e9e99e874f6d637f846a768edc479984865e58bfa8d180573eed6651c0"
-        },
-        {
-            "date": 1763011406126,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-13.log",
-            "hash": "1aca2a868866bfb9b055ae4e8a7addb42a799daeefa742009972198867fbbc90"
-        },
-        {
-            "date": 1763127018550,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-14.log",
-            "hash": "5be69ffd4e2b7c5799e1a89d61d2b1a319c0d1d2ba2f06fe4c7a5adbefa76b62"
-        },
-        {
-            "date": 1763213107825,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-15.log",
-            "hash": "e1d2cbf0b5d405e88ee6e4cdf03e43d26ffed860ecc2837fefa211fd61cb816c"
+            "date": 1763515859783,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-19.log",
+            "hash": "ca914e64b02dead3c4ef9e7358fbeca3a8eeeb1d9c0ef9a0025c3e34ce7d1e10"
         }
     ],
     "hashType": "sha256"
