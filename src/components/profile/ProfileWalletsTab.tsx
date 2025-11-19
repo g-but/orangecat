@@ -5,7 +5,6 @@ import { Profile } from '@/types/database';
 import { Wallet } from '@/types/wallet';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { Bitcoin, Zap, Wallet as WalletIcon, AlertCircle } from 'lucide-react';
-import ProfileWalletSection from './ProfileWalletSection';
 import BitcoinDonationCard from '@/components/bitcoin/BitcoinDonationCard';
 import { logger } from '@/utils/logger';
 
@@ -62,9 +61,7 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
         <Card>
           <CardContent className="py-12 text-center">
             <WalletIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              No Payment Methods Yet
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Payment Methods Yet</h3>
             <p className="text-gray-600 max-w-md mx-auto">
               {isOwnProfile
                 ? 'Add Bitcoin or Lightning addresses to start accepting donations.'
@@ -74,19 +71,13 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
         </Card>
       )}
 
-      {/* Multi-Wallet System */}
-      {hasWallets && (
-        <ProfileWalletSection
-          wallets={wallets}
-          loading={loading}
-          isOwnProfile={isOwnProfile}
-          legacyBitcoinAddress={profile.bitcoin_address}
-          legacyLightningAddress={profile.lightning_address}
-        />
-      )}
+      {/* Multi-Wallet System - TODO: Implement wallet display */}
+      {/* {hasWallets && (
+        <div>Multiple wallets display - TODO</div>
+      )} */}
 
       {/* Legacy Bitcoin Address */}
-      {!hasWallets && profile.bitcoin_address && (
+      {profile.bitcoin_address && (
         <Card data-bitcoin-card>
           <CardHeader>
             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -107,7 +98,7 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
       )}
 
       {/* Legacy Lightning Address */}
-      {!hasWallets && profile.lightning_address && (
+      {profile.lightning_address && (
         <Card data-lightning-card>
           <CardHeader>
             <h3 className="text-lg font-semibold flex items-center gap-2">
@@ -147,8 +138,8 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
               <div className="text-sm">
                 <p className="text-blue-900 font-medium mb-1">Manage Your Wallets</p>
                 <p className="text-blue-700">
-                  You can add and manage multiple wallets from your profile settings.
-                  Create separate wallets for different projects or purposes.
+                  You can add and manage multiple wallets from your profile settings. Create
+                  separate wallets for different projects or purposes.
                 </p>
               </div>
             </div>
