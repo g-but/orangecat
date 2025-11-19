@@ -43,7 +43,7 @@ import ProfileWizard from './ProfileWizard';
 import { profileSchema as serverProfileSchema, normalizeProfileData } from '@/lib/validation';
 
 // Profile Images Section Component
-function ProfileImagesSection({
+export function ProfileImagesSection({
   profile,
   avatarPreview,
   bannerPreview,
@@ -126,7 +126,7 @@ function ProfileImagesSection({
 // Use server-side schema for consistency
 const profileSchema = serverProfileSchema;
 
-type ProfileFormValues = z.infer<typeof profileSchema>;
+export type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface ModernProfileEditorProps {
   profile: Profile;

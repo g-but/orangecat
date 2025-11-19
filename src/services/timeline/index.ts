@@ -146,6 +146,26 @@ class TimelineService {
   }
 
   /**
+   * Create a simple post (convenience method for common use case)
+   */
+  async createPost(params: {
+    content: string;
+    visibility?: TimelineVisibility;
+    eventType?: string;
+    tags?: string[];
+  }): Promise<TimelineEventResponse> {
+    return this.createEvent({
+      eventType: (params.eventType as TimelineEventType) || 'post_created',
+      subjectType: 'profile',
+      title: params.content.slice(0, 100),
+      description: params.content,
+      content: { text: params.content },
+      visibility: params.visibility || 'public',
+      tags: params.tags || [],
+    });
+  }
+
+  /**
    * Create project-related events automatically
    */
   async createProjectEvent(

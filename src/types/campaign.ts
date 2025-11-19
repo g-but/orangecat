@@ -1,15 +1,19 @@
 /**
  * Campaign Types - Proper TypeScript Definitions
- * 
+ *
  * Replaces 'any' types in Campaign services with proper type definitions
  * for form data, API responses, and project operations
- * 
+ *
  * Created: 2025-06-08
  * Last Modified: 2025-06-08
  * Last Modified Summary: Initial creation of Campaign types for TypeScript cleanup
  */
 
 import type { FormValue, SupabaseResponse } from '@/types/common'
+import type { Project } from '@/types/database'
+
+// Campaign is an alias for Project (campaigns were renamed to projects)
+export type Campaign = Project;
 
 // ==================== CAMPAIGN FORM DATA ====================
 
