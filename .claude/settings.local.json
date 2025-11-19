@@ -37,7 +37,12 @@
       "Bash(git cherry-pick:*)",
       "Bash(pkill:*)",
       "Bash(npm run dev:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c \"SELECT id, username, name, email FROM profiles WHERE username LIKE ''%@%'' LIMIT 5;\")",
+      "Bash(source .env.local)",
+      "Bash(export NEXT_PUBLIC_SUPABASE_URL=https://ohkueislstxomdjavyhs.supabase.co)",
+      "Bash(export:*)",
+      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -f /home/g/dev/orangecat/scripts/fix-handle-new-user-function.sql)"
     ],
     "deny": [],
     "ask": []
