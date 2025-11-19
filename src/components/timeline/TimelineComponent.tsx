@@ -64,11 +64,13 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [editTitle, setEditTitle] = useState(event.title);
-  const [editDescription, setEditDescription] = useState(event.description || '');
+  const [editContent, setEditContent] = useState(event.description || '');
   const [editVisibility, setEditVisibility] = useState<'public' | 'private'>(
     event.visibility || 'public'
   );
+
+  // Determine if this is a user post (no title needed)
+  const isUserPost = event.eventType === 'status_update' || event.metadata?.is_user_post;
   // Local counts fallback (for reload cases)
   useEffect(() => {
     if ((event.likesCount ?? 0) === 0 || (event.commentsCount ?? 0) === 0) {
@@ -94,11 +96,10 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
   // Update edit form when event changes
   useEffect(() => {
     if (!showEditModal) {
-      setEditTitle(event.title);
-      setEditDescription(event.description || '');
+      setEditContent(event.description || '');
       setEditVisibility(event.visibility || 'public');
     }
-  }, [event.title, event.description, event.visibility, showEditModal]);
+  }, [event.description, event.visibility, showEditModal]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -277,23 +278,30 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
 
   // Handle edit
   const handleEdit = useCallback(async () => {
-    if (!editTitle.trim() || isEditing) {
+    if (!editContent.trim() || isEditing) {
       return;
     }
 
     setIsEditing(true);
     try {
-      const result = await timelineService.updateEvent(event.id, {
-        title: editTitle.trim(),
-        description: editDescription.trim() || undefined,
+      // For user posts, title is auto-generated from content
+      const updates: any = {
+        description: editContent.trim(),
         visibility: editVisibility,
-      });
+      };
+
+      // Only update title for non-user posts
+      if (!isUserPost) {
+        updates.title = editContent.trim().substring(0, 100);
+      }
+
+      const result = await timelineService.updateEvent(event.id, updates);
 
       if (result.success) {
         onUpdate({
-          title: editTitle.trim(),
-          description: editDescription.trim() || undefined,
+          description: editContent.trim(),
           visibility: editVisibility,
+          ...(isUserPost ? {} : { title: updates.title }),
         });
         setShowEditModal(false);
       } else {
@@ -306,7 +314,7 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
     } finally {
       setIsEditing(false);
     }
-  }, [event.id, editTitle, editDescription, editVisibility, isEditing, onUpdate]);
+  }, [event.id, editContent, editVisibility, isEditing, isUserPost, onUpdate]);
 
   // Handle delete
   const handleDelete = useCallback(async () => {
@@ -333,11 +341,11 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
 
   // Open edit modal
   const openEditModal = useCallback(() => {
-    setEditTitle(event.title);
-    setEditDescription(event.description || '');
+    setEditContent(event.description || '');
+    setEditVisibility(event.visibility || 'public');
     setShowEditModal(true);
     setShowMenu(false);
-  }, [event.title, event.description]);
+  }, [event.description, event.visibility]);
 
   const timeAgo = formatDistanceToNow(new Date(event.eventTimestamp), { addSuffix: true });
 
@@ -393,15 +401,14 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
               )}
             </div>
 
-            {/* Event Title and Description - hide title for user posts */}
+            {/* Event Content - hide title for user posts */}
             <div className="mb-2">
-              {event.title &&
-                event.eventType !== 'status_update' &&
-                !event.metadata?.is_user_post && (
-                  <h3 className="font-semibold text-gray-900 mb-1.5 text-base leading-relaxed">
-                    {event.title}
-                  </h3>
-                )}
+              {/* Only show title for system events, not user posts */}
+              {!isUserPost && event.title && (
+                <h3 className="font-semibold text-gray-900 mb-1.5 text-base leading-relaxed">
+                  {event.title}
+                </h3>
+              )}
               {event.description && (
                 <p className="text-gray-700 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                   {event.description}
@@ -556,21 +563,10 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
             </button>
           </div>
 
-          {/* Visibility Indicator */}
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            {event.visibility === 'public' ? (
-              <Eye className="w-3 h-3" />
-            ) : event.visibility === 'followers' ? (
-              <EyeOff className="w-3 h-3" />
-            ) : (
-              <span className="w-3 h-3 bg-gray-400 rounded-full" />
-            )}
-            <span className="capitalize">{event.visibility}</span>
-            {isOwner && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-gray-500 ml-2"
+          {/* Visibility Indicator & Toggle */}
+          <div className="flex items-center gap-2">
+            {isOwner ? (
+              <button
                 onClick={async () => {
                   const next = (event.visibility || 'public') === 'public' ? 'private' : 'public';
                   // Optimistic toggle
@@ -582,10 +578,37 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
                     onUpdate({ visibility: event.visibility });
                   }
                 }}
-                aria-label="Toggle visibility"
+                className={`
+                  flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium
+                  transition-all border
+                  ${event.visibility === 'public'
+                    ? 'bg-yellow-50 border-yellow-300 text-yellow-800 hover:bg-yellow-100'
+                    : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
+                  }
+                `}
+                title={`Click to make ${event.visibility === 'public' ? 'private' : 'public'}`}
               >
-                {event.visibility === 'public' ? 'Make Private' : 'Make Public'}
-              </Button>
+                {event.visibility === 'public' ? (
+                  <>
+                    <Globe className="w-3.5 h-3.5" />
+                    <span>Public</span>
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Private</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs text-gray-500">
+                {event.visibility === 'public' ? (
+                  <Globe className="w-3.5 h-3.5" />
+                ) : (
+                  <Lock className="w-3.5 h-3.5" />
+                )}
+                <span className="capitalize">{event.visibility}</span>
+              </div>
             )}
           </div>
         </div>
@@ -693,85 +716,139 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
         )}
       </CardContent>
 
-      {/* Edit Modal */}
+      {/* Edit Modal - Modern, No Title Field for User Posts */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <Card className="max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold">Edit Post</h2>
-                <Button variant="ghost" size="sm" onClick={() => setShowEditModal(false)}>
-                  <X className="w-4 h-4" />
-                </Button>
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">Edit Post</h2>
+                  <p className="text-sm text-gray-500 mt-1">Make changes to your post</p>
+                </div>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
+                {/* Content Editor */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-                  <Input
-                    value={editTitle}
-                    onChange={e => setEditTitle(e.target.value)}
-                    placeholder="Post title"
-                    className="w-full"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    {isUserPost ? 'Your Post' : 'Content'}
+                  </label>
                   <Textarea
-                    value={editDescription}
-                    onChange={e => setEditDescription(e.target.value)}
-                    placeholder="What's happening?"
-                    rows={6}
-                    className="w-full"
+                    value={editContent}
+                    onChange={e => setEditContent(e.target.value)}
+                    placeholder={isUserPost ? "What's on your mind?" : "Event description"}
+                    rows={8}
+                    className="w-full resize-none border-2 border-gray-200 focus:border-orange-400 focus:ring-2 focus:ring-orange-200 rounded-lg p-4 text-base"
+                    maxLength={500}
                   />
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-xs text-gray-500">
+                      {isUserPost ? 'Express yourself freely' : 'Describe the event'}
+                    </p>
+                    <span className={`text-xs font-medium ${
+                      editContent.length > 450 ? 'text-red-600' :
+                      editContent.length > 400 ? 'text-orange-500' :
+                      'text-gray-500'
+                    }`}>
+                      {editContent.length}/500
+                    </span>
+                  </div>
                 </div>
 
+                {/* Visibility Toggle */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Visibility</label>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setEditVisibility(editVisibility === 'public' ? 'private' : 'public')
-                    }
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors"
-                    style={{
-                      backgroundColor:
-                        editVisibility === 'public' ? 'rgb(254 249 195)' : 'rgb(243 244 246)',
-                      borderColor:
-                        editVisibility === 'public' ? 'rgb(251 191 36)' : 'rgb(209 213 219)',
-                      color: editVisibility === 'public' ? 'rgb(146 64 14)' : 'rgb(75 85 99)',
-                    }}
-                  >
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    Visibility
+                  </label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setEditVisibility('public')}
+                      className={`
+                        flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2
+                        font-medium transition-all
+                        ${editVisibility === 'public'
+                          ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-400 text-yellow-900 shadow-sm'
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                        }
+                      `}
+                    >
+                      <Globe className="w-5 h-5" />
+                      <span>Public</span>
+                      {editVisibility === 'public' && <Check className="w-4 h-4 ml-auto" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditVisibility('private')}
+                      className={`
+                        flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2
+                        font-medium transition-all
+                        ${editVisibility === 'private'
+                          ? 'bg-gray-100 border-gray-400 text-gray-900 shadow-sm'
+                          : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                        }
+                      `}
+                    >
+                      <Lock className="w-5 h-5" />
+                      <span>Private</span>
+                      {editVisibility === 'private' && <Check className="w-4 h-4 ml-auto" />}
+                    </button>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-600 flex items-center gap-1">
                     {editVisibility === 'public' ? (
                       <>
-                        <Globe className="w-4 h-4" />
-                        <span>Public</span>
+                        <Globe className="w-3 h-3" />
+                        Everyone can see this post on your timeline
                       </>
                     ) : (
                       <>
-                        <Lock className="w-4 h-4" />
-                        <span>Private</span>
+                        <Lock className="w-3 h-3" />
+                        Only you can see this post
                       </>
                     )}
-                  </button>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {editVisibility === 'public'
-                      ? 'Everyone can see this post'
-                      : 'Only you can see this post'}
                   </p>
                 </div>
 
-                <div className="flex gap-2 justify-end">
+                {/* Info Box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800">
+                    💡 <strong>Tip:</strong> {isUserPost
+                      ? 'Your post will be visible to others based on the visibility setting above.'
+                      : 'System events are displayed with additional context automatically.'}
+                  </p>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 justify-end pt-4 border-t border-gray-200">
                   <Button
                     variant="outline"
                     onClick={() => setShowEditModal(false)}
                     disabled={isEditing}
+                    className="px-6"
                   >
                     Cancel
                   </Button>
-                  <Button onClick={handleEdit} disabled={!editTitle.trim() || isEditing}>
-                    {isEditing ? 'Saving...' : 'Save Changes'}
+                  <Button
+                    onClick={handleEdit}
+                    disabled={!editContent.trim() || isEditing || editContent.length > 500}
+                    className="px-6 bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-semibold"
+                  >
+                    {isEditing ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Saving...
+                      </span>
+                    ) : (
+                      'Save Changes'
+                    )}
                   </Button>
                 </div>
               </div>

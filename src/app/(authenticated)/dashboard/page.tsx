@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PROFILE_CATEGORIES } from '@/types/profile';
-import { QuickPostWidget } from '@/components/dashboard/QuickPostWidget';
+import UnifiedPostComposer from '@/components/timeline/UnifiedPostComposer';
 
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated, session } = useAuth();
@@ -284,14 +284,16 @@ export default function DashboardPage() {
         </div>
 
         {/* Quick Post Widget - Prominent placement for easy timeline posting */}
-        <QuickPostWidget
-          onPostSuccess={() => {
+        <UnifiedPostComposer
+          mode="inline"
+          onPostCreated={() => {
             // Reload timeline feed when a post is created
             if (user?.id) {
               loadTimelineFeed(user.id);
             }
           }}
-          className="animate-fadeIn"
+          showVisibilityToggle={true}
+          showProjectSelection={false}
         />
 
         {/* Urgent Actions */}

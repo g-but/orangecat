@@ -4,7 +4,7 @@ import { Suspense, useCallback, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Profile } from '@/types/database';
 import TimelineView from '@/components/timeline/TimelineView';
-import TimelineComposer from '@/components/timeline/TimelineComposer';
+import UnifiedPostComposer from '@/components/timeline/UnifiedPostComposer';
 
 interface ProfileTimelineTabProps {
   profile: Profile;
@@ -17,7 +17,7 @@ interface ProfileTimelineTabProps {
  * Displays timeline for profile pages using modular architecture.
  * - Shows posts that appear on this profile's timeline (subject_id = profile.id)
  * - Allows posting to profile timeline (anyone can post if enabled)
- * - Reuses TimelineView and TimelineComposer components (DRY)
+ * - Reuses TimelineView and UnifiedPostComposer components (DRY)
  */
 export default function ProfileTimelineTab({ profile, isOwnProfile }: ProfileTimelineTabProps) {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -30,13 +30,14 @@ export default function ProfileTimelineTab({ profile, isOwnProfile }: ProfileTim
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       {/* Composer - Allow posting on profile timeline */}
-      <TimelineComposer
-        targetOwnerId={profile.id}
-        targetOwnerType="profile"
-        targetOwnerName={profile.display_name || profile.username || 'User'}
-        allowProjectSelection={true}
+      <UnifiedPostComposer
+        mode="full"
+        subjectId={profile.id}
+        subjectType="profile"
+        showProjectSelection={true}
         onPostCreated={handlePostCreated}
         showBanner={!isOwnProfile}
+        showVisibilityToggle={true}
       />
 
       {/* Timeline Feed - Posts on this profile */}

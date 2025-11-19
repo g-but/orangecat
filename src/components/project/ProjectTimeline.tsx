@@ -3,7 +3,7 @@
 import React, { useCallback, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Activity } from 'lucide-react';
-import TimelineComposer from '@/components/timeline/TimelineComposer';
+import UnifiedPostComposer from '@/components/timeline/UnifiedPostComposer';
 import TimelineView from '@/components/timeline/TimelineView';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -55,15 +55,17 @@ export default function ProjectTimeline({
       </div>
 
       {showComposer && user && (
-        <TimelineComposer
-          targetOwnerId={projectId}
-          targetOwnerType="project"
-          targetOwnerName={projectTitle}
+        <UnifiedPostComposer
+          mode="full"
+          subjectId={projectId}
+          subjectType="project"
           onPostCreated={handlePostCreated}
           onCancel={() => setShowComposer(false)}
           placeholder={`Share an update about ${projectTitle}...`}
           buttonText="Post Update"
           showBanner={false}
+          showVisibilityToggle={true}
+          showProjectSelection={false}
         />
       )}
 
