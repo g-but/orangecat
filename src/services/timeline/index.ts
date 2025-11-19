@@ -1477,9 +1477,9 @@ class TimelineService {
               actor_type: 'user',
               subject_type: 'profile',
               subject_id: userId,
-              title: 'Welcome to My Journey!',
+              title: 'Welcome to My Timeline!',
               description:
-                'Just set up my personal timeline on OrangeCat. Excited to share my Bitcoin crowdfunding journey!',
+                'Just set up my personal timeline on OrangeCat. Excited to share my Bitcoin crowdfunding progress!',
               content: null,
               amount_sats: null,
               amount_btc: null,

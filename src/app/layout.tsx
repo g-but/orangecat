@@ -146,8 +146,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
-        {/* Service Worker Registration */}
-        <Script
+        {/* Service Worker Registration - Temporarily disabled due to Next.js 15 compatibility */}
+        {/* <Script
           id="service-worker-registration"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
@@ -157,7 +157,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   navigator.serviceWorker.register('/sw.js')
                     .then(function(registration) {
                       // Service Worker registration successful
-                      
+
                       // Check for updates
                       registration.addEventListener('updatefound', function() {
                         const newWorker = registration.installing;
@@ -183,22 +183,22 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               }
             `,
           }}
-        />
+        /> */}
 
-        {/* PWA Install Prompt */}
-        <Script
+        {/* PWA Install Prompt - Temporarily disabled due to Next.js 15 compatibility */}
+        {/* <Script
           id="pwa-install-prompt"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
               let deferredPrompt;
               let installButton;
-              
+
               window.addEventListener('beforeinstallprompt', (e) => {
                 // PWA install prompt available
                 e.preventDefault();
                 deferredPrompt = e;
-                
+
                 // Show install button if available
                 installButton = document.getElementById('pwa-install-btn');
                 if (installButton) {
@@ -215,7 +215,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   });
                 }
               });
-              
+
               window.addEventListener('appinstalled', (evt) => {
                 // PWA app installed successfully
                 if (installButton) {
@@ -224,7 +224,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               });
             `,
           }}
-        />
+        /> */}
 
         {/* Simplified global polyfill */}
         <Script

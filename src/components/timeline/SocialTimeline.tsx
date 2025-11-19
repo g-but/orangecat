@@ -149,9 +149,9 @@ export default function SocialTimeline({
         logger.error(
           `Failed to load ${mode} timeline`,
           err,
-          mode === 'journey' ? 'Journey' : 'Community'
+          mode === 'journey' ? 'Timeline' : 'Community'
         );
-        setError(`Failed to load ${mode === 'journey' ? 'your journey' : 'community posts'}`);
+        setError(`Failed to load ${mode === 'journey' ? 'your timeline' : 'community posts'}`);
       } finally {
         setLoading(false);
       }
