@@ -1,32 +1,14 @@
-import { Inter, Playfair_Display } from 'next/font/google';
-
-// Font loading with optimized preloading strategy
-// Primary font (Inter) is preloaded for faster FCP
-// Secondary font (Playfair Display) is lazy loaded to reduce initial bundle
-const inter = Inter({
-  subsets: ['latin'],
+// Use local system fonts to avoid network dependency during build
+// This provides fast loading and works offline
+const inter = {
   variable: '--font-inter',
-  display: 'swap',
-  fallback: [
-    'system-ui',
-    '-apple-system',
-    'BlinkMacSystemFont',
-    'Segoe UI',
-    'Roboto',
-    'sans-serif',
-  ],
-  preload: true, // Enable preload for primary font (critical for FCP)
-  adjustFontFallback: true, // Optimize font fallback rendering
-});
+  style: { fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
+};
 
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
+const playfairDisplay = {
   variable: '--font-playfair-display',
-  display: 'swap',
-  fallback: ['Georgia', 'Cambria', 'Times New Roman', 'Times', 'serif'],
-  preload: false, // Keep secondary font lazy loaded (not critical for initial render)
-  adjustFontFallback: true,
-});
+  style: { fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif' }
+};
 import './globals.css';
 import ClientErrorBoundary from '@/components/ClientErrorBoundary';
 import { Suspense, lazy } from 'react';
