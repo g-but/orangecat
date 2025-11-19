@@ -1,15 +1,7 @@
-// Use local system fonts to avoid network dependency during build
-// This provides fast loading and works offline
-const inter = {
-  variable: '--font-inter',
-  style: { fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }
-};
-
-const playfairDisplay = {
-  variable: '--font-playfair-display',
-  style: { fontFamily: 'Georgia, Cambria, "Times New Roman", Times, serif' }
-};
 import './globals.css';
+
+// Use system fonts via CSS variables to avoid Google Fonts network dependency
+// Font variables are defined in globals.css
 import ClientErrorBoundary from '@/components/ClientErrorBoundary';
 import { Suspense, lazy } from 'react';
 import Loading, { GlobalAuthLoader } from '@/components/Loading';
@@ -89,7 +81,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${playfairDisplay.variable}`}
       suppressHydrationWarning
     >
       <head>
