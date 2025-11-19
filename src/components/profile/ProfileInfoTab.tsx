@@ -1,6 +1,7 @@
 'use client';
 
-import { Profile } from '@/types/database';
+import { useState } from 'react';
+import { Profile, ProfileFormData } from '@/types/database';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import {
   User,
@@ -12,31 +13,92 @@ import {
   Github,
   Info,
   Shield,
-  Clock
+  Clock,
+  Edit as EditIcon,
 } from 'lucide-react';
 import { format } from 'date-fns';
+import Button from '@/components/ui/Button';
+import ModernProfileEditor from './ModernProfileEditor';
 
 interface ProfileInfoTabProps {
   profile: Profile;
+  isOwnProfile?: boolean;
+  userId?: string;
+  userEmail?: string;
+  onSave?: (data: ProfileFormData) => Promise<void>;
 }
 
 /**
  * ProfileInfoTab Component
  *
  * Shows detailed profile information including location, join date,
- * social links, and other metadata.
+ * social links, and other metadata. Supports in-place editing for own profile.
  *
  * Best Practices:
- * - DRY: Reusable info display
- * - Modular: Separate from overview
+ * - DRY: Reusable info display and edit mode
+ * - Modular: Separate from overview, integrates ModernProfileEditor
  * - Progressive: Lazy loaded on first click
+ * - Mobile-first: Edit in context without navigation
  */
-export default function ProfileInfoTab({ profile }: ProfileInfoTabProps) {
+export default function ProfileInfoTab({
+  profile,
+  isOwnProfile = false,
+  userId,
+  userEmail,
+  onSave,
+}: ProfileInfoTabProps) {
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
   const joinDate = profile.created_at ? new Date(profile.created_at) : null;
   const lastActive = profile.updated_at ? new Date(profile.updated_at) : null;
 
+  // Handle save from editor
+  const handleSave = async (data: ProfileFormData) => {
+    if (onSave) {
+      try {
+        await onSave(data);
+        // Only switch back to view mode if save succeeded
+        setMode('view');
+      } catch (error) {
+        // Error is already handled by onSave (toast shown)
+        // Stay in edit mode so user can try again
+        console.error('Failed to save profile:', error);
+      }
+    }
+  };
+
+  // Handle cancel editing
+  const handleCancel = () => {
+    setMode('view');
+  };
+
+  // If in edit mode and we have required props, show editor
+  if (mode === 'edit' && isOwnProfile && userId && onSave) {
+    return (
+      <div className="space-y-6">
+        <ModernProfileEditor
+          profile={profile}
+          userId={userId}
+          userEmail={userEmail}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      </div>
+    );
+  }
+
+  // View mode
   return (
     <div className="space-y-6">
+      {/* Edit Button (only for own profile) */}
+      {isOwnProfile && userId && onSave && (
+        <div className="flex justify-end">
+          <Button onClick={() => setMode('edit')} variant="outline">
+            <EditIcon className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
+        </div>
+      )}
+
       {/* Profile Details Card */}
       <Card>
         <CardHeader>
@@ -78,12 +140,14 @@ export default function ProfileInfoTab({ profile }: ProfileInfoTabProps) {
           )}
 
           {/* Location */}
-          {profile.location && (
+          {(profile.location_search || profile.location) && (
             <div className="flex items-start gap-3">
               <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
               <div className="flex-1">
                 <div className="text-sm text-gray-500">Location</div>
-                <div className="font-medium text-gray-900">{profile.location}</div>
+                <div className="font-medium text-gray-900">
+                  {profile.location_search || profile.location}
+                </div>
               </div>
             </div>
           )}
@@ -112,9 +176,7 @@ export default function ProfileInfoTab({ profile }: ProfileInfoTabProps) {
               <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
               <div className="flex-1">
                 <div className="text-sm text-gray-500">Member Since</div>
-                <div className="font-medium text-gray-900">
-                  {format(joinDate, 'MMMM d, yyyy')}
-                </div>
+                <div className="font-medium text-gray-900">{format(joinDate, 'MMMM d, yyyy')}</div>
               </div>
             </div>
           )}

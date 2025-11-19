@@ -96,7 +96,7 @@ export const navigationSections: NavSection[] = [
       },
       {
         name: 'My Info',
-        href: '/profile',
+        href: '/profiles/me?tab=info',
         icon: Info,
         description: 'Your profile information',
         requiresAuth: true,
