@@ -5,23 +5,23 @@ import SocialTimeline from '@/components/timeline/SocialTimeline';
 import { BookOpen, Plus } from 'lucide-react';
 
 /**
- * My Journey Page - Personal Timeline
+ * My Timeline Page - Personal Timeline
  *
  * Uses the unified SocialTimeline component with personal mode.
  * Identical interface to Community page but shows user's own posts.
  *
  * Built with best practices: DRY, maintainable, modular, high quality code
  */
-export default function MyJourneyPage() {
+export default function MyTimelinePage() {
   return (
     <SocialTimeline
-      title="My Journey"
+      title="My Timeline"
       description="Your personal timeline and story"
       icon={BookOpen}
       gradientFrom="from-orange-50/30"
       gradientVia="via-white"
       gradientTo="to-yellow-50/20"
-      mode="journey"
+      mode="timeline"
       showShareButton={true}
       shareButtonText="Share Update"
       shareButtonIcon={Plus}

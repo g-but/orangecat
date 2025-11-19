@@ -24,7 +24,20 @@
       "Bash(git commit:*)",
       "Bash(git reset:*)",
       "Bash(git stash drop:*)",
-      "Bash(git push origin develop)"
+      "Bash(git push origin develop)",
+      "Bash(tree:*)",
+      "WebSearch",
+      "WebFetch(domain:revampit.vercel.app)",
+      "Bash(python3:*)",
+      "Bash(pip3 install:*)",
+      "Bash(pptx_env/bin/pip install:*)",
+      "Bash(pptx_env/bin/python:*)",
+      "Bash(git branch:*)",
+      "Bash(git log:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(pkill:*)",
+      "Bash(npm run dev:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
