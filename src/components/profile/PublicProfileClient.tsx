@@ -135,7 +135,7 @@ export default function PublicProfileClient({
   }, [showShare]);
 
   // Define tabs for progressive loading
-  // Matches sidebar navigation: Dashboard (Overview), Timeline, Projects, People, Wallets, Info
+  // Order: Overview, Info, Projects, People, Wallets
   const tabs = [
     {
       id: 'overview',
@@ -144,10 +144,10 @@ export default function PublicProfileClient({
       content: <ProfileOverviewTab profile={profile} stats={stats} />,
     },
     {
-      id: 'timeline',
-      label: 'Timeline',
-      icon: <MessageSquare className="w-4 h-4" />,
-      content: <ProfileTimelineTab profile={profile} isOwnProfile={isOwnProfile} />,
+      id: 'info',
+      label: 'Info',
+      icon: <Info className="w-4 h-4" />,
+      content: <ProfileInfoTab profile={profile} />,
     },
     {
       id: 'projects',
@@ -160,19 +160,15 @@ export default function PublicProfileClient({
       id: 'people',
       label: 'People',
       icon: <Users className="w-4 h-4" />,
+      badge: stats?.followerCount,
       content: <ProfilePeopleTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
     {
       id: 'wallets',
       label: 'Wallets',
       icon: <Wallet className="w-4 h-4" />,
+      badge: stats?.walletCount,
       content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
-    },
-    {
-      id: 'info',
-      label: 'Info',
-      icon: <Info className="w-4 h-4" />,
-      content: <ProfileInfoTab profile={profile} />,
     },
   ];
 

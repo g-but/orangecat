@@ -42,7 +42,11 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
         if (followingResponse.ok) {
           const followingData = await followingResponse.json();
           if (followingData.success && followingData.data) {
-            setFollowing(followingData.data);
+            // Extract profiles from nested structure
+            const followingProfiles = followingData.data
+              .map((item: any) => item.profiles)
+              .filter((p: any) => p !== null);
+            setFollowing(followingProfiles);
           }
         }
 
@@ -51,7 +55,11 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
         if (followersResponse.ok) {
           const followersData = await followersResponse.json();
           if (followersData.success && followersData.data) {
-            setFollowers(followersData.data);
+            // Extract profiles from nested structure
+            const followerProfiles = followersData.data
+              .map((item: any) => item.profiles)
+              .filter((p: any) => p !== null);
+            setFollowers(followerProfiles);
           }
         }
       } catch (error) {
@@ -121,32 +129,40 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
       {/* People List */}
       {hasConnections && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {currentList.map(person => (
-            <Link
-              key={person.id}
-              href={`/profiles/${person.username}`}
-              className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all"
-            >
-              {person.avatar_url ? (
-                <Image
-                  src={person.avatar_url}
-                  alt={person.name || person.username}
-                  width={48}
-                  height={48}
-                  className="rounded-lg object-cover flex-shrink-0"
-                />
-              ) : (
-                <DefaultAvatar size={48} className="rounded-lg flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-gray-900 truncate">
-                  {person.name || person.username}
-                </h4>
-                <p className="text-sm text-gray-600 mb-1">@{person.username}</p>
-                {person.bio && <p className="text-sm text-gray-600 line-clamp-2">{person.bio}</p>}
-              </div>
-            </Link>
-          ))}
+          {currentList.map(person => {
+            // Skip if no username or id
+            if (!person.username || !person.id) {
+              console.warn('Person missing username or id:', person);
+              return null;
+            }
+
+            return (
+              <Link
+                key={person.id}
+                href={`/profiles/${person.username}`}
+                className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all"
+              >
+                {person.avatar_url ? (
+                  <Image
+                    src={person.avatar_url}
+                    alt={person.name || person.username}
+                    width={48}
+                    height={48}
+                    className="rounded-lg object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <DefaultAvatar size={48} className="rounded-lg flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-900 truncate">
+                    {person.name || person.username}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-1">@{person.username}</p>
+                  {person.bio && <p className="text-sm text-gray-600 line-clamp-2">{person.bio}</p>}
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
