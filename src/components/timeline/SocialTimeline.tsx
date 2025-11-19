@@ -7,7 +7,7 @@ import { TimelineFeedResponse } from '@/types/timeline';
 import Button from '@/components/ui/Button';
 import { LucideIcon, TrendingUp, Clock, Flame, Plus } from 'lucide-react';
 import { logger } from '@/utils/logger';
-import TimelineComposer from './TimelineComposer';
+import UnifiedPostComposer from './UnifiedPostComposer';
 import { deduplicateCrossPosts, filterOptimisticEvents } from '@/utils/timeline';
 
 export interface SocialTimelineProps {
@@ -274,11 +274,11 @@ export default function SocialTimeline({
   const inlineComposer =
     showInlineComposer && user ? (
       <div ref={composerRef}>
-        <TimelineComposer
-          targetOwnerId={timelineOwnerId || (mode === 'journey' ? user.id : undefined)}
-          targetOwnerType={timelineOwnerType}
-          targetOwnerName={timelineOwnerName}
-          allowProjectSelection={allowProjectSelection}
+        <UnifiedPostComposer
+          mode="full"
+          subjectId={timelineOwnerId || (mode === 'journey' ? user.id : undefined)}
+          subjectType={timelineOwnerType}
+          showProjectSelection={allowProjectSelection}
           placeholder={
             mode === 'journey'
               ? "What's on your mind?"
@@ -288,6 +288,7 @@ export default function SocialTimeline({
           onPostCreated={() => loadTimelineFeed(sortBy)}
           onOptimisticUpdate={handleOptimisticUpdate}
           showBanner={Boolean(timelineOwnerId && timelineOwnerId !== user.id)}
+          showVisibilityToggle={true}
         />
       </div>
     ) : undefined;
