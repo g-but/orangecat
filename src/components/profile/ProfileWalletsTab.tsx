@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Profile } from '@/types/database';
 import { Wallet, WalletFormData } from '@/types/wallet';
 import { WalletManager } from '@/components/wallets/WalletManager';
+import PublicWalletDisplay from '@/components/wallets/PublicWalletDisplay';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Wallet as WalletIcon, Info } from 'lucide-react';
 import { logger } from '@/utils/logger';
@@ -16,9 +17,8 @@ interface ProfileWalletsTabProps {
 /**
  * ProfileWalletsTab Component
  *
- * Displays user's Bitcoin wallets on their profile.
- * Own profile: Full management (add, edit, delete, refresh)
- * Public view: Read-only display of wallets for donations
+ * Displays and manages user's Bitcoin wallets on their profile.
+ * Only shown for own profile (not visible to others).
  */
 export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWalletsTabProps) {
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -165,41 +165,31 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
     );
   }
 
-  // Render wallet manager with appropriate permissions
+  // Show public wallet display for non-own profiles
+  if (!isOwnProfile) {
+    return <PublicWalletDisplay wallets={wallets} profileName={profile.name || profile.username || 'This user'} />;
+  }
+
+  // Show wallet manager for own profile
   return (
     <div className="space-y-6">
       {/* Info Banner */}
-      {isOwnProfile && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex gap-3">
-            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-blue-900 mb-1">Manage Your Wallets</h3>
-              <p className="text-sm text-blue-800">
-                Add and manage your Bitcoin wallets. You can categorize them, set goals, and track balances.
-                Wallets added here will also appear in "My Wallets" from the sidebar.
-              </p>
-            </div>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+        <div className="flex gap-3">
+          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="font-semibold text-blue-900 mb-1 text-sm sm:text-base">Manage Your Wallets</h3>
+            <p className="text-xs sm:text-sm text-blue-800">
+              Add and manage your Bitcoin wallets. You can categorize them, set goals, and track balances.
+              These wallets will be visible on your public profile.
+            </p>
           </div>
         </div>
-      )}
-      {!isOwnProfile && wallets.length > 0 && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex gap-3">
-            <WalletIcon className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
-            <div>
-              <h3 className="font-semibold text-orange-900 mb-1">Support with Bitcoin</h3>
-              <p className="text-sm text-orange-800">
-                Send Bitcoin directly to support this user's projects and work.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      </div>
 
       {/* Wallet Manager */}
       <Card>
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <WalletManager
             wallets={wallets}
             entityType="profile"
