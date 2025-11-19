@@ -77,12 +77,7 @@ export function shouldShowNavigationItem(item: NavigationItem, user: User | null
  * Sidebar navigation sections for authenticated users
  *
  * Navigation items with "My" prefix for personal items:
- * - Dashboard (main dashboard overview)
- * - My Timeline (personal timeline and posts)
- * - My Projects (projects management dashboard)
- * - My People (people connections)
- * - My Wallets (Bitcoin wallets)
- * - My Info (profile information)
+ * Order matches public profile tabs: Dashboard, Info, Projects, People, Wallets
  */
 export const navigationSections: NavSection[] = [
   {
@@ -100,10 +95,10 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        name: 'My Timeline',
-        href: '/timeline',
-        icon: BookOpen,
-        description: 'Your personal timeline and posts',
+        name: 'My Info',
+        href: '/profile',
+        icon: Info,
+        description: 'Your profile information',
         requiresAuth: true,
       },
       {
@@ -125,13 +120,6 @@ export const navigationSections: NavSection[] = [
         href: '/dashboard/wallets',
         icon: Wallet,
         description: 'Manage your Bitcoin wallets',
-        requiresAuth: true,
-      },
-      {
-        name: 'My Info',
-        href: '/profile',
-        icon: Info,
-        description: 'Your profile information',
         requiresAuth: true,
       },
     ],
