@@ -127,6 +127,25 @@ export default async function PublicProfilePage({ params }: PageProps) {
     .neq('status', 'draft') // Exclude drafts from public profile
     .order('created_at', { ascending: false });
 
+  // Fetch follower count
+  const { count: followerCount } = await supabase
+    .from('follows')
+    .select('*', { count: 'exact', head: true })
+    .eq('following_id', profile.id);
+
+  // Fetch wallet count (handle missing table gracefully)
+  let walletCount = 0;
+  try {
+    const { count } = await supabase
+      .from('wallets')
+      .select('*', { count: 'exact', head: true })
+      .eq('profile_id', profile.id);
+    walletCount = count || 0;
+  } catch (error) {
+    // Wallets table might not exist yet
+    console.log('Wallets table not available');
+  }
+
   // Calculate statistics
   const projectCount = projects?.length || 0;
   const totalRaised = projects?.reduce((sum, p) => sum + (Number(p.raised_amount) || 0), 0) || 0;
@@ -161,6 +180,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
         stats={{
           projectCount,
           totalRaised,
+          followerCount: followerCount || 0,
+          walletCount,
         }}
       />
     </>
