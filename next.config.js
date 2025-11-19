@@ -13,8 +13,9 @@ try {
 const nextConfig = {
   // Externalize Supabase packages for server-side rendering
   // Note: 'standalone' output is REMOVED - it's incompatible with Vercel
-  // Note: @supabase/ssr removed from externals to fix webpack bundling issues
-  serverExternalPackages: ['@supabase/supabase-js'],
+  // Note: serverExternalPackages removed entirely to fix webpack bundling issues
+  // Let webpack bundle all packages including Supabase for proper module resolution
+  // serverExternalPackages: [],
 
   // Image optimization
   images: {
