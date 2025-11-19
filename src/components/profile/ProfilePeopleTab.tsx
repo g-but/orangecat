@@ -48,7 +48,11 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
       const response = await fetch(`/api/social/followers/${profile.id}`);
       if (response.ok) {
         const data = await response.json();
-        setFollowers(data.data || []);
+        // Extract profile data from nested structure
+        const followerProfiles = (data.data || [])
+          .map((item: any) => item.profiles)
+          .filter((profile: any) => profile !== null);
+        setFollowers(followerProfiles);
         setLoadedTabs(prev => new Set(prev).add('followers'));
       }
     } catch (err) {
@@ -70,7 +74,11 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
       const response = await fetch(`/api/social/following/${profile.id}`);
       if (response.ok) {
         const data = await response.json();
-        setFollowing(data.data || []);
+        // Extract profile data from nested structure
+        const followingProfiles = (data.data || [])
+          .map((item: any) => item.profiles)
+          .filter((profile: any) => profile !== null);
+        setFollowing(followingProfiles);
         setLoadedTabs(prev => new Set(prev).add('following'));
       }
     } catch (err) {
@@ -141,29 +149,29 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
         </Card>
       </div>
 
-      {/* View Toggle */}
-      <div className="flex gap-2 border-b border-gray-200">
+      {/* View Toggle - Mobile Friendly */}
+      <div className="flex gap-2 border-b border-gray-200 overflow-x-auto">
         <button
           onClick={() => setActiveView('followers')}
-          className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+          className={`px-4 sm:px-6 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
             activeView === 'followers'
               ? 'border-orange-500 text-orange-600'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
           <Users className="w-4 h-4 inline mr-2" />
-          Followers ({followers.length})
+          <span className="hidden xs:inline">Followers </span>({followers.length})
         </button>
         <button
           onClick={() => setActiveView('following')}
-          className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+          className={`px-4 sm:px-6 py-3 font-medium transition-colors border-b-2 whitespace-nowrap ${
             activeView === 'following'
               ? 'border-orange-500 text-orange-600'
               : 'border-transparent text-gray-600 hover:text-gray-900'
           }`}
         >
           <UserPlus className="w-4 h-4 inline mr-2" />
-          Following ({following.length})
+          <span className="hidden xs:inline">Following </span>({following.length})
         </button>
       </div>
 
