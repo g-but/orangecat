@@ -18,7 +18,7 @@ export interface SocialTimelineProps {
   gradientTo: string;
 
   // Data source
-  mode: 'journey' | 'community';
+  mode: 'timeline' | 'community';
 
   // Timeline ownership (for cross-posting)
   timelineOwnerId?: string; // Whose timeline posts appear on
@@ -77,22 +77,33 @@ export default function SocialTimeline({
   const [error, setError] = useState<string | null>(null);
 
   // Handle optimistic event updates
-  const handleOptimisticUpdate = useCallback((event: any) => {
-    setOptimisticEvents(prev => [event, ...prev]);
-    onOptimisticUpdate?.(event);
-  }, [onOptimisticUpdate]);
+  const handleOptimisticUpdate = useCallback(
+    (event: any) => {
+      setOptimisticEvents(prev => [event, ...prev]);
+      onOptimisticUpdate?.(event);
+    },
+    [onOptimisticUpdate]
+  );
 
   // Merge optimistic events with real feed
   const mergedFeed = React.useMemo(() => {
-    if (!timelineFeed) return null;
+    if (!timelineFeed) {
+      return null;
+    }
 
     // Remove optimistic events that have been replaced by real events
-    const filteredOptimistic = optimisticEvents.filter(optEvent =>
-      !timelineFeed.events.some((realEvent: any) => {
-        // Match by content and timestamp (simple heuristic)
-        return realEvent.description === optEvent.description &&
-               Math.abs(new Date(realEvent.eventTimestamp).getTime() - new Date(optEvent.eventTimestamp).getTime()) < 5000; // 5 second window
-      })
+    const filteredOptimistic = optimisticEvents.filter(
+      optEvent =>
+        !timelineFeed.events.some((realEvent: any) => {
+          // Match by content and timestamp (simple heuristic)
+          return (
+            realEvent.description === optEvent.description &&
+            Math.abs(
+              new Date(realEvent.eventTimestamp).getTime() -
+                new Date(optEvent.eventTimestamp).getTime()
+            ) < 5000
+          ); // 5 second window
+        })
     );
 
     return {
@@ -101,7 +112,7 @@ export default function SocialTimeline({
       metadata: {
         ...timelineFeed.metadata,
         totalEvents: filteredOptimistic.length + timelineFeed.events.length,
-      }
+      },
     };
   }, [timelineFeed, optimisticEvents]);
   const [sortBy, setSortBy] = useState<'recent' | 'trending' | 'popular'>(defaultSort);
@@ -130,7 +141,7 @@ export default function SocialTimeline({
 
         let feed: TimelineFeedResponse;
 
-        if (mode === 'journey') {
+        if (mode === 'timeline') {
           // Personal timeline - user's own posts
           feed = await timelineService.getEnrichedUserFeed(user.id, {}, { page, limit: 20 });
         } else {
@@ -146,9 +157,9 @@ export default function SocialTimeline({
         logger.error(
           `Failed to load ${mode} timeline`,
           err,
-          mode === 'journey' ? 'Journey' : 'Community'
+          mode === 'timeline' ? 'Journey' : 'Community'
         );
-        setError(`Failed to load ${mode === 'journey' ? 'your journey' : 'community posts'}`);
+        setError(`Failed to load ${mode === 'timeline' ? 'your journey' : 'community posts'}`);
       } finally {
         setLoading(false);
       }
@@ -270,16 +281,14 @@ export default function SocialTimeline({
     showInlineComposer && user ? (
       <div ref={composerRef}>
         <TimelineComposer
-          targetOwnerId={timelineOwnerId || (mode === 'journey' ? user.id : undefined)}
+          targetOwnerId={timelineOwnerId || (mode === 'timeline' ? user.id : undefined)}
           targetOwnerType={timelineOwnerType}
           targetOwnerName={timelineOwnerName}
           allowProjectSelection={allowProjectSelection}
           placeholder={
-            mode === 'journey'
-              ? "What's on your mind?"
-              : 'Share something with the community...'
+            mode === 'timeline' ? "What's on your mind?" : 'Share something with the community...'
           }
-          buttonText={mode === 'journey' ? 'Share Update' : 'Post'}
+          buttonText={mode === 'timeline' ? 'Share Update' : 'Post'}
           onPostCreated={() => loadTimelineFeed(sortBy)}
           onOptimisticUpdate={handleOptimisticUpdate}
           showBanner={Boolean(timelineOwnerId && timelineOwnerId !== user.id)}
@@ -296,7 +305,7 @@ export default function SocialTimeline({
           totalLikes: timelineFeed.events.reduce((sum, e) => sum + (e.likesCount || 0), 0),
           totalComments: timelineFeed.events.reduce((sum, e) => sum + (e.commentsCount || 0), 0),
           totalFollowers:
-            mode === 'journey' ? timelineFeed.events.filter(e => e.isRecent).length : undefined,
+            mode === 'timeline' ? timelineFeed.events.filter(e => e.isRecent).length : undefined,
         }
       : undefined);
 
@@ -322,7 +331,7 @@ export default function SocialTimeline({
       <div className="text-center py-16">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto mb-4"></div>
         <p className="text-gray-500 text-lg">
-          Loading {mode === 'journey' ? 'your journey' : 'community'}...
+          Loading {mode === 'timeline' ? 'your journey' : 'community'}...
         </p>
       </div>
     ) : error ? (
@@ -339,10 +348,10 @@ export default function SocialTimeline({
       <div className="text-center py-16">
         <Icon className="w-20 h-20 text-gray-300 mx-auto mb-4" />
         <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          {mode === 'journey' ? 'No posts yet' : 'No posts yet'}
+          {mode === 'timeline' ? 'No posts yet' : 'No posts yet'}
         </h3>
         <p className="text-gray-600 max-w-md mx-auto">
-          {mode === 'journey'
+          {mode === 'timeline'
             ? "Share your first update about what you're working on!"
             : 'Be the first to share something productive with the community!'}
         </p>
@@ -350,26 +359,24 @@ export default function SocialTimeline({
     ) : null;
 
   const headerContent =
-    showSortingControls || (showShareButton && user)
-      ? (
-          <>
-            {showSortingControls && <SortingControls />}
-            {showShareButton && user && (
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() =>
-                  composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                }
-                className="inline-flex items-center gap-2"
-              >
-                <ShareIcon className="w-4 h-4" />
-                {shareButtonText}
-              </Button>
-            )}
-          </>
-        )
-      : undefined;
+    showSortingControls || (showShareButton && user) ? (
+      <>
+        {showSortingControls && <SortingControls />}
+        {showShareButton && user && (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() =>
+              composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+            }
+            className="inline-flex items-center gap-2"
+          >
+            <ShareIcon className="w-4 h-4" />
+            {shareButtonText}
+          </Button>
+        )}
+      </>
+    ) : undefined;
 
   return (
     <TimelineLayout

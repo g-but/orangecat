@@ -13,6 +13,7 @@ import ProfileViewTabs from '@/components/profile/ProfileViewTabs';
 import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab';
 import ProfileTimelineTab from '@/components/profile/ProfileTimelineTab';
 import ProfileProjectsTab from '@/components/profile/ProfileProjectsTab';
+import ProfilePeopleTab from '@/components/profile/ProfilePeopleTab';
 import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
 import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
 import {
@@ -134,6 +135,7 @@ export default function PublicProfileClient({
   }, [showShare]);
 
   // Define tabs for progressive loading
+  // Matches sidebar navigation: Dashboard (Overview), Timeline, Projects, People, Wallets, Info
   const tabs = [
     {
       id: 'overview',
@@ -155,16 +157,22 @@ export default function PublicProfileClient({
       content: <ProfileProjectsTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
     {
-      id: 'info',
-      label: 'Info',
-      icon: <Info className="w-4 h-4" />,
-      content: <ProfileInfoTab profile={profile} />,
+      id: 'people',
+      label: 'People',
+      icon: <Users className="w-4 h-4" />,
+      content: <ProfilePeopleTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
     {
       id: 'wallets',
       label: 'Wallets',
       icon: <Wallet className="w-4 h-4" />,
       content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
+    },
+    {
+      id: 'info',
+      label: 'Info',
+      icon: <Info className="w-4 h-4" />,
+      content: <ProfileInfoTab profile={profile} />,
     },
   ];
 

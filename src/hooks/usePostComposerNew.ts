@@ -530,8 +530,6 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     );
   }, []);
 
-  
-
   const clearError = useCallback(() => {
     setError(null);
   }, []);
