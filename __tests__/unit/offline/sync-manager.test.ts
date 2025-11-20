@@ -8,20 +8,26 @@ jest.mock('@/services/timeline', () => ({
   }
 }))
 
-const queueMock = {
-  getQueueByUser: jest.fn(),
-  removeFromQueue: jest.fn().mockResolvedValue(undefined),
-  incrementAttemptCount: jest.fn().mockResolvedValue(undefined)
-}
-
+// Mock the offline queue service
 jest.mock('@/lib/offline-queue', () => ({
-  offlineQueueService: queueMock
+  offlineQueueService: {
+    getQueueByUser: jest.fn(),
+    removeFromQueue: jest.fn().mockResolvedValue(undefined),
+    incrementAttemptCount: jest.fn().mockResolvedValue(undefined)
+  }
 }))
+
+const queueMock = jest.mocked(require('@/lib/offline-queue')).offlineQueueService
+const timelineService = jest.mocked(require('@/services/timeline')).timelineService
 
 describe('sync-manager', () => {
   beforeEach(() => {
     jest.useFakeTimers()
-    ;(navigator as any).onLine = true
+    // Mock navigator.onLine
+    Object.defineProperty(navigator, 'onLine', {
+      writable: true,
+      value: true
+    })
     queueMock.getQueueByUser.mockReset()
     queueMock.removeFromQueue.mockReset()
     queueMock.incrementAttemptCount.mockReset()
@@ -71,8 +77,7 @@ describe('sync-manager', () => {
   })
 
   test('classifies network/5xx as transient and increments attempts', async () => {
-    const { timelineService } = jest.requireMock('@/services/timeline')
-    ;(timelineService.createEvent as jest.Mock).mockRejectedValue({ status: 500 })
+    timelineService.createEvent.mockRejectedValueOnce({ status: 500 })
 
     queueMock.getQueueByUser.mockResolvedValue([{ id: 'q4', payload: {}, attempts: 1 }])
     syncManager.setCurrentUser('user-3')
