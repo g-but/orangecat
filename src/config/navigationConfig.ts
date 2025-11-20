@@ -48,18 +48,11 @@ export function getNavigationItems(user: User | null): NavigationItem[] {
     ];
   }
 
+  // Simplified navigation for logged-out users - mobile-first approach
   return [
     { name: 'Discover', href: '/discover' },
     { name: 'Community', href: '/community' },
-    {
-      name: 'About',
-      children: [
-        { name: 'Stories', href: '/stories', description: 'Real success stories from our users' },
-        { name: 'Technology', href: '/technology', description: 'Our tech stack and approach' },
-        { name: 'FAQ', href: '/faq', description: 'Frequently asked questions' },
-      ],
-    },
-    { name: 'Blog', href: '/blog' },
+    { name: 'About', href: '/about' },
   ];
 }
 
@@ -96,9 +89,9 @@ export const navigationSections: NavSection[] = [
       },
       {
         name: 'My Info',
-        href: '/profiles/me?tab=info',
+        href: '/dashboard/info',
         icon: Info,
-        description: 'Your profile information',
+        description: 'Edit your profile information',
         requiresAuth: true,
       },
       {
@@ -156,10 +149,10 @@ export const navigationSections: NavSection[] = [
  */
 export const bottomNavItems: NavItem[] = [
   {
-    name: 'Profile',
-    href: '/profile',
+    name: 'View My Profile',
+    href: '/profiles/me',
     icon: User,
-    description: 'View and edit your profile',
+    description: 'View your public profile',
     requiresAuth: true,
   },
   {

@@ -58,7 +58,170 @@ class TimelineService {
   // ==================== EVENT CREATION ====================
 
   /**
-   * Create a new timeline event
+   * Create a new timeline event with visibility contexts (no duplicates)
+   * This is the NEW preferred method for creating posts with cross-posting support
+   */
+  async createEventWithVisibility(
+    request: CreateTimelineEventRequest & {
+      timelineContexts?: Array<{
+        timeline_type: 'profile' | 'project' | 'community';
+        timeline_owner_id: string | null;
+      }>;
+    }
+  ): Promise<TimelineEventResponse> {
+    try {
+      // Get current user if actorId not provided
+      let actorId = request.actorId;
+      if (!actorId) {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (!user) {
+          return { success: false, error: 'Authentication required' };
+        }
+        actorId = user.id;
+      }
+
+      // Validate required fields
+      const validation = this.validateEventRequest(request);
+      if (!validation.valid) {
+        return { success: false, error: validation.error };
+      }
+
+      // Prepare timeline contexts as JSONB array
+      const timelineContextsJson = (request.timelineContexts || []).map(ctx => ({
+        timeline_type: ctx.timeline_type,
+        timeline_owner_id: ctx.timeline_owner_id,
+      }));
+
+      // Use database function to create post with visibility contexts
+      // The function returns JSONB, so we need to parse it
+      const { data, error } = await supabase.rpc('create_post_with_visibility', {
+        p_event_type: request.eventType || 'post_created',
+        p_actor_id: actorId,
+        p_subject_type: request.subjectType || 'profile',
+        p_subject_id: request.subjectId || null,
+        p_title: request.title,
+        p_description: request.description || null,
+        p_visibility: request.visibility || 'public',
+        p_metadata: request.metadata || {},
+        p_timeline_contexts: timelineContextsJson as any, // Supabase will handle JSONB conversion
+      });
+
+      if (error) {
+        logger.error('Failed to create post with visibility', { error, data }, 'Timeline');
+
+        // Provide more specific error messages
+        if (error.message?.includes('function') && error.message?.includes('does not exist')) {
+          return {
+            success: false,
+            error: 'Posting feature is not available. Please contact support if this persists.',
+          };
+        }
+
+        if (error.message?.includes('permission') || error.message?.includes('policy')) {
+          return {
+            success: false,
+            error: 'You do not have permission to post here. Please check your account status.',
+          };
+        }
+
+        return {
+          success: false,
+          error: error.message || 'Failed to create post. Please try again.',
+        };
+      }
+
+      // Handle case where data might be null or undefined
+      if (!data) {
+        logger.error('Function returned no data', { error, request }, 'Timeline');
+        return { success: false, error: 'No response from server. Please try again.' };
+      }
+
+      // Parse the JSONB response
+      let result: any;
+      if (typeof data === 'string') {
+        try {
+          result = JSON.parse(data);
+        } catch (parseError) {
+          logger.error('Failed to parse function response', { parseError, data }, 'Timeline');
+          return { success: false, error: 'Invalid response from server. Please try again.' };
+        }
+      } else if (typeof data === 'object') {
+        result = data;
+      } else {
+        logger.error('Unexpected data type from function', { data, type: typeof data }, 'Timeline');
+        return { success: false, error: 'Unexpected response format. Please try again.' };
+      }
+
+      // Check if the function returned success
+      if (!result || result.success === false) {
+        logger.error('Function returned unsuccessful result', { result, request }, 'Timeline');
+        return {
+          success: false,
+          error: result?.error || 'Failed to create post. Please try again.',
+        };
+      }
+
+      // Extract post_id - handle both direct property and nested structure
+      const postId = result.post_id || result.data?.post_id || result.id;
+
+      if (!postId) {
+        logger.error('No post_id in function response', { result }, 'Timeline');
+        return { success: false, error: 'Post created but could not retrieve ID. Please refresh.' };
+      }
+
+      // Fetch the created event
+      const { data: event, error: fetchError } = await supabase
+        .from('timeline_events')
+        .select('*')
+        .eq('id', postId)
+        .single();
+
+      if (fetchError) {
+        logger.error('Failed to fetch created post', fetchError, 'Timeline');
+        return { success: false, error: 'Post created but could not retrieve details' };
+      }
+
+      const timelineEvent = this.mapDbEventToTimelineEvent(event);
+
+      return {
+        success: true,
+        event: timelineEvent,
+        metadata: {
+          visibility_count: result.visibility_count || 0,
+        },
+      };
+    } catch (error: any) {
+      logger.error('Error creating post with visibility', { error, request }, 'Timeline');
+
+      // Provide more helpful error messages
+      if (error?.message?.includes('function') && error?.message?.includes('does not exist')) {
+        logger.warn(
+          'create_post_with_visibility function not found, falling back to legacy method',
+          {},
+          'Timeline'
+        );
+        // Fallback to legacy createEvent method
+        return this.createEvent(request);
+      }
+
+      if (error?.message?.includes('network') || error?.message?.includes('fetch')) {
+        return {
+          success: false,
+          error: 'Network error. Please check your connection and try again.',
+        };
+      }
+
+      return {
+        success: false,
+        error: error?.message || 'Failed to create post. Please try again.',
+      };
+    }
+  }
+
+  /**
+   * Create a new timeline event (LEGACY - prefer createEventWithVisibility for posts)
    */
   async createEvent(request: CreateTimelineEventRequest): Promise<TimelineEventResponse> {
     try {
@@ -690,7 +853,7 @@ class TimelineService {
 
   /**
    * Get public community timeline (posts from all users and projects)
-   * OPTIMIZED: Uses enriched_timeline_events VIEW to eliminate N+1 queries
+   * FIXED: Uses community_timeline_no_duplicates VIEW to eliminate duplicate cross-posts
    */
   async getCommunityFeed(
     filters?: Partial<TimelineFilters>,
@@ -703,15 +866,14 @@ class TimelineService {
 
       const sortBy = filters?.sortBy || 'recent';
 
-      // Query enriched VIEW - all JOINs pre-computed at database level
+      // Query community timeline view (NO DUPLICATES!)
       const {
         data: enrichedEvents,
         error,
         count,
       } = await supabase
-        .from('enriched_timeline_events')
+        .from('community_timeline_no_duplicates')
         .select('*', { count: 'exact' })
-        .eq('visibility', 'public')
         .order('event_timestamp', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -864,7 +1026,11 @@ class TimelineService {
             likeCount: data.like_count || 0,
           };
         } catch (dbError) {
-          logger.warn('Database function not available for unlike, using fallback', dbError, 'Timeline');
+          logger.warn(
+            'Database function not available for unlike, using fallback',
+            dbError,
+            'Timeline'
+          );
           const { error: delErr } = await supabase
             .from('timeline_likes')
             .delete()
@@ -899,7 +1065,11 @@ class TimelineService {
             likeCount: data.like_count || 0,
           };
         } catch (dbError) {
-          logger.warn('Database function not available for like, using fallback', dbError, 'Timeline');
+          logger.warn(
+            'Database function not available for like, using fallback',
+            dbError,
+            'Timeline'
+          );
           // Fallback: insert into timeline_likes and return new count
           const { error: insertErr } = await supabase
             .from('timeline_likes')
@@ -953,7 +1123,11 @@ class TimelineService {
           shareCount: data.share_count || 0,
         };
       } catch (dbError) {
-        logger.warn('Database function not available for share, using fallback', dbError, 'Timeline');
+        logger.warn(
+          'Database function not available for share, using fallback',
+          dbError,
+          'Timeline'
+        );
         // Fallback: create a simple share event referencing the original
         const fallback = await this.createEvent({
           eventType: 'post_shared',
@@ -1012,11 +1186,20 @@ class TimelineService {
           commentCount: data.comment_count || 0,
         };
       } catch (dbError) {
-        logger.warn('Database function not available for comments, using fallback', dbError, 'Timeline');
+        logger.warn(
+          'Database function not available for comments, using fallback',
+          dbError,
+          'Timeline'
+        );
         // Fallback: insert directly into timeline_comments
         const { data: inserted, error: iErr } = await supabase
           .from('timeline_comments')
-          .insert({ event_id: eventId, user_id: userId, content, parent_comment_id: parentCommentId })
+          .insert({
+            event_id: eventId,
+            user_id: userId,
+            content,
+            parent_comment_id: parentCommentId,
+          })
           .select('id')
           .single();
         if (iErr || !inserted) {
@@ -1041,8 +1224,14 @@ class TimelineService {
   async getEventCounts(eventId: string): Promise<{ likeCount: number; commentCount: number }> {
     try {
       const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
-        supabase.from('timeline_likes').select('*', { count: 'exact', head: true }).eq('event_id', eventId),
-        supabase.from('timeline_comments').select('*', { count: 'exact', head: true }).eq('event_id', eventId),
+        supabase
+          .from('timeline_likes')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_id', eventId),
+        supabase
+          .from('timeline_comments')
+          .select('*', { count: 'exact', head: true })
+          .eq('event_id', eventId),
       ]);
       return { likeCount: likeCount || 0, commentCount: commentCount || 0 };
     } catch (error) {
@@ -1100,7 +1289,11 @@ class TimelineService {
 
         return data || [];
       } catch (dbError) {
-        logger.warn('Database function not available for comments, using fallback', dbError, 'Timeline');
+        logger.warn(
+          'Database function not available for comments, using fallback',
+          dbError,
+          'Timeline'
+        );
         // Fallback: query comments table directly and enrich with profile info
         const { data: comments, error: cErr } = await supabase
           .from('timeline_comments')
@@ -1121,7 +1314,10 @@ class TimelineService {
             .in('id', userIds as string[]);
           if (!pErr && profiles) {
             profilesMap = Object.fromEntries(
-              profiles.map((p: any) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url }])
+              profiles.map((p: any) => [
+                p.id,
+                { display_name: p.display_name, avatar_url: p.avatar_url },
+              ])
             );
           }
         }
@@ -1159,7 +1355,11 @@ class TimelineService {
 
         return data || [];
       } catch (dbError) {
-        logger.warn('Database function not available for comment replies, using fallback', dbError, 'Timeline');
+        logger.warn(
+          'Database function not available for comment replies, using fallback',
+          dbError,
+          'Timeline'
+        );
         const { data: replies, error: rErr } = await supabase
           .from('timeline_comments')
           .select('id, event_id, user_id, content, created_at, parent_comment_id')
@@ -1179,7 +1379,10 @@ class TimelineService {
             .in('id', userIds as string[]);
           if (!pErr && profiles) {
             profilesMap = Object.fromEntries(
-              profiles.map((p: any) => [p.id, { display_name: p.display_name, avatar_url: p.avatar_url }])
+              profiles.map((p: any) => [
+                p.id,
+                { display_name: p.display_name, avatar_url: p.avatar_url },
+              ])
             );
           }
         }

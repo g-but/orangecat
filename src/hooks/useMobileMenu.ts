@@ -30,16 +30,30 @@ export function useMobileMenu(): UseMobileMenuReturn {
     setIsOpen(false);
   }, [pathname]);
 
-  // Lock body scroll when menu is open
+  // Lock body scroll when menu is open (prevent background scrolling)
   useEffect(() => {
     if (isOpen) {
+      // Store original overflow value
+      const originalOverflow = document.body.style.overflow;
+      const originalPosition = document.body.style.position;
+      const originalTop = document.body.style.top;
+      const scrollY = window.scrollY;
+
+      // Lock scroll
       document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      return () => {
+        // Restore original values
+        document.body.style.overflow = originalOverflow;
+        document.body.style.position = originalPosition;
+        document.body.style.top = originalTop;
+        document.body.style.width = '';
+        window.scrollTo(0, scrollY);
+      };
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [isOpen]);
 
   return {

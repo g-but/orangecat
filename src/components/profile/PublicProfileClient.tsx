@@ -162,7 +162,7 @@ export default function PublicProfileClient({
   }, [showShare]);
 
   // Define tabs for progressive loading
-  // Order: Overview, Info, Projects, People, Wallets
+  // Order: Overview, Info, Timeline, Projects, People, Wallets
   const tabs = [
     {
       id: 'overview',
@@ -183,6 +183,12 @@ export default function PublicProfileClient({
           onSave={handleProfileSave}
         />
       ),
+    },
+    {
+      id: 'timeline',
+      label: 'Timeline',
+      icon: <MessageSquare className="w-4 h-4" />,
+      content: <ProfileTimelineTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
     {
       id: 'projects',

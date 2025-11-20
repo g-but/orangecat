@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, ReactNode } from 'react';
+import { useState, ReactNode, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export interface ProfileTab {
@@ -26,8 +27,25 @@ interface ProfileViewTabsProps {
  * - Progressive: Lazy loads tab content on first click
  */
 export default function ProfileViewTabs({ tabs, defaultTab, className }: ProfileViewTabsProps) {
-  const [activeTab, setActiveTab] = useState(defaultTab || tabs[0]?.id);
-  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set([defaultTab || tabs[0]?.id]));
+  const searchParams = useSearchParams();
+  const tabFromUrl = searchParams?.get('tab');
+
+  // Determine initial tab: URL param > defaultTab > first tab
+  const initialTab =
+    tabFromUrl && tabs.some(t => t.id === tabFromUrl) ? tabFromUrl : defaultTab || tabs[0]?.id;
+
+  const [activeTab, setActiveTab] = useState(initialTab);
+  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set([initialTab]));
+
+  // Update active tab when URL changes
+  useEffect(() => {
+    if (tabFromUrl && tabs.some(t => t.id === tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+      if (!loadedTabs.has(tabFromUrl)) {
+        setLoadedTabs(new Set([...loadedTabs, tabFromUrl]));
+      }
+    }
+  }, [tabFromUrl, tabs, activeTab, loadedTabs]);
 
   const handleTabClick = (tabId: string) => {
     setActiveTab(tabId);

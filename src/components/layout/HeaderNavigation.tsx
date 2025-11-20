@@ -40,21 +40,20 @@ export function HeaderNavigation({ items, isActive, className }: HeaderNavigatio
     <nav className={cn('flex items-center space-x-1', className)}>
       {items.map((item, index) => {
         if (item.children && item.children.length > 0) {
-          return (
-            <HeaderNavDropdown
-              key={item.name}
-              item={item}
-              isActive={isActive}
-            />
-          );
+          return <HeaderNavDropdown key={item.name} item={item} isActive={isActive} />;
+        }
+
+        // Skip items without href (shouldn't happen, but defensive)
+        if (!item.href) {
+          return null;
         }
 
         return (
           <HeaderNavLink
-            key={item.href || `nav-item-${index}`}
-            href={item.href || '#'}
+            key={item.href}
+            href={item.href}
             label={item.name}
-            isActive={item.href ? isActive(item.href) : false}
+            isActive={isActive(item.href)}
           />
         );
       })}
@@ -134,32 +133,39 @@ function HeaderNavDropdown({ item, isActive }: HeaderNavDropdownProps) {
         )}
       >
         {item.name}
-        <ChevronDown
-          className={cn('w-4 h-4 transition-transform', isOpen && 'rotate-180')}
-        />
-        {hasActiveChild && <div className="absolute inset-x-0 bottom-0 h-0.5 bg-orange-500 rounded-full" />}
+        <ChevronDown className={cn('w-4 h-4 transition-transform', isOpen && 'rotate-180')} />
+        {hasActiveChild && (
+          <div className="absolute inset-x-0 bottom-0 h-0.5 bg-orange-500 rounded-full" />
+        )}
       </button>
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-          {item.children?.map((child, index) => (
-            <Link
-              key={child.href || `dropdown-item-${index}`}
-              href={child.href || '#'}
-              className={cn(
-                'block px-4 py-2.5 text-sm transition-colors',
-                child.href && isActive(child.href)
-                  ? 'text-orange-600 bg-orange-50 font-medium'
-                  : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
-              )}
-              onClick={() => setIsOpen(false)}
-            >
-              <div className="font-medium">{child.name}</div>
-              {child.description && (
-                <div className="text-xs text-gray-500 mt-0.5">{child.description}</div>
-              )}
-            </Link>
-          ))}
+          {item.children?.map((child, index) => {
+            // Skip children without href
+            if (!child.href) {
+              return null;
+            }
+
+            return (
+              <Link
+                key={child.href}
+                href={child.href}
+                className={cn(
+                  'block px-4 py-2.5 text-sm transition-colors',
+                  isActive(child.href)
+                    ? 'text-orange-600 bg-orange-50 font-medium'
+                    : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
+                )}
+                onClick={() => setIsOpen(false)}
+              >
+                <div className="font-medium">{child.name}</div>
+                {child.description && (
+                  <div className="text-xs text-gray-500 mt-0.5">{child.description}</div>
+                )}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>
