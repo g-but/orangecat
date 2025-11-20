@@ -7,11 +7,26 @@ export interface Database {
           username: string | null;
           name: string | null;
           bio: string | null;
+          email: string | null;
+          // Location fields
+          location: string | null; // Legacy field (deprecated)
+          location_search: string | null; // Display field for formatted address
+          location_country: string | null; // ISO 3166-1 alpha-2 country code
+          location_city: string | null; // City or municipality name
+          location_zip: string | null; // ZIP or postal code
+          latitude: number | null; // Geographic latitude coordinate
+          longitude: number | null; // Geographic longitude coordinate
+          // Media fields
           avatar_url: string | null;
+          banner_url: string | null;
+          website: string | null;
+          // Wallet fields
           bitcoin_address: string | null;
           lightning_address: string | null;
+          // Status fields
           verification_status: string | null;
           status: string | null;
+          // Timestamps
           created_at: string;
           updated_at: string;
         };
@@ -20,11 +35,26 @@ export interface Database {
           username?: string | null;
           name?: string | null;
           bio?: string | null;
+          email?: string | null;
+          // Location fields
+          location?: string | null;
+          location_search?: string | null;
+          location_country?: string | null;
+          location_city?: string | null;
+          location_zip?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
+          // Media fields
           avatar_url?: string | null;
+          banner_url?: string | null;
+          website?: string | null;
+          // Wallet fields
           bitcoin_address?: string | null;
           lightning_address?: string | null;
+          // Status fields
           verification_status?: string | null;
           status?: string | null;
+          // Timestamps
           created_at?: string;
           updated_at?: string;
         };
@@ -33,11 +63,26 @@ export interface Database {
           username?: string | null;
           name?: string | null;
           bio?: string | null;
+          email?: string | null;
+          // Location fields
+          location?: string | null;
+          location_search?: string | null;
+          location_country?: string | null;
+          location_city?: string | null;
+          location_zip?: string | null;
+          latitude?: number | null;
+          longitude?: number | null;
+          // Media fields
           avatar_url?: string | null;
+          banner_url?: string | null;
+          website?: string | null;
+          // Wallet fields
           bitcoin_address?: string | null;
           lightning_address?: string | null;
+          // Status fields
           verification_status?: string | null;
           status?: string | null;
+          // Timestamps
           created_at?: string;
           updated_at?: string;
         };
@@ -259,10 +304,20 @@ export type ProfileFormData = {
   username?: string | null;
   name?: string | null;
   bio?: string | null;
-  location?: string | null;
+  email?: string | null;
+  // Location fields
+  location?: string | null; // Legacy field (deprecated but kept for backward compatibility)
+  location_search?: string | null; // Display field for formatted address
+  location_country?: string | null; // ISO 3166-1 alpha-2 country code
+  location_city?: string | null; // City or municipality name
+  location_zip?: string | null; // ZIP or postal code
+  latitude?: number | null; // Geographic latitude coordinate
+  longitude?: number | null; // Geographic longitude coordinate
+  // Media fields
   avatar_url?: string | null;
   banner_url?: string | null;
   website?: string | null;
+  // Wallet fields
   bitcoin_address?: string | null;
   lightning_address?: string | null;
 };

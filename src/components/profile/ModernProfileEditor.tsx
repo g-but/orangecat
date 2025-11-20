@@ -167,7 +167,9 @@ export default function ModernProfileEditor({
       location_country: profile.location_country || '',
       location_city: profile.location_city || '',
       location_zip: profile.location_zip || '',
-      location_search: profile.location_search || '',
+      // CRITICAL: Fallback to legacy location field if location_search is not set
+      // This ensures consistency between view mode and edit mode
+      location_search: profile.location_search || profile.location || '',
       latitude: profile.latitude || undefined,
       longitude: profile.longitude || undefined,
       // Keep legacy location for backward compatibility

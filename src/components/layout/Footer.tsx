@@ -1,35 +1,35 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import { navigation } from '@/config/navigation'
-import Logo from './Logo'
-import { usePathname } from 'next/navigation'
-import { ArrowUp } from 'lucide-react'
+import Link from 'next/link';
+import { navigation } from '@/config/navigation';
+import Logo from './Logo';
+import { usePathname } from 'next/navigation';
+import { ArrowUp } from 'lucide-react';
 
 export default function Footer() {
-  const pathname = usePathname()
+  const pathname = usePathname();
   // Check if current page is an authenticated page
-  const isAuthPage = pathname && (
-    pathname.startsWith('/dashboard') || 
-    pathname.startsWith('/profile') || 
-    pathname.startsWith('/settings') ||
-    pathname.startsWith('/assets') ||
-    pathname.startsWith('/people') ||
-    pathname.startsWith('/events') ||
-    pathname.startsWith('/organizations') ||
-    pathname.startsWith('/projects') ||
-    pathname.startsWith('/projects/create')
-  )
+  const isAuthPage =
+    pathname &&
+    (pathname.startsWith('/dashboard') ||
+      pathname.startsWith('/profile') ||
+      pathname.startsWith('/settings') ||
+      pathname.startsWith('/assets') ||
+      pathname.startsWith('/people') ||
+      pathname.startsWith('/events') ||
+      pathname.startsWith('/organizations') ||
+      pathname.startsWith('/projects') ||
+      pathname.startsWith('/projects/create'));
 
   const scrollToTop = () => {
     if (typeof window !== 'undefined' && window.scrollTo) {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }
+  };
 
   // Don't render footer on authenticated pages to avoid layout conflicts with sidebar
   if (isAuthPage) {
-    return null
+    return null;
   }
 
   return (
@@ -57,7 +57,7 @@ export default function Footer() {
 
             {/* Social Links */}
             <div className="flex space-x-4">
-              {navigation.footer.social.map((item) => (
+              {navigation.footer.social.map(item => (
                 <a
                   key={item.name}
                   href={item.href}
@@ -66,7 +66,9 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   aria-label={`Follow us on ${item.name}`}
                 >
-                  {item.icon && <item.icon className="h-5 w-5 transition-transform group-hover:scale-110" />}
+                  {item.icon && (
+                    <item.icon className="h-5 w-5 transition-transform group-hover:scale-110" />
+                  )}
                 </a>
               ))}
             </div>
@@ -81,7 +83,7 @@ export default function Footer() {
               <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-full"></div>
             </h3>
             <ul className="space-y-3">
-              {navigation.main.map((item) => (
+              {navigation.main.map(item => (
                 <li key={item.name}>
                   <Link
                     href={item.href}
@@ -105,7 +107,7 @@ export default function Footer() {
               <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-full"></div>
             </h3>
             <ul className="space-y-3">
-              {navigation.footer.legal.map((item) => (
+              {navigation.footer.legal.map(item => (
                 <li key={item.name}>
                   <Link
                     href={item.href}
@@ -148,7 +150,7 @@ export default function Footer() {
             <p className="text-sm text-slate-500 text-center sm:text-left">
               &copy; {new Date().getFullYear()} OrangeCat. All rights reserved.
             </p>
-            
+
             {/* Additional Links */}
             <div className="flex items-center space-x-6 text-sm">
               <Link
@@ -166,21 +168,21 @@ export default function Footer() {
                 Source Code
               </a>
               <Link
-                href="/api"
+                href="/technology"
                 className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
               >
-                API
+                Technology
               </Link>
               <Link
-                href="/status"
+                href="/faq"
                 className="text-slate-500 hover:text-orange-600 transition-colors duration-300 hover:underline"
               >
-                Status
+                FAQ
               </Link>
             </div>
           </div>
         </div>
       </div>
     </footer>
-  )
-} 
+  );
+}
