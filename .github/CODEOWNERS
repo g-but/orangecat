@@ -1,21 +1,14 @@
-# CODEOWNERS - Assigns required reviewers by path
-# More info: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+# CODEOWNERS assigns required reviewers by path.
+# Update these to your actual GitHub handles/teams.
 
-# Default owner for everything
+# Default owners for all files
 * @g-but
 
-# Critical infrastructure and security paths
+# Critical areas
 supabase/** @g-but
 src/services/security/** @g-but
 src/middleware/** @g-but
 scripts/deployment/** @g-but
 
-# Database migrations require careful review
-supabase/migrations/** @g-but
-
-# CI/CD workflows
-.github/workflows/** @g-but
-
-# Security and policy files
-SECURITY.md @g-but
-.github/CODEOWNERS @g-but
+# Documentation (optional different owners)
+docs/** @g-but

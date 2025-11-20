@@ -1,14 +1,8 @@
 /** @type {import('next').NextConfig} */
 
-// Make bundle analyzer optional (only load if installed)
-let withBundleAnalyzer = (config) => config;
-try {
-  withBundleAnalyzer = require('@next/bundle-analyzer')({
-    enabled: process.env.ANALYZE === 'true',
-  });
-} catch (e) {
-  console.log('Bundle analyzer not installed, skipping...');
-}
+const withBundleAnalyzer = require('@next/bundle-analyzer')({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 const nextConfig = {
   // Externalize Supabase packages for server-side rendering

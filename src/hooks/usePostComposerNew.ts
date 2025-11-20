@@ -245,8 +245,17 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
 
     try {
       const response = await fetch('/api/profile');
-      const exists = response.ok || response.status === 404;
+      const exists = response.ok; // Only true if status 200
       profileCheckCache.current.set(user.id, { exists, timestamp: Date.now() });
+
+      if (!exists) {
+        logger.warn(
+          'Profile not found, user may need to complete setup',
+          { userId: user.id },
+          'usePostComposer'
+        );
+      }
+
       return exists;
     } catch (err) {
       logger.error('Failed to ensure profile exists', err, 'usePostComposer');
@@ -304,7 +313,9 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       // Ensure profile exists
       const profileExists = await ensureProfile();
       if (!profileExists) {
-        throw new Error('Unable to verify your profile. Please refresh and try again.');
+        throw new Error(
+          'Unable to verify your profile. Please refresh the page and try again. If the problem persists, you may need to complete your profile setup.'
+        );
       }
 
       const postContent = content.trim();
@@ -316,8 +327,33 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         onOptimisticUpdate(optimisticEvent);
       }
 
-      // Create main post
-      const mainPostResult = await timelineService.createEvent({
+      // Build timeline visibility contexts
+      const timelineContexts = [];
+
+      // Add main subject timeline (profile or project)
+      timelineContexts.push({
+        timeline_type: subjectType,
+        timeline_owner_id: subjectId || user.id,
+      });
+
+      // Add selected project timelines (cross-posting)
+      selectedProjects.forEach(projectId => {
+        timelineContexts.push({
+          timeline_type: 'project',
+          timeline_owner_id: projectId,
+        });
+      });
+
+      // Add community timeline for public posts
+      if (visibility === 'public') {
+        timelineContexts.push({
+          timeline_type: 'community',
+          timeline_owner_id: null,
+        });
+      }
+
+      // Create single post with visibility contexts (no duplicates!)
+      const mainPostResult = await timelineService.createEventWithVisibility({
         eventType: 'status_update',
         actorId: user.id,
         subjectType,
@@ -327,44 +363,19 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         visibility,
         metadata: {
           is_user_post: true,
-          cross_posted: subjectId && subjectId !== user.id,
-          cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
+          cross_posted_count: selectedProjects.length,
         },
+        timelineContexts,
       });
 
       if (!mainPostResult.success) {
-        throw new Error(mainPostResult.error || 'Failed to create post');
-      }
-
-      // Cross-post to selected projects
-      if (selectedProjects.length > 0) {
-        const crossPostPromises = selectedProjects.map(projectId =>
-          timelineService.createEvent({
-            eventType: 'status_update',
-            actorId: user.id,
-            subjectType: 'project',
-            subjectId: projectId,
-            title,
-            description: postContent,
-            visibility,
-            metadata: {
-              is_user_post: true,
-              cross_posted_from_main: true,
-              original_post_id: mainPostResult.event?.id,
-            },
-          })
+        const errorMsg = mainPostResult.error || 'Failed to create post';
+        logger.error(
+          'Post creation failed',
+          { error: errorMsg, mainPostResult },
+          'usePostComposer'
         );
-
-        const crossPostResults = await Promise.allSettled(crossPostPromises);
-        const failedPosts = crossPostResults.filter(
-          result =>
-            result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.success)
-        );
-
-        if (failedPosts.length > 0) {
-          logger.warn(`${failedPosts.length} cross-posts failed`, failedPosts, 'usePostComposer');
-          setError(`${failedPosts.length} cross-posts failed, but main post was successful`);
-        }
+        throw new Error(errorMsg);
       }
 
       // Success
@@ -411,9 +422,18 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         // Handle specific known error messages
         if (err.message.includes('Unable to verify your profile')) {
           errorMessage = err.message;
+        } else if (err.message.includes('Authentication required')) {
+          errorMessage = 'You must be logged in to post. Please refresh and try again.';
+        } else if (err.message.includes('Failed to create post')) {
+          errorMessage = err.message;
+        } else if (err.message.includes('network') || err.message.includes('fetch')) {
+          errorMessage = 'A network error occurred. Please check your connection and try again.';
         } else {
-          errorMessage = 'A network error occurred. Please check your connection.';
+          // Show the actual error message if it's helpful
+          errorMessage = err.message || 'An unexpected error occurred. Please try again.';
         }
+      } else if (typeof err === 'string') {
+        errorMessage = err;
       }
 
       setError(errorMessage);
@@ -485,13 +505,18 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     // Online posting logic
     setIsPosting(true);
     setError(null);
-    setRetryCount(0);
 
     const success = await performPost();
     setIsPosting(false);
 
-    // Auto-retry logic
+    // Auto-retry logic (only if not a permanent error like missing profile)
     if (!success && enableRetry && retryCount < MAX_RETRY_ATTEMPTS && navigator.onLine) {
+      // Don't retry if error is about profile verification
+      if (error && error.includes('profile')) {
+        logger.warn('Profile verification failed, skipping retry', { error }, 'usePostComposer');
+        return;
+      }
+
       setRetryCount(prev => prev + 1);
       if (retryTimer.current) {
         clearTimeout(retryTimer.current);
@@ -529,8 +554,6 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       prev.includes(projectId) ? prev.filter(id => id !== projectId) : [...prev, projectId]
     );
   }, []);
-
-  
 
   const clearError = useCallback(() => {
     setError(null);
