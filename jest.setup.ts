@@ -58,7 +58,7 @@ Object.defineProperty(window, 'sessionStorage', {
 jest.spyOn(console, 'error').mockImplementation((...args) => {
   if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) return
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (console as any).error.original?.(...args)
+  return (console.error as any).original?.(...args)
 })
 
 // Ensure every test gets a fresh module graph so imports executed in one test
@@ -150,7 +150,7 @@ global.console = {
 // =====================================================================
 
 // Mock Supabase client
-jest.mock('@/services/supabase/client', () => ({
+jest.mock('@/services/supabase/core/client', () => ({
   __esModule: true,
   default: {
     auth: {
