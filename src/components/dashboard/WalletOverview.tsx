@@ -1,66 +1,69 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { 
-  Bitcoin, 
-  TrendingUp, 
-  AlertCircle, 
+import { useState } from 'react';
+import Link from 'next/link';
+import {
+  Bitcoin,
+  TrendingUp,
+  AlertCircle,
   RefreshCw,
   Eye,
   ArrowUpRight,
   ArrowDownLeft,
   Clock,
-  ExternalLink
-} from 'lucide-react'
-import Button from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { useBitcoinWallet } from '@/hooks/useBitcoinWallet'
-import { BitcoinTransaction } from '@/types/bitcoin'
-import { getTransactionUrl } from '@/services/bitcoin'
+  ExternalLink,
+} from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useBitcoinWallet } from '@/hooks/useBitcoinWallet';
+import { BitcoinTransaction } from '@/types/bitcoin';
+import { getTransactionUrl } from '@/services/bitcoin';
 
 interface WalletOverviewProps {
-  walletAddress?: string | null
-  className?: string
+  walletAddress?: string | null;
+  className?: string;
 }
 
 // Transaction status formatting
 const getTransactionStatus = (status: string, timestamp: number) => {
   if (status === 'confirmed') {
-    return { label: 'Confirmed', color: 'text-green-600', bgColor: 'bg-green-100' }
+    return { label: 'Confirmed', color: 'text-green-600', bgColor: 'bg-green-100' };
   }
   if (status === 'pending') {
-    return { label: 'Pending', color: 'text-orange-600', bgColor: 'bg-orange-100' }
+    return { label: 'Pending', color: 'text-orange-600', bgColor: 'bg-orange-100' };
   }
-  return { label: 'Unknown', color: 'text-gray-600', bgColor: 'bg-gray-100' }
-}
+  return { label: 'Unknown', color: 'text-gray-600', bgColor: 'bg-gray-100' };
+};
 
 // Format Bitcoin amount
 const formatBitcoinAmount = (amount: number) => {
-  return amount.toFixed(8)
-}
+  return amount.toFixed(8);
+};
 
 // Format transaction value with color
 const formatTransactionValue = (transaction: BitcoinTransaction) => {
-  const sign = transaction.type === 'incoming' ? '+' : '-'
-  const color = transaction.type === 'incoming' ? 'text-green-600' : 'text-red-600'
+  const sign = transaction.type === 'incoming' ? '+' : '-';
+  const color = transaction.type === 'incoming' ? 'text-green-600' : 'text-red-600';
   return {
     display: `${sign}₿${formatBitcoinAmount(transaction.amount)}`,
-    color
-  }
-}
+    color,
+  };
+};
 
 // Get Mempool.space address URL
 const getAddressUrl = (address: string): string => {
-  return `https://mempool.space/address/${address}`
-}
+  return `https://mempool.space/address/${address}`;
+};
 
 export function WalletOverview({ walletAddress, className = '' }: WalletOverviewProps) {
-  const { walletData, isLoading: walletLoading, error: walletError, refresh: refreshWallet } = useBitcoinWallet(
-    walletAddress || ''
-  )
+  const {
+    walletData,
+    isLoading: walletLoading,
+    error: walletError,
+    refresh: refreshWallet,
+  } = useBitcoinWallet(walletAddress || '');
 
-  const hasWalletAddress = Boolean(walletAddress)
+  const hasWalletAddress = Boolean(walletAddress);
 
   return (
     <div className={`grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 ${className}`}>
@@ -103,9 +106,15 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
         <CardContent className="pt-0 pb-4 sm:pb-6">
           {!hasWalletAddress ? (
             <div className="text-center py-4 sm:py-6">
-              <p className="text-orange-100 text-sm sm:text-base mb-3 sm:mb-4">Add a Bitcoin address to see your balance</p>
+              <p className="text-orange-100 text-sm sm:text-base mb-3 sm:mb-4">
+                Add a Bitcoin address to see your balance
+              </p>
               <Link href="/profile">
-                <Button variant="outline" size="sm" className="border-white text-orange-600 bg-white hover:bg-orange-50 min-h-[44px] px-4 sm:px-6 touch-manipulation">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-white text-orange-600 bg-white hover:bg-orange-50 min-h-[44px] px-4 sm:px-6 touch-manipulation"
+                >
                   Add Bitcoin Address
                 </Button>
               </Link>
@@ -113,7 +122,9 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
           ) : walletError ? (
             <div className="text-center py-4 sm:py-6">
               <p className="text-orange-100 text-sm sm:text-base mb-2">Unable to load balance</p>
-              <p className="text-orange-200 text-xs sm:text-sm mb-3 sm:mb-4 break-words">{walletError}</p>
+              <p className="text-orange-200 text-xs sm:text-sm mb-3 sm:mb-4 break-words">
+                {walletError}
+              </p>
               <Button
                 variant="outline"
                 size="sm"
@@ -134,7 +145,10 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
                 ₿{formatBitcoinAmount(walletData?.balance || 0)}
               </p>
               <p className="text-orange-100 text-xs sm:text-sm">
-                Last updated: {walletData?.lastUpdated ? new Date(walletData.lastUpdated).toLocaleTimeString() : 'Never'}
+                Last updated:{' '}
+                {walletData?.lastUpdated
+                  ? new Date(walletData.lastUpdated).toLocaleTimeString()
+                  : 'Never'}
               </p>
               <div className="flex items-center text-orange-200 text-xs sm:text-sm">
                 <ExternalLink className="w-3 h-3 mr-1 flex-shrink-0" />
@@ -151,7 +165,9 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
           <CardTitle className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div className="flex items-center min-w-0">
               <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-orange-600 flex-shrink-0" />
-              <span className="text-base sm:text-lg font-semibold truncate">Recent Transactions</span>
+              <span className="text-base sm:text-lg font-semibold truncate">
+                Recent Transactions
+              </span>
             </div>
             {hasWalletAddress && walletData?.transactions && walletData.transactions.length > 0 && (
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
@@ -164,8 +180,12 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
                   <ExternalLink className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   <span className="text-sm">View on Mempool</span>
                 </Button>
-                <Link href="/profile/me">
-                  <Button variant="outline" size="sm" className="w-full sm:w-auto min-h-[44px] px-3 sm:px-4 touch-manipulation">
+                <Link href="/profiles/me">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto min-h-[44px] px-3 sm:px-4 touch-manipulation"
+                  >
                     <Eye className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="text-sm">View All</span>
                   </Button>
@@ -181,9 +201,15 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
           {!hasWalletAddress ? (
             <div className="text-center py-6 sm:py-8">
               <Clock className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-3 sm:mb-4" />
-              <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">Add a Bitcoin address to see transactions</p>
+              <p className="text-gray-500 mb-3 sm:mb-4 text-sm sm:text-base">
+                Add a Bitcoin address to see transactions
+              </p>
               <Link href="/profile">
-                <Button variant="outline" size="sm" className="min-h-[44px] px-4 sm:px-6 touch-manipulation">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="min-h-[44px] px-4 sm:px-6 touch-manipulation"
+                >
                   Set Up Wallet
                 </Button>
               </Link>
@@ -191,8 +217,12 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
           ) : walletError ? (
             <div className="text-center py-6 sm:py-8">
               <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 text-red-300 mx-auto mb-3 sm:mb-4" />
-              <p className="text-red-600 mb-2 text-sm sm:text-base font-medium">Unable to load transactions</p>
-              <p className="text-gray-500 text-xs sm:text-sm mb-3 sm:mb-4 break-words">{walletError}</p>
+              <p className="text-red-600 mb-2 text-sm sm:text-base font-medium">
+                Unable to load transactions
+              </p>
+              <p className="text-gray-500 text-xs sm:text-sm mb-3 sm:mb-4 break-words">
+                {walletError}
+              </p>
               <Button
                 variant="outline"
                 size="sm"
@@ -205,8 +235,11 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
             </div>
           ) : walletLoading ? (
             <div className="space-y-3 sm:space-y-4">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="animate-pulse flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 border border-gray-100 rounded-lg">
+              {[1, 2, 3].map(i => (
+                <div
+                  key={i}
+                  className="animate-pulse flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 border border-gray-100 rounded-lg"
+                >
                   <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gray-200 rounded-full flex-shrink-0"></div>
                   <div className="flex-1 space-y-2 min-w-0">
                     <div className="h-3 sm:h-4 bg-gray-200 rounded w-3/4"></div>
@@ -223,18 +256,25 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
             <div className="text-center py-6 sm:py-8">
               <Bitcoin className="w-10 h-10 sm:w-12 sm:h-12 text-gray-300 mx-auto mb-3 sm:mb-4" />
               <p className="text-gray-500 text-sm sm:text-base">No transactions found</p>
-              <p className="text-gray-400 text-xs sm:text-sm mt-1 sm:mt-2">Transactions will appear here once you start using Bitcoin</p>
+              <p className="text-gray-400 text-xs sm:text-sm mt-1 sm:mt-2">
+                Transactions will appear here once you start using Bitcoin
+              </p>
             </div>
           ) : (
             <div className="space-y-3 sm:space-y-4">
               {walletData.transactions.slice(0, 5).map((tx: any) => {
-                const statusInfo = getTransactionStatus(tx.status, tx.timestamp)
-                const valueInfo = formatTransactionValue(tx)
-                
+                const statusInfo = getTransactionStatus(tx.status, tx.timestamp);
+                const valueInfo = formatTransactionValue(tx);
+
                 return (
-                  <div key={tx.txid} className="flex items-center justify-between p-3 sm:p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors group touch-manipulation">
+                  <div
+                    key={tx.txid}
+                    className="flex items-center justify-between p-3 sm:p-4 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors group touch-manipulation"
+                  >
                     <div className="flex items-center space-x-3 sm:space-x-4 min-w-0 flex-1">
-                      <div className={`p-2 sm:p-3 rounded-full flex-shrink-0 ${tx.type === 'incoming' ? 'bg-green-100' : 'bg-red-100'}`}>
+                      <div
+                        className={`p-2 sm:p-3 rounded-full flex-shrink-0 ${tx.type === 'incoming' ? 'bg-green-100' : 'bg-red-100'}`}
+                      >
                         {tx.type === 'incoming' ? (
                           <ArrowDownLeft className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                         ) : (
@@ -246,17 +286,22 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
                           {tx.type === 'incoming' ? 'Received' : 'Sent'}
                         </p>
                         <p className="text-xs sm:text-sm text-gray-500 truncate">
-                          {new Date(tx.timestamp).toLocaleDateString()} at {new Date(tx.timestamp).toLocaleTimeString()}
+                          {new Date(tx.timestamp).toLocaleDateString()} at{' '}
+                          {new Date(tx.timestamp).toLocaleTimeString()}
                         </p>
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0 ml-2">
                       <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2">
                         <div className="text-right">
-                          <p className={`font-medium text-sm sm:text-base ${valueInfo.color} break-all`}>
+                          <p
+                            className={`font-medium text-sm sm:text-base ${valueInfo.color} break-all`}
+                          >
                             {valueInfo.display}
                           </p>
-                          <span className={`text-xs px-2 py-1 rounded-full ${statusInfo.bgColor} ${statusInfo.color} whitespace-nowrap`}>
+                          <span
+                            className={`text-xs px-2 py-1 rounded-full ${statusInfo.bgColor} ${statusInfo.color} whitespace-nowrap`}
+                          >
                             {statusInfo.label}
                           </span>
                         </div>
@@ -272,14 +317,18 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
                       </div>
                     </div>
                   </div>
-                )
+                );
               })}
-              
+
               {walletData.transactions.length > 5 && (
                 <div className="text-center pt-3 sm:pt-4 border-t border-gray-100">
                   <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-3">
-                    <Link href="/profile/me" className="w-full sm:w-auto">
-                      <Button variant="outline" size="sm" className="w-full sm:w-auto min-h-[44px] px-4 sm:px-6 touch-manipulation">
+                    <Link href="/profiles/me" className="w-full sm:w-auto">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto min-h-[44px] px-4 sm:px-6 touch-manipulation"
+                      >
                         View All {walletData.transactions.length} Transactions
                       </Button>
                     </Link>
@@ -300,5 +349,5 @@ export function WalletOverview({ walletAddress, className = '' }: WalletOverview
         </CardContent>
       </Card>
     </div>
-  )
-} 
+  );
+}

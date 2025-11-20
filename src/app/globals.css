@@ -32,6 +32,17 @@ html {
   }
 }
 
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes scaleIn {
   from {
     opacity: 0;
@@ -658,6 +669,11 @@ html {
     height: env(safe-area-inset-top);
     background: linear-gradient(135deg, #f7931a 0%, #e8830f 100%);
   }
+  
+  /* Ensure mobile menu is above everything */
+  [data-mobile-menu] {
+    z-index: 9999 !important;
+  }
 }
 
 /* Mobile-specific media queries */
@@ -725,4 +741,4 @@ html {
   body {
     @apply bg-background text-foreground;
   }
-} 
+}

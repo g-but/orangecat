@@ -78,25 +78,29 @@ const TimelineComposer = React.memo(function TimelineComposer({
     [targetOwnerName, postingToOwnTimeline]
   );
 
-  const defaultPlaceholder = useMemo(
-    () => postingToOwnTimeline
-      ? "What's on your mind?"
-      : `Write on ${targetName}...`,
-    [postingToOwnTimeline, targetName]
-  );
+  const defaultPlaceholder = useMemo(() => {
+    if (!postingToOwnTimeline) {
+      return `Write on ${targetName}'s timeline...`;
+    }
+    // Context-aware, helpful placeholder
+    return 'Share an update about your project...';
+  }, [postingToOwnTimeline, targetName]);
 
   // Memoized character count color
   const characterCountColor = useMemo(() => {
-    if (postComposer.content.length > 450) return 'text-red-500';
-    if (postComposer.content.length > 400) return 'text-orange-500';
+    if (postComposer.content.length > 450) {
+      return 'text-red-500';
+    }
+    if (postComposer.content.length > 400) {
+      return 'text-orange-500';
+    }
     return 'text-gray-500';
   }, [postComposer.content.length]);
 
   // Memoized button disabled state
-  const isButtonDisabled = useMemo(() =>
-    !postComposer.content.trim() ||
-    postComposer.isPosting ||
-    postComposer.content.length > 500,
+  const isButtonDisabled = useMemo(
+    () =>
+      !postComposer.content.trim() || postComposer.isPosting || postComposer.content.length > 500,
     [postComposer.content, postComposer.isPosting]
   );
 
@@ -131,7 +135,9 @@ const TimelineComposer = React.memo(function TimelineComposer({
                 src={(profile as any)?.avatar_url || user?.user_metadata?.avatar_url}
                 alt={user.user_metadata.name || 'User'}
                 className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
-                onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                onError={e => {
+                  (e.currentTarget as HTMLImageElement).style.display = 'none';
+                }}
               />
             ) : (
               <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
@@ -145,6 +151,9 @@ const TimelineComposer = React.memo(function TimelineComposer({
           {/* Post Input */}
           <div className="flex-1 min-w-0">
             <textarea
+              id="timeline-composer-input"
+              aria-label="Write your post"
+              aria-describedby="composer-hint composer-char-count"
               value={postComposer.content}
               onChange={e => {
                 postComposer.setContent(e.target.value);
@@ -152,10 +161,11 @@ const TimelineComposer = React.memo(function TimelineComposer({
               }}
               onKeyDown={handleKeyDown}
               placeholder={placeholder || defaultPlaceholder}
-              className="w-full border-0 resize-none text-lg placeholder-gray-500 focus:outline-none bg-transparent"
+              className={`w-full resize-none text-lg placeholder-gray-400 bg-white/50 border border-gray-200 rounded-lg px-4 py-3 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all ${postComposer.isPosting ? 'opacity-50 cursor-wait' : ''}`}
               rows={3}
               maxLength={500}
               disabled={postComposer.isPosting}
+              data-posting={postComposer.isPosting}
             />
 
             {/* Project Selection */}
@@ -236,12 +246,22 @@ const TimelineComposer = React.memo(function TimelineComposer({
                 </button>
 
                 {/* Character Count */}
-                <div className={`text-sm font-medium ${characterCountColor}`}>
+                <div
+                  id="composer-char-count"
+                  className={`text-sm font-medium ${characterCountColor}`}
+                  aria-live="polite"
+                >
                   {postComposer.content.length}/500
                 </div>
 
                 {/* Keyboard Hint */}
-                <div className="text-xs text-gray-400 hidden sm:block">Ctrl+Enter to post</div>
+                <div
+                  id="composer-hint"
+                  className="text-xs text-gray-400 hidden sm:block"
+                  aria-hidden="true"
+                >
+                  Ctrl+Enter to post
+                </div>
               </div>
 
               <div className="flex gap-2">
@@ -260,7 +280,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
                   disabled={isButtonDisabled}
                   className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 disabled:from-gray-300 disabled:to-gray-300 text-white px-6 py-2 rounded-full font-semibold transition-all shadow-sm hover:shadow-md disabled:shadow-none"
                   size="sm"
-                  aria-label={postComposer.isPosting ? "Posting..." : `Post ${buttonText}`}
+                  aria-label={postComposer.isPosting ? 'Posting...' : `Post ${buttonText}`}
                 >
                   {postComposer.isPosting ? (
                     <span className="flex items-center gap-2">

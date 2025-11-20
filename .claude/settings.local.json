@@ -1,30 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -f /home/g/dev/orangecat/supabase/migrations/20251113150000_create_enriched_timeline_view.sql)",
-      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c \"\\d profiles\")",
-      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql:*)",
-      "Bash(node apply-timeline-migration.js:*)",
-      "Bash(npx supabase --version)",
-      "Bash(npx supabase db push:*)",
-      "Bash(npx supabase:*)",
-      "Bash(chmod:*)",
-      "Bash(/home/g/dev/orangecat/apply-social-features.sh:*)",
-      "Bash(node /home/g/dev/orangecat/apply-social-features-migration.js:*)",
-      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -f /home/g/dev/orangecat/supabase/migrations/20251113000001_timeline_social_features.sql)",
-      "Bash(SUPABASE_ACCESS_TOKEN=\"sbp_7bc7546939c5675c6146d5773f83f05b0131c614\" node:*)",
-      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c \"SELECT tgname, tgrelid::regclass, proname FROM pg_trigger t JOIN pg_proc p ON t.tgfoid = p.oid WHERE tgrelid = ''auth.users''::regclass;\")",
-      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c \"SELECT column_name FROM information_schema.columns WHERE table_schema = ''''public'''' AND table_name = ''''profiles'''' ORDER BY ordinal_position;\")",
-      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql -h aws-0-us-west-1.pooler.supabase.com -p 6543 -U postgres.ohkueislstxomdjavyhs -d postgres -c \"\\df public.handle_new_user\")",
-      "Bash(ls:*)",
-      "Bash(node:*)",
-      "Bash(sort:*)",
-      "Bash(done)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(git reset:*)",
-      "Bash(git stash drop:*)",
-      "Bash(git push origin develop)"
+      "Bash(./check-columns.sh:*)",
+      "Bash(./verify-fix.sh:*)",
+      "Bash(cat:*)"
     ],
     "deny": [],
     "ask": []

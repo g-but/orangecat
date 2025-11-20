@@ -1,24 +1,21 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Profile } from '@/types/database';
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import DefaultAvatar from '@/components/ui/DefaultAvatar';
-import { Users, UserPlus, UserMinus, User } from 'lucide-react';
-import { logger } from '@/utils/logger';
 import Image from 'next/image';
+import { Users, UserPlus } from 'lucide-react';
+import { Profile } from '@/types/database';
+import DefaultAvatar from '@/components/ui/DefaultAvatar';
 
 interface ProfilePeopleTabProps {
   profile: Profile;
-  isOwnProfile: boolean;
+  isOwnProfile?: boolean;
 }
 
-interface FollowUser {
+interface Connection {
   id: string;
-  username: string | null;
-  name: string | null;
+  username: string;
+  name: string;
   avatar_url: string | null;
   bio: string | null;
 }
@@ -26,214 +23,146 @@ interface FollowUser {
 /**
  * ProfilePeopleTab Component
  *
- * Displays followers and following lists for a profile.
- * Shows social connections and allows follow/unfollow actions.
+ * Displays user's connections (followers/following) in a tab context.
+ * Shows people the user is connected with.
  */
 export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopleTabProps) {
-  const [activeView, setActiveView] = useState<'followers' | 'following'>('followers');
-  const [followers, setFollowers] = useState<FollowUser[]>([]);
-  const [following, setFollowing] = useState<FollowUser[]>([]);
-  const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set());
+  const [following, setFollowing] = useState<Connection[]>([]);
+  const [followers, setFollowers] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<'following' | 'followers'>('following');
 
-  // Load followers when viewing followers tab
-  const loadFollowers = useCallback(async () => {
-    if (loadedTabs.has('followers')) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch(`/api/social/followers/${profile.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setFollowers(data.data || []);
-        setLoadedTabs(prev => new Set(prev).add('followers'));
-      }
-    } catch (err) {
-      logger.error('Error loading followers', err, 'ProfilePeopleTab');
-      setError('Failed to load followers');
-    } finally {
-      setLoading(false);
-    }
-  }, [profile.id, loadedTabs]);
-
-  // Load following when viewing following tab
-  const loadFollowing = useCallback(async () => {
-    if (loadedTabs.has('following')) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch(`/api/social/following/${profile.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setFollowing(data.data || []);
-        setLoadedTabs(prev => new Set(prev).add('following'));
-      }
-    } catch (err) {
-      logger.error('Error loading following', err, 'ProfilePeopleTab');
-      setError('Failed to load following');
-    } finally {
-      setLoading(false);
-    }
-  }, [profile.id, loadedTabs]);
-
-  // Load appropriate data based on active view
   useEffect(() => {
-    if (activeView === 'followers') {
-      loadFollowers();
-    } else {
-      loadFollowing();
+    const fetchConnections = async () => {
+      try {
+        setLoading(true);
+
+        // Fetch following
+        const followingResponse = await fetch(`/api/social/following/${profile.id}`);
+        if (followingResponse.ok) {
+          const followingData = await followingResponse.json();
+          if (followingData.success && followingData.data) {
+            // Extract profiles from nested structure
+            const followingProfiles = followingData.data
+              .map((item: any) => item.profiles)
+              .filter((p: any) => p !== null);
+            setFollowing(followingProfiles);
+          }
+        }
+
+        // Fetch followers
+        const followersResponse = await fetch(`/api/social/followers/${profile.id}`);
+        if (followersResponse.ok) {
+          const followersData = await followersResponse.json();
+          if (followersData.success && followersData.data) {
+            // Extract profiles from nested structure
+            const followerProfiles = followersData.data
+              .map((item: any) => item.profiles)
+              .filter((p: any) => p !== null);
+            setFollowers(followerProfiles);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch connections:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (profile.id) {
+      fetchConnections();
     }
-  }, [activeView, loadFollowers, loadFollowing]);
+  }, [profile.id]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-      </div>
-    );
+    return <div className="text-gray-500 text-sm py-8 text-center">Loading connections...</div>;
   }
 
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="text-center text-red-600">
-            <p className="font-medium">Error loading connections</p>
-            <p className="text-sm mt-1">{error}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const displayList = activeView === 'followers' ? followers : following;
-  const emptyMessage = activeView === 'followers'
-    ? `${isOwnProfile ? 'You have' : 'No'} no followers yet`
-    : `${isOwnProfile ? 'You are' : 'Not'} not following anyone yet`;
+  const currentList = activeView === 'following' ? following : followers;
+  const hasConnections = currentList.length > 0;
 
   return (
     <div className="space-y-6">
-      {/* Stats Card */}
-      <div className="grid grid-cols-2 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-orange-600">{followers.length}</div>
-              <div className="text-sm text-gray-600 mt-1">
-                {followers.length === 1 ? 'Follower' : 'Followers'}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">{following.length}</div>
-              <div className="text-sm text-gray-600 mt-1">Following</div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* View Toggle */}
-      <div className="flex gap-2 border-b border-gray-200">
-        <button
-          onClick={() => setActiveView('followers')}
-          className={`px-6 py-3 font-medium transition-colors border-b-2 ${
-            activeView === 'followers'
-              ? 'border-orange-500 text-orange-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          <Users className="w-4 h-4 inline mr-2" />
-          Followers ({followers.length})
-        </button>
+      {/* Toggle between Following and Followers */}
+      <div className="flex gap-4 border-b border-gray-200">
         <button
           onClick={() => setActiveView('following')}
-          className={`px-6 py-3 font-medium transition-colors border-b-2 ${
+          className={`pb-3 px-4 font-medium transition-colors ${
             activeView === 'following'
-              ? 'border-orange-500 text-orange-600'
-              : 'border-transparent text-gray-600 hover:text-gray-900'
+              ? 'text-orange-600 border-b-2 border-orange-600'
+              : 'text-gray-600 hover:text-gray-900'
           }`}
         >
-          <UserPlus className="w-4 h-4 inline mr-2" />
           Following ({following.length})
+        </button>
+        <button
+          onClick={() => setActiveView('followers')}
+          className={`pb-3 px-4 font-medium transition-colors ${
+            activeView === 'followers'
+              ? 'text-orange-600 border-b-2 border-orange-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Followers ({followers.length})
         </button>
       </div>
 
+      {/* Empty State */}
+      {!hasConnections && (
+        <div className="text-center py-12">
+          <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {activeView === 'following' ? 'No Following Yet' : 'No Followers Yet'}
+          </h3>
+          <p className="text-gray-600">
+            {isOwnProfile
+              ? activeView === 'following'
+                ? 'Start following people to see them here'
+                : 'When people follow you, they will appear here'
+              : activeView === 'following'
+                ? 'Not following anyone yet'
+                : 'No followers yet'}
+          </p>
+        </div>
+      )}
+
       {/* People List */}
-      {displayList.length === 0 ? (
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center text-gray-500">
-              <Users className="w-16 h-16 mx-auto mb-4 opacity-30" />
-              <p className="font-medium">{emptyMessage}</p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {displayList.map((user) => (
-            <Card key={user.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  {/* Avatar */}
-                  <Link
-                    href={`/profiles/${user.username || user.id}`}
-                    className="flex-shrink-0"
-                  >
-                    {user.avatar_url ? (
-                      <Image
-                        src={user.avatar_url}
-                        alt={user.name || 'User'}
-                        width={48}
-                        height={48}
-                        className="rounded-full object-cover"
-                      />
-                    ) : (
-                      <DefaultAvatar size={48} className="rounded-full" />
-                    )}
-                  </Link>
+      {hasConnections && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {currentList.map(person => {
+            // Skip if no username or id
+            if (!person.username || !person.id) {
+              console.warn('Person missing username or id:', person);
+              return null;
+            }
 
-                  {/* User Info */}
-                  <div className="flex-1 min-w-0">
-                    <Link
-                      href={`/profiles/${user.username || user.id}`}
-                      className="font-semibold text-gray-900 hover:text-orange-600 transition-colors block truncate"
-                    >
-                      {user.name || 'Anonymous'}
-                    </Link>
-                    {user.username && (
-                      <p className="text-sm text-gray-500 truncate">@{user.username}</p>
-                    )}
-                    {user.bio && (
-                      <p className="text-xs text-gray-600 mt-1 line-clamp-2">{user.bio}</p>
-                    )}
-                  </div>
+            return (
+              <Link
+                key={person.id}
+                href={`/profiles/${person.username}`}
+                className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all"
+              >
+                {person.avatar_url ? (
+                  <Image
+                    src={person.avatar_url}
+                    alt={person.name || person.username}
+                    width={48}
+                    height={48}
+                    className="rounded-lg object-cover flex-shrink-0"
+                  />
+                ) : (
+                  <DefaultAvatar size={48} className="rounded-lg flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-gray-900 truncate">
+                    {person.name || person.username}
+                  </h4>
+                  <p className="text-sm text-gray-600 mb-1">@{person.username}</p>
+                  {person.bio && <p className="text-sm text-gray-600 line-clamp-2">{person.bio}</p>}
                 </div>
-
-                {/* Action Button */}
-                <div className="mt-3">
-                  <Link href={`/profiles/${user.username || user.id}`}>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full"
-                    >
-                      <User className="w-4 h-4 mr-2" />
-                      View Profile
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

@@ -10,7 +10,18 @@
 
 import { ComponentType, SVGProps } from 'react';
 import type { User } from '@supabase/supabase-js';
-import { Home, Users, Rocket, Settings, User, Compass, BookOpen, Globe, Wallet } from 'lucide-react';
+import {
+  Home,
+  Users,
+  Rocket,
+  Settings,
+  User,
+  Compass,
+  BookOpen,
+  Globe,
+  Wallet,
+  Info,
+} from 'lucide-react';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
 
 export interface NavigationItem {
@@ -37,18 +48,11 @@ export function getNavigationItems(user: User | null): NavigationItem[] {
     ];
   }
 
+  // Simplified navigation for logged-out users - mobile-first approach
   return [
     { name: 'Discover', href: '/discover' },
     { name: 'Community', href: '/community' },
-    {
-      name: 'About',
-      children: [
-        { name: 'Stories', href: '/stories', description: 'Real success stories from our users' },
-        { name: 'Technology', href: '/technology', description: 'Our tech stack and approach' },
-        { name: 'FAQ', href: '/faq', description: 'Frequently asked questions' },
-      ],
-    },
-    { name: 'Blog', href: '/blog' },
+    { name: 'About', href: '/about' },
   ];
 }
 
@@ -65,12 +69,8 @@ export function shouldShowNavigationItem(item: NavigationItem, user: User | null
 /**
  * Sidebar navigation sections for authenticated users
  *
- * Simplified navigation with only essential items:
- * - Dashboard (main dashboard overview)
- * - My Projects (projects management dashboard)
- * - My People (people we are connected to)
- * - Discover (separated section for exploring)
- * - Settings (at bottom)
+ * Navigation items with "My" prefix for personal items:
+ * Order matches public profile tabs: Dashboard, Info, Projects, People, Wallets
  */
 export const navigationSections: NavSection[] = [
   {
@@ -88,10 +88,10 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        name: 'My Journey',
-        href: '/journey',
-        icon: BookOpen,
-        description: 'Your personal timeline and posts',
+        name: 'My Info',
+        href: '/dashboard/info',
+        icon: Info,
+        description: 'Edit your profile information',
         requiresAuth: true,
       },
       {
@@ -109,7 +109,7 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
-        name: 'Wallets',
+        name: 'My Wallets',
         href: '/dashboard/wallets',
         icon: Wallet,
         description: 'Manage your Bitcoin wallets',
@@ -149,10 +149,10 @@ export const navigationSections: NavSection[] = [
  */
 export const bottomNavItems: NavItem[] = [
   {
-    name: 'Profile',
-    href: '/profile',
+    name: 'View My Profile',
+    href: '/profiles/me',
     icon: User,
-    description: 'View and edit your profile',
+    description: 'View your public profile',
     requiresAuth: true,
   },
   {

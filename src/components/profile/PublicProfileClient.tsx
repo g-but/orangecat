@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Profile } from '@/types/database';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -11,10 +12,10 @@ import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import ProfileShare from '@/components/sharing/ProfileShare';
 import ProfileViewTabs from '@/components/profile/ProfileViewTabs';
 import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab';
-import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
 import ProfileTimelineTab from '@/components/profile/ProfileTimelineTab';
 import ProfileProjectsTab from '@/components/profile/ProfileProjectsTab';
 import ProfilePeopleTab from '@/components/profile/ProfilePeopleTab';
+import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
 import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
 import {
   Bitcoin,
@@ -32,6 +33,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { ProfileFormData } from '@/types/database';
 
 interface PublicProfileClientProps {
   profile: Profile;
@@ -54,6 +56,7 @@ export default function PublicProfileClient({
   stats,
 }: PublicProfileClientProps) {
   const { user } = useAuth();
+  const router = useRouter();
   const isOwnProfile = profile.id === user?.id;
 
   const [showShare, setShowShare] = useState(false);
@@ -114,6 +117,30 @@ export default function PublicProfileClient({
     }
   };
 
+  // Handle profile save (for editing in Info tab)
+  const handleProfileSave = async (data: ProfileFormData) => {
+    try {
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save profile');
+      }
+
+      toast.success('Profile updated successfully');
+
+      // Refresh the server-side data without full page reload
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to save profile');
+      throw error;
+    }
+  };
+
   // Close share dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -135,6 +162,7 @@ export default function PublicProfileClient({
   }, [showShare]);
 
   // Define tabs for progressive loading
+  // Order: Overview, Info, Timeline, Projects, People, Wallets
   const tabs = [
     {
       id: 'overview',
@@ -146,7 +174,15 @@ export default function PublicProfileClient({
       id: 'info',
       label: 'Info',
       icon: <Info className="w-4 h-4" />,
-      content: <ProfileInfoTab profile={profile} isOwnProfile={isOwnProfile} />,
+      content: (
+        <ProfileInfoTab
+          profile={profile}
+          isOwnProfile={isOwnProfile}
+          userId={user?.id}
+          userEmail={user?.email}
+          onSave={handleProfileSave}
+        />
+      ),
     },
     {
       id: 'timeline',
@@ -165,12 +201,14 @@ export default function PublicProfileClient({
       id: 'people',
       label: 'People',
       icon: <Users className="w-4 h-4" />,
+      badge: stats?.followerCount,
       content: <ProfilePeopleTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
     {
       id: 'wallets',
       label: 'Wallets',
       icon: <Wallet className="w-4 h-4" />,
+      badge: stats?.walletCount,
       content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
   ];
@@ -227,18 +265,6 @@ export default function PublicProfileClient({
                 </div>
               )}
             </div>
-
-            {isOwnProfile && (
-              <Link href="/profiles/me">
-                <Button
-                  variant="outline"
-                  className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg"
-                >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
-              </Link>
-            )}
 
             {!isOwnProfile && (
               <Button

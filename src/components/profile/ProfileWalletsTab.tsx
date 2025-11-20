@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Profile } from '@/types/database';
-import { Wallet, WalletFormData } from '@/types/wallet';
-import { WalletManager } from '@/components/wallets/WalletManager';
-import { Card, CardContent } from '@/components/ui/Card';
-import { Wallet as WalletIcon, Info } from 'lucide-react';
+import { Wallet } from '@/types/wallet';
+import { Card, CardHeader, CardContent } from '@/components/ui/Card';
+import { Bitcoin, Zap, Wallet as WalletIcon, AlertCircle } from 'lucide-react';
+import BitcoinDonationCard from '@/components/bitcoin/BitcoinDonationCard';
 import { logger } from '@/utils/logger';
 
 interface ProfileWalletsTabProps {
@@ -16,34 +16,32 @@ interface ProfileWalletsTabProps {
 /**
  * ProfileWalletsTab Component
  *
- * Displays and manages user's Bitcoin wallets on their profile.
- * Only shown for own profile (not visible to others).
+ * Displays all wallet addresses and payment methods for the profile.
+ * Supports both multi-wallet system and legacy addresses.
+ *
+ * Best Practices:
+ * - DRY: Reuses existing wallet components
+ * - Modular: Separate tab for wallet info
+ * - Progressive: Lazy loaded on first click
+ * - Minimal clicks: All wallet info in one place
  */
 export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWalletsTabProps) {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Load wallets
+  // Load wallets on mount
   useEffect(() => {
-    if (!profile.id) return;
-
     const loadWallets = async () => {
       try {
         setLoading(true);
-        setError(null);
-
         const response = await fetch(`/api/wallets?profile_id=${profile.id}`);
-        if (!response.ok) {
-          throw new Error('Failed to load wallets');
-        }
 
-        const data = await response.json();
-        setWallets(data.wallets || []);
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load wallets';
-        logger.error('Error loading wallets', err, 'ProfileWalletsTab');
-        setError(errorMessage);
+        if (response.ok) {
+          const data = await response.json();
+          setWallets(data.wallets || []);
+        }
+      } catch (error) {
+        logger.error('Failed to load wallets', error, 'ProfileWalletsTab');
       } finally {
         setLoading(false);
       }
@@ -52,163 +50,102 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
     loadWallets();
   }, [profile.id]);
 
-  // Add wallet
-  const handleAddWallet = async (data: WalletFormData) => {
-    try {
-      const response = await fetch('/api/wallets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          entity_type: 'profile',
-          entity_id: profile.id,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to add wallet');
-      }
-
-      const result = await response.json();
-      setWallets(prev => [...prev, result.wallet]);
-      logger.info('Wallet added successfully', null, 'ProfileWalletsTab');
-    } catch (err) {
-      logger.error('Error adding wallet', err, 'ProfileWalletsTab');
-      throw err;
-    }
-  };
-
-  // Update wallet
-  const handleUpdateWallet = async (walletId: string, data: Partial<WalletFormData>) => {
-    try {
-      const response = await fetch(`/api/wallets/${walletId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to update wallet');
-      }
-
-      const result = await response.json();
-      setWallets(prev => prev.map(w => (w.id === walletId ? result.wallet : w)));
-      logger.info('Wallet updated successfully', null, 'ProfileWalletsTab');
-    } catch (err) {
-      logger.error('Error updating wallet', err, 'ProfileWalletsTab');
-      throw err;
-    }
-  };
-
-  // Delete wallet
-  const handleDeleteWallet = async (walletId: string) => {
-    try {
-      const response = await fetch(`/api/wallets/${walletId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to delete wallet');
-      }
-
-      setWallets(prev => prev.filter(w => w.id !== walletId));
-      logger.info('Wallet deleted successfully', null, 'ProfileWalletsTab');
-    } catch (err) {
-      logger.error('Error deleting wallet', err, 'ProfileWalletsTab');
-      throw err;
-    }
-  };
-
-  // Refresh wallet balance
-  const handleRefreshWallet = async (walletId: string) => {
-    try {
-      const response = await fetch(`/api/wallets/${walletId}/refresh`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Failed to refresh wallet');
-      }
-
-      const result = await response.json();
-      setWallets(prev => prev.map(w => (w.id === walletId ? result.wallet : w)));
-      logger.info('Wallet balance refreshed', null, 'ProfileWalletsTab');
-    } catch (err) {
-      logger.error('Error refreshing wallet', err, 'ProfileWalletsTab');
-      alert('Failed to refresh wallet balance. Please try again.');
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="text-center text-red-600">
-            <p className="font-medium">Error loading wallets</p>
-            <p className="text-sm mt-1">{error}</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (!isOwnProfile) {
-    return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="text-center text-gray-500">
-            <WalletIcon className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Wallet information is private</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
+  const hasWallets = wallets.length > 0;
+  const hasLegacyAddresses = profile.bitcoin_address || profile.lightning_address;
+  const hasAnyPaymentMethod = hasWallets || hasLegacyAddresses;
 
   return (
     <div className="space-y-6">
-      {/* Info Banner */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex gap-3">
-          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div>
-            <h3 className="font-semibold text-blue-900 mb-1">Manage Your Wallets</h3>
-            <p className="text-sm text-blue-800">
-              Add and manage your Bitcoin wallets. You can categorize them, set goals, and track balances.
-              Wallets added here will also appear in "My Wallets" from the sidebar.
+      {/* Empty State */}
+      {!hasAnyPaymentMethod && !loading && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <WalletIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No Payment Methods Yet</h3>
+            <p className="text-gray-600 max-w-md mx-auto">
+              {isOwnProfile
+                ? 'Add Bitcoin or Lightning addresses to start accepting donations.'
+                : 'This user has not added any payment methods yet.'}
             </p>
-          </div>
-        </div>
-      </div>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Wallet Manager */}
-      <Card>
-        <CardContent className="p-6">
-          <WalletManager
-            wallets={wallets}
-            entityType="profile"
-            entityId={profile.id}
-            onAdd={handleAddWallet}
-            onUpdate={handleUpdateWallet}
-            onDelete={handleDeleteWallet}
-            onRefresh={handleRefreshWallet}
-            maxWallets={10}
-            isOwner={isOwnProfile}
-          />
-        </CardContent>
-      </Card>
+      {/* Multi-Wallet System - TODO: Implement wallet display */}
+      {/* {hasWallets && (
+        <div>Multiple wallets display - TODO</div>
+      )} */}
+
+      {/* Legacy Bitcoin Address */}
+      {profile.bitcoin_address && (
+        <Card data-bitcoin-card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Bitcoin className="w-5 h-5 text-orange-500" />
+              Bitcoin Address
+            </h3>
+          </CardHeader>
+          <CardContent>
+            <BitcoinDonationCard
+              address={profile.bitcoin_address}
+              recipientName={profile.name || profile.username || 'User'}
+              amount={0.001}
+              purpose="Support this profile"
+              qrSize={200}
+            />
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Legacy Lightning Address */}
+      {profile.lightning_address && (
+        <Card data-lightning-card>
+          <CardHeader>
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Zap className="w-5 h-5 text-yellow-500" />
+              Lightning Address
+            </h3>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="text-sm text-gray-600 mb-2">Lightning Address</div>
+              <div className="font-mono text-sm break-all bg-white p-3 rounded border border-gray-200">
+                {profile.lightning_address}
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+              <div className="flex gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                <div>
+                  <div className="font-medium text-yellow-900 mb-1">Lightning Network</div>
+                  <p className="text-sm text-yellow-700">
+                    Send instant Bitcoin payments using a Lightning-compatible wallet.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Info Note for Own Profile */}
+      {isOwnProfile && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="py-4">
+            <div className="flex gap-3">
+              <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="text-blue-900 font-medium mb-1">Manage Your Wallets</p>
+                <p className="text-blue-700">
+                  You can add and manage multiple wallets from your profile settings. Create
+                  separate wallets for different projects or purposes.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

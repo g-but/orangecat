@@ -2,21 +2,21 @@
 
 echo "🧹 Running pre-commit checks..."
 
-# Fast checks only (target: ≤3s)
-# Tests moved to pre-push for better developer experience
-
+# Run lint-staged if configured, otherwise run basic checks
 if command -v lint-staged >/dev/null 2>&1; then
-  # Use lint-staged if configured (runs on staged files only)
   npx lint-staged
 else
-  # Fallback: run basic checks
   echo "⚡ Running ESLint..."
-  npm run lint:check || { echo "❌ ESLint failed"; exit 1; }
+  npm run lint
   echo "✅ ESLint passed"
 
   echo "🔍 Running TypeScript check..."
-  npm run type-check || { echo "❌ TypeScript check failed"; exit 1; }
+  npm run type-check
   echo "✅ TypeScript check passed"
+
+  echo "🧪 Running tests..."
+  npm run test:unit
+  echo "✅ Tests passed"
 fi
 
-echo "🎉 Pre-commit checks passed! (tests will run on push)"
+echo "🎉 All pre-commit checks passed!"
