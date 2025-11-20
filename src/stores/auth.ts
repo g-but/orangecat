@@ -47,6 +47,9 @@ interface AuthState {
 
 const STORAGE_KEY = 'orangecat-auth-storage';
 
+// Request deduplication: Track in-flight profile fetch
+let inFlightProfileFetch: Promise<{ error: string | null }> | null = null;
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -101,29 +104,45 @@ export const useAuthStore = create<AuthState>()(
       setAuthError: (authError: string | null) => set({ authError }),
 
       fetchProfile: async () => {
+        // Deduplicate concurrent requests - if already fetching, return same promise
+        if (inFlightProfileFetch) {
+          logger.debug('Deduplicating profile fetch - using in-flight request', undefined, 'Auth');
+          return inFlightProfileFetch;
+        }
+
         const currentState = get();
         if (!currentState.user?.id) {
           return { error: 'No authenticated user' };
         }
 
-        try {
-          const response = await fetch('/api/profile');
-          const result = await response.json();
+        // Create and store the fetch promise
+        inFlightProfileFetch = (async () => {
+          try {
+            const response = await fetch('/api/profile');
+            const result = await response.json();
 
-          if (!response.ok) {
-            return { error: result.error || 'Failed to fetch profile' };
-          }
+            if (!response.ok) {
+              return { error: result.error || 'Failed to fetch profile' };
+            }
 
-          if (result.success && result.data) {
-            set({ profile: result.data });
-            return { error: null };
-          } else {
-            return { error: 'Profile not found' };
+            if (result.success && result.data) {
+              set({ profile: result.data });
+              return { error: null };
+            } else {
+              return { error: 'Profile not found' };
+            }
+          } catch (error) {
+            logger.error('Failed to fetch profile:', error);
+            return { error: 'Failed to fetch profile' };
+          } finally {
+            // Clear the in-flight promise after a small delay to allow near-simultaneous calls to deduplicate
+            setTimeout(() => {
+              inFlightProfileFetch = null;
+            }, 100);
           }
-        } catch (error) {
-          logger.error('Failed to fetch profile:', error);
-          return { error: 'Failed to fetch profile' };
-        }
+        })();
+
+        return inFlightProfileFetch;
       },
 
       signOut: async () => {

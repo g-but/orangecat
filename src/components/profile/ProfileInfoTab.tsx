@@ -1,287 +1,239 @@
 'use client';
 
-import { Profile } from '@/types/database';
+import { useState } from 'react';
+import { Profile, ProfileFormData } from '@/types/database';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import {
   User,
   MapPin,
   Globe,
   Calendar,
-  Bitcoin,
-  Zap,
   Mail,
-  Heart,
-  Sparkles,
-  Edit
+  Twitter,
+  Github,
+  Info,
+  Shield,
+  Clock,
+  Edit as EditIcon,
 } from 'lucide-react';
+import { format } from 'date-fns';
 import Button from '@/components/ui/Button';
-import { useState } from 'react';
+import ModernProfileEditor from './ModernProfileEditor';
 
 interface ProfileInfoTabProps {
   profile: Profile;
-  isOwnProfile: boolean;
+  isOwnProfile?: boolean;
+  userId?: string;
+  userEmail?: string;
+  onSave?: (data: ProfileFormData) => Promise<void>;
 }
 
 /**
  * ProfileInfoTab Component
  *
- * Displays detailed profile information in a structured format.
- * Shows all profile fields including personal details, location, story, and contact info.
+ * Shows detailed profile information including location, join date,
+ * social links, and other metadata. Supports in-place editing for own profile.
+ *
+ * Best Practices:
+ * - DRY: Reusable info display and edit mode
+ * - Modular: Separate from overview, integrates ModernProfileEditor
+ * - Progressive: Lazy loaded on first click
+ * - Mobile-first: Edit in context without navigation
  */
-export default function ProfileInfoTab({ profile, isOwnProfile }: ProfileInfoTabProps) {
-  const [showEditModal, setShowEditModal] = useState(false);
+export default function ProfileInfoTab({
+  profile,
+  isOwnProfile = false,
+  userId,
+  userEmail,
+  onSave,
+}: ProfileInfoTabProps) {
+  const [mode, setMode] = useState<'view' | 'edit'>('view');
+  const joinDate = profile.created_at ? new Date(profile.created_at) : null;
+  const lastActive = profile.updated_at ? new Date(profile.updated_at) : null;
 
+  // Handle save from editor
+  const handleSave = async (data: ProfileFormData) => {
+    if (onSave) {
+      try {
+        await onSave(data);
+        // Only switch back to view mode if save succeeded
+        setMode('view');
+      } catch (error) {
+        // Error is already handled by onSave (toast shown)
+        // Stay in edit mode so user can try again
+        console.error('Failed to save profile:', error);
+      }
+    }
+  };
+
+  // Handle cancel editing
+  const handleCancel = () => {
+    setMode('view');
+  };
+
+  // If in edit mode and we have required props, show editor
+  if (mode === 'edit' && isOwnProfile && userId && onSave) {
+    return (
+      <div className="space-y-6">
+        <ModernProfileEditor
+          profile={profile}
+          userId={userId}
+          userEmail={userEmail}
+          onSave={handleSave}
+          onCancel={handleCancel}
+        />
+      </div>
+    );
+  }
+
+  // View mode
   return (
     <div className="space-y-6">
-      {/* Personal Details */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <h3 className="text-lg font-semibold flex items-center gap-2">
-            <User className="w-5 h-5 text-gray-500" />
-            Personal Details
-          </h3>
-          {isOwnProfile && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowEditModal(true)}
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Display Name */}
-            {profile.name && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">Display Name</label>
-                <p className="text-gray-900 mt-1">{profile.name}</p>
-              </div>
-            )}
-
-            {/* Username */}
-            <div>
-              <label className="text-sm font-medium text-gray-500">Username</label>
-              <p className="text-gray-900 mt-1">@{profile.username || 'Not set'}</p>
-            </div>
-
-            {/* Member Since */}
-            {profile.created_at && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">Member Since</label>
-                <div className="flex items-center gap-2 mt-1">
-                  <Calendar className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-900">
-                    {new Date(profile.created_at).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric',
-                    })}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Bio */}
-          {profile.bio && (
-            <div className="pt-4 border-t">
-              <label className="text-sm font-medium text-gray-500">Bio</label>
-              <p className="text-gray-900 mt-2 whitespace-pre-wrap">{profile.bio}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Location */}
-      {(profile.location_city || profile.location_country) && (
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <MapPin className="w-5 h-5 text-gray-500" />
-              Location
-            </h3>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2 text-gray-900">
-              <MapPin className="w-4 h-4 text-gray-400" />
-              <span>
-                {[profile.location_city, profile.location_country]
-                  .filter(Boolean)
-                  .join(', ')}
-              </span>
-            </div>
-            {profile.location_zip && (
-              <p className="text-sm text-gray-500 mt-2">ZIP: {profile.location_zip}</p>
-            )}
-          </CardContent>
-        </Card>
+      {/* Edit Button (only for own profile) */}
+      {isOwnProfile && userId && onSave && (
+        <div className="flex justify-end">
+          <Button onClick={() => setMode('edit')} variant="outline">
+            <EditIcon className="w-4 h-4 mr-2" />
+            Edit Profile
+          </Button>
+        </div>
       )}
 
-      {/* Background & Story */}
-      {(profile.background || profile.inspiration_statement) && (
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Heart className="w-5 h-5 text-gray-500" />
-              My Story
-            </h3>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {profile.background && (
-              <div>
-                <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Background
-                </label>
-                <p className="text-gray-900 mt-2 whitespace-pre-wrap">{profile.background}</p>
-              </div>
-            )}
-
-            {profile.inspiration_statement && (
-              <div className="pt-4 border-t">
-                <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <Heart className="w-4 h-4" />
-                  What Inspires Me
-                </label>
-                <p className="text-gray-900 mt-2 whitespace-pre-wrap">
-                  {profile.inspiration_statement}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Contact & Links */}
+      {/* Profile Details Card */}
       <Card>
         <CardHeader>
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Globe className="w-5 h-5 text-gray-500" />
-            Contact & Links
+            <Info className="w-5 h-5 text-gray-500" />
+            Profile Information
           </h3>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-4">
+          {/* Username */}
+          <div className="flex items-start gap-3">
+            <User className="w-5 h-5 text-gray-400 mt-0.5" />
+            <div className="flex-1">
+              <div className="text-sm text-gray-500">Username</div>
+              <div className="font-medium text-gray-900">@{profile.username}</div>
+            </div>
+          </div>
+
+          {/* Display Name */}
+          {profile.name && (
+            <div className="flex items-start gap-3">
+              <User className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <div className="text-sm text-gray-500">Display Name</div>
+                <div className="font-medium text-gray-900">{profile.name}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Email (only for own profile) */}
+          {profile.email && (
+            <div className="flex items-start gap-3">
+              <Mail className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <div className="text-sm text-gray-500">Email</div>
+                <div className="font-medium text-gray-900">{profile.email}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Location */}
+          {(profile.location_search || profile.location) && (
+            <div className="flex items-start gap-3">
+              <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <div className="text-sm text-gray-500">Location</div>
+                <div className="font-medium text-gray-900">
+                  {profile.location_search || profile.location}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Website */}
           {profile.website && (
-            <div className="flex items-center gap-3 text-gray-700">
-              <Globe className="w-5 h-5 text-gray-400 flex-shrink-0" />
-              <a
-                href={profile.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline break-all"
-              >
-                {profile.website.replace(/^https?:\/\//, '')}
-              </a>
+            <div className="flex items-start gap-3">
+              <Globe className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <div className="text-sm text-gray-500">Website</div>
+                <a
+                  href={profile.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-blue-600 hover:underline break-all"
+                >
+                  {profile.website}
+                </a>
+              </div>
             </div>
           )}
 
-          {/* Email (if public) */}
-          {profile.email && (
-            <div className="flex items-center gap-3 text-gray-700">
-              <Mail className="w-5 h-5 text-gray-400 flex-shrink-0" />
-              <a
-                href={`mailto:${profile.email}`}
-                className="text-blue-600 hover:underline break-all"
-              >
-                {profile.email}
-              </a>
+          {/* Join Date */}
+          {joinDate && (
+            <div className="flex items-start gap-3">
+              <Calendar className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <div className="text-sm text-gray-500">Member Since</div>
+                <div className="font-medium text-gray-900">{format(joinDate, 'MMMM d, yyyy')}</div>
+              </div>
             </div>
           )}
 
-          {!profile.website && !profile.email && (
-            <p className="text-gray-500 text-sm italic">No contact information provided</p>
+          {/* Last Active */}
+          {lastActive && (
+            <div className="flex items-start gap-3">
+              <Clock className="w-5 h-5 text-gray-400 mt-0.5" />
+              <div className="flex-1">
+                <div className="text-sm text-gray-500">Last Active</div>
+                <div className="font-medium text-gray-900">
+                  {format(lastActive, 'MMMM d, yyyy')}
+                </div>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Payment Addresses */}
-      {(profile.bitcoin_address || profile.lightning_address) && (
+      {/* Bio Card (if not shown elsewhere) */}
+      {profile.bio && (
         <Card>
           <CardHeader>
             <h3 className="text-lg font-semibold flex items-center gap-2">
-              <Bitcoin className="w-5 h-5 text-orange-500" />
-              Payment Addresses
+              <User className="w-5 h-5 text-gray-500" />
+              Bio
             </h3>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {/* Bitcoin Address */}
-            {profile.bitcoin_address && (
-              <div>
-                <label className="text-sm font-medium text-gray-500 mb-2 block">
-                  Bitcoin Address
-                </label>
-                <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3 rounded-lg">
-                  <Bitcoin className="w-5 h-5 text-orange-500 flex-shrink-0" />
-                  <code className="text-sm font-mono flex-1 overflow-x-auto">
-                    {profile.bitcoin_address}
-                  </code>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(profile.bitcoin_address || '');
-                    }}
-                  >
-                    Copy
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Lightning Address */}
-            {profile.lightning_address && (
-              <div>
-                <label className="text-sm font-medium text-gray-500 mb-2 block">
-                  Lightning Address
-                </label>
-                <div className="flex items-center gap-3 text-gray-700 bg-gray-50 p-3 rounded-lg">
-                  <Zap className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-                  <code className="text-sm flex-1 overflow-x-auto">
-                    {profile.lightning_address}
-                  </code>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      navigator.clipboard.writeText(profile.lightning_address || '');
-                    }}
-                  >
-                    Copy
-                  </Button>
-                </div>
-              </div>
-            )}
+          <CardContent>
+            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{profile.bio}</p>
           </CardContent>
         </Card>
       )}
 
-      {/* Edit Modal would go here if needed */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6">
-            <h2 className="text-xl font-bold mb-4">Edit Profile</h2>
-            <p className="text-gray-600 mb-4">
-              Profile editing will redirect to the profile editor page.
-            </p>
-            <div className="flex gap-3">
-              <Button
-                onClick={() => {
-                  window.location.href = '/settings/profile';
-                }}
-              >
-                Go to Profile Settings
-              </Button>
-              <Button variant="outline" onClick={() => setShowEditModal(false)}>
-                Cancel
-              </Button>
-            </div>
+      {/* Verification Status */}
+      <Card>
+        <CardHeader>
+          <h3 className="text-lg font-semibold flex items-center gap-2">
+            <Shield className="w-5 h-5 text-gray-500" />
+            Account Status
+          </h3>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Email Verified</span>
+            <span className={profile.email ? 'text-green-600 font-medium' : 'text-gray-400'}>
+              {profile.email ? '✓ Verified' : 'Not verified'}
+            </span>
           </div>
-        </div>
-      )}
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600">Profile Complete</span>
+            <span className="text-green-600 font-medium">
+              {profile.bio && profile.avatar_url ? '✓ Complete' : 'In Progress'}
+            </span>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

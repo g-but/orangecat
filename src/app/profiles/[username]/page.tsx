@@ -1,8 +1,7 @@
 import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import PublicProfileClient from '@/components/profile/PublicProfileClient';
-import { notFound } from 'next/navigation';
-import { isValidUUID } from '@/utils/validation';
+import { notFound, redirect } from 'next/navigation';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -19,7 +18,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { data: profile } = await supabase
     .from('profiles')
     .select('name, bio, avatar_url, username')
-    .eq(isValidUUID(username) ? 'id' : 'username', username)
+    .eq('username', username)
     .single();
 
   if (!profile) {
@@ -80,7 +79,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     } = await supabase.auth.getUser();
     if (!user) {
       // Not authenticated, redirect to login
-      return notFound();
+      redirect('/auth?redirect=/profiles/me');
     }
 
     // Get username for current user
@@ -93,11 +92,11 @@ export default async function PublicProfilePage({ params }: PageProps) {
     targetUsername = userProfile?.username || user.id;
   }
 
-  // Fetch profile data server-side (supports both username and UUID lookups)
+  // Fetch profile data server-side
   const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('*')
-    .eq(isValidUUID(targetUsername) ? 'id' : 'username', targetUsername)
+    .eq('username', targetUsername)
     .single();
 
   if (profileError || !profile) {
@@ -127,6 +126,25 @@ export default async function PublicProfilePage({ params }: PageProps) {
     .eq('user_id', profile.id)
     .neq('status', 'draft') // Exclude drafts from public profile
     .order('created_at', { ascending: false });
+
+  // Fetch follower count
+  const { count: followerCount } = await supabase
+    .from('follows')
+    .select('*', { count: 'exact', head: true })
+    .eq('following_id', profile.id);
+
+  // Fetch wallet count (handle missing table gracefully)
+  let walletCount = 0;
+  try {
+    const { count } = await supabase
+      .from('wallets')
+      .select('*', { count: 'exact', head: true })
+      .eq('profile_id', profile.id);
+    walletCount = count || 0;
+  } catch (error) {
+    // Wallets table might not exist yet
+    console.log('Wallets table not available');
+  }
 
   // Calculate statistics
   const projectCount = projects?.length || 0;
@@ -162,6 +180,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
         stats={{
           projectCount,
           totalRaised,
+          followerCount: followerCount || 0,
+          walletCount,
         }}
       />
     </>

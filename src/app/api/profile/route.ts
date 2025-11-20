@@ -41,10 +41,10 @@ export async function GET(request: NextRequest) {
         return apiNotFound('Profile not found');
       }
 
-      return respondWithProfile(supabase, user, bootstrappedProfile);
+      return respondWithProfile(supabase, user, bootstrappedProfile, request);
     }
 
-    return respondWithProfile(supabase, user, profile);
+    return respondWithProfile(supabase, user, profile, request);
   } catch (error) {
     return handleApiError(error);
   }
@@ -55,19 +55,27 @@ type SupabaseServer = Awaited<ReturnType<typeof createServerClient>>;
 async function respondWithProfile(
   supabase: SupabaseServer,
   user: any,
-  profile: any
+  profile: any,
+  request: NextRequest
 ) {
-  const { count: projectCount } = await supabase
-    .from('projects')
-    .select('*', { count: 'exact', head: true })
-    .eq('user_id', user.id);
+  // Only fetch project count if explicitly requested via query param
+  // This makes auth flow faster by avoiding expensive count query
+  const includeStats = request.nextUrl.searchParams.get('include_stats') === 'true';
 
-  const profileWithCounts = {
-    ...profile,
-    project_count: projectCount || 0,
-  };
+  if (includeStats) {
+    const { count: projectCount } = await supabase
+      .from('projects')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id);
 
-  return apiSuccess(profileWithCounts);
+    return apiSuccess({
+      ...profile,
+      project_count: projectCount || 0,
+    });
+  }
+
+  // Return profile without expensive stats for fast auth
+  return apiSuccess(profile);
 }
 
 async function ensureProfileRecord(supabase: SupabaseServer, user: any) {

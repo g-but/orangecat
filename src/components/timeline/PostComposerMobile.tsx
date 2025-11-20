@@ -97,7 +97,9 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
                   src={(profile as any)?.avatar_url || user?.user_metadata?.avatar_url}
                   alt={user.user_metadata.name || 'User avatar'}
                   className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                  onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  onError={e => {
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  }}
                 />
               ) : (
                 <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">

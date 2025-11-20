@@ -66,7 +66,7 @@ export default function UserProfileDropdown({
     {
       label: 'Edit Profile',
       icon: Settings,
-      href: '/profiles/me',
+      href: profile?.username ? `/profiles/${profile.username}?tab=info` : '/profiles/me?tab=info',
       description: 'Update your information',
     },
   ];
