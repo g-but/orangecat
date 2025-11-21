@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Profile, ProfileFormData } from '@/types/database';
+import { Profile as DatabaseProfile, ProfileFormData } from '@/types/database';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import {
   User,
@@ -21,7 +21,7 @@ import Button from '@/components/ui/Button';
 import ModernProfileEditor from './ModernProfileEditor';
 
 interface ProfileInfoTabProps {
-  profile: Profile;
+  profile: DatabaseProfile & { email?: string | null };
   isOwnProfile?: boolean;
   userId?: string;
   userEmail?: string;
@@ -76,7 +76,7 @@ export default function ProfileInfoTab({
     return (
       <div className="space-y-6">
         <ModernProfileEditor
-          profile={profile}
+          profile={profile as any}
           userId={userId}
           userEmail={userEmail}
           onSave={handleSave}
@@ -108,6 +108,14 @@ export default function ProfileInfoTab({
           </h3>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Bio - Show prominently first */}
+          {profile.bio && (
+            <div className="pb-4 border-b border-gray-200">
+              <div className="text-sm text-gray-500 mb-2">About</div>
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{profile.bio}</p>
+            </div>
+          )}
+
           {/* Username */}
           <div className="flex items-start gap-3">
             <User className="w-5 h-5 text-gray-400 mt-0.5" />
@@ -195,21 +203,6 @@ export default function ProfileInfoTab({
           )}
         </CardContent>
       </Card>
-
-      {/* Bio Card (if not shown elsewhere) */}
-      {profile.bio && (
-        <Card>
-          <CardHeader>
-            <h3 className="text-lg font-semibold flex items-center gap-2">
-              <User className="w-5 h-5 text-gray-500" />
-              Bio
-            </h3>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-700 whitespace-pre-wrap leading-relaxed">{profile.bio}</p>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Verification Status */}
       <Card>

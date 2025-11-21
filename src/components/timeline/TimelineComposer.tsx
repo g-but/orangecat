@@ -1,48 +1,159 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Globe, Lock } from 'lucide-react';
+import { Globe, Lock, FolderPlus, X, Bold, Italic } from 'lucide-react';
 import { usePostComposer } from '@/hooks/usePostComposerNew';
+import AvatarLink from '@/components/ui/AvatarLink';
+import { cn } from '@/lib/utils';
+import { markdownToHtml, htmlToMarkdown, getSelectionRange, setSelectionRange } from '@/utils/markdownEditor';
 
 /**
- * TimelineComposer Component - Modular Post Creation
+ * TimelineComposer Component - X-Inspired Minimal Design
  *
- * Reusable composer for creating timeline posts.
- * Supports posting to:
- * - Own timeline (journey)
- * - Other profiles
- * - Projects
- * - Optional cross-posting to additional project timelines
+ * Clean, minimal composer inspired by X (Twitter) design principles.
+ * Features:
+ * - Minimal visual weight (no heavy cards/gradients)
+ * - Progressive disclosure (collapsible project selection)
+ * - Basic text formatting (bold/italic via markdown)
+ * - Modular, maintainable, DRY code
  */
 
 export interface TimelineComposerProps {
-  // Target timeline (where the post will appear)
-  targetOwnerId?: string; // Profile ID or Project ID
+  targetOwnerId?: string;
   targetOwnerType?: 'profile' | 'project';
-  targetOwnerName?: string; // Display name for context
-
-  // Feature flags
-  allowProjectSelection?: boolean; // Allow selecting additional projects to cross-post
-
-  // Callbacks
+  targetOwnerName?: string;
+  allowProjectSelection?: boolean;
   onPostCreated?: (event?: any) => void;
-  onOptimisticUpdate?: (event: any) => void; // For immediate UI feedback
+  onOptimisticUpdate?: (event: any) => void;
   onCancel?: () => void;
-
-  // UI customization
   placeholder?: string;
   buttonText?: string;
-  showBanner?: boolean; // Show banner when posting to someone else's timeline
+  showBanner?: boolean;
 }
 
 /**
- * TimelineComposer - Universal Post Creation Component
- *
- * Optimized with React.memo for performance and proper accessibility.
+ * Text Formatting Toolbar Component
+ * 
+ * Modular component for applying markdown-style formatting (bold/italic)
+ * Uses markdown syntax: **bold** and *italic*
  */
+function TextFormatToolbar({
+  textareaRef,
+  onFormat,
+  content,
+}: {
+  textareaRef: React.RefObject<HTMLElement>;
+  onFormat: (format: 'bold' | 'italic') => void;
+  content: string;
+}) {
+  if (!content) return null;
+
+  return (
+    <div className="flex items-center gap-1 sm:gap-0.5 mt-2">
+      <button
+        type="button"
+        onClick={() => onFormat('bold')}
+        className="p-3 sm:p-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 hover:bg-orange-50 active:bg-orange-100 rounded-full text-gray-400 hover:text-orange-500 transition-colors touch-manipulation"
+        title="Bold (Ctrl+B)"
+        aria-label="Make text bold"
+      >
+        <Bold className="w-4 h-4 sm:w-4 sm:h-4" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onFormat('italic')}
+        className="p-3 sm:p-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 hover:bg-orange-50 active:bg-orange-100 rounded-full text-gray-400 hover:text-orange-500 transition-colors touch-manipulation"
+        title="Italic (Ctrl+I)"
+        aria-label="Make text italic"
+      >
+        <Italic className="w-4 h-4 sm:w-4 sm:h-4" />
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Project Selection Panel Component
+ * 
+ * Collapsible panel for selecting projects to cross-post
+ * Uses progressive disclosure - hidden by default
+ */
+function ProjectSelectionPanel({
+  projects,
+  selectedProjects,
+  onToggle,
+  onClose,
+  isPosting,
+}: {
+  projects: Array<{ id: string; title: string }>;
+  selectedProjects: string[];
+  onToggle: (id: string) => void;
+  onClose: () => void;
+  isPosting: boolean;
+}) {
+  if (projects.length === 0) return null;
+
+  return (
+    <div className="mt-3 p-3 bg-orange-50/50 rounded-xl border border-orange-100">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-semibold text-orange-800 uppercase tracking-wide">
+          Cross-post to Projects
+        </span>
+        <button
+          onClick={onClose}
+          className="text-orange-400 hover:text-orange-600 active:text-orange-700 transition-colors p-2 sm:p-1 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full touch-manipulation"
+          aria-label="Close project selection"
+        >
+          <X className="w-4 h-4 sm:w-3 sm:h-3" />
+        </button>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {projects.map(project => (
+          <button
+            key={project.id}
+            type="button"
+            onClick={() => onToggle(project.id)}
+            disabled={isPosting}
+            className={cn(
+              'px-3 py-1 text-xs font-medium rounded-full border transition-all',
+              selectedProjects.includes(project.id)
+                ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:bg-orange-50'
+            )}
+          >
+            {project.title}
+          </button>
+        ))}
+      </div>
+      {selectedProjects.length > 0 && (
+        <p className="mt-2 text-xs text-gray-600">
+          This post will appear on {selectedProjects.length} project timeline
+          {selectedProjects.length > 1 ? 's' : ''}
+        </p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Context Indicator Component
+ * 
+ * Subtle indicator showing where the post will appear
+ * Replaces the large banner with minimal design
+ */
+function ContextIndicator({ targetName }: { targetName: string }) {
+  return (
+    <div className="mb-1.5 flex items-center">
+      <span className="text-xs sm:text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 sm:py-0.5 rounded-full">
+        To {targetName}
+      </span>
+    </div>
+  );
+}
+
+
 const TimelineComposer = React.memo(function TimelineComposer({
   targetOwnerId,
   targetOwnerType = 'profile',
@@ -52,22 +163,27 @@ const TimelineComposer = React.memo(function TimelineComposer({
   onOptimisticUpdate,
   onCancel,
   placeholder,
-  buttonText = 'Share',
+  buttonText = 'Post',
   showBanner = true,
 }: TimelineComposerProps) {
   const { user, profile } = useAuth();
+  const [showProjects, setShowProjects] = useState(false);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [isComposing, setIsComposing] = useState(false);
 
   // Use the post composer hook
   const postComposer = usePostComposer({
     subjectType: targetOwnerType,
     subjectId: targetOwnerId,
     allowProjectSelection,
-    onSuccess: onPostCreated,
+    onSuccess: () => {
+      onPostCreated?.();
+      setShowProjects(false);
+    },
     onOptimisticUpdate,
-    targetOwnerName,
   });
 
-  // Memoized computations to prevent unnecessary recalculations
+  // Determine if posting to own timeline
   const postingToOwnTimeline = useMemo(
     () => !targetOwnerId || targetOwnerId === user?.id,
     [targetOwnerId, user?.id]
@@ -78,126 +194,202 @@ const TimelineComposer = React.memo(function TimelineComposer({
     [targetOwnerName, postingToOwnTimeline]
   );
 
-  const defaultPlaceholder = useMemo(() => {
-    if (!postingToOwnTimeline) {
-      return `Write on ${targetName}'s timeline...`;
+  // Default placeholder
+  const defaultPlaceholder = postingToOwnTimeline
+    ? "What's happening?"
+    : `Write on ${targetName}...`;
+
+  // Sync markdown content to HTML in editor (only when not actively composing)
+  useEffect(() => {
+    if (!editorRef.current || isComposing) return;
+    
+    const currentHtml = editorRef.current.innerHTML.replace(/\s+/g, ' ').trim();
+    const expectedHtml = markdownToHtml(postComposer.content).replace(/\s+/g, ' ').trim();
+    
+    // Only update if significantly different (avoid cursor jumping on every keystroke)
+    if (currentHtml !== expectedHtml && expectedHtml !== '<br>') {
+      const selection = getSelectionRange(editorRef.current);
+      const wasFocused = document.activeElement === editorRef.current;
+      
+      editorRef.current.innerHTML = expectedHtml || '<br>';
+      
+      // Restore cursor position and focus
+      if (selection && wasFocused) {
+        requestAnimationFrame(() => {
+          if (editorRef.current) {
+            try {
+              setSelectionRange(editorRef.current, selection.start, selection.end);
+              editorRef.current.focus();
+            } catch (e) {
+              // Fallback: just focus
+              editorRef.current.focus();
+            }
+          }
+        });
+      }
     }
-    // Context-aware, helpful placeholder
-    return 'Share an update about your project...';
-  }, [postingToOwnTimeline, targetName]);
+  }, [postComposer.content, isComposing]);
 
-  // Memoized character count color
-  const characterCountColor = useMemo(() => {
-    if (postComposer.content.length > 450) {
-      return 'text-red-500';
-    }
-    if (postComposer.content.length > 400) {
-      return 'text-orange-500';
-    }
-    return 'text-gray-500';
-  }, [postComposer.content.length]);
+  // Formatting handler - uses document.execCommand for contentEditable
+  const handleFormat = useCallback((format: 'bold' | 'italic') => {
+    if (!editorRef.current) return;
 
-  // Memoized button disabled state
-  const isButtonDisabled = useMemo(
-    () =>
-      !postComposer.content.trim() || postComposer.isPosting || postComposer.content.length > 500,
-    [postComposer.content, postComposer.isPosting]
-  );
+    // Focus editor if not already focused
+    editorRef.current.focus();
 
-  // Project loading is now handled by the usePostComposer hook
+    // Use document.execCommand for formatting (works with contentEditable)
+    // Note: execCommand is deprecated but still widely supported
+    const command = format === 'bold' ? 'bold' : 'italic';
+    document.execCommand(command, false);
+    
+    // Sync back to markdown after a brief delay to let browser update
+    setTimeout(() => {
+      if (editorRef.current) {
+        const html = editorRef.current.innerHTML;
+        const markdown = htmlToMarkdown(html);
+        postComposer.setContent(markdown);
+      }
+    }, 0);
+  }, [postComposer]);
 
-  // Handle keyboard shortcuts
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  // Handle input in contentEditable
+  const handleInput = useCallback(() => {
+    if (!editorRef.current) return;
+    
+    setIsComposing(true);
+    
+    // Debounce the markdown conversion slightly to avoid cursor jumping
+    setTimeout(() => {
+      if (editorRef.current) {
+        const html = editorRef.current.innerHTML;
+        const markdown = htmlToMarkdown(html);
+        
+        // Only update if different to avoid unnecessary re-renders
+        if (markdown !== postComposer.content) {
+          postComposer.setContent(markdown);
+        }
+        
+        // Auto-resize
+        editorRef.current.style.height = 'auto';
+        editorRef.current.style.height = `${Math.min(editorRef.current.scrollHeight, 200)}px`;
+      }
+      setIsComposing(false);
+    }, 10);
+  }, [postComposer]);
+
+  // Handle keyboard shortcuts (desktop only - mobile keyboards don't have Ctrl/Cmd)
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    // Ctrl/Cmd + Enter to post (desktop only)
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      postComposer.handlePost();
+      e.preventDefault();
+      if (!postComposer.isPosting && postComposer.content.trim()) {
+        postComposer.handlePost();
+      }
     }
+    // Escape to cancel
     if (e.key === 'Escape' && onCancel) {
       onCancel();
     }
-  };
+    // Ctrl/Cmd + B for bold (desktop only)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+      e.preventDefault();
+      handleFormat('bold');
+    }
+    // Ctrl/Cmd + I for italic (desktop only)
+    if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+      e.preventDefault();
+      handleFormat('italic');
+    }
+  }, [postComposer, onCancel, handleFormat]);
+
+  // Project selection handlers
+  const handleToggleProject = useCallback((id: string) => {
+    postComposer.toggleProjectSelection(id);
+  }, [postComposer]);
+
+  const handleCloseProjects = useCallback(() => {
+    setShowProjects(false);
+  }, []);
+
+  const handleOpenProjects = useCallback(() => {
+    setShowProjects(true);
+  }, []);
+
+  // Character count color
+  const characterCountColor = useMemo(() => {
+    if (postComposer.content.length > 450) return 'text-red-500';
+    if (postComposer.content.length > 400) return 'text-orange-500';
+    return 'text-gray-400';
+  }, [postComposer.content.length]);
+
+  // Button disabled state
+  const isButtonDisabled = useMemo(
+    () =>
+      !postComposer.content.trim() ||
+      postComposer.isPosting ||
+      postComposer.content.length > 500,
+    [postComposer.content, postComposer.isPosting]
+  );
 
   return (
-    <Card className="border-l-4 border-l-orange-500 bg-gradient-to-r from-orange-50/30 via-white to-yellow-50/20 shadow-sm hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        {/* Timeline Context Banner */}
-        {showBanner && !postingToOwnTimeline && (
-          <div className="mb-3 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2 text-sm">
-            <span className="text-blue-700 font-medium">✍️ Posting on {targetName}</span>
-            <span className="text-blue-500 text-xs">(Your post will appear on their timeline)</span>
+    <div className="border-b border-gray-200 bg-white px-3 sm:px-4 py-3 transition-all safe-area-padding-x">
+      <div className="flex gap-2 sm:gap-3">
+        {/* User Avatar - Using AvatarLink component */}
+        <div className="pt-0.5 sm:pt-1 flex-shrink-0">
+          <AvatarLink
+            username={profile?.username || null}
+            userId={user?.id || null}
+            avatarUrl={profile?.avatar_url || user?.user_metadata?.avatar_url || null}
+            name={profile?.name || user?.user_metadata?.name || user?.email || 'User'}
+            size={44}
+            className="flex-shrink-0"
+            isCurrentUser={true}
+          />
           </div>
-        )}
 
-        <div className="flex gap-3">
-          {/* User Avatar */}
-          <div className="flex-shrink-0">
-            {profile?.avatar_url || user?.user_metadata?.avatar_url ? (
-              <img
-                src={(profile as any)?.avatar_url || user?.user_metadata?.avatar_url}
-                alt={user.user_metadata.name || 'User'}
-                className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
-                onError={e => {
-                  (e.currentTarget as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-yellow-600 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                <span className="text-white font-semibold text-base">
-                  {(user?.user_metadata?.name || user?.email || 'U')[0].toUpperCase()}
-                </span>
-              </div>
+        {/* Content Area */}
+        <div className="flex-1 min-w-0">
+          {/* Subtle Context Indicator (Replacement for Banner) */}
+          {!postingToOwnTimeline && showBanner && (
+            <ContextIndicator targetName={targetName} />
             )}
-          </div>
 
-          {/* Post Input */}
-          <div className="flex-1 min-w-0">
-            <textarea
-              id="timeline-composer-input"
-              aria-label="Write your post"
-              aria-describedby="composer-hint composer-char-count"
-              value={postComposer.content}
-              onChange={e => {
-                postComposer.setContent(e.target.value);
-                // Clear error when user starts typing
-              }}
+          {/* ContentEditable Input - Shows formatted text inline (like X) */}
+          <div
+            ref={editorRef}
+            contentEditable
+            onInput={handleInput}
               onKeyDown={handleKeyDown}
-              placeholder={placeholder || defaultPlaceholder}
-              className={`w-full resize-none text-lg placeholder-gray-400 bg-white/50 border border-gray-200 rounded-lg px-4 py-3 hover:border-orange-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all ${postComposer.isPosting ? 'opacity-50 cursor-wait' : ''}`}
-              rows={3}
-              maxLength={500}
-              disabled={postComposer.isPosting}
-              data-posting={postComposer.isPosting}
+            data-placeholder={placeholder || defaultPlaceholder}
+            className={cn(
+              'w-full min-h-[3rem] sm:min-h-[3rem] text-base sm:text-lg',
+              'border-none bg-transparent p-0 focus:outline-none',
+              'leading-relaxed break-words',
+              'empty:before:content-[attr(data-placeholder)]',
+              'empty:before:text-gray-400',
+              'empty:before:pointer-events-none',
+              postComposer.isPosting && 'opacity-50 cursor-not-allowed'
+            )}
+            style={{ fontSize: '16px' }} // Prevent iOS zoom on focus
+            suppressContentEditableWarning
             />
 
-            {/* Project Selection */}
-            {allowProjectSelection && postComposer.userProjects.length > 0 && (
-              <div className="mt-3 p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Also post to projects (optional):
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {postComposer.userProjects.map(project => (
-                    <button
-                      key={project.id}
-                      type="button"
-                      onClick={() => postComposer.toggleProjectSelection(project.id)}
-                      className={`px-3 py-1 text-sm rounded-full border transition-colors ${
-                        postComposer.selectedProjects.includes(project.id)
-                          ? 'bg-orange-500 text-white border-orange-500'
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-orange-300'
-                      }`}
-                      disabled={postComposer.isPosting}
-                    >
-                      {project.title}
-                    </button>
-                  ))}
-                </div>
-                {postComposer.selectedProjects.length > 0 && (
-                  <p className="mt-2 text-xs text-gray-600">
-                    This post will appear on {postComposer.selectedProjects.length} project timeline
-                    {postComposer.selectedProjects.length > 1 ? 's' : ''}
-                  </p>
-                )}
-              </div>
+          {/* Text Formatting Toolbar */}
+          <TextFormatToolbar
+            textareaRef={editorRef as any}
+            onFormat={handleFormat}
+            content={postComposer.content}
+          />
+
+          {/* Project Selection Panel (Collapsible) */}
+          {showProjects && allowProjectSelection && (
+            <ProjectSelectionPanel
+              projects={postComposer.userProjects}
+              selectedProjects={postComposer.selectedProjects}
+              onToggle={handleToggleProject}
+              onClose={handleCloseProjects}
+              isPosting={postComposer.isPosting}
+            />
             )}
 
             {/* Error/Success Messages */}
@@ -212,10 +404,10 @@ const TimelineComposer = React.memo(function TimelineComposer({
               </div>
             )}
 
-            {/* Post Actions */}
-            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-200">
-              <div className="flex items-center gap-3 flex-wrap">
-                {/* Visibility Toggle */}
+          {/* Bottom Toolbar - Mobile optimized */}
+          <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
+            <div className="flex items-center gap-1 sm:gap-1 text-orange-500">
+              {/* Visibility Toggle (Icon only) - 44px touch target */}
                 <button
                   type="button"
                   onClick={() =>
@@ -224,79 +416,62 @@ const TimelineComposer = React.memo(function TimelineComposer({
                     )
                   }
                   disabled={postComposer.isPosting}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-sm font-medium transition-colors border disabled:opacity-50 disabled:cursor-not-allowed ${
+                className="p-3 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 hover:bg-orange-50 active:bg-orange-100 rounded-full transition-colors text-gray-400 hover:text-orange-500 disabled:opacity-50 touch-manipulation"
+                title={
                     postComposer.visibility === 'public'
-                      ? 'bg-yellow-50 border-yellow-300 text-yellow-800 hover:bg-yellow-100'
-                      : 'bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  aria-label={`Post visibility: ${postComposer.visibility === 'public' ? 'Public - everyone can see this post' : 'Private - only you can see this post'}`}
-                  aria-pressed={postComposer.visibility === 'public'}
+                    ? 'Public - Everyone can see'
+                    : 'Private - Only you can see'
+                }
+                aria-label={`Post visibility: ${postComposer.visibility}`}
                 >
                   {postComposer.visibility === 'public' ? (
-                    <>
-                      <Globe className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>Public</span>
-                    </>
+                  <Globe className="w-4 h-4 sm:w-4 sm:h-4" />
                   ) : (
-                    <>
-                      <Lock className="w-3.5 h-3.5" aria-hidden="true" />
-                      <span>Private</span>
-                    </>
+                  <Lock className="w-4 h-4 sm:w-4 sm:h-4" />
                   )}
                 </button>
 
-                {/* Character Count */}
-                <div
-                  id="composer-char-count"
-                  className={`text-sm font-medium ${characterCountColor}`}
-                  aria-live="polite"
+              {/* Project Toggle (Icon only) - 44px touch target */}
+              {allowProjectSelection && postComposer.userProjects.length > 0 && (
+                <button
+                  type="button"
+                  onClick={showProjects ? handleCloseProjects : handleOpenProjects}
+                  className={cn(
+                    'p-3 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full transition-colors touch-manipulation',
+                    showProjects || postComposer.selectedProjects.length > 0
+                      ? 'text-orange-600 bg-orange-100 active:bg-orange-200'
+                      : 'text-gray-400 hover:bg-orange-50 active:bg-orange-100 hover:text-orange-500'
+                  )}
+                  title="Cross-post to Projects"
+                  aria-label="Toggle project selection"
                 >
+                  <FolderPlus className="w-4 h-4 sm:w-4 sm:h-4" />
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              {/* Subtle Character Count - Larger on mobile */}
+              {postComposer.content.length > 0 && (
+                <div className={cn('text-sm sm:text-xs font-medium', characterCountColor)}>
                   {postComposer.content.length}/500
                 </div>
+              )}
 
-                {/* Keyboard Hint */}
-                <div
-                  id="composer-hint"
-                  className="text-xs text-gray-400 hidden sm:block"
-                  aria-hidden="true"
-                >
-                  Ctrl+Enter to post
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                {onCancel && (
-                  <Button
-                    variant="outline"
-                    onClick={onCancel}
-                    disabled={postComposer.isPosting}
-                    size="sm"
-                  >
-                    Cancel
-                  </Button>
-                )}
+              {/* Post Button - Already has 44px min-height from Button component */}
                 <Button
                   onClick={postComposer.handlePost}
                   disabled={isButtonDisabled}
-                  className="bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 disabled:from-gray-300 disabled:to-gray-300 text-white px-6 py-2 rounded-full font-semibold transition-all shadow-sm hover:shadow-md disabled:shadow-none"
+                className="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-full px-5 sm:px-5 py-2 sm:py-1.5 text-sm font-bold shadow-sm disabled:opacity-50 disabled:shadow-none transition-all touch-manipulation"
                   size="sm"
-                  aria-label={postComposer.isPosting ? 'Posting...' : `Post ${buttonText}`}
-                >
-                  {postComposer.isPosting ? (
-                    <span className="flex items-center gap-2">
-                      <span className="animate-spin">⏳</span>
-                      Posting...
-                    </span>
-                  ) : (
-                    buttonText
-                  )}
+              >
+                {postComposer.isPosting ? 'Posting...' : buttonText}
                 </Button>
-              </div>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 });
 

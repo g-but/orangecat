@@ -31,18 +31,23 @@ interface SidebarNavItemProps {
  */
 export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: SidebarNavItemProps) {
   const linkClasses = [
-    'group flex items-center px-3 py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative',
+    'group flex items-center py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative',
     SIDEBAR_SPACING.ITEM_HEIGHT,
+    // Consistent horizontal padding: match bottom items alignment
+    // When collapsed: no padding, centered
+    // When expanded: px-3 for left alignment
+    isExpanded ? 'px-3' : 'px-0 lg:justify-center',
     isActive
       ? `${SIDEBAR_COLORS.ACTIVE_BACKGROUND} ${SIDEBAR_COLORS.ACTIVE_TEXT} shadow-sm border ${SIDEBAR_COLORS.ACTIVE_BORDER}`
       : item.comingSoon
         ? 'text-gray-400 cursor-not-allowed'
         : `${SIDEBAR_COLORS.TEXT_PRIMARY} ${SIDEBAR_COLORS.HOVER_BACKGROUND} hover:text-gray-900`,
-    isExpanded ? '' : 'lg:justify-center',
   ].join(' ');
 
   const iconClasses = [
     'h-5 w-5 shrink-0 transition-colors',
+    // Ensure icon is centered when collapsed
+    isExpanded ? '' : 'lg:mx-auto',
     isActive
       ? 'text-tiffany-600'
       : item.comingSoon
@@ -51,9 +56,9 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
   ].join(' ');
 
   const textClasses = [
-    'transition-all duration-200 whitespace-nowrap',
+    'transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis',
     isExpanded
-      ? 'block opacity-100 ml-3'
+      ? 'block opacity-100 ml-3 flex-1 min-w-0'
       : 'hidden lg:block lg:opacity-0 lg:max-w-0 lg:overflow-hidden',
   ].join(' ');
 
@@ -78,8 +83,8 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
       {/* Active indicator */}
       {isActive && (
         <div
-          className={`absolute right-3 w-2 h-2 bg-tiffany-500 rounded-full ${
-            isExpanded ? 'block' : 'hidden lg:block lg:opacity-0'
+          className={`absolute w-2 h-2 bg-tiffany-500 rounded-full ${
+            isExpanded ? 'right-3 block' : 'hidden lg:block lg:opacity-0'
           }`}
         />
       )}

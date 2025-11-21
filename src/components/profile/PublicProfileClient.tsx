@@ -215,11 +215,11 @@ export default function PublicProfileClient({
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:py-8">
         {/* Header Banner Section */}
-        <div className="relative mb-8">
+        <div className="relative mb-4 sm:mb-6 lg:mb-8">
           {/* Banner */}
-          <div className="relative h-80 bg-gradient-to-r from-orange-400 via-orange-500 to-teal-500 rounded-2xl shadow-xl overflow-hidden">
+          <div className="relative h-32 sm:h-48 md:h-64 lg:h-80 bg-gradient-to-r from-orange-400 via-orange-500 to-teal-500 rounded-xl sm:rounded-2xl shadow-xl overflow-hidden">
             {profile.banner_url && (
               <Image src={profile.banner_url} alt="Profile banner" fill className="object-cover" />
             )}
@@ -228,34 +228,50 @@ export default function PublicProfileClient({
           </div>
 
           {/* Avatar */}
-          <div className="absolute -bottom-16 left-8">
+          <div className="absolute -bottom-8 sm:-bottom-12 md:-bottom-16 left-3 sm:left-6 lg:left-8">
             {profile.avatar_url ? (
               <Image
                 src={profile.avatar_url}
                 alt={profile.name || 'User'}
                 width={128}
                 height={128}
-                className="rounded-2xl object-cover border-4 border-white shadow-2xl"
+                className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-xl sm:rounded-2xl object-cover border-2 sm:border-4 border-white shadow-2xl"
               />
             ) : (
-              <DefaultAvatar size={128} className="rounded-2xl border-4 border-white shadow-2xl" />
+              <DefaultAvatar 
+                size={128} 
+                className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white shadow-2xl" 
+              />
             )}
           </div>
 
           {/* Action Buttons */}
-          <div className="absolute top-6 right-6 flex gap-3">
+          <div className="absolute top-2 right-2 sm:top-4 sm:right-4 lg:top-6 lg:right-6 flex gap-2 sm:gap-3">
             {/* Share Button */}
             <div className="relative" ref={shareButtonRef}>
               <Button
                 onClick={() => setShowShare(!showShare)}
                 variant="outline"
-                className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg"
+                size="sm"
+                className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg text-xs sm:text-sm"
               >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
+                <Share2 className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Share</span>
               </Button>
               {showShare && (
-                <div ref={shareDropdownRef} className="absolute top-full right-0 mt-2 z-50">
+                <div 
+                  ref={shareDropdownRef} 
+                  className="absolute top-full right-0 mt-2 z-[9999] sm:z-50"
+                  style={{
+                    // Ensure dropdown appears above banner on mobile
+                    position: typeof window !== 'undefined' && window.innerWidth < 640 ? 'fixed' : 'absolute',
+                    top: typeof window !== 'undefined' && window.innerWidth < 640 ? 'auto' : undefined,
+                    bottom: typeof window !== 'undefined' && window.innerWidth < 640 ? '20px' : undefined,
+                    left: typeof window !== 'undefined' && window.innerWidth < 640 ? '50%' : undefined,
+                    transform: typeof window !== 'undefined' && window.innerWidth < 640 ? 'translateX(-50%)' : undefined,
+                    right: typeof window !== 'undefined' && window.innerWidth < 640 ? 'auto' : undefined,
+                  }}
+                >
                   <ProfileShare
                     username={profile.username || ''}
                     profileName={profile.name || profile.username || 'User'}
@@ -270,28 +286,34 @@ export default function PublicProfileClient({
               <Button
                 onClick={handleFollowToggle}
                 disabled={isFollowLoading}
+                size="sm"
                 className={cn(
-                  'shadow-lg',
+                  'shadow-lg text-xs sm:text-sm',
                   isFollowing
                     ? 'bg-gray-600 hover:bg-gray-700 text-white'
                     : 'bg-orange-600 hover:bg-orange-700 text-white'
                 )}
               >
-                <Users className="w-4 h-4 mr-2" />
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                <span className="hidden sm:inline">
                 {isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
+                </span>
+                <span className="sm:hidden">
+                  {isFollowLoading ? '...' : isFollowing ? '−' : '+'}
+                </span>
               </Button>
             )}
           </div>
         </div>
 
-        {/* Main Content - Two Column Layout */}
-        <div className="mt-20">
+        {/* Main Content - Single Column */}
+        <div className="mt-12 sm:mt-16 md:mt-20">
           {/* Profile Name & Bio */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6 mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-xl border-0 p-4 sm:p-6 mb-4 sm:mb-6">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
               {profile.name || profile.username || 'User'}
             </h1>
-            <p className="text-lg text-orange-600 font-medium mb-4">@{profile.username}</p>
+            <p className="text-sm sm:text-base md:text-lg text-orange-600 font-medium mb-3 sm:mb-4">@{profile.username}</p>
             {profile.website && (
               <a
                 href={profile.website}
@@ -306,35 +328,37 @@ export default function PublicProfileClient({
             )}
           </div>
 
-          {/* Tabbed Content with Progressive Loading */}
-          <ProfileViewTabs tabs={tabs} defaultTab="overview" />
+          {/* Tabbed Content - View Only */}
+          <ProfileViewTabs tabs={tabs} defaultTab="timeline" />
         </div>
 
         {/* Support CTA for non-own profiles with wallets */}
         {!isOwnProfile && (profile.bitcoin_address || profile.lightning_address) && (
-          <div className="mt-8">
+          <div className="mt-4 sm:mt-6 lg:mt-8">
             <Card className="bg-gradient-to-r from-orange-50 to-teal-50 border-2 border-orange-200">
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
+                  <div className="text-center md:text-left">
+                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">
                       Support {profile.name || profile.username}
                     </h3>
-                    <p className="text-gray-600">
+                    <p className="text-sm sm:text-base text-gray-600">
                       Send Bitcoin directly to support their work and projects
                     </p>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2 sm:gap-3 w-full md:w-auto">
                     {profile.bitcoin_address && (
                       <Button
                         onClick={() => {
                           const element = document.querySelector('[data-bitcoin-card]');
                           element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }}
-                        className="bg-orange-600 hover:bg-orange-700 text-white"
+                        size="sm"
+                        className="flex-1 md:flex-none bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm"
                       >
-                        <Bitcoin className="w-4 h-4 mr-2" />
-                        Send Bitcoin
+                        <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Send Bitcoin</span>
+                        <span className="sm:hidden">Bitcoin</span>
                       </Button>
                     )}
                     {profile.lightning_address && (
@@ -344,10 +368,12 @@ export default function PublicProfileClient({
                           element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }}
                         variant="outline"
-                        className="border-yellow-400 hover:bg-yellow-50"
+                        size="sm"
+                        className="flex-1 md:flex-none border-yellow-400 hover:bg-yellow-50 text-xs sm:text-sm"
                       >
-                        <Zap className="w-4 h-4 mr-2" />
-                        Send Lightning
+                        <Zap className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                        <span className="hidden sm:inline">Send Lightning</span>
+                        <span className="sm:hidden">Lightning</span>
                       </Button>
                     )}
                   </div>

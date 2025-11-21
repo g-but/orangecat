@@ -15,6 +15,7 @@ import { Menu, Bell, Search } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
+import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { HeaderNavigation } from './HeaderNavigation';
 import { getNavigationItems } from '@/config/navigationConfig';
 import Logo from '@/components/layout/Logo';
@@ -46,6 +47,7 @@ export function AuthenticatedHeader({
   const pathname = usePathname();
   const { user } = useAuth();
   const navigation = getNavigationItems(user);
+  const { isScrolled, isHidden } = useHeaderScroll();
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -54,32 +56,47 @@ export function AuthenticatedHeader({
     return pathname === href || pathname.startsWith(`${href}/`);
   };
 
+  // Header classes with scroll hiding behavior (consistent with UnifiedHeader)
+  const headerClasses = [
+    `fixed top-0 left-0 right-0 ${SIDEBAR_Z_INDEX.HEADER} transition-all duration-200`,
+    isScrolled
+      ? 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-200/50'
+      : 'bg-white/95 backdrop-blur-lg shadow-sm border-b',
+    SIDEBAR_COLORS.BORDER,
+    isHidden ? '-translate-y-full' : 'translate-y-0',
+  ].join(' ');
+
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 ${SIDEBAR_Z_INDEX.HEADER} bg-white/95 backdrop-blur-lg shadow-sm border-b ${SIDEBAR_COLORS.BORDER}`}
+        className={headerClasses}
+        style={{
+          paddingTop: 'env(safe-area-inset-top, 0px)',
+        }}
       >
-        <div className="flex items-center justify-between h-16 px-4">
+        <div className="flex items-center justify-between h-16 px-2 sm:px-3 md:px-4 lg:px-6">
           {/* Left: Logo + Mobile Menu Toggle */}
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 lg:space-x-4 min-w-0 flex-shrink-0">
             <button
               onClick={onToggleSidebar}
-              className="lg:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+              className="lg:hidden p-1.5 sm:p-2 flex-shrink-0 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
               aria-label="Toggle sidebar"
             >
               <Menu className="w-5 h-5" />
             </button>
 
-            {/* Logo - always visible */}
+            {/* Logo - always visible, shrink on mobile */}
+            <div className="flex-shrink-0">
             <Logo />
+            </div>
 
-            {/* Mobile Navigation Links - Compact */}
-            <div className="lg:hidden flex items-center space-x-1 ml-2">
+            {/* Mobile Navigation Links - Hidden on very small screens, shown on sm+ */}
+            <div className="hidden sm:flex lg:hidden items-center space-x-0.5 sm:space-x-1 ml-1 sm:ml-2 overflow-x-auto scrollbar-hide">
               {navigation.map(item => (
                 <Link
                   key={item.name}
                   href={item.href || '#'}
-                  className={`px-2 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-colors ${
+                  className={`px-1.5 sm:px-2 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap flex-shrink-0 ${
                     isActive(item.href || '')
                       ? 'text-orange-600 bg-orange-50'
                       : 'text-gray-600 hover:text-orange-600 hover:bg-gray-50'
@@ -92,38 +109,44 @@ export function AuthenticatedHeader({
           </div>
 
           {/* Center: Desktop Navigation + Search */}
-          <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-6 space-x-4">
+          <div className="hidden lg:flex items-center flex-1 max-w-2xl mx-4 xl:mx-6 space-x-3 xl:space-x-4 min-w-0">
             {/* Desktop Navigation Links */}
+            <div className="flex-shrink-0">
             <HeaderNavigation items={navigation} isActive={isActive} />
+            </div>
 
             {/* Desktop Search */}
-            <div className="flex-1 max-w-md">
+            <div className="flex-1 max-w-md min-w-0">
               <EnhancedSearchBar placeholder="Search projects, people..." className="w-full" />
             </div>
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center space-x-3">
-            {/* Mobile Search Button */}
+          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 flex-shrink-0">
+            {/* Mobile Search Button - Show on mobile and tablet, hide on desktop */}
             <button
               onClick={onShowMobileSearch}
-              className="md:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+              className="lg:hidden p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors flex-shrink-0"
               aria-label="Search"
             >
               <Search className="w-5 h-5" />
             </button>
 
-            {/* Create Button */}
+            {/* Create Button - Responsive sizing */}
+            <div className="hidden sm:block flex-shrink-0">
             <HeaderCreateButton />
+            </div>
 
-            {/* Notifications */}
-            <button className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors">
+            {/* Notifications - Responsive padding */}
+            <button className="relative p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors flex-shrink-0">
               <Bell className="w-5 h-5" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
+              <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></span>
             </button>
 
-            {/* User Profile Dropdown */}
+            {/* User Profile Dropdown - Responsive */}
+            <div className="flex-shrink-0">
             <UserProfileDropdown />
+            </div>
           </div>
         </div>
       </header>

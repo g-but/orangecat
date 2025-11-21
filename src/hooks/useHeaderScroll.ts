@@ -6,8 +6,8 @@
  * - Hide/show on scroll down/up
  *
  * Created: 2025-01-07
- * Last Modified: 2025-01-07
- * Last Modified Summary: Created shared hook for header scroll logic
+ * Last Modified: 2025-01-27
+ * Last Modified Summary: Extended to support bottom nav transparency
  */
 
 import { useState, useEffect, useRef } from 'react';
@@ -48,9 +48,79 @@ export function useHeaderScroll(options: UseHeaderScrollOptions = {}): UseHeader
       lastScrollRef.current = current;
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [hideOnScrollDown, scrollThreshold]);
 
   return { isScrolled, isHidden };
+}
+
+/**
+ * Hook for bottom navigation scroll transparency
+ * Reuses scroll detection pattern from useHeaderScroll
+ */
+interface UseBottomNavScrollOptions {
+  transparencyThreshold?: number;
+  scrollDelay?: number;
+}
+
+interface UseBottomNavScrollReturn {
+  shouldBeTransparent: boolean;
+  shouldBeSmall: boolean;
+}
+
+export function useBottomNavScroll(options: UseBottomNavScrollOptions = {}): UseBottomNavScrollReturn {
+  const { transparencyThreshold = 10, scrollDelay = 200 } = options;
+  const [shouldBeTransparent, setShouldBeTransparent] = useState(false);
+  const [shouldBeSmall, setShouldBeSmall] = useState(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const lastScrollY = useRef(0);
+  const isScrollingRef = useRef(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const isScrollingDown = currentScrollY > lastScrollY.current;
+      const scrollThreshold = 50; // Start shrinking/transparency after 50px
+      
+      // More transparent and smaller when actively scrolling down
+      if (isScrollingDown && currentScrollY > transparencyThreshold) {
+        isScrollingRef.current = true;
+        setShouldBeTransparent(true);
+        setShouldBeSmall(currentScrollY > scrollThreshold);
+        
+        if (scrollTimeoutRef.current) {
+          clearTimeout(scrollTimeoutRef.current);
+        }
+        
+        scrollTimeoutRef.current = setTimeout(() => {
+          isScrollingRef.current = false;
+          // Keep slightly transparent and small even when stopped (like X)
+          const keepTransparent = currentScrollY > scrollThreshold;
+          setShouldBeTransparent(keepTransparent);
+          setShouldBeSmall(keepTransparent);
+        }, scrollDelay);
+      } else if (!isScrollingDown && currentScrollY < scrollThreshold) {
+        // Less transparent and full size when near top
+        setShouldBeTransparent(false);
+        setShouldBeSmall(false);
+      } else if (currentScrollY > scrollThreshold) {
+        // Maintain state when scrolling up but still scrolled
+        setShouldBeTransparent(true);
+        setShouldBeSmall(true);
+      }
+      
+      lastScrollY.current = currentScrollY;
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, [transparencyThreshold, scrollDelay]);
+
+  return { shouldBeTransparent, shouldBeSmall };
 }

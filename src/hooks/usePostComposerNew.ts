@@ -209,8 +209,15 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     try {
       const { data, error } = await supabase
         .from('projects')
-        .select('id, title, description, status')
-        .eq('creator_id', user.id)
+        .select(`
+          id, 
+          title, 
+          description, 
+          status, 
+          contributor_count,
+          project_media(id, storage_path, position)
+        `)
+        .eq('user_id', user.id)
         .neq('status', 'draft')
         .order('updated_at', { ascending: false })
         .limit(50);
@@ -218,7 +225,29 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       if (error) {
         throw error;
       }
-      setUserProjects(data || []);
+
+      // Process projects to add thumbnail URLs
+      const projectsWithThumbnails = (data || []).map((project: any) => {
+        let thumbnail_url = null;
+        if (project.project_media && project.project_media.length > 0) {
+          const firstMedia = project.project_media.sort(
+            (a: any, b: any) => a.position - b.position
+          )[0];
+          if (firstMedia?.storage_path) {
+            const { data: urlData } = supabase.storage
+              .from('project-media')
+              .getPublicUrl(firstMedia.storage_path);
+            thumbnail_url = urlData.publicUrl;
+          }
+        }
+        return {
+          ...project,
+          thumbnail_url,
+          project_media: undefined, // Remove nested data
+        };
+      });
+
+      setUserProjects(projectsWithThumbnails);
     } catch (err) {
       logger.warn('Failed to load user projects (non-blocking)', err, 'usePostComposer');
       setUserProjects([]);

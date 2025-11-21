@@ -31,6 +31,7 @@ import {
   SIDEBAR_Z_INDEX,
   SIDEBAR_TRANSITIONS,
   SIDEBAR_COLORS,
+  SIDEBAR_SPACING,
 } from '@/constants/sidebar';
 
 interface SidebarProps {
@@ -84,7 +85,12 @@ export function Sidebar({
 
   return (
     <aside
-      className={`fixed top-16 bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg transition-all ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} border-r ${SIDEBAR_COLORS.BORDER} ${sidebarWidth} ${sidebarTranslate} overflow-y-auto`}
+      className={`fixed bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg transition-all ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} border-r ${SIDEBAR_COLORS.BORDER} ${sidebarWidth} ${sidebarTranslate} overflow-y-auto overflow-x-hidden`}
+      style={{
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        top: 'calc(4rem + env(safe-area-inset-top, 0px))',
+      }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         // Only collapse on unhover if sidebar is not manually opened
@@ -93,7 +99,7 @@ export function Sidebar({
         }
       }}
     >
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-w-0">
         {/* User Profile Section */}
         {user && profile && (
           <SidebarUserProfile
@@ -114,11 +120,11 @@ export function Sidebar({
           onNavigate={handleNavigate}
         />
 
-        {/* Toggle Button */}
-        <div className="border-t border-gray-100 p-2 hidden lg:block">
+        {/* Toggle Button - Desktop only */}
+        <div className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 hidden lg:block mt-auto`}>
           <button
             onClick={toggleSidebar}
-            className="w-full flex items-center justify-center p-3 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-all duration-200"
+            className={`w-full flex items-center justify-center p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-all duration-200 ${isExpanded ? '' : 'lg:px-0'}`}
             aria-label={
               navigationState.isSidebarOpen
                 ? navigationLabels.SIDEBAR_COLLAPSE
@@ -128,6 +134,19 @@ export function Sidebar({
             <Menu className="h-5 w-5" />
           </button>
         </div>
+        
+        {/* Mobile Close Button - Visible when sidebar is open on mobile */}
+        {navigationState.isSidebarOpen && (
+          <div className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 lg:hidden mt-auto`}>
+            <button
+              onClick={toggleSidebar}
+              className="w-full flex items-center justify-center p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-all duration-200"
+              aria-label={navigationLabels.SIDEBAR_COLLAPSE}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );

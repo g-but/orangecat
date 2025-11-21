@@ -1,34 +1,90 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import SocialTimeline from '@/components/timeline/SocialTimeline';
+import PostComposerMobile from '@/components/timeline/PostComposerMobile';
 import { BookOpen, Plus } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useComposer } from '@/contexts/ComposerContext';
 
 /**
  * My Timeline Page - Personal Timeline
  *
  * Uses the unified SocialTimeline component with personal mode.
  * Identical interface to Community page but shows user's own posts.
+ * Supports X-style full-screen composer via global context (instant) or ?compose=true query param (fallback).
  *
  * Built with best practices: DRY, maintainable, modular, high quality code
  */
 export default function MyTimelinePage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user } = useAuth();
+  const { isOpen: isGlobalComposerOpen, closeComposer } = useComposer();
+  const [showComposer, setShowComposer] = useState(false);
+
+  // Use global composer if available, otherwise fall back to query param
+  const isComposerOpen = isGlobalComposerOpen || showComposer;
+
+  // Detect ?compose=true in URL and open X-style composer (fallback for direct navigation)
+  useEffect(() => {
+    const composeParam = searchParams.get('compose');
+    if (composeParam === 'true' && !isGlobalComposerOpen) {
+      setShowComposer(true);
+    } else if (composeParam !== 'true') {
+      setShowComposer(false);
+    }
+  }, [searchParams, isGlobalComposerOpen]);
+
+  // Close composer and remove query param
+  const handleCloseComposer = () => {
+    setShowComposer(false);
+    closeComposer(); // Also close global composer
+    const newParams = new URLSearchParams(searchParams.toString());
+    newParams.delete('compose');
+    const newUrl = newParams.toString() ? `/timeline?${newParams.toString()}` : '/timeline';
+    router.replace(newUrl, { scroll: false });
+  };
+
+  // Handle post created - close composer and refresh timeline
+  const handlePostCreated = () => {
+    handleCloseComposer();
+    // Timeline will auto-refresh via SocialTimeline's onPostCreated
+  };
+
   return (
-    <SocialTimeline
-      title="My Timeline"
-      description="Your personal timeline and story"
-      icon={BookOpen}
-      gradientFrom="from-orange-50/30"
-      gradientVia="via-white"
-      gradientTo="to-yellow-50/20"
-      mode="timeline"
-      showShareButton={true}
-      shareButtonText="Share Update"
-      shareButtonIcon={Plus}
-      defaultSort="recent"
-      showSortingControls={false}
-      showInlineComposer={true}
-      allowProjectSelection={true}
-    />
+    <>
+      <SocialTimeline
+        title="My Timeline"
+        description="Your personal timeline and story"
+        icon={BookOpen}
+        gradientFrom="from-orange-50/30"
+        gradientVia="via-white"
+        gradientTo="to-yellow-50/20"
+        mode="timeline"
+        showShareButton={true}
+        shareButtonText="Share Update"
+        shareButtonIcon={Plus}
+        defaultSort="recent"
+        showSortingControls={false}
+        showInlineComposer={!showComposer}
+        allowProjectSelection={true}
+      />
+
+      {/* X-style full-screen composer (mobile) - Only render if using query param fallback */}
+      {user && showComposer && !isGlobalComposerOpen && (
+        <PostComposerMobile
+          fullScreen={true}
+          isOpen={showComposer}
+          onClose={handleCloseComposer}
+          onPostCreated={handlePostCreated}
+          autoFocus={true}
+          showProjectSelection={true}
+          placeholder="What's happening?"
+          buttonText="Post"
+        />
+      )}
+    </>
   );
 }

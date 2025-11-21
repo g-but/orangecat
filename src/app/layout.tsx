@@ -37,6 +37,7 @@ import Script from 'next/script';
 import { AuthProvider } from '@/components/providers/AuthProvider';
 import { SyncManagerInitializer } from '@/components/SyncManagerInitializer';
 import { OfflineQueueIndicator } from '@/components/ui/OfflineQueueIndicator';
+import { ComposerProvider } from '@/contexts/ComposerContext';
 
 // Dynamic imports for non-critical components
 const DynamicToaster = lazy(() => import('sonner').then(module => ({ default: module.Toaster })));
@@ -49,6 +50,7 @@ const DynamicSpeedInsights = lazy(() =>
 );
 const DynamicUnifiedHeader = lazy(() => import('@/components/layout/UnifiedHeader'));
 const DynamicFooter = lazy(() => import('@/components/layout/Footer'));
+const DynamicMobileBottomNav = lazy(() => import('@/components/layout/MobileBottomNav'));
 const DynamicChatbot = lazy(() =>
   import('@/components/ui/SimpleChatbot').then(module => ({ default: module.SimpleChatbot }))
 );
@@ -248,23 +250,30 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ClientErrorBoundary>
             <SyncManagerInitializer />
             <AuthProvider>
-              <div className="relative min-h-screen flex flex-col">
-                {/* Global Auth Loader - temporarily disabled for debugging */}
-                {/* <GlobalAuthLoader /> */}
+              <ComposerProvider>
+                <div className="relative min-h-screen flex flex-col">
+                  {/* Global Auth Loader - temporarily disabled for debugging */}
+                  {/* <GlobalAuthLoader /> */}
 
-                {/* Header */}
-                <Suspense fallback={<Loading />}>
-                  <DynamicUnifiedHeader />
-                </Suspense>
+                  {/* Header */}
+                  <Suspense fallback={<Loading />}>
+                    <DynamicUnifiedHeader />
+                  </Suspense>
 
-                {/* Main Content */}
-                <main className="flex-1 flex flex-col">{children}</main>
+                  {/* Main Content */}
+                  <main className="flex-1 flex flex-col">{children}</main>
 
-                {/* Footer */}
-                <Suspense fallback={<div className="h-16" />}>
-                  <DynamicFooter />
-                </Suspense>
-              </div>
+                  {/* Footer */}
+                  <Suspense fallback={<div className="h-16" />}>
+                    <DynamicFooter />
+                  </Suspense>
+
+                  {/* Mobile Bottom Navigation - Available on all routes */}
+                  <Suspense fallback={null}>
+                    <DynamicMobileBottomNav />
+                  </Suspense>
+                </div>
+              </ComposerProvider>
             </AuthProvider>
 
             {/* Toast Notifications */}
