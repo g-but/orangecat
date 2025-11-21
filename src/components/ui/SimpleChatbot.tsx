@@ -93,7 +93,7 @@ export function SimpleChatbot() {
     return (
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg flex items-center justify-center text-white transition-all hover:scale-110"
+        className="hidden md:flex fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg items-center justify-center text-white transition-all hover:scale-110"
         aria-label="Open chat assistant"
       >
         <MessageCircle className="w-6 h-6" />
@@ -106,7 +106,7 @@ export function SimpleChatbot() {
   return (
     <div
       ref={chatRef}
-      className="fixed bottom-6 left-6 z-50 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col"
+      className="hidden md:flex fixed bottom-6 left-6 z-50 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex-col"
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b bg-gradient-to-r from-orange-50 to-orange-100 rounded-t-2xl">

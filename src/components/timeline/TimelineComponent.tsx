@@ -25,7 +25,10 @@ import {
 } from 'lucide-react';
 import { logger } from '@/utils/logger';
 import { ShareModal } from '@/components/timeline/ShareModal';
+import { RepostModal } from '@/components/timeline/RepostModal';
 import { formatDistanceToNow } from 'date-fns';
+import AvatarLink from '@/components/ui/AvatarLink';
+import Link from 'next/link';
 
 interface TimelineComponentProps {
   feed: TimelineFeedResponse;
@@ -33,24 +36,111 @@ interface TimelineComponentProps {
   onLoadMore?: () => void;
   showFilters?: boolean;
   compact?: boolean;
+  enableMultiSelect?: boolean; // Enable multi-select mode for bulk operations
 }
 
 interface TimelineEventProps {
   event: TimelineDisplayEvent;
   onUpdate: (updates: Partial<TimelineDisplayEvent>) => void;
   compact?: boolean;
+  isSelected?: boolean; // For multi-select mode
+  onToggleSelect?: (eventId: string) => void; // For multi-select mode
+  selectionMode?: boolean; // Whether multi-select mode is active
+}
+
+/**
+ * Simple markdown renderer for timeline posts
+ * Supports **bold** and *italic* formatting
+ * Returns React elements for safe rendering
+ */
+function renderMarkdownText(text: string): React.ReactNode[] {
+  if (!text) return [];
+
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let key = 0;
+
+  // Match **bold** first (to avoid conflicts with *italic*)
+  const boldRegex = /\*\*(.+?)\*\*/g;
+  const italicRegex = /(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g;
+
+  // First pass: find all bold matches
+  const boldMatches: Array<{ start: number; end: number; text: string }> = [];
+  let match;
+  while ((match = boldRegex.exec(text)) !== null) {
+    boldMatches.push({
+      start: match.index,
+      end: match.index + match[0].length,
+      text: match[1],
+    });
+  }
+
+  // Second pass: find all italic matches (excluding those inside bold)
+  const italicMatches: Array<{ start: number; end: number; text: string }> = [];
+  while ((match = italicRegex.exec(text)) !== null) {
+    const isInsideBold = boldMatches.some(
+      b => match.index >= b.start && match.index < b.end
+    );
+    if (!isInsideBold) {
+      italicMatches.push({
+        start: match.index,
+        end: match.index + match[0].length,
+        text: match[1],
+      });
+    }
+  }
+
+  // Combine and sort all matches
+  const allMatches = [
+    ...boldMatches.map(m => ({ ...m, type: 'bold' as const })),
+    ...italicMatches.map(m => ({ ...m, type: 'italic' as const })),
+  ].sort((a, b) => a.start - b.start);
+
+  // Build React elements
+  for (const match of allMatches) {
+    // Add text before match
+    if (match.start > lastIndex) {
+      const beforeText = text.substring(lastIndex, match.start);
+      if (beforeText) {
+        parts.push(<React.Fragment key={`text-${key++}`}>{beforeText}</React.Fragment>);
+      }
+    }
+
+    // Add formatted text
+    if (match.type === 'bold') {
+      parts.push(<strong key={`bold-${key++}`}>{match.text}</strong>);
+    } else {
+      parts.push(<em key={`italic-${key++}`}>{match.text}</em>);
+    }
+
+    lastIndex = match.end;
+  }
+
+  // Add remaining text
+  if (lastIndex < text.length) {
+    const remaining = text.substring(lastIndex);
+    if (remaining) {
+      parts.push(<React.Fragment key={`text-${key++}`}>{remaining}</React.Fragment>);
+    }
+  }
+
+  return parts.length > 0 ? parts : [text];
 }
 
 const TimelineEventComponent: React.FC<TimelineEventProps> = ({
   event,
   onUpdate,
   compact = false,
+  isSelected = false,
+  onToggleSelect,
+  selectionMode = false,
 }) => {
   const { user } = useAuth();
   const [isLiking, setIsLiking] = useState(false);
   const [isSharing, setIsSharing] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [isReposting, setIsReposting] = useState(false);
+  const [repostModalOpen, setRepostModalOpen] = useState(false);
   const [isCommenting, setIsCommenting] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
@@ -176,24 +266,29 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
     [event.id, isSharing, onUpdate]
   );
 
-  const handleRepost = useCallback(async () => {
+  // Open repost modal
+  const handleRepostClick = useCallback(() => {
+    if (!user?.id) return;
+    setRepostModalOpen(true);
+  }, [user?.id]);
+
+  // Simple repost (no quote)
+  const handleSimpleRepost = useCallback(async () => {
     if (isReposting || !user?.id) {
       return;
     }
 
     setIsReposting(true);
     try {
-      // Create a repost - essentially a new status update that references the original
       const result = await timelineService.createEvent({
         eventType: 'status_update',
         actorId: user.id,
         subjectType: 'profile',
         subjectId: user.id,
         title: `Repost from ${event.actor.name}`,
-        description:
-          event.description
-            ? `“${String(event.description).slice(0, 120)}”`
-            : 'Shared a post',
+        description: event.description
+          ? `"${String(event.description).slice(0, 120)}"`
+          : 'Shared a post',
         visibility: 'public',
         metadata: {
           is_repost: true,
@@ -205,8 +300,6 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
       });
 
       if (result.success) {
-        // Note: We don't update the current event's repost count here
-        // since reposts are separate timeline events
         logger.info('Successfully reposted event', null, 'Timeline');
       } else {
         logger.error('Failed to repost event', result.error, 'Timeline');
@@ -219,6 +312,50 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
       setIsReposting(false);
     }
   }, [event.id, event.actor.id, event.actor.name, event.description, isReposting, user?.id]);
+
+  // Quote repost (with user's commentary)
+  const handleQuoteRepost = useCallback(
+    async (quoteText: string) => {
+      if (isReposting || !user?.id || !quoteText.trim()) {
+        return;
+      }
+
+      setIsReposting(true);
+      try {
+        const result = await timelineService.createEvent({
+          eventType: 'status_update',
+          actorId: user.id,
+          subjectType: 'profile',
+          subjectId: user.id,
+          title: `Quote repost from ${event.actor.name}`,
+          description: `${quoteText}\n\n---\n\nReposted from ${event.actor.name}:\n${event.description || 'Shared a post'}`,
+          visibility: 'public',
+          metadata: {
+            is_quote_repost: true,
+            is_repost: true,
+            original_event_id: event.id,
+            original_actor_id: event.actor.id,
+            original_actor_name: event.actor.name,
+            quote_text: quoteText,
+          },
+          parentEventId: event.id,
+        });
+
+        if (result.success) {
+          logger.info('Successfully quote reposted event', null, 'Timeline');
+        } else {
+          logger.error('Failed to quote repost event', result.error, 'Timeline');
+          alert(result.error || 'Failed to quote repost');
+        }
+      } catch (error) {
+        logger.error('Error quote reposting event', error, 'Timeline');
+        alert('Failed to quote repost');
+      } finally {
+        setIsReposting(false);
+      }
+    },
+    [event.id, event.actor.id, event.actor.name, event.description, isReposting, user?.id]
+  );
 
   const loadComments = useCallback(async () => {
     try {
@@ -342,43 +479,61 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
   const timeAgo = formatDistanceToNow(new Date(event.eventTimestamp), { addSuffix: true });
 
   return (
-    <Card
-      className={`mb-4 transition-all hover:shadow-md ${event.isFeatured ? 'ring-2 ring-orange-300 bg-gradient-to-r from-orange-50/20 to-transparent' : 'hover:bg-gray-50/50'}`}
+    <div
+      className={`relative mb-0 sm:mb-3 transition-all border-b border-gray-200 sm:border-0 sm:rounded-lg sm:bg-white sm:shadow-sm hover:bg-gray-50/50 ${
+        event.isFeatured ? 'sm:ring-2 sm:ring-orange-300 sm:bg-gradient-to-r sm:from-orange-50/20 sm:to-transparent' : ''
+      } ${selectionMode && isSelected ? 'bg-orange-50/30 border-orange-200' : ''}`}
     >
-      <CardContent className="p-4">
-        {/* Event Header */}
-        <div className="flex items-start gap-3 mb-3">
-          {/* Actor Avatar - Larger, more prominent */}
-          <div className="flex-shrink-0">
-            {event.actor.avatar ? (
-              <img
-                src={event.actor.avatar}
-                alt={event.actor.name}
-                className="w-12 h-12 rounded-full border-2 border-white shadow-sm hover:border-orange-200 transition-colors"
-              />
-            ) : (
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-yellow-500 rounded-full flex items-center justify-center border-2 border-white shadow-sm">
-                <span className="text-white font-semibold text-base">
-                  {event.actor.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
-          </div>
+      {/* Selection Checkbox - Show when in selection mode */}
+      {selectionMode && (
+        <div className="absolute left-4 top-4 z-10">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect?.(event.id)}
+            className="h-5 w-5 rounded border-gray-300 text-orange-500 focus:ring-orange-500 cursor-pointer"
+            aria-label={`Select post: ${event.title || event.description?.substring(0, 30) || 'Untitled'}`}
+          />
+        </div>
+      )}
+
+      <div className={`px-4 py-3 sm:p-4 sm:pb-4 ${selectionMode ? 'pl-12 sm:pl-16' : ''}`}>
+
+        {/* Event Header - X-style compact layout */}
+        <div className="flex items-start gap-3 sm:gap-3 mb-2.5 sm:mb-3">
+          {/* Actor Avatar - X-style: Compact on mobile */}
+          <AvatarLink
+            username={event.actor.username}
+            userId={event.actor.id}
+            avatarUrl={event.actor.avatar}
+            name={event.actor.name}
+            size={compact ? 40 : 44}
+            className="flex-shrink-0"
+          />
 
           {/* Event Content */}
           <div className="flex-1 min-w-0">
-            {/* Actor and Event Info */}
-            <div className="flex items-center gap-2 mb-2 flex-wrap">
-              <span className="font-semibold text-gray-900 hover:text-orange-600 transition-colors cursor-pointer">
+            {/* Actor and Event Info - X-style: Single line, compact */}
+            <div className="flex items-center gap-1.5 sm:gap-1.5 mb-2 sm:mb-1.5 flex-wrap">
+              <Link
+                href={event.actor.username ? `/profiles/${event.actor.username}` : `/profiles/${event.actor.id}`}
+                className="font-semibold text-sm sm:text-[15px] text-gray-900 hover:underline transition-colors cursor-pointer"
+              >
                 {event.actor.name}
-              </span>
+              </Link>
               {event.actor.username && (
-                <span className="text-gray-500 text-sm">@{event.actor.username}</span>
+                <>
+                  <Link
+                    href={`/profiles/${event.actor.username}`}
+                    className="text-gray-500 text-sm sm:text-[15px] hover:underline transition-colors"
+                  >
+                    @{event.actor.username}
+                  </Link>
+                  <span className="text-gray-400 select-none text-sm sm:text-[15px]">·</span>
+                </>
               )}
-              <span className="text-gray-400">·</span>
-              <span className="text-gray-500 text-sm flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {timeAgo}
+              <span className="text-gray-500 text-sm sm:text-[15px]">
+                {timeAgo.replace('about ', '').replace(' ago', '')}
               </span>
               {event.isRecent && (
                 <span className="px-2 py-0.5 bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-700 text-xs rounded-full font-medium">
@@ -393,18 +548,18 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
               )}
             </div>
 
-            {/* Event Title and Description - hide title for user posts */}
-            <div className="mb-2">
+            {/* Event Title and Description - X-style: Clean, readable */}
+            <div className="mb-3 sm:mb-3">
               {event.title &&
                 event.eventType !== 'status_update' &&
                 !event.metadata?.is_user_post && (
-                  <h3 className="font-semibold text-gray-900 mb-1.5 text-base leading-relaxed">
+                  <h3 className="font-semibold text-gray-900 mb-1.5 text-sm sm:text-base leading-relaxed">
                     {event.title}
                   </h3>
                 )}
               {event.description && (
-                <p className="text-gray-700 text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                  {event.description}
+                <p className="text-gray-900 text-sm sm:text-base leading-[1.5] sm:leading-[1.5] whitespace-pre-wrap break-words">
+                  {renderMarkdownText(event.description)}
                 </p>
               )}
             </div>
@@ -483,64 +638,28 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
           )}
         </div>
 
-        {/* Social Interaction Buttons - Twitter-like design */}
-        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
-          <div className="flex items-center gap-6 sm:gap-8">
-            {/* Like Button - Enhanced */}
-            <button
-              onClick={handleLike}
-              disabled={isLiking}
-              className={`group flex items-center gap-2 px-2 py-1 rounded-full transition-all ${
-                event.userLiked
-                  ? 'text-red-600 hover:bg-red-50'
-                  : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              <Heart
-                className={`w-5 h-5 transition-transform group-hover:scale-110 ${
-                  event.userLiked ? 'fill-current' : ''
-                }`}
-              />
-              <span className="text-sm font-medium min-w-[1.5rem] text-left">
-                {(event.likesCount || 0) > 0 ? event.likesCount : ''}
-              </span>
-            </button>
-
-            {/* Comment Button - Enhanced */}
+        {/* Social Interaction Buttons - X-style: Touch-optimized for mobile */}
+        <div className="flex items-center justify-between pt-3 sm:pt-3 border-t-0 sm:border-t border-gray-100">
+          <div className="flex items-center gap-2 sm:gap-4 flex-1 sm:flex-initial">
+            {/* Comment Button - X-style: 44x44px touch target on mobile */}
             <button
               onClick={toggleComments}
-              className="group flex items-center gap-2 px-2 py-1 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all"
+              className="group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2 py-2 sm:py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 active:bg-blue-100/50 transition-colors touch-manipulation justify-center sm:justify-start"
             >
-              <MessageCircle className="w-5 h-5 transition-transform group-hover:scale-110" />
-              <span className="text-sm font-medium min-w-[1.5rem] text-left">
+              <MessageCircle className="w-5 h-5 sm:w-5 sm:h-5 transition-transform group-hover:scale-110" />
+              <span className="text-sm sm:text-sm min-w-[1.5rem] text-left">
                 {(event.commentsCount || 0) > 0 ? event.commentsCount : ''}
               </span>
             </button>
 
-            {/* Share Button - Enhanced */}
+            {/* Repost Button - X-style: 44x44px touch target on mobile */}
             <button
-              onClick={handleShareOpen}
-              disabled={isSharing}
-              className={`group flex items-center gap-2 px-2 py-1 rounded-full transition-all ${
-                event.userShared
-                  ? 'text-blue-600 hover:bg-blue-50'
-                  : 'text-gray-500 hover:text-blue-600 hover:bg-blue-50'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              <Share2 className="w-5 h-5 transition-transform group-hover:scale-110" />
-              <span className="text-sm font-medium min-w-[1.5rem] text-left">
-                {(event.sharesCount || 0) > 0 ? event.sharesCount : ''}
-              </span>
-            </button>
-
-            {/* Repost Button */}
-            <button
-              onClick={handleRepost}
+              onClick={handleRepostClick}
               disabled={isReposting}
-              className="group flex items-center gap-2 px-2 py-1 rounded-full text-gray-500 hover:text-green-600 hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2 py-2 sm:py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-gray-500 hover:text-green-500 hover:bg-green-50/50 active:bg-green-100/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation justify-center sm:justify-start"
             >
               <svg
-                className="w-5 h-5 transition-transform group-hover:scale-110"
+                className="w-5 h-5 sm:w-5 sm:h-5 transition-transform group-hover:scale-110"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -552,12 +671,50 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
                   d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
               </svg>
-              <span className="text-sm font-medium">Repost</span>
+              <span className="text-sm sm:text-sm min-w-[1.5rem] text-left">
+                {/* Repost count would go here if we track it */}
+              </span>
+            </button>
+
+            {/* Like Button - X-style: 44x44px touch target on mobile */}
+            <button
+              onClick={handleLike}
+              disabled={isLiking}
+              className={`group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2 py-2 sm:py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full transition-colors touch-manipulation justify-center sm:justify-start ${
+                event.userLiked
+                  ? 'text-red-500 hover:bg-red-50/50 active:bg-red-100/50'
+                  : 'text-gray-500 hover:text-red-500 hover:bg-red-50/50 active:bg-red-100/50'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <Heart
+                className={`w-5 h-5 sm:w-5 sm:h-5 transition-transform group-hover:scale-110 ${
+                  event.userLiked ? 'fill-current' : ''
+                }`}
+              />
+              <span className="text-sm sm:text-sm min-w-[1.5rem] text-left">
+                {(event.likesCount || 0) > 0 ? event.likesCount : ''}
+              </span>
+            </button>
+
+            {/* Share Button - X-style: 44x44px touch target on mobile */}
+            <button
+              onClick={handleShareOpen}
+              disabled={isSharing}
+              className={`group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2 py-2 sm:py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full transition-colors touch-manipulation justify-center sm:justify-start ${
+                event.userShared
+                  ? 'text-blue-500 hover:bg-blue-50/50 active:bg-blue-100/50'
+                  : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 active:bg-blue-100/50'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              <Share2 className="w-5 h-5 sm:w-5 sm:h-5 transition-transform group-hover:scale-110" />
+              <span className="text-sm sm:text-sm min-w-[1.5rem] text-left">
+                {(event.sharesCount || 0) > 0 ? event.sharesCount : ''}
+              </span>
             </button>
           </div>
 
-          {/* Visibility Indicator */}
-          <div className="flex items-center gap-1 text-xs text-gray-500">
+          {/* Visibility Indicator - Hidden on mobile */}
+          <div className="hidden sm:flex items-center gap-1 text-xs text-gray-400">
             {event.visibility === 'public' ? (
               <Eye className="w-3 h-3" />
             ) : event.visibility === 'followers' ? (
@@ -599,25 +756,49 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
           isSubmitting={isSharing}
         />
 
-        {/* Comments Section */}
-        {showComments && (
-          <div className="mt-4 pt-4 border-t border-gray-100">
+        {/* Repost Modal */}
+        <RepostModal
+          isOpen={repostModalOpen}
+          onClose={() => setRepostModalOpen(false)}
+          event={event}
+          onSimpleRepost={handleSimpleRepost}
+          onQuoteRepost={handleQuoteRepost}
+          isReposting={isReposting}
+        />
+
+      </div>
+
+      {/* Comments Section */}
+      {showComments && (
+        <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-2 sm:pt-4 border-t border-gray-100">
+            {/* Reply Context - X-style "Replying to @username" */}
+            <div className="mb-3 text-sm text-gray-500">
+              Replying to{' '}
+              <Link
+                href={event.actor.username ? `/profiles/${event.actor.username}` : `/profiles/${event.actor.id}`}
+                className="text-orange-600 hover:text-orange-700 hover:underline"
+              >
+                @{event.actor.username || event.actor.name}
+              </Link>
+            </div>
+
             {/* Add Comment */}
             <div className="flex gap-2 mb-4">
               <input
                 type="text"
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
-                placeholder="Write a comment..."
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Post your reply"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                 onKeyPress={e => e.key === 'Enter' && handleComment()}
               />
               <Button
                 size="sm"
                 onClick={handleComment}
                 disabled={!commentText.trim() || isCommenting}
+                className="bg-orange-500 hover:bg-orange-600 text-white"
               >
-                {isCommenting ? '...' : 'Comment'}
+                {isCommenting ? '...' : 'Reply'}
               </Button>
             </div>
 
@@ -626,15 +807,23 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
               <div className="space-y-3">
                 {comments.map(comment => (
                   <div key={comment.id} className="flex gap-2">
-                    <img
-                      src={comment.user_avatar}
-                      alt={comment.user_name}
-                      className="w-6 h-6 rounded-full flex-shrink-0"
+                    <AvatarLink
+                      username={(comment as any).user_username || null}
+                      userId={(comment as any).user_id || null}
+                      avatarUrl={comment.user_avatar || null}
+                      name={comment.user_name || null}
+                      size={24}
+                      className="flex-shrink-0"
                     />
                     <div className="flex-1">
                       <div className="bg-gray-100 rounded-lg px-3 py-2">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-sm">{comment.user_name}</span>
+                          <Link
+                            href={(comment as any).user_username ? `/profiles/${(comment as any).user_username}` : `/profiles/${(comment as any).user_id || '#'}`}
+                            className="font-medium text-sm hover:text-orange-600 transition-colors"
+                          >
+                            {comment.user_name}
+                          </Link>
                           <span className="text-xs text-gray-500">
                             {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                           </span>
@@ -662,15 +851,23 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
                             <div className="mt-2 space-y-2 ml-8">
                               {replies[comment.id].map(reply => (
                                 <div key={reply.id} className="flex gap-2">
-                                  <img
-                                    src={reply.user_avatar}
-                                    alt={reply.user_name}
-                                    className="w-5 h-5 rounded-full flex-shrink-0"
+                                  <AvatarLink
+                                    username={(reply as any).user_username || null}
+                                    userId={(reply as any).user_id || null}
+                                    avatarUrl={reply.user_avatar || null}
+                                    name={reply.user_name || null}
+                                    size={20}
+                                    className="flex-shrink-0"
                                   />
                                   <div className="flex-1">
                                     <div className="bg-gray-50 rounded-lg px-3 py-2">
                                       <div className="flex items-center gap-2 mb-1">
-                                        <span className="font-medium text-xs">{reply.user_name}</span>
+                                        <Link
+                                          href={(reply as any).user_username ? `/profiles/${(reply as any).user_username}` : `/profiles/${(reply as any).user_id || '#'}`}
+                                          className="font-medium text-xs hover:text-orange-600 transition-colors"
+                                        >
+                                          {reply.user_name}
+                                        </Link>
                                         <span className="text-[10px] text-gray-500">
                                           {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true })}
                                         </span>
@@ -691,7 +888,6 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
             )}
           </div>
         )}
-      </CardContent>
 
       {/* Edit Modal */}
       {showEditModal && (
@@ -816,7 +1012,7 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
           </Card>
         </div>
       )}
-    </Card>
+    </div>
   );
 };
 
@@ -826,14 +1022,24 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   onLoadMore,
   showFilters = true,
   compact = false,
+  enableMultiSelect = false,
 }) => {
   const [events, setEvents] = useState(feed.events);
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   const handleEventUpdate = useCallback(
     (eventId: string, updates: Partial<TimelineDisplayEvent>) => {
       setEvents(prevEvents => {
         // If post is deleted, remove it from the list
         if (updates.isDeleted) {
+          setSelectedEventIds(prev => {
+            const next = new Set(prev);
+            next.delete(eventId);
+            return next;
+          });
           return prevEvents.filter(event => event.id !== eventId);
         }
         // Otherwise, update it
@@ -844,8 +1050,58 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
     [onEventUpdate]
   );
 
+  // Multi-select handlers
+  const toggleSelectionMode = useCallback(() => {
+    setSelectionMode(prev => !prev);
+    setSelectedEventIds(new Set());
+  }, []);
+
+  const toggleEventSelection = useCallback((eventId: string) => {
+    setSelectedEventIds(prev => {
+      const next = new Set(prev);
+      if (next.has(eventId)) {
+        next.delete(eventId);
+      } else {
+        next.add(eventId);
+      }
+      return next;
+    });
+  }, []);
+
   // Filter out deleted events
   const visibleEvents = events.filter(event => !event.isDeleted);
+
+  const selectAll = useCallback(() => {
+    const visible = events.filter(event => !event.isDeleted);
+    if (selectedEventIds.size === visible.length) {
+      setSelectedEventIds(new Set());
+    } else {
+      setSelectedEventIds(new Set(visible.map(e => e.id)));
+    }
+  }, [events, selectedEventIds.size]);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedEventIds.size === 0) return;
+
+    try {
+      setIsBulkDeleting(true);
+      const deletePromises = Array.from(selectedEventIds).map(eventId =>
+        timelineService.deleteEvent(eventId, 'Bulk deleted by user')
+      );
+      await Promise.all(deletePromises);
+
+      // Remove deleted events from UI
+      setEvents(prev => prev.filter(e => !selectedEventIds.has(e.id)));
+      setSelectedEventIds(new Set());
+      setShowBulkDeleteConfirm(false);
+      setSelectionMode(false);
+    } catch (error) {
+      logger.error('Error bulk deleting events', error, 'Timeline');
+      alert('Failed to delete some posts');
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  }, [selectedEventIds]);
 
   // Don't render anything if empty - let parent handle empty state
   if (visibleEvents.length === 0) {
@@ -853,15 +1109,69 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      {/* Events List - Clean, no extra headers */}
-      <div className="space-y-4">
+    <div className="space-y-0 sm:space-y-4">
+      {/* Multi-Select Controls - Only show if enabled */}
+      {enableMultiSelect && (
+        <div className="sticky top-16 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-3 mb-4 sm:mb-0">
+          <div className="flex items-center justify-between">
+            {!selectionMode ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSelectionMode}
+                className="flex items-center gap-2"
+              >
+                <span>Select Posts</span>
+              </Button>
+            ) : (
+              <div className="flex items-center gap-3 flex-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={selectAll}
+                  className="text-sm"
+                >
+                  {selectedEventIds.size === visibleEvents.length ? 'Deselect All' : 'Select All'}
+                </Button>
+                <span className="text-sm text-gray-600">
+                  {selectedEventIds.size} {selectedEventIds.size === 1 ? 'post' : 'posts'} selected
+                </span>
+                <div className="flex items-center gap-2 ml-auto">
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setShowBulkDeleteConfirm(true)}
+                    disabled={selectedEventIds.size === 0}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete ({selectedEventIds.size})
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleSelectionMode}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Events List - Clean, no extra headers - X-style on mobile: no spacing between posts */}
+      <div className="space-y-0 sm:space-y-4">
         {visibleEvents.map(event => (
           <TimelineEventComponent
             key={event.id}
             event={event}
             onUpdate={updates => handleEventUpdate(event.id, updates)}
             compact={compact}
+            isSelected={selectedEventIds.has(event.id)}
+            onToggleSelect={toggleEventSelection}
+            selectionMode={selectionMode}
           />
         ))}
       </div>
@@ -874,8 +1184,52 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
           </Button>
         </div>
       )}
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <Card className="max-w-md w-full mx-4">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <Trash2 className="w-6 h-6 text-red-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold">
+                    Delete {selectedEventIds.size} {selectedEventIds.size === 1 ? 'post' : 'posts'}?
+                  </h2>
+                  <p className="text-sm text-gray-600">This action cannot be undone</p>
+                </div>
+              </div>
+
+              <p className="text-gray-700 mb-6">
+                Are you sure you want to delete {selectedEventIds.size === 1 ? 'this post' : 'these posts'}? 
+                {selectedEventIds.size > 1 && ' They will be'} permanently removed from your timeline.
+              </p>
+
+              <div className="flex gap-2 justify-end">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowBulkDeleteConfirm(false)}
+                  disabled={isBulkDeleting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={handleBulkDelete}
+                  disabled={isBulkDeleting}
+                >
+                  {isBulkDeleting ? 'Deleting...' : 'Delete'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };
 
 export default TimelineComponent;
+export { TimelineEventComponent };

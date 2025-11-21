@@ -4,9 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
-import { useAnalytics } from '@/hooks/useAnalytics';
 import { timelineService } from '@/services/timeline';
-import TimelineComponent from '@/components/timeline/TimelineComponent';
 import { TimelineFeedResponse } from '@/types/timeline';
 import { useTimelineEvents } from '@/hooks/useTimelineEvents';
 import { logger } from '@/utils/logger';
@@ -17,32 +15,20 @@ import Link from 'next/link';
 import {
   Target,
   Users,
-  TrendingUp,
-  Plus,
   ArrowRight,
-  FileText,
   Eye,
   BarChart3,
-  Rocket,
-  AlertCircle,
   Star,
-  Wallet,
-  ExternalLink,
   Edit3,
-  Zap,
-  RefreshCw,
-  Compass,
-  MessageSquare,
-  BookOpen,
 } from 'lucide-react';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PROFILE_CATEGORIES } from '@/types/profile';
-import { QuickPostWidget } from '@/components/dashboard/QuickPostWidget';
+import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
+import { DashboardTimeline } from '@/components/dashboard/DashboardTimeline';
 
 export default function DashboardPage() {
-  const { user, profile, isLoading, error: authError, hydrated, session } = useAuth();
-  const { projects, drafts, loadProjects, isLoading: projectLoading, getStats } = useProjectStore();
-  const { metrics, isLoading: analyticsLoading } = useAnalytics();
+  const { user, profile, isLoading, error: authError, hydrated } = useAuth();
+  const { projects, drafts, loadProjects, getStats } = useProjectStore();
   const { dispatchProjectCreated } = useTimelineEvents(); // Enable automatic timeline event creation
   const router = useRouter();
   const [localLoading, setLocalLoading] = useState(true);
@@ -247,423 +233,60 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
-        {/* Modern Welcome Section with Gradient Background */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-bitcoinOrange/5 via-tiffany-50/80 to-orange-50/40 rounded-3xl border border-white/50 backdrop-blur-sm p-8 mb-8">
-          {/* Background decoration */}
-          <div className="absolute top-4 right-4 w-24 h-24 bg-gradient-to-br from-bitcoinOrange/10 to-tiffany-400/10 rounded-full blur-2xl" />
-          <div className="absolute bottom-4 left-4 w-16 h-16 bg-gradient-to-br from-tiffany-400/10 to-orange-300/10 rounded-full blur-xl" />
-
-          <div className="relative">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 bg-gradient-to-br from-bitcoinOrange/20 to-orange-400/20 rounded-2xl backdrop-blur-sm">
-                  <span className="text-2xl">👤</span>
-                </div>
-                <div>
-                  <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 bg-clip-text text-transparent">
-                    Welcome back, {profile?.name || profile?.username || 'there'}! 👋
-                  </h1>
-                  {profileCategory && (
-                    <div
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border backdrop-blur-sm mt-2 ${profileCategory.color}`}
-                    >
-                      <span>{profileCategory.icon}</span>
-                      {profileCategory.label}
-                    </div>
-                  )}
-                </div>
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        {/* Compact Welcome Header */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-orange-50/50 to-tiffany-50/50 rounded-xl border border-gray-100 p-4 sm:p-6 mb-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-orange-500 to-tiffany-500 rounded-lg">
+                <span className="text-xl">👤</span>
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                  Welcome back, {profile?.name || profile?.username || 'there'}!
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {totalProjects > 0
+                    ? `${totalProjects} project${totalProjects !== 1 ? 's' : ''}${totalDrafts > 0 ? ` • ${totalDrafts} draft${totalDrafts !== 1 ? 's' : ''}` : ''}`
+                    : "Let's get started"}
+                </p>
               </div>
             </div>
-            <p className="text-lg text-gray-600 leading-relaxed">
-              {totalProjects > 0
-                ? `Managing ${totalProjects} project${totalProjects !== 1 ? 's' : ''}${totalDrafts > 0 ? ` • ${totalDrafts} draft${totalDrafts !== 1 ? 's' : ''}` : ''}`
-                : "Welcome! Let's create your first Bitcoin fundraising project."}
-            </p>
+            {profileCategory && (
+              <div className={`hidden sm:flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${profileCategory.color}`}>
+                <span>{profileCategory.icon}</span>
+                {profileCategory.label}
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Quick Post Widget - Prominent placement for easy timeline posting */}
-        <QuickPostWidget
-          onPostSuccess={() => {
-            // Reload timeline feed when a post is created
-            if (user?.id) {
-              loadTimelineFeed(user.id);
-            }
-          }}
-          className="animate-fadeIn"
-        />
+        {/* 2-COLUMN LAYOUT: Sidebar + Main Timeline */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* LEFT: Compact Sidebar with Metrics and Actions */}
+          <DashboardSidebar
+            stats={{
+              totalProjects,
+              totalDrafts,
+              totalRaised,
+              totalSupporters,
+              primaryCurrency,
+            }}
+            profileCompletion={profileCompletion}
+            profile={profile}
+          />
 
-        {/* Urgent Actions */}
-        {(totalDrafts > 0 || profileCompletion < 100) && (
-          <Card className="border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <AlertCircle className="w-6 h-6 text-orange-600 mt-1 flex-shrink-0" />
-                <div className="flex-1">
-                  <h2 className="text-lg font-semibold text-gray-900 mb-3">Action Required</h2>
-
-                  {/* Profile completion */}
-                  {profileCompletion < 100 && (
-                    <div className="mb-4 p-3 bg-white rounded-lg border border-orange-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900">Complete your profile</span>
-                        <span className="text-sm text-orange-600">
-                          {profileCompletion}% complete
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 mb-2">
-                        {!hasUsername && (
-                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                            Username needed
-                          </span>
-                        )}
-                        {!hasBitcoinAddress && (
-                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                            Bitcoin address needed
-                          </span>
-                        )}
-                        {!hasBio && (
-                          <span className="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded">
-                            Bio needed
-                          </span>
-                        )}
-                      </div>
-                      <Link href="/profile">
-                        <Button size="sm" variant="outline">
-                          <Star className="w-4 h-4 mr-1" />
-                          Complete Profile
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-
-                  {/* Draft projects */}
-                  {totalDrafts > 0 && (
-                    <div className="p-3 bg-white rounded-lg border border-orange-200">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900">
-                          {totalDrafts} draft project{totalDrafts > 1 ? 's' : ''} waiting
-                        </span>
-                        {primaryDraft && (
-                          <span className="text-sm text-orange-600">
-                            &ldquo;{primaryDraft.title}&rdquo;
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex gap-2">
-                        <Link href="/projects/create">
-                          <Button size="sm" variant="outline">
-                            <FileText className="w-4 h-4 mr-1" />
-                            Continue Editing
-                          </Button>
-                        </Link>
-                        <Link href="/dashboard/projects">
-                          <Button size="sm" variant="outline">
-                            View All Drafts
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Example Project Templates - Only show when user has no projects */}
-        {totalProjects === 0 && (
-          <Card className="border-tiffany-200 bg-gradient-to-r from-tiffany-50 to-orange-50">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Zap className="w-5 h-5 text-tiffany-600" />
-                Quick Start: Example Projects
-              </CardTitle>
-              <CardDescription>
-                Click any example to pre-fill the project form and get started instantly
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Example 1: Community Garden */}
-                <Link href="/projects/create?template=community-garden">
-                  <div className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-tiffany-500 transition-all cursor-pointer group">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Target className="w-5 h-5 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 group-hover:text-tiffany-600 transition-colors">
-                          Community Garden Project
-                        </h4>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Creating a shared community space with raised garden beds and educational
-                          workshops.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="px-2 py-1 bg-green-50 text-green-700 rounded-full">
-                        Community
-                      </span>
-                      <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-full">
-                        Education
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Example 2: Animal Shelter */}
-                <Link href="/projects/create?template=animal-shelter">
-                  <div className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-tiffany-500 transition-all cursor-pointer group">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Target className="w-5 h-5 text-orange-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 group-hover:text-tiffany-600 transition-colors">
-                          Local Animal Shelter
-                        </h4>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Supporting animal rescue operations and veterinary care for abandoned
-                          pets.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="px-2 py-1 bg-orange-50 text-orange-700 rounded-full">
-                        Charity
-                      </span>
-                      <span className="px-2 py-1 bg-red-50 text-red-700 rounded-full">Health</span>
-                    </div>
-                  </div>
-                </Link>
-
-                {/* Example 3: Art Exhibition */}
-                <Link href="/projects/create?template=art-exhibition">
-                  <div className="p-4 bg-white rounded-lg border-2 border-gray-200 hover:border-tiffany-500 transition-all cursor-pointer group">
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Target className="w-5 h-5 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900 group-hover:text-tiffany-600 transition-colors">
-                          Art Exhibition Fundraiser
-                        </h4>
-                        <p className="text-sm text-gray-600 mt-1">
-                          Organizing a traveling art show featuring local artists and cultural
-                          exhibits.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-full">
-                        Creative
-                      </span>
-                      <span className="px-2 py-1 bg-pink-50 text-pink-700 rounded-full">
-                        Community
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Overview Cards with Enhanced Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Fundraising Overview */}
-          <Card
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => router.push('/dashboard/projects')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <Target className="w-8 h-8 text-teal-600" />
-                <ArrowRight className="w-4 h-4 text-gray-400" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Projects</h3>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="font-medium text-lg text-gray-900">{totalProjects}</div>
-                <div>
-                  {totalProjects - totalDrafts} published
-                  {totalDrafts > 0 && ` • ${totalDrafts} draft${totalDrafts !== 1 ? 's' : ''}`}
-                </div>
-                {totalRaised > 0 && (
-                  <div className="font-medium text-green-600">
-                    <CurrencyDisplay amount={totalRaised} currency={primaryCurrency} size="sm" />{' '}
-                    raised total
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Profile Card */}
-          <Card
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => router.push('/profile')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <Star className="w-8 h-8 text-blue-600" />
-                <ArrowRight className="w-4 h-4 text-gray-400" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Profile</h3>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="font-medium text-lg text-gray-900">{profileCompletion}%</div>
-                <div>{profile?.username ? `@${profile.username}` : 'No username set'}</div>
-                <div
-                  className={
-                    profileCompletion === 100 ? 'text-green-600 font-medium' : 'text-orange-600'
-                  }
-                >
-                  {profileCompletion === 100 ? 'All set!' : 'Needs attention'}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Community/Support */}
-          <Card
-            className="hover:shadow-md transition-shadow cursor-pointer"
-            onClick={() => router.push('/discover')}
-          >
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <Users className="w-8 h-8 text-purple-600" />
-                <ArrowRight className="w-4 h-4 text-gray-400" />
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-2">Community</h3>
-              <div className="space-y-1 text-sm text-gray-600">
-                <div className="font-medium text-lg text-gray-900">{totalSupporters}</div>
-                <div>Total supporters</div>
-                <div className="text-purple-600 font-medium">Explore more</div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Analytics/Performance */}
-          {totalProjects > 0 ? (
-            <Card
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => router.push('/dashboard/projects')}
-            >
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <BarChart3 className="w-8 h-8 text-green-600" />
-                  <ArrowRight className="w-4 h-4 text-gray-400" />
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">Performance</h3>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div className="font-medium text-lg text-gray-900">
-                    <CurrencyDisplay
-                      amount={totalProjects > 0 ? totalRaised / totalProjects : 0}
-                      currency={primaryCurrency}
-                      size="md"
-                    />
-                  </div>
-                  <div>Avg per project</div>
-                  <div className="text-green-600 font-medium">View analytics</div>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card
-              className="border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50 hover:shadow-lg transition-all cursor-pointer"
-              onClick={() => router.push('/projects/create')}
-            >
-              <CardContent className="p-8">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="p-3 bg-orange-100 rounded-full">
-                    <Zap className="w-8 h-8 text-orange-600" />
-                  </div>
-                  <ArrowRight className="w-5 h-5 text-orange-500" />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-3 text-xl">Create Your First Project</h3>
-                <div className="space-y-2 text-sm text-gray-600 mb-6">
-                  <div className="font-semibold text-lg text-gray-900">🚀 Ready to launch?</div>
-                  <div>Your Bitcoin fundraising page is just a few clicks away</div>
-                  <div className="text-orange-600 font-medium">Get funded in minutes</div>
-                </div>
-                <Button className="w-full bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800">
-                  Start Creating Now
-                </Button>
-              </CardContent>
-            </Card>
-          )}
+          {/* RIGHT: Main Timeline Feed with Composer */}
+          <DashboardTimeline
+            timelineFeed={timelineFeed}
+            isLoading={timelineLoading}
+            error={timelineError}
+            onRefresh={() => user?.id && loadTimelineFeed(user.id)}
+            onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
+            userId={user?.id}
+          />
         </div>
 
-        {/* Timeline Activity Feed - Promoted for better visibility */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Your Journey</CardTitle>
-                <CardDescription>Recent activities, posts, and updates from your timeline</CardDescription>
-              </div>
-              <Link href="/journey">
-                <Button variant="outline" size="sm">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  View Full Timeline
-                </Button>
-              </Link>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            {timelineLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-                <p className="text-gray-500">Loading your activity feed...</p>
-              </div>
-            ) : timelineError ? (
-              <div className="text-center py-8 text-red-600">
-                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
-                <p className="mb-2">Failed to load timeline</p>
-                <p className="text-sm text-gray-500 mb-4">{timelineError}</p>
-                <Button variant="outline" onClick={() => user?.id && loadTimelineFeed(user.id)}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Try Again
-                </Button>
-              </div>
-            ) : timelineFeed && timelineFeed.events.length > 0 ? (
-              <TimelineComponent
-                feed={timelineFeed}
-                onLoadMore={() => {
-                  // TODO: Implement pagination loading
-                  logger.info('Load more timeline events requested', {}, 'Dashboard');
-                }}
-                showFilters={false}
-                compact={true}
-              />
-            ) : (
-              <div className="text-center py-12 text-gray-500">
-                <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">Start Your Journey</h3>
-                <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-                  Share your first update! Your timeline will show your posts, project updates, and interactions with the community.
-                </p>
-                <div className="flex gap-3 justify-center">
-                  <Button
-                    onClick={() => router.push('/journey?compose=true')}
-                    className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    Share Your First Post
-                  </Button>
-                  <Link href="/discover">
-                    <Button variant="outline">
-                      <Compass className="w-4 h-4 mr-2" />
-                      Explore Community
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
 
         {/* My Projects Section */}
         {safeProjects.length > 0 && (

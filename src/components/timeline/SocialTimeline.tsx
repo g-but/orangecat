@@ -136,7 +136,10 @@ export default function SocialTimeline({
       }
 
       try {
-        setLoading(true);
+        // Only show loading on initial load (page 1)
+        if (page === 1) {
+          setLoading(true);
+        }
         setError(null);
 
         let feed: TimelineFeedResponse;
@@ -152,7 +155,18 @@ export default function SocialTimeline({
           );
         }
 
-        setTimelineFeed(feed);
+        // Append events for pagination, replace for initial load or sort change
+        if (page === 1) {
+          setTimelineFeed(feed);
+        } else {
+          setTimelineFeed(prev => {
+            if (!prev) return feed;
+            return {
+              ...feed,
+              events: [...prev.events, ...feed.events],
+            };
+          });
+        }
       } catch (err) {
         logger.error(
           `Failed to load ${mode} timeline`,
@@ -366,9 +380,18 @@ export default function SocialTimeline({
           <Button
             size="sm"
             variant="secondary"
-            onClick={() =>
-              composerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-            }
+            onClick={() => {
+              // Scroll to composer smoothly without causing jumps
+              if (composerRef.current) {
+                const element = composerRef.current;
+                const elementPosition = element.getBoundingClientRect().top + window.scrollY;
+                const offsetPosition = elementPosition - 80; // Account for sticky header
+                window.scrollTo({
+                  top: offsetPosition,
+                  behavior: 'smooth'
+                });
+              }
+            }}
             className="inline-flex items-center gap-2"
           >
             <ShareIcon className="w-4 h-4" />
@@ -392,6 +415,7 @@ export default function SocialTimeline({
       stats={timelineStats}
       showFilters={false}
       compact={false}
+      enableMultiSelect={mode === 'timeline'} // Enable multi-select for personal timeline (management mode)
       additionalHeaderContent={headerContent}
       emptyState={emptyState}
       inlineComposer={inlineComposer}

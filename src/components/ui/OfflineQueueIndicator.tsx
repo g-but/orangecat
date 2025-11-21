@@ -62,7 +62,7 @@ export function OfflineQueueIndicator() {
   const { icon, text, bgColor } = getIndicatorContent();
 
   return (
-    <div className="fixed bottom-4 left-4 z-50">
+    <div className="fixed bottom-4 left-4 z-30 md:z-50">
       <div className="sr-only" aria-live="polite">
         {isSyncing ? 'Synchronizing queued posts' : isOnline ? 'Online' : 'Offline mode'}
       </div>

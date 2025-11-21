@@ -1306,17 +1306,17 @@ class TimelineService {
           return [];
         }
         const userIds = Array.from(new Set(comments.map(c => c.user_id).filter(Boolean)));
-        let profilesMap: Record<string, { display_name: string; avatar_url: string | null }> = {};
+        let profilesMap: Record<string, { display_name: string; username: string | null; avatar_url: string | null }> = {};
         if (userIds.length > 0) {
           const { data: profiles, error: pErr } = await supabase
             .from('profiles')
-            .select('id, display_name, avatar_url')
+            .select('id, display_name, username, avatar_url')
             .in('id', userIds as string[]);
           if (!pErr && profiles) {
             profilesMap = Object.fromEntries(
               profiles.map((p: any) => [
                 p.id,
-                { display_name: p.display_name, avatar_url: p.avatar_url },
+                { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url },
               ])
             );
           }
@@ -1327,6 +1327,7 @@ class TimelineService {
           created_at: c.created_at,
           user_id: c.user_id,
           user_name: profilesMap[c.user_id]?.display_name || 'User',
+          user_username: profilesMap[c.user_id]?.username || null,
           user_avatar: profilesMap[c.user_id]?.avatar_url || null,
           reply_count: 0,
         }));
@@ -1371,17 +1372,17 @@ class TimelineService {
           return [];
         }
         const userIds = Array.from(new Set(replies.map(c => c.user_id).filter(Boolean)));
-        let profilesMap: Record<string, { display_name: string; avatar_url: string | null }> = {};
+        let profilesMap: Record<string, { display_name: string; username: string | null; avatar_url: string | null }> = {};
         if (userIds.length > 0) {
           const { data: profiles, error: pErr } = await supabase
             .from('profiles')
-            .select('id, display_name, avatar_url')
+            .select('id, display_name, username, avatar_url')
             .in('id', userIds as string[]);
           if (!pErr && profiles) {
             profilesMap = Object.fromEntries(
               profiles.map((p: any) => [
                 p.id,
-                { display_name: p.display_name, avatar_url: p.avatar_url },
+                { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url },
               ])
             );
           }
@@ -1392,6 +1393,7 @@ class TimelineService {
           created_at: c.created_at,
           user_id: c.user_id,
           user_name: profilesMap[c.user_id]?.display_name || 'User',
+          user_username: profilesMap[c.user_id]?.username || null,
           user_avatar: profilesMap[c.user_id]?.avatar_url || null,
           reply_count: 0,
         }));

@@ -304,7 +304,7 @@ export default function ModernProjectCard({
   if (viewMode === 'list') {
     return (
       <div
-        className={`flex w-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white transition-shadow duration-200 hover:border-gray-200 hover:shadow-lg ${className}`}
+        className={`flex w-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-200 ease-ios shadow-card hover:border-gray-200 hover:shadow-card-hover ${className}`}
       >
         <Link href={`/projects/${project.id}`} className="flex w-full flex-col gap-4 sm:flex-row">
           <div className="relative h-48 flex-1 overflow-hidden sm:h-auto">
@@ -402,7 +402,7 @@ export default function ModernProjectCard({
 
   return (
     <div
-      className={`flex h-full flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white transition-shadow duration-200 hover:border-gray-200 hover:shadow-xl ${className}`}
+      className={`flex h-full flex-col overflow-hidden rounded-xl border border-gray-100 bg-white transition-all duration-200 ease-ios shadow-card hover:border-gray-200 hover:shadow-card-hover active:scale-98 ${className}`}
     >
       <Link href={`/projects/${project.id}`} className="flex h-full flex-col">
         <div className="relative aspect-[16/10] w-full overflow-hidden">
@@ -411,14 +411,14 @@ export default function ModernProjectCard({
           {/* Favorites button */}
           {user && (
             <button
-              className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/30 text-white backdrop-blur transition-colors duration-200 hover:bg-white/40 disabled:opacity-50"
+              className="absolute right-3 top-3 flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/90 text-white backdrop-blur-md shadow-button transition-all duration-200 ease-ios hover:bg-white hover:scale-105 active:scale-95 disabled:opacity-50"
               onClick={handleToggleFavorite}
               disabled={isTogglingFavorite}
               aria-label={isLiked ? 'Remove from favourites' : 'Add to favourites'}
               title={isLiked ? 'Remove from favourites' : 'Add to favourites'}
             >
               <Heart
-                className={`h-4 w-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-white'}`}
+                className={`h-5 w-5 ${isLiked ? 'fill-red-500 text-red-500 animate-heart-beat' : 'text-gray-700'}`}
               />
             </button>
           )}

@@ -40,7 +40,7 @@ export function SidebarNavigation({
     <>
       {/* Navigation Sections */}
       <nav
-        className={`flex-1 ${SIDEBAR_SPACING.PADDING_X} ${SIDEBAR_SPACING.PADDING_Y} ${SIDEBAR_SPACING.SECTION_SPACING} overflow-y-auto`}
+        className={`flex-1 ${SIDEBAR_SPACING.PADDING_Y} ${SIDEBAR_SPACING.SECTION_SPACING} overflow-y-auto overflow-x-hidden`}
         aria-label={navigationLabels.MAIN_NAVIGATION}
       >
         {sections.map(section => {
@@ -48,10 +48,10 @@ export function SidebarNavigation({
           const hasActiveItem = section.items.some(item => isItemActive(item.href));
 
           return (
-            <div key={section.id} className="space-y-1 sm:space-y-2">
+            <div key={section.id} className={`space-y-1 sm:space-y-2 ${SIDEBAR_SPACING.PADDING_X}`}>
               {/* Section Header */}
               <div
-                className={`flex items-center justify-between px-3 ${isExpanded ? 'block' : 'hidden lg:block lg:opacity-0 lg:max-h-0 lg:overflow-hidden'}`}
+                className={`flex items-center justify-between ${isExpanded ? 'px-0' : 'px-0'} ${isExpanded ? 'block' : 'hidden lg:block lg:opacity-0 lg:max-h-0 lg:overflow-hidden'}`}
               >
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   {section.title}
@@ -92,7 +92,7 @@ export function SidebarNavigation({
 
       {/* Bottom Navigation Items */}
       {bottomItems.length > 0 && (
-        <div className="border-t border-gray-100 p-2 space-y-1">
+        <div className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 space-y-1`}>
           {bottomItems.map(item => (
             <SidebarNavItem
               key={item.name}

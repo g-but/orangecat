@@ -29,20 +29,31 @@ export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarU
     return null;
   }
 
+  // Use actual username URL for better UX and SEO, fallback to /profiles/me if no username
+  const profileUrl = profile.username 
+    ? `/profiles/${profile.username}` 
+    : '/profiles/me';
+
   return (
     <div
-      className={`px-3 sm:px-4 py-3 sm:py-4 border-b border-gray-100 ${
+      className={`px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-b border-gray-100 flex-shrink-0 ${
         isExpanded ? 'block' : 'hidden lg:flex lg:flex-col lg:items-center'
       }`}
     >
       <Link
-        href="/profiles/me"
-        className={`flex items-center hover:bg-gray-50 p-2 sm:p-3 rounded-xl transition-all duration-200 group w-full ${
-          isExpanded ? 'space-x-3' : 'lg:flex-col lg:space-y-2 lg:space-x-0'
+        href={profileUrl}
+        className={`flex items-center hover:bg-gray-50 p-1.5 sm:p-2 lg:p-3 rounded-xl transition-all duration-200 group w-full ${
+          isExpanded ? 'space-x-2 sm:space-x-3' : 'lg:flex-col lg:space-y-2 lg:space-x-0'
         }`}
-        onClick={onNavigate}
+        onClick={(e) => {
+          // Only call onNavigate if provided (for mobile sidebar closing)
+          // Don't prevent default navigation
+          if (onNavigate) {
+            onNavigate();
+          }
+        }}
       >
-        <div className="relative">
+        <div className="relative flex-shrink-0">
           {profile.avatar_url && !avatarError ? (
             <Image
               src={profile.avatar_url}
@@ -58,10 +69,10 @@ export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarU
               className="transition-all duration-300 group-hover:ring-2 group-hover:ring-tiffany-200 rounded-full"
             />
           )}
-          <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 border-2 border-white rounded-full" />
         </div>
         <div className={`flex-1 min-w-0 ${isExpanded ? 'block' : 'hidden lg:hidden'}`}>
-          <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-tiffany-700 transition-colors">
+          <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate group-hover:text-tiffany-700 transition-colors">
             {profile.name || profile.username || 'User'}
           </p>
           <p className="text-xs text-gray-500 truncate">@{profile.username || 'username'}</p>

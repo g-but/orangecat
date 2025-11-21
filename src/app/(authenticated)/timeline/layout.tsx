@@ -1,12 +1,12 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'My Journey - OrangeCat',
+  title: 'My Timeline - OrangeCat',
   description:
-    'Share your personal timeline, achievements, and journey with the Bitcoin crowdfunding community.',
-  keywords: ['bitcoin', 'crowdfunding', 'timeline', 'journey', 'achievements', 'community'],
+    'Share your personal timeline, achievements, and updates with the Bitcoin crowdfunding community.',
+  keywords: ['bitcoin', 'crowdfunding', 'timeline', 'achievements', 'community'],
   openGraph: {
-    title: 'My Journey - OrangeCat',
+    title: 'My Timeline - OrangeCat',
     description: 'Share your personal timeline and achievements with the Bitcoin community.',
     type: 'website',
   },

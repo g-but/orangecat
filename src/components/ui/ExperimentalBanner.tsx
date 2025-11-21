@@ -78,27 +78,27 @@ export default function ExperimentalBanner({
 
   return (
     <div className={`bg-gradient-to-r from-orange-100 to-tiffany-100 border-b border-orange-200 ${className}`}>
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-3">
+      <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-sm flex-1 justify-center">
+          <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm flex-1 justify-center">
             {children || (
               <>
-                <span className="text-orange-600 font-medium">🚧 Experimental Version</span>
-                <span className="text-gray-600">•</span>
-                <span className="text-gray-600">
+                <span className="text-orange-600 font-medium">🚧 Experimental</span>
+                <span className="text-gray-600 hidden sm:inline">•</span>
+                <span className="text-gray-600 text-xs sm:text-sm hidden sm:inline">
                   {storageType === 'session'
-                    ? 'Development preview - features may not work as expected'
-                    : 'This is a development preview - features may not work as expected'
+                    ? 'Development preview'
+                    : 'Development preview'
                   }
                 </span>
-                <span className="text-gray-600">•</span>
+                <span className="text-gray-600 hidden sm:inline">•</span>
                 <a
                   href="https://github.com/g-but/orangecat"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-orange-600 hover:text-orange-700 font-medium underline"
+                  className="text-orange-600 hover:text-orange-700 font-medium underline text-xs sm:text-sm"
                 >
-                  View Source
+                  Source
                 </a>
               </>
             )}
@@ -106,10 +106,10 @@ export default function ExperimentalBanner({
           {dismissible && (
             <button
               onClick={handleDismiss}
-              className="ml-4 p-1 hover:bg-orange-200 rounded-full transition-colors"
+              className="ml-2 sm:ml-4 p-1 hover:bg-orange-200 rounded-full transition-colors"
               aria-label="Dismiss banner"
             >
-              <X className="w-4 h-4 text-orange-600" />
+              <X className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-orange-600" />
             </button>
           )}
         </div>

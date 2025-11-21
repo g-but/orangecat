@@ -12,21 +12,21 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'primary', size = 'md', isLoading, children, ...props }, ref) => {
     const baseStyles =
-      'inline-flex items-center justify-center rounded-xl font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-95 transform touch-manipulation select-none';
+      'inline-flex items-center justify-center rounded-full font-medium transition-all duration-200 ease-ios focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-98 transform touch-manipulation select-none';
 
     const variants = {
       primary:
-        'bg-tiffany-600 text-white hover:bg-tiffany-700 focus-visible:ring-tiffany-500 shadow-lg hover:shadow-xl active:shadow-md border-0',
+        'bg-tiffany-600 text-white hover:bg-tiffany-700 focus-visible:ring-tiffany-500 shadow-button hover:shadow-button-hover active:shadow-sm border-0',
       secondary:
-        'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-500 shadow-md hover:shadow-lg active:shadow-sm border border-gray-200',
+        'bg-gray-100 text-gray-900 hover:bg-gray-200 focus-visible:ring-gray-500 shadow-button hover:shadow-button-hover active:shadow-sm border border-gray-200',
       ghost:
         'hover:bg-gray-100 hover:text-gray-900 focus-visible:ring-gray-500 shadow-none hover:shadow-sm text-gray-700',
       danger:
-        'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-lg hover:shadow-xl active:shadow-md border-0',
+        'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 shadow-button hover:shadow-button-hover active:shadow-sm border-0',
       outline:
-        'border-2 border-gray-300 bg-transparent hover:bg-gray-50 hover:border-gray-400 focus-visible:ring-gray-500 shadow-sm hover:shadow-md active:shadow-sm text-gray-700',
+        'border-2 border-gray-300 bg-transparent hover:bg-gray-50 hover:border-gray-400 focus-visible:ring-gray-500 shadow-sm hover:shadow-button active:shadow-sm text-gray-700',
       gradient:
-        'bg-gradient-to-r from-tiffany-600 to-orange-600 hover:from-tiffany-700 hover:to-orange-700 text-white shadow-lg hover:shadow-xl active:shadow-md border-0 focus-visible:ring-tiffany-500',
+        'bg-gradient-to-r from-tiffany-600 to-orange-600 hover:from-tiffany-700 hover:to-orange-700 text-white shadow-button hover:shadow-button-hover active:shadow-sm border-0 focus-visible:ring-tiffany-500',
     };
 
     const sizes = {

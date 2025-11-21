@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import {
   Menu,
   X,
@@ -21,7 +22,7 @@ import { useMobileMenu } from '@/hooks/useMobileMenu';
 import { useActiveRoute } from '@/hooks/useActiveRoute';
 import { HeaderNavigation } from './HeaderNavigation';
 import { isAuthenticatedRoute } from '@/config/headerRoutes';
-import { getNavigationItems } from '@/config/navigationConfig';
+import { getNavigationItems, navigationSections, bottomNavItems } from '@/config/navigationConfig';
 import Logo from './Logo';
 import AuthButtons from './AuthButtons';
 import { HeaderCreateButton } from '@/components/dashboard/SmartCreateButton';
@@ -29,6 +30,7 @@ import EnhancedSearchBar from '@/components/search/EnhancedSearchBar';
 import MobileSearchModal from '@/components/search/MobileSearchModal';
 import UserProfileDropdown from '@/components/ui/UserProfileDropdown';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface UnifiedHeaderProps {
   showSearch?: boolean;
@@ -55,6 +57,7 @@ export default function UnifiedHeader({
   hideForRoutes = AUTHENTICATED_ROUTES_WITH_OWN_HEADER,
 }: UnifiedHeaderProps) {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile, signOut } = useAuth();
@@ -64,9 +67,42 @@ export default function UnifiedHeader({
   const navigation = getNavigationItems(user);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuButtonRef = useRef<HTMLButtonElement>(null);
+  const [isClosing, setIsClosing] = useState(false);
+  const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Ensure consistent server/client rendering - only check pathname after mount
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Handle closing animation - keep backdrop and menu visible during animation
+  useEffect(() => {
+    if (!mobileMenu.isOpen && isClosing) {
+      // Clear any existing timeout
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+      // Wait for animation to complete (300ms matches slideInLeft animation)
+      closeTimeoutRef.current = setTimeout(() => {
+        setIsClosing(false);
+      }, 300);
+      return () => {
+        if (closeTimeoutRef.current) {
+          clearTimeout(closeTimeoutRef.current);
+        }
+      };
+    } else if (mobileMenu.isOpen) {
+      setIsClosing(false);
+    }
+  }, [mobileMenu.isOpen, isClosing]);
 
   // Close mobile menu when clicking outside or pressing Escape
   useEffect(() => {
+    const handleClose = () => {
+      setIsClosing(true);
+      mobileMenu.close();
+    };
+
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (
         mobileMenu.isOpen &&
@@ -75,13 +111,13 @@ export default function UnifiedHeader({
         mobileMenuButtonRef.current &&
         !mobileMenuButtonRef.current.contains(event.target as Node)
       ) {
-        mobileMenu.close();
+        handleClose();
       }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && mobileMenu.isOpen) {
-        mobileMenu.close();
+        handleClose();
       }
     };
 
@@ -110,10 +146,13 @@ export default function UnifiedHeader({
   };
 
   // Hide UnifiedHeader for routes that have their own header
-  const shouldHide = isAuthenticatedRoute(pathname);
+  // Only check after mount to ensure consistent SSR/client rendering
+  const shouldHide = isMounted && pathname ? isAuthenticatedRoute(pathname) : false;
 
+  // Always render the same structure to prevent hydration mismatch
+  // Use CSS to hide if needed
   if (shouldHide) {
-    return <div className="h-16" />;
+    return <div className="h-16" aria-hidden="true" />;
   }
 
   // X/Twitter-inspired header styling with proper z-index
@@ -131,8 +170,27 @@ export default function UnifiedHeader({
       <header className={headerClasses}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            {/* Left: Logo */}
-            <div className="flex-shrink-0">
+            {/* Left: Hamburger Menu (Mobile) + Logo */}
+            <div className="flex items-center space-x-2 flex-shrink-0">
+              {/* Mobile Menu Button - Always on left for consistency */}
+              <button
+                ref={mobileMenuButtonRef}
+                onClick={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  mobileMenu.toggle();
+                }}
+                className="lg:hidden p-3 min-h-[44px] min-w-[44px] text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-150 touch-manipulation active:scale-95 flex items-center justify-center"
+                aria-label="Toggle mobile menu"
+                aria-expanded={mobileMenu.isOpen}
+                type="button"
+              >
+                {mobileMenu.isOpen ? (
+                  <X className="w-5 h-5 transition-transform duration-200" />
+                ) : (
+                  <Menu className="w-5 h-5 transition-transform duration-200" />
+                )}
+              </button>
               <Logo />
             </div>
 
@@ -172,7 +230,7 @@ export default function UnifiedHeader({
               {showSearch && (
                 <button
                   onClick={() => setShowMobileSearch(true)}
-                  className="md:hidden p-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors duration-150"
+                  className="md:hidden p-3 min-h-[44px] min-w-[44px] text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors duration-150 flex items-center justify-center"
                   aria-label="Search"
                 >
                   <Search className="w-5 h-5" />
@@ -187,11 +245,11 @@ export default function UnifiedHeader({
 
                   {/* Notifications - X-style */}
                   <button
-                    className="relative p-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-150"
+                    className="relative p-3 min-h-[44px] min-w-[44px] text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-150 flex items-center justify-center"
                     aria-label="Notifications"
                   >
                     <Bell className="w-5 h-5" />
-                    <span className="absolute top-1 right-1 w-2 h-2 bg-orange-500 rounded-full"></span>
+                    <span className="absolute top-2 right-2 w-2 h-2 bg-orange-500 rounded-full"></span>
                   </button>
 
                   {/* User Menu */}
@@ -205,50 +263,47 @@ export default function UnifiedHeader({
                   <AuthButtons />
                 </div>
               )}
-
-              {/* Mobile Menu Button - X-style hamburger */}
-              <button
-                ref={mobileMenuButtonRef}
-                onClick={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  mobileMenu.toggle();
-                }}
-                className="lg:hidden p-2.5 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-150 ml-2 touch-manipulation active:scale-95"
-                aria-label="Toggle mobile menu"
-                aria-expanded={mobileMenu.isOpen}
-                type="button"
-              >
-                {mobileMenu.isOpen ? (
-                  <X className="w-5 h-5 transition-transform duration-200" />
-                ) : (
-                  <Menu className="w-5 h-5 transition-transform duration-200" />
-                )}
-              </button>
             </div>
           </div>
         </div>
 
+        {/* Mobile Menu - Rendered via portal for z-index safety */}
+        {(mobileMenu.isOpen || isClosing) && typeof window !== 'undefined' && createPortal(
+          <>
         {/* Mobile Menu Backdrop - X-style overlay */}
-        {mobileMenu.isOpen && (
           <div
-            className="lg:hidden fixed top-16 bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm z-[50] transition-opacity duration-200"
-            onClick={mobileMenu.close}
-            onTouchStart={mobileMenu.close}
+              className={cn(
+                "lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-[9998] transition-opacity duration-300",
+                isClosing ? "opacity-0" : "opacity-100"
+              )}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsClosing(true);
+              mobileMenu.close();
+            }}
+            onTouchStart={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsClosing(true);
+              mobileMenu.close();
+            }}
             aria-hidden="true"
           />
-        )}
 
-        {/* Mobile Menu - X-inspired slide-in drawer */}
-        {mobileMenu.isOpen && (
+        {/* Mobile Menu - Slide-in drawer from left (consistent with dashboard sidebar) */}
           <div
             ref={mobileMenuRef}
-            className="lg:hidden fixed top-16 bottom-0 left-0 w-80 max-w-[85vw] bg-white shadow-2xl z-[55] overflow-y-auto overscroll-contain"
+              className={cn(
+                "lg:hidden fixed top-16 bottom-0 left-0 w-80 max-w-[85vw] sm:max-w-sm bg-white dark:bg-gray-900 shadow-2xl z-[9999] overflow-y-auto overscroll-contain transition-transform duration-300 ease-out",
+                isClosing ? "-translate-x-full" : "translate-x-0"
+              )}
             style={{
               WebkitOverflowScrolling: 'touch',
               overscrollBehavior: 'contain',
-              animation: 'slideInLeft 0.3s ease-out',
+              height: 'calc(100vh - 4rem)', // Explicit height calculation
             }}
+              data-mobile-menu="true"
           >
             <div className="flex flex-col h-full">
               {/* User Profile Section - Top (if authenticated) */}
@@ -262,17 +317,17 @@ export default function UnifiedHeader({
                     {profile.avatar_url ? (
                       <img
                         src={profile.avatar_url}
-                        alt={profile.display_name || profile.username || 'User'}
+                        alt={profile.name || profile.username || 'User'}
                         className="w-12 h-12 rounded-full object-cover ring-2 ring-orange-200"
                       />
                     ) : (
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-orange-400 to-tiffany-400 flex items-center justify-center text-white font-bold text-lg ring-2 ring-orange-200">
-                        {profile.display_name?.[0] || profile.username?.[0] || 'U'}
+                        {profile.name?.[0] || profile.username?.[0] || 'U'}
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-gray-900 truncate">
-                        {profile.display_name || profile.username || 'User'}
+                        {profile.name || profile.username || 'User'}
                       </div>
                       <div className="text-sm text-gray-500 truncate">
                         @{profile.username || 'user'}
@@ -300,17 +355,67 @@ export default function UnifiedHeader({
                 </div>
               )}
 
-              {/* Navigation Links - X-style */}
+              {/* Navigation Links - Use same structure as Sidebar for consistency */}
               <nav className="flex-1 p-2 overflow-y-auto">
-                <div className="space-y-1">
-                  {navigation.map(item => {
-                    if (!item.href) {
-                      return null;
-                    }
+                <div className="space-y-4">
+                  {/* Render navigation sections (same as Sidebar) */}
+                  {navigationSections
+                    .filter(section => !section.requiresAuth || user)
+                    .map(section => {
+                      const sectionItems = section.items.filter(
+                        item => !item.requiresAuth || user
+                      );
 
+                      if (sectionItems.length === 0) return null;
+
+                      return (
+                        <div key={section.id} className="space-y-1">
+                          {/* Section Header */}
+                          <div className="px-4 py-2">
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                              {section.title}
+                            </h3>
+                          </div>
+
+                          {/* Section Items */}
+                          <div className="space-y-1">
+                            {sectionItems.map(item => {
+                              const isActiveRoute = isActive(item.href);
+                              const Icon = item.icon;
+                              const linkClasses = [
+                                'flex items-center w-full px-4 py-3.5 text-base font-medium rounded-full transition-all duration-200 touch-manipulation',
+                                isActiveRoute
+                                  ? 'bg-orange-500 text-white shadow-md font-semibold'
+                                  : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200',
+                              ].join(' ');
+
+                              return (
+                                <Link
+                                  key={item.name}
+                                  href={item.href}
+                                  className={linkClasses}
+                                  onClick={mobileMenu.close}
+                                >
+                                  {Icon && <Icon className="w-5 h-5 mr-3" />}
+                                  <span>{item.name}</span>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+              </nav>
+
+              {/* Bottom Actions - Use same structure as Sidebar for consistency */}
+              {user && bottomNavItems.length > 0 && (
+                <div className="p-4 border-t border-gray-200 space-y-1 bg-gray-50/50">
+                  {bottomNavItems.map(item => {
+                    const Icon = item.icon;
                     const isActiveRoute = isActive(item.href);
                     const linkClasses = [
-                      'flex items-center w-full px-4 py-3.5 text-base font-medium rounded-full transition-all duration-200 touch-manipulation',
+                      'flex items-center w-full px-4 py-3.5 text-base font-medium rounded-full transition-all duration-150 touch-manipulation',
                       isActiveRoute
                         ? 'bg-orange-500 text-white shadow-md font-semibold'
                         : 'text-gray-900 hover:bg-gray-100 active:bg-gray-200',
@@ -323,55 +428,11 @@ export default function UnifiedHeader({
                         className={linkClasses}
                         onClick={mobileMenu.close}
                       >
+                        {Icon && <Icon className="w-5 h-5 mr-3" />}
                         <span>{item.name}</span>
                       </Link>
                     );
                   })}
-
-                  {/* Additional authenticated user links */}
-                  {user && (
-                    <>
-                      <div className="h-px bg-gray-200 my-2 mx-4" />
-                      <Link
-                        href="/dashboard"
-                        className="flex items-center w-full px-4 py-3.5 text-base font-medium text-gray-900 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-200 touch-manipulation"
-                        onClick={mobileMenu.close}
-                      >
-                        <Home className="w-5 h-5 mr-3" />
-                        <span>Dashboard</span>
-                      </Link>
-                      <Link
-                        href="/dashboard/projects"
-                        className="flex items-center w-full px-4 py-3.5 text-base font-medium text-gray-900 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-200 touch-manipulation"
-                        onClick={mobileMenu.close}
-                      >
-                        <FileText className="w-5 h-5 mr-3" />
-                        <span>My Projects</span>
-                      </Link>
-                      <Link
-                        href="/dashboard/wallets"
-                        className="flex items-center w-full px-4 py-3.5 text-base font-medium text-gray-900 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-200 touch-manipulation"
-                        onClick={mobileMenu.close}
-                      >
-                        <Wallet className="w-5 h-5 mr-3" />
-                        <span>Wallets</span>
-                      </Link>
-                    </>
-                  )}
-                </div>
-              </nav>
-
-              {/* Bottom Actions (if authenticated) - X-style */}
-              {user && (
-                <div className="p-4 border-t border-gray-200 space-y-1 bg-gray-50/50">
-                  <Link
-                    href="/settings"
-                    className="flex items-center w-full px-4 py-3.5 text-base font-medium text-gray-900 hover:bg-gray-100 active:bg-gray-200 rounded-full transition-all duration-150 touch-manipulation"
-                    onClick={mobileMenu.close}
-                  >
-                    <Settings className="w-5 h-5 mr-3" />
-                    <span>Settings</span>
-                  </Link>
                   <button
                     onClick={handleLogout}
                     className="flex items-center w-full px-4 py-3.5 text-base font-medium text-red-600 hover:bg-red-50 active:bg-red-100 rounded-full transition-all duration-150 touch-manipulation"
@@ -384,6 +445,8 @@ export default function UnifiedHeader({
               )}
             </div>
           </div>
+          </>,
+          document.body
         )}
       </header>
 
