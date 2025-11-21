@@ -127,7 +127,7 @@
     "date-fns": "^4.1.0",
     "focus-trap-react": "^11.0.4",
     "framer-motion": "^12.20.1",
-    "glob": "^11.0.3",
+    "glob": "^11.1.0",
     "gray-matter": "^4.0.3",
     "lodash": "^4.17.21",
     "lucide-react": "^0.488.0",
