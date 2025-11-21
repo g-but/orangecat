@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { timelineService } from '@/services/timeline';
 import { TimelineFeedResponse, TimelineDisplayEvent } from '@/types/timeline';
 import TimelineComponent from './TimelineComponent';
+import TimelineComposer from './TimelineComposer';
 import Button from '@/components/ui/Button';
 import { logger } from '@/utils/logger';
 
@@ -15,10 +16,18 @@ import { logger } from '@/utils/logger';
  * Used across all timeline contexts: journey, community, profiles, projects.
  *
  * Data Fetching Strategy:
- * - 'journey': Shows user's own posts (actor_id = userId)
+ * - 'journey': Shows user's own posts (actor_id = userId) - posts the user created
  * - 'community': Shows all public posts
- * - 'profile': Shows posts on a specific profile (subject_id = profileId)
- * - 'project': Shows posts on a specific project (subject_id = projectId)
+ * - 'profile': Shows posts on a specific profile (subject_id = profileId) - posts on that profile's timeline
+ * - 'project': Shows posts on a specific project (subject_id = projectId) - posts on that project's timeline
+ *
+ * IMPORTANT: 'journey' and 'profile' show DIFFERENT data:
+ * - Journey (My Timeline): Shows posts WHERE user is the actor (posts user created)
+ * - Profile Timeline: Shows posts WHERE profile is the subject (posts on that profile's timeline)
+ * 
+ * This means a post can appear on a profile timeline but not in "My Timeline" if:
+ * - Someone else posted on that profile's timeline, OR
+ * - The user posted on someone else's profile timeline
  */
 
 export interface TimelineViewProps {
@@ -286,6 +295,26 @@ export default function TimelineView({
   // Render timeline
   return (
     <div className="space-y-4">
+      {/* Timeline Composer - Show at top if enabled */}
+      {showComposer && user && (
+        <TimelineComposer
+          targetOwnerId={ownerId}
+          targetOwnerType={ownerType}
+          allowProjectSelection={feedType === 'profile' || feedType === 'project'}
+          onPostCreated={handlePostCreated}
+          placeholder={
+            feedType === 'profile'
+              ? 'Write on this timeline...'
+              : feedType === 'project'
+                ? 'Share an update about this project...'
+                : "What's on your mind?"
+          }
+          buttonText="Post"
+          showBanner={Boolean(ownerId && ownerId !== user.id)}
+        />
+      )}
+
+      {/* Timeline Feed */}
       {mergedFeed && (
         <TimelineComponent
           feed={mergedFeed}

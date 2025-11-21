@@ -1,10 +1,8 @@
 'use client';
 
 import { Suspense, useCallback, useState } from 'react';
-import dynamic from 'next/dynamic';
 import { Profile } from '@/types/database';
 import TimelineView from '@/components/timeline/TimelineView';
-import TimelineComposer from '@/components/timeline/TimelineComposer';
 
 interface ProfileTimelineTabProps {
   profile: Profile;
@@ -14,10 +12,10 @@ interface ProfileTimelineTabProps {
 /**
  * ProfileTimelineTab Component
  *
- * Displays timeline for profile pages using modular architecture.
+ * Displays timeline for profile pages.
  * - Shows posts that appear on this profile's timeline (subject_id = profile.id)
- * - Allows posting to profile timeline (anyone can post if enabled)
- * - Reuses TimelineView and TimelineComposer components (DRY)
+ * - Shows composer for all profiles (users can post on any profile's timeline)
+ * - Reuses TimelineView component (DRY)
  */
 export default function ProfileTimelineTab({ profile, isOwnProfile }: ProfileTimelineTabProps) {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -28,32 +26,22 @@ export default function ProfileTimelineTab({ profile, isOwnProfile }: ProfileTim
   }, []);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-4">
-      {/* Composer - Allow posting on profile timeline */}
-      <TimelineComposer
-        targetOwnerId={profile.id}
-        targetOwnerType="profile"
-        targetOwnerName={profile.display_name || profile.username || 'User'}
-        allowProjectSelection={true}
-        onPostCreated={handlePostCreated}
-        showBanner={!isOwnProfile}
-      />
-
-      {/* Timeline Feed - Posts on this profile */}
+    <div className="w-full px-0 sm:px-4 sm:max-w-2xl sm:mx-auto space-y-0 sm:space-y-4">
+      {/* Timeline Feed - Show composer for all profiles (users can post on any profile) */}
       <Suspense fallback={<TimelineLoadingSkeleton />}>
         <TimelineView
           key={refreshKey}
           feedType="profile"
           ownerId={profile.id}
           ownerType="profile"
-          showComposer={false} // Composer shown above
+          showComposer={true} // Enable composer for all profiles
           compact={false}
           showFilters={false}
           emptyStateTitle="No posts yet"
           emptyStateDescription={
             isOwnProfile
-              ? 'Your timeline is empty. Share your first update!'
-              : 'No posts on this timeline yet. Be the first to post!'
+              ? 'Share your first update!'
+              : 'No posts on this timeline yet.'
           }
           onPostCreated={handlePostCreated}
         />

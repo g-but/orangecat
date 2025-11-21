@@ -242,7 +242,7 @@ export default function UserProfileDropdown({
         onClick={toggle}
         onKeyDown={handleTriggerKeyDown}
         disabled={isProfileLoading}
-        className="flex items-center space-x-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1 rounded-xl px-3 py-2.5 min-h-[44px] disabled:opacity-50"
+        className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1 rounded-xl px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 md:py-2.5 min-h-[36px] sm:min-h-[40px] md:min-h-[44px] disabled:opacity-50"
         aria-haspopup="menu"
         aria-expanded={isOpen}
         aria-label="User menu"
@@ -253,9 +253,9 @@ export default function UserProfileDropdown({
               <Image
                 src={avatarUrl}
                 alt={displayName}
-                width={36}
-                height={36}
-                className="rounded-full object-cover ring-2 ring-orange-200 hover:ring-orange-300 transition-all duration-200"
+                width={32}
+                height={32}
+                className="rounded-full object-cover ring-2 ring-orange-200 hover:ring-orange-300 transition-all duration-200 sm:w-9 sm:h-9 md:w-[36px] md:h-[36px]"
                 onError={() => setAvatarError(true)}
               />
             ) : (
@@ -264,13 +264,13 @@ export default function UserProfileDropdown({
                 className="rounded-full ring-2 ring-orange-200 hover:ring-orange-300 transition-all duration-200"
               />
             )}
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 border-2 border-white rounded-full shadow-sm"></div>
+            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-400 border-2 border-white rounded-full shadow-sm"></div>
           </span>
         )}
-        <span className="font-medium text-base max-w-[140px] truncate flex items-center">
+        <span className="font-medium text-sm sm:text-base max-w-[80px] sm:max-w-[100px] md:max-w-[140px] truncate flex items-center hidden sm:flex">
           {firstName}
           {isProfileLoading && (
-            <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-2" />
+            <div className="w-3 h-3 border border-gray-400 border-t-transparent rounded-full animate-spin ml-1 sm:ml-2" />
           )}
         </span>
         <ChevronDown

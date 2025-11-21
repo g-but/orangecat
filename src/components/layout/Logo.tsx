@@ -4,8 +4,8 @@ import Link from 'next/link'
 
 export default function Logo({ className = '' }: { className?: string }) {
   return (
-    <Link href="/" className={`flex items-center space-x-2 group min-h-[44px] py-2 ${className}`.trim()}>
-      <span className="inline-block w-8 h-8 sm:w-9 sm:h-9 align-middle">
+    <Link href="/" className={`flex items-center space-x-1.5 sm:space-x-2 group min-h-[44px] py-2 ${className}`.trim()}>
+      <span className="inline-block w-7 h-7 sm:w-8 sm:h-8 md:w-9 md:h-9 align-middle flex-shrink-0">
         {/* Cuter, modern cat face SVG with Bitcoin orange accents */}
         <svg width="100%" height="100%" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
           {/* Head */}
@@ -25,7 +25,7 @@ export default function Logo({ className = '' }: { className?: string }) {
           <path d="M32 25 Q27 27 24 25" stroke="#FF6B00" strokeWidth="1" fill="none"/>
         </svg>
       </span>
-      <span className="text-xl sm:text-2xl font-bold text-tiffany-600 group-hover:text-orange-500 transition-colors">OrangeCat</span>
+      <span className="text-lg sm:text-xl md:text-2xl font-bold text-tiffany-600 group-hover:text-orange-500 transition-colors whitespace-nowrap hidden sm:block">OrangeCat</span>
     </Link>
   )
 } 

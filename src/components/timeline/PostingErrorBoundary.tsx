@@ -213,3 +213,4 @@ export function withPostingErrorBoundary<P extends object>(
 
   return WrappedComponent;
 }
+

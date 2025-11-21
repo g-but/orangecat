@@ -95,6 +95,13 @@ export const navigationSections: NavSection[] = [
         requiresAuth: true,
       },
       {
+        name: 'My Timeline',
+        href: '/timeline',
+        icon: BookOpen,
+        description: 'Manage your timeline and posts',
+        requiresAuth: true,
+      },
+      {
         name: 'My Projects',
         href: '/dashboard/projects',
         icon: Rocket,

@@ -27,7 +27,7 @@ export function PerformanceMonitor({ className = '' }: PerformanceMonitorProps) 
 
   if (!isVisible) {
     return (
-      <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
+      <div className={`hidden md:flex fixed bottom-4 right-4 z-50 ${className}`}>
         <Button
           variant="outline"
           size="sm"
@@ -84,7 +84,7 @@ export function PerformanceMonitor({ className = '' }: PerformanceMonitorProps) 
   const breakdown = getMetricsBreakdown()
 
   return (
-    <div className={`fixed bottom-4 right-4 z-50 ${className}`}>
+    <div className={`hidden md:flex fixed bottom-4 right-4 z-50 ${className}`}>
       <Card className="w-80 bg-white shadow-xl border-gray-200">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">

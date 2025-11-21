@@ -262,7 +262,7 @@ export default function EnhancedSearchBar({
   return (
     <div ref={searchRef} className={`relative ${className}`}>
       <form onSubmit={handleSubmit} className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-2.5 sm:left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
         <input
           ref={inputRef}
           type="text"
@@ -272,15 +272,15 @@ export default function EnhancedSearchBar({
           onFocus={() => setIsOpen(true)}
           onKeyDown={handleInputKeyDown}
           autoFocus={autoFocus}
-          className="w-full pl-10 pr-10 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50 hover:bg-white transition-all duration-200 placeholder-gray-500"
+          className="w-full pl-9 sm:pl-10 pr-8 sm:pr-10 py-2 sm:py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-gray-50 hover:bg-white transition-all duration-200 placeholder-gray-500"
           aria-label="Search"
           aria-expanded={isOpen}
           aria-haspopup="listbox"
           role="combobox"
           aria-autocomplete="list"
         />
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center text-xs text-gray-400">
-          <kbd className="px-1.5 py-0.5 bg-gray-100 rounded border text-xs">⌘K</kbd>
+        <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 flex items-center text-xs text-gray-400">
+          <kbd className="hidden sm:inline-flex px-1.5 py-0.5 bg-gray-100 rounded border text-xs">⌘K</kbd>
         </div>
       </form>
 

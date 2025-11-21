@@ -10,15 +10,42 @@ interface PageProps {
 /**
  * Generate metadata for public profile pages
  * This enables SEO and social media preview cards
+ * 
+ * Handles /profiles/me by resolving to the actual username
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { username } = await params;
   const supabase = await createServerClient();
 
+  // Handle /profiles/me → resolve to actual username
+  let targetUsername = username;
+  if (username === 'me') {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    
+    if (user) {
+      // Get username for current user
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('username')
+        .eq('id', user.id)
+        .single();
+      
+      targetUsername = userProfile?.username || user.id;
+    } else {
+      // Not authenticated - return generic metadata
+      return {
+        title: 'My Profile | OrangeCat',
+        description: 'View your profile on OrangeCat. Support Bitcoin fundraising projects.',
+      };
+    }
+  }
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('name, bio, avatar_url, username')
-    .eq('username', username)
+    .eq('username', targetUsername)
     .single();
 
   if (!profile) {
@@ -28,12 +55,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const displayName = profile.name || profile.username || username;
+  const displayName = profile.name || profile.username || targetUsername;
   const description =
     profile.bio ||
     `View ${displayName}'s profile on OrangeCat. Support their Bitcoin fundraising projects.`;
   const image = profile.avatar_url || '/images/og-default.png';
-  const url = `https://orangecat.ch/profiles/${username}`;
+  // Use actual username in URL, not "me" for better SEO
+  const url = `https://orangecat.ch/profiles/${profile.username || targetUsername}`;
 
   return {
     title: `${displayName} | OrangeCat`,
@@ -151,14 +179,16 @@ export default async function PublicProfilePage({ params }: PageProps) {
   const totalRaised = projects?.reduce((sum, p) => sum + (Number(p.raised_amount) || 0), 0) || 0;
 
   // Generate JSON-LD structured data for SEO
+  // Use actual username in URL, not "me" for better SEO
+  const canonicalUsername = profile.username || targetUsername;
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: profile.name || profile.username || username,
+    name: profile.name || profile.username || canonicalUsername,
     alternateName: profile.username || undefined,
     description: profile.bio || undefined,
     image: profile.avatar_url || undefined,
-    url: `https://orangecat.ch/profiles/${username}`,
+    url: `https://orangecat.ch/profiles/${canonicalUsername}`,
     sameAs: profile.website ? [profile.website] : undefined,
     ...(profile.bitcoin_address && {
       paymentAccepted: 'Bitcoin',

@@ -332,7 +332,7 @@ export default function DiscoverPage() {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <motion.h1
-              className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-gray-900 mb-4"
+              className="text-fluid-3xl font-extrabold tracking-tight text-gray-900 mb-4"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.5 }}
@@ -344,7 +344,7 @@ export default function DiscoverPage() {
             </motion.h1>
 
             <motion.p
-              className="mt-4 max-w-2xl mx-auto text-base sm:text-lg text-gray-600"
+              className="mt-4 max-w-2xl mx-auto text-fluid-lg text-gray-600"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.7 }}
@@ -359,17 +359,17 @@ export default function DiscoverPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.9 }}
             >
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-white/50">
-                <div className="text-xl font-bold text-gray-900">{stats.totalProjects}</div>
-                <div className="text-xs text-gray-600">Active Projects</div>
+              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-white/80 shadow-card">
+                <div className="text-fluid-xl font-bold text-gray-900">{stats.totalProjects}</div>
+                <div className="text-sm text-gray-600 mt-1">Active Projects</div>
               </div>
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-white/50">
-                <div className="text-xl font-bold text-tiffany-600">{stats.totalProfiles}</div>
-                <div className="text-xs text-gray-600">People</div>
+              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-white/80 shadow-card">
+                <div className="text-fluid-xl font-bold text-tiffany-600">{stats.totalProfiles}</div>
+                <div className="text-sm text-gray-600 mt-1">People</div>
               </div>
-              <div className="bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-white/50">
-                <div className="text-xl font-bold text-bitcoinOrange">0 BTC</div>
-                <div className="text-xs text-gray-600">Funds Raised</div>
+              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-white/80 shadow-card">
+                <div className="text-fluid-xl font-bold text-bitcoinOrange">0 BTC</div>
+                <div className="text-sm text-gray-600 mt-1">Funds Raised</div>
               </div>
             </motion.div>
           </motion.div>

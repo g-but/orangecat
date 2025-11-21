@@ -88,3 +88,4 @@ The 3 active components serve distinct purposes:
 - This is good separation of concerns
 
 The only issue was unused legacy code (`ProjectCard.tsx`), which should be removed.
+
