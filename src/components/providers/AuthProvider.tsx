@@ -35,27 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     logger.info('Setting up auth state change listener', undefined, 'Auth');
 
-    // Clear any stale sessionStorage data on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const storedUser = useAuthStore.getState().user;
-
-      // If session user ID doesn't match stored user ID, clear stale data
-      if (storedUser && session?.user && storedUser.id !== session.user.id) {
-        logger.warn(
-          'Session mismatch detected - clearing stale auth data',
-          {
-            storedUserId: storedUser.id,
-            sessionUserId: session.user.id,
-          },
-          'Auth'
-        );
-        clear();
-        setInitialAuthState(session.user, session, null);
-        fetchProfile().catch(err => {
-          logger.warn('Failed to fetch profile after session sync', { error: err }, 'Auth');
-        });
-      }
-    });
+    // NOTE: We don't call getSession() here because:
+    // 1. onAuthStateChange will fire INITIAL_SESSION event with the current session
+    // 2. This prevents duplicate session checks and excessive lock acquisitions
+    // 3. The INITIAL_SESSION handler below will handle any session mismatch
 
     // Set up the auth state change listener
     const {
@@ -76,6 +59,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         case 'INITIAL_SESSION':
           // Initial session load - set state with existing session
           if (session?.user) {
+            const storedUser = useAuthStore.getState().user;
+
+            // Check for session mismatch (user ID changed)
+            if (storedUser && storedUser.id !== session.user.id) {
+              logger.warn(
+                'Session mismatch detected - clearing stale auth data',
+                {
+                  storedUserId: storedUser.id,
+                  sessionUserId: session.user.id,
+                },
+                'Auth'
+              );
+              clear();
+            }
+
             // Always clear profile on initial session to prevent stale data
             setInitialAuthState(session.user, session, null);
             // Fetch profile in background

@@ -12,6 +12,7 @@
     "d": "node scripts/dev/dev-start.js",
     "dev": "next dev",
     "dev:clean": "bash scripts/dev.sh",
+    "dev:nuke": "bash scripts/dev/nuke-cache.sh",
     "dev:win": "scripts/dev.bat",
     "kill:node": "powershell \"Stop-Process -Name node -Force -ErrorAction SilentlyContinue\"",
     "clear:cache": "rm -rf .next && npm cache clean --force",

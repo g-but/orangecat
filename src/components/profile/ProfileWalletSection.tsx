@@ -1,8 +1,9 @@
 'use client';
 
-import { Bitcoin, Copy } from 'lucide-react';
+import { Bitcoin, Copy, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
+import { QRCodeSVG } from 'qrcode.react';
 import { Wallet, WALLET_CATEGORIES } from '@/types/wallet';
 import BitcoinDonationCard from '@/components/bitcoin/BitcoinDonationCard';
 import BitcoinWalletStatsCompact from '@/components/bitcoin/BitcoinWalletStatsCompact';
@@ -109,13 +110,23 @@ export default function ProfileWalletSection({
                     </div>
                   )}
 
+                  {/* QR Code for easy scanning */}
+                  <div className="mb-4 flex justify-center">
+                    <div className="bg-white p-3 rounded-lg border-2 border-gray-200 shadow-sm">
+                      <QRCodeSVG
+                        value={`bitcoin:${wallet.address_or_xpub}`}
+                        size={120}
+                        level="H"
+                        includeMargin={false}
+                      />
+                    </div>
+                  </div>
+
                   {/* Address with copy button */}
                   <div className="pt-3 border-t">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs text-gray-500">
-                        {wallet.wallet_type === 'xpub'
-                          ? 'Extended Public Key'
-                          : 'Bitcoin Address'}
+                        {wallet.wallet_type === 'xpub' ? 'Extended Public Key' : 'Bitcoin Address'}
                       </span>
                       <button
                         onClick={() => {
@@ -129,10 +140,37 @@ export default function ProfileWalletSection({
                         Copy
                       </button>
                     </div>
-                    <code className="text-xs text-gray-700 block font-mono break-all bg-gray-50 p-2 rounded">
+                    <code
+                      className="text-xs text-gray-700 block font-mono break-all bg-gray-50 p-2 rounded cursor-pointer hover:bg-gray-100 transition-colors"
+                      onClick={() => {
+                        navigator.clipboard.writeText(wallet.address_or_xpub);
+                        toast.success('Address copied to clipboard');
+                      }}
+                      title="Click to copy address"
+                    >
                       {wallet.address_or_xpub.slice(0, 20)}...
                       {wallet.address_or_xpub.slice(-10)}
                     </code>
+                  </div>
+
+                  {/* Send Button */}
+                  <div className="mt-3 pt-3 border-t">
+                    <Button
+                      onClick={() => {
+                        const bitcoinUri = `bitcoin:${wallet.address_or_xpub}`;
+                        window.location.href = bitcoinUri;
+                        // Fallback: show toast if wallet doesn't open
+                        setTimeout(() => {
+                          toast.info(
+                            "If your wallet didn't open, copy the address and paste it manually"
+                          );
+                        }, 500);
+                      }}
+                      className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      Send with Wallet
+                    </Button>
                   </div>
                 </div>
               );

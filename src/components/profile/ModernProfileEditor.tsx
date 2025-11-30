@@ -4,20 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import {
-  Save,
-  X,
-  MapPin,
-  Link as LinkIcon,
-  User,
-  Camera,
-  Bitcoin,
-  Zap,
-  ArrowRight,
-  ArrowLeft,
-  Check,
-} from 'lucide-react';
-import { LocationAutocomplete } from '@/components/ui/LocationAutocomplete';
+import { Save, X, MapPin, Link as LinkIcon, User, Camera, Mail, Phone } from 'lucide-react';
+import { LocationInput } from '@/components/ui/LocationInput';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -35,9 +23,10 @@ import { toast } from 'sonner';
 import { Profile } from '@/types/profile';
 import { ProfileFormData } from '@/types/database';
 import { ProfileStorageService } from '@/services/profile/storage';
-import { WalletManager } from '@/components/wallets/WalletManager';
-import { Wallet, WalletFormData } from '@/types/wallet';
 import ProfileWizard from './ProfileWizard';
+import { SocialLinksEditor } from './SocialLinksEditor';
+import { SocialLink } from '@/types/social';
+import { ProfileFieldType } from '@/lib/profile-guidance';
 
 // Import server-side schema to keep validation consistent
 import { profileSchema as serverProfileSchema, normalizeProfileData } from '@/lib/validation';
@@ -135,6 +124,8 @@ interface ModernProfileEditorProps {
   onSave: (data: ProfileFormData) => Promise<void>;
   onCancel: () => void;
   useWizard?: boolean; // Whether to use the step-by-step wizard
+  onFieldFocus?: (field: ProfileFieldType) => void; // For guidance sidebar
+  inline?: boolean; // If true, render inline instead of as modal
 }
 
 export default function ModernProfileEditor({
@@ -144,11 +135,13 @@ export default function ModernProfileEditor({
   onSave,
   onCancel,
   useWizard = false,
+  onFieldFocus,
+  inline = false,
 }: ModernProfileEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
-  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const bannerInputRef = useRef<HTMLInputElement>(null);
@@ -156,10 +149,22 @@ export default function ModernProfileEditor({
   // Get user from auth context or props
   const user = { id: userId };
 
+  // Parse social links from profile
+  useEffect(() => {
+    if (profile.social_links) {
+      if (typeof profile.social_links === 'object' && 'links' in profile.social_links) {
+        setSocialLinks((profile.social_links as { links: SocialLink[] }).links || []);
+      } else if (Array.isArray(profile.social_links)) {
+        setSocialLinks(profile.social_links as SocialLink[]);
+      }
+    }
+  }, [profile.social_links]);
+
   // Form setup with default values
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     mode: 'onChange',
+    reValidateMode: 'onChange',
     defaultValues: {
       username: profile.username || userEmail?.split('@')[0] || '',
       name: profile.name || '',
@@ -177,6 +182,11 @@ export default function ModernProfileEditor({
       avatar_url: profile.avatar_url || '',
       banner_url: profile.banner_url || '',
       website: profile.website || '',
+      // Social & Contact
+      social_links: socialLinks.length > 0 ? { links: socialLinks } : undefined,
+      contact_email: (profile as any).contact_email || userEmail || '',
+      phone: (profile as any).phone || '',
+      // Wallet fields (kept for backward compatibility, but wallets managed separately)
       bitcoin_address: profile.bitcoin_address || '',
       lightning_address: profile.lightning_address || '',
     },
@@ -236,120 +246,61 @@ export default function ModernProfileEditor({
     }
   };
 
-  // Fetch wallets on component mount
+  // Update form when social links change
   useEffect(() => {
-    if (profile.id) {
-      fetch(`/api/wallets?profile_id=${profile.id}`)
-        .then(res => res.json())
-        .then(data => setWallets(data.wallets || []))
-        .catch(err => {
-          console.error('Failed to fetch wallets:', err);
-        });
-    }
-  }, [profile.id]);
-
-  // Wallet CRUD handlers
-  const handleAddWallet = async (data: WalletFormData) => {
-    try {
-      const res = await fetch('/api/wallets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...data, profile_id: profile.id }),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to add wallet');
-      }
-
-      const { wallet } = await res.json();
-      setWallets([...wallets, wallet]);
-      toast.success('Wallet added successfully');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to add wallet');
-      throw error;
-    }
-  };
-
-  const handleUpdateWallet = async (walletId: string, data: Partial<WalletFormData>) => {
-    try {
-      const res = await fetch(`/api/wallets/${walletId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to update wallet');
-      }
-
-      const { wallet } = await res.json();
-      setWallets(wallets.map(w => (w.id === walletId ? wallet : w)));
-      toast.success('Wallet updated');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to update wallet');
-      throw error;
-    }
-  };
-
-  const handleDeleteWallet = async (walletId: string) => {
-    try {
-      const res = await fetch(`/api/wallets/${walletId}`, {
-        method: 'DELETE',
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to delete wallet');
-      }
-
-      setWallets(wallets.filter(w => w.id !== walletId));
-      toast.success('Wallet deleted');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to delete wallet');
-      throw error;
-    }
-  };
-
-  const handleRefreshWallet = async (walletId: string) => {
-    try {
-      const res = await fetch(`/api/wallets/${walletId}/refresh`, {
-        method: 'POST',
-      });
-
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || 'Failed to refresh balance');
-      }
-
-      const { wallet } = await res.json();
-      setWallets(wallets.map(w => (w.id === walletId ? wallet : w)));
-      toast.success('Balance updated');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to refresh balance');
-      throw error;
-    }
-  };
+    form.setValue('social_links', socialLinks.length > 0 ? { links: socialLinks } : undefined);
+  }, [socialLinks, form]);
 
   // Handle form submission
   const onSubmit = async (data: ProfileFormValues) => {
     setIsSaving(true);
 
     try {
+      // Ensure social_links includes current state, converting null labels to undefined
+      const normalizedLinks =
+        socialLinks.length > 0
+          ? {
+              links: socialLinks.map(link => ({
+                platform: link.platform,
+                value: link.value,
+                label: link.label || undefined, // Convert null to undefined
+              })),
+            }
+          : undefined;
+
+      const dataWithSocialLinks = {
+        ...data,
+        social_links: normalizedLinks,
+      };
+
       // Normalize the data using our helper function
-      const normalizedData = normalizeProfileData(data);
-      const formData: ProfileFormData = normalizedData;
+      const normalizedData = normalizeProfileData(dataWithSocialLinks);
+      // Type assertion needed because normalizeProfileData may return types with null labels
+      const formData = normalizedData as ProfileFormData;
 
       await onSave(formData);
       // Success toast is shown by useUnifiedProfile hook
 
-      // Close modal after successful save
-      onCancel();
+      // Don't call onCancel here - let the parent handle navigation
+      // The edit page will navigate after showing success toast
     } catch (error) {
+      // Extract error message properly
+      let errorMessage = 'Please try again';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      } else if (error && typeof error === 'object') {
+        // Try to extract message from error object
+        errorMessage = (error as any).message || (error as any).error || JSON.stringify(error);
+      }
+
       toast.error('Failed to save profile', {
-        description: error instanceof Error ? error.message : 'Please try again',
+        description: errorMessage,
       });
+
+      // Also log to console for debugging
+      console.error('Profile save error:', error);
     } finally {
       setIsSaving(false);
     }
@@ -361,13 +312,381 @@ export default function ModernProfileEditor({
       <ProfileWizard
         profile={profile}
         userId={userId}
-        userEmail={userEmail}
+        userEmail={userEmail || ''}
         onSave={onSave}
         onCancel={onCancel}
       />
     );
   }
 
+  // Render inline (for dedicated edit page) or as modal (for popup editing)
+  if (inline) {
+    // Inline mode: clean form layout without modal wrapper (page provides header/layout)
+    return (
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-6">
+            {/* Debug: Show form errors if any */}
+            {Object.keys(form.formState.errors).length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start gap-2">
+                  <div className="flex-shrink-0 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center text-xs font-bold mt-0.5">
+                    !
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-sm font-semibold text-red-900 mb-2">
+                      Please fix the following errors:
+                    </h4>
+                    <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                      {Object.entries(form.formState.errors).map(([field, error]) => (
+                        <li key={field}>
+                          <span className="font-medium">{field}:</span>{' '}
+                          {error?.message?.toString() || 'Invalid value'}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Profile Images Section */}
+            <ProfileImagesSection
+              profile={profile}
+              avatarPreview={avatarPreview}
+              bannerPreview={bannerPreview}
+              avatarInputRef={avatarInputRef}
+              bannerInputRef={bannerInputRef}
+              handleFileUpload={handleFileUpload}
+            />
+
+            {/* Form Fields */}
+            <div className="space-y-8">
+              {/* SECTION: Profile */}
+              <div className="space-y-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-5 sm:px-5 sm:py-6">
+                <div className="mb-1">
+                  <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                    Profile
+                  </h3>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Your basic profile information – username, name, bio and location.
+                  </p>
+                </div>
+
+                {/* Username - Required field (moved early) */}
+                <FormField
+                  control={form.control}
+                  name="username"
+                  render={({ field }) => {
+                    const { value, ...rest } = field;
+                    return (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          Username <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium z-10 pointer-events-none">
+                              @
+                            </span>
+                            <Input
+                              placeholder="your_unique_username"
+                              className="pl-8"
+                              {...rest}
+                              value={value || ''}
+                              onFocus={() => onFieldFocus?.('username')}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
+                />
+
+                {/* Name - Display name */}
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem id="name">
+                      <FormLabel className="text-sm font-medium text-gray-700">Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Your display name"
+                          {...field}
+                          value={field.value || ''}
+                          onFocus={() => onFieldFocus?.('name')}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs text-gray-500">
+                        This is how others will see you
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Bio */}
+                <FormField
+                  control={form.control}
+                  name="bio"
+                  render={({ field }) => (
+                    <FormItem id="bio">
+                      <FormLabel className="text-sm font-medium text-gray-700">Bio</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Tell your story..."
+                          className="min-h-[80px] resize-none"
+                          {...field}
+                          value={field.value || ''}
+                          onFocus={() => onFieldFocus?.('bio')}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs text-gray-500">
+                        Share your story with the community
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Location - Smart autocomplete */}
+                <FormField
+                  control={form.control}
+                  name="location_search"
+                  render={({ field }) => (
+                    <FormItem id="location">
+                      <FormLabel className="text-sm font-medium text-gray-700">Location</FormLabel>
+                      <FormControl>
+                        <LocationInput
+                          value={field.value || ''}
+                          onFocus={() => onFieldFocus?.('location')}
+                          onChange={locationData => {
+                            if (locationData) {
+                              // Update the structured location fields
+                              form.setValue('location_country', locationData.country);
+                              form.setValue('location_city', locationData.city);
+                              form.setValue('location_zip', locationData.zipCode);
+                              form.setValue('location_search', locationData.formattedAddress);
+
+                              // Store canton/state information in location_context
+                              if (locationData.country === 'CH' && locationData.canton) {
+                                // Swiss canton
+                                const cantonInfo = locationData.cantonCode
+                                  ? `${locationData.canton} (${locationData.cantonCode})`
+                                  : locationData.canton;
+                                form.setValue('location_context', cantonInfo);
+                              } else if (locationData.state) {
+                                // Other countries - store state/province
+                                const stateInfo = locationData.stateCode
+                                  ? `${locationData.state} (${locationData.stateCode})`
+                                  : locationData.state;
+                                form.setValue('location_context', stateInfo);
+                              }
+
+                              // Store coordinates if available (for future use)
+                              if (locationData.latitude && locationData.longitude) {
+                                form.setValue('latitude', locationData.latitude);
+                                form.setValue('longitude', locationData.longitude);
+                              }
+                            } else {
+                              // Clear location data
+                              form.setValue('location_country', '');
+                              form.setValue('location_city', '');
+                              form.setValue('location_zip', '');
+                              form.setValue('location_search', '');
+                              form.setValue('latitude', undefined);
+                              form.setValue('longitude', undefined);
+                            }
+                          }}
+                          placeholder="Type your city or address..."
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs text-gray-500">
+                        Just type your city or address – we will look it up and store the structured
+                        location.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Hidden fields for structured location data */}
+              <input type="hidden" {...form.register('location_country')} />
+              <input type="hidden" {...form.register('location_city')} />
+              <input type="hidden" {...form.register('location_zip')} />
+              <input type="hidden" {...form.register('latitude')} />
+              <input type="hidden" {...form.register('longitude')} />
+
+              {/* SECTION: Online presence */}
+              <div className="space-y-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-5 sm:px-5 sm:py-6">
+                <div className="mb-1">
+                  <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                    Online Presence
+                  </h3>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Your website and social media – where people can find you online.
+                  </p>
+                </div>
+
+                {/* Website */}
+                <FormField
+                  control={form.control}
+                  name="website"
+                  render={({ field }) => (
+                    <FormItem id="website">
+                      <FormLabel className="text-sm font-medium text-gray-700">Website</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="https://your-website.com"
+                          {...field}
+                          value={field.value || ''}
+                          onFocus={() => onFieldFocus?.('website')}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Social Media & Links */}
+                <div id="socialLinks" className="pt-4 mt-2 border-t border-gray-100">
+                  <div onFocus={() => onFieldFocus?.('socialLinks')} tabIndex={-1}>
+                    <SocialLinksEditor
+                      links={socialLinks}
+                      onChange={setSocialLinks}
+                      maxLinks={15}
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3">
+                    💡 Want to add wallets? Manage them in{' '}
+                    <a
+                      href="/dashboard/wallets"
+                      className="text-orange-600 hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      My Wallets
+                    </a>
+                  </p>
+                </div>
+              </div>
+
+              {/* SECTION: Contact Information */}
+              <div className="space-y-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-5 sm:px-5 sm:py-6">
+                <div className="mb-1">
+                  <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                    Contact Information
+                  </h3>
+                  <p className="mt-1 text-xs text-gray-500">How people can reach you directly.</p>
+                </div>
+
+                {/* Contact Email */}
+                <FormField
+                  control={form.control}
+                  name="contact_email"
+                  render={({ field }) => (
+                    <FormItem id="contactEmail">
+                      <FormLabel className="text-sm font-medium text-gray-700">
+                        Contact Email (public)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="contact@example.com"
+                          {...field}
+                          value={field.value || ''}
+                          onFocus={() => onFieldFocus?.('contactEmail')}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs text-gray-500">
+                        Visible on your public profile. Defaults to your registration email.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Registration Email (read-only) */}
+                {userEmail && (
+                  <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Mail className="w-4 h-4 text-gray-400" />
+                      <span className="text-xs font-medium text-gray-500">
+                        Registration Email (private)
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-900">{userEmail}</p>
+                    <p className="text-xs text-gray-500 mt-1">Used for account login only</p>
+                  </div>
+                )}
+
+                {/* Phone */}
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem id="phone">
+                      <FormLabel className="text-sm font-medium text-gray-700">
+                        Phone (optional)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          type="tel"
+                          placeholder="+41 XX XXX XX XX"
+                          {...field}
+                          value={field.value || ''}
+                          onFocus={() => onFieldFocus?.('phone')}
+                        />
+                      </FormControl>
+                      <FormDescription className="text-xs text-gray-500">
+                        Helps supporters contact you
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Action Buttons - Save is primary CTA */}
+            <div className="flex items-center justify-between gap-3 pt-6 border-t border-gray-200 mt-6 bg-gray-50 -mx-6 px-6 py-4 rounded-b-xl">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onCancel}
+                disabled={isSaving}
+                className="px-4 text-gray-600 hover:text-gray-900"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSaving || !watchedUsername?.trim()}
+                className="px-8 py-3 text-base font-semibold bg-gradient-to-r from-bitcoinOrange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSaving ? (
+                  <>
+                    <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5 mr-2" />
+                    Save Profile
+                  </>
+                )}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </div>
+    );
+  }
+
+  // Modal mode (default)
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
@@ -405,100 +724,161 @@ export default function ModernProfileEditor({
               />
 
               {/* Form Fields */}
-              <div className="space-y-4">
-                {/* Name - Main field like X */}
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Name</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Your display name"
-                          className="text-lg"
-                          {...field}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormDescription className="text-xs text-gray-500">
-                        This is how others will see you
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+              <div className="space-y-8">
+                {/* SECTION: Profile */}
+                <div className="space-y-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-5 sm:px-5 sm:py-6">
+                  <div className="mb-1">
+                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                      Profile
+                    </h3>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Your basic profile information – username, name, bio and location.
+                    </p>
+                  </div>
 
-                {/* Bio */}
-                <FormField
-                  control={form.control}
-                  name="bio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700">Bio</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Tell your story..."
-                          className="min-h-[80px] resize-none"
-                          {...field}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormDescription className="text-xs text-gray-500">
-                        Share your story with the community
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                  {/* Username - Required field (moved early) */}
+                  <FormField
+                    control={form.control}
+                    name="username"
+                    render={({ field }) => {
+                      const { value, ...rest } = field;
+                      return (
+                        <FormItem>
+                          <FormLabel className="text-sm font-medium text-gray-700">
+                            Username <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 font-medium z-10 pointer-events-none">
+                                @
+                              </span>
+                              <Input
+                                placeholder="your-username"
+                                className="pl-8"
+                                {...rest}
+                                value={value || ''}
+                                onFocus={() => onFieldFocus?.('username')}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormDescription className="text-xs text-gray-500">
+                            Your unique identifier. Cannot be changed later.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      );
+                    }}
+                  />
 
-                {/* Location - Smart autocomplete */}
-                <FormField
-                  control={form.control}
-                  name="location_search"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <MapPin className="w-4 h-4" />
-                        Location
-                      </FormLabel>
-                      <FormControl>
-                        <LocationAutocomplete
-                          value={field.value || ''}
-                          onChange={locationData => {
-                            if (locationData) {
-                              // Update the structured location fields
-                              form.setValue('location_country', locationData.country);
-                              form.setValue('location_city', locationData.city);
-                              form.setValue('location_zip', locationData.zipCode);
-                              form.setValue('location_search', locationData.formattedAddress);
+                  {/* Display Name */}
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          Display Name
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="Your Name"
+                            {...field}
+                            value={field.value || ''}
+                            onFocus={() => onFieldFocus?.('name')}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                              // Store coordinates if available (for future use)
-                              if (locationData.latitude && locationData.longitude) {
-                                form.setValue('latitude', locationData.latitude);
-                                form.setValue('longitude', locationData.longitude);
+                  {/* Bio */}
+                  <FormField
+                    control={form.control}
+                    name="bio"
+                    render={({ field }) => (
+                      <FormItem id="bio">
+                        <FormLabel className="text-sm font-medium text-gray-700">Bio</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Tell your story..."
+                            className="min-h-[80px] resize-none"
+                            {...field}
+                            value={field.value || ''}
+                            onFocus={() => onFieldFocus?.('bio')}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Share your story with the community
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Location - Smart autocomplete */}
+                  <FormField
+                    control={form.control}
+                    name="location_search"
+                    render={({ field }) => (
+                      <FormItem id="location">
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          Location
+                        </FormLabel>
+                        <FormControl>
+                          <LocationInput
+                            value={field.value || ''}
+                            onFocus={() => onFieldFocus?.('location')}
+                            onChange={locationData => {
+                              if (locationData) {
+                                // Update the structured location fields
+                                form.setValue('location_country', locationData.country);
+                                form.setValue('location_city', locationData.city);
+                                form.setValue('location_zip', locationData.zipCode);
+                                form.setValue('location_search', locationData.formattedAddress);
+
+                                // Store canton/state information in location_context
+                                if (locationData.country === 'CH' && locationData.canton) {
+                                  // Swiss canton
+                                  const cantonInfo = locationData.cantonCode
+                                    ? `${locationData.canton} (${locationData.cantonCode})`
+                                    : locationData.canton;
+                                  form.setValue('location_context', cantonInfo);
+                                } else if (locationData.state) {
+                                  // Other countries - store state/province
+                                  const stateInfo = locationData.stateCode
+                                    ? `${locationData.state} (${locationData.stateCode})`
+                                    : locationData.state;
+                                  form.setValue('location_context', stateInfo);
+                                }
+
+                                // Store coordinates if available (for future use)
+                                if (locationData.latitude && locationData.longitude) {
+                                  form.setValue('latitude', locationData.latitude);
+                                  form.setValue('longitude', locationData.longitude);
+                                }
+                              } else {
+                                // Clear location data
+                                form.setValue('location_country', '');
+                                form.setValue('location_city', '');
+                                form.setValue('location_zip', '');
+                                form.setValue('location_search', '');
+                                form.setValue('latitude', undefined);
+                                form.setValue('longitude', undefined);
                               }
-                            } else {
-                              // Clear location data
-                              form.setValue('location_country', '');
-                              form.setValue('location_city', '');
-                              form.setValue('location_zip', '');
-                              form.setValue('location_search', '');
-                              form.setValue('latitude', undefined);
-                              form.setValue('longitude', undefined);
-                            }
-                          }}
-                          placeholder="Search for your city or address..."
-                        />
-                      </FormControl>
-                      <FormDescription className="text-xs text-gray-500">
-                        Start typing to find your location. This helps local people and projects
-                        find you.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                            }}
+                            placeholder="Type your city or address..."
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Just type your city or address – we'll find it. Works everywhere in the
+                          world.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
                 {/* Hidden fields for structured location data */}
                 <input type="hidden" {...form.register('location_country')} />
@@ -507,104 +887,162 @@ export default function ModernProfileEditor({
                 <input type="hidden" {...form.register('latitude')} />
                 <input type="hidden" {...form.register('longitude')} />
 
-                {/* Website */}
-                <FormField
-                  control={form.control}
-                  name="website"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <LinkIcon className="w-4 h-4" />
-                        Website
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="https://your-website.com"
-                          {...field}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* SECTION: Online presence */}
+                <div className="space-y-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-5 sm:px-5 sm:py-6">
+                  <div className="mb-1">
+                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                      Online Presence
+                    </h3>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Your website and social media – where people can find you online.
+                    </p>
+                  </div>
 
-                {/* Username - Required field */}
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => {
-                    const { value, ...rest } = field;
-                    return (
-                      <FormItem>
-                        <FormLabel className="text-sm font-medium text-gray-700">
-                          Username <span className="text-red-500">*</span>
-                        </FormLabel>
+                  {/* Website */}
+                  <FormField
+                    control={form.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem id="website">
+                        <FormLabel className="text-sm font-medium text-gray-700">Website</FormLabel>
                         <FormControl>
-                          <div className="relative">
-                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
-                              @
-                            </span>
-                            <Input
-                              placeholder="your_unique_username"
-                              className="pl-8"
-                              {...rest}
-                              value={value || ''}
-                            />
-                          </div>
+                          <Input
+                            placeholder="https://your-website.com"
+                            {...field}
+                            value={field.value || ''}
+                            onFocus={() => onFieldFocus?.('website')}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
-                    );
-                  }}
-                />
+                    )}
+                  />
 
-                {/* Multi-Wallet System */}
-                <div className="pt-4 border-t border-gray-200">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Bitcoin className="w-4 h-4 text-orange-500" />
-                    Bitcoin Wallets
-                  </h3>
+                  {/* Social Media & Links */}
+                  <div id="socialLinks" className="pt-4 mt-2 border-t border-gray-100">
+                    <div onFocus={() => onFieldFocus?.('socialLinks')} tabIndex={-1}>
+                      <SocialLinksEditor
+                        links={socialLinks}
+                        onChange={setSocialLinks}
+                        maxLinks={15}
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500 mt-3">
+                      💡 Want to add wallets? Manage them in{' '}
+                      <a
+                        href="/dashboard/wallets"
+                        className="text-orange-600 hover:underline"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        My Wallets
+                      </a>
+                    </p>
+                  </div>
+                </div>
 
-                  <WalletManager
-                    wallets={wallets}
-                    entityType="profile"
-                    entityId={profile.id}
-                    onAdd={handleAddWallet}
-                    onUpdate={handleUpdateWallet}
-                    onDelete={handleDeleteWallet}
-                    onRefresh={handleRefreshWallet}
-                    maxWallets={10}
-                    isOwner={true}
+                {/* SECTION: Contact Information */}
+                <div className="space-y-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-5 sm:px-5 sm:py-6">
+                  <div className="mb-1">
+                    <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                      Contact Information
+                    </h3>
+                    <p className="mt-1 text-xs text-gray-500">How people can reach you directly.</p>
+                  </div>
+
+                  {/* Contact Email */}
+                  <FormField
+                    control={form.control}
+                    name="contact_email"
+                    render={({ field }) => (
+                      <FormItem id="contactEmail">
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          Contact Email (public)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="email"
+                            placeholder="contact@example.com"
+                            {...field}
+                            value={field.value || ''}
+                            onFocus={() => onFieldFocus?.('contactEmail')}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Visible on your public profile. Defaults to your registration email.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {/* Registration Email (read-only) */}
+                  {userEmail && (
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Mail className="w-4 h-4 text-gray-400" />
+                        <span className="text-xs font-medium text-gray-500">
+                          Registration Email (private)
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-900">{userEmail}</p>
+                      <p className="text-xs text-gray-500 mt-1">Used for account login only</p>
+                    </div>
+                  )}
+
+                  {/* Phone */}
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem id="phone">
+                        <FormLabel className="text-sm font-medium text-gray-700">
+                          Phone (optional)
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="tel"
+                            placeholder="+41 XX XXX XX XX"
+                            {...field}
+                            value={field.value || ''}
+                            onFocus={() => onFieldFocus?.('phone')}
+                          />
+                        </FormControl>
+                        <FormDescription className="text-xs text-gray-500">
+                          Helps supporters contact you
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-6 border-t">
+              {/* Action Buttons - Save is primary CTA */}
+              <div className="flex items-center justify-between gap-3 pt-6 border-t border-gray-200 bg-gray-50 -mx-6 px-6 py-4 rounded-b-lg">
                 <Button
                   type="button"
-                  variant="outline"
+                  variant="ghost"
                   onClick={onCancel}
                   disabled={isSaving}
-                  className="px-6"
+                  className="px-4 text-gray-600 hover:text-gray-900"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={isSaving || !watchedUsername?.trim()}
-                  className="px-6 bg-black hover:bg-gray-800"
+                  className="px-8 py-3 text-base font-semibold bg-gradient-to-r from-bitcoinOrange to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSaving ? (
                     <>
-                      <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <div className="w-5 h-5 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
                       Saving...
                     </>
                   ) : (
                     <>
-                      <Save className="w-4 h-4 mr-2" />
-                      Save
+                      <Save className="w-5 h-5 mr-2" />
+                      Save Profile
                     </>
                   )}
                 </Button>

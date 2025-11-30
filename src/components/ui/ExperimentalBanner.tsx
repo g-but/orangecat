@@ -43,9 +43,8 @@ export default function ExperimentalBanner({
 }: ExperimentalBannerProps) {
   const [isVisible, setIsVisible] = useState(true);
 
-  const storageKey = storageType === 'session'
-    ? 'oc_hide_experimental_banner'
-    : 'experimental-banner-dismissed';
+  const storageKey =
+    storageType === 'session' ? 'oc_hide_experimental_banner' : 'experimental-banner-dismissed';
 
   const storageValue = storageType === 'session' ? '1' : 'true';
 
@@ -77,8 +76,10 @@ export default function ExperimentalBanner({
   }
 
   return (
-    <div className={`bg-gradient-to-r from-orange-100 to-tiffany-100 border-b border-orange-200 ${className}`}>
-      <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-1.5 sm:py-2.5">
+    <div
+      className={`bg-gradient-to-r from-orange-100 to-tiffany-100 border-b border-orange-200 ${className}`}
+    >
+      <div className="container mx-auto px-3 sm:px-6 lg:px-8 py-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm flex-1 justify-center">
             {children || (
@@ -86,10 +87,7 @@ export default function ExperimentalBanner({
                 <span className="text-orange-600 font-medium">🚧 Experimental</span>
                 <span className="text-gray-600 hidden sm:inline">•</span>
                 <span className="text-gray-600 text-xs sm:text-sm hidden sm:inline">
-                  {storageType === 'session'
-                    ? 'Development preview'
-                    : 'Development preview'
-                  }
+                  {storageType === 'session' ? 'Development preview' : 'Development preview'}
                 </span>
                 <span className="text-gray-600 hidden sm:inline">•</span>
                 <a

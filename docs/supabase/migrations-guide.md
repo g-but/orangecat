@@ -1,5 +1,9 @@
 # Database Migrations
 
+created_date: 2024-03-24  
+last_modified_date: 2025-11-27  
+last_modified_summary: Documented profile contact_email field and schema extension pattern.
+
 This directory contains SQL migration files that define the database schema and its evolution over time. Each migration file represents a specific change to the database structure.
 
 ## File Structure
@@ -18,22 +22,33 @@ This directory contains SQL migration files that define the database schema and 
 
 ## Current Schema
 
-The database consists of three main tables:
+The schema has evolved beyond the original three-table MVP, but the core entities remain:
 
 1. **profiles**
    - Stores user profile information
-   - Links to auth.users via user_id
-   - Contains optional fields like username, name, website, etc. (Note: `name` standardized from `display_name`)
+   - Links to `auth.users` via `id`
+   - Contains optional fields like `username`, `name`, `website`, `location_*`, transparency fields, and contact details
+   - **Public contact email**: the `contact_email` column (added in `20251124060022_add_contact_email.sql`) is the public-facing email shown in the profile “Contact” section. It is separate from the private auth email.
 
-2. **funding_pages**
+2. **projects**
    - Stores crowdfunding project information
-   - Links to profiles via user_id
-   - Tracks project status, goals, and current funding
+   - Links to profiles via `user_id`
+   - Tracks project status, goals, current funding and uses a `metadata JSONB` column for flexible, project-specific data
 
 3. **transactions**
    - Records donations and payments
-   - Links to funding_pages and users
+   - Links to projects and users
    - Tracks transaction status and amounts
+
+### Extending the profile schema safely
+
+To add new pieces of profile data (for example, new fields in the “Info / Contact” section), follow this pattern:
+
+1. **Create a migration** that adds a nullable column to `public.profiles` (e.g. `ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS contact_email TEXT;`).
+2. **Update TypeScript types** in `src/types/database.ts`, `src/types/profile.ts`, and any related social/contact types.
+3. **Update validation and normalization** in `src/lib/validation.ts` (add the field to `profileSchema` and, if needed, to `normalizeProfileData`).
+4. **Wire UI components** (e.g. `ModernProfileEditor`, `ProfileInfoTab`, `ProfileOverviewTab`) to read/write the new field.
+5. **Document the new field** briefly in this guide (what it is used for, and whether it is public or private).
 
 ## Security
 

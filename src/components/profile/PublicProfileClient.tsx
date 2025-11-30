@@ -35,6 +35,14 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { ProfileFormData } from '@/types/database';
 
+/**
+ * DEPRECATED: This component is being replaced by the unified ProfileLayout.
+ * It will be removed once all references are migrated.
+ *
+ * Use ProfileLayout from '@/components/profile/ProfileLayout' instead.
+ */
+import type { Wallet } from '@/types/wallet';
+
 interface PublicProfileClientProps {
   profile: Profile;
   projects?: any[];
@@ -62,6 +70,8 @@ export default function PublicProfileClient({
   const [showShare, setShowShare] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
   const [isFollowLoading, setIsFollowLoading] = useState(false);
+  const [wallets, setWallets] = useState<Wallet[]>([]);
+  const [walletsLoading, setWalletsLoading] = useState(false);
   const shareButtonRef = useRef<HTMLDivElement>(null);
   const shareDropdownRef = useRef<HTMLDivElement>(null);
 
@@ -86,6 +96,31 @@ export default function PublicProfileClient({
 
     checkFollowStatus();
   }, [user?.id, profile.id, isOwnProfile]);
+
+  // Load wallets for this profile (used for support CTA and wallets tab badge)
+  useEffect(() => {
+    const loadWallets = async () => {
+      if (!profile.id) {
+        return;
+      }
+      try {
+        setWalletsLoading(true);
+        const response = await fetch(`/api/wallets?profile_id=${profile.id}`);
+        if (!response.ok) {
+          return;
+        }
+        const data = await response.json();
+        setWallets(Array.isArray(data.wallets) ? data.wallets : []);
+      } catch (error) {
+        // Non-fatal: just log to console; profile page should still render
+        console.error('Failed to load wallets for profile:', error);
+      } finally {
+        setWalletsLoading(false);
+      }
+    };
+
+    loadWallets();
+  }, [profile.id]);
 
   // Handle follow/unfollow
   const handleFollowToggle = async () => {
@@ -168,7 +203,14 @@ export default function PublicProfileClient({
       id: 'overview',
       label: 'Overview',
       icon: <User className="w-4 h-4" />,
-      content: <ProfileOverviewTab profile={profile} stats={stats} />,
+      content: (
+        <ProfileOverviewTab
+          profile={profile}
+          stats={stats}
+          isOwnProfile={isOwnProfile}
+          context="public"
+        />
+      ),
     },
     {
       id: 'info',
@@ -208,7 +250,7 @@ export default function PublicProfileClient({
       id: 'wallets',
       label: 'Wallets',
       icon: <Wallet className="w-4 h-4" />,
-      badge: stats?.walletCount,
+      badge: ((stats as any)?.walletCount ?? wallets.length) || undefined,
       content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
   ];
@@ -238,9 +280,9 @@ export default function PublicProfileClient({
                 className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-xl sm:rounded-2xl object-cover border-2 sm:border-4 border-white shadow-2xl"
               />
             ) : (
-              <DefaultAvatar 
-                size={128} 
-                className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white shadow-2xl" 
+              <DefaultAvatar
+                size={128}
+                className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-xl sm:rounded-2xl border-2 sm:border-4 border-white shadow-2xl"
               />
             )}
           </div>
@@ -259,17 +301,27 @@ export default function PublicProfileClient({
                 <span className="hidden sm:inline">Share</span>
               </Button>
               {showShare && (
-                <div 
-                  ref={shareDropdownRef} 
+                <div
+                  ref={shareDropdownRef}
                   className="absolute top-full right-0 mt-2 z-[9999] sm:z-50"
                   style={{
                     // Ensure dropdown appears above banner on mobile
-                    position: typeof window !== 'undefined' && window.innerWidth < 640 ? 'fixed' : 'absolute',
-                    top: typeof window !== 'undefined' && window.innerWidth < 640 ? 'auto' : undefined,
-                    bottom: typeof window !== 'undefined' && window.innerWidth < 640 ? '20px' : undefined,
-                    left: typeof window !== 'undefined' && window.innerWidth < 640 ? '50%' : undefined,
-                    transform: typeof window !== 'undefined' && window.innerWidth < 640 ? 'translateX(-50%)' : undefined,
-                    right: typeof window !== 'undefined' && window.innerWidth < 640 ? 'auto' : undefined,
+                    position:
+                      typeof window !== 'undefined' && window.innerWidth < 640
+                        ? 'fixed'
+                        : 'absolute',
+                    top:
+                      typeof window !== 'undefined' && window.innerWidth < 640 ? 'auto' : undefined,
+                    bottom:
+                      typeof window !== 'undefined' && window.innerWidth < 640 ? '20px' : undefined,
+                    left:
+                      typeof window !== 'undefined' && window.innerWidth < 640 ? '50%' : undefined,
+                    transform:
+                      typeof window !== 'undefined' && window.innerWidth < 640
+                        ? 'translateX(-50%)'
+                        : undefined,
+                    right:
+                      typeof window !== 'undefined' && window.innerWidth < 640 ? 'auto' : undefined,
                   }}
                 >
                   <ProfileShare
@@ -296,7 +348,7 @@ export default function PublicProfileClient({
               >
                 <Users className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
                 <span className="hidden sm:inline">
-                {isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
+                  {isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
                 </span>
                 <span className="sm:hidden">
                   {isFollowLoading ? '...' : isFollowing ? '−' : '+'}
@@ -313,7 +365,9 @@ export default function PublicProfileClient({
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">
               {profile.name || profile.username || 'User'}
             </h1>
-            <p className="text-sm sm:text-base md:text-lg text-orange-600 font-medium mb-3 sm:mb-4">@{profile.username}</p>
+            <p className="text-sm sm:text-base md:text-lg text-orange-600 font-medium mb-3 sm:mb-4">
+              @{profile.username}
+            </p>
             {profile.website && (
               <a
                 href={profile.website}
@@ -332,56 +386,61 @@ export default function PublicProfileClient({
           <ProfileViewTabs tabs={tabs} defaultTab="timeline" />
         </div>
 
-        {/* Support CTA for non-own profiles with wallets */}
-        {!isOwnProfile && (profile.bitcoin_address || profile.lightning_address) && (
-          <div className="mt-4 sm:mt-6 lg:mt-8">
-            <Card className="bg-gradient-to-r from-orange-50 to-teal-50 border-2 border-orange-200">
-              <CardContent className="p-4 sm:p-6">
-                <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
-                  <div className="text-center md:text-left">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">
-                      Support {profile.name || profile.username}
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-600">
-                      Send Bitcoin directly to support their work and projects
-                    </p>
+        {/* Support CTA for non-own profiles with wallets.
+            Uses multi-wallet system; falls back to legacy fields if needed. */}
+        {!isOwnProfile &&
+          (wallets.length > 0 || profile.bitcoin_address || profile.lightning_address) && (
+            <div className="mt-4 sm:mt-6 lg:mt-8">
+              <Card className="bg-gradient-to-r from-orange-50 to-teal-50 border-2 border-orange-200">
+                <CardContent className="p-4 sm:p-6">
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
+                    <div className="text-center md:text-left">
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-1 sm:mb-2">
+                        Support {profile.name || profile.username}
+                      </h3>
+                      <p className="text-sm sm:text-base text-gray-600">
+                        Send Bitcoin directly to support their work and projects
+                      </p>
+                    </div>
+                    <div className="flex gap-2 sm:gap-3 w-full md:w-auto">
+                      {/* Primary Bitcoin wallet: scroll to wallet section if present */}
+                      {(wallets.length > 0 || profile.bitcoin_address) && (
+                        <Button
+                          onClick={() => {
+                            const element = document.querySelector(
+                              '[data-wallet-section],[data-bitcoin-card]'
+                            );
+                            element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }}
+                          size="sm"
+                          className="flex-1 md:flex-none bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm"
+                        >
+                          <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Send Bitcoin</span>
+                          <span className="sm:hidden">Bitcoin</span>
+                        </Button>
+                      )}
+                      {profile.lightning_address && (
+                        <Button
+                          onClick={() => {
+                            const element = document.querySelector('[data-lightning-card]');
+                            element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          }}
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 md:flex-none border-yellow-400 hover:bg-yellow-50 text-xs sm:text-sm"
+                        >
+                          <Zap className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                          <span className="hidden sm:inline">Send Lightning</span>
+                          <span className="sm:hidden">Lightning</span>
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-2 sm:gap-3 w-full md:w-auto">
-                    {profile.bitcoin_address && (
-                      <Button
-                        onClick={() => {
-                          const element = document.querySelector('[data-bitcoin-card]');
-                          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }}
-                        size="sm"
-                        className="flex-1 md:flex-none bg-orange-600 hover:bg-orange-700 text-white text-xs sm:text-sm"
-                      >
-                        <Bitcoin className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
-                        <span className="hidden sm:inline">Send Bitcoin</span>
-                        <span className="sm:hidden">Bitcoin</span>
-                      </Button>
-                    )}
-                    {profile.lightning_address && (
-                      <Button
-                        onClick={() => {
-                          const element = document.querySelector('[data-lightning-card]');
-                          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        }}
-                        variant="outline"
-                        size="sm"
-                        className="flex-1 md:flex-none border-yellow-400 hover:bg-yellow-50 text-xs sm:text-sm"
-                      >
-                        <Zap className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
-                        <span className="hidden sm:inline">Send Lightning</span>
-                        <span className="sm:hidden">Lightning</span>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
       </div>
     </div>
   );

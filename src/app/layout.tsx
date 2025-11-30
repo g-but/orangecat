@@ -148,16 +148,66 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
 
-        {/* Service Worker Registration */}
+        {/* Service Worker Registration - Only in Production */}
         <Script
           id="service-worker-registration"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
+              (function() {
+                if ('serviceWorker' in navigator) {
+                  const isDevelopment = window.location.hostname === 'localhost' || 
+                                       window.location.hostname === '127.0.0.1' ||
+                                       window.location.hostname.includes('localhost') ||
+                                       window.location.hostname === '0.0.0.0';
+                  
+                  if (isDevelopment) {
+                    // In development: Aggressively unregister ALL service workers
+                    console.log('[SW] Development mode detected - disabling service workers');
+                    
+                    // Unregister immediately
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                      console.log('[SW] Found', registrations.length, 'service worker(s) to unregister');
+                      const unregisterPromises = registrations.map(function(registration) {
+                        return registration.unregister().then(function(success) {
+                          console.log('[SW] Unregistered:', success);
+                          return success;
+                        });
+                      });
+                      
+                      // Clear ALL caches
+                      return Promise.all(unregisterPromises).then(function() {
+                        return caches.keys();
+                      });
+                    }).then(function(cacheNames) {
+                      console.log('[SW] Found', cacheNames.length, 'cache(s) to delete');
+                      return Promise.all(
+                        cacheNames.map(function(cacheName) {
+                          console.log('[SW] Deleting cache:', cacheName);
+                          return caches.delete(cacheName);
+                        })
+                      );
+                    }).then(function() {
+                      console.log('[SW] All service workers and caches cleared for development');
+                      // Force reload if there was a service worker
+                      if (navigator.serviceWorker.controller) {
+                        console.log('[SW] Service worker was controlling page, reloading...');
+                        window.location.reload();
+                      }
+                    }).catch(function(error) {
+                      console.error('[SW] Error clearing service workers:', error);
+                    });
+                  } else {
+                  // In production: Register service worker normally
+                  window.addEventListener('load', function() {
+                    // Unregister all existing service workers first to clear stale cache
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                      for(let registration of registrations) {
+                        registration.unregister();
+                      }
+                      // Then register the new one
+                      return navigator.serviceWorker.register('/sw.js');
+                    }).then(function(registration) {
                       // Service Worker registration successful
                       
                       // Check for updates
@@ -167,10 +217,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                           newWorker.addEventListener('statechange', function() {
                             if (newWorker.state === 'installed') {
                               if (navigator.serviceWorker.controller) {
-                                // New content available, notify user
-                                // New content available - could show update notification
+                                // New content available - force reload to get fresh code
+                                window.location.reload();
                               } else {
-                                // Content cached for first time
                                 // Content cached for first time - app now works offline
                               }
                             }
@@ -180,9 +229,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                     })
                     .catch(function(error) {
                       // Service Worker registration failed - app will work without offline features
+                      console.warn('Service Worker registration failed:', error);
                     });
-                });
-              }
+                  });
+                  }
+                }
+              })();
             `,
           }}
         />

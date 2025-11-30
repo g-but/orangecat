@@ -123,6 +123,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
+    console.log('Profile PUT request body:', body);
 
     // Check username uniqueness before validation if username is being updated
     if (body.username) {
@@ -140,12 +141,51 @@ export async function PUT(request: NextRequest) {
 
     // Normalize and validate the data
     const normalizedBody = normalizeProfileData(body);
-    const validatedData = profileSchema.parse(normalizedBody);
+    console.log('Normalized body:', normalizedBody);
+
+    let validatedData;
+    try {
+      validatedData = profileSchema.parse(normalizedBody);
+      console.log('Validation passed');
+    } catch (zodError) {
+      console.error('Zod validation failed:', zodError);
+      throw zodError;
+    }
+
+    // Only persist fields that are known to exist on the profiles table.
+    // This avoids accidental errors if the validation schema contains
+    // fields that are not yet migrated in the database.
+    const allowedFields = [
+      'username',
+      'name',
+      'bio',
+      'email',
+      'contact_email',
+      'location_country',
+      'location_city',
+      'location_zip',
+      'location_search',
+      'latitude',
+      'longitude',
+      'location',
+      'avatar_url',
+      'banner_url',
+      'website',
+      'social_links',
+      'phone',
+      'bitcoin_address',
+      'lightning_address',
+    ];
+
+    const dataToSave = Object.fromEntries(
+      Object.entries(validatedData as any).filter(([key]) => allowedFields.includes(key))
+    );
+    console.log('Profile dataToSave for update:', dataToSave);
 
     const { data: profile, error } = await supabase
       .from('profiles')
       .update({
-        ...validatedData,
+        ...dataToSave,
         updated_at: new Date().toISOString(),
       })
       .eq('id', user.id)
@@ -153,14 +193,19 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) {
+      console.error('Supabase update error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
       return apiValidationError('Failed to update profile', { details: error.message });
     }
 
     return apiSuccess(profile);
   } catch (error) {
+    console.error('Profile update error:', error);
+
     // Provide specific error messages for Zod validation errors
     if (error instanceof Error && error.name === 'ZodError') {
       const zodError = error as any;
+      console.error('Zod validation errors:', zodError.errors);
       const firstError = zodError.errors?.[0];
       const fieldName = firstError?.path?.join('.') || 'field';
       const message = firstError?.message || 'Invalid profile data';

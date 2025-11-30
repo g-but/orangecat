@@ -1,29 +1,29 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import { 
-  Activity, 
-  Database, 
-  Clock, 
-  Zap, 
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import {
+  Activity,
+  Database,
+  Clock,
+  Zap,
   AlertTriangle,
   CheckCircle,
   RefreshCw,
   Eye,
-  EyeOff
-} from 'lucide-react'
-import { useAnalytics } from '@/hooks/useAnalytics'
-import { analyticsService } from '@/services/analytics'
+  EyeOff,
+} from 'lucide-react';
+import { useAnalytics } from '@/hooks/useAnalytics';
+import { analyticsService } from '@/services/analytics';
 
 interface PerformanceMonitorProps {
-  className?: string
+  className?: string;
 }
 
 export function PerformanceMonitor({ className = '' }: PerformanceMonitorProps) {
-  const [isVisible, setIsVisible] = useState(false)
-  const { metrics, isLoading, error, lastUpdated, cacheStats } = useAnalytics()
+  const [isVisible, setIsVisible] = useState(false);
+  const { metrics, isLoading, error, lastUpdated, cacheStats } = useAnalytics();
 
   if (!isVisible) {
     return (
@@ -37,51 +37,61 @@ export function PerformanceMonitor({ className = '' }: PerformanceMonitorProps) 
           <Activity className="w-4 h-4" />
         </Button>
       </div>
-    )
+    );
   }
 
   const getHealthStatus = () => {
-    if (error) {return { status: 'error', color: 'text-red-600', icon: AlertTriangle }}
-    if (isLoading) {return { status: 'loading', color: 'text-yellow-600', icon: RefreshCw }}
-    return { status: 'healthy', color: 'text-green-600', icon: CheckCircle }
-  }
+    if (error) {
+      return { status: 'error', color: 'text-red-600', icon: AlertTriangle };
+    }
+    if (isLoading) {
+      return { status: 'loading', color: 'text-yellow-600', icon: RefreshCw };
+    }
+    return { status: 'healthy', color: 'text-green-600', icon: CheckCircle };
+  };
 
-  const health = getHealthStatus()
-  const HealthIcon = health.icon
+  const health = getHealthStatus();
+  const HealthIcon = health.icon;
 
   const getDataFreshness = () => {
-    if (!lastUpdated) {return 'Never'}
-    const now = Date.now()
-    const diff = now - lastUpdated.getTime()
-    const minutes = Math.floor(diff / 60000)
-    const seconds = Math.floor((diff % 60000) / 1000)
-    
-    if (minutes > 0) {return `${minutes}m ${seconds}s ago`}
-    return `${seconds}s ago`
-  }
+    if (!lastUpdated) {
+      return 'Never';
+    }
+    const now = Date.now();
+    const diff = now - lastUpdated.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const seconds = Math.floor((diff % 60000) / 1000);
+
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s ago`;
+    }
+    return `${seconds}s ago`;
+  };
 
   const getMetricsBreakdown = () => {
-    if (!metrics) {return { real: 0, demo: 0, total: 0 }}
-    
-    let real = 0
-    let demo = 0
-    let total = 0
-    
+    if (!metrics) {
+      return { real: 0, demo: 0, total: 0 };
+    }
+
+    let real = 0;
+    let demo = 0;
+    let total = 0;
+
     Object.values(metrics).forEach(feature => {
       Object.values(feature.stats).forEach(stat => {
-        total++
+        total++;
         if (typeof stat === 'object' && stat !== null && 'isDemo' in stat && stat.isDemo) {
-          demo++
+          demo++;
         } else {
-          real++
+          real++;
         }
-      })
-    })
-    
-    return { real, demo, total }
-  }
+      });
+    });
 
-  const breakdown = getMetricsBreakdown()
+    return { real, demo, total };
+  };
+
+  const breakdown = getMetricsBreakdown();
 
   return (
     <div className={`hidden md:flex fixed bottom-4 right-4 z-50 ${className}`}>
@@ -102,7 +112,7 @@ export function PerformanceMonitor({ className = '' }: PerformanceMonitorProps) 
             </Button>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           {/* System Health */}
           <div className="flex items-center justify-between">
@@ -195,14 +205,13 @@ export function PerformanceMonitor({ className = '' }: PerformanceMonitorProps) 
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 // Development-only wrapper
 export function DevPerformanceMonitor() {
-  if (process.env.NODE_ENV !== 'development') {
-    return null
-  }
-  
-  return <PerformanceMonitor />
-} 
+  // Temporarily disabled: the floating performance monitor toggle button
+  // is not needed in the current UX. Developers can still mount the
+  // PerformanceMonitor component directly where required.
+  return null;
+}

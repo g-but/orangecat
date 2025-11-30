@@ -2,22 +2,29 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/auth';
 import Loading from '@/components/Loading';
-import ModernProfileEditor from '@/components/profile/ModernProfileEditor';
-import { Profile, ProfileFormData } from '@/types/database';
-import { toast } from 'sonner';
-import { Info } from 'lucide-react';
+import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
+import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab';
+import { Profile } from '@/types/database';
+import { Info, Edit, ArrowRight } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 
 /**
- * Dashboard Info Page
+ * Dashboard Info Page - VIEW MODE
  *
- * Private page for users to edit their profile information.
- * Reuses ModernProfileEditor component following DRY principles.
+ * Shows profile information in read-only mode.
+ * This is the default view when accessing "My Info" from the sidebar.
+ * Users can click "Edit Profile" button to switch to edit mode.
  *
- * Single source of truth: Auth store for profile data
- * Separation of concerns: This page handles editing, auth store handles fetching
+ * UX Principles:
+ * - View is default (less cognitive load, see info first)
+ * - Edit is explicit action (user chooses to edit)
+ * - Clear separation of concerns (view vs edit)
+ * - Consistent with dashboard patterns
  */
 export default function DashboardInfoPage() {
   const { user, profile: storeProfile, isLoading: authLoading } = useAuth();
@@ -35,46 +42,13 @@ export default function DashboardInfoPage() {
     }
   }, [storeProfile, authLoading]);
 
-  // Handle profile save
-  const handleSave = async (data: ProfileFormData) => {
-    try {
-      const response = await fetch('/api/profile', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save profile');
-      }
-
-      toast.success('Profile updated successfully');
-
-      // Refresh profile data from API
-      const updatedResponse = await fetch('/api/profile');
-      if (updatedResponse.ok) {
-        const result = await updatedResponse.json();
-        // Unwrap the API response structure
-        if (result.success && result.data) {
-          setProfile(result.data);
-          // Update auth store as well
-          useAuthStore.getState().fetchProfile();
-        }
-      }
-
-      // Navigate back to dashboard
-      router.push('/dashboard');
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Failed to save profile');
-      throw error; // Re-throw so ModernProfileEditor can handle it
+  // Refresh profile after edits (called when returning from edit page)
+  useEffect(() => {
+    // Refresh profile when component mounts or when returning from edit
+    if (storeProfile) {
+      setProfile(storeProfile);
     }
-  };
-
-  // Handle cancel - navigate back to dashboard
-  const handleCancel = () => {
-    router.push('/dashboard');
-  };
+  }, [storeProfile]);
 
   // Loading state
   if (authLoading || isLoading) {
@@ -87,38 +61,79 @@ export default function DashboardInfoPage() {
     return <Loading />;
   }
 
-  // No profile loaded
+  // No profile loaded yet – fall back to loading state instead of error to avoid flash
   if (!profile) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <p className="text-gray-600">Failed to load profile. Please try again.</p>
-        </div>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Page Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Info className="w-8 h-8 text-orange-600" />
-          <h1 className="text-3xl font-bold text-gray-900">Edit Profile Information</h1>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
+      <div className="mx-auto max-w-4xl lg:max-w-5xl px-3 sm:px-4 py-5 sm:py-6 lg:px-8 lg:py-8">
+        {/* Page Header */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Info className="w-5 h-5 text-orange-600" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Info</h1>
+            </div>
+            <div className="sm:inline-flex">
+              <Link href="/dashboard/info/edit">
+                <Button className="w-full sm:w-auto justify-center">
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+          <p className="mt-1 text-sm sm:text-base text-gray-600 sm:ml-12">
+            View your profile information. This is what others see on your public profile.
+          </p>
         </div>
-        <p className="text-gray-600">
-          Update your profile details. This information will be visible on your public profile.
-        </p>
-      </div>
 
-      {/* Profile Editor */}
-      <ModernProfileEditor
-        profile={profile}
-        userId={user.id}
-        userEmail={user.email}
-        onSave={handleSave}
-        onCancel={handleCancel}
-      />
+        {/* Profile Information Display */}
+        <div className="space-y-6">
+          {/* Overview Section */}
+          <ProfileOverviewTab profile={profile} isOwnProfile={true} context="dashboard" />
+
+          {/* Detailed Info Section - Read-only view */}
+          <ProfileInfoTab
+            profile={profile as any}
+            isOwnProfile={true}
+            userId={user.id}
+            userEmail={user.email}
+            context="dashboard"
+            // Don't pass onSave - this makes it read-only view mode
+            // Edit functionality is handled by navigating to /dashboard/info/edit
+          />
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-8 pt-8 border-t border-gray-200">
+          <Card>
+            <CardHeader>
+              <h3 className="text-lg font-semibold">Quick Actions</h3>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3">
+                {profile.username && (
+                  <Link href={`/profiles/${profile.username}`}>
+                    <Button variant="outline">
+                      <Info className="w-4 h-4 mr-2" />
+                      View Public Profile
+                    </Button>
+                  </Link>
+                )}
+                <Link href="/dashboard/wallets">
+                  <Button variant="outline">Manage Wallets</Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

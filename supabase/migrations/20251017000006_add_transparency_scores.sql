@@ -58,6 +58,7 @@ DECLARE
   max_score numeric(5,2) := 100;
   factors jsonb := '{}';
   profile_data record;
+  link_count INTEGER := 0;
 BEGIN
   -- Get profile data
   SELECT * INTO profile_data FROM profiles WHERE id = profile_id;
@@ -75,10 +76,11 @@ BEGIN
     factors := factors || jsonb_build_object('username', 15);
   END IF;
 
-  -- Display name (10 points)
-  IF profile_data.display_name IS NOT NULL AND profile_data.display_name != '' THEN
+  -- Display name (10 points) - check both name and display_name for backward compatibility
+  IF (profile_data.name IS NOT NULL AND profile_data.name != '') OR
+     (profile_data.display_name IS NOT NULL AND profile_data.display_name != '') THEN
     score := score + 10;
-    factors := factors || jsonb_build_object('display_name', 10);
+    factors := factors || jsonb_build_object('name', 10);
   END IF;
 
   -- Avatar (10 points)
@@ -106,15 +108,36 @@ BEGIN
   END IF;
 
   -- Website (5 points)
-  IF profile_data.website_url IS NOT NULL AND profile_data.website_url != '' THEN
+  IF profile_data.website IS NOT NULL AND profile_data.website != '' THEN
     score := score + 5;
     factors := factors || jsonb_build_object('website', 5);
   END IF;
 
-  -- Location (5 points)
-  IF profile_data.location IS NOT NULL AND profile_data.location != '' THEN
+  -- Location (5 points) - check structured location fields
+  IF (profile_data.location_search IS NOT NULL AND profile_data.location_search != '') OR
+     (profile_data.location_country IS NOT NULL AND profile_data.location_country != '') OR
+     (profile_data.location IS NOT NULL AND profile_data.location != '') THEN
     score := score + 5;
     factors := factors || jsonb_build_object('location', 5);
+  END IF;
+
+  -- Contact Email (5 points) - optional, no penalty if missing
+  IF profile_data.contact_email IS NOT NULL AND profile_data.contact_email != '' THEN
+    score := score + 5;
+    factors := factors || jsonb_build_object('contact_email', 5);
+  END IF;
+
+  -- Social Links (track count but no penalty) - weight = 0 for now
+  IF profile_data.social_links IS NOT NULL THEN
+    -- Count links if structure is { links: [...] }
+    IF jsonb_typeof(profile_data.social_links) = 'object' AND profile_data.social_links ? 'links' THEN
+      link_count := jsonb_array_length(profile_data.social_links->'links');
+    ELSIF jsonb_typeof(profile_data.social_links) = 'array' THEN
+      link_count := jsonb_array_length(profile_data.social_links);
+    END IF;
+    
+    -- Track but don't add to score (weight = 0)
+    factors := factors || jsonb_build_object('social_links_count', 0, 'social_links_tracked', link_count);
   END IF;
 
   -- Verification status (10 bonus points for verified profiles)

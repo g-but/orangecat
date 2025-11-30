@@ -1,38 +1,38 @@
-import { InputHTMLAttributes, forwardRef, useId } from 'react'
-import { LucideIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { InputHTMLAttributes, forwardRef, useId } from 'react';
+import { LucideIcon } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  description?: string
-  error?: string
-  required?: boolean
-  icon?: LucideIcon
+  label?: string;
+  description?: string;
+  error?: string;
+  required?: boolean;
+  icon?: LucideIcon;
 }
 
 // Helper function to get icon test ID based on icon name
 const getIconTestId = (Icon: LucideIcon): string => {
-  const iconName = Icon.displayName || Icon.name || 'icon'
+  const iconName = Icon.displayName || Icon.name || 'icon';
   // Map common Lucide icon names to test IDs
   const iconMap: Record<string, string> = {
-    'Mail': 'mail',
-    'Lock': 'lock',
-    'Bitcoin': 'bitcoin',
-    'User': 'user',
-    'Search': 'search',
-    'Key': 'key',
-    'Eye': 'eye',
-    'EyeOff': 'eye-off'
-  }
-  return iconMap[iconName] || iconName.toLowerCase()
-}
+    Mail: 'mail',
+    Lock: 'lock',
+    Bitcoin: 'bitcoin',
+    User: 'user',
+    Search: 'search',
+    Key: 'key',
+    Eye: 'eye',
+    EyeOff: 'eye-off',
+  };
+  return iconMap[iconName] || iconName.toLowerCase();
+};
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ className, label, description, error, required, icon: Icon, id, ...props }, ref) => {
-    const generatedId = useId()
-    const inputId = id || generatedId
-    const errorId = `${inputId}-error`
-    const descriptionId = `${inputId}-description`
+    const generatedId = useId();
+    const inputId = id || generatedId;
+    const errorId = `${inputId}-error`;
+    const descriptionId = `${inputId}-description`;
 
     return (
       <div className="space-y-2">
@@ -52,16 +52,14 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             required={required}
             className={cn(
-              'block w-full rounded-md shadow-sm sm:text-sm',
+              'block w-full rounded-md shadow-sm text-sm text-gray-900',
               'border-gray-300 focus:border-tiffany-500 focus:ring-tiffany-500',
+              'placeholder:text-gray-400',
               error && 'border-red-300 focus:border-red-500 focus:ring-red-500',
               Icon && 'pl-10',
               className
             )}
-            aria-describedby={cn(
-              error && errorId,
-              description && descriptionId
-            )}
+            aria-describedby={cn(error && errorId, description && descriptionId)}
             aria-invalid={error ? 'true' : 'false'}
             ref={ref}
             {...props}
@@ -78,11 +76,11 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
           </p>
         )}
       </div>
-    )
+    );
   }
-)
+);
 
-Input.displayName = 'Input'
+Input.displayName = 'Input';
 
-export { Input }
-export default Input 
+export { Input };
+export default Input;
