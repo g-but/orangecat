@@ -177,16 +177,44 @@ export default function DashboardWalletsPage() {
     try {
       // Use profile from auth store (already loaded)
 
-      const response = await fetch('/api/wallets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          profile_id: profile.id,
-        }),
-      });
+      let response;
+      try {
+        response = await fetch('/api/wallets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...data,
+            profile_id: profile.id,
+          }),
+        });
+      } catch (fetchError) {
+        // Handle network errors, CORS issues, etc.
+        logger.error(
+          'Network error during wallet creation',
+          {
+            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            profileId: profile.id,
+          },
+          'WalletManagement'
+        );
+        toast.error('Network error. Please check your connection and try again.');
+        return;
+      }
 
       if (!response.ok) {
+        // Handle authentication errors specifically
+        if (response.status === 401 || response.status === 403) {
+          logger.warn(
+            'Authentication required for wallet operation',
+            { status: response.status, profileId: profile.id },
+            'WalletManagement'
+          );
+          toast.error('Please log in to add wallets');
+          // Redirect to login
+          router.push('/auth?mode=login&from=/dashboard/wallets');
+          return;
+        }
+
         const errorMessage = await parseErrorResponse(response);
         logger.error(
           'Failed to add wallet',
@@ -232,17 +260,42 @@ export default function DashboardWalletsPage() {
 
     try {
       // Force add the wallet by sending a special flag
-      const response = await fetch('/api/wallets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...duplicateDialog.walletData,
-          profile_id: profile.id,
-          force_duplicate: true, // Special flag to bypass duplicate warning
-        }),
-      });
+      let response;
+      try {
+        response = await fetch('/api/wallets', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...duplicateDialog.walletData,
+            profile_id: profile.id,
+            force_duplicate: true, // Special flag to bypass duplicate warning
+          }),
+        });
+      } catch (fetchError) {
+        logger.error(
+          'Network error during duplicate wallet creation',
+          {
+            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            profileId: profile.id,
+          },
+          'WalletManagement'
+        );
+        toast.error('Network error. Please check your connection and try again.');
+        return;
+      }
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          logger.warn(
+            'Authentication required for duplicate wallet operation',
+            { status: response.status, profileId: profile.id },
+            'WalletManagement'
+          );
+          toast.error('Please log in to add wallets');
+          router.push('/auth?mode=login&from=/dashboard/wallets');
+          return;
+        }
+
         const errorMessage = await parseErrorResponse(response);
         logger.error(
           'Failed to force add duplicate wallet',
@@ -289,17 +342,42 @@ export default function DashboardWalletsPage() {
   // Handle wallet update
   const handleUpdateWallet = async (walletId: string, data: Partial<WalletFormData>) => {
     try {
-      const response = await fetch(`/api/wallets/${walletId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...data,
-          // Include profile_id so the API can fall back to legacy storage if needed
-          profile_id: profile?.id,
-        }),
-      });
+      let response;
+      try {
+        response = await fetch(`/api/wallets/${walletId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...data,
+            // Include profile_id so the API can fall back to legacy storage if needed
+            profile_id: profile?.id,
+          }),
+        });
+      } catch (fetchError) {
+        logger.error(
+          'Network error during wallet update',
+          {
+            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            walletId,
+          },
+          'WalletManagement'
+        );
+        toast.error('Network error. Please check your connection and try again.');
+        return;
+      }
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          logger.warn(
+            'Authentication required for wallet update',
+            { status: response.status, walletId },
+            'WalletManagement'
+          );
+          toast.error('Please log in to update wallets');
+          router.push('/auth?mode=login&from=/dashboard/wallets');
+          return;
+        }
+
         const errorMessage = await parseErrorResponse(response);
         logger.error(
           'Failed to update wallet',
@@ -334,11 +412,36 @@ export default function DashboardWalletsPage() {
   // Handle wallet delete
   const handleDeleteWallet = async (walletId: string) => {
     try {
-      const response = await fetch(`/api/wallets/${walletId}`, {
-        method: 'DELETE',
-      });
+      let response;
+      try {
+        response = await fetch(`/api/wallets/${walletId}`, {
+          method: 'DELETE',
+        });
+      } catch (fetchError) {
+        logger.error(
+          'Network error during wallet deletion',
+          {
+            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            walletId,
+          },
+          'WalletManagement'
+        );
+        toast.error('Network error. Please check your connection and try again.');
+        return;
+      }
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          logger.warn(
+            'Authentication required for wallet deletion',
+            { status: response.status, walletId },
+            'WalletManagement'
+          );
+          toast.error('Please log in to delete wallets');
+          router.push('/auth?mode=login&from=/dashboard/wallets');
+          return;
+        }
+
         const errorMessage = await parseErrorResponse(response);
         logger.error(
           'Failed to delete wallet',
@@ -361,11 +464,35 @@ export default function DashboardWalletsPage() {
   // Handle wallet refresh
   const handleRefreshWallet = async (walletId: string) => {
     try {
-      const response = await fetch(`/api/wallets/${walletId}/refresh`, {
-        method: 'POST',
-      });
+      let response;
+      try {
+        response = await fetch(`/api/wallets/${walletId}/refresh`, {
+          method: 'POST',
+        });
+      } catch (fetchError) {
+        logger.error(
+          'Network error during wallet refresh',
+          {
+            error: fetchError instanceof Error ? fetchError.message : String(fetchError),
+            walletId,
+          },
+          'WalletManagement'
+        );
+        toast.error('Network error. Please check your connection and try again.');
+        return;
+      }
 
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          logger.warn(
+            'Authentication required for wallet refresh',
+            { status: response.status, walletId },
+            'WalletManagement'
+          );
+          toast.error('Please log in to refresh wallet data');
+          router.push('/auth?mode=login&from=/dashboard/wallets');
+          return;
+        }
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to refresh wallet');
       }
