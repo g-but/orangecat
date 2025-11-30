@@ -162,7 +162,7 @@ function waitForDeployment() {
 
     logInfo('Monitoring Vercel deployments...');
 
-    const vercel = spawn('npx', ['vercel', 'ls', '--prod'], {
+    const vercel = spawn('npx', ['vercel', 'ls', '--prod', '--yes'], {
       stdio: ['pipe', 'pipe', 'pipe'],
       cwd: process.cwd()
     });
