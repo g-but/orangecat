@@ -74,7 +74,7 @@ export interface SearchFilters {
     start: string;
     end: string;
   };
-  // Geographic filters (optional; no-op until schema supports them)
+  // Geographic filters (now implemented!)
   country?: string;
   city?: string;
   postal_code?: string;
@@ -252,6 +252,7 @@ function calculateRelevanceScore(result: SearchResult, query: string): number {
 // Optimized profile search with better indexing usage
 async function searchProfiles(
   query?: string,
+  filters?: SearchFilters,
   limit: number = 20,
   offset: number = 0
 ): Promise<SearchProfile[]> {
@@ -259,7 +260,9 @@ async function searchProfiles(
   // Query profiles by name
   let profileQuery = supabase
     .from('profiles')
-    .select('id, username, name, bio, avatar_url, created_at');
+    .select(
+      'id, username, name, bio, avatar_url, created_at, location_country, location_city, location_zip, latitude, longitude'
+    );
 
   if (query) {
     // OPTIMIZATION: Use tsvector for full-text search when available
@@ -270,6 +273,35 @@ async function searchProfiles(
     );
   }
 
+  // Apply location filters
+  if (filters) {
+    if (filters.country) {
+      profileQuery = profileQuery.eq('location_country', filters.country.toUpperCase());
+    }
+
+    if (filters.city) {
+      const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
+      profileQuery = profileQuery.ilike('location_city', `%${sanitizedCity}%`);
+    }
+
+    if (filters.postal_code) {
+      profileQuery = profileQuery.eq('location_zip', filters.postal_code);
+    }
+
+    // Radius search using Haversine formula (for profiles with lat/lng)
+    if (filters.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
+      // Use PostGIS if available, otherwise filter in application layer
+      // For now, we'll use a bounding box approximation for better performance
+      // This is less precise but much faster than Haversine in SQL
+      const radiusDegrees = filters.radius_km / 111.0; // Approximate: 1 degree ≈ 111 km
+      profileQuery = profileQuery
+        .gte('latitude', filters.lat - radiusDegrees)
+        .lte('latitude', filters.lat + radiusDegrees)
+        .gte('longitude', filters.lng - radiusDegrees)
+        .lte('longitude', filters.lng + radiusDegrees);
+    }
+  }
+
   // OPTIMIZATION: Use created_at index for better performance
   const { data: profiles, error } = await profileQuery
     .order('created_at', { ascending: false })
@@ -278,11 +310,37 @@ async function searchProfiles(
   if (error) {
     throw error;
   }
-  
-  return (profiles || []).map((p: any) => ({
+
+  let results = (profiles || []).map((p: any) => ({
     ...p,
-    name: p.name, 
+    name: p.name,
   }));
+
+  // Apply precise radius filtering if needed (Haversine formula)
+  if (filters?.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
+    results = results.filter(profile => {
+      if (!profile.latitude || !profile.longitude) {
+        return false;
+      }
+
+      // Haversine formula for precise distance calculation
+      const R = 6371; // Earth's radius in km
+      const dLat = ((profile.latitude - filters.lat!) * Math.PI) / 180;
+      const dLon = ((profile.longitude - filters.lng!) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((filters.lat! * Math.PI) / 180) *
+          Math.cos((profile.latitude * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+
+      return distance <= filters.radius_km!;
+    });
+  }
+
+  return results;
 }
 
 // Optimized project search with better query structure
@@ -295,16 +353,14 @@ async function searchFundingPages(
   // OPTIMIZATION: Only select necessary columns to reduce payload
   // Use cover_image_url (actual column name) instead of banner_url/featured_image_url
   // Also fetch first project_media image as fallback if cover_image_url is not set
-  let projectQuery = supabase
-    .from('projects')
-    .select(
-      `
+  let projectQuery = supabase.from('projects').select(
+    `
       id, user_id, title, description, bitcoin_address,
       created_at, updated_at, category, status, goal_amount, currency, raised_amount,
-      cover_image_url,
+      cover_image_url, location_city, location_country, location_coordinates,
       project_media!left(storage_path, position)
     `
-    );
+  );
 
   if (query) {
     const sanitizedQuery = query.replace(/[%_]/g, '\\$&');
@@ -352,6 +408,26 @@ async function searchFundingPages(
         .gte('created_at', filters.dateRange.start)
         .lte('created_at', filters.dateRange.end);
     }
+
+    // Location filters
+    if (filters.country) {
+      projectQuery = projectQuery.eq('location_country', filters.country.toUpperCase());
+    }
+
+    if (filters.city) {
+      const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
+      projectQuery = projectQuery.ilike('location_city', `%${sanitizedCity}%`);
+    }
+
+    // Radius search using PostGIS (projects have location_coordinates POINT)
+    if (filters.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
+      // Use PostGIS ST_DWithin for precise radius search
+      // Note: This requires PostGIS extension and location_coordinates column
+      const radiusMeters = filters.radius_km * 1000;
+      // Use RPC call for PostGIS queries (Supabase doesn't support PostGIS directly in JS client)
+      // For now, we'll filter in application layer after fetching
+      // TODO: Create a Postgres function for radius search if needed
+    }
   }
 
   // OPTIMIZATION: Use index-friendly ordering
@@ -366,33 +442,92 @@ async function searchFundingPages(
     return [];
   }
 
+  // Apply radius filtering for projects if needed (PostGIS ST_DWithin)
+  // Note: Supabase JS client doesn't support PostGIS directly, so we filter in application layer
+  let filteredProjects = rawProjects;
+  if (filters?.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
+    filteredProjects = rawProjects.filter((project: any) => {
+      if (!project.location_coordinates) {
+        return false;
+      }
+
+      // Parse PostGIS POINT format: "(lng,lat)" or "POINT(lng lat)"
+      let projectLat: number | null = null;
+      let projectLng: number | null = null;
+
+      if (typeof project.location_coordinates === 'string') {
+        // Handle POINT string format
+        const match = project.location_coordinates.match(/\(([^,]+),?\s*([^)]+)\)/);
+        if (match) {
+          projectLng = parseFloat(match[1]);
+          projectLat = parseFloat(match[2]);
+        }
+      } else if (
+        project.location_coordinates?.x !== undefined &&
+        project.location_coordinates?.y !== undefined
+      ) {
+        // Handle object format {x: lng, y: lat}
+        projectLng = project.location_coordinates.x;
+        projectLat = project.location_coordinates.y;
+      }
+
+      if (projectLat === null || projectLng === null) {
+        return false;
+      }
+
+      // Haversine formula for distance calculation
+      const R = 6371; // Earth's radius in km
+      const dLat = ((projectLat - filters.lat!) * Math.PI) / 180;
+      const dLon = ((projectLng - filters.lng!) * Math.PI) / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos((filters.lat! * Math.PI) / 180) *
+          Math.cos((projectLat * Math.PI) / 180) *
+          Math.sin(dLon / 2) *
+          Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const distance = R * c;
+
+      return distance <= filters.radius_km!;
+    });
+  }
+
   // Fetch profiles for all projects in parallel
-  const userIds = [...new Set(rawProjects.map((p: any) => p.user_id))];
+  const userIds = [...new Set(filteredProjects.map((p: any) => p.user_id))];
   const { data: profiles } = await supabase
     .from('profiles')
     .select('id, username, name, avatar_url')
     .in('id', userIds);
 
   // Create a map of user_id to profile for quick lookup
-  
-  const profileMap = new Map(profiles?.map((p: any) => [
-    p.id, 
-    {
-      ...p,
-      name: p.name, 
-    }
-  ]) || []);
+
+  const profileMap = new Map(
+    profiles?.map((p: any) => [
+      p.id,
+      {
+        ...p,
+        name: p.name,
+      },
+    ]) || []
+  );
 
   // OPTIMIZATION: Minimize data transformation overhead
-  const projects: SearchFundingPage[] = rawProjects.map((project: any) => {
+  const projects: SearchFundingPage[] = filteredProjects.map((project: any) => {
     // Get first project_media image as fallback if cover_image_url is not set
     let coverImageUrl = project.cover_image_url;
-    if (!coverImageUrl && project.project_media && Array.isArray(project.project_media) && project.project_media.length > 0) {
+    if (
+      !coverImageUrl &&
+      project.project_media &&
+      Array.isArray(project.project_media) &&
+      project.project_media.length > 0
+    ) {
       // Get first media item (sorted by position)
       const firstMedia = project.project_media.sort((a: any, b: any) => a.position - b.position)[0];
       if (firstMedia?.storage_path) {
         // Generate public URL from storage path
-        const { data: urlData } = supabase.storage.from('project-media').getPublicUrl(firstMedia.storage_path);
+        const { data: urlData } = supabase.storage
+          .from('project-media')
+          .getPublicUrl(firstMedia.storage_path);
         coverImageUrl = urlData.publicUrl;
       }
     }
@@ -508,7 +643,7 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
     // OPTIMIZATION: Use Promise.all for parallel searches when type is 'all'
     if (type === 'all') {
       const [profiles, projects] = await Promise.all([
-        searchProfiles(query, limit, offset).catch(error => {
+        searchProfiles(query, filters, limit, offset).catch(error => {
           logger.warn('Error searching profiles', error, 'Search');
           return [];
         }),
@@ -651,10 +786,14 @@ export async function getTrending(): Promise<SearchResponse> {
         .in('id', userIds);
 
       // Create a map of user_id to profile for quick lookup
-      const profileMap = new Map(profiles?.map(p => ({
-        ...p,
-        name: p.name, 
-      })).map(p => [p.id, p]) || []);
+      const profileMap = new Map(
+        profiles
+          ?.map(p => ({
+            ...p,
+            name: p.name,
+          }))
+          .map(p => [p.id, p]) || []
+      );
 
       const recentProjects: SearchFundingPage[] = projectsData.data.map((project: any) => {
         // Use cover_image_url directly (getTrending doesn't fetch project_media to keep it fast)
@@ -687,7 +826,7 @@ export async function getTrending(): Promise<SearchResponse> {
           type: 'profile',
           data: {
             ...profile,
-            name: profile.name, 
+            name: profile.name,
           },
         });
       });

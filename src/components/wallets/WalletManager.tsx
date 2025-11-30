@@ -1,10 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { Wallet, WalletFormData, WALLET_CATEGORIES, WalletCategory, validateAddressOrXpub } from '@/types/wallet';
+import Link from 'next/link';
+import {
+  Wallet,
+  WalletFormData,
+  WALLET_CATEGORIES,
+  WalletCategory,
+  validateAddressOrXpub,
+} from '@/types/wallet';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
+import type { WalletFieldType } from '@/lib/wallet-guidance';
+import { toast } from 'sonner';
+import {
+  Pencil,
+  Trash2,
+  Star,
+  RefreshCw,
+  Copy,
+  Check,
+  ExternalLink,
+  Wallet as WalletIcon,
+} from 'lucide-react';
 
 interface WalletManagerProps {
   wallets: Wallet[];
@@ -16,6 +35,7 @@ interface WalletManagerProps {
   onRefresh?: (walletId: string) => Promise<void>;
   maxWallets?: number;
   isOwner?: boolean;
+  onFieldFocus?: (field: WalletFieldType) => void;
 }
 
 export function WalletManager({
@@ -28,11 +48,14 @@ export function WalletManager({
   onRefresh,
   maxWallets = 10,
   isOwner = false,
+  onFieldFocus,
 }: WalletManagerProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [walletToDelete, setWalletToDelete] = useState<Wallet | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const activeWallets = wallets.filter((w) => w.is_active);
+  const activeWallets = wallets.filter(w => w.is_active);
   const canAddMore = activeWallets.length < maxWallets;
 
   return (
@@ -45,7 +68,7 @@ export function WalletManager({
             {activeWallets.length} of {maxWallets} wallets
           </p>
         </div>
-        {isOwner && canAddMore && !isAdding && (
+        {isOwner && canAddMore && !isAdding && activeWallets.length > 0 && (
           <Button onClick={() => setIsAdding(true)} variant="outline" size="sm">
             + Add Wallet
           </Button>
@@ -55,7 +78,8 @@ export function WalletManager({
       {/* Add new wallet form */}
       {isAdding && isOwner && (
         <WalletForm
-          onSubmit={async (data) => {
+          onFieldFocus={onFieldFocus}
+          onSubmit={async data => {
             await onAdd?.(data);
             setIsAdding(false);
           }}
@@ -64,8 +88,8 @@ export function WalletManager({
       )}
 
       {/* Wallet list */}
-      <div className="space-y-3">
-        {activeWallets.map((wallet) => (
+      <div className="space-y-4 sm:space-y-3">
+        {activeWallets.map(wallet => (
           <WalletCard
             key={wallet.id}
             wallet={wallet}
@@ -73,28 +97,86 @@ export function WalletManager({
             isEditing={editingId === wallet.id}
             onEdit={() => setEditingId(wallet.id)}
             onCancelEdit={() => setEditingId(null)}
-            onUpdate={async (data) => {
+            onUpdate={async data => {
               await onUpdate?.(wallet.id, data);
               setEditingId(null);
             }}
-            onDelete={async () => {
-              if (confirm('Delete this wallet? This cannot be undone.')) {
-                await onDelete?.(wallet.id);
+            onDelete={() => setWalletToDelete(wallet)}
+            onRefresh={async () => {
+              if (onRefresh) {
+                await onRefresh(wallet.id);
               }
             }}
-            onRefresh={() => onRefresh?.(wallet.id)}
+            onFieldFocus={onFieldFocus}
           />
         ))}
       </div>
 
       {activeWallets.length === 0 && !isAdding && (
-        <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg">
-          <p className="text-gray-500 mb-4">No wallets yet</p>
+        <>
+          <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50/50">
+            <WalletIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No wallets yet</h3>
+            <p className="text-gray-600 mb-4 max-w-md mx-auto">
+              Add your first Bitcoin wallet to start receiving support.
+            </p>
+            {isOwner && (
+              <Button onClick={() => setIsAdding(true)} variant="outline">
+                Add Your First Wallet
+              </Button>
+            )}
+          </div>
           {isOwner && (
-            <Button onClick={() => setIsAdding(true)} variant="outline">
-              Add Your First Wallet
-            </Button>
+            <div className="text-center">
+              <Link
+                href="/wallets"
+                className="text-sm text-gray-600 hover:text-orange-600 transition-colors inline-flex items-center gap-1"
+              >
+                I don't have a wallet yet
+                <ExternalLink className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           )}
+        </>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {walletToDelete && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Wallet</h3>
+            <p className="text-gray-600 mb-4">
+              Are you sure you want to delete "{walletToDelete.label}"? This action cannot be
+              undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <Button
+                onClick={() => setWalletToDelete(null)}
+                variant="outline"
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={async () => {
+                  setIsDeleting(true);
+                  try {
+                    await onDelete?.(walletToDelete.id);
+                    setWalletToDelete(null);
+                  } catch (error) {
+                    // Error is already handled by parent component
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }}
+                variant="danger"
+                disabled={isDeleting}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
@@ -111,6 +193,7 @@ function WalletCard({
   onUpdate,
   onDelete,
   onRefresh,
+  onFieldFocus,
 }: {
   wallet: Wallet;
   isOwner: boolean;
@@ -118,8 +201,9 @@ function WalletCard({
   onEdit: () => void;
   onCancelEdit: () => void;
   onUpdate: (data: Partial<WalletFormData>) => Promise<void>;
-  onDelete: () => Promise<void>;
+  onDelete: () => void;
   onRefresh: () => Promise<void>;
+  onFieldFocus?: (field: WalletFieldType) => void;
 }) {
   if (isEditing && isOwner) {
     return (
@@ -130,9 +214,12 @@ function WalletCard({
           address_or_xpub: wallet.address_or_xpub,
           category: wallet.category,
           category_icon: wallet.category_icon,
+          behavior_type: wallet.behavior_type || 'general',
           goal_amount: wallet.goal_amount || undefined,
           goal_currency: wallet.goal_currency || undefined,
+          is_primary: wallet.is_primary,
         }}
+        onFieldFocus={onFieldFocus}
         onSubmit={onUpdate}
         onCancel={onCancelEdit}
         submitLabel="Save Changes"
@@ -144,46 +231,90 @@ function WalletCard({
   const progressPercent = wallet.goal_amount ? (wallet.balance_btc / wallet.goal_amount) * 100 : 0;
 
   return (
-    <div className="border rounded-lg p-4 hover:border-orange-300 transition-colors">
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{wallet.category_icon || categoryInfo.icon}</span>
-          <div>
-            <h4 className="font-semibold flex items-center gap-2">
-              {wallet.label}
+    <div className="border rounded-lg p-4 sm:p-6 hover:border-orange-300 hover:shadow-md transition-all bg-white">
+      {/* Header with icon, title, and action buttons */}
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
+          <span className="text-3xl sm:text-4xl flex-shrink-0">
+            {wallet.category_icon || categoryInfo.icon}
+          </span>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h4 className="font-semibold text-base sm:text-lg truncate">{wallet.label}</h4>
               {wallet.is_primary && (
-                <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded">Primary</span>
+                <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0">
+                  <Star className="w-3 h-3 fill-orange-700" />
+                  Primary
+                </span>
               )}
-            </h4>
-            {wallet.description && <p className="text-sm text-gray-600">{wallet.description}</p>}
+            </div>
+            {wallet.description && (
+              <p className="text-sm text-gray-600 mt-1 line-clamp-2">{wallet.description}</p>
+            )}
             <p className="text-xs text-gray-500 mt-1">{categoryInfo.label}</p>
           </div>
         </div>
+
+        {/* Action buttons - icon only on mobile, with tooltips */}
         {isOwner && (
-          <div className="flex gap-2">
-            <Button onClick={onEdit} variant="ghost" size="sm">
-              Edit
-            </Button>
-            <Button onClick={onDelete} variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
-              Delete
-            </Button>
+          <div className="flex gap-1 sm:gap-2 flex-shrink-0">
+            {!wallet.is_primary && (
+              <button
+                onClick={async () => {
+                  try {
+                    await onUpdate({ is_primary: true });
+                    toast.success(`${wallet.label} is now your primary wallet`);
+                  } catch (error) {
+                    toast.error('Failed to set primary wallet');
+                  }
+                }}
+                className="p-2 rounded-lg hover:bg-orange-50 text-orange-600 hover:text-orange-700 transition-colors"
+                title="Set as primary wallet"
+                aria-label="Set as primary wallet"
+              >
+                <Star className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
+            )}
+            <button
+              onClick={onEdit}
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+              title="Edit wallet"
+              aria-label="Edit wallet"
+            >
+              <Pencil className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            <button
+              onClick={onDelete}
+              className="p-2 rounded-lg hover:bg-red-50 text-red-600 hover:text-red-700 transition-colors"
+              title="Delete wallet"
+              aria-label="Delete wallet"
+            >
+              <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
           </div>
         )}
       </div>
 
       {/* Balance */}
-      <div className="bg-gray-50 rounded p-3 mb-3">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-sm text-gray-600">Current Balance</span>
+      <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700">Current Balance</span>
           {isOwner && wallet.balance_updated_at && (
-            <Button onClick={onRefresh} variant="ghost" size="sm" className="text-xs">
-              🔄 Refresh
-            </Button>
+            <button
+              onClick={onRefresh}
+              className="p-1.5 rounded-md hover:bg-gray-200 text-gray-600 hover:text-gray-900 transition-colors"
+              title="Refresh balance"
+              aria-label="Refresh balance"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
           )}
         </div>
-        <div className="text-2xl font-bold text-orange-600">{wallet.balance_btc.toFixed(8)} BTC</div>
+        <div className="text-2xl sm:text-3xl font-bold text-orange-600">
+          {wallet.balance_btc.toFixed(8)} BTC
+        </div>
         {wallet.balance_updated_at && (
-          <div className="text-xs text-gray-500 mt-1">
+          <div className="text-xs text-gray-500 mt-2">
             Updated {new Date(wallet.balance_updated_at).toLocaleString()}
           </div>
         )}
@@ -191,40 +322,47 @@ function WalletCard({
 
       {/* Goal progress */}
       {wallet.goal_amount && (
-        <div>
-          <div className="flex justify-between text-sm mb-1">
-            <span className="text-gray-600">Goal</span>
-            <span className="font-medium">
+        <div className="mb-4">
+          <div className="flex justify-between text-sm mb-2">
+            <span className="text-gray-600 font-medium">Goal</span>
+            <span className="font-semibold text-gray-900">
               {wallet.balance_btc.toFixed(4)} / {wallet.goal_amount} {wallet.goal_currency}
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
+          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
             <div
-              className="bg-orange-500 h-2 rounded-full transition-all"
+              className="bg-orange-500 h-2.5 rounded-full transition-all"
               style={{ width: `${Math.min(progressPercent, 100)}%` }}
             />
           </div>
-          <div className="text-xs text-gray-500 mt-1">{progressPercent.toFixed(1)}% funded</div>
+          <div className="text-xs text-gray-500">{progressPercent.toFixed(1)}% funded</div>
         </div>
       )}
 
       {/* Address (truncated) */}
-      <div className="mt-3 pt-3 border-t">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-gray-500">
+      <div className="pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-medium text-gray-600">
             {wallet.wallet_type === 'xpub' ? 'Extended Public Key' : 'Bitcoin Address'}
           </span>
           <button
-            onClick={() => {
-              navigator.clipboard.writeText(wallet.address_or_xpub);
-              alert('Copied to clipboard!');
+            onClick={async () => {
+              try {
+                await navigator.clipboard.writeText(wallet.address_or_xpub);
+                toast.success('Copied to clipboard!');
+              } catch (error) {
+                toast.error('Failed to copy to clipboard');
+              }
             }}
-            className="text-xs text-orange-600 hover:text-orange-700"
+            className="p-1.5 rounded-md hover:bg-gray-100 text-gray-600 hover:text-orange-600 transition-colors flex items-center gap-1"
+            title="Copy address"
+            aria-label="Copy address"
           >
-            Copy
+            <Copy className="w-3.5 h-3.5" />
+            <span className="text-xs hidden sm:inline">Copy</span>
           </button>
         </div>
-        <code className="text-xs text-gray-700 block mt-1 font-mono break-all">
+        <code className="text-xs text-gray-700 block font-mono break-all bg-gray-50 p-2 rounded border">
           {wallet.address_or_xpub.slice(0, 20)}...{wallet.address_or_xpub.slice(-10)}
         </code>
       </div>
@@ -238,11 +376,13 @@ function WalletForm({
   onSubmit,
   onCancel,
   submitLabel = 'Add Wallet',
+  onFieldFocus,
 }: {
   initialData?: Partial<WalletFormData>;
   onSubmit: (data: WalletFormData) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
+  onFieldFocus?: (field: WalletFieldType) => void;
 }) {
   const [formData, setFormData] = useState<WalletFormData>({
     label: initialData?.label || '',
@@ -250,14 +390,15 @@ function WalletForm({
     address_or_xpub: initialData?.address_or_xpub || '',
     category: initialData?.category || 'general',
     category_icon: initialData?.category_icon,
+    behavior_type: initialData?.behavior_type || 'general',
     goal_amount: initialData?.goal_amount,
     goal_currency: initialData?.goal_currency || 'USD',
+    is_primary: initialData?.is_primary || false,
   });
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     setError(null);
 
     // Validate
@@ -284,24 +425,29 @@ function WalletForm({
   const selectedCategory = WALLET_CATEGORIES[formData.category];
 
   return (
-    <form onSubmit={handleSubmit} className="border rounded-lg p-4 bg-gray-50">
+    <div className="border rounded-lg p-4 bg-gray-50">
       <h4 className="font-semibold mb-4">{submitLabel}</h4>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded mb-4">{error}</div>
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded mb-4">
+          {error}
+        </div>
       )}
 
       {/* Category selection */}
       <div className="mb-4">
         <label className="block text-sm font-medium mb-2">Category</label>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {(Object.keys(WALLET_CATEGORIES) as WalletCategory[]).map((cat) => {
+          {(Object.keys(WALLET_CATEGORIES) as WalletCategory[]).map(cat => {
             const catInfo = WALLET_CATEGORIES[cat];
             return (
               <button
                 key={cat}
                 type="button"
-                onClick={() => setFormData({ ...formData, category: cat, category_icon: catInfo.icon })}
+                onClick={() => {
+                  setFormData({ ...formData, category: cat, category_icon: catInfo.icon });
+                  onFieldFocus?.('category');
+                }}
                 className={`p-3 border rounded-lg text-left transition-colors ${
                   formData.category === cat
                     ? 'border-orange-500 bg-orange-50'
@@ -322,7 +468,8 @@ function WalletForm({
         <label className="block text-sm font-medium mb-2">Wallet Name *</label>
         <Input
           value={formData.label}
-          onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+          onChange={e => setFormData({ ...formData, label: e.target.value })}
+          onFocus={() => onFieldFocus?.('label')}
           placeholder="e.g., Monthly Rent, Groceries, Medical Fund"
           required
         />
@@ -333,7 +480,8 @@ function WalletForm({
         <label className="block text-sm font-medium mb-2">Description (optional)</label>
         <Textarea
           value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+          onChange={e => setFormData({ ...formData, description: e.target.value })}
+          onFocus={() => onFieldFocus?.('description')}
           placeholder="Explain how these funds will be used..."
           rows={2}
         />
@@ -341,15 +489,22 @@ function WalletForm({
 
       {/* Address or xpub */}
       <div className="mb-4">
-        <label className="block text-sm font-medium mb-2">Bitcoin Address or xpub *</label>
+        <label className="block text-sm font-medium mb-2">
+          Bitcoin Address or Extended Public Key *
+          <span className="ml-2 text-xs font-normal text-gray-500">
+            (xpub/ypub/zpub recommended)
+          </span>
+        </label>
         <Input
           value={formData.address_or_xpub}
-          onChange={(e) => setFormData({ ...formData, address_or_xpub: e.target.value })}
-          placeholder="bc1q... or zpub..."
+          onChange={e => setFormData({ ...formData, address_or_xpub: e.target.value })}
+          onFocus={() => onFieldFocus?.('addressOrXpub')}
+          placeholder="zpub... (recommended) or bc1q..."
           required
         />
         <p className="text-xs text-gray-500 mt-1">
-          Use a single address or extended public key (xpub/ypub/zpub) to track all addresses
+          Extended public keys (xpub/ypub/zpub) automatically track all addresses and transactions.
+          Single addresses work but only track that one address.
         </p>
       </div>
 
@@ -361,15 +516,20 @@ function WalletForm({
             type="number"
             step="0.01"
             value={formData.goal_amount || ''}
-            onChange={(e) => setFormData({ ...formData, goal_amount: parseFloat(e.target.value) || undefined })}
+            onChange={e =>
+              setFormData({ ...formData, goal_amount: parseFloat(e.target.value) || undefined })
+            }
+            onFocus={() => onFieldFocus?.('goalAmount')}
             placeholder="1000"
             className="flex-1"
           />
           <select
             value={formData.goal_currency}
-            onChange={(e) => setFormData({ ...formData, goal_currency: e.target.value })}
+            onChange={e => setFormData({ ...formData, goal_currency: e.target.value })}
+            onFocus={() => onFieldFocus?.('goalCurrency')}
             className="border rounded px-3 py-2"
           >
+            <option value="CHF">CHF</option>
             <option value="USD">USD</option>
             <option value="EUR">EUR</option>
             <option value="BTC">BTC</option>
@@ -378,15 +538,34 @@ function WalletForm({
         </div>
       </div>
 
+      {/* Primary wallet checkbox (only when editing) */}
+      {initialData?.address_or_xpub && (
+        <div className="mb-4">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={formData.is_primary || false}
+              onChange={e => setFormData({ ...formData, is_primary: e.target.checked })}
+              className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+            />
+            <span className="text-sm font-medium">Set as primary wallet</span>
+          </label>
+          <p className="text-xs text-gray-500 mt-1 ml-6">
+            The primary wallet is displayed prominently on your profile. Only one wallet can be
+            primary at a time.
+          </p>
+        </div>
+      )}
+
       {/* Actions */}
       <div className="flex gap-2">
-        <Button type="submit" disabled={isSubmitting} className="flex-1">
+        <Button type="button" onClick={handleSubmit} disabled={isSubmitting} className="flex-1">
           {isSubmitting ? 'Saving...' : submitLabel}
         </Button>
         <Button type="button" onClick={onCancel} variant="outline">
           Cancel
         </Button>
       </div>
-    </form>
+    </div>
   );
 }

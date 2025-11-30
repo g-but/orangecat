@@ -20,6 +20,12 @@ export interface Database {
           avatar_url: string | null;
           banner_url: string | null;
           website: string | null;
+          // Social & Contact
+          social_links: {
+            links: Array<{ platform: string; label?: string; value: string }>;
+          } | null;
+          contact_email: string | null;
+          phone: string | null;
           // Wallet fields
           bitcoin_address: string | null;
           lightning_address: string | null;
@@ -301,7 +307,7 @@ export type OrganizationUpdate = Database['public']['Tables']['organizations']['
 
 // Form data types for profile operations
 export type ProfileFormData = {
-  username?: string | null;
+  username: string; // Required field - must match validation schema
   name?: string | null;
   bio?: string | null;
   email?: string | null;
@@ -313,11 +319,19 @@ export type ProfileFormData = {
   location_zip?: string | null; // ZIP or postal code
   latitude?: number | null; // Geographic latitude coordinate
   longitude?: number | null; // Geographic longitude coordinate
+  // Extended transparency fields
+  background?: string | null; // Personal/professional background
+  inspiration_statement?: string | null; // What inspires them
+  location_context?: string | null; // Additional context about location (canton/state)
   // Media fields
   avatar_url?: string | null;
   banner_url?: string | null;
   website?: string | null;
-  // Wallet fields
+  // Social & Contact
+  social_links?: { links: Array<{ platform: string; label?: string; value: string }> } | null;
+  contact_email?: string | null;
+  phone?: string | null;
+  // Wallet fields (kept for backward compatibility, but wallets managed separately)
   bitcoin_address?: string | null;
   lightning_address?: string | null;
 };

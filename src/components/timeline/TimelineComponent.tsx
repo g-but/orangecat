@@ -54,7 +54,9 @@ interface TimelineEventProps {
  * Returns React elements for safe rendering
  */
 function renderMarkdownText(text: string): React.ReactNode[] {
-  if (!text) return [];
+  if (!text) {
+    return [];
+  }
 
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
@@ -78,9 +80,7 @@ function renderMarkdownText(text: string): React.ReactNode[] {
   // Second pass: find all italic matches (excluding those inside bold)
   const italicMatches: Array<{ start: number; end: number; text: string }> = [];
   while ((match = italicRegex.exec(text)) !== null) {
-    const isInsideBold = boldMatches.some(
-      b => match.index >= b.start && match.index < b.end
-    );
+    const isInsideBold = boldMatches.some(b => match.index >= b.start && match.index < b.end);
     if (!isInsideBold) {
       italicMatches.push({
         start: match.index,
@@ -164,7 +164,10 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
     if ((event.likesCount ?? 0) === 0 || (event.commentsCount ?? 0) === 0) {
       (async () => {
         const counts = await timelineService.getEventCounts(event.id);
-        if (counts.likeCount !== (event.likesCount || 0) || counts.commentCount !== (event.commentsCount || 0)) {
+        if (
+          counts.likeCount !== (event.likesCount || 0) ||
+          counts.commentCount !== (event.commentsCount || 0)
+        ) {
           onUpdate({ likesCount: counts.likeCount, commentsCount: counts.commentCount });
         }
       })();
@@ -238,7 +241,9 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
 
   const handleShareConfirm = useCallback(
     async (shareText: string) => {
-      if (isSharing) return;
+      if (isSharing) {
+        return;
+      }
       // Optimistic share count update
       const originalCount = event.sharesCount || 0;
       onUpdate({ userShared: true, sharesCount: originalCount + 1 });
@@ -268,7 +273,9 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
 
   // Open repost modal
   const handleRepostClick = useCallback(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      return;
+    }
     setRepostModalOpen(true);
   }, [user?.id]);
 
@@ -366,17 +373,14 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
     }
   }, [event.id]);
 
-  const loadReplies = useCallback(
-    async (parentId: string) => {
-      try {
-        const list = await timelineService.getCommentReplies(parentId, 20);
-        setReplies(prev => ({ ...prev, [parentId]: list }));
-      } catch (error) {
-        logger.error('Failed to load replies', error, 'Timeline');
-      }
-    },
-    []
-  );
+  const loadReplies = useCallback(async (parentId: string) => {
+    try {
+      const list = await timelineService.getCommentReplies(parentId, 20);
+      setReplies(prev => ({ ...prev, [parentId]: list }));
+    } catch (error) {
+      logger.error('Failed to load replies', error, 'Timeline');
+    }
+  }, []);
 
   const handleComment = useCallback(async () => {
     if (!commentText.trim() || isCommenting) {
@@ -477,11 +481,19 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
   }, [event.title, event.description]);
 
   const timeAgo = formatDistanceToNow(new Date(event.eventTimestamp), { addSuffix: true });
+  const isReply = !!event.parentEventId;
+  const isQuoteRepost = event.metadata?.is_quote_repost === true;
 
   return (
-    <div
-      className={`relative mb-0 sm:mb-3 transition-all border-b border-gray-200 sm:border-0 sm:rounded-lg sm:bg-white sm:shadow-sm hover:bg-gray-50/50 ${
-        event.isFeatured ? 'sm:ring-2 sm:ring-orange-300 sm:bg-gradient-to-r sm:from-orange-50/20 sm:to-transparent' : ''
+    <article
+      className={`relative transition-all bg-white ${
+        isReply
+          ? 'ml-0 sm:ml-12 border-l-0 sm:border-l-2 border-gray-200 pl-0 sm:pl-4'
+          : 'border-b border-gray-200 sm:border-0 sm:rounded-lg sm:shadow-sm sm:mb-4'
+      } hover:bg-gray-50/50 ${
+        event.isFeatured
+          ? 'sm:ring-2 sm:ring-orange-300 sm:bg-gradient-to-r sm:from-orange-50/20 sm:to-transparent'
+          : ''
       } ${selectionMode && isSelected ? 'bg-orange-50/30 border-orange-200' : ''}`}
     >
       {/* Selection Checkbox - Show when in selection mode */}
@@ -497,72 +509,107 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
         </div>
       )}
 
-      <div className={`px-4 py-3 sm:p-4 sm:pb-4 ${selectionMode ? 'pl-12 sm:pl-16' : ''}`}>
-
-        {/* Event Header - X-style compact layout */}
-        <div className="flex items-start gap-3 sm:gap-3 mb-2.5 sm:mb-3">
-          {/* Actor Avatar - X-style: Compact on mobile */}
+      <div className={`px-4 py-3 sm:px-4 sm:py-3 ${selectionMode ? 'pl-12 sm:pl-16' : ''}`}>
+        {/* Post Header - X/Twitter style */}
+        <div className="flex items-start gap-3 mb-2">
+          {/* Profile Picture */}
           <AvatarLink
             username={event.actor.username}
             userId={event.actor.id}
             avatarUrl={event.actor.avatar}
             name={event.actor.name}
-            size={compact ? 40 : 44}
+            size={compact ? 40 : 48}
             className="flex-shrink-0"
           />
 
-          {/* Event Content */}
+          {/* Content */}
           <div className="flex-1 min-w-0">
-            {/* Actor and Event Info - X-style: Single line, compact */}
-            <div className="flex items-center gap-1.5 sm:gap-1.5 mb-2 sm:mb-1.5 flex-wrap">
+            {/* User Info Line - Display name, handle, timestamp */}
+            <div className="flex items-center gap-1.5 mb-1 flex-wrap">
               <Link
-                href={event.actor.username ? `/profiles/${event.actor.username}` : `/profiles/${event.actor.id}`}
-                className="font-semibold text-sm sm:text-[15px] text-gray-900 hover:underline transition-colors cursor-pointer"
+                href={
+                  event.actor.username
+                    ? `/profiles/${event.actor.username}`
+                    : `/profiles/${event.actor.id}`
+                }
+                className="font-bold text-[15px] text-gray-900 hover:underline"
               >
                 {event.actor.name}
               </Link>
               {event.actor.username && (
                 <>
-                  <Link
-                    href={`/profiles/${event.actor.username}`}
-                    className="text-gray-500 text-sm sm:text-[15px] hover:underline transition-colors"
-                  >
-                    @{event.actor.username}
-                  </Link>
-                  <span className="text-gray-400 select-none text-sm sm:text-[15px]">·</span>
+                  <span className="text-gray-500 text-[15px]">@{event.actor.username}</span>
+                  <span className="text-gray-500 text-[15px]">·</span>
                 </>
               )}
-              <span className="text-gray-500 text-sm sm:text-[15px]">
+              <span className="text-gray-500 text-[15px]">
                 {timeAgo.replace('about ', '').replace(' ago', '')}
               </span>
-              {event.isRecent && (
-                <span className="px-2 py-0.5 bg-gradient-to-r from-orange-100 to-yellow-100 text-orange-700 text-xs rounded-full font-medium">
-                  New
-                </span>
-              )}
-              {event.isFeatured && (
-                <span className="px-2 py-0.5 bg-gradient-to-r from-orange-200 to-yellow-200 text-orange-800 text-xs rounded-full font-medium flex items-center gap-1">
-                  <Star className="w-3 h-3" />
-                  Featured
-                </span>
-              )}
             </div>
 
-            {/* Event Title and Description - X-style: Clean, readable */}
-            <div className="mb-3 sm:mb-3">
+            {/* Reply Context */}
+            {isReply && (
+              <div className="mb-2 text-sm text-gray-500">
+                Replying to{' '}
+                <Link
+                  href={
+                    event.actor.username
+                      ? `/profiles/${event.actor.username}`
+                      : `/profiles/${event.actor.id}`
+                  }
+                  className="text-orange-600 hover:text-orange-700 hover:underline"
+                >
+                  @{event.actor.username || event.actor.name}
+                </Link>
+              </div>
+            )}
+
+            {/* Post Content */}
+            <div className="mb-3">
               {event.title &&
                 event.eventType !== 'status_update' &&
                 !event.metadata?.is_user_post && (
-                  <h3 className="font-semibold text-gray-900 mb-1.5 text-sm sm:text-base leading-relaxed">
+                  <h3 className="font-semibold text-gray-900 mb-1.5 text-[15px] leading-relaxed">
                     {event.title}
                   </h3>
                 )}
               {event.description && (
-                <p className="text-gray-900 text-sm sm:text-base leading-[1.5] sm:leading-[1.5] whitespace-pre-wrap break-words">
+                <p className="text-gray-900 text-[15px] leading-[1.5] whitespace-pre-wrap break-words">
                   {renderMarkdownText(event.description)}
                 </p>
               )}
             </div>
+
+            {/* Quote Repost - Show original post as nested card (X/Twitter style) */}
+            {isQuoteRepost && event.metadata?.original_event_id && (
+              <div className="mt-3 border border-gray-200 rounded-xl overflow-hidden hover:bg-gray-50/50 transition-colors cursor-pointer">
+                <div className="p-3">
+                  <div className="flex items-start gap-2 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="font-semibold text-sm text-gray-900">
+                          {event.metadata.original_actor_name || 'User'}
+                        </span>
+                        <span className="text-gray-500 text-sm">
+                          @
+                          {event.metadata.original_actor_name?.toLowerCase().replace(/\s+/g, '') ||
+                            'user'}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-900 leading-relaxed">
+                        {event.description?.includes('---')
+                          ? event.description
+                              .split('\n\n---\n\n')[1]
+                              ?.replace(/^Reposted from .+:\n/, '') ||
+                            event.description.split('\n\n---\n\n')[1]
+                          : event.description || 'Original post content'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Formatted Amount for Financial Events */}
             {event.formattedAmount && (
@@ -598,19 +645,79 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
                 ))}
               </div>
             )}
+
+            {/* Interaction Icons Row - X/Twitter style */}
+            <div className="flex items-center justify-between max-w-[425px] mt-3">
+              {/* Reply */}
+              <button
+                onClick={toggleComments}
+                className="group flex items-center gap-1 text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 rounded-full p-2 -ml-2 transition-colors"
+              >
+                <MessageCircle className="w-5 h-5" />
+                <span className="text-sm">
+                  {(event.commentsCount || 0) > 0 ? event.commentsCount : ''}
+                </span>
+              </button>
+
+              {/* Repost */}
+              <button
+                onClick={handleRepostClick}
+                disabled={isReposting}
+                className="group flex items-center gap-1 text-gray-500 hover:text-green-500 hover:bg-green-50/50 rounded-full p-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                <span className="text-sm">
+                  {(event.repostsCount || 0) > 0 ? event.repostsCount : ''}
+                </span>
+              </button>
+
+              {/* Like */}
+              <button
+                onClick={handleLike}
+                disabled={isLiking}
+                className={`group flex items-center gap-1 rounded-full p-2 transition-colors ${
+                  event.userLiked
+                    ? 'text-red-500 hover:bg-red-50/50'
+                    : 'text-gray-500 hover:text-red-500 hover:bg-red-50/50'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Heart className={`w-5 h-5 ${event.userLiked ? 'fill-current' : ''}`} />
+                <span className="text-sm">
+                  {(event.likesCount || 0) > 0 ? event.likesCount : ''}
+                </span>
+              </button>
+
+              {/* Share */}
+              <button
+                onClick={handleShareOpen}
+                disabled={isSharing}
+                className={`group flex items-center gap-1 rounded-full p-2 transition-colors ${
+                  event.userShared
+                    ? 'text-blue-500 hover:bg-blue-50/50'
+                    : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50/50'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Share2 className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* More Options Menu - Only show for owner */}
           {isOwner && (
             <div className="relative flex-shrink-0" ref={menuRef}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-shrink-0"
+              <button
                 onClick={() => setShowMenu(!showMenu)}
+                className="text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-full p-2 transition-colors"
               >
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
 
               {/* Dropdown Menu */}
               {showMenu && (
@@ -638,115 +745,6 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
           )}
         </div>
 
-        {/* Social Interaction Buttons - X-style: Touch-optimized for mobile */}
-        <div className="flex items-center justify-between pt-3 sm:pt-3 border-t-0 sm:border-t border-gray-100">
-          <div className="flex items-center gap-2 sm:gap-4 flex-1 sm:flex-initial">
-            {/* Comment Button - X-style: 44x44px touch target on mobile */}
-            <button
-              onClick={toggleComments}
-              className="group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2 py-2 sm:py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 active:bg-blue-100/50 transition-colors touch-manipulation justify-center sm:justify-start"
-            >
-              <MessageCircle className="w-5 h-5 sm:w-5 sm:h-5 transition-transform group-hover:scale-110" />
-              <span className="text-sm sm:text-sm min-w-[1.5rem] text-left">
-                {(event.commentsCount || 0) > 0 ? event.commentsCount : ''}
-              </span>
-            </button>
-
-            {/* Repost Button - X-style: 44x44px touch target on mobile */}
-            <button
-              onClick={handleRepostClick}
-              disabled={isReposting}
-              className="group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2 py-2 sm:py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full text-gray-500 hover:text-green-500 hover:bg-green-50/50 active:bg-green-100/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed touch-manipulation justify-center sm:justify-start"
-            >
-              <svg
-                className="w-5 h-5 sm:w-5 sm:h-5 transition-transform group-hover:scale-110"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                />
-              </svg>
-              <span className="text-sm sm:text-sm min-w-[1.5rem] text-left">
-                {/* Repost count would go here if we track it */}
-              </span>
-            </button>
-
-            {/* Like Button - X-style: 44x44px touch target on mobile */}
-            <button
-              onClick={handleLike}
-              disabled={isLiking}
-              className={`group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2 py-2 sm:py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full transition-colors touch-manipulation justify-center sm:justify-start ${
-                event.userLiked
-                  ? 'text-red-500 hover:bg-red-50/50 active:bg-red-100/50'
-                  : 'text-gray-500 hover:text-red-500 hover:bg-red-50/50 active:bg-red-100/50'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              <Heart
-                className={`w-5 h-5 sm:w-5 sm:h-5 transition-transform group-hover:scale-110 ${
-                  event.userLiked ? 'fill-current' : ''
-                }`}
-              />
-              <span className="text-sm sm:text-sm min-w-[1.5rem] text-left">
-                {(event.likesCount || 0) > 0 ? event.likesCount : ''}
-              </span>
-            </button>
-
-            {/* Share Button - X-style: 44x44px touch target on mobile */}
-            <button
-              onClick={handleShareOpen}
-              disabled={isSharing}
-              className={`group flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2 py-2 sm:py-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full transition-colors touch-manipulation justify-center sm:justify-start ${
-                event.userShared
-                  ? 'text-blue-500 hover:bg-blue-50/50 active:bg-blue-100/50'
-                  : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 active:bg-blue-100/50'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              <Share2 className="w-5 h-5 sm:w-5 sm:h-5 transition-transform group-hover:scale-110" />
-              <span className="text-sm sm:text-sm min-w-[1.5rem] text-left">
-                {(event.sharesCount || 0) > 0 ? event.sharesCount : ''}
-              </span>
-            </button>
-          </div>
-
-          {/* Visibility Indicator - Hidden on mobile */}
-          <div className="hidden sm:flex items-center gap-1 text-xs text-gray-400">
-            {event.visibility === 'public' ? (
-              <Eye className="w-3 h-3" />
-            ) : event.visibility === 'followers' ? (
-              <EyeOff className="w-3 h-3" />
-            ) : (
-              <span className="w-3 h-3 bg-gray-400 rounded-full" />
-            )}
-            <span className="capitalize">{event.visibility}</span>
-            {isOwner && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-gray-500 ml-2"
-                onClick={async () => {
-                  const next = (event.visibility || 'public') === 'public' ? 'private' : 'public';
-                  // Optimistic toggle
-                  onUpdate({ visibility: next });
-                  const res = await timelineService.updateEventVisibility(event.id, next);
-                  if (!res.success) {
-                    logger.error('Failed to update visibility', res.error, 'Timeline');
-                    // Revert on failure
-                    onUpdate({ visibility: event.visibility });
-                  }
-                }}
-                aria-label="Toggle visibility"
-              >
-                {event.visibility === 'public' ? 'Make Private' : 'Make Public'}
-              </Button>
-            )}
-          </div>
-        </div>
-
         {/* Share Modal */}
         <ShareModal
           isOpen={shareOpen}
@@ -765,129 +763,142 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
           onQuoteRepost={handleQuoteRepost}
           isReposting={isReposting}
         />
-
       </div>
 
       {/* Comments Section */}
       {showComments && (
         <div className="px-3 sm:px-4 pb-3 sm:pb-4 pt-2 sm:pt-4 border-t border-gray-100">
-            {/* Reply Context - X-style "Replying to @username" */}
-            <div className="mb-3 text-sm text-gray-500">
-              Replying to{' '}
-              <Link
-                href={event.actor.username ? `/profiles/${event.actor.username}` : `/profiles/${event.actor.id}`}
-                className="text-orange-600 hover:text-orange-700 hover:underline"
-              >
-                @{event.actor.username || event.actor.name}
-              </Link>
-            </div>
+          {/* Reply Context - X-style "Replying to @username" */}
+          <div className="mb-3 text-sm text-gray-500">
+            Replying to{' '}
+            <Link
+              href={
+                event.actor.username
+                  ? `/profiles/${event.actor.username}`
+                  : `/profiles/${event.actor.id}`
+              }
+              className="text-orange-600 hover:text-orange-700 hover:underline"
+            >
+              @{event.actor.username || event.actor.name}
+            </Link>
+          </div>
 
-            {/* Add Comment */}
-            <div className="flex gap-2 mb-4">
-              <input
-                type="text"
-                value={commentText}
-                onChange={e => setCommentText(e.target.value)}
-                placeholder="Post your reply"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                onKeyPress={e => e.key === 'Enter' && handleComment()}
-              />
-              <Button
-                size="sm"
-                onClick={handleComment}
-                disabled={!commentText.trim() || isCommenting}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
-              >
-                {isCommenting ? '...' : 'Reply'}
-              </Button>
-            </div>
+          {/* Add Comment */}
+          <div className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={commentText}
+              onChange={e => setCommentText(e.target.value)}
+              placeholder="Post your reply"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+              onKeyPress={e => e.key === 'Enter' && handleComment()}
+            />
+            <Button
+              size="sm"
+              onClick={handleComment}
+              disabled={!commentText.trim() || isCommenting}
+              className="bg-orange-500 hover:bg-orange-600 text-white"
+            >
+              {isCommenting ? '...' : 'Reply'}
+            </Button>
+          </div>
 
-            {/* Comments List */}
-            {comments.length > 0 && (
-              <div className="space-y-3">
-                {comments.map(comment => (
-                  <div key={comment.id} className="flex gap-2">
-                    <AvatarLink
-                      username={(comment as any).user_username || null}
-                      userId={(comment as any).user_id || null}
-                      avatarUrl={comment.user_avatar || null}
-                      name={comment.user_name || null}
-                      size={24}
-                      className="flex-shrink-0"
-                    />
-                    <div className="flex-1">
-                      <div className="bg-gray-100 rounded-lg px-3 py-2">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Link
-                            href={(comment as any).user_username ? `/profiles/${(comment as any).user_username}` : `/profiles/${(comment as any).user_id || '#'}`}
-                            className="font-medium text-sm hover:text-orange-600 transition-colors"
-                          >
-                            {comment.user_name}
-                          </Link>
-                          <span className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-700">{comment.content}</p>
+          {/* Comments List */}
+          {comments.length > 0 && (
+            <div className="space-y-3">
+              {comments.map(comment => (
+                <div key={comment.id} className="flex gap-2">
+                  <AvatarLink
+                    username={(comment as any).user_username || null}
+                    userId={(comment as any).user_id || null}
+                    avatarUrl={comment.user_avatar || null}
+                    name={comment.user_name || null}
+                    size={24}
+                    className="flex-shrink-0"
+                  />
+                  <div className="flex-1">
+                    <div className="bg-gray-100 rounded-lg px-3 py-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Link
+                          href={
+                            (comment as any).user_username
+                              ? `/profiles/${(comment as any).user_username}`
+                              : `/profiles/${(comment as any).user_id || '#'}`
+                          }
+                          className="font-medium text-sm hover:text-orange-600 transition-colors"
+                        >
+                          {comment.user_name}
+                        </Link>
+                        <span className="text-xs text-gray-500">
+                          {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
+                        </span>
                       </div>
-                      {comment.reply_count > 0 && (
-                        <div className="mt-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs text-gray-500"
-                            onClick={async () => {
-                              const next = !expandedReplies[comment.id];
-                              setExpandedReplies(prev => ({ ...prev, [comment.id]: next }));
-                              if (next && !replies[comment.id]) {
-                                await loadReplies(comment.id);
-                              }
-                            }}
-                          >
-                            {expandedReplies[comment.id] ? 'Hide' : 'View'} {comment.reply_count}{' '}
-                            repl{comment.reply_count === 1 ? 'y' : 'ies'}
-                          </Button>
-                          {expandedReplies[comment.id] && replies[comment.id] && (
-                            <div className="mt-2 space-y-2 ml-8">
-                              {replies[comment.id].map(reply => (
-                                <div key={reply.id} className="flex gap-2">
-                                  <AvatarLink
-                                    username={(reply as any).user_username || null}
-                                    userId={(reply as any).user_id || null}
-                                    avatarUrl={reply.user_avatar || null}
-                                    name={reply.user_name || null}
-                                    size={20}
-                                    className="flex-shrink-0"
-                                  />
-                                  <div className="flex-1">
-                                    <div className="bg-gray-50 rounded-lg px-3 py-2">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <Link
-                                          href={(reply as any).user_username ? `/profiles/${(reply as any).user_username}` : `/profiles/${(reply as any).user_id || '#'}`}
-                                          className="font-medium text-xs hover:text-orange-600 transition-colors"
-                                        >
-                                          {reply.user_name}
-                                        </Link>
-                                        <span className="text-[10px] text-gray-500">
-                                          {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true })}
-                                        </span>
-                                      </div>
-                                      <p className="text-sm text-gray-700">{reply.content}</p>
+                      <p className="text-sm text-gray-700">{comment.content}</p>
+                    </div>
+                    {comment.reply_count > 0 && (
+                      <div className="mt-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-xs text-gray-500"
+                          onClick={async () => {
+                            const next = !expandedReplies[comment.id];
+                            setExpandedReplies(prev => ({ ...prev, [comment.id]: next }));
+                            if (next && !replies[comment.id]) {
+                              await loadReplies(comment.id);
+                            }
+                          }}
+                        >
+                          {expandedReplies[comment.id] ? 'Hide' : 'View'} {comment.reply_count} repl
+                          {comment.reply_count === 1 ? 'y' : 'ies'}
+                        </Button>
+                        {expandedReplies[comment.id] && replies[comment.id] && (
+                          <div className="mt-2 space-y-2 ml-8">
+                            {replies[comment.id].map(reply => (
+                              <div key={reply.id} className="flex gap-2">
+                                <AvatarLink
+                                  username={(reply as any).user_username || null}
+                                  userId={(reply as any).user_id || null}
+                                  avatarUrl={reply.user_avatar || null}
+                                  name={reply.user_name || null}
+                                  size={20}
+                                  className="flex-shrink-0"
+                                />
+                                <div className="flex-1">
+                                  <div className="bg-gray-50 rounded-lg px-3 py-2">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Link
+                                        href={
+                                          (reply as any).user_username
+                                            ? `/profiles/${(reply as any).user_username}`
+                                            : `/profiles/${(reply as any).user_id || '#'}`
+                                        }
+                                        className="font-medium text-xs hover:text-orange-600 transition-colors"
+                                      >
+                                        {reply.user_name}
+                                      </Link>
+                                      <span className="text-[10px] text-gray-500">
+                                        {formatDistanceToNow(new Date(reply.created_at), {
+                                          addSuffix: true,
+                                        })}
+                                      </span>
                                     </div>
+                                    <p className="text-sm text-gray-700">{reply.content}</p>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Edit Modal */}
       {showEditModal && (
@@ -1012,7 +1023,7 @@ const TimelineEventComponent: React.FC<TimelineEventProps> = ({
           </Card>
         </div>
       )}
-    </div>
+    </article>
   );
 };
 
@@ -1081,7 +1092,9 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   }, [events, selectedEventIds.size]);
 
   const handleBulkDelete = useCallback(async () => {
-    if (selectedEventIds.size === 0) return;
+    if (selectedEventIds.size === 0) {
+      return;
+    }
 
     try {
       setIsBulkDeleting(true);
@@ -1125,12 +1138,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
               </Button>
             ) : (
               <div className="flex items-center gap-3 flex-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={selectAll}
-                  className="text-sm"
-                >
+                <Button variant="ghost" size="sm" onClick={selectAll} className="text-sm">
                   {selectedEventIds.size === visibleEvents.length ? 'Deselect All' : 'Select All'}
                 </Button>
                 <span className="text-sm text-gray-600">
@@ -1147,11 +1155,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
                     <Trash2 className="w-4 h-4" />
                     Delete ({selectedEventIds.size})
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={toggleSelectionMode}
-                  >
+                  <Button variant="ghost" size="sm" onClick={toggleSelectionMode}>
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
@@ -1161,8 +1165,8 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
         </div>
       )}
 
-      {/* Events List - Clean, no extra headers - X-style on mobile: no spacing between posts */}
-      <div className="space-y-0 sm:space-y-4">
+      {/* Events List - X/Twitter style: no spacing on mobile, spacing on desktop */}
+      <div className="space-y-0">
         {visibleEvents.map(event => (
           <TimelineEventComponent
             key={event.id}
@@ -1203,8 +1207,10 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
               </div>
 
               <p className="text-gray-700 mb-6">
-                Are you sure you want to delete {selectedEventIds.size === 1 ? 'this post' : 'these posts'}? 
-                {selectedEventIds.size > 1 && ' They will be'} permanently removed from your timeline.
+                Are you sure you want to delete{' '}
+                {selectedEventIds.size === 1 ? 'this post' : 'these posts'}?
+                {selectedEventIds.size > 1 && ' They will be'} permanently removed from your
+                timeline.
               </p>
 
               <div className="flex gap-2 justify-end">
@@ -1215,11 +1221,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
                 >
                   Cancel
                 </Button>
-                <Button
-                  variant="danger"
-                  onClick={handleBulkDelete}
-                  disabled={isBulkDeleting}
-                >
+                <Button variant="danger" onClick={handleBulkDelete} disabled={isBulkDeleting}>
                   {isBulkDeleting ? 'Deleting...' : 'Delete'}
                 </Button>
               </div>

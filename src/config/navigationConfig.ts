@@ -91,7 +91,7 @@ export const navigationSections: NavSection[] = [
         name: 'My Info',
         href: '/dashboard/info',
         icon: Info,
-        description: 'Edit your profile information',
+        description: 'View your profile information',
         requiresAuth: true,
       },
       {
