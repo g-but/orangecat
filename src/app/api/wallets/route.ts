@@ -295,13 +295,32 @@ export async function POST(request: NextRequest) {
         .eq('is_active', true)
         .single();
 
-      if (existingWallet) {
-        return NextResponse.json<ErrorResponse>(
+      let duplicateInfo = null;
+      const forceDuplicate = body.force_duplicate === true;
+
+      if (existingWallet && !forceDuplicate) {
+        // Get details of existing wallets with the same address
+        const { data: existingWallets } = await supabase
+          .from('wallets')
+          .select('id, label, category')
+          .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
+          .eq('address_or_xpub', sanitized.address_or_xpub)
+          .eq('is_active', true);
+
+        duplicateInfo = {
+          existingWallets: existingWallets || [],
+          message: 'This wallet address is already connected to your account',
+        };
+
+        logger.warn(
+          'Duplicate wallet address detected',
           {
-            error: 'This address/xpub is already added to this profile/project',
-            code: 'DUPLICATE_ADDRESS',
+            address: sanitized.address_or_xpub,
+            entityId,
+            entityType,
+            existingCount: existingWallets?.length,
           },
-          { status: 409 }
+          'WalletManagement'
         );
       }
 
@@ -387,7 +406,11 @@ export async function POST(request: NextRequest) {
         return handleSupabaseError('create wallet', error, { entityId });
       }
 
-      return NextResponse.json(wallet, { status: 201 });
+      const response = {
+        wallet,
+        ...(duplicateInfo && { duplicateWarning: duplicateInfo }),
+      };
+      return NextResponse.json(response, { status: 201 });
     } catch (insertError: unknown) {
       // If the wallets table truly does not exist, fall back to profile metadata storage
       if (isTableNotFoundError(insertError) && body.profile_id) {

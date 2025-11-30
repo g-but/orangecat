@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import { WalletManager } from '@/components/wallets/WalletManager';
+import { DuplicateWalletDialog } from '@/components/wallets/DuplicateWalletDialog';
 import { Wallet, WalletFormData } from '@/types/wallet';
 import { toast } from 'sonner';
 import { Wallet as WalletIcon, Info, AlertCircle, HelpCircle } from 'lucide-react';
@@ -38,6 +39,17 @@ export default function DashboardWalletsPage() {
   const [focusedField, setFocusedField] = useState<WalletFieldType>(null);
   const [showMobileGuidance, setShowMobileGuidance] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+
+  // Duplicate wallet dialog state
+  const [duplicateDialog, setDuplicateDialog] = useState<{
+    isOpen: boolean;
+    walletData: WalletFormData | null;
+    existingWallets: Array<{ id: string; label: string; category: string }> | null;
+  }>({
+    isOpen: false,
+    walletData: null,
+    existingWallets: null,
+  });
 
   // Detect desktop vs mobile for collapsible sections
   useEffect(() => {
@@ -184,12 +196,19 @@ export default function DashboardWalletsPage() {
         throw new Error(errorMessage);
       }
 
-      let newWallet;
-      try {
-        newWallet = await response.json();
-      } catch (jsonError) {
-        throw new Error('Invalid response from server');
+      const responseData = await response.json();
+
+      // Check if there's a duplicate warning
+      if (responseData.duplicateWarning) {
+        setDuplicateDialog({
+          isOpen: true,
+          walletData: data,
+          existingWallets: responseData.duplicateWarning.existingWallets,
+        });
+        return; // Don't proceed with adding the wallet yet
       }
+
+      const newWallet = responseData.wallet || responseData;
 
       if (!newWallet) {
         throw new Error('Wallet creation failed: no wallet data returned');
@@ -204,6 +223,67 @@ export default function DashboardWalletsPage() {
       // The error is already displayed to the user via toast
       throw error; // Re-throw for form to handle
     }
+  };
+
+  const handleConfirmDuplicateWallet = async () => {
+    if (!duplicateDialog.walletData || !user?.id || !profile?.id) {
+      return;
+    }
+
+    try {
+      // Force add the wallet by sending a special flag
+      const response = await fetch('/api/wallets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...duplicateDialog.walletData,
+          profile_id: profile.id,
+          force_duplicate: true, // Special flag to bypass duplicate warning
+        }),
+      });
+
+      if (!response.ok) {
+        const errorMessage = await parseErrorResponse(response);
+        logger.error(
+          'Failed to force add duplicate wallet',
+          { status: response.status, profileId: profile.id },
+          'WalletManagement'
+        );
+        throw new Error(errorMessage);
+      }
+
+      const responseData = await response.json();
+      const newWallet = responseData.wallet || responseData;
+
+      // Update wallets state
+      setWallets(prev => [newWallet, ...prev]);
+
+      toast.success('Wallet added successfully');
+      logger.info(
+        'Wallet added with duplicate confirmation',
+        { walletId: newWallet.id, profileId: profile.id },
+        'WalletManagement'
+      );
+
+      // Close dialog
+      setDuplicateDialog({
+        isOpen: false,
+        walletData: null,
+        existingWallets: null,
+      });
+    } catch (error) {
+      toast.error(
+        `Failed to add wallet: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
+    }
+  };
+
+  const handleCancelDuplicateWallet = () => {
+    setDuplicateDialog({
+      isOpen: false,
+      walletData: null,
+      existingWallets: null,
+    });
   };
 
   // Handle wallet update
@@ -568,6 +648,15 @@ export default function DashboardWalletsPage() {
             </div>
           </div>
         )}
+
+        {/* Duplicate Wallet Dialog */}
+        <DuplicateWalletDialog
+          isOpen={duplicateDialog.isOpen}
+          onClose={handleCancelDuplicateWallet}
+          onConfirm={handleConfirmDuplicateWallet}
+          walletData={duplicateDialog.walletData}
+          existingWallets={duplicateDialog.existingWallets || []}
+        />
       </div>
     </div>
   );
