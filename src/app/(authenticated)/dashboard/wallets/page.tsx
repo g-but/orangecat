@@ -693,11 +693,6 @@ export default function DashboardWalletsPage() {
               <Info className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm text-blue-900 flex-1">
                 <p className="font-medium">About Bitcoin Wallets</p>
-                <p className="hidden lg:block mt-1">
-                  Connect a Bitcoin address or extended public key (xpub/ypub/zpub) from a wallet
-                  you control. Active wallets appear on your profile so supporters know exactly what
-                  they are funding.
-                </p>
                 <p className="lg:hidden mt-1 text-xs">
                   Connect your Bitcoin address or xpub to receive support
                 </p>

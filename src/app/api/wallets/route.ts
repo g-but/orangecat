@@ -218,6 +218,7 @@ export async function POST(request: NextRequest) {
     // Validate UUID format
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const entityId = body.profile_id || body.project_id!;
+    const entityType = body.profile_id ? 'profile' : 'project';
     if (!uuidRegex.test(entityId)) {
       return NextResponse.json<ErrorResponse>(
         { error: 'Invalid entity ID format', code: 'INVALID_ID' },
@@ -285,6 +286,10 @@ export async function POST(request: NextRequest) {
     // Check for duplicate address/xpub for this entity in the wallets table if it exists.
     // If the table does not exist (42P01), we will fall back to profile-based storage below.
     let isFirstWallet = false;
+    let duplicateInfo: {
+      existingWallets: Array<{ id: string; label: string; category: string }>;
+      message: string;
+    } | null = null;
 
     try {
       const { data: existingWallet } = await supabase
@@ -295,7 +300,6 @@ export async function POST(request: NextRequest) {
         .eq('is_active', true)
         .single();
 
-      let duplicateInfo = null;
       const forceDuplicate = body.force_duplicate === true;
 
       if (existingWallet && !forceDuplicate) {
@@ -400,7 +404,11 @@ export async function POST(request: NextRequest) {
             is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
           });
 
-          return NextResponse.json(fallbackWallet, { status: 201 });
+          const fallbackResponse = {
+            wallet: fallbackWallet,
+            ...(duplicateInfo && { duplicateWarning: duplicateInfo }),
+          };
+          return NextResponse.json(fallbackResponse, { status: 201 });
         }
 
         return handleSupabaseError('create wallet', error, { entityId });
@@ -430,7 +438,11 @@ export async function POST(request: NextRequest) {
           is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
         });
 
-        return NextResponse.json(fallbackWallet, { status: 201 });
+        const fallbackResponse = {
+          wallet: fallbackWallet,
+          ...(duplicateInfo && { duplicateWarning: duplicateInfo }),
+        };
+        return NextResponse.json(fallbackResponse, { status: 201 });
       }
 
       return handleSupabaseError('create wallet', insertError, { entityId });
