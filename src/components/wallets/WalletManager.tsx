@@ -55,6 +55,25 @@ export function WalletManager({
   const [walletToDelete, setWalletToDelete] = useState<Wallet | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Validate required props after hooks
+  if (!entityType) {
+    console.error('WalletManager: entityType is required');
+    return (
+      <div className="p-4 text-red-600 bg-red-50 rounded-lg border border-red-200">
+        Error: Entity type not configured properly
+      </div>
+    );
+  }
+
+  if (!entityId) {
+    console.error('WalletManager: entityId is required');
+    return (
+      <div className="p-4 text-red-600 bg-red-50 rounded-lg border border-red-200">
+        Error: Entity ID not configured properly
+      </div>
+    );
+  }
+
   const activeWallets = wallets.filter(w => w.is_active);
   const canAddMore = activeWallets.length < maxWallets;
 
@@ -401,10 +420,25 @@ function WalletForm({
   const handleSubmit = async () => {
     setError(null);
 
-    // Validate
-    if (!formData.label.trim()) {
-      setError('Wallet label is required');
+    // Comprehensive validation
+    if (!formData.label?.trim()) {
+      setError('Wallet name is required');
       return;
+    }
+
+    if (!formData.address_or_xpub?.trim()) {
+      setError('Wallet address is required');
+      return;
+    }
+
+    if (!formData.category) {
+      setError('Wallet category is required');
+      return;
+    }
+
+    // Ensure behavior_type is set
+    if (!formData.behavior_type) {
+      setFormData(prev => ({ ...prev, behavior_type: 'general' }));
     }
 
     const validation = validateAddressOrXpub(formData.address_or_xpub);

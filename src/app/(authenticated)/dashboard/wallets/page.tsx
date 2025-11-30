@@ -166,7 +166,7 @@ export default function DashboardWalletsPage() {
         fetchController.abort();
       }
     };
-  }, [user?.id, profile?.id, authLoading]);
+  }, [user?.id, profile?.id, authLoading, profile]);
 
   // Handle wallet add
   const handleAddWallet = async (data: WalletFormData) => {
@@ -762,13 +762,13 @@ export default function DashboardWalletsPage() {
               <WalletManager
                 wallets={wallets}
                 entityType="profile"
-                entityId={user.id}
+                entityId={user?.id || ''}
                 onAdd={handleAddWallet}
                 onUpdate={handleUpdateWallet}
                 onDelete={handleDeleteWallet}
                 onRefresh={handleRefreshWallet}
                 maxWallets={10}
-                isOwner={true}
+                isOwner={!!user?.id && !!profile?.id}
                 onFieldFocus={setFocusedField}
               />
             </div>
