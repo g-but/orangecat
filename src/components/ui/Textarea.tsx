@@ -1,19 +1,19 @@
-import { TextareaHTMLAttributes, forwardRef, useId } from 'react'
-import { cn } from '@/lib/utils'
+import { TextareaHTMLAttributes, forwardRef, useId } from 'react';
+import { cn } from '@/lib/utils';
 
 export interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string
-  description?: string
-  error?: string
-  required?: boolean
+  label?: string;
+  description?: string;
+  error?: string;
+  required?: boolean;
 }
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ className, label, description, error, required, id, ...props }, ref) => {
-    const generatedId = useId()
-    const textareaId = id || generatedId
-    const errorId = `${textareaId}-error`
-    const descriptionId = `${textareaId}-description`
+    const generatedId = useId();
+    const textareaId = id || generatedId;
+    const errorId = `${textareaId}-error`;
+    const descriptionId = `${textareaId}-description`;
 
     return (
       <div className="space-y-2">
@@ -26,17 +26,14 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           id={textareaId}
           className={cn(
-            'flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm shadow-sm',
+            'flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm text-gray-900 shadow-sm',
             'border-gray-300 bg-white placeholder:text-gray-400',
             'focus:border-tiffany-500 focus:ring-tiffany-500 focus:outline-none focus:ring-2',
             'disabled:cursor-not-allowed disabled:opacity-50',
             error && 'border-red-300 focus:border-red-500 focus:ring-red-500',
             className
           )}
-          aria-describedby={cn(
-            error && errorId,
-            description && descriptionId
-          )}
+          aria-describedby={cn(error && errorId, description && descriptionId)}
           aria-invalid={error ? 'true' : 'false'}
           ref={ref}
           {...props}
@@ -52,11 +49,11 @@ const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           </p>
         )}
       </div>
-    )
+    );
   }
-)
+);
 
-Textarea.displayName = 'Textarea'
+Textarea.displayName = 'Textarea';
 
-export { Textarea }
-export default Textarea 
+export { Textarea };
+export default Textarea;

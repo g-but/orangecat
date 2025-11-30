@@ -4,6 +4,11 @@ import { useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { ProjectWizard } from '@/components/wizard/ProjectWizard';
 import { DynamicSidebar, type FieldType } from '@/components/create/DynamicSidebar';
+import {
+  projectGuidanceContent,
+  projectDefaultContent,
+  type ProjectFieldType,
+} from '@/lib/project-guidance';
 import { Card } from '@/components/ui/Card';
 import { CheckCircle2, Edit, Rocket, HelpCircle } from 'lucide-react';
 
@@ -11,7 +16,7 @@ export default function CreateProjectPage() {
   const searchParams = useSearchParams();
   const isEditMode = !!(searchParams.get('edit') || searchParams.get('draft'));
 
-  const [focusedField, setFocusedField] = useState<FieldType>('title');
+  const [focusedField, setFocusedField] = useState<ProjectFieldType>('title');
   const [completionPercentage, setCompletionPercentage] = useState(0);
   const [goalAmount, setGoalAmount] = useState<number | undefined>();
   const [goalCurrency, setGoalCurrency] = useState<'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'>('CHF');
@@ -97,8 +102,10 @@ export default function CreateProjectPage() {
               </Card>
 
               {/* Dynamic Guidance - Desktop Only */}
-              <DynamicSidebar
+              <DynamicSidebar<ProjectFieldType>
                 activeField={focusedField}
+                guidanceContent={projectGuidanceContent}
+                defaultContent={projectDefaultContent}
                 goalAmount={goalAmount}
                 goalCurrency={goalCurrency}
               />
@@ -159,8 +166,10 @@ export default function CreateProjectPage() {
                 </button>
               </div>
               <div className="p-4">
-                <DynamicSidebar
+                <DynamicSidebar<ProjectFieldType>
                   activeField={focusedField}
+                  guidanceContent={projectGuidanceContent}
+                  defaultContent={projectDefaultContent}
                   goalAmount={goalAmount}
                   goalCurrency={goalCurrency}
                 />

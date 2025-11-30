@@ -26,7 +26,7 @@ import {
   ProjectTemplates,
   type ProjectTemplate,
 } from '@/components/create/templates/ProjectTemplates';
-import type { FieldType } from '@/components/create/DynamicSidebar';
+import type { ProjectFieldType } from '@/lib/project-guidance';
 import { satoshisToBitcoin, bitcoinToSatoshis } from '@/utils/currency';
 import ProjectMediaUpload from '@/components/project/ProjectMediaUpload';
 
@@ -79,7 +79,7 @@ interface ProjectWizardProps {
   initialData?: Partial<ProjectFormData>;
   onSave?: () => void;
   onCancel?: () => void;
-  onFieldFocus?: (field: FieldType) => void;
+  onFieldFocus?: (field: ProjectFieldType) => void;
   onProgressChange?: (percentage: number) => void;
   onGoalAmountChange?: (amount: number | undefined) => void;
   onGoalCurrencyChange?: (currency: 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS') => void;
@@ -348,7 +348,7 @@ export function ProjectWizard({
     setErrors(prev => ({ ...prev, [field]: error }));
   };
 
-  const handleFieldFocus = (field: FieldType) => {
+  const handleFieldFocus = (field: ProjectFieldType) => {
     if (onFieldFocus) {
       onFieldFocus(field);
     }
@@ -735,7 +735,7 @@ export function ProjectWizard({
             <Input
               value={formData.websiteUrl}
               onChange={e => handleFieldChange('websiteUrl', e.target.value)}
-              onFocus={() => handleFieldFocus('websiteUrl' as FieldType)}
+              onFocus={() => handleFieldFocus('websiteUrl' as ProjectFieldType)}
               onBlur={() => handleFieldBlur('websiteUrl')}
               placeholder="https://yourproject.com"
               className={errors.websiteUrl ? 'border-red-500' : ''}

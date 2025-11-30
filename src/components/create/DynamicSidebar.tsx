@@ -1,11 +1,12 @@
 /**
  * DynamicSidebar Component
  *
- * Single sidebar that adapts based on user state:
- * - Default: "What's a Project?" intro
- * - Active: Field-specific guidance + currency converter
+ * Generic sidebar that adapts based on user state:
+ * - Default: Intro content (configurable)
+ * - Active: Field-specific guidance + optional custom content (e.g., currency converter)
  *
- * Purpose: Eliminate duplication, provide contextual help exactly when needed.
+ * Purpose: Single component for both project and profile editing.
+ * Same familiar UI/UX, just different content.
  *
  * @module components/create
  */
@@ -13,146 +14,20 @@
 'use client';
 
 import React from 'react';
-import {
-  Target,
-  FileText,
-  DollarSign,
-  Coins,
-  Bitcoin,
-  Tag,
-  Wallet,
-  Lightbulb,
-  CheckCircle2,
-  Heart,
-  Shield,
-  Users,
-  ArrowLeftRight,
-  TrendingUp,
-  AlertCircle,
-  ExternalLink,
-} from 'lucide-react';
+import { CheckCircle2, ArrowLeftRight, TrendingUp } from 'lucide-react';
 import Card from '@/components/ui/Card';
+import type { FieldGuidanceContent, DefaultContent } from '@/lib/project-guidance';
 
-export type FieldType =
-  | 'title'
-  | 'description'
-  | 'goalAmount'
-  | 'currency'
-  | 'fundingPurpose'
-  | 'bitcoinAddress'
-  | 'websiteUrl'
-  | 'categories'
-  | null;
+export type FieldType = string | null;
 
-interface DynamicSidebarProps {
-  activeField: FieldType;
+interface DynamicSidebarProps<T extends string = string> {
+  activeField: T | null;
+  guidanceContent: Record<NonNullable<T>, FieldGuidanceContent>;
+  defaultContent: DefaultContent;
   goalAmount?: number;
   goalCurrency?: 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS';
   className?: string;
 }
-
-// Mock rates
-const MOCK_RATES = {
-  BTC_TO_USD: 98000,
-  BTC_TO_EUR: 92000,
-  BTC_TO_CHF: 88000,
-};
-
-const guidanceContent: Record<
-  NonNullable<FieldType>,
-  {
-    icon: React.ReactNode;
-    title: string;
-    description: string;
-    tips: string[];
-    examples?: string[];
-  }
-> = {
-  title: {
-    icon: <Target className="w-5 h-5 text-orange-600" />,
-    title: 'Project Title',
-    description:
-      'Your title is the first thing people see. Make it clear, specific, and inspiring.',
-    tips: [
-      'Keep it under 60 characters',
-      'Be specific: "Community Garden in Basel" > "Garden Project"',
-      'Avoid jargon',
-      'Make it memorable',
-    ],
-    examples: ['Community Garden Project', 'Local Animal Shelter', 'Open Source Bitcoin Tools'],
-  },
-  description: {
-    icon: <FileText className="w-5 h-5 text-orange-600" />,
-    title: 'Project Description',
-    description: 'Tell your story. What problem are you solving? Why does it matter?',
-    tips: [
-      'Start with the problem',
-      'Explain your solution',
-      'Share why this matters',
-      'Be authentic and personal',
-    ],
-  },
-  goalAmount: {
-    icon: <DollarSign className="w-5 h-5 text-orange-600" />,
-    title: 'Goal Amount',
-    description: 'Set a funding target. Optional but helps donors understand your needs.',
-    tips: ['Be realistic and specific', 'Break down major costs', 'Can be updated later'],
-  },
-  currency: {
-    icon: <Coins className="w-5 h-5 text-orange-600" />,
-    title: 'Display Currency',
-    description: 'Choose how to display your goal. All donations are received in Bitcoin.',
-    tips: [
-      '⚠️ This is DISPLAY ONLY',
-      'All donations settle to your Bitcoin wallet',
-      'CHF/USD/EUR help local donors',
-      'SATS is native Bitcoin',
-    ],
-  },
-  fundingPurpose: {
-    icon: <Lightbulb className="w-5 h-5 text-orange-600" />,
-    title: 'Funding Purpose',
-    description: 'What will donations be used for? Transparency builds trust.',
-    tips: ['Be specific about expenses', 'Use bullet points', 'Update as needs evolve'],
-  },
-  bitcoinAddress: {
-    icon: <Wallet className="w-5 h-5 text-orange-600" />,
-    title: 'Bitcoin Address',
-    description: 'Where donations will be sent. Can add later, but needed to receive funds.',
-    tips: [
-      'Use a wallet YOU control',
-      'Starts with bc1, 1, or 3',
-      'Lightning looks like email@domain.com',
-      "⚠️ Don't have a wallet? Get one first!",
-    ],
-  },
-  websiteUrl: {
-    icon: <ExternalLink className="w-5 h-5 text-orange-600" />,
-    title: 'Project Website',
-    description: 'Link to your project website or social media page. Helps build credibility.',
-    tips: [
-      'Must be a valid HTTP or HTTPS URL',
-      'Can link to website, Twitter, GitHub, etc.',
-      'Increases trust and transparency',
-      'Optional but recommended',
-    ],
-    examples: [
-      'https://yourproject.com',
-      'https://twitter.com/yourproject',
-      'https://github.com/yourproject',
-    ],
-  },
-  categories: {
-    icon: <Tag className="w-5 h-5 text-orange-600" />,
-    title: 'Categories',
-    description: 'Help people discover your project.',
-    tips: [
-      'Choose 1-3 most relevant',
-      'Improves discoverability',
-      'First is your primary category',
-    ],
-  },
-};
 
 function CurrencyBreakdown({ amount, currency }: { amount: number; currency: string }) {
   const toSatoshis = (): number => {
@@ -233,40 +108,34 @@ function CurrencyBreakdown({ amount, currency }: { amount: number; currency: str
 
 /**
  * Sidebar that shows default state or contextual guidance
+ * Now generic - works for both projects and profiles
  */
-export function DynamicSidebar({
+export function DynamicSidebar<T extends string = string>({
   activeField,
+  guidanceContent,
+  defaultContent,
   goalAmount,
   goalCurrency,
   className = '',
-}: DynamicSidebarProps) {
-  // Default state: What's a Project
+}: DynamicSidebarProps<T>) {
+  // Default state: Show intro content
   if (!activeField) {
     return (
       <div className={`sticky top-4 ${className}`}>
         <div className="p-4 rounded-xl border border-orange-200 bg-orange-50/60">
-          <h2 className="font-semibold text-gray-900 mb-2">What's a Project?</h2>
-          <p className="text-sm text-gray-700 mb-3">
-            A project is any initiative that needs funding — from personal goals to community
-            causes. Accept Bitcoin donations directly to your wallet.
-          </p>
+          <h2 className="font-semibold text-gray-900 mb-2">{defaultContent.title}</h2>
+          <p className="text-sm text-gray-700 mb-3">{defaultContent.description}</p>
           <ul className="text-sm text-gray-700 space-y-2">
-            <li className="flex items-start gap-2">
-              <Heart className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-              Accept Bitcoin donations instantly
-            </li>
-            <li className="flex items-start gap-2">
-              <Users className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-              Rally supporters and share updates
-            </li>
-            <li className="flex items-start gap-2">
-              <Shield className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-              Transparent and self-custodial by design
-            </li>
+            {defaultContent.features.map((feature, index) => (
+              <li key={index} className="flex items-start gap-2">
+                <span className="mt-0.5 flex-shrink-0">{feature.icon}</span>
+                <span>{feature.text}</span>
+              </li>
+            ))}
           </ul>
-          <p className="text-xs text-gray-500 mt-3">
-            💡 Click on any field to get specific guidance
-          </p>
+          {defaultContent.hint && (
+            <p className="text-xs text-gray-500 mt-3">{defaultContent.hint}</p>
+          )}
         </div>
       </div>
     );
@@ -274,6 +143,17 @@ export function DynamicSidebar({
 
   // Active state: Field guidance
   const content = guidanceContent[activeField];
+
+  if (!content) {
+    // Fallback if field not found
+    return (
+      <div className={`sticky top-4 ${className}`}>
+        <Card className="p-4">
+          <p className="text-sm text-gray-600">No guidance available for this field.</p>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className={`sticky top-4 ${className}`}>
@@ -326,7 +206,7 @@ export function DynamicSidebar({
           </div>
         )}
 
-        {/* Currency Converter (only for goal/currency fields with amount) */}
+        {/* Currency Converter (only for project goal/currency fields with amount) */}
         {(activeField === 'goalAmount' || activeField === 'currency') &&
           goalAmount &&
           goalAmount > 0 &&

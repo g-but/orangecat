@@ -1,27 +1,51 @@
-import { createServerClient as createSupabaseServerClient, type CookieOptions } from '@supabase/ssr'
-import { cookies as getNextCookies } from 'next/headers'
-import { Database } from '@/types/database'
-import { SupabaseClient } from '@supabase/supabase-js'
+import {
+  createServerClient as createSupabaseServerClient,
+  type CookieOptions,
+} from '@supabase/ssr';
+import { cookies as getNextCookies } from 'next/headers';
+import { Database } from '@/types/database';
+import { logger } from '@/utils/logger';
 
 // Environment variables with fallbacks for build time
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+// IMPORTANT: Keep server/client configuration in sync
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
 
 // Warn if using fallback values in production
-if ((!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) && process.env.NODE_ENV === 'production') {
+if (
+  (!process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    (!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY &&
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) &&
+  process.env.NODE_ENV === 'production'
+) {
+  logger.warn(
+    'Using fallback Supabase configuration on the server. Authentication and profile APIs may not work correctly.',
+    {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
+      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        ? 'Publishable Key Set'
+        : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          ? 'Anon Key Set'
+          : 'Missing',
+    },
+    'Supabase'
+  );
 }
 
 // Create a server-side Supabase client
 export const createServerClient = async () => {
-  const cookieStore = await getNextCookies()
+  const cookieStore = await getNextCookies();
 
   return createSupabaseServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
         return cookieStore.getAll().map((cookie: any) => ({
           name: cookie.name,
-          value: cookie.value
-        }))
+          value: cookie.value,
+        }));
       },
       setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
         try {
@@ -29,8 +53,8 @@ export const createServerClient = async () => {
             // The `set` method here will throw an error if called from a Server Component
             // It's primarily for use in Route Handlers and Server Actions
             // For Server Components, reading cookies is fine, but setting them needs a different approach (e.g., in middleware or actions)
-            cookieStore.set(name, value, options)
-          })
+            cookieStore.set(name, value, options);
+          });
         } catch (error) {
           // Gracefully handle errors if `set` is called in an unsupported context (e.g. Server Components during render)
           // console.error('Error setting cookies in Supabase server client:', error);
@@ -51,5 +75,5 @@ export const createServerClient = async () => {
       //   } catch (error) { /* Handle error */ }
       // },
     },
-  })
-} 
+  });
+};

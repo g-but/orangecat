@@ -19,6 +19,16 @@
             "date": 1763742283907,
             "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-21.log",
             "hash": "ff58fdbc9e44e30395fb4d6d323044cc93335d9ad182dae86be5823f25d4f9c3"
+        },
+        {
+            "date": 1764237625152,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-27.log",
+            "hash": "8628725935f0c6fd2da304f6a09d03bcc352184875e0185c494c695a7d538629"
+        },
+        {
+            "date": 1764524098242,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-30.log",
+            "hash": "837116d290c214a9cffe499b2dca60692657fb5784cb1cb981a32c671859cd8c"
         }
     ],
     "hashType": "sha256"

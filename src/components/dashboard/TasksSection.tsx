@@ -86,15 +86,18 @@ export default function TasksSection({ className }: TasksSectionProps) {
       });
     }
 
+    // Wallet setup task (based on presence of any wallets, not legacy column alone)
+    // NOTE: For now we still use the legacy bitcoin_address hint; a future iteration
+    // can hydrate this from the wallets API to avoid extra client calls here.
     if (!profile.bitcoin_address) {
       tasks.push({
         id: 'add-bitcoin-address',
-        title: 'Add Bitcoin Address',
-        description: 'Connect your Bitcoin wallet to receive donations',
+        title: 'Add Bitcoin Wallet',
+        description: 'Add at least one Bitcoin wallet to start receiving donations',
         completed: false,
         priority: 'high',
         category: 'setup',
-        action: { label: 'Add Address', href: '/profile' },
+        action: { label: 'Manage Wallets', href: '/dashboard/wallets' },
         icon: Wallet,
       });
     }

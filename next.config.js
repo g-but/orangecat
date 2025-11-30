@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 
-let withBundleAnalyzer = (config) => config;
+let withBundleAnalyzer = config => config;
 try {
   withBundleAnalyzer = require('@next/bundle-analyzer')({
     enabled: process.env.ANALYZE === 'true',
@@ -10,6 +10,9 @@ try {
 }
 
 const nextConfig = {
+  // Fix workspace root detection to prevent watching entire home directory
+  outputFileTracingRoot: __dirname,
+
   // Externalize Supabase packages for server-side rendering
   // Note: 'standalone' output is REMOVED - it's incompatible with Vercel
   serverExternalPackages: ['@supabase/supabase-js', '@supabase/ssr'],
@@ -66,11 +69,13 @@ const nextConfig = {
   // Enable compression
   compress: true,
 
-  // Generate ETags for better caching
-  generateEtags: true,
+  // Generate ETags for better caching (disabled in dev to prevent stale content)
+  generateEtags: process.env.NODE_ENV === 'production',
 
   // Enhanced headers for performance
   async headers() {
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+
     return [
       {
         source: '/(.*)',
@@ -91,6 +96,15 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
           },
+          // Disable caching in development
+          ...(isDevelopment
+            ? [
+                {
+                  key: 'Cache-Control',
+                  value: 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+                },
+              ]
+            : []),
         ],
       },
       {
@@ -98,10 +112,26 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=31536000, immutable',
+            value: isDevelopment
+              ? 'no-store, no-cache, must-revalidate'
+              : 'public, max-age=31536000, immutable',
           },
         ],
       },
+      // Disable caching for all JS/CSS in development
+      ...(isDevelopment
+        ? [
+            {
+              source: '/_next/static/(.*)',
+              headers: [
+                {
+                  key: 'Cache-Control',
+                  value: 'no-store, no-cache, must-revalidate',
+                },
+              ],
+            },
+          ]
+        : []),
     ];
   },
 
@@ -135,6 +165,23 @@ const nextConfig = {
   // Advanced webpack optimizations for bundle size
   webpack: (config, options) => {
     const { dev, isServer, webpack } = options;
+
+    // Prevent watching parent directories to avoid EMFILE errors
+    // Use explicit patterns and absolute paths to limit scope
+    config.watchOptions = {
+      ...config.watchOptions,
+      ignored: [
+        '**/node_modules/**',
+        '**/.git/**',
+        '**/.next/**',
+        '/home/g/**',
+        '/home/**',
+        '!**/orangecat/**',
+      ],
+      followSymlinks: false,
+      aggregateTimeout: 300,
+      poll: 1000, // Use polling to prevent filesystem traversal issues
+    };
 
     // Note: Manual webpack externals REMOVED - they cause build issues on Vercel
     // Supabase packages are handled via serverExternalPackages config instead

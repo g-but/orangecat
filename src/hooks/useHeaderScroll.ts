@@ -27,29 +27,58 @@ export function useHeaderScroll(options: UseHeaderScrollOptions = {}): UseHeader
   const [isScrolled, setIsScrolled] = useState(false);
   const [isHidden, setIsHidden] = useState(false);
   const lastScrollRef = useRef<number>(0);
+  const tickingRef = useRef<boolean>(false);
+  const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const minScrollDelta = 5; // Minimum scroll delta to prevent flickering from tiny movements
 
   useEffect(() => {
     const handleScroll = () => {
-      const current = window.scrollY;
-      setIsScrolled(current > 0);
+      if (!tickingRef.current) {
+        window.requestAnimationFrame(() => {
+          const current = window.scrollY;
+          const scrollDelta = Math.abs(current - lastScrollRef.current);
 
-      if (hideOnScrollDown) {
-        const isScrollingDown = current > lastScrollRef.current && current > scrollThreshold;
-        const isScrollingUp = current < lastScrollRef.current;
+          setIsScrolled(current > 0);
 
-        if (isScrollingDown) {
-          setIsHidden(true);
-        }
-        if (isScrollingUp) {
-          setIsHidden(false);
-        }
+          if (hideOnScrollDown) {
+            // Only process if scroll delta is significant enough to prevent flickering
+            if (scrollDelta >= minScrollDelta) {
+              const isScrollingDown = current > lastScrollRef.current && current > scrollThreshold;
+              const isScrollingUp = current < lastScrollRef.current;
+
+              // Clear any pending hide timeout
+              if (hideTimeoutRef.current) {
+                clearTimeout(hideTimeoutRef.current);
+                hideTimeoutRef.current = null;
+              }
+
+              if (isScrollingDown) {
+                // Add small delay before hiding to prevent flickering
+                hideTimeoutRef.current = setTimeout(() => {
+                  setIsHidden(true);
+                }, 100);
+              } else if (isScrollingUp) {
+                // Show immediately when scrolling up
+                setIsHidden(false);
+              }
+            }
+          }
+
+          lastScrollRef.current = current;
+          tickingRef.current = false;
+        });
+
+        tickingRef.current = true;
       }
-
-      lastScrollRef.current = current;
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+    };
   }, [hideOnScrollDown, scrollThreshold]);
 
   return { isScrolled, isHidden };
@@ -69,7 +98,9 @@ interface UseBottomNavScrollReturn {
   shouldBeSmall: boolean;
 }
 
-export function useBottomNavScroll(options: UseBottomNavScrollOptions = {}): UseBottomNavScrollReturn {
+export function useBottomNavScroll(
+  options: UseBottomNavScrollOptions = {}
+): UseBottomNavScrollReturn {
   const { transparencyThreshold = 10, scrollDelay = 200 } = options;
   const [shouldBeTransparent, setShouldBeTransparent] = useState(false);
   const [shouldBeSmall, setShouldBeSmall] = useState(false);
@@ -82,17 +113,17 @@ export function useBottomNavScroll(options: UseBottomNavScrollOptions = {}): Use
       const currentScrollY = window.scrollY;
       const isScrollingDown = currentScrollY > lastScrollY.current;
       const scrollThreshold = 50; // Start shrinking/transparency after 50px
-      
+
       // More transparent and smaller when actively scrolling down
       if (isScrollingDown && currentScrollY > transparencyThreshold) {
         isScrollingRef.current = true;
         setShouldBeTransparent(true);
         setShouldBeSmall(currentScrollY > scrollThreshold);
-        
+
         if (scrollTimeoutRef.current) {
           clearTimeout(scrollTimeoutRef.current);
         }
-        
+
         scrollTimeoutRef.current = setTimeout(() => {
           isScrollingRef.current = false;
           // Keep slightly transparent and small even when stopped (like X)
@@ -109,7 +140,7 @@ export function useBottomNavScroll(options: UseBottomNavScrollOptions = {}): Use
         setShouldBeTransparent(true);
         setShouldBeSmall(true);
       }
-      
+
       lastScrollY.current = currentScrollY;
     };
 

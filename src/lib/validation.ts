@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { validatePhoneNumber, normalizePhoneNumber } from './phone-validation';
 
 // Profile validation
 // Note: Server-side normalizes empty strings to undefined before validation
@@ -37,22 +38,66 @@ export const profileSchema = z.object({
   location: z.string().max(100).optional().nullable().or(z.literal('')),
   avatar_url: z.string().url().optional().nullable().or(z.literal('')),
   banner_url: z.string().url().optional().nullable().or(z.literal('')),
-  website: z.string().max(200).optional().nullable().or(z.literal('')),
-  bitcoin_address: z
+  website: z
     .string()
-    .regex(/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/, 'Invalid Bitcoin address format')
+    .max(200)
     .optional()
     .nullable()
-    .or(z.literal('')),
-  lightning_address: z
+    .or(z.literal(''))
+    .refine(
+      val =>
+        !val ||
+        val.trim() === '' ||
+        /^https?:\/\/.+/i.test(val) ||
+        /^[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9]*\.[a-zA-Z]{2,}$/.test(val),
+      'Please enter a valid website (e.g., orangecat.ch or https://orangecat.ch)'
+    ),
+  // Social & Contact
+  social_links: z
+    .object({
+      links: z.array(
+        z.object({
+          platform: z.string(),
+          label: z.string().optional().nullable(),
+          value: z.string().min(1, 'Value is required'),
+        })
+      ),
+    })
+    .optional()
+    .nullable(),
+  contact_email: z
     .string()
-    .regex(
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-      'Invalid Lightning address format (must be like user@domain.com)'
-    )
     .optional()
     .nullable()
-    .or(z.literal('')),
+    .or(z.literal(''))
+    .refine(
+      val => !val || val.trim() === '' || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+      'Please enter a valid email address'
+    ),
+  phone: z
+    .string()
+    .max(20)
+    .optional()
+    .nullable()
+    .or(z.literal(''))
+    .refine(
+      val => {
+        if (!val || val.trim() === '') {
+          return true;
+        }
+        const result = validatePhoneNumber(val);
+        return result.valid;
+      },
+      val => {
+        const result = validatePhoneNumber(val || '');
+        return result.error || 'Invalid phone number format';
+      }
+    ),
+  // Wallet fields (kept for backward compatibility, but wallets are now managed separately)
+  // IMPORTANT: Validation is intentionally lenient to avoid blocking profile saves
+  // when legacy data contains non-standard test values.
+  bitcoin_address: z.string().max(200).optional().nullable().or(z.literal('')),
+  lightning_address: z.string().max(200).optional().nullable().or(z.literal('')),
 });
 
 // Project validation
@@ -107,7 +152,18 @@ export function normalizeProfileData(data: any): ProfileData {
   if (normalized.website && typeof normalized.website === 'string') {
     const website = normalized.website.trim();
     if (website && !website.match(/^https?:\/\//i)) {
-      normalized.website = `https://${website}`;
+      // Only add https:// if it looks like a domain (has a dot)
+      if (website.includes('.')) {
+        normalized.website = `https://${website}`;
+      }
+    }
+  }
+
+  // Normalize phone number to E.164 format
+  if (normalized.phone && typeof normalized.phone === 'string') {
+    const normalizedPhone = normalizePhoneNumber(normalized.phone);
+    if (normalizedPhone) {
+      normalized.phone = normalizedPhone;
     }
   }
 
@@ -123,6 +179,35 @@ export function normalizeProfileData(data: any): ProfileData {
 
   if (normalized.location_zip && typeof normalized.location_zip === 'string') {
     normalized.location_zip = normalized.location_zip.trim();
+  }
+
+  // Normalize contact_email:
+  // - If user explicitly provides a public contact email, store it in the
+  //   profile.email column which is used as the public-facing email.
+  // - If contact_email is empty, keep existing email unchanged.
+  if (normalized.contact_email && typeof normalized.contact_email === 'string') {
+    normalized.email = normalized.contact_email;
+  }
+
+  // Normalize social_links: ensure structure is { links: [...] }
+  if (normalized.social_links) {
+    if (Array.isArray(normalized.social_links)) {
+      // If it's an array, wrap it
+      normalized.social_links = { links: normalized.social_links };
+    } else if (normalized.social_links && !normalized.social_links.links) {
+      // If it's an object but not the right structure, try to convert
+      normalized.social_links = { links: [] };
+    }
+    // Filter out empty links
+    if (normalized.social_links.links) {
+      normalized.social_links.links = normalized.social_links.links.filter(
+        (link: any) => link && link.value && link.value.trim()
+      );
+      // If no links, set to undefined
+      if (normalized.social_links.links.length === 0) {
+        normalized.social_links = undefined;
+      }
+    }
   }
 
   // Normalize empty strings to undefined for optional fields

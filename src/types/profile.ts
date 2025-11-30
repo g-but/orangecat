@@ -19,6 +19,11 @@ export interface Profile {
   avatar_url?: string | null;
   banner_url?: string | null;
   website?: string | null;
+  // Social & Contact
+  social_links?: { links: Array<{ platform: string; label?: string; value: string }> } | null;
+  contact_email?: string | null;
+  phone?: string | null;
+  // Wallet fields (kept for backward compatibility, but wallets managed separately)
   bitcoin_address?: string | null;
   lightning_address?: string | null;
   created_at: string;

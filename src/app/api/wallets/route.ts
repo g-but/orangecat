@@ -7,6 +7,19 @@ import {
   validateAddressOrXpub,
   detectWalletType,
 } from '@/types/wallet';
+import { logger } from '@/utils/logger';
+import {
+  FALLBACK_WALLETS_KEY,
+  POSTGRES_TABLE_NOT_FOUND,
+  MAX_WALLETS_PER_ENTITY,
+} from '@/lib/wallets/constants';
+import {
+  logWalletError,
+  handleSupabaseError,
+  isTableNotFoundError,
+  createWalletErrorResponse,
+} from '@/lib/wallets/errorHandling';
+import { type ProfileMetadata, isProfileMetadata } from '@/lib/wallets/types';
 
 interface ErrorResponse {
   error: string;
@@ -14,7 +27,97 @@ interface ErrorResponse {
   field?: string;
 }
 
+type SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
+
+async function getFallbackProfileWallets(supabase: SupabaseClient, profileId: string) {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('metadata')
+    .eq('id', profileId)
+    .single();
+
+  if (error) {
+    logWalletError('load fallback wallets', error, { profileId });
+    return [];
+  }
+
+  const metadata: ProfileMetadata = isProfileMetadata(profile?.metadata) ? profile.metadata : {};
+  const wallets = metadata[FALLBACK_WALLETS_KEY];
+
+  return Array.isArray(wallets) ? wallets : [];
+}
+
+async function addFallbackProfileWallet(
+  supabase: SupabaseClient,
+  profileId: string,
+  walletPayload: {
+    label: string;
+    description?: string | null;
+    address_or_xpub: string;
+    wallet_type: string;
+    category: string;
+    category_icon?: string | null;
+    behavior_type?: string;
+    budget_amount?: number | null;
+    budget_period?: string | null;
+    goal_amount?: number | null;
+    goal_currency?: string | null;
+    goal_deadline?: string | null;
+    is_primary?: boolean;
+  }
+) {
+  const { data: profile, error } = await supabase
+    .from('profiles')
+    .select('metadata')
+    .eq('id', profileId)
+    .single();
+
+  if (error) {
+    logWalletError('load profile for fallback wallet', error, { profileId });
+    throw error;
+  }
+
+  const metadata: ProfileMetadata = isProfileMetadata(profile?.metadata) ? profile.metadata : {};
+  const existing = Array.isArray(metadata[FALLBACK_WALLETS_KEY])
+    ? (metadata[FALLBACK_WALLETS_KEY] as Wallet[])
+    : [];
+
+  const now = new Date().toISOString();
+
+  const wallet = {
+    id: crypto.randomUUID(),
+    profile_id: profileId,
+    project_id: null,
+    created_at: now,
+    updated_at: now,
+    is_active: true,
+    balance_btc: 0,
+    display_order: existing.length,
+    ...walletPayload,
+  };
+
+  const updatedMetadata = {
+    ...metadata,
+    [FALLBACK_WALLETS_KEY]: [...existing, wallet],
+  };
+
+  const { error: updateError } = await supabase
+    .from('profiles')
+    .update({ metadata: updatedMetadata })
+    .eq('id', profileId);
+
+  if (updateError) {
+    logWalletError('save fallback wallet', updateError, { profileId });
+    throw updateError;
+  }
+
+  return wallet;
+}
+
 // GET /api/wallets?profile_id=xxx OR ?project_id=xxx
+// NOTE: This route currently uses the legacy `wallets` table.
+// It is kept for backward compatibility while we migrate fully to the
+// new wallet_definitions / wallet_ownerships / wallet_categories architecture.
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerClient();
@@ -33,42 +136,47 @@ export async function GET(request: NextRequest) {
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const idToValidate = profileId || projectId;
     if (idToValidate && !uuidRegex.test(idToValidate)) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Invalid ID format', code: 'INVALID_ID' },
-        { status: 400 }
-      );
+      return createWalletErrorResponse('Invalid ID format', 'INVALID_ID', 400);
     }
 
-    let query = supabase
-      .from('wallets')
-      .select('*')
-      .eq('is_active', true)
-      .order('display_order', { ascending: true })
-      .order('created_at', { ascending: false });
+    try {
+      let query = supabase
+        .from('wallets')
+        .select('*')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: false });
 
-    if (profileId) {
-      query = query.eq('profile_id', profileId);
-    } else if (projectId) {
-      query = query.eq('project_id', projectId);
+      if (profileId) {
+        query = query.eq('profile_id', profileId);
+      } else if (projectId) {
+        query = query.eq('project_id', projectId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        // If the wallets table does not exist yet, gracefully fall back
+        if (isTableNotFoundError(error) && profileId) {
+          const fallbackWallets = await getFallbackProfileWallets(supabase, profileId);
+          return NextResponse.json({ wallets: fallbackWallets }, { status: 200 });
+        }
+
+        return handleSupabaseError('fetch wallets', error, { profileId, projectId });
+      }
+
+      return NextResponse.json({ wallets: data || [] }, { status: 200 });
+    } catch (innerError: unknown) {
+      // Catch errors such as relation not existing that might be thrown at query time
+      if (profileId && isTableNotFoundError(innerError)) {
+        const fallbackWallets = await getFallbackProfileWallets(supabase, profileId);
+        return NextResponse.json({ wallets: fallbackWallets }, { status: 200 });
+      }
+
+      return handleSupabaseError('fetch wallets query', innerError, { profileId, projectId });
     }
-
-    const { data, error } = await query;
-
-    if (error) {
-      console.error('Error fetching wallets:', error);
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Failed to fetch wallets', code: 'FETCH_ERROR' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({ wallets: data || [] }, { status: 200 });
   } catch (error) {
-    console.error('Wallet fetch error:', error);
-    return NextResponse.json<ErrorResponse>(
-      { error: 'Internal server error', code: 'INTERNAL_ERROR' },
-      { status: 500 }
-    );
+    return handleSupabaseError('fetch wallets', error, { profileId, projectId });
   }
 }
 
@@ -128,16 +236,16 @@ export async function POST(request: NextRequest) {
 
     // Verify ownership
     if (body.profile_id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('user_id')
-        .eq('id', body.profile_id)
-        .single();
-
-      if (!profile || profile.user_id !== user.id) {
-        return NextResponse.json<ErrorResponse>(
-          { error: 'Forbidden', code: 'FORBIDDEN' },
-          { status: 403 }
+      // Profiles.id IS the user_id (references auth.users), so we can directly compare
+      if (body.profile_id !== user.id) {
+        logWalletError('verify profile ownership', new Error('Ownership mismatch'), {
+          profile_id: body.profile_id,
+          user_id: user.id,
+        });
+        return createWalletErrorResponse(
+          'Forbidden: Profile does not belong to this user',
+          'FORBIDDEN',
+          403
         );
       }
     } else if (body.project_id) {
@@ -174,91 +282,137 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for duplicate address/xpub for this entity
-    const { data: existingWallet } = await supabase
-      .from('wallets')
-      .select('id')
-      .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
-      .eq('address_or_xpub', sanitized.address_or_xpub)
-      .eq('is_active', true)
-      .single();
+    // Check for duplicate address/xpub for this entity in the wallets table if it exists.
+    // If the table does not exist (42P01), we will fall back to profile-based storage below.
+    let isFirstWallet = false;
 
-    if (existingWallet) {
-      return NextResponse.json<ErrorResponse>(
-        {
-          error: 'This address/xpub is already added to this profile/project',
-          code: 'DUPLICATE_ADDRESS',
-        },
-        { status: 409 }
-      );
-    }
+    try {
+      const { data: existingWallet } = await supabase
+        .from('wallets')
+        .select('id')
+        .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
+        .eq('address_or_xpub', sanitized.address_or_xpub)
+        .eq('is_active', true)
+        .single();
 
-    // Transaction: Check count and insert atomically
-    // Note: The trigger will enforce the 10-wallet limit
-    // But we can provide better error message by checking first
-    const { data: existingWallets } = await supabase
-      .from('wallets')
-      .select('id')
-      .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
-      .eq('is_active', true);
-
-    const walletCount = existingWallets?.length || 0;
-    const isFirstWallet = walletCount === 0;
-
-    if (walletCount >= 10) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Maximum 10 wallets allowed per profile/project', code: 'WALLET_LIMIT_REACHED' },
-        { status: 400 }
-      );
-    }
-
-    // Create wallet
-    const { data: wallet, error } = await supabase
-      .from('wallets')
-      .insert({
-        profile_id: body.profile_id || null,
-        project_id: body.project_id || null,
-        label: sanitized.label,
-        description: sanitized.description || null,
-        address_or_xpub: sanitized.address_or_xpub,
-        wallet_type: walletType,
-        category: sanitized.category,
-        category_icon: sanitized.category_icon || '💰',
-        behavior_type: body.behavior_type || 'general',
-        budget_amount: body.budget_amount || null,
-        budget_period: body.budget_period || null,
-        goal_amount: sanitized.goal_amount || null,
-        goal_currency: sanitized.goal_currency || null,
-        goal_deadline: sanitized.goal_deadline || null,
-        is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
-        balance_btc: 0,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Error creating wallet:', error);
-
-      // Check for specific error messages
-      if (error.message.includes('Maximum 10')) {
+      if (existingWallet) {
         return NextResponse.json<ErrorResponse>(
-          { error: 'Maximum 10 wallets allowed', code: 'WALLET_LIMIT' },
-          { status: 400 }
+          {
+            error: 'This address/xpub is already added to this profile/project',
+            code: 'DUPLICATE_ADDRESS',
+          },
+          { status: 409 }
         );
       }
 
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Failed to create wallet', code: 'CREATE_ERROR' },
-        { status: 500 }
-      );
+      const { data: existingWallets } = await supabase
+        .from('wallets')
+        .select('id')
+        .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
+        .eq('is_active', true);
+
+      const walletCount = existingWallets?.length || 0;
+      isFirstWallet = walletCount === 0;
+
+      if (walletCount >= MAX_WALLETS_PER_ENTITY) {
+        return createWalletErrorResponse(
+          `Maximum ${MAX_WALLETS_PER_ENTITY} wallets allowed per profile/project`,
+          'WALLET_LIMIT_REACHED',
+          400
+        );
+      }
+    } catch (dupCheckError: unknown) {
+      if (!isTableNotFoundError(dupCheckError)) {
+        return handleSupabaseError('check existing wallets', dupCheckError, { entityId });
+      }
+      // If wallets table is missing, we'll handle persistence via fallback below.
     }
 
-    return NextResponse.json({ wallet }, { status: 201 });
+    // Try to create the wallet in the dedicated wallets table first
+    try {
+      const { data: wallet, error } = await supabase
+        .from('wallets')
+        .insert({
+          profile_id: body.profile_id || null,
+          project_id: body.project_id || null,
+          label: sanitized.label,
+          description: sanitized.description || null,
+          address_or_xpub: sanitized.address_or_xpub,
+          wallet_type: walletType,
+          category: sanitized.category,
+          category_icon: sanitized.category_icon || '💰',
+          behavior_type: body.behavior_type || 'general',
+          budget_amount: body.budget_amount || null,
+          budget_period: body.budget_period || null,
+          goal_amount: sanitized.goal_amount || null,
+          goal_currency: sanitized.goal_currency || null,
+          goal_deadline: sanitized.goal_deadline || null,
+          is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
+          balance_btc: 0,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        // Check for specific error messages
+        if (error.message.includes(`Maximum ${MAX_WALLETS_PER_ENTITY}`)) {
+          return createWalletErrorResponse(
+            `Maximum ${MAX_WALLETS_PER_ENTITY} wallets allowed`,
+            'WALLET_LIMIT',
+            400
+          );
+        }
+
+        // If the wallets table is missing, fall back to profile-based storage
+        if (isTableNotFoundError(error) && body.profile_id) {
+          const fallbackWallet = await addFallbackProfileWallet(supabase, body.profile_id, {
+            label: sanitized.label,
+            description: sanitized.description || null,
+            address_or_xpub: sanitized.address_or_xpub,
+            wallet_type: walletType,
+            category: sanitized.category,
+            category_icon: sanitized.category_icon || '💰',
+            behavior_type: body.behavior_type || 'general',
+            budget_amount: body.budget_amount || null,
+            budget_period: body.budget_period || null,
+            goal_amount: sanitized.goal_amount || null,
+            goal_currency: sanitized.goal_currency || null,
+            goal_deadline: sanitized.goal_deadline || null,
+            is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
+          });
+
+          return NextResponse.json(fallbackWallet, { status: 201 });
+        }
+
+        return handleSupabaseError('create wallet', error, { entityId });
+      }
+
+      return NextResponse.json(wallet, { status: 201 });
+    } catch (insertError: unknown) {
+      // If the wallets table truly does not exist, fall back to profile metadata storage
+      if (isTableNotFoundError(insertError) && body.profile_id) {
+        const fallbackWallet = await addFallbackProfileWallet(supabase, body.profile_id, {
+          label: sanitized.label,
+          description: sanitized.description || null,
+          address_or_xpub: sanitized.address_or_xpub,
+          wallet_type: walletType,
+          category: sanitized.category,
+          category_icon: sanitized.category_icon || '💰',
+          behavior_type: body.behavior_type || 'general',
+          budget_amount: body.budget_amount || null,
+          budget_period: body.budget_period || null,
+          goal_amount: sanitized.goal_amount || null,
+          goal_currency: sanitized.goal_currency || null,
+          goal_deadline: sanitized.goal_deadline || null,
+          is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
+        });
+
+        return NextResponse.json(fallbackWallet, { status: 201 });
+      }
+
+      return handleSupabaseError('create wallet', insertError, { entityId });
+    }
   } catch (error) {
-    console.error('Wallet creation error:', error);
-    return NextResponse.json<ErrorResponse>(
-      { error: 'Internal server error', code: 'INTERNAL_ERROR' },
-      { status: 500 }
-    );
+    return handleSupabaseError('create wallet', error);
   }
 }

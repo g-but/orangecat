@@ -11,7 +11,6 @@ import { DevPerformanceMonitor } from '@/components/dashboard/PerformanceMonitor
 import { NavigationShortcuts } from '@/components/navigation/NavigationShortcuts';
 import MobileSearchModal from '@/components/search/MobileSearchModal';
 import ExperimentalBanner from '@/components/ui/ExperimentalBanner';
-import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { ComposerProvider, useComposer } from '@/contexts/ComposerContext';
 import PostComposerMobile from '@/components/timeline/PostComposerMobile';
 import { useRouter } from 'next/navigation';
@@ -84,10 +83,7 @@ function AuthenticatedLayoutContent({ children }: AuthenticatedLayoutProps) {
       {/* Experimental Notice */}
       <ExperimentalBanner
         storageType="session"
-        className={`pt-16 ${navigationState.isSidebarOpen ? 'lg:ml-64' : 'lg:ml-16'} transition-all ${SIDEBAR_TRANSITIONS.DURATION}`}
-        style={{
-          paddingTop: 'calc(4rem + env(safe-area-inset-top, 0px))',
-        }}
+        className={`${navigationState.isSidebarOpen ? 'lg:ml-64' : 'lg:ml-16'} transition-all ${SIDEBAR_TRANSITIONS.DURATION}`}
       />
 
       {/* Main Content */}
@@ -110,8 +106,7 @@ function AuthenticatedLayoutContent({ children }: AuthenticatedLayoutProps) {
       {/* Mobile Search Modal */}
       <MobileSearchModal isOpen={showMobileSearch} onClose={() => setShowMobileSearch(false)} />
 
-      {/* Mobile Bottom Navigation - Context-aware for authenticated routes */}
-      <MobileBottomNav />
+      {/* Mobile Bottom Navigation is rendered in root layout.tsx to avoid duplication */}
 
       {/* Global Mobile Composer - Opens instantly from Plus button */}
       {user && (
@@ -121,7 +116,10 @@ function AuthenticatedLayoutContent({ children }: AuthenticatedLayoutProps) {
           onClose={() => {
             closeComposer();
             // If we navigated to timeline, go back
-            if (window.location.pathname === '/timeline' && window.location.search.includes('compose=true')) {
+            if (
+              window.location.pathname === '/timeline' &&
+              window.location.search.includes('compose=true')
+            ) {
               router.replace('/timeline', { scroll: false });
             }
           }}

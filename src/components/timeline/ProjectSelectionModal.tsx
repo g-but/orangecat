@@ -25,7 +25,7 @@ interface ProjectSelectionModalProps {
 
 /**
  * X-style Project Selection Modal
- * 
+ *
  * Matches X's "Choose audience" interface but for projects instead of groups.
  * Shows "Everyone" option and list of user's projects with selection checkmarks.
  */
@@ -138,9 +138,7 @@ export default function ProjectSelectionModal({
                     <div
                       className={cn(
                         'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3',
-                        isSelected
-                          ? 'bg-orange-500 border-orange-500'
-                          : 'border-gray-300'
+                        isSelected ? 'bg-orange-500 border-orange-500' : 'border-gray-300'
                       )}
                     >
                       {isSelected && <Check className="w-4 h-4 text-white" />}
@@ -172,4 +170,3 @@ export default function ProjectSelectionModal({
     </BottomSheet>
   );
 }
-

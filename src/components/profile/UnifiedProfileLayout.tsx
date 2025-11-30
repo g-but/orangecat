@@ -28,14 +28,10 @@ interface UnifiedProfileLayoutProps {
 }
 
 /**
- * UnifiedProfileLayout - Refactored
+ * DEPRECATED: UnifiedProfileLayout is being replaced by the unified ProfileLayout component.
  *
- * Main profile layout component, now simplified with extracted sub-components:
- * - ProfileBanner: Banner image with avatar
- * - ProfileActions: Share, Edit, Follow buttons
- * - ProfileBasicInfo: Name, bio, website
- * - ProfileWalletSection: Multi-wallet support
- * - ProfileErrorBoundary: Error handling for each section
+ * Use ProfileLayout from '@/components/profile/ProfileLayout' instead.
+ * This component will be removed once all references are migrated.
  */
 export default function UnifiedProfileLayout({
   profile,
@@ -55,7 +51,9 @@ export default function UnifiedProfileLayout({
   // Check follow status on mount
   useEffect(() => {
     const checkFollowStatus = async () => {
-      if (!user?.id || isOwnProfile || !profile.id) return;
+      if (!user?.id || isOwnProfile || !profile.id) {
+        return;
+      }
 
       try {
         const response = await fetch(`/api/social/following/${user.id}`);
@@ -75,7 +73,9 @@ export default function UnifiedProfileLayout({
   // Fetch wallets for this profile
   useEffect(() => {
     const fetchWallets = async () => {
-      if (!profile.id) return;
+      if (!profile.id) {
+        return;
+      }
 
       try {
         setWalletsLoading(true);
@@ -325,10 +325,18 @@ function ProfileProjectsList({ userId, isOwnProfile }: { userId: string; isOwnPr
             const created = new Date(date);
             const now = new Date();
             const days = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-            if (days === 0) return 'Today';
-            if (days === 1) return 'Yesterday';
-            if (days < 7) return `${days}d ago`;
-            if (days < 30) return `${Math.floor(days / 7)}w ago`;
+            if (days === 0) {
+              return 'Today';
+            }
+            if (days === 1) {
+              return 'Yesterday';
+            }
+            if (days < 7) {
+              return `${days}d ago`;
+            }
+            if (days < 30) {
+              return `${Math.floor(days / 7)}w ago`;
+            }
             return created.toLocaleDateString();
           };
 
