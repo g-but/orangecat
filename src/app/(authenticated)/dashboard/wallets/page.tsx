@@ -170,22 +170,69 @@ export default function DashboardWalletsPage() {
 
   // Handle wallet add
   const handleAddWallet = async (data: WalletFormData) => {
-    if (!user?.id || !profile?.id) {
+    // Comprehensive validation before API call
+    if (!user?.id) {
+      logger.error('User ID not available for wallet creation', {}, 'WalletManagement');
+      toast.error('Authentication error. Please refresh the page and try again.');
       return;
     }
 
+    if (!profile?.id) {
+      logger.error(
+        'Profile ID not available for wallet creation',
+        { userId: user.id },
+        'WalletManagement'
+      );
+      toast.error('Profile not loaded. Please refresh the page and try again.');
+      return;
+    }
+
+    // Validate required form data
+    if (!data.label?.trim()) {
+      toast.error('Wallet name is required');
+      return;
+    }
+
+    if (!data.address_or_xpub?.trim()) {
+      toast.error('Wallet address is required');
+      return;
+    }
+
+    if (!data.category) {
+      toast.error('Wallet category is required');
+      return;
+    }
+
+    logger.info(
+      'Starting wallet creation',
+      {
+        userId: user.id,
+        profileId: profile.id,
+        label: data.label,
+        category: data.category,
+      },
+      'WalletManagement'
+    );
+
     try {
       // Use profile from auth store (already loaded)
+      const requestBody = {
+        ...data,
+        profile_id: profile.id,
+      };
+
+      logger.debug('Sending wallet creation request', { requestBody }, 'WalletManagement');
 
       let response;
       try {
         response = await fetch('/api/wallets', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ...data,
-            profile_id: profile.id,
-          }),
+          headers: {
+            'Content-Type': 'application/json',
+            // Add cache control to prevent caching issues
+            'Cache-Control': 'no-cache',
+          },
+          body: JSON.stringify(requestBody),
         });
       } catch (fetchError) {
         // Handle network errors, CORS issues, etc.
@@ -194,6 +241,7 @@ export default function DashboardWalletsPage() {
           {
             error: fetchError instanceof Error ? fetchError.message : String(fetchError),
             profileId: profile.id,
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
           },
           'WalletManagement'
         );
@@ -215,19 +263,65 @@ export default function DashboardWalletsPage() {
           return;
         }
 
-        const errorMessage = await parseErrorResponse(response);
+        let errorMessage;
+        try {
+          errorMessage = await parseErrorResponse(response);
+        } catch (parseError) {
+          logger.error(
+            'Failed to parse error response',
+            {
+              status: response.status,
+              parseError: parseError instanceof Error ? parseError.message : String(parseError),
+              profileId: profile.id,
+            },
+            'WalletManagement'
+          );
+          errorMessage = `Server error (${response.status})`;
+        }
+
         logger.error(
           'Failed to add wallet',
-          { status: response.status, profileId: profile.id },
+          {
+            status: response.status,
+            errorMessage,
+            profileId: profile.id,
+            responseType: response.type,
+            responseUrl: response.url,
+          },
           'WalletManagement'
         );
-        throw new Error(errorMessage);
+        toast.error(errorMessage || 'Failed to add wallet');
+        return;
       }
 
-      const responseData = await response.json();
+      let responseData;
+      try {
+        responseData = await response.json();
+        logger.debug('Wallet creation response received', { responseData }, 'WalletManagement');
+      } catch (jsonError) {
+        logger.error(
+          'Failed to parse wallet creation response',
+          {
+            error: jsonError instanceof Error ? jsonError.message : String(jsonError),
+            profileId: profile.id,
+          },
+          'WalletManagement'
+        );
+        toast.error('Invalid response from server');
+        return;
+      }
 
       // Check if there's a duplicate warning
       if (responseData.duplicateWarning) {
+        logger.info(
+          'Duplicate wallet warning triggered',
+          {
+            existingCount: responseData.duplicateWarning.existingWallets?.length,
+            profileId: profile.id,
+          },
+          'WalletManagement'
+        );
+
         setDuplicateDialog({
           isOpen: true,
           walletData: data,
@@ -238,12 +332,28 @@ export default function DashboardWalletsPage() {
 
       const newWallet = responseData.wallet || responseData;
 
-      if (!newWallet) {
-        throw new Error('Wallet creation failed: no wallet data returned');
+      if (!newWallet || !newWallet.id) {
+        logger.error(
+          'Invalid wallet data returned',
+          { newWallet, profileId: profile.id },
+          'WalletManagement'
+        );
+        toast.error('Wallet creation failed: invalid data returned');
+        return;
       }
 
       setWallets(prev => [...prev, newWallet]);
       toast.success('Wallet added successfully');
+      logger.info(
+        'Wallet added successfully',
+        {
+          walletId: newWallet.id,
+          profileId: profile.id,
+          label: newWallet.label,
+          category: newWallet.category,
+        },
+        'WalletManagement'
+      );
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to add wallet';
       toast.error(errorMessage);
