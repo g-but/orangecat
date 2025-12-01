@@ -35,3 +35,4 @@ CREATE INDEX IF NOT EXISTS idx_profiles_contact_email
 COMMIT;
 
 
+

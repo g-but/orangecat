@@ -18,6 +18,13 @@ import { CheckCircle2, ArrowLeftRight, TrendingUp } from 'lucide-react';
 import Card from '@/components/ui/Card';
 import type { FieldGuidanceContent, DefaultContent } from '@/lib/project-guidance';
 
+// Mock rates (production: fetch from API)
+const MOCK_RATES = {
+  BTC_TO_USD: 98000,
+  BTC_TO_EUR: 92000,
+  BTC_TO_CHF: 88000,
+};
+
 export type FieldType = string | null;
 
 interface DynamicSidebarProps<T extends string = string> {
