@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/services/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { WalletFormData, validateAddressOrXpub, detectWalletType } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import { handleSupabaseError } from '@/lib/wallets/errorHandling';
