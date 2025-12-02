@@ -147,6 +147,7 @@ async function runLocalTests() {
     // Check if dev server is running (try both 3000 and 3002)
     let serverPort = 3000;
     let serverReady = false;
+    let retries = 0;
 
     // First check if port 3000 is available
     try {
@@ -170,7 +171,7 @@ async function runLocalTests() {
 
         // Wait for server to be ready
         logInfo('Waiting for development server to start...');
-        let retries = 0;
+        retries = 0;
         while (retries < 30) {
           try {
             // Try both ports
