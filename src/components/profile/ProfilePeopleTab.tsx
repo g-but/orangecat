@@ -6,6 +6,8 @@ import Image from 'next/image';
 import { Users, UserPlus } from 'lucide-react';
 import { Profile } from '@/types/database';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
+import supabase from '@/lib/supabase/browser';
+import { useAuth } from '@/hooks/useAuth';
 
 interface ProfilePeopleTabProps {
   profile: Profile;
@@ -27,39 +29,96 @@ interface Connection {
  * Shows people the user is connected with.
  */
 export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopleTabProps) {
+  const { user } = useAuth();
   const [following, setFollowing] = useState<Connection[]>([]);
   const [followers, setFollowers] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeView, setActiveView] = useState<'following' | 'followers'>('following');
+  const [activeView, setActiveView] = useState<'following' | 'followers'>('followers');
 
   useEffect(() => {
     const fetchConnections = async () => {
       try {
         setLoading(true);
 
-        // Fetch following
-        const followingResponse = await fetch(`/api/social/following/${profile.id}`);
-        if (followingResponse.ok) {
-          const followingData = await followingResponse.json();
-          if (followingData.success && followingData.data) {
-            // Extract profiles from nested structure
-            const followingProfiles = followingData.data
+        // Check if this is the user's own profile (use prop or check user)
+        const isCurrentUserProfile = isOwnProfile || user?.id === profile.id;
+
+        if (isCurrentUserProfile) {
+          // For own profile, use direct Supabase queries (no API auth issues)
+
+          // Fetch following
+          const { data: followingData, error: followingError } = await supabase
+            .from('follows')
+            .select(
+              `
+              following_id,
+              profiles!follows_following_id_fkey (
+                id,
+                username,
+                display_name,
+                bio,
+                avatar_url
+              )
+            `
+            )
+            .eq('follower_id', profile.id);
+
+          if (!followingError && followingData) {
+            const followingProfiles = followingData
               .map((item: any) => item.profiles)
               .filter((p: any) => p !== null);
             setFollowing(followingProfiles);
           }
-        }
 
-        // Fetch followers
-        const followersResponse = await fetch(`/api/social/followers/${profile.id}`);
-        if (followersResponse.ok) {
-          const followersData = await followersResponse.json();
-          if (followersData.success && followersData.data) {
-            // Extract profiles from nested structure
-            const followerProfiles = followersData.data
+          // Fetch followers
+          const { data: followersData, error: followersError } = await supabase
+            .from('follows')
+            .select(
+              `
+              follower_id,
+              profiles!follows_follower_id_fkey (
+                id,
+                username,
+                display_name,
+                bio,
+                avatar_url
+              )
+            `
+            )
+            .eq('following_id', profile.id);
+
+          if (!followersError && followersData) {
+            const followerProfiles = followersData
               .map((item: any) => item.profiles)
               .filter((p: any) => p !== null);
             setFollowers(followerProfiles);
+          }
+        } else {
+          // For other profiles, use API (will work if public data)
+          // Fetch following
+          const followingResponse = await fetch(`/api/social/following/${profile.id}`);
+          if (followingResponse.ok) {
+            const followingData = await followingResponse.json();
+            if (followingData.success && followingData.data && followingData.data.data) {
+              // Extract profiles from nested structure
+              const followingProfiles = followingData.data.data
+                .map((item: any) => item.profiles)
+                .filter((p: any) => p !== null);
+              setFollowing(followingProfiles);
+            }
+          }
+
+          // Fetch followers
+          const followersResponse = await fetch(`/api/social/followers/${profile.id}`);
+          if (followersResponse.ok) {
+            const followersData = await followersResponse.json();
+            if (followersData.success && followersData.data && followersData.data.data) {
+              // Extract profiles from nested structure
+              const followerProfiles = followersData.data.data
+                .map((item: any) => item.profiles)
+                .filter((p: any) => p !== null);
+              setFollowers(followerProfiles);
+            }
           }
         }
       } catch (error) {
@@ -83,18 +142,8 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
 
   return (
     <div className="space-y-6">
-      {/* Toggle between Following and Followers */}
+      {/* Toggle between Followers and Following */}
       <div className="flex gap-4 border-b border-gray-200">
-        <button
-          onClick={() => setActiveView('following')}
-          className={`pb-3 px-4 font-medium transition-colors ${
-            activeView === 'following'
-              ? 'text-orange-600 border-b-2 border-orange-600'
-              : 'text-gray-600 hover:text-gray-900'
-          }`}
-        >
-          Following ({following.length})
-        </button>
         <button
           onClick={() => setActiveView('followers')}
           className={`pb-3 px-4 font-medium transition-colors ${
@@ -104,6 +153,16 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
           }`}
         >
           Followers ({followers.length})
+        </button>
+        <button
+          onClick={() => setActiveView('following')}
+          className={`pb-3 px-4 font-medium transition-colors ${
+            activeView === 'following'
+              ? 'text-orange-600 border-b-2 border-orange-600'
+              : 'text-gray-600 hover:text-gray-900'
+          }`}
+        >
+          Following ({following.length})
         </button>
       </div>
 

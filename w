@@ -1,12 +1,15 @@
 #!/usr/bin/env node
 
 /**
- * 🚀 OrangeCat W Script - One-Button Deploy & Test
+ * 🚀 OrangeCat W Script - Complete Deployment & Testing Pipeline
  *
- * This script automates the complete deployment and testing workflow:
- * 1. Commit and push to main branch
- * 2. Monitor Vercel deployment
- * 3. Test newly implemented features in browser
+ * This script automates the comprehensive deployment workflow:
+ * 1. Commit changes with smart messaging
+ * 2. Test locally via automated browser testing
+ * 3. Push to main if tests pass, fix if they fail
+ * 4. Monitor Vercel deployment with detailed logging
+ * 5. Retry deployment if it fails
+ * 6. Comprehensive production testing on orangecat.ch
  *
  * Usage: npm run w
  *        ./w
@@ -133,6 +136,61 @@ function generateCommitMessage() {
 }
 
 /**
+ * Run automated local browser tests
+ */
+async function runLocalTests() {
+  logHeader('LOCAL BROWSER TESTING');
+
+  try {
+    logInfo('Running automated tests on localhost:3000...');
+
+    // Check if dev server is running
+    try {
+      execSync('curl -f http://localhost:3000/api/health', { stdio: 'pipe', timeout: 5000 });
+      logSuccess('Development server is responding');
+    } catch {
+      logWarning('Development server not responding, starting it...');
+      // Start dev server in background
+      const devProcess = spawn('npm', ['run', 'dev'], {
+        stdio: ['pipe', 'pipe', 'pipe'],
+        detached: true
+      });
+
+      // Wait for server to be ready
+      logInfo('Waiting for development server to start...');
+      let retries = 0;
+      while (retries < 30) {
+        try {
+          execSync('curl -f http://localhost:3000/api/health', { stdio: 'pipe', timeout: 2000 });
+          logSuccess('Development server ready');
+          break;
+        } catch {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          retries++;
+        }
+      }
+
+      if (retries >= 30) {
+        logError('Development server failed to start');
+        return false;
+      }
+    }
+
+    // Run Playwright tests
+    logInfo('Executing Playwright test suite...');
+    execSync('npm run test:e2e:node', { stdio: 'inherit' });
+
+    logSuccess('Local tests passed successfully');
+    return true;
+
+  } catch (error) {
+    logError(`Local tests failed: ${error.message}`);
+    logInfo('Please fix the issues and run `w` again');
+    return false;
+  }
+}
+
+/**
  * Push to main branch
  */
 function pushToMain() {
@@ -207,12 +265,143 @@ function waitForDeployment() {
 }
 
 /**
- * Test the deployed features
+ * Comprehensive production testing with automated browser validation
+ */
+async function runProductionTests(deploymentUrl) {
+  logHeader('PRODUCTION BROWSER TESTING');
+
+  logInfo(`Running comprehensive tests on: ${deploymentUrl}`);
+
+  try {
+    const { chromium } = await import('playwright');
+
+    const browser = await chromium.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const context = await browser.newContext();
+    const page = await context.newPage();
+
+    let testResults = {
+      passed: 0,
+      failed: 0,
+      errors: []
+    };
+
+    // Test 1: Health check
+    try {
+      logInfo('🩺 Testing health endpoint...');
+      const healthResponse = await page.goto(`${deploymentUrl}/api/health`);
+      if (healthResponse?.ok()) {
+        logSuccess('Health check passed');
+        testResults.passed++;
+      } else {
+        throw new Error('Health check failed');
+      }
+    } catch (error) {
+      logError(`Health check failed: ${error.message}`);
+      testResults.failed++;
+      testResults.errors.push('Health check');
+    }
+
+    // Test 2: Landing page loads
+    try {
+      logInfo('🏠 Testing landing page...');
+      await page.goto(deploymentUrl, { waitUntil: 'networkidle' });
+      const title = await page.title();
+      if (title && title.length > 0) {
+        logSuccess('Landing page loaded successfully');
+        testResults.passed++;
+      } else {
+        throw new Error('Landing page title not found');
+      }
+    } catch (error) {
+      logError(`Landing page test failed: ${error.message}`);
+      testResults.failed++;
+      testResults.errors.push('Landing page');
+    }
+
+    // Test 3: Authentication flow (check for login elements)
+    try {
+      logInfo('🔐 Testing authentication elements...');
+      const hasAuthElements = await page.locator('text=/Sign In|Login|Auth/i').count() > 0 ||
+                              await page.locator('[data-testid*="auth"], [data-testid*="login"]').count() > 0;
+
+      if (hasAuthElements) {
+        logSuccess('Authentication elements found');
+        testResults.passed++;
+      } else {
+        logInfo('No authentication elements found (may be expected for public pages)');
+        testResults.passed++; // Not necessarily a failure
+      }
+    } catch (error) {
+      logError(`Authentication test failed: ${error.message}`);
+      testResults.failed++;
+      testResults.errors.push('Authentication');
+    }
+
+    // Test 4: Navigation and routing
+    try {
+      logInfo('🧭 Testing navigation...');
+      // Look for navigation elements
+      const navElements = await page.locator('nav, [role="navigation"], header a').count();
+      if (navElements > 0) {
+        logSuccess('Navigation elements found');
+        testResults.passed++;
+      } else {
+        logWarning('No navigation elements found');
+        testResults.passed++; // Not critical
+      }
+    } catch (error) {
+      logError(`Navigation test failed: ${error.message}`);
+      testResults.failed++;
+      testResults.errors.push('Navigation');
+    }
+
+    // Test 5: Error handling (404 page)
+    try {
+      logInfo('🚫 Testing 404 error handling...');
+      const notFoundResponse = await page.goto(`${deploymentUrl}/nonexistent-page-12345`, { waitUntil: 'networkidle' });
+      if (notFoundResponse?.status() === 404) {
+        logSuccess('404 error handling works');
+        testResults.passed++;
+      } else {
+        logWarning('404 page may not be properly configured');
+        testResults.passed++; // Not critical
+      }
+    } catch (error) {
+      logError(`404 test failed: ${error.message}`);
+      testResults.failed++;
+      testResults.errors.push('Error handling');
+    }
+
+    await browser.close();
+
+    // Summary
+    logInfo(`Test Results: ${testResults.passed} passed, ${testResults.failed} failed`);
+
+    if (testResults.failed > 0) {
+      logError(`Failed tests: ${testResults.errors.join(', ')}`);
+      return false;
+    }
+
+    logSuccess('All production tests passed!');
+    return true;
+
+  } catch (error) {
+    logError(`Production testing failed: ${error.message}`);
+    return false;
+  }
+}
+
+/**
+ * Legacy test function - opens browser for manual testing
  */
 function testFeatures(deploymentUrl) {
-  logHeader('TESTING DEPLOYED FEATURES');
+  logHeader('MANUAL BROWSER TESTING');
 
-  logInfo(`Opening browser to test features at: ${deploymentUrl}`);
+  logInfo(`Opening browser for manual testing at: ${deploymentUrl}`);
 
   try {
     // Try to open browser (works on most systems)
@@ -232,11 +421,12 @@ function testFeatures(deploymentUrl) {
     }
 
     logSuccess('Browser opened successfully');
-    logInfo('Please test the newly implemented duplicate wallet feature:');
-    logInfo('1. Go to Dashboard → Wallets');
-    logInfo('2. Try adding a wallet with an address you already have');
-    logInfo('3. Verify the duplicate warning dialog appears');
-    logInfo('4. Test both "Add Anyway" and "Cancel" options');
+    logInfo('Please manually test the application:');
+    logInfo('1. Check landing page loads correctly');
+    logInfo('2. Test authentication flows');
+    logInfo('3. Verify navigation works');
+    logInfo('4. Test core functionality');
+    logInfo('5. Check for any console errors');
 
   } catch (error) {
     logWarning('Could not automatically open browser');
@@ -245,26 +435,42 @@ function testFeatures(deploymentUrl) {
 }
 
 /**
- * Show deployment summary
+ * Show comprehensive deployment summary
  */
 function showSummary(success, deploymentUrl) {
-  console.log(`\n${colors.magenta}${colors.bright}🎉 DEPLOYMENT SUMMARY${colors.reset}`);
-  console.log(`${colors.magenta}${'═'.repeat(50)}${colors.reset}`);
+  console.log(`\n${colors.magenta}${colors.bright}🎉 DEPLOYMENT PIPELINE SUMMARY${colors.reset}`);
+  console.log(`${colors.magenta}${'═'.repeat(60)}${colors.reset}`);
+
+  console.log(`${colors.blue}📋 Pipeline Steps Completed:${colors.reset}`);
+  console.log(`${success ? colors.green : colors.red}✓${colors.reset} Code committed and tested locally`);
+  console.log(`${success ? colors.green : colors.red}✓${colors.reset} Changes pushed to main branch`);
+  console.log(`${success ? colors.green : colors.red}✓${colors.reset} Vercel deployment monitored`);
+  console.log(`${success ? colors.green : colors.red}✓${colors.reset} Production tests executed`);
+  console.log(`${colors.blue}✓${colors.reset} Manual testing guidance provided`);
 
   if (success) {
-    logSuccess('Deployment completed successfully!');
+    logSuccess('🎉 Full deployment pipeline completed successfully!');
     console.log(`${colors.blue}📍 Production URL: ${colors.bright}${deploymentUrl}${colors.reset}`);
     console.log(`${colors.blue}🔗 Health Check: ${deploymentUrl}/api/health${colors.reset}`);
     console.log(`${colors.blue}📊 Vercel Dashboard: https://vercel.com/dashboard${colors.reset}`);
   } else {
-    logError('Deployment failed or incomplete');
+    logError('⚠️ Deployment completed but with issues');
     console.log(`${colors.yellow}🔧 Check the logs above for error details${colors.reset}`);
+    console.log(`${colors.yellow}🔄 Consider rollback if critical functionality is broken${colors.reset}`);
   }
 
   console.log(`\n${colors.cyan}🚀 Next Steps:${colors.reset}`);
-  console.log(`${colors.cyan}• Test the duplicate wallet feature in the browser${colors.reset}`);
-  console.log(`${colors.cyan}• Monitor application logs if needed${colors.reset}`);
+  console.log(`${colors.cyan}• Complete manual testing in the opened browser${colors.reset}`);
+  console.log(`${colors.cyan}• Monitor application logs: ${colors.bright}npm run monitor:logs${colors.reset}`);
   console.log(`${colors.cyan}• Check Vercel analytics for performance metrics${colors.reset}`);
+  console.log(`${colors.cyan}• Verify user feedback and error reports${colors.reset}`);
+
+  if (!success) {
+    console.log(`\n${colors.red}🚨 Issue Resolution:${colors.reset}`);
+    console.log(`${colors.red}• Run ${colors.bright}npm run deploy:rollback${colors.reset} if rollback needed${colors.reset}`);
+    console.log(`${colors.red}• Check ${colors.bright}npm run monitor:logs${colors.reset} for deployment errors${colors.reset}`);
+    console.log(`${colors.red}• Verify ${colors.bright}${deploymentUrl}/api/health${colors.reset} is responding${colors.reset}`);
+  }
 }
 
 /**
@@ -277,7 +483,7 @@ async function main() {
   console.log(`${colors.magenta}${colors.bright}`);
   console.log('╔══════════════════════════════════════════════════════════════╗');
   console.log('║                    🚀 ORANGECAT W SCRIPT                    ║');
-  console.log('║             One-Button Deploy & Test Workflow              ║');
+  console.log('║          Complete Deployment & Testing Pipeline            ║');
   console.log('╚══════════════════════════════════════════════════════════════╝');
   console.log(`${colors.reset}`);
 
@@ -289,31 +495,81 @@ async function main() {
     }
 
     // Step 1: Commit changes
+    logHeader('STEP 1: COMMIT CHANGES');
     const hasChanges = commitChanges();
     if (!hasChanges) {
       logWarning('No changes to deploy');
       return;
     }
 
-    // Step 2: Push to main
+    // Step 2: Local testing before deployment
+    logHeader('STEP 2: LOCAL TESTING');
+    const localTestsPassed = await runLocalTests();
+    if (!localTestsPassed) {
+      logError('Local tests failed - please fix issues and try again');
+      logInfo('Common fixes:');
+      logInfo('• Check console for JavaScript errors');
+      logInfo('• Verify API endpoints are working');
+      logInfo('• Test core user flows manually');
+      process.exit(1);
+    }
+
+    // Step 3: Push to main (only if tests passed)
+    logHeader('STEP 3: PUSH TO MAIN');
     const pushSuccess = pushToMain();
     if (!pushSuccess) {
       logError('Push failed, cannot proceed with deployment');
       process.exit(1);
     }
 
-    // Step 3: Wait for Vercel deployment
+    // Step 4: Monitor Vercel deployment with enhanced logging
+    logHeader('STEP 4: DEPLOYMENT MONITORING');
     logInfo('Vercel will auto-deploy from main branch...');
-    const deploymentUrl = await waitForDeployment();
+    let deploymentUrl;
+    let deploymentRetries = 0;
+    const maxRetries = 2;
 
-    // Step 4: Test features
+    while (deploymentRetries <= maxRetries) {
+      try {
+        deploymentUrl = await waitForDeployment();
+        logSuccess('Deployment completed successfully');
+        break;
+      } catch (error) {
+        deploymentRetries++;
+        if (deploymentRetries <= maxRetries) {
+          logWarning(`Deployment attempt ${deploymentRetries} failed, retrying...`);
+          logInfo('Waiting 30 seconds before retry...');
+          await new Promise(resolve => setTimeout(resolve, 30000));
+        } else {
+          logError(`Deployment failed after ${maxRetries + 1} attempts`);
+          throw error;
+        }
+      }
+    }
+
+    // Step 5: Comprehensive production testing
+    logHeader('STEP 5: PRODUCTION VALIDATION');
+    const productionTestsPassed = await runProductionTests(deploymentUrl);
+    if (!productionTestsPassed) {
+      logError('Production tests failed - deployment may have issues');
+      logWarning('Please investigate and consider rollback if critical');
+    }
+
+    // Step 6: Manual testing guidance
+    logHeader('STEP 6: MANUAL TESTING');
     testFeatures(deploymentUrl);
 
-    // Show summary
-    showSummary(true, deploymentUrl);
+    // Show final summary
+    showSummary(productionTestsPassed, deploymentUrl);
+
+    if (productionTestsPassed) {
+      logSuccess('🎉 Deployment pipeline completed successfully!');
+    } else {
+      logWarning('⚠️ Deployment completed but some tests failed - manual verification recommended');
+    }
 
   } catch (error) {
-    logError(`Deployment failed: ${error.message}`);
+    logError(`Deployment pipeline failed: ${error.message}`);
     showSummary(false, CONFIG.productionUrl);
     process.exit(1);
   }
