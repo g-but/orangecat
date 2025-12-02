@@ -82,8 +82,9 @@ export default function UnifiedProfileLayout({
         const response = await fetch(`/api/wallets?profile_id=${profile.id}`);
         const data = await response.json();
 
-        if (response.ok && data.wallets) {
-          setWallets(data.wallets);
+        // API returns { success: true, data: [...] } (standard response format)
+        if (response.ok && Array.isArray(data.data)) {
+          setWallets(data.data);
         }
       } catch (error) {
         console.error('Failed to fetch wallets:', error);

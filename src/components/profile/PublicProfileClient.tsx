@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -29,7 +29,7 @@ import {
   Globe,
   ExternalLink,
   Info,
-  Wallet,
+  Wallet as WalletIcon,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -49,6 +49,9 @@ interface PublicProfileClientProps {
   stats?: {
     projectCount: number;
     totalRaised: number;
+    followerCount?: number;
+    followingCount?: number;
+    walletCount?: number;
   };
 }
 
@@ -110,7 +113,8 @@ export default function PublicProfileClient({
           return;
         }
         const data = await response.json();
-        setWallets(Array.isArray(data.wallets) ? data.wallets : []);
+        // API returns { success: true, data: [...] } (standard response format)
+        setWallets(Array.isArray(data.data) ? data.data : []);
       } catch (error) {
         // Non-fatal: just log to console; profile page should still render
         console.error('Failed to load wallets for profile:', error);
@@ -198,62 +202,65 @@ export default function PublicProfileClient({
 
   // Define tabs for progressive loading
   // Order: Overview, Info, Timeline, Projects, People, Wallets
-  const tabs = [
-    {
-      id: 'overview',
-      label: 'Overview',
-      icon: <User className="w-4 h-4" />,
-      content: (
-        <ProfileOverviewTab
-          profile={profile}
-          stats={stats}
-          isOwnProfile={isOwnProfile}
-          context="public"
-        />
-      ),
-    },
-    {
-      id: 'info',
-      label: 'Info',
-      icon: <Info className="w-4 h-4" />,
-      content: (
-        <ProfileInfoTab
-          profile={profile}
-          isOwnProfile={isOwnProfile}
-          userId={user?.id}
-          userEmail={user?.email}
-          onSave={handleProfileSave}
-        />
-      ),
-    },
-    {
-      id: 'timeline',
-      label: 'Timeline',
-      icon: <MessageSquare className="w-4 h-4" />,
-      content: <ProfileTimelineTab profile={profile} isOwnProfile={isOwnProfile} />,
-    },
-    {
-      id: 'projects',
-      label: 'Projects',
-      icon: <Target className="w-4 h-4" />,
-      badge: stats?.projectCount,
-      content: <ProfileProjectsTab profile={profile} isOwnProfile={isOwnProfile} />,
-    },
-    {
-      id: 'people',
-      label: 'People',
-      icon: <Users className="w-4 h-4" />,
-      badge: stats?.followerCount,
-      content: <ProfilePeopleTab profile={profile} isOwnProfile={isOwnProfile} />,
-    },
-    {
-      id: 'wallets',
-      label: 'Wallets',
-      icon: <Wallet className="w-4 h-4" />,
-      badge: ((stats as any)?.walletCount ?? wallets.length) || undefined,
-      content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
-    },
-  ];
+  const tabs = useMemo(
+    () => [
+      {
+        id: 'overview',
+        label: 'Overview',
+        icon: <User className="w-4 h-4" />,
+        content: (
+          <ProfileOverviewTab
+            profile={profile}
+            stats={stats}
+            isOwnProfile={isOwnProfile}
+            context="public"
+          />
+        ),
+      },
+      {
+        id: 'info',
+        label: 'Info',
+        icon: <Info className="w-4 h-4" />,
+        content: (
+          <ProfileInfoTab
+            profile={profile}
+            isOwnProfile={isOwnProfile}
+            userId={user?.id}
+            userEmail={user?.email}
+            onSave={handleProfileSave}
+          />
+        ),
+      },
+      {
+        id: 'timeline',
+        label: 'Timeline',
+        icon: <MessageSquare className="w-4 h-4" />,
+        content: <ProfileTimelineTab profile={profile} isOwnProfile={isOwnProfile} />,
+      },
+      {
+        id: 'projects',
+        label: 'Projects',
+        icon: <Target className="w-4 h-4" />,
+        badge: stats?.projectCount,
+        content: <ProfileProjectsTab profile={profile} isOwnProfile={isOwnProfile} />,
+      },
+      {
+        id: 'people',
+        label: 'People',
+        icon: <Users className="w-4 h-4" />,
+        badge: `${stats?.followerCount || 0}/${stats?.followingCount || 0}`,
+        content: <ProfilePeopleTab profile={profile} isOwnProfile={isOwnProfile} />,
+      },
+      {
+        id: 'wallets',
+        label: 'Wallets',
+        icon: <WalletIcon className="w-4 h-4" />,
+        badge: wallets.length || (stats as any)?.walletCount || undefined,
+        content: <ProfileWalletsTab profile={profile} isOwnProfile={isOwnProfile} />,
+      },
+    ],
+    [stats, wallets, profile, isOwnProfile, user, handleProfileSave]
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
