@@ -144,37 +144,61 @@ async function runLocalTests() {
   try {
     logInfo('Running automated tests on localhost:3000...');
 
-    // Check if dev server is running
+    // Check if dev server is running (try both 3000 and 3002)
+    let serverPort = 3000;
+    let serverReady = false;
+
+    // First check if port 3000 is available
     try {
       execSync('curl -f http://localhost:3000/api/health', { stdio: 'pipe', timeout: 5000 });
-      logSuccess('Development server is responding');
+      logSuccess('Development server is responding on port 3000');
+      serverReady = true;
     } catch {
-      logWarning('Development server not responding, starting it...');
-      // Start dev server in background
-      const devProcess = spawn('npm', ['run', 'dev'], {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        detached: true
-      });
+      // Try port 3002
+      try {
+        execSync('curl -f http://localhost:3002/api/health', { stdio: 'pipe', timeout: 5000 });
+        logSuccess('Development server is responding on port 3002');
+        serverPort = 3002;
+        serverReady = true;
+      } catch {
+        logWarning('Development server not responding, starting it...');
+        // Start dev server in background
+        const devProcess = spawn('npm', ['run', 'dev'], {
+          stdio: ['pipe', 'pipe', 'pipe'],
+          detached: true
+        });
 
-      // Wait for server to be ready
-      logInfo('Waiting for development server to start...');
-      let retries = 0;
-      while (retries < 30) {
-        try {
-          execSync('curl -f http://localhost:3000/api/health', { stdio: 'pipe', timeout: 2000 });
-          logSuccess('Development server ready');
-          break;
-        } catch {
-          await new Promise(resolve => setTimeout(resolve, 2000));
-          retries++;
+        // Wait for server to be ready
+        logInfo('Waiting for development server to start...');
+        let retries = 0;
+        while (retries < 30) {
+          try {
+            // Try both ports
+            execSync(`curl -f http://localhost:3000/api/health`, { stdio: 'pipe', timeout: 2000 });
+            serverPort = 3000;
+            logSuccess('Development server ready on port 3000');
+            serverReady = true;
+            break;
+          } catch {
+            try {
+              execSync(`curl -f http://localhost:3002/api/health`, { stdio: 'pipe', timeout: 2000 });
+              serverPort = 3002;
+              logSuccess('Development server ready on port 3002');
+              serverReady = true;
+              break;
+            } catch {
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              retries++;
+            }
+          }
         }
       }
+    }
 
       if (retries >= 30) {
         logError('Development server failed to start');
         return false;
       }
-    }
 
     // Run Playwright tests
     logInfo('Executing Playwright test suite...');
