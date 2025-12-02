@@ -10,7 +10,7 @@ interface PageProps {
 /**
  * Generate metadata for public profile pages
  * This enables SEO and social media preview cards
- * 
+ *
  * Handles /profiles/me by resolving to the actual username
  */
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    
+
     if (user) {
       // Get username for current user
       const { data: userProfile } = await supabase
@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         .select('username')
         .eq('id', user.id)
         .single();
-      
+
       targetUsername = userProfile?.username || user.id;
     } else {
       // Not authenticated - return generic metadata
@@ -161,17 +161,35 @@ export default async function PublicProfilePage({ params }: PageProps) {
     .select('*', { count: 'exact', head: true })
     .eq('following_id', profile.id);
 
-  // Fetch wallet count (handle missing table gracefully)
+  // Fetch following count
+  const { count: followingCount } = await supabase
+    .from('follows')
+    .select('*', { count: 'exact', head: true })
+    .eq('follower_id', profile.id);
+
+  // Fetch wallet count using new wallet architecture
   let walletCount = 0;
   try {
-    const { count } = await supabase
-      .from('wallets')
-      .select('*', { count: 'exact', head: true })
-      .eq('profile_id', profile.id);
-    walletCount = count || 0;
+    // Use the get_entity_wallets function to get active wallets for this profile
+    const { data: walletData } = await supabase.rpc('get_entity_wallets', {
+      p_entity_type: 'profile',
+      p_entity_id: profile.id,
+    });
+    walletCount = walletData ? walletData.filter((w: any) => w.is_active).length : 0;
   } catch (error) {
-    // Wallets table might not exist yet
-    console.log('Wallets table not available');
+    // Fallback: try querying wallet_ownerships table directly
+    try {
+      const { count } = await supabase
+        .from('wallet_ownerships')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_type', 'profile')
+        .eq('owner_id', profile.id)
+        .eq('is_active', true);
+      walletCount = count || 0;
+    } catch (fallbackError) {
+      // If both fail, wallets table might not be migrated yet
+      console.log('Wallet architecture not available');
+    }
   }
 
   // Calculate statistics
@@ -211,6 +229,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
           projectCount,
           totalRaised,
           followerCount: followerCount || 0,
+          followingCount: followingCount || 0,
           walletCount,
         }}
       />
