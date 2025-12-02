@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import Loading from '@/components/Loading';
@@ -43,14 +43,7 @@ export default function PeoplePage() {
     }
   }, [user, session, hydrated, authLoading, router]);
 
-  // Load connections
-  useEffect(() => {
-    if (user?.id && hydrated) {
-      loadConnections();
-    }
-  }, [user?.id, hydrated]);
-
-  const loadConnections = async () => {
+  const loadConnections = useCallback(async () => {
     if (!user?.id) {
       return;
     }
@@ -67,8 +60,8 @@ export default function PeoplePage() {
         const followingData = await followingRes.json();
         if (followingData.success) {
           // Transform API response to Connection format
-          // API returns: { following_id, created_at, profiles: {...} }
-          const transformed = (followingData.data || [])
+          // API returns: { data: { data: [...], pagination: {...} } }
+          const transformed = (followingData.data?.data || [])
             .map((item: any) => {
               // Handle both nested profiles object and direct profile data
               const profileData = item.profiles || (item.following_id ? null : item);
@@ -98,8 +91,8 @@ export default function PeoplePage() {
         const followersData = await followersRes.json();
         if (followersData.success) {
           // Transform API response to Connection format
-          // API returns: { follower_id, created_at, profiles: {...} }
-          const transformed = (followersData.data || [])
+          // API returns: { data: { data: [...], pagination: {...} } }
+          const transformed = (followersData.data?.data || [])
             .map((item: any) => {
               // Handle both nested profiles object and direct profile data
               const profileData = item.profiles || (item.follower_id ? null : item);
@@ -130,7 +123,14 @@ export default function PeoplePage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.id]);
+
+  // Load connections
+  useEffect(() => {
+    if (user?.id && hydrated) {
+      loadConnections();
+    }
+  }, [user?.id, hydrated, loadConnections]);
 
   const handleFollow = async (profileId: string) => {
     if (!user?.id) {
@@ -227,16 +227,6 @@ export default function PeoplePage() {
         {/* Tabs */}
         <div className="mb-6 flex gap-4 border-b border-gray-200">
           <button
-            onClick={() => setActiveTab('following')}
-            className={`px-4 py-2 font-medium transition-colors ${
-              activeTab === 'following'
-                ? 'text-orange-600 border-b-2 border-orange-600'
-                : 'text-gray-600 hover:text-gray-900'
-            }`}
-          >
-            Following ({following.length})
-          </button>
-          <button
             onClick={() => setActiveTab('followers')}
             className={`px-4 py-2 font-medium transition-colors ${
               activeTab === 'followers'
@@ -245,6 +235,16 @@ export default function PeoplePage() {
             }`}
           >
             Followers ({followers.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('following')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'following'
+                ? 'text-orange-600 border-b-2 border-orange-600'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            Following ({following.length})
           </button>
         </div>
 
