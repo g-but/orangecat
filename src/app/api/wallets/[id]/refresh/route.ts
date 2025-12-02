@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createServerClient } from '@/services/supabase/server';
+import { createServerClient } from '@/lib/supabase/server';
 import { fetchBitcoinBalance } from '@/services/blockchain';
 import { logger } from '@/utils/logger';
 import {
