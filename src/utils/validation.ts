@@ -27,23 +27,24 @@ const BITCOIN_ADDRESS_PATTERNS = {
   testnetSegwit: /^2[A-HJ-NP-Z0-9]{25,34}$/,
 
   // Testnet Bech32: Start with tb1
-  testnetBech32: /^tb1[a-z0-9]{8,87}$/
-}
+  testnetBech32: /^tb1[a-z0-9]{8,87}$/,
+};
 
 // Lightning Network invoice validation
-const LIGHTNING_INVOICE_PATTERN = /^lnbc[a-z0-9]+$/i
+const LIGHTNING_INVOICE_PATTERN = /^lnbc[a-z0-9]+$/i;
 
 // Email validation pattern
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Username validation pattern (alphanumeric, underscore, dash, 3-30 chars)
-const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,30}$/
+const USERNAME_PATTERN = /^[a-zA-Z0-9_-]{3,30}$/;
 
 // URL validation pattern
-const URL_PATTERN = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/
+const URL_PATTERN =
+  /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$/;
 
 // UUID validation pattern
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Validate UUID format
@@ -52,10 +53,10 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{
  */
 export function isValidUUID(value: string): boolean {
   if (!value || typeof value !== 'string') {
-    return false
+    return false;
   }
 
-  return UUID_PATTERN.test(value.trim())
+  return UUID_PATTERN.test(value.trim());
 }
 
 /**
@@ -66,22 +67,26 @@ export function isValidUUID(value: string): boolean {
  */
 export function isValidBitcoinAddress(address: string, allowTestnet: boolean = false): boolean {
   if (!address || typeof address !== 'string') {
-    return false
+    return false;
   }
 
-  const trimmed = address.trim()
+  const trimmed = address.trim();
 
   if (allowTestnet) {
-    return BITCOIN_ADDRESS_PATTERNS.legacy.test(trimmed) ||
-           BITCOIN_ADDRESS_PATTERNS.segwit.test(trimmed) ||
-           BITCOIN_ADDRESS_PATTERNS.bech32.test(trimmed) ||
-           BITCOIN_ADDRESS_PATTERNS.testnetLegacy.test(trimmed) ||
-           BITCOIN_ADDRESS_PATTERNS.testnetSegwit.test(trimmed) ||
-           BITCOIN_ADDRESS_PATTERNS.testnetBech32.test(trimmed)
+    return (
+      BITCOIN_ADDRESS_PATTERNS.legacy.test(trimmed) ||
+      BITCOIN_ADDRESS_PATTERNS.segwit.test(trimmed) ||
+      BITCOIN_ADDRESS_PATTERNS.bech32.test(trimmed) ||
+      BITCOIN_ADDRESS_PATTERNS.testnetLegacy.test(trimmed) ||
+      BITCOIN_ADDRESS_PATTERNS.testnetSegwit.test(trimmed) ||
+      BITCOIN_ADDRESS_PATTERNS.testnetBech32.test(trimmed)
+    );
   } else {
-    return BITCOIN_ADDRESS_PATTERNS.legacy.test(trimmed) ||
-           BITCOIN_ADDRESS_PATTERNS.segwit.test(trimmed) ||
-           BITCOIN_ADDRESS_PATTERNS.bech32.test(trimmed)
+    return (
+      BITCOIN_ADDRESS_PATTERNS.legacy.test(trimmed) ||
+      BITCOIN_ADDRESS_PATTERNS.segwit.test(trimmed) ||
+      BITCOIN_ADDRESS_PATTERNS.bech32.test(trimmed)
+    );
   }
 }
 
@@ -92,10 +97,10 @@ export function isValidBitcoinAddress(address: string, allowTestnet: boolean = f
  */
 export function isValidLightningAddress(invoice: string): boolean {
   if (!invoice || typeof invoice !== 'string') {
-    return false
+    return false;
   }
 
-  return LIGHTNING_INVOICE_PATTERN.test(invoice.trim())
+  return LIGHTNING_INVOICE_PATTERN.test(invoice.trim());
 }
 
 /**
@@ -105,10 +110,10 @@ export function isValidLightningAddress(invoice: string): boolean {
  */
 export function isValidEmail(email: string): boolean {
   if (!email || typeof email !== 'string') {
-    return false
+    return false;
   }
 
-  return EMAIL_PATTERN.test(email.trim())
+  return EMAIL_PATTERN.test(email.trim());
 }
 
 /**
@@ -118,10 +123,10 @@ export function isValidEmail(email: string): boolean {
  */
 export function isValidUsername(username: string): boolean {
   if (!username || typeof username !== 'string') {
-    return false
+    return false;
   }
 
-  return USERNAME_PATTERN.test(username.trim())
+  return USERNAME_PATTERN.test(username.trim());
 }
 
 /**
@@ -131,10 +136,10 @@ export function isValidUsername(username: string): boolean {
  */
 export function isValidUrl(url: string): boolean {
   if (!url || typeof url !== 'string') {
-    return false
+    return false;
   }
 
-  return URL_PATTERN.test(url.trim())
+  return URL_PATTERN.test(url.trim());
 }
 
 /**
@@ -144,14 +149,14 @@ export function isValidUrl(url: string): boolean {
  */
 export function sanitizeString(input: string): string {
   if (!input || typeof input !== 'string') {
-    return ''
+    return '';
   }
 
   return input
     .trim()
     .replace(/[<>\"'&]/g, '') // Remove HTML characters
     .replace(/\s+/g, ' ') // Normalize whitespace
-    .slice(0, 1000) // Limit length
+    .slice(0, 1000); // Limit length
 }
 
 /**
@@ -161,11 +166,11 @@ export function sanitizeString(input: string): string {
  */
 export function isValidGoalAmount(amount: number): boolean {
   if (typeof amount !== 'number' || isNaN(amount)) {
-    return false
+    return false;
   }
 
   // Must be positive and reasonable (max 1 BTC = 100,000,000 sats)
-  return amount > 0 && amount <= 100000000
+  return amount > 0 && amount <= 100000000;
 }
 
 /**
@@ -175,26 +180,26 @@ export function isValidGoalAmount(amount: number): boolean {
  */
 export function isValidBitcoinAmount(amount: string): boolean {
   if (!amount || typeof amount !== 'string') {
-    return false
+    return false;
   }
 
-  const trimmed = amount.trim().toLowerCase()
+  const trimmed = amount.trim().toLowerCase();
 
   // Check for BTC format (e.g., "0.001", "1.5")
-  const btcPattern = /^\d+(\.\d{1,8})?$/
+  const btcPattern = /^\d+(\.\d{1,8})?$/;
   if (btcPattern.test(trimmed)) {
-    const num = parseFloat(trimmed)
-    return num > 0 && num <= 21e6 // Max 21 million BTC
+    const num = parseFloat(trimmed);
+    return num > 0 && num <= 21e6; // Max 21 million BTC
   }
 
   // Check for sats format (e.g., "100000 sats", "50000sats")
-  const satsPattern = /^\d+\s*sats?$/i
+  const satsPattern = /^\d+\s*sats?$/i;
   if (satsPattern.test(trimmed)) {
-    const num = parseInt(trimmed.replace(/\s*sats?$/i, ''))
-    return num > 0 && num <= 21e6 * 1e8 // Max 21 million BTC in sats
+    const num = parseInt(trimmed.replace(/\s*sats?$/i, ''));
+    return num > 0 && num <= 21e6 * 1e8; // Max 21 million BTC in sats
   }
 
-  return false
+  return false;
 }
 
 /**
@@ -204,11 +209,11 @@ export function isValidBitcoinAmount(amount: string): boolean {
  */
 export function isValidProjectTitle(title: string): boolean {
   if (!title || typeof title !== 'string') {
-    return false
+    return false;
   }
 
-  const trimmed = title.trim()
-  return trimmed.length >= 3 && trimmed.length <= 100
+  const trimmed = title.trim();
+  return trimmed.length >= 3 && trimmed.length <= 100;
 }
 
 /**
@@ -218,11 +223,45 @@ export function isValidProjectTitle(title: string): boolean {
  */
 export function isValidProjectDescription(description: string): boolean {
   if (!description || typeof description !== 'string') {
-    return false
+    return false;
   }
 
-  const trimmed = description.trim()
-  return trimmed.length >= 10 && trimmed.length <= 5000
+  const trimmed = description.trim();
+  return trimmed.length >= 10 && trimmed.length <= 5000;
+}
+
+/**
+ * Validate bio text
+ * @param bio - Bio text to validate
+ * @returns boolean indicating if bio is valid
+ */
+export function isValidBio(bio: string): boolean {
+  if (!bio || typeof bio !== 'string') {
+    return false;
+  }
+
+  const trimmed = bio.trim();
+  return trimmed.length <= 500;
+}
+
+/**
+ * Validate password strength
+ * @param password - Password to validate
+ * @returns boolean indicating if password is valid
+ */
+export function isValidPassword(password: string): boolean {
+  if (!password || typeof password !== 'string') {
+    return false;
+  }
+
+  // At least 8 characters, with uppercase, lowercase, number, and special character
+  const hasMinLength = password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(password);
+  const hasLowercase = /[a-z]/.test(password);
+  const hasNumber = /[0-9]/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+  return hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
 }
 
 /**
@@ -230,8 +269,10 @@ export function isValidProjectDescription(description: string): boolean {
  * @param error - Error object to check
  * @returns boolean indicating if error is an AuthError
  */
-export function isAuthError(error: any): error is { message: string; name?: string; status?: number } {
-  return error && typeof error === 'object' && 'message' in error
+export function isAuthError(
+  error: any
+): error is { message: string; name?: string; status?: number } {
+  return error && typeof error === 'object' && 'message' in error;
 }
 
 // Export additional validation functions that might be expected by tests
@@ -241,5 +282,5 @@ export {
   isValidEmail as validateEmail,
   isValidUsername as validateUsername,
   isValidUrl as validateUrl,
-  sanitizeString as sanitizeInput
-}
+  sanitizeString as sanitizeInput,
+};

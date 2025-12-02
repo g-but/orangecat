@@ -44,6 +44,26 @@ export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse;
 // =====================================================================
 
 /**
+ * Cache configuration presets
+ */
+export const CACHE_PRESETS = {
+  // No caching - always fresh
+  NONE: 'no-store, must-revalidate',
+
+  // Short cache - 1 minute CDN, 5 minutes stale-while-revalidate
+  SHORT: 's-maxage=60, stale-while-revalidate=300',
+
+  // Medium cache - 5 minutes CDN, 30 minutes stale-while-revalidate
+  MEDIUM: 's-maxage=300, stale-while-revalidate=1800',
+
+  // Long cache - 1 hour CDN, 24 hours stale-while-revalidate
+  LONG: 's-maxage=3600, stale-while-revalidate=86400',
+
+  // Static - 1 day CDN, 1 week stale-while-revalidate
+  STATIC: 's-maxage=86400, stale-while-revalidate=604800',
+} as const;
+
+/**
  * Create a successful API response with standard format
  */
 export function apiSuccess<T>(
@@ -51,9 +71,10 @@ export function apiSuccess<T>(
   options?: Omit<ApiSuccessResponse['metadata'], 'timestamp'> & {
     status?: number;
     headers?: HeadersInit;
+    cache?: string | keyof typeof CACHE_PRESETS;
   }
 ): NextResponse<ApiSuccessResponse<T>> {
-  const { status, headers, ...metadata } = options || {};
+  const { status, headers, cache, ...metadata } = options || {};
   const response: ApiSuccessResponse<T> = {
     success: true,
     data,
@@ -63,9 +84,18 @@ export function apiSuccess<T>(
     },
   };
 
+  // Build headers with cache control if specified
+  const responseHeaders = new Headers(headers || {});
+
+  if (cache) {
+    const cacheValue =
+      typeof cache === 'string' ? cache : CACHE_PRESETS[cache] || CACHE_PRESETS.NONE;
+    responseHeaders.set('Cache-Control', cacheValue);
+  }
+
   return NextResponse.json(response, {
     status: status || 200,
-    headers: headers || {},
+    headers: responseHeaders,
   });
 }
 

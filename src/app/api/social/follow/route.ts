@@ -2,21 +2,42 @@ import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiBadRequest,
+  apiNotFound,
+  apiInternalError,
+  apiConflict,
+  apiRateLimited,
+} from '@/lib/api/standardResponse';
+import { rateLimitSocial } from '@/lib/rate-limit';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 
 async function handleFollow(request: AuthenticatedRequest) {
   try {
     const supabase = await createServerClient();
     const user = request.user;
+
+    // Rate limiting check - 10 follows per minute
+    const rateLimitResult = rateLimitSocial(user.id);
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
+      logger.warn('Follow rate limit exceeded', { userId: user.id });
+      return apiRateLimited('Too many follow requests. Please slow down.', retryAfter);
+    }
+
     const { following_id } = await request.json();
 
-    // Validate input
-    if (!following_id) {
-      return NextResponse.json({ error: 'following_id is required' }, { status: 400 });
+    // Validate input using centralized validator
+    const validationError = getValidationError(validateUUID(following_id, 'following_id'));
+    if (validationError) {
+      return validationError;
     }
 
     // Prevent self-following
     if (user.id === following_id) {
-      return NextResponse.json({ error: 'Cannot follow yourself' }, { status: 400 });
+      return apiBadRequest('Cannot follow yourself');
     }
 
     // Check if target user exists
@@ -27,7 +48,7 @@ async function handleFollow(request: AuthenticatedRequest) {
       .single();
 
     if (userError || !targetUser) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return apiNotFound('User not found');
     }
 
     // Check if already following
@@ -39,7 +60,7 @@ async function handleFollow(request: AuthenticatedRequest) {
       .single();
 
     if (existingFollow) {
-      return NextResponse.json({ success: true, message: 'Already following this user' });
+      return apiConflict('Already following this user');
     }
 
     // Create follow relationship
@@ -49,17 +70,26 @@ async function handleFollow(request: AuthenticatedRequest) {
     });
 
     if (followError) {
-      logger.error('Error creating follow:', followError);
-      return NextResponse.json({ error: 'Failed to follow user' }, { status: 500 });
+      logger.error('Error creating follow', {
+        userId: user.id,
+        followingId: following_id,
+        error: followError.message,
+      });
+      return apiInternalError('Failed to follow user');
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Successfully followed user',
+    // Audit log follow action
+    await auditSuccess(AUDIT_ACTIONS.USER_FOLLOWED, user.id, 'profile', following_id);
+
+    logger.info('User followed successfully', {
+      userId: user.id,
+      followingId: following_id,
     });
+
+    return apiSuccess({ following_id }, { status: 201 });
   } catch (error) {
-    logger.error('Unexpected error in POST /api/social/follow:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Unexpected error in POST /api/social/follow', { error });
+    return apiInternalError('Internal server error');
   }
 }
 

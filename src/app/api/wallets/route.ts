@@ -8,18 +8,16 @@ import {
   detectWalletType,
 } from '@/types/wallet';
 import { logger } from '@/utils/logger';
-import {
-  FALLBACK_WALLETS_KEY,
-  POSTGRES_TABLE_NOT_FOUND,
-  MAX_WALLETS_PER_ENTITY,
-} from '@/lib/wallets/constants';
+import { MAX_WALLETS_PER_ENTITY } from '@/lib/wallets/constants';
 import {
   logWalletError,
   handleSupabaseError,
-  isTableNotFoundError,
   createWalletErrorResponse,
 } from '@/lib/wallets/errorHandling';
-import { type ProfileMetadata, isProfileMetadata } from '@/lib/wallets/types';
+import { rateLimitWrite } from '@/lib/rate-limit';
+import { apiRateLimited, apiSuccess, apiBadRequest } from '@/lib/api/standardResponse';
+import { validateOneOfIds, getValidationError } from '@/lib/api/validation';
+import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 
 interface ErrorResponse {
   error: string;
@@ -29,95 +27,7 @@ interface ErrorResponse {
 
 type SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
 
-async function getFallbackProfileWallets(supabase: SupabaseClient, profileId: string) {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('metadata')
-    .eq('id', profileId)
-    .single();
-
-  if (error) {
-    logWalletError('load fallback wallets', error, { profileId });
-    return [];
-  }
-
-  const metadata: ProfileMetadata = isProfileMetadata(profile?.metadata) ? profile.metadata : {};
-  const wallets = metadata[FALLBACK_WALLETS_KEY];
-
-  return Array.isArray(wallets) ? wallets : [];
-}
-
-async function addFallbackProfileWallet(
-  supabase: SupabaseClient,
-  profileId: string,
-  walletPayload: {
-    label: string;
-    description?: string | null;
-    address_or_xpub: string;
-    wallet_type: string;
-    category: string;
-    category_icon?: string | null;
-    behavior_type?: string;
-    budget_amount?: number | null;
-    budget_period?: string | null;
-    goal_amount?: number | null;
-    goal_currency?: string | null;
-    goal_deadline?: string | null;
-    is_primary?: boolean;
-  }
-) {
-  const { data: profile, error } = await supabase
-    .from('profiles')
-    .select('metadata')
-    .eq('id', profileId)
-    .single();
-
-  if (error) {
-    logWalletError('load profile for fallback wallet', error, { profileId });
-    throw error;
-  }
-
-  const metadata: ProfileMetadata = isProfileMetadata(profile?.metadata) ? profile.metadata : {};
-  const existing = Array.isArray(metadata[FALLBACK_WALLETS_KEY])
-    ? (metadata[FALLBACK_WALLETS_KEY] as Wallet[])
-    : [];
-
-  const now = new Date().toISOString();
-
-  const wallet = {
-    id: crypto.randomUUID(),
-    profile_id: profileId,
-    project_id: null,
-    created_at: now,
-    updated_at: now,
-    is_active: true,
-    balance_btc: 0,
-    display_order: existing.length,
-    ...walletPayload,
-  };
-
-  const updatedMetadata = {
-    ...metadata,
-    [FALLBACK_WALLETS_KEY]: [...existing, wallet],
-  };
-
-  const { error: updateError } = await supabase
-    .from('profiles')
-    .update({ metadata: updatedMetadata })
-    .eq('id', profileId);
-
-  if (updateError) {
-    logWalletError('save fallback wallet', updateError, { profileId });
-    throw updateError;
-  }
-
-  return wallet;
-}
-
 // GET /api/wallets?profile_id=xxx OR ?project_id=xxx
-// NOTE: This route currently uses the legacy `wallets` table.
-// It is kept for backward compatibility while we migrate fully to the
-// new wallet_definitions / wallet_ownerships / wallet_categories architecture.
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerClient();
@@ -125,57 +35,46 @@ export async function GET(request: NextRequest) {
     const profileId = searchParams.get('profile_id');
     const projectId = searchParams.get('project_id');
 
-    if (!profileId && !projectId) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'profile_id or project_id required', code: 'MISSING_PARAMS' },
-        { status: 400 }
-      );
+    // Validate that exactly one ID is provided using centralized validator
+    const idValidation = validateOneOfIds(
+      { profile_id: profileId, project_id: projectId },
+      'profile_id or project_id is required'
+    );
+    const validationError = getValidationError(idValidation);
+    if (validationError) {
+      return validationError;
     }
 
-    // Validate UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const idToValidate = profileId || projectId;
-    if (idToValidate && !uuidRegex.test(idToValidate)) {
-      return createWalletErrorResponse('Invalid ID format', 'INVALID_ID', 400);
+    // Build query for wallets table
+    let query = supabase
+      .from('wallets')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true })
+      .order('created_at', { ascending: false });
+
+    if (profileId) {
+      query = query.eq('profile_id', profileId);
+    } else if (projectId) {
+      query = query.eq('project_id', projectId);
     }
 
-    try {
-      let query = supabase
-        .from('wallets')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true })
-        .order('created_at', { ascending: false });
+    const { data, error } = await query;
 
-      if (profileId) {
-        query = query.eq('profile_id', profileId);
-      } else if (projectId) {
-        query = query.eq('project_id', projectId);
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        // If the wallets table does not exist yet, gracefully fall back
-        if (isTableNotFoundError(error) && profileId) {
-          const fallbackWallets = await getFallbackProfileWallets(supabase, profileId);
-          return NextResponse.json({ wallets: fallbackWallets }, { status: 200 });
-        }
-
-        return handleSupabaseError('fetch wallets', error, { profileId, projectId });
-      }
-
-      return NextResponse.json({ wallets: data || [] }, { status: 200 });
-    } catch (innerError: unknown) {
-      // Catch errors such as relation not existing that might be thrown at query time
-      if (profileId && isTableNotFoundError(innerError)) {
-        const fallbackWallets = await getFallbackProfileWallets(supabase, profileId);
-        return NextResponse.json({ wallets: fallbackWallets }, { status: 200 });
-      }
-
-      return handleSupabaseError('fetch wallets query', innerError, { profileId, projectId });
+    if (error) {
+      logger.error('Failed to fetch wallets', {
+        profileId,
+        projectId,
+        error: error.message,
+        code: error.code,
+      });
+      return handleSupabaseError('fetch wallets', error, { profileId, projectId });
     }
+
+    // Return wallets with standard response format and caching
+    return apiSuccess(data || [], { cache: 'SHORT' });
   } catch (error) {
+    logger.error('Unexpected error in GET /api/wallets', { error });
     return handleSupabaseError('fetch wallets', error, { profileId, projectId });
   }
 }
@@ -193,6 +92,14 @@ export async function POST(request: NextRequest) {
         { error: 'Unauthorized', code: 'UNAUTHORIZED' },
         { status: 401 }
       );
+    }
+
+    // Rate limiting check - 30 writes per minute per user
+    const rateLimitResult = rateLimitWrite(user.id);
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
+      logger.info('Wallet creation rate limit exceeded', { userId: user.id });
+      return apiRateLimited('Too many wallet creation requests. Please slow down.', retryAfter);
     }
 
     const body = (await request.json()) as WalletFormData & {
@@ -413,6 +320,14 @@ export async function POST(request: NextRequest) {
 
         return handleSupabaseError('create wallet', error, { entityId });
       }
+
+      // Audit log wallet creation
+      await auditSuccess(AUDIT_ACTIONS.WALLET_CREATED, user.id, 'wallet', wallet.id, {
+        walletType,
+        category: sanitized.category,
+        entityType,
+        entityId,
+      });
 
       const response = {
         wallet,

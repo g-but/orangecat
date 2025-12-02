@@ -7,13 +7,7 @@ import Button from '@/components/ui/Button';
 import TimelineComponent from '@/components/timeline/TimelineComponent';
 import TimelineComposer from '@/components/timeline/TimelineComposer';
 import { TimelineFeedResponse } from '@/types/timeline';
-import {
-  BookOpen,
-  MessageSquare,
-  Compass,
-  RefreshCw,
-  AlertCircle,
-} from 'lucide-react';
+import { BookOpen, MessageSquare, Compass, RefreshCw, AlertCircle } from 'lucide-react';
 
 interface DashboardTimelineProps {
   timelineFeed: TimelineFeedResponse | null;
@@ -61,7 +55,7 @@ export function DashboardTimeline({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Your Timeline</CardTitle>
+              <CardTitle>My Timeline</CardTitle>
               <CardDescription>Recent activities, posts, and updates</CardDescription>
             </div>
             <Link href="/timeline">
@@ -100,9 +94,10 @@ export function DashboardTimeline({
           ) : (
             <div className="text-center py-12 text-gray-500">
               <MessageSquare className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Start Your Timeline</h3>
+              <h3 className="text-lg font-semibold text-gray-700 mb-2">Start My Timeline</h3>
               <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
-                Share your first update! Your timeline will show your posts, project updates, and interactions with the community.
+                Share your first update! My timeline will show your posts, project updates, and
+                interactions with the community.
               </p>
               <div className="flex gap-3 justify-center">
                 <Button

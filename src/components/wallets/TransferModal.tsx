@@ -92,7 +92,9 @@ export function TransferModal({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -105,7 +107,12 @@ export function TransferModal({
             disabled={isSubmitting}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
@@ -113,12 +120,10 @@ export function TransferModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* From Wallet */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              From Wallet
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">From Wallet</label>
             <select
               value={fromWalletId}
-              onChange={(e) => setFromWalletId(e.target.value)}
+              onChange={e => setFromWalletId(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isSubmitting || !!sourceWallet}
               required
@@ -132,19 +137,18 @@ export function TransferModal({
             </select>
             {fromWallet && (
               <p className="mt-1 text-sm text-gray-500">
-                Available: {fromWallet.balance_btc.toFixed(8)} BTC (~${(fromWallet.balance_btc * BTC_PRICE_USD).toFixed(2)})
+                Available: {fromWallet.balance_btc.toFixed(8)} BTC (~$
+                {(fromWallet.balance_btc * BTC_PRICE_USD).toFixed(2)})
               </p>
             )}
           </div>
 
           {/* To Wallet */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              To Wallet
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">To Wallet</label>
             <select
               value={toWalletId}
-              onChange={(e) => setToWalletId(e.target.value)}
+              onChange={e => setToWalletId(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={isSubmitting}
               required
@@ -160,20 +164,19 @@ export function TransferModal({
             </select>
             {toWallet && (
               <p className="mt-1 text-sm text-gray-500">
-                Current: {toWallet.balance_btc.toFixed(8)} BTC (~${(toWallet.balance_btc * BTC_PRICE_USD).toFixed(2)})
+                Current: {toWallet.balance_btc.toFixed(8)} BTC (~$
+                {(toWallet.balance_btc * BTC_PRICE_USD).toFixed(2)})
               </p>
             )}
           </div>
 
           {/* Amount */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Amount (BTC)
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Amount (BTC)</label>
             <input
               type="number"
               value={amount}
-              onChange={(e) => setAmount(e.target.value)}
+              onChange={e => setAmount(e.target.value)}
               step="0.00000001"
               min="0"
               max={fromWallet?.balance_btc || undefined}
@@ -201,12 +204,10 @@ export function TransferModal({
 
           {/* Note */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Note (optional)
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Note (optional)</label>
             <textarea
               value={note}
-              onChange={(e) => setNote(e.target.value)}
+              onChange={e => setNote(e.target.value)}
               placeholder="Add a note about this transfer..."
               maxLength={500}
               rows={3}
@@ -231,13 +232,15 @@ export function TransferModal({
                 <div className="flex justify-between">
                   <span>{fromWallet.label}:</span>
                   <span>
-                    {fromWallet.balance_btc.toFixed(8)} → {(fromWallet.balance_btc - parseFloat(amount)).toFixed(8)} BTC
+                    {fromWallet.balance_btc.toFixed(8)} →{' '}
+                    {(fromWallet.balance_btc - parseFloat(amount)).toFixed(8)} BTC
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span>{toWallet.label}:</span>
                   <span>
-                    {toWallet.balance_btc.toFixed(8)} → {(toWallet.balance_btc + parseFloat(amount)).toFixed(8)} BTC
+                    {toWallet.balance_btc.toFixed(8)} →{' '}
+                    {(toWallet.balance_btc + parseFloat(amount)).toFixed(8)} BTC
                   </span>
                 </div>
               </div>

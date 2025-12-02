@@ -12,6 +12,7 @@ interface Props {
   showDetails?: boolean;
   resetOnPropsChange?: boolean;
   level?: 'page' | 'component' | 'route';
+  maxRetries?: number;
 }
 
 interface State {
@@ -19,6 +20,7 @@ interface State {
   error?: Error;
   errorInfo?: ErrorInfo;
   eventId?: string;
+  retryCount: number;
 }
 
 export default class ErrorBoundary extends Component<Props, State> {
@@ -26,10 +28,10 @@ export default class ErrorBoundary extends Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, retryCount: 0 };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
     return {
       hasError: true,
       error,
@@ -92,12 +94,13 @@ export default class ErrorBoundary extends Component<Props, State> {
       this.resetTimeoutId = null;
     }
 
-    this.setState({
+    this.setState(prevState => ({
       hasError: false,
       error: undefined,
       errorInfo: undefined,
       eventId: undefined,
-    });
+      retryCount: prevState.retryCount + 1,
+    }));
   };
 
   handleReload = () => {
@@ -121,8 +124,13 @@ export default class ErrorBoundary extends Component<Props, State> {
       return this.props.fallback;
     }
 
-    const { error, eventId } = this.state;
-    const { level = 'page', showDetails = process.env.NODE_ENV === 'development' } = this.props;
+    const { error, eventId, retryCount } = this.state;
+    const {
+      level = 'page',
+      showDetails = process.env.NODE_ENV === 'development',
+      maxRetries = 3,
+    } = this.props;
+    const canRetry = retryCount < maxRetries;
 
     if (level === 'component') {
       return (
@@ -148,10 +156,16 @@ export default class ErrorBoundary extends Component<Props, State> {
               )}
 
               <div className="mt-3">
-                <Button onClick={this.handleReset} variant="secondary" size="sm">
-                  <RefreshCw className="w-3 h-3 mr-1" />
-                  Retry
-                </Button>
+                {canRetry ? (
+                  <Button onClick={this.handleReset} variant="secondary" size="sm">
+                    <RefreshCw className="w-3 h-3 mr-1" />
+                    Retry ({retryCount}/{maxRetries})
+                  </Button>
+                ) : (
+                  <p className="text-xs text-red-600">
+                    Maximum retry attempts reached. Please refresh the page.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -181,10 +195,17 @@ export default class ErrorBoundary extends Component<Props, State> {
           )}
 
           <div className="flex gap-3">
-            <Button onClick={this.handleReset} variant="primary" className="flex-1">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
-            </Button>
+            {canRetry ? (
+              <Button onClick={this.handleReset} variant="primary" className="flex-1">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again ({retryCount}/{maxRetries})
+              </Button>
+            ) : (
+              <Button onClick={this.handleReload} variant="primary" className="flex-1">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Reload Page
+              </Button>
+            )}
 
             <Button onClick={this.handleGoHome} variant="secondary" className="flex-1">
               <Home className="w-4 h-4 mr-2" />

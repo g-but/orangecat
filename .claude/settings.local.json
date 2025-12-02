@@ -28,7 +28,11 @@
       "Bash(./test-profile-save.sh:*)",
       "Bash(npx supabase:*)",
       "Bash(pgrep:*)",
-      "Bash(node test-profile-fixes.mjs:*)"
+      "Bash(node test-profile-fixes.mjs:*)",
+      "mcp__filesystem__directory_tree",
+      "mcp__filesystem__list_directory",
+      "mcp__filesystem__read_multiple_files",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

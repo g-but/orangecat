@@ -72,9 +72,15 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
           <div className="mt-3">
             <div className="flex justify-between text-sm text-gray-600 mb-1">
               <span>
-                {formatUsd(wallet.balance_btc)} / {formatCurrency(wallet.goal_amount, wallet.goal_currency || 'USD')}
+                {formatUsd(wallet.balance_btc)} /{' '}
+                {formatCurrency(wallet.goal_amount, wallet.goal_currency || 'USD')}
               </span>
-              <span>{calculateProgress(wallet.balance_btc * BTC_PRICE_USD, wallet.goal_amount).toFixed(1)}%</span>
+              <span>
+                {calculateProgress(wallet.balance_btc * BTC_PRICE_USD, wallet.goal_amount).toFixed(
+                  1
+                )}
+                %
+              </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div
@@ -91,7 +97,9 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
         {wallet.behavior_type === 'recurring_budget' && wallet.budget_amount && (
           <div className="mt-3">
             <div className="flex justify-between text-sm text-gray-600">
-              <span>Budget: {formatCurrency(wallet.budget_amount, wallet.budget_period || 'USD')}</span>
+              <span>
+                Budget: {formatCurrency(wallet.budget_amount, wallet.budget_period || 'USD')}
+              </span>
               <span className="text-xs text-gray-500">{wallet.budget_period || 'monthly'}</span>
             </div>
           </div>
@@ -100,9 +108,7 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
         {/* Expanded content */}
         {isExpanded && (
           <div className="mt-4 pt-4 border-t border-gray-200 space-y-3">
-            {wallet.description && (
-              <p className="text-sm text-gray-600">{wallet.description}</p>
-            )}
+            {wallet.description && <p className="text-sm text-gray-600">{wallet.description}</p>}
 
             <div className="text-xs text-gray-500 space-y-1">
               <div className="flex justify-between">
@@ -111,7 +117,9 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
               </div>
               <div className="flex justify-between">
                 <span>Type:</span>
-                <span>{wallet.wallet_type === 'xpub' ? 'Extended Public Key' : 'Single Address'}</span>
+                <span>
+                  {wallet.wallet_type === 'xpub' ? 'Extended Public Key' : 'Single Address'}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span>Category:</span>
@@ -122,7 +130,7 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
             <div className="flex space-x-2 pt-2">
               {onTransfer && (
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     onTransfer(wallet);
                   }}
@@ -132,7 +140,7 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
                 </button>
               )}
               <button
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   navigator.clipboard.writeText(wallet.address_or_xpub);
                 }}
@@ -175,9 +183,7 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
             <span className="mr-2">🔄</span>
             Recurring Budgets ({budgetWallets.length})
           </h3>
-          <div className="space-y-3">
-            {budgetWallets.map(renderWalletCard)}
-          </div>
+          <div className="space-y-3">{budgetWallets.map(renderWalletCard)}</div>
         </div>
       )}
 
@@ -188,9 +194,7 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
             <span className="mr-2">🎯</span>
             Savings Goals ({goalWallets.length})
           </h3>
-          <div className="space-y-3">
-            {goalWallets.map(renderWalletCard)}
-          </div>
+          <div className="space-y-3">{goalWallets.map(renderWalletCard)}</div>
         </div>
       )}
 
@@ -201,9 +205,7 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
             <span className="mr-2">💰</span>
             General Wallets ({generalWallets.length})
           </h3>
-          <div className="space-y-3">
-            {generalWallets.map(renderWalletCard)}
-          </div>
+          <div className="space-y-3">{generalWallets.map(renderWalletCard)}</div>
         </div>
       )}
     </div>

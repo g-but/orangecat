@@ -1,11 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = await createServerClient();
     const { id } = await params;
+
+    // Validate user ID
+    const idValidation = getValidationError(validateUUID(id, 'user ID'));
+    if (idValidation) {
+      return idValidation;
+    }
+
+    const supabase = await createServerClient();
     const { searchParams } = new URL(request.url);
 
     // Pagination
@@ -26,8 +35,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .range(offset, offset + limit - 1);
 
     if (followsError) {
-      logger.error('Error fetching follows:', followsError);
-      return NextResponse.json({ error: 'Failed to fetch followers' }, { status: 500 });
+      logger.error('Failed to fetch follows', { userId: id, error: followsError.message });
+      return apiInternalError('Failed to fetch followers');
     }
 
     // Then fetch profiles for each follower_id
@@ -41,8 +50,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         .in('id', followerIds);
 
       if (profilesError) {
-        logger.error('Error fetching profiles:', profilesError);
-        return NextResponse.json({ error: 'Failed to fetch profiles' }, { status: 500 });
+        logger.error('Failed to fetch follower profiles', {
+          userId: id,
+          followerCount: followerIds.length,
+          error: profilesError.message,
+        });
+        return apiInternalError('Failed to fetch follower profiles');
       }
 
       // Combine follows with profiles
@@ -56,17 +69,25 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: followers || [],
-      pagination: {
-        limit,
-        offset,
-        total: count || 0,
-      },
+    logger.info('Fetched followers successfully', {
+      userId: id,
+      count: followers.length,
+      total: count || 0,
     });
+
+    return apiSuccess(
+      {
+        data: followers || [],
+        pagination: {
+          limit,
+          offset,
+          total: count || 0,
+        },
+      },
+      { cache: 'SHORT' }
+    );
   } catch (error) {
-    logger.error('Unexpected error in GET /api/social/followers/[id]:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Unexpected error fetching followers', { userId: id, error });
+    return apiInternalError('Internal server error');
   }
 }
