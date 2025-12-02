@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
+import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 
 /**
@@ -20,16 +21,15 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
       .order('created_at', { ascending: false });
 
     if (favoritesError) {
-      logger.error('Error fetching favorites:', favoritesError);
-      return NextResponse.json({ error: 'Failed to fetch favorites' }, { status: 500 });
+      logger.error('Failed to fetch favorites', {
+        userId: user.id,
+        error: favoritesError.message,
+      });
+      return apiInternalError('Failed to fetch favorites');
     }
 
     if (!favorites || favorites.length === 0) {
-      return NextResponse.json({
-        success: true,
-        data: [],
-        count: 0,
-      });
+      return apiSuccess({ data: [], count: 0 }, { cache: 'SHORT' });
     }
 
     // Get full project data for favorited projects
@@ -60,8 +60,12 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
       .order('created_at', { ascending: false });
 
     if (projectsError) {
-      logger.error('Error fetching favorited projects:', projectsError);
-      return NextResponse.json({ error: 'Failed to fetch favorited projects' }, { status: 500 });
+      logger.error('Failed to fetch favorited projects', {
+        userId: user.id,
+        projectCount: projectIds.length,
+        error: projectsError.message,
+      });
+      return apiInternalError('Failed to fetch favorited projects');
     }
 
     // Fetch profiles separately for each project creator
@@ -88,14 +92,18 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
       profiles: project.user_id ? profilesMap.get(project.user_id) : null,
     }));
 
-    return NextResponse.json({
-      success: true,
-      data: projectsWithFavorite,
+    logger.info('Fetched favorites successfully', {
+      userId: user.id,
       count: projectsWithFavorite.length,
     });
+
+    return apiSuccess(
+      { data: projectsWithFavorite, count: projectsWithFavorite.length },
+      { cache: 'SHORT' }
+    );
   } catch (error) {
-    logger.error('Unexpected error fetching favorites:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Unexpected error fetching favorites', { error });
+    return apiInternalError('Internal server error');
   }
 }
 

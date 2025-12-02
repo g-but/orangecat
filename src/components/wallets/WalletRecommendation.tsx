@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState, useMemo } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import {
   Bitcoin,
   Shield,
@@ -14,28 +14,28 @@ import {
   AlertTriangle,
   Star,
   ExternalLink,
-  Download
-} from 'lucide-react'
-import Button from '@/components/ui/Button'
-import Card from '@/components/ui/Card'
-import Badge from '@/components/ui/badge'
+  Download,
+} from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import Badge from '@/components/ui/badge';
 
 export interface UserPreferences {
-  experience: 'beginner' | 'intermediate' | 'advanced'
-  privacy: 'low' | 'medium' | 'high'
-  custody: 'custodial' | 'self-custody'
-  frequency: 'occasional' | 'regular' | 'frequent'
-  amount: 'small' | 'medium' | 'large'
-  device: 'mobile' | 'desktop' | 'both'
-  features: string[]
+  experience: 'beginner' | 'intermediate' | 'advanced';
+  privacy: 'low' | 'medium' | 'high';
+  custody: 'custodial' | 'self-custody';
+  frequency: 'occasional' | 'regular' | 'frequent';
+  amount: 'small' | 'medium' | 'large';
+  device: 'mobile' | 'desktop' | 'both';
+  features: string[];
 }
 
 interface WalletRecommendation {
-  wallet: any
-  score: number
-  reasons: string[]
-  pros: string[]
-  cons: string[]
+  wallet: any;
+  score: number;
+  reasons: string[];
+  pros: string[];
+  cons: string[];
 }
 
 export default function WalletRecommendation() {
@@ -46,10 +46,10 @@ export default function WalletRecommendation() {
     frequency: 'regular',
     amount: 'medium',
     device: 'both',
-    features: []
-  })
+    features: [],
+  });
 
-  const [showResults, setShowResults] = useState(false)
+  const [showResults, setShowResults] = useState(false);
 
   // This would come from the wallet data
   const wallets = [
@@ -62,7 +62,7 @@ export default function WalletRecommendation() {
       custody: 'self-custody',
       features: ['lightning', 'watch-only', 'open-source'],
       rating: 4.6,
-      recommended: true
+      recommended: true,
     },
     {
       id: 'electrum',
@@ -73,7 +73,7 @@ export default function WalletRecommendation() {
       custody: 'self-custody',
       features: ['hardware-wallet', 'advanced-privacy', 'open-source'],
       rating: 4.5,
-      recommended: false
+      recommended: false,
     },
     {
       id: 'ledger-nano',
@@ -84,88 +84,93 @@ export default function WalletRecommendation() {
       custody: 'self-custody',
       features: ['hardware-security', 'multi-crypto', 'offline-storage'],
       rating: 4.8,
-      recommended: true
-    }
-  ]
+      recommended: true,
+    },
+  ];
 
   const getRecommendations = (): WalletRecommendation[] => {
-    return wallets.map(wallet => {
-      let score = 0
-      const reasons: string[] = []
-      const pros: string[] = []
-      const cons: string[] = []
+    return wallets
+      .map(wallet => {
+        let score = 0;
+        const reasons: string[] = [];
+        const pros: string[] = [];
+        const cons: string[] = [];
 
-      // Experience level scoring
-      if (preferences.experience === 'beginner' && wallet.difficulty === 'beginner') {
-        score += 30
-        reasons.push('Perfect for beginners')
-        pros.push('Easy to use interface')
-      } else if (preferences.experience === 'intermediate' && wallet.difficulty === 'intermediate') {
-        score += 25
-        reasons.push('Matches your experience level')
-      } else if (preferences.experience === 'advanced' && wallet.difficulty === 'advanced') {
-        score += 20
-        reasons.push('Advanced features for power users')
-      }
-
-      // Privacy level scoring
-      if (preferences.privacy === 'high' && wallet.privacyLevel === 'high') {
-        score += 25
-        reasons.push('High privacy protection')
-        pros.push('Strong privacy features')
-      } else if (preferences.privacy === 'medium' && wallet.privacyLevel === 'medium') {
-        score += 20
-        reasons.push('Good balance of privacy and usability')
-      }
-
-      // Custody preference scoring
-      if (preferences.custody === wallet.custody) {
-        score += 20
-        reasons.push(`Matches your ${wallet.custody} preference`)
-        if (wallet.custody === 'self-custody') {
-          pros.push('You control your private keys')
-        } else {
-          pros.push('Convenient custodial service')
+        // Experience level scoring
+        if (preferences.experience === 'beginner' && wallet.difficulty === 'beginner') {
+          score += 30;
+          reasons.push('Perfect for beginners');
+          pros.push('Easy to use interface');
+        } else if (
+          preferences.experience === 'intermediate' &&
+          wallet.difficulty === 'intermediate'
+        ) {
+          score += 25;
+          reasons.push('Matches your experience level');
+        } else if (preferences.experience === 'advanced' && wallet.difficulty === 'advanced') {
+          score += 20;
+          reasons.push('Advanced features for power users');
         }
-      }
 
-      // Device preference scoring
-      if (preferences.device === 'both' || preferences.device === wallet.type) {
-        score += 15
-        reasons.push(`Works on your preferred device (${wallet.type})`)
-      }
-
-      // Features scoring
-      if (preferences.features.length > 0) {
-        const matchingFeatures = wallet.features.filter(f =>
-          preferences.features.some(pf => f.toLowerCase().includes(pf.toLowerCase()))
-        )
-        score += matchingFeatures.length * 5
-        if (matchingFeatures.length > 0) {
-          reasons.push(`Supports ${matchingFeatures.length} of your preferred features`)
+        // Privacy level scoring
+        if (preferences.privacy === 'high' && wallet.privacyLevel === 'high') {
+          score += 25;
+          reasons.push('High privacy protection');
+          pros.push('Strong privacy features');
+        } else if (preferences.privacy === 'medium' && wallet.privacyLevel === 'medium') {
+          score += 20;
+          reasons.push('Good balance of privacy and usability');
         }
-      }
 
-      // Rating bonus
-      score += (wallet.rating - 4) * 5
+        // Custody preference scoring
+        if (preferences.custody === wallet.custody) {
+          score += 20;
+          reasons.push(`Matches your ${wallet.custody} preference`);
+          if (wallet.custody === 'self-custody') {
+            pros.push('You control your private keys');
+          } else {
+            pros.push('Convenient custodial service');
+          }
+        }
 
-      // Recommended bonus
-      if (wallet.recommended) {
-        score += 10
-        reasons.push('Highly recommended by experts')
-      }
+        // Device preference scoring
+        if (preferences.device === 'both' || preferences.device === wallet.type) {
+          score += 15;
+          reasons.push(`Works on your preferred device (${wallet.type})`);
+        }
 
-      return {
-        wallet,
-        score: Math.round(score),
-        reasons,
-        pros: [],
-        cons: []
-      }
-    }).sort((a, b) => b.score - a.score)
-  }
+        // Features scoring
+        if (preferences.features.length > 0) {
+          const matchingFeatures = wallet.features.filter(f =>
+            preferences.features.some(pf => f.toLowerCase().includes(pf.toLowerCase()))
+          );
+          score += matchingFeatures.length * 5;
+          if (matchingFeatures.length > 0) {
+            reasons.push(`Supports ${matchingFeatures.length} of your preferred features`);
+          }
+        }
 
-  const recommendations = getRecommendations()
+        // Rating bonus
+        score += (wallet.rating - 4) * 5;
+
+        // Recommended bonus
+        if (wallet.recommended) {
+          score += 10;
+          reasons.push('Highly recommended by experts');
+        }
+
+        return {
+          wallet,
+          score: Math.round(score),
+          reasons,
+          pros: [],
+          cons: [],
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+  };
+
+  const recommendations = getRecommendations();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
@@ -208,7 +213,7 @@ export default function WalletRecommendation() {
                     {[
                       { value: 'beginner', label: 'Beginner', desc: 'New to Bitcoin' },
                       { value: 'intermediate', label: 'Intermediate', desc: 'Some experience' },
-                      { value: 'advanced', label: 'Advanced', desc: 'Power user' }
+                      { value: 'advanced', label: 'Advanced', desc: 'Power user' },
                     ].map(option => (
                       <label key={option.value} className="flex items-center">
                         <input
@@ -216,10 +221,12 @@ export default function WalletRecommendation() {
                           name="experience"
                           value={option.value}
                           checked={preferences.experience === option.value}
-                          onChange={(e) => setPreferences(prev => ({
-                            ...prev,
-                            experience: e.target.value as any
-                          }))}
+                          onChange={e =>
+                            setPreferences(prev => ({
+                              ...prev,
+                              experience: e.target.value as any,
+                            }))
+                          }
                           className="mr-3"
                         />
                         <div>
@@ -240,7 +247,7 @@ export default function WalletRecommendation() {
                     {[
                       { value: 'low', label: 'Basic', desc: 'Simple, convenient' },
                       { value: 'medium', label: 'Standard', desc: 'Good balance' },
-                      { value: 'high', label: 'Maximum', desc: 'Privacy focused' }
+                      { value: 'high', label: 'Maximum', desc: 'Privacy focused' },
                     ].map(option => (
                       <label key={option.value} className="flex items-center">
                         <input
@@ -248,10 +255,12 @@ export default function WalletRecommendation() {
                           name="privacy"
                           value={option.value}
                           checked={preferences.privacy === option.value}
-                          onChange={(e) => setPreferences(prev => ({
-                            ...prev,
-                            privacy: e.target.value as any
-                          }))}
+                          onChange={e =>
+                            setPreferences(prev => ({
+                              ...prev,
+                              privacy: e.target.value as any,
+                            }))
+                          }
                           className="mr-3"
                         />
                         <div>
@@ -270,8 +279,12 @@ export default function WalletRecommendation() {
                   </label>
                   <div className="space-y-2">
                     {[
-                      { value: 'self-custody', label: 'Self-Custody', desc: 'You control your keys' },
-                      { value: 'custodial', label: 'Custodial', desc: 'Third party holds keys' }
+                      {
+                        value: 'self-custody',
+                        label: 'Self-Custody',
+                        desc: 'You control your keys',
+                      },
+                      { value: 'custodial', label: 'Custodial', desc: 'Third party holds keys' },
                     ].map(option => (
                       <label key={option.value} className="flex items-center">
                         <input
@@ -279,10 +292,12 @@ export default function WalletRecommendation() {
                           name="custody"
                           value={option.value}
                           checked={preferences.custody === option.value}
-                          onChange={(e) => setPreferences(prev => ({
-                            ...prev,
-                            custody: e.target.value as any
-                          }))}
+                          onChange={e =>
+                            setPreferences(prev => ({
+                              ...prev,
+                              custody: e.target.value as any,
+                            }))
+                          }
                           className="mr-3"
                         />
                         <div>
@@ -303,7 +318,7 @@ export default function WalletRecommendation() {
                     {[
                       { value: 'mobile', label: 'Mobile', desc: 'Phone or tablet' },
                       { value: 'desktop', label: 'Desktop', desc: 'Computer' },
-                      { value: 'both', label: 'Both', desc: 'Mobile & desktop' }
+                      { value: 'both', label: 'Both', desc: 'Mobile & desktop' },
                     ].map(option => (
                       <label key={option.value} className="flex items-center">
                         <input
@@ -311,10 +326,12 @@ export default function WalletRecommendation() {
                           name="device"
                           value={option.value}
                           checked={preferences.device === option.value}
-                          onChange={(e) => setPreferences(prev => ({
-                            ...prev,
-                            device: e.target.value as any
-                          }))}
+                          onChange={e =>
+                            setPreferences(prev => ({
+                              ...prev,
+                              device: e.target.value as any,
+                            }))
+                          }
                           className="mr-3"
                         />
                         <div>
@@ -363,12 +380,18 @@ export default function WalletRecommendation() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Card className={`p-6 ${index === 0 ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange' : ''}`}>
+                  <Card
+                    className={`p-6 ${index === 0 ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange' : ''}`}
+                  >
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                          index === 0 ? 'bg-bitcoinOrange text-white' : 'bg-gray-100 text-gray-600'
-                        }`}>
+                        <div
+                          className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                            index === 0
+                              ? 'bg-bitcoinOrange text-white'
+                              : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
                           {index === 0 ? (
                             <Award className="w-6 h-6" />
                           ) : (
@@ -382,11 +405,15 @@ export default function WalletRecommendation() {
                               <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
                               <span className="text-sm">{rec.wallet.rating}</span>
                             </div>
-                            <Badge className={
-                              rec.wallet.difficulty === 'beginner' ? 'bg-green-100 text-green-700' :
-                              rec.wallet.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700' :
-                              'bg-red-100 text-red-700'
-                            }>
+                            <Badge
+                              className={
+                                rec.wallet.difficulty === 'beginner'
+                                  ? 'bg-green-100 text-green-700'
+                                  : rec.wallet.difficulty === 'intermediate'
+                                    ? 'bg-yellow-100 text-yellow-700'
+                                    : 'bg-red-100 text-red-700'
+                              }
+                            >
                               {rec.wallet.difficulty}
                             </Badge>
                           </div>
@@ -406,7 +433,10 @@ export default function WalletRecommendation() {
                       </h4>
                       <div className="flex flex-wrap gap-2">
                         {rec.reasons.map((reason, idx) => (
-                          <span key={idx} className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                          <span
+                            key={idx}
+                            className="px-2 py-1 bg-green-100 text-green-700 rounded-full text-sm"
+                          >
                             {reason}
                           </span>
                         ))}
@@ -450,11 +480,7 @@ export default function WalletRecommendation() {
                         Get {rec.wallet.name}
                         <ExternalLink className="w-4 h-4 ml-2" />
                       </Button>
-                      {index === 0 && (
-                        <Button variant="outline">
-                          Learn More
-                        </Button>
-                      )}
+                      {index === 0 && <Button variant="outline">Learn More</Button>}
                     </div>
                   </Card>
                 </motion.div>
@@ -463,11 +489,7 @@ export default function WalletRecommendation() {
 
             {/* Reset Button */}
             <div className="text-center">
-              <Button
-                variant="outline"
-                onClick={() => setShowResults(false)}
-                className="px-8"
-              >
+              <Button variant="outline" onClick={() => setShowResults(false)} className="px-8">
                 Change Preferences
               </Button>
             </div>
@@ -475,5 +497,5 @@ export default function WalletRecommendation() {
         )}
       </div>
     </div>
-  )
+  );
 }

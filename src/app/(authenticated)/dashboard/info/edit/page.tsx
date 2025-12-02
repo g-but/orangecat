@@ -63,7 +63,8 @@ const PROFILE_COMPLETION_FIELDS = [
   {
     label: 'At least one social link',
     weight: 5,
-    isComplete: (profile: Profile) => !!(profile.social_links as any)?.links?.length,
+    isComplete: (profile: Profile) =>
+      !!(profile.social_links as { links?: unknown[] })?.links?.length,
   },
   {
     label: 'Phone number',

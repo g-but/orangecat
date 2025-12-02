@@ -144,6 +144,42 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <meta name="msapplication-TileColor" content="#F7931A" />
         <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
 
+        {/* SEO Meta Tags */}
+        <meta
+          name="description"
+          content="Simple Bitcoin-native crowdfunding platform. Send Bitcoin to fund projects you believe in. Every satoshi is tracked transparently."
+        />
+        <meta
+          name="keywords"
+          content="bitcoin, crowdfunding, crypto, funding, blockchain, donations, transparency"
+        />
+        <meta name="author" content="OrangeCat" />
+
+        {/* Open Graph / Facebook */}
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://orangecat.ch/" />
+        <meta property="og:title" content="OrangeCat - Bitcoin Crowdfunding" />
+        <meta
+          property="og:description"
+          content="Simple Bitcoin-native crowdfunding platform. Send Bitcoin to fund projects you believe in. Every satoshi is tracked transparently."
+        />
+        <meta property="og:image" content="https://orangecat.ch/og-image.png" />
+
+        {/* Twitter */}
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" content="https://orangecat.ch/" />
+        <meta property="twitter:title" content="OrangeCat - Bitcoin Crowdfunding" />
+        <meta
+          property="twitter:description"
+          content="Simple Bitcoin-native crowdfunding platform. Send Bitcoin to fund projects you believe in. Every satoshi is tracked transparently."
+        />
+        <meta property="twitter:image" content="https://orangecat.ch/og-image.png" />
+
+        {/* Additional SEO */}
+        <meta name="robots" content="index, follow" />
+        <meta name="googlebot" content="index, follow" />
+        <link rel="canonical" href="https://orangecat.ch/" />
+
         {/* Preconnect to external domains */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

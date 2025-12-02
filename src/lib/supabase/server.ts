@@ -42,7 +42,7 @@ export const createServerClient = async () => {
   return createSupabaseServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
-        return cookieStore.getAll().map((cookie: any) => ({
+        return cookieStore.getAll().map(cookie => ({
           name: cookie.name,
           value: cookie.value,
         }));

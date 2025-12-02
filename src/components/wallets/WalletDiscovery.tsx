@@ -1,19 +1,19 @@
-'use client'
+'use client';
 
-import React, { useState, useMemo } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Bitcoin, RefreshCw } from 'lucide-react'
-import Button from '@/components/ui/Button'
-import { cn } from '@/lib/utils'
+import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Bitcoin, RefreshCw } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 
 // Import our new modular components
-import { WalletCard } from './WalletCard'
-import { WalletFilters, WalletFilters as WalletFiltersType } from './WalletFilters'
-import { walletProviders } from '@/data/walletProviders'
-import type { WalletProvider } from '@/data/walletProviders'
+import { WalletCard } from './WalletCard';
+import { WalletFilters, WalletFilters as WalletFiltersType } from './WalletFilters';
+import { walletProviders } from '@/data/walletProviders';
+import type { WalletProvider } from '@/data/walletProviders';
 
 export default function WalletDiscovery() {
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set())
+  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
   const [filters, setFilters] = useState<WalletFiltersType>({
     type: [],
     difficulty: [],
@@ -21,56 +21,62 @@ export default function WalletDiscovery() {
     custody: [],
     countries: [],
     features: [],
-    search: ''
-  })
+    search: '',
+  });
 
   // Filter wallets based on current filters
   const filteredWallets = useMemo(() => {
     return walletProviders.filter(wallet => {
       // Search filter
-      if (filters.search && !wallet.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-          !wallet.description.toLowerCase().includes(filters.search.toLowerCase())) {
-        return false
+      if (
+        filters.search &&
+        !wallet.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !wallet.description.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
+        return false;
       }
 
       // Type filter
       if (filters.type.length > 0 && !filters.type.includes(wallet.type)) {
-        return false
+        return false;
       }
 
       // Difficulty filter
       if (filters.difficulty.length > 0 && !filters.difficulty.includes(wallet.difficulty)) {
-        return false
+        return false;
       }
 
       // Privacy filter
       if (filters.privacy.length > 0 && !filters.privacy.includes(wallet.privacyLevel)) {
-        return false
+        return false;
       }
 
       // Custody filter
       if (filters.custody.length > 0 && !filters.custody.includes(wallet.custody)) {
-        return false
+        return false;
       }
 
       // Countries filter
-      if (filters.countries.length > 0 && !filters.countries.some(country => wallet.countries.includes(country))) {
-        return false
+      if (
+        filters.countries.length > 0 &&
+        !filters.countries.some(country => wallet.countries.includes(country))
+      ) {
+        return false;
       }
 
-      return true
-    })
-  }, [filters])
+      return true;
+    });
+  }, [filters]);
 
   const toggleCard = (walletId: string) => {
-    const newExpanded = new Set(expandedCards)
+    const newExpanded = new Set(expandedCards);
     if (newExpanded.has(walletId)) {
-      newExpanded.delete(walletId)
+      newExpanded.delete(walletId);
     } else {
-      newExpanded.add(walletId)
+      newExpanded.add(walletId);
     }
-    setExpandedCards(newExpanded)
-  }
+    setExpandedCards(newExpanded);
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -87,11 +93,7 @@ export default function WalletDiscovery() {
       </div>
 
       {/* Filters */}
-      <WalletFilters
-        filters={filters}
-        onFiltersChange={setFilters}
-        className="mb-8"
-      />
+      <WalletFilters filters={filters} onFiltersChange={setFilters} className="mb-8" />
 
       {/* Results Count */}
       <div className="mb-6">
@@ -103,7 +105,7 @@ export default function WalletDiscovery() {
       {/* Wallet Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <AnimatePresence>
-          {filteredWallets.map((wallet) => (
+          {filteredWallets.map(wallet => (
             <WalletCard
               key={wallet.id}
               wallet={wallet}
@@ -126,20 +128,22 @@ export default function WalletDiscovery() {
           <p className="text-gray-600 mb-6">Try adjusting your filters or search terms</p>
           <Button
             variant="outline"
-            onClick={() => setFilters({
-              type: [],
-              difficulty: [],
-              privacy: [],
-              custody: [],
-              countries: [],
-              features: [],
-              search: ''
-            })}
+            onClick={() =>
+              setFilters({
+                type: [],
+                difficulty: [],
+                privacy: [],
+                custody: [],
+                countries: [],
+                features: [],
+                search: '',
+              })
+            }
           >
             Clear All Filters
           </Button>
         </motion.div>
       )}
     </div>
-  )
+  );
 }

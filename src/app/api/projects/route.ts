@@ -9,7 +9,10 @@ import {
   handleApiError,
   handleSupabaseError,
 } from '@/lib/api/standardResponse';
-import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
+import { rateLimit, rateLimitWrite, createRateLimitResponse } from '@/lib/rate-limit';
+import { logger } from '@/utils/logger';
+import { apiRateLimited } from '@/lib/api/standardResponse';
+import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 
 // GET /api/projects - Get all projects
 export async function GET(request: NextRequest) {
@@ -65,12 +68,6 @@ export async function GET(request: NextRequest) {
 // POST /api/projects - Create new project
 export async function POST(request: NextRequest) {
   try {
-    // Rate limiting check (stricter for POST)
-    const rateLimitResult = rateLimit(request);
-    if (!rateLimitResult.success) {
-      return createRateLimitResponse(rateLimitResult);
-    }
-
     const supabase = await createServerClient();
     const {
       data: { user },
@@ -79,6 +76,14 @@ export async function POST(request: NextRequest) {
 
     if (authError || !user) {
       return apiUnauthorized();
+    }
+
+    // Rate limiting check - 30 writes per minute per user
+    const rateLimitResult = rateLimitWrite(user.id);
+    if (!rateLimitResult.success) {
+      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
+      logger.warn('Project creation rate limit exceeded', { userId: user.id });
+      return apiRateLimited('Too many project creation requests. Please slow down.', retryAfter);
     }
 
     const body = await request.json();
@@ -107,12 +112,23 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      try {
-        console.error('[API] /api/projects insert error:', error);
-      } catch {}
+      logger.error('Project creation failed', {
+        userId: user.id,
+        error: error.message,
+        code: error.code,
+      });
       return handleSupabaseError(error);
     }
 
+    // Audit log project creation
+    await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, user.id, 'project', project.id, {
+      title: project.title,
+      category: project.category,
+      goalAmount: project.goal_amount,
+      currency: project.currency,
+    });
+
+    logger.info('Project created successfully', { userId: user.id, projectId: project.id });
     return apiSuccess(project, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {

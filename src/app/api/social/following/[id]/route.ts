@@ -1,11 +1,20 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = await createServerClient();
     const { id } = await params;
+
+    // Validate user ID
+    const idValidation = getValidationError(validateUUID(id, 'user ID'));
+    if (idValidation) {
+      return idValidation;
+    }
+
+    const supabase = await createServerClient();
     const { searchParams } = new URL(request.url);
 
     // Pagination
@@ -26,8 +35,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       .range(offset, offset + limit - 1);
 
     if (followsError) {
-      logger.error('Error fetching follows:', followsError);
-      return NextResponse.json({ error: 'Failed to fetch following' }, { status: 500 });
+      logger.error('Failed to fetch follows', { userId: id, error: followsError.message });
+      return apiInternalError('Failed to fetch following');
     }
 
     // Then fetch profiles for each following_id
@@ -41,8 +50,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         .in('id', followingIds);
 
       if (profilesError) {
-        logger.error('Error fetching profiles:', profilesError);
-        return NextResponse.json({ error: 'Failed to fetch profiles' }, { status: 500 });
+        logger.error('Failed to fetch following profiles', {
+          userId: id,
+          followingCount: followingIds.length,
+          error: profilesError.message,
+        });
+        return apiInternalError('Failed to fetch following profiles');
       }
 
       // Combine follows with profiles
@@ -56,17 +69,25 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      data: following || [],
-      pagination: {
-        limit,
-        offset,
-        total: count || 0,
-      },
+    logger.info('Fetched following successfully', {
+      userId: id,
+      count: following.length,
+      total: count || 0,
     });
+
+    return apiSuccess(
+      {
+        data: following || [],
+        pagination: {
+          limit,
+          offset,
+          total: count || 0,
+        },
+      },
+      { cache: 'SHORT' }
+    );
   } catch (error) {
-    logger.error('Unexpected error in GET /api/social/following/[id]:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Unexpected error fetching following', { userId: id, error });
+    return apiInternalError('Internal server error');
   }
 }

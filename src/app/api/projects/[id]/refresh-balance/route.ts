@@ -1,39 +1,74 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { fetchBitcoinBalance } from '@/services/blockchain';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiForbidden,
+  apiNotFound,
+  apiBadRequest,
+  apiInternalError,
+  apiRateLimited,
+} from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
+import { logger } from '@/utils/logger';
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabase = await createServerClient();
+    const { id: projectId } = await params;
 
-    const { data: project, error } = await supabase
-      .from('projects')
-      .select('id, user_id, bitcoin_address, bitcoin_balance_btc, bitcoin_balance_updated_at')
-      .eq('id', params.id)
-      .single();
-
-    if (error || !project) {
-      return Response.json({ error: 'Project not found' }, { status: 404 });
+    // Validate project ID
+    const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
+    if (idValidation) {
+      return idValidation;
     }
 
+    const supabase = await createServerClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user || user.id !== project.user_id) {
-      return Response.json({ error: 'Unauthorized' }, { status: 403 });
+
+    if (!user) {
+      return apiUnauthorized();
+    }
+
+    const { data: project, error } = await supabase
+      .from('projects')
+      .select(
+        'id, user_id, bitcoin_address, bitcoin_balance_btc, bitcoin_balance_updated_at, title'
+      )
+      .eq('id', projectId)
+      .single();
+
+    if (error || !project) {
+      logger.error('Project not found for balance refresh', { projectId, userId: user.id });
+      return apiNotFound('Project not found');
+    }
+
+    if (user.id !== project.user_id) {
+      logger.warn('Unauthorized balance refresh attempt', {
+        projectId,
+        userId: user.id,
+        ownerId: project.user_id,
+      });
+      return apiForbidden('You can only refresh balance for your own projects');
     }
 
     if (!project.bitcoin_address) {
-      return Response.json({ error: 'No Bitcoin address configured' }, { status: 400 });
+      logger.info('No Bitcoin address configured for project', { projectId, userId: user.id });
+      return apiBadRequest('No Bitcoin address configured for this project');
     }
 
+    // Check cooldown - return cached if very recent (<1 second)
     if (project.bitcoin_balance_updated_at) {
       const last = new Date(project.bitcoin_balance_updated_at);
       const secondsAgo = (Date.now() - last.getTime()) / 1000;
+
       if (secondsAgo < 1) {
-        return Response.json(
+        logger.info('Returning cached balance (updated <1s ago)', { projectId, userId: user.id });
+        return apiSuccess(
           {
-            success: true,
             balance_btc: project.bitcoin_balance_btc,
             updated_at: project.bitcoin_balance_updated_at,
             cached: true,
@@ -41,40 +76,75 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
           { status: 202 }
         );
       }
+
       const minutesAgo = secondsAgo / 60;
       if (minutesAgo < 5) {
         const wait = Math.ceil(5 - minutesAgo);
-        return Response.json(
-          {
-            error: `Please wait ${wait} more minute${wait > 1 ? 's' : ''}`,
-            next_refresh_at: new Date(last.getTime() + 5 * 60000).toISOString(),
-          },
-          { status: 429 }
-        );
+        logger.info('Balance refresh rate limited', {
+          projectId,
+          userId: user.id,
+          minutesAgo,
+          waitMinutes: wait,
+        });
+        return apiRateLimited(`Please wait ${wait} more minute${wait > 1 ? 's' : ''}`, wait * 60);
       }
     }
 
-    const balance = await fetchBitcoinBalance(project.bitcoin_address);
+    // Fetch balance from blockchain
+    let balance;
+    try {
+      balance = await fetchBitcoinBalance(project.bitcoin_address);
+    } catch (error) {
+      logger.error('Failed to fetch Bitcoin balance', {
+        projectId,
+        userId: user.id,
+        address: project.bitcoin_address,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+      return apiInternalError('Failed to fetch balance from blockchain');
+    }
 
+    // Update project balance
     const { error: updateError } = await supabase
       .from('projects')
       .update({
         bitcoin_balance_btc: balance.balance_btc,
         bitcoin_balance_updated_at: balance.updated_at,
       })
-      .eq('id', params.id);
+      .eq('id', projectId);
 
     if (updateError) {
-      throw updateError;
+      logger.error('Failed to update project balance', {
+        projectId,
+        userId: user.id,
+        error: updateError.message,
+      });
+      return apiInternalError('Failed to update project balance');
     }
 
-    return Response.json({
-      success: true,
+    // Audit log balance refresh
+    await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, user.id, 'project', projectId, {
+      action: 'balance_refresh',
+      previousBalance: project.bitcoin_balance_btc,
+      newBalance: balance.balance_btc,
+      address: project.bitcoin_address,
+      txCount: balance.tx_count,
+    });
+
+    logger.info('Project balance refreshed successfully', {
+      projectId,
+      userId: user.id,
+      balance: balance.balance_btc,
+      txCount: balance.tx_count,
+    });
+
+    return apiSuccess({
       balance_btc: balance.balance_btc,
       tx_count: balance.tx_count,
       updated_at: balance.updated_at,
     });
-  } catch (err: any) {
-    return Response.json({ error: err?.message || 'Failed to refresh balance' }, { status: 500 });
+  } catch (error) {
+    logger.error('Unexpected error refreshing project balance', { projectId, error });
+    return apiInternalError('Failed to refresh balance');
   }
 }

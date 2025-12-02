@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
+import { apiSuccess, apiNotFound, apiInternalError } from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 
 /**
@@ -13,23 +16,27 @@ async function handleToggleFavorite(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createServerClient();
-    const user = request.user;
     const { id: projectId } = await params;
 
-    if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    // Validate project ID
+    const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
+    if (idValidation) {
+      return idValidation;
     }
+
+    const supabase = await createServerClient();
+    const user = request.user;
 
     // Verify project exists
     const { data: project, error: projectError } = await supabase
       .from('projects')
-      .select('id, user_id')
+      .select('id, user_id, title')
       .eq('id', projectId)
       .single();
 
     if (projectError || !project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+      logger.error('Project not found for favorite', { projectId, userId: user.id });
+      return apiNotFound('Project not found');
     }
 
     // Check if already favorited
@@ -41,15 +48,18 @@ async function handleToggleFavorite(
       .maybeSingle();
 
     if (favoriteCheckError) {
-      logger.error('Error checking favorite status:', favoriteCheckError);
-      return NextResponse.json({ error: 'Failed to check favorite status' }, { status: 500 });
+      logger.error('Failed to check favorite status', {
+        userId: user.id,
+        projectId,
+        error: favoriteCheckError.message,
+      });
+      return apiInternalError('Failed to check favorite status');
     }
 
     if (request.method === 'POST') {
       // Add to favorites
       if (existingFavorite) {
-        return NextResponse.json({
-          success: true,
+        return apiSuccess({
           isFavorited: true,
           message: 'Project already in favorites',
         });
@@ -61,20 +71,29 @@ async function handleToggleFavorite(
       });
 
       if (insertError) {
-        logger.error('Error adding favorite:', insertError);
-        return NextResponse.json({ error: 'Failed to add favorite' }, { status: 500 });
+        logger.error('Failed to add favorite', {
+          userId: user.id,
+          projectId,
+          error: insertError.message,
+        });
+        return apiInternalError('Failed to add favorite');
       }
 
-      return NextResponse.json({
-        success: true,
+      // Audit log favorite added
+      await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, user.id, 'project', projectId, {
+        action: 'favorite',
+        projectTitle: project.title,
+      });
+
+      logger.info('Project added to favorites', { userId: user.id, projectId });
+      return apiSuccess({
         isFavorited: true,
         message: 'Project added to favorites',
       });
     } else if (request.method === 'DELETE') {
       // Remove from favorites
       if (!existingFavorite) {
-        return NextResponse.json({
-          success: true,
+        return apiSuccess({
           isFavorited: false,
           message: 'Project not in favorites',
         });
@@ -87,12 +106,22 @@ async function handleToggleFavorite(
         .eq('project_id', projectId);
 
       if (deleteError) {
-        logger.error('Error removing favorite:', deleteError);
-        return NextResponse.json({ error: 'Failed to remove favorite' }, { status: 500 });
+        logger.error('Failed to remove favorite', {
+          userId: user.id,
+          projectId,
+          error: deleteError.message,
+        });
+        return apiInternalError('Failed to remove favorite');
       }
 
-      return NextResponse.json({
-        success: true,
+      // Audit log favorite removed
+      await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, user.id, 'project', projectId, {
+        action: 'unfavorite',
+        projectTitle: project.title,
+      });
+
+      logger.info('Project removed from favorites', { userId: user.id, projectId });
+      return apiSuccess({
         isFavorited: false,
         message: 'Project removed from favorites',
       });
@@ -100,8 +129,8 @@ async function handleToggleFavorite(
 
     return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
   } catch (error) {
-    logger.error('Unexpected error in favorite toggle:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Unexpected error in favorite toggle', { error });
+    return apiInternalError('Internal server error');
   }
 }
 
@@ -114,13 +143,16 @@ async function handleGetFavoriteStatus(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabase = await createServerClient();
-    const user = request.user;
     const { id: projectId } = await params;
 
-    if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+    // Validate project ID
+    const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
+    if (idValidation) {
+      return idValidation;
     }
+
+    const supabase = await createServerClient();
+    const user = request.user;
 
     const { data: favorite, error: favoriteError } = await supabase
       .from('project_favorites')
@@ -130,17 +162,18 @@ async function handleGetFavoriteStatus(
       .maybeSingle();
 
     if (favoriteError) {
-      logger.error('Error checking favorite status:', favoriteError);
-      return NextResponse.json({ error: 'Failed to check favorite status' }, { status: 500 });
+      logger.error('Failed to check favorite status', {
+        userId: user.id,
+        projectId,
+        error: favoriteError.message,
+      });
+      return apiInternalError('Failed to check favorite status');
     }
 
-    return NextResponse.json({
-      success: true,
-      isFavorited: !!favorite,
-    });
+    return apiSuccess({ isFavorited: !!favorite });
   } catch (error) {
-    logger.error('Unexpected error checking favorite status:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Unexpected error checking favorite status', { error });
+    return apiInternalError('Internal server error');
   }
 }
 

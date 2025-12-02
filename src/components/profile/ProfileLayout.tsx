@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { ScalableProfile, ProfileFormData } from '@/types/database';
+import { ScalableProfile, ProfileFormData, Project } from '@/types/database';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
@@ -47,7 +47,7 @@ import { cn } from '@/lib/utils';
 
 interface ProfileLayoutProps {
   profile: ScalableProfile;
-  projects?: any[];
+  projects?: Project[];
   stats?: {
     projectCount: number;
     totalRaised: number;
@@ -90,7 +90,9 @@ export default function ProfileLayout({
         const response = await fetch(`/api/social/following/${user.id}`);
         const data = await response.json();
         if (data.success && Array.isArray(data.data)) {
-          const following = data.data.some((f: any) => f.following_id === profile.id);
+          const following = data.data.some(
+            (f: { following_id: string }) => f.following_id === profile.id
+          );
           setIsFollowing(following);
         }
       } catch (error) {

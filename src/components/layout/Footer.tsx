@@ -1,12 +1,13 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { navigation } from '@/config/navigation';
 import Logo from './Logo';
 import { usePathname } from 'next/navigation';
 import { ArrowUp } from 'lucide-react';
 
-export default function Footer() {
+const Footer = React.memo(function Footer() {
   const pathname = usePathname();
   // Check if current page is an authenticated page
   const isAuthPage =
@@ -37,8 +38,9 @@ export default function Footer() {
       {/* Back to top button */}
       <button
         onClick={scrollToTop}
-        className="absolute -top-6 right-4 sm:right-8 w-12 h-12 bg-gradient-to-r from-orange-500 to-tiffany-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 flex items-center justify-center group z-10"
+        className="absolute -top-6 right-4 sm:right-8 w-12 h-12 bg-gradient-to-r from-orange-500 to-tiffany-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 flex items-center justify-center group z-10"
         aria-label="Back to top"
+        type="button"
       >
         <ArrowUp className="w-5 h-5 group-hover:animate-bounce" />
       </button>
@@ -61,7 +63,7 @@ export default function Footer() {
                 <a
                   key={item.name}
                   href={item.href}
-                  className="group w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-tiffany-500 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-md"
+                  className="group w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-gradient-to-r hover:from-orange-500 hover:to-tiffany-500 transition-all duration-300 hover:scale-110 active:scale-95 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2"
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Follow us on ${item.name}`}
@@ -148,7 +150,7 @@ export default function Footer() {
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gradient-to-r from-orange-200/50 to-tiffany-200/50">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <p className="text-sm text-slate-500 text-center sm:text-left">
-              &copy; {new Date().getFullYear()} OrangeCat. All rights reserved.
+              &copy; 2025 OrangeCat. All rights reserved.
             </p>
 
             {/* Additional Links */}
@@ -185,4 +187,8 @@ export default function Footer() {
       </div>
     </footer>
   );
-}
+});
+
+Footer.displayName = 'Footer';
+
+export default Footer;

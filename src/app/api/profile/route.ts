@@ -8,6 +8,7 @@ import {
   apiValidationError,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
 
 // GET /api/profile - Get current user's profile
 export async function GET(request: NextRequest) {
@@ -68,14 +69,22 @@ async function respondWithProfile(
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
-    return apiSuccess({
-      ...profile,
-      project_count: projectCount || 0,
-    });
+    return apiSuccess(
+      {
+        ...profile,
+        project_count: projectCount || 0,
+      },
+      {
+        cache: 'SHORT', // Cache for 1 minute
+      }
+    );
   }
 
   // Return profile without expensive stats for fast auth
-  return apiSuccess(profile);
+  // Use short cache since profile data changes infrequently
+  return apiSuccess(profile, {
+    cache: 'SHORT', // Cache for 1 minute
+  });
 }
 
 async function ensureProfileRecord(supabase: SupabaseServer, user: any) {
@@ -123,7 +132,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    console.log('Profile PUT request body:', body);
+    logger.info('Profile update request', { userId: user.id, fields: Object.keys(body) });
 
     // Check username uniqueness before validation if username is being updated
     if (body.username) {
@@ -135,20 +144,20 @@ export async function PUT(request: NextRequest) {
         .single();
 
       if (existingProfile) {
+        logger.warn('Username already taken', { username: body.username, userId: user.id });
         return apiValidationError('Username is already taken', { field: 'username' });
       }
     }
 
     // Normalize and validate the data
     const normalizedBody = normalizeProfileData(body);
-    console.log('Normalized body:', normalizedBody);
 
     let validatedData;
     try {
       validatedData = profileSchema.parse(normalizedBody);
-      console.log('Validation passed');
+      logger.debug('Profile validation passed', { userId: user.id });
     } catch (zodError) {
-      console.error('Zod validation failed:', zodError);
+      logger.warn('Profile validation failed', { userId: user.id, error: zodError });
       throw zodError;
     }
 
@@ -180,7 +189,10 @@ export async function PUT(request: NextRequest) {
     const dataToSave = Object.fromEntries(
       Object.entries(validatedData as any).filter(([key]) => allowedFields.includes(key))
     );
-    console.log('Profile dataToSave for update:', dataToSave);
+    logger.debug('Profile update data prepared', {
+      userId: user.id,
+      fields: Object.keys(dataToSave),
+    });
 
     const { data: profile, error } = await supabase
       .from('profiles')
@@ -193,19 +205,22 @@ export async function PUT(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Supabase update error:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
+      logger.error('Profile update failed', {
+        userId: user.id,
+        error: error.message,
+        code: error.code,
+      });
       return apiValidationError('Failed to update profile', { details: error.message });
     }
 
+    logger.info('Profile updated successfully', { userId: user.id });
     return apiSuccess(profile);
   } catch (error) {
-    console.error('Profile update error:', error);
+    logger.error('Profile update error', { error });
 
     // Provide specific error messages for Zod validation errors
     if (error instanceof Error && error.name === 'ZodError') {
       const zodError = error as any;
-      console.error('Zod validation errors:', zodError.errors);
       const firstError = zodError.errors?.[0];
       const fieldName = firstError?.path?.join('.') || 'field';
       const message = firstError?.message || 'Invalid profile data';
