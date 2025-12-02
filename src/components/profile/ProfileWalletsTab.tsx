@@ -36,7 +36,7 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
 
         if (response.ok) {
           const data = await response.json();
-          setWallets(data.wallets || []);
+          setWallets(data.data || []);
         }
       } catch (error) {
         logger.error('Failed to load wallets', error, 'ProfileWalletsTab');

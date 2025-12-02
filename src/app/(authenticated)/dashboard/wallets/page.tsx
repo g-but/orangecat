@@ -113,8 +113,8 @@ export default function DashboardWalletsPage() {
 
         if (walletsResponse.ok) {
           const data = await walletsResponse.json();
-          // API returns { wallets: [...] }
-          setWallets(Array.isArray(data.wallets) ? data.wallets : Array.isArray(data) ? data : []);
+          // API returns { success: true, data: [...] } (standard response format)
+          setWallets(Array.isArray(data.data) ? data.data : []);
           setLoadingError(null);
         } else {
           // Wallets table might not exist yet, set empty array

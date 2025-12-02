@@ -48,11 +48,23 @@ export default function ProjectsDashboardPage() {
           const response = await fetch('/api/projects/favorites');
           if (response.ok) {
             const result = await response.json();
-            setFavorites(result.data || []);
+            // API returns { success: true, data: { data: [...], count: N } }
+            let favoritesData: any[] = [];
+            if (result && typeof result === 'object' && result.success) {
+              // Standard API response format with nested data
+              if (result.data && Array.isArray(result.data.data)) {
+                favoritesData = result.data.data;
+              }
+            }
+            setFavorites(favoritesData);
+          } else {
+            // If API fails, set empty array
+            setFavorites([]);
           }
         } catch (error) {
           // Silently fail - favorites will load when tab is clicked
           logger.debug('Failed to preload favorites count', { error }, 'ProjectsDashboardPage');
+          setFavorites([]); // Ensure favorites is always an array
         }
       };
       loadFavoritesCount();
@@ -68,8 +80,18 @@ export default function ProjectsDashboardPage() {
           const response = await fetch('/api/projects/favorites');
           if (response.ok) {
             const result = await response.json();
-            setFavorites(result.data || []);
+            // API returns { success: true, data: { data: [...], count: N } }
+            let favoritesData: any[] = [];
+            if (result && typeof result === 'object' && result.success) {
+              // Standard API response format with nested data
+              if (result.data && Array.isArray(result.data.data)) {
+                favoritesData = result.data.data;
+              }
+            }
+            setFavorites(favoritesData);
           } else {
+            // If API fails, set empty array
+            setFavorites([]);
             logger.error(
               'Failed to load favorites',
               { status: response.status },
@@ -80,6 +102,7 @@ export default function ProjectsDashboardPage() {
         } catch (error) {
           logger.error('Failed to load favorites', { error }, 'ProjectsDashboardPage');
           toast.error('Failed to load favorites');
+          setFavorites([]); // Ensure favorites is always an array
         } finally {
           setFavoritesLoading(false);
         }
@@ -93,23 +116,42 @@ export default function ProjectsDashboardPage() {
 
   // Memoize items based on active tab with search and filter
   const filteredItems = useMemo(() => {
-    let items = activeTab === 'favorites' ? favorites : projects;
+    // Ensure both favorites and projects are arrays
+    const safeFavorites = Array.isArray(favorites) ? favorites : [];
+    const safeProjects = Array.isArray(projects) ? projects : [];
 
-    // Apply search filter
-    if (searchQuery.trim()) {
+    let items = activeTab === 'favorites' ? safeFavorites : safeProjects;
+
+    // Additional safety check - ensure items is always an array
+    if (!Array.isArray(items)) {
+      logger.error('Items is not an array after safety checks:', {
+        items,
+        activeTab,
+        safeFavorites,
+        safeProjects,
+      });
+      items = [];
+    }
+
+    // Apply search filter with safety check
+    if (searchQuery.trim() && Array.isArray(items)) {
       const query = searchQuery.toLowerCase();
       items = items.filter(
         p =>
-          p.title?.toLowerCase().includes(query) ||
-          p.description?.toLowerCase().includes(query) ||
-          p.category?.toLowerCase().includes(query) ||
-          p.tags?.some(tag => tag.toLowerCase().includes(query))
+          p?.title?.toLowerCase().includes(query) ||
+          p?.description?.toLowerCase().includes(query) ||
+          p?.category?.toLowerCase().includes(query) ||
+          p?.tags?.some(tag => tag?.toLowerCase().includes(query))
       );
     }
 
-    // Apply status filter
-    if (statusFilter !== 'all') {
+    // Apply status filter with safety check
+    if (statusFilter !== 'all' && Array.isArray(items)) {
       items = items.filter(p => {
+        if (!p) {
+          return false;
+        }
+
         if (statusFilter === 'draft') {
           return p.isDraft;
         }
@@ -129,7 +171,8 @@ export default function ProjectsDashboardPage() {
       });
     }
 
-    return items;
+    // Final safety check to ensure we always return an array
+    return Array.isArray(items) ? items : [];
   }, [activeTab, projects, favorites, searchQuery, statusFilter]);
 
   // Use filtered items for display
@@ -189,7 +232,7 @@ export default function ProjectsDashboardPage() {
   };
 
   const handleBulkDelete = () => {
-    const selectedProjects = items.filter(p => selectedIds.has(p.id));
+    const selectedProjects = Array.isArray(items) ? items.filter(p => selectedIds.has(p.id)) : [];
     if (selectedProjects.length === 1) {
       setProjectToDelete(selectedProjects[0]);
     } else {
@@ -248,7 +291,7 @@ export default function ProjectsDashboardPage() {
   const { convertToBTC } = useCurrencyConversion();
 
   const selectedProjects = useMemo(
-    () => items.filter(p => selectedIds.has(p.id)),
+    () => (Array.isArray(items) ? items.filter(p => selectedIds.has(p.id)) : []),
     [items, selectedIds]
   );
 

@@ -31,8 +31,8 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
         const response = await fetch(`/api/profiles/${profile.id}/projects`);
         const result = await response.json();
 
-        if (result.success && result.data) {
-          setProjects(result.data);
+        if (result.success && result.data && Array.isArray(result.data.data)) {
+          setProjects(result.data.data);
         }
       } catch (error) {
         console.error('Failed to fetch projects:', error);

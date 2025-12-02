@@ -646,7 +646,8 @@ class TimelineService {
 
       const sortBy = filters?.sortBy || 'recent';
 
-      // Query events where subject_type = 'profile' and subject_id = profileId
+      // Query events where the subject is this profile OR the actor is this user
+      const currentUserId = await this.getCurrentUserId();
       const {
         data: events,
         error,
@@ -654,9 +655,7 @@ class TimelineService {
       } = await supabase
         .from('enriched_timeline_events')
         .select('*', { count: 'exact' })
-        .eq('subject_type', 'profile')
-        .eq('subject_id', profileId)
-        .or(`visibility.eq.public,actor_id.eq.${await this.getCurrentUserId()}`)
+        .or(`actor_id.eq.${profileId},and(subject_type.eq.profile,subject_id.eq.${profileId})`)
         .order('event_timestamp', { ascending: false })
         .range(offset, offset + limit - 1);
 
@@ -1306,7 +1305,10 @@ class TimelineService {
           return [];
         }
         const userIds = Array.from(new Set(comments.map(c => c.user_id).filter(Boolean)));
-        let profilesMap: Record<string, { display_name: string; username: string | null; avatar_url: string | null }> = {};
+        let profilesMap: Record<
+          string,
+          { display_name: string; username: string | null; avatar_url: string | null }
+        > = {};
         if (userIds.length > 0) {
           const { data: profiles, error: pErr } = await supabase
             .from('profiles')
@@ -1372,7 +1374,10 @@ class TimelineService {
           return [];
         }
         const userIds = Array.from(new Set(replies.map(c => c.user_id).filter(Boolean)));
-        let profilesMap: Record<string, { display_name: string; username: string | null; avatar_url: string | null }> = {};
+        let profilesMap: Record<
+          string,
+          { display_name: string; username: string | null; avatar_url: string | null }
+        > = {};
         if (userIds.length > 0) {
           const { data: profiles, error: pErr } = await supabase
             .from('profiles')

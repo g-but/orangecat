@@ -6,7 +6,33 @@ This directory contains proven workflows and operational procedures for common d
 
 ## 📚 Available Workflows
 
-### 1. Supabase Migration Workflow
+### 1. Deployment Workflow
+
+**File:** `DEPLOYMENT_WORKFLOW.md`
+
+**Use this when:** You want to deploy code changes to production (triggered by `w` command)
+
+**Contains:**
+
+- Complete deployment pipeline (commit → test → deploy → validate)
+- Automated browser testing for local and production environments
+- Vercel deployment monitoring with retry logic
+- Error handling and recovery procedures
+- Success metrics and troubleshooting guides
+
+**Quick Start:**
+
+```bash
+# Full deployment workflow
+npm run w
+
+# Or directly
+./w
+```
+
+---
+
+### 2. Supabase Migration Workflow
 
 **File:** `SUPABASE_MIGRATION_WORKFLOW.md`
 
@@ -83,6 +109,10 @@ node apply-migration.js migration.sql
 ---
 
 ## 🎯 Which Document Should I Read?
+
+### I need to deploy code changes NOW:
+
+→ Start with **DEPLOYMENT_WORKFLOW.md** (complete pipeline guide)
 
 ### I need to apply a migration NOW:
 
@@ -187,7 +217,13 @@ sed -n '163p' migration.sql
 
 **For new team members:**
 
-### Day 1: Quick Start
+### Day 1: Deployment Workflow
+
+- Read `DEPLOYMENT_WORKFLOW.md`
+- Understand the `w` command pipeline
+- Practice with test deployments
+
+### Day 2: Database Operations
 
 - Read `MIGRATION_QUICK_REFERENCE.md`
 - Apply a test migration
@@ -252,6 +288,15 @@ sed -n '163p' migration.sql
 
 **Our workflow is successful when:**
 
+**Deployment Pipeline:**
+
+- ✅ Code deploys safely with full testing validation
+- ✅ Local testing prevents production issues
+- ✅ Vercel deployments monitored with automatic retries
+- ✅ Production validation confirms all workflows work
+
+**Migration Pipeline:**
+
 - ✅ Migrations apply without manual Dashboard intervention
 - ✅ SQL errors caught before production (via validation)
 - ✅ Authentication works automatically (no manual token copying)
@@ -266,6 +311,7 @@ sed -n '163p' migration.sql
 
 **Recent additions:**
 
+- December 2, 2025: Complete deployment workflow documented
 - November 14, 2025: Complete migration workflow documented
 - November 14, 2025: Quick reference guide added
 - November 14, 2025: Lessons learned from 7-attempt debugging session
