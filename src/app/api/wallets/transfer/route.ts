@@ -1,79 +1,126 @@
 import { logger } from '@/utils/logger';
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { z } from 'zod';
+import { NextRequest } from 'next/server';
+import { createServerClient } from '@/services/supabase/server';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiForbidden,
+  apiNotFound,
+  apiBadRequest,
+  apiInternalError,
+} from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 
-// Validation schema for internal transfers
-const transferSchema = z.object({
-  from_wallet_id: z.string().uuid('Invalid wallet ID'),
-  to_wallet_id: z.string().uuid('Invalid wallet ID'),
-  amount_btc: z.number().positive('Amount must be positive').max(21_000_000, 'Amount exceeds max BTC supply'),
-  note: z.string().max(500).optional(),
-});
+interface TransferRequest {
+  from_wallet_id: string;
+  to_wallet_id: string;
+  amount_btc: number;
+  note?: string;
+}
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
-    const rawBody = await request.json();
-
-    // Validate input
-    const body = transferSchema.parse(rawBody);
-
-    // Authenticate user
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
+    if (!user) {
+      return apiUnauthorized();
+    }
+
+    const body = (await request.json()) as TransferRequest;
+
+    // Validate wallet IDs
+    const fromValidation = getValidationError(validateUUID(body.from_wallet_id, 'from_wallet_id'));
+    if (fromValidation) {
+      return fromValidation;
+    }
+
+    const toValidation = getValidationError(validateUUID(body.to_wallet_id, 'to_wallet_id'));
+    if (toValidation) {
+      return toValidation;
+    }
+
+    // Validate amount
+    if (typeof body.amount_btc !== 'number' || body.amount_btc <= 0) {
+      return apiBadRequest('Amount must be a positive number');
+    }
+
+    if (body.amount_btc > 21_000_000) {
+      return apiBadRequest('Amount exceeds maximum BTC supply');
+    }
+
+    // Validate note length
+    if (body.note && body.note.length > 500) {
+      return apiBadRequest('Note cannot exceed 500 characters');
     }
 
     // Prevent transferring to the same wallet
     if (body.from_wallet_id === body.to_wallet_id) {
-      return NextResponse.json(
-        { error: 'Cannot transfer to the same wallet' },
-        { status: 400 }
-      );
+      return apiBadRequest('Cannot transfer to the same wallet');
     }
 
     // Fetch both wallets and verify ownership
     const { data: wallets, error: walletsError } = await supabase
       .from('wallets')
       .select('id, user_id, label, balance_btc, profile_id, project_id')
-      .in('id', [body.from_wallet_id, body.to_wallet_id]);
+      .in('id', [body.from_wallet_id, body.to_wallet_id])
+      .eq('is_active', true);
 
-    if (walletsError || !wallets || wallets.length !== 2) {
-      logger.error('Wallet fetch error:', walletsError);
-      return NextResponse.json({ error: 'One or both wallets not found' }, { status: 404 });
+    if (walletsError) {
+      logger.error('Failed to fetch wallets for transfer', {
+        userId: user.id,
+        fromWalletId: body.from_wallet_id,
+        toWalletId: body.to_wallet_id,
+        error: walletsError.message,
+      });
+      return apiInternalError('Failed to fetch wallet information');
+    }
+
+    if (!wallets || wallets.length !== 2) {
+      logger.warn('One or both wallets not found for transfer', {
+        userId: user.id,
+        fromWalletId: body.from_wallet_id,
+        toWalletId: body.to_wallet_id,
+        walletsFound: wallets?.length || 0,
+      });
+      return apiNotFound('One or both wallets not found');
     }
 
     const fromWallet = wallets.find(w => w.id === body.from_wallet_id);
     const toWallet = wallets.find(w => w.id === body.to_wallet_id);
 
     if (!fromWallet || !toWallet) {
-      return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
+      logger.error('Wallet lookup failed after fetch', {
+        userId: user.id,
+        fromWalletId: body.from_wallet_id,
+        toWalletId: body.to_wallet_id,
+      });
+      return apiNotFound('Wallet not found');
     }
 
     // Verify both wallets belong to the user
     if (fromWallet.user_id !== user.id || toWallet.user_id !== user.id) {
-      return NextResponse.json(
-        { error: 'You can only transfer between your own wallets' },
-        { status: 403 }
-      );
+      logger.warn('Unauthorized wallet transfer attempt', {
+        userId: user.id,
+        fromWalletUserId: fromWallet.user_id,
+        toWalletUserId: toWallet.user_id,
+      });
+      return apiForbidden('You can only transfer between your own wallets');
     }
 
     // Check sufficient balance
     if (fromWallet.balance_btc < body.amount_btc) {
-      return NextResponse.json(
-        {
-          error: 'Insufficient balance',
-          details: {
-            available: fromWallet.balance_btc,
-            requested: body.amount_btc,
-          },
-        },
-        { status: 400 }
+      logger.info('Insufficient balance for transfer', {
+        userId: user.id,
+        fromWalletId: body.from_wallet_id,
+        available: fromWallet.balance_btc,
+        requested: body.amount_btc,
+      });
+      return apiBadRequest(
+        `Insufficient balance. Available: ${fromWallet.balance_btc} BTC, Requested: ${body.amount_btc} BTC`
       );
     }
 
@@ -109,11 +156,16 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (txError) {
-      logger.error('Transaction creation error:', txError);
-      return NextResponse.json({ error: 'Failed to create transaction record' }, { status: 500 });
+      logger.error('Failed to create transaction record', {
+        userId: user.id,
+        fromWalletId: body.from_wallet_id,
+        toWalletId: body.to_wallet_id,
+        error: txError.message,
+      });
+      return apiInternalError('Failed to create transaction record');
     }
 
-    // Update wallet balances
+    // Update wallet balances using RPC function
     const { error: updateError } = await supabase.rpc('transfer_between_wallets', {
       p_from_wallet_id: body.from_wallet_id,
       p_to_wallet_id: body.to_wallet_id,
@@ -122,11 +174,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (updateError) {
-      logger.error('Balance update error:', updateError);
-      return NextResponse.json(
-        { error: 'Failed to update wallet balances' },
-        { status: 500 }
-      );
+      logger.error('Failed to update wallet balances', {
+        userId: user.id,
+        transactionId: transaction.id,
+        error: updateError.message,
+      });
+      return apiInternalError('Failed to update wallet balances');
     }
 
     // Fetch updated wallets
@@ -135,26 +188,38 @@ export async function POST(request: NextRequest) {
       .select('*')
       .in('id', [body.from_wallet_id, body.to_wallet_id]);
 
-    return NextResponse.json({
-      success: true,
+    // Audit log wallet transfer
+    await auditSuccess(
+      AUDIT_ACTIONS.WALLET_BALANCE_REFRESHED,
+      user.id,
+      'wallet',
+      body.from_wallet_id,
+      {
+        action: 'transfer',
+        fromWalletId: body.from_wallet_id,
+        toWalletId: body.to_wallet_id,
+        amountBtc: body.amount_btc,
+        transactionId: transaction.id,
+        fromWalletLabel: fromWallet.label,
+        toWalletLabel: toWallet.label,
+      }
+    );
+
+    logger.info('Wallet transfer completed successfully', {
+      userId: user.id,
+      fromWalletId: body.from_wallet_id,
+      toWalletId: body.to_wallet_id,
+      amountBtc: body.amount_btc,
+      transactionId: transaction.id,
+    });
+
+    return apiSuccess({
       transaction,
       wallets: updatedWallets,
       message: `Transferred ${body.amount_btc} BTC from ${fromWallet.label} to ${toWallet.label}`,
     });
   } catch (error) {
-    // Handle Zod validation errors
-    if (error instanceof z.ZodError) {
-      logger.warn('Transfer validation failed:', error.errors);
-      return NextResponse.json(
-        {
-          error: 'Invalid transfer data',
-          details: error.errors,
-        },
-        { status: 400 }
-      );
-    }
-
-    logger.error('Transfer API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Unexpected error in wallet transfer', { error });
+    return apiInternalError('Internal server error');
   }
 }

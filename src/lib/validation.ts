@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import DOMPurify from 'dompurify';
 import { validatePhoneNumber, normalizePhoneNumber } from './phone-validation';
 
 // Profile validation
@@ -139,8 +140,41 @@ export const transactionSchema = z.object({
 
 // REMOVED: Organization validation (not in MVP)
 
+// HTML sanitization for rich text content
+export function sanitizeHtml(html: string): string {
+  if (typeof window === 'undefined') {
+    // Server-side: basic HTML tag removal for security
+    return html.replace(/<[^>]*>/g, '');
+  }
+
+  // Client-side: use DOMPurify for comprehensive sanitization
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: [
+      'p',
+      'br',
+      'strong',
+      'em',
+      'u',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'ul',
+      'ol',
+      'li',
+      'blockquote',
+      'code',
+      'pre',
+    ],
+    ALLOWED_ATTR: [],
+    ALLOW_DATA_ATTR: false,
+  });
+}
+
 // Helper function to normalize profile data
-export function normalizeProfileData(data: any): ProfileData {
+export function normalizeProfileData(data: unknown): ProfileData {
   const normalized = { ...data };
 
   // If name is empty or not provided, use username
@@ -201,7 +235,7 @@ export function normalizeProfileData(data: any): ProfileData {
     // Filter out empty links
     if (normalized.social_links.links) {
       normalized.social_links.links = normalized.social_links.links.filter(
-        (link: any) => link && link.value && link.value.trim()
+        (link: { value?: string }) => link && link.value && link.value.trim()
       );
       // If no links, set to undefined
       if (normalized.social_links.links.length === 0) {

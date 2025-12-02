@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { Home, Plus, User, Compass, BookOpen, Rocket } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,7 +8,7 @@ import { useBottomNavScroll } from '@/hooks/useHeaderScroll';
 import { useComposer } from '@/contexts/ComposerContext';
 import { cn } from '@/lib/utils';
 
-export default function MobileBottomNav() {
+const MobileBottomNav = React.memo(function MobileBottomNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, hydrated } = useAuth();
@@ -227,4 +228,8 @@ export default function MobileBottomNav() {
       </nav>
     </div>
   );
-}
+});
+
+MobileBottomNav.displayName = 'MobileBottomNav';
+
+export default MobileBottomNav;

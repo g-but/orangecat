@@ -13,6 +13,7 @@
 
 import { SocialLink } from '@/types/social';
 import { getPlatformById } from '@/lib/social-platforms';
+import { normalizeSocialUrl } from '@/lib/utils';
 import { ExternalLink } from 'lucide-react';
 
 interface SocialLinksDisplayProps {
@@ -48,11 +49,12 @@ export function SocialLinksDisplay({
           const displayLabel =
             link.platform === 'custom' ? link.label : platform?.label || link.platform;
           const displayValue = link.value;
+          const normalizedUrl = normalizeSocialUrl(link.platform, displayValue);
 
           return (
             <a
               key={link.platform + link.value}
-              href={displayValue}
+              href={normalizedUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition-colors text-sm text-gray-700 hover:text-orange-600"

@@ -1,16 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/services/supabase/server';
 import { fetchBitcoinBalance } from '@/services/blockchain';
+import { logger } from '@/utils/logger';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiForbidden,
+  apiNotFound,
+  apiBadRequest,
+  apiInternalError,
+  apiRateLimited,
+} from '@/lib/api/standardResponse';
+import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 
 const COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 const API_TIMEOUT_MS = 10_000; // 10 seconds
 const SATS_PER_BTC = 100_000_000;
-
-interface ErrorResponse {
-  error: string;
-  code?: string;
-  details?: Record<string, any>;
-}
 
 /**
  * Fetch from external API with timeout
@@ -85,19 +91,16 @@ async function fetchXpubBalance(xpub: string): Promise<number> {
 }
 
 /**
- * POST /api/wallets/[id]/refresh - Refresh wallet balance (FIXED VERSION)
+ * POST /api/wallets/[id]/refresh - Refresh wallet balance
  */
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
 
-    // Validate UUID format
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(id)) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Invalid wallet ID format', code: 'INVALID_ID' },
-        { status: 400 }
-      );
+    // Validate wallet ID
+    const idValidation = getValidationError(validateUUID(id, 'wallet ID'));
+    if (idValidation) {
+      return idValidation;
     }
 
     const supabase = await createServerClient();
@@ -106,36 +109,29 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiUnauthorized();
     }
 
-    // Get wallet with proper typing
+    // Get wallet
     const { data: wallet, error: fetchError } = await supabase
       .from('wallets')
       .select('*')
       .eq('id', id)
-      .eq('user_id', user.id) // Use denormalized user_id for efficiency
+      .eq('user_id', user.id)
       .single();
 
     if (fetchError || !wallet) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Wallet not found', code: 'NOT_FOUND' },
-        { status: 404 }
-      );
+      logger.error('Wallet not found for refresh', { walletId: id, userId: user.id });
+      return apiNotFound('Wallet not found');
     }
 
-    // Verify ownership (redundant with RLS but explicit check)
+    // Verify ownership (redundant with query filter but explicit)
     if (wallet.user_id !== user.id) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Forbidden', code: 'FORBIDDEN' },
-        { status: 403 }
-      );
+      logger.warn('Unauthorized balance refresh attempt', { walletId: id, userId: user.id });
+      return apiForbidden('You do not have permission to refresh this wallet');
     }
 
-    // Check cooldown (rate limiting)
+    // Check cooldown
     if (wallet.balance_updated_at) {
       const lastUpdate = new Date(wallet.balance_updated_at).getTime();
       const now = Date.now();
@@ -143,17 +139,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
       if (timeSinceUpdate < COOLDOWN_MS) {
         const remainingSeconds = Math.ceil((COOLDOWN_MS - timeSinceUpdate) / 1000);
-        return NextResponse.json<ErrorResponse>(
-          {
-            error: 'Rate limited',
-            code: 'RATE_LIMITED',
-            details: {
-              remainingSeconds,
-              balance_btc: wallet.balance_btc,
-              balance_updated_at: wallet.balance_updated_at,
-            },
-          },
-          { status: 429 }
+        logger.info('Balance refresh rate limited', {
+          walletId: id,
+          userId: user.id,
+          remainingSeconds,
+        });
+        return apiRateLimited(
+          'Balance can only be refreshed every 5 minutes. Please wait.',
+          remainingSeconds
         );
       }
     }
@@ -163,84 +156,56 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     try {
       if (wallet.wallet_type === 'address') {
-        // Single address - fetch balance directly
         const balanceData = await fetchBitcoinBalance(wallet.address_or_xpub);
         totalBalanceBtc = balanceData.balance_btc;
       } else if (wallet.wallet_type === 'xpub') {
-        // xpub - fetch from mempool.space
         totalBalanceBtc = await fetchXpubBalance(wallet.address_or_xpub);
       } else {
-        return NextResponse.json<ErrorResponse>(
-          { error: 'Invalid wallet type', code: 'INVALID_WALLET_TYPE' },
-          { status: 400 }
-        );
+        logger.error('Invalid wallet type', { walletId: id, walletType: wallet.wallet_type });
+        return apiBadRequest('Invalid wallet type');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Balance fetch failed', { walletId: id, error: errorMessage });
 
       if (errorMessage === 'TIMEOUT') {
-        return NextResponse.json<ErrorResponse>(
-          {
-            error: 'Balance fetch timed out. Please try again.',
-            code: 'TIMEOUT',
-          },
-          { status: 504 }
-        );
+        return apiInternalError('Balance fetch timed out. Please try again.', {
+          status: 504,
+        });
       }
 
       if (errorMessage === 'RATE_LIMITED') {
-        return NextResponse.json<ErrorResponse>(
-          {
-            error: 'Blockchain API rate limited. Please wait a few minutes and try again.',
-            code: 'EXTERNAL_RATE_LIMITED',
-          },
-          { status: 429 }
+        return apiRateLimited(
+          'Blockchain API rate limited. Please wait a few minutes and try again.',
+          300 // 5 minutes
         );
       }
 
       if (errorMessage.startsWith('API_ERROR')) {
-        return NextResponse.json<ErrorResponse>(
+        return apiInternalError(
+          'Blockchain API error. Please check your address/xpub and try again.',
           {
-            error: 'Blockchain API error. Please check your address/xpub and try again.',
-            code: 'BLOCKCHAIN_API_ERROR',
-          },
-          { status: 502 }
+            status: 502,
+          }
         );
       }
 
       if (errorMessage === 'NETWORK_ERROR') {
-        return NextResponse.json<ErrorResponse>(
-          {
-            error: 'Network error while fetching balance. Please try again.',
-            code: 'NETWORK_ERROR',
-          },
-          { status: 503 }
-        );
+        return apiInternalError('Network error while fetching balance. Please try again.', {
+          status: 503,
+        });
       }
 
-      // Unknown error
-      console.error('Balance fetch error:', error);
-      return NextResponse.json<ErrorResponse>(
-        {
-          error: 'Failed to fetch balance',
-          code: 'FETCH_ERROR',
-        },
-        { status: 500 }
-      );
+      return apiInternalError('Failed to fetch balance from blockchain');
     }
 
     // Validate balance
     if (typeof totalBalanceBtc !== 'number' || isNaN(totalBalanceBtc) || totalBalanceBtc < 0) {
-      return NextResponse.json<ErrorResponse>(
-        {
-          error: 'Invalid balance received from blockchain',
-          code: 'INVALID_BALANCE',
-        },
-        { status: 500 }
-      );
+      logger.error('Invalid balance received', { walletId: id, balance: totalBalanceBtc });
+      return apiInternalError('Invalid balance received from blockchain');
     }
 
-    // Update wallet balance with transaction safety
+    // Update wallet balance
     const { data: updatedWallet, error: updateError } = await supabase
       .from('wallets')
       .update({
@@ -248,46 +213,41 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         balance_updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id) // Ensure still owned by same user
+      .eq('user_id', user.id)
       .select()
       .single();
 
     if (updateError) {
-      console.error('Error updating wallet balance:', updateError);
-      return NextResponse.json<ErrorResponse>(
-        {
-          error: 'Failed to update wallet balance',
-          code: 'UPDATE_ERROR',
-        },
-        { status: 500 }
-      );
+      logger.error('Failed to update wallet balance', { walletId: id, error: updateError.message });
+      return apiInternalError('Failed to update wallet balance');
     }
 
     if (!updatedWallet) {
-      return NextResponse.json<ErrorResponse>(
-        {
-          error: 'Wallet was deleted or ownership changed during update',
-          code: 'WALLET_CHANGED',
-        },
-        { status: 409 }
-      );
+      logger.error('Wallet disappeared during update', { walletId: id });
+      return apiInternalError('Wallet was deleted or ownership changed during update', {
+        status: 409,
+      });
     }
 
-    return NextResponse.json(
-      {
-        wallet: updatedWallet,
-        message: 'Balance refreshed successfully',
-      },
-      { status: 200 }
-    );
+    // Audit log balance refresh
+    await auditSuccess(AUDIT_ACTIONS.WALLET_BALANCE_REFRESHED, user.id, 'wallet', id, {
+      previousBalance: wallet.balance_btc,
+      newBalance: totalBalanceBtc,
+      walletType: wallet.wallet_type,
+    });
+
+    logger.info('Balance refreshed successfully', {
+      walletId: id,
+      userId: user.id,
+      balance: totalBalanceBtc,
+    });
+
+    return apiSuccess({
+      wallet: updatedWallet,
+      message: 'Balance refreshed successfully',
+    });
   } catch (error) {
-    console.error('Unexpected balance refresh error:', error);
-    return NextResponse.json<ErrorResponse>(
-      {
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR',
-      },
-      { status: 500 }
-    );
+    logger.error('Unexpected balance refresh error', { error });
+    return apiInternalError('Internal server error');
   }
 }

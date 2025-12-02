@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bitcoin,
   Smartphone,
@@ -19,35 +19,35 @@ import {
   AlertTriangle,
   Lightbulb,
   Target,
-  Zap
-} from 'lucide-react'
-import Button from '@/components/ui/Button'
-import Card from '@/components/ui/Card'
-import { Badge } from '@/components/ui/badge'
-import { Progress } from '@/components/ui/progress'
+  Zap,
+} from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 
 interface OnboardingStep {
-  id: string
-  title: string
-  description: string
-  icon: any
-  content: any
+  id: string;
+  title: string;
+  description: string;
+  icon: any;
+  content: any;
   action?: {
-    label: string
-    onClick: () => void
-  }
+    label: string;
+    onClick: () => void;
+  };
 }
 
 export default function WalletOnboarding() {
-  const [currentStep, setCurrentStep] = useState(0)
-  const [selectedWallet, setSelectedWallet] = useState<string | null>(null)
-  const [walletAddress, setWalletAddress] = useState('')
+  const [currentStep, setCurrentStep] = useState(0);
+  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
+  const [walletAddress, setWalletAddress] = useState('');
 
   const steps: OnboardingStep[] = [
     {
       id: 'welcome',
       title: 'Welcome to Bitcoin Wallets',
-      description: 'Let\'s get you set up with a secure Bitcoin wallet',
+      description: "Let's get you set up with a secure Bitcoin wallet",
       icon: Bitcoin,
       content: (
         <div className="text-center space-y-6">
@@ -57,8 +57,9 @@ export default function WalletOnboarding() {
           <div>
             <h3 className="text-xl font-semibold mb-2">Why do you need a Bitcoin wallet?</h3>
             <p className="text-gray-600">
-              A Bitcoin wallet lets you receive, store, and send Bitcoin. It's like a digital bank account
-              that you control completely - no bank can freeze your funds or charge you fees.
+              A Bitcoin wallet lets you receive, store, and send Bitcoin. It's like a digital bank
+              account that you control completely - no bank can freeze your funds or charge you
+              fees.
             </p>
           </div>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -67,14 +68,14 @@ export default function WalletOnboarding() {
               <div className="text-left">
                 <h4 className="font-semibold text-blue-900 mb-1">Pro Tip</h4>
                 <p className="text-blue-800 text-sm">
-                  Your wallet is yours alone. Never share your recovery phrase with anyone, and always
-                  download wallets from official websites.
+                  Your wallet is yours alone. Never share your recovery phrase with anyone, and
+                  always download wallets from official websites.
                 </p>
               </div>
             </div>
           </div>
         </div>
-      )
+      ),
     },
     {
       id: 'choose-type',
@@ -128,7 +129,9 @@ export default function WalletOnboarding() {
 
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                selectedWallet === 'hardware' ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange' : ''
+                selectedWallet === 'hardware'
+                  ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange'
+                  : ''
               }`}
               onClick={() => setSelectedWallet('hardware')}
             >
@@ -169,7 +172,7 @@ export default function WalletOnboarding() {
             </Card>
           </div>
         </div>
-      )
+      ),
     },
     {
       id: 'get-wallet',
@@ -182,8 +185,12 @@ export default function WalletOnboarding() {
             <div className="bg-white rounded-lg border border-gray-200 p-6">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 bg-bitcoinOrange/10 rounded-lg flex items-center justify-center">
-                  {selectedWallet === 'mobile' && <Smartphone className="w-6 h-6 text-bitcoinOrange" />}
-                  {selectedWallet === 'desktop' && <Monitor className="w-6 h-6 text-bitcoinOrange" />}
+                  {selectedWallet === 'mobile' && (
+                    <Smartphone className="w-6 h-6 text-bitcoinOrange" />
+                  )}
+                  {selectedWallet === 'desktop' && (
+                    <Monitor className="w-6 h-6 text-bitcoinOrange" />
+                  )}
                   {selectedWallet === 'hardware' && <Lock className="w-6 h-6 text-bitcoinOrange" />}
                   {selectedWallet === 'browser' && <Globe className="w-6 h-6 text-bitcoinOrange" />}
                 </div>
@@ -208,9 +215,7 @@ export default function WalletOnboarding() {
 
                 <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
                   <Shield className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm text-blue-800">
-                    Verify the URL and check for HTTPS
-                  </span>
+                  <span className="text-sm text-blue-800">Verify the URL and check for HTTPS</span>
                 </div>
 
                 <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
@@ -231,7 +236,7 @@ export default function WalletOnboarding() {
             </Button>
           </div>
         </div>
-      )
+      ),
     },
     {
       id: 'setup-wallet',
@@ -246,8 +251,8 @@ export default function WalletOnboarding() {
               <div>
                 <h3 className="font-semibold text-red-900 mb-2">⚠️ Critical Security Step</h3>
                 <p className="text-red-800 text-sm mb-3">
-                  Your recovery phrase (seed phrase) is the master key to your Bitcoin.
-                  Write it down on paper and store it safely offline.
+                  Your recovery phrase (seed phrase) is the master key to your Bitcoin. Write it
+                  down on paper and store it safely offline.
                 </p>
                 <div className="bg-red-100 border border-red-300 rounded p-3">
                   <p className="text-red-900 text-sm font-medium">
@@ -264,9 +269,7 @@ export default function WalletOnboarding() {
                 <Download className="w-6 h-6 text-blue-600" />
               </div>
               <h4 className="font-semibold mb-2">Download & Install</h4>
-              <p className="text-sm text-gray-600">
-                Follow the official installation guide
-              </p>
+              <p className="text-sm text-gray-600">Follow the official installation guide</p>
             </Card>
 
             <Card className="text-center p-4">
@@ -274,9 +277,7 @@ export default function WalletOnboarding() {
                 <Shield className="w-6 h-6 text-green-600" />
               </div>
               <h4 className="font-semibold mb-2">Create Wallet</h4>
-              <p className="text-sm text-gray-600">
-                Generate your recovery phrase
-              </p>
+              <p className="text-sm text-gray-600">Generate your recovery phrase</p>
             </Card>
 
             <Card className="text-center p-4">
@@ -284,13 +285,11 @@ export default function WalletOnboarding() {
                 <CheckCircle className="w-6 h-6 text-purple-600" />
               </div>
               <h4 className="font-semibold mb-2">Verify Backup</h4>
-              <p className="text-sm text-gray-600">
-                Confirm your recovery phrase
-              </p>
+              <p className="text-sm text-gray-600">Confirm your recovery phrase</p>
             </Card>
           </div>
         </div>
-      )
+      ),
     },
     {
       id: 'get-address',
@@ -345,13 +344,13 @@ export default function WalletOnboarding() {
         label: 'Add to OrangeCat Profile',
         onClick: () => {
           // This would navigate to profile setup
-        }
-      }
-    }
-  ]
+        },
+      },
+    },
+  ];
 
-  const currentStepData = steps[currentStep]
-  const progress = ((currentStep + 1) / steps.length) * 100
+  const currentStepData = steps[currentStep];
+  const progress = ((currentStep + 1) / steps.length) * 100;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
@@ -363,7 +362,9 @@ export default function WalletOnboarding() {
               <Bitcoin className="w-8 h-8 text-bitcoinOrange" />
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Get Your Bitcoin Wallet</h1>
-                <p className="text-sm text-gray-600">Step {currentStep + 1} of {steps.length}</p>
+                <p className="text-sm text-gray-600">
+                  Step {currentStep + 1} of {steps.length}
+                </p>
               </div>
             </div>
             <Button variant="outline" onClick={() => window.history.back()}>
@@ -378,12 +379,8 @@ export default function WalletOnboarding() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="py-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">
-                {currentStepData.title}
-              </span>
-              <span className="text-sm text-gray-500">
-                {Math.round(progress)}% Complete
-              </span>
+              <span className="text-sm font-medium text-gray-700">{currentStepData.title}</span>
+              <span className="text-sm text-gray-500">{Math.round(progress)}% Complete</span>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
@@ -406,18 +403,12 @@ export default function WalletOnboarding() {
               <div className="w-16 h-16 bg-bitcoinOrange/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <currentStepData.icon className="w-8 h-8 text-bitcoinOrange" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                {currentStepData.title}
-              </h2>
-              <p className="text-gray-600 max-w-2xl mx-auto">
-                {currentStepData.description}
-              </p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">{currentStepData.title}</h2>
+              <p className="text-gray-600 max-w-2xl mx-auto">{currentStepData.description}</p>
             </div>
 
             {/* Step Content */}
-            <div className="min-h-[400px]">
-              {currentStepData.content}
-            </div>
+            <div className="min-h-[400px]">{currentStepData.content}</div>
 
             {/* Navigation */}
             <div className="flex items-center justify-between pt-8 border-t border-gray-200">
@@ -453,5 +444,5 @@ export default function WalletOnboarding() {
         </AnimatePresence>
       </div>
     </div>
-  )
+  );
 }

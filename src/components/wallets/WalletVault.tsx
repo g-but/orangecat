@@ -1,7 +1,7 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
   Search,
@@ -23,27 +23,27 @@ import {
   Eye,
   EyeOff,
   Download,
-  Upload
-} from 'lucide-react'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import Card from '@/components/ui/Card'
-import Badge from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+  Upload,
+} from 'lucide-react';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Card from '@/components/ui/Card';
+import Badge from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 export interface WalletAddress {
-  id: string
-  name: string
-  address: string
-  type: 'bitcoin' | 'lightning' | 'ethereum' | 'solana' | 'other'
-  category: 'personal' | 'organization' | 'project' | 'friend' | 'business' | 'donation'
-  description?: string
-  tags: string[]
-  isFavorite: boolean
-  isPublic: boolean
-  createdAt: string
-  lastUsed?: string
-  usageCount: number
+  id: string;
+  name: string;
+  address: string;
+  type: 'bitcoin' | 'lightning' | 'ethereum' | 'solana' | 'other';
+  category: 'personal' | 'organization' | 'project' | 'friend' | 'business' | 'donation';
+  description?: string;
+  tags: string[];
+  isFavorite: boolean;
+  isPublic: boolean;
+  createdAt: string;
+  lastUsed?: string;
+  usageCount: number;
 }
 
 const sampleAddresses: WalletAddress[] = [
@@ -59,12 +59,13 @@ const sampleAddresses: WalletAddress[] = [
     isPublic: true,
     createdAt: '2024-01-15T10:30:00Z',
     lastUsed: '2024-01-20T14:22:00Z',
-    usageCount: 5
+    usageCount: 5,
   },
   {
     id: '2',
     name: 'Lightning Network',
-    address: 'lightning:lnbc1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvus8g6rfwvs8qun0dfjkxaq8rkx3yf5tcsyz3d73gafnh3cax9rn449d9p5uxz9ezhhypd0elx87sjle52x86fux2ypatgddc6k63n7erqz25le42c4u4ecky03ylcqca784w',
+    address:
+      'lightning:lnbc1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypqdpl2pkx2ctnv5sxxmmwwd5kgetjypeh2ursdae8g6twvus8g6rfwvs8qun0dfjkxaq8rkx3yf5tcsyz3d73gafnh3cax9rn449d9p5uxz9ezhhypd0elx87sjle52x86fux2ypatgddc6k63n7erqz25le42c4u4ecky03ylcqca784w',
     type: 'lightning',
     category: 'personal',
     description: 'Lightning Network address for instant payments',
@@ -73,7 +74,7 @@ const sampleAddresses: WalletAddress[] = [
     isPublic: true,
     createdAt: '2024-01-16T09:15:00Z',
     lastUsed: '2024-01-19T16:45:00Z',
-    usageCount: 3
+    usageCount: 3,
   },
   {
     id: '3',
@@ -87,82 +88,103 @@ const sampleAddresses: WalletAddress[] = [
     isPublic: true,
     createdAt: '2024-01-17T11:20:00Z',
     lastUsed: '2024-01-18T13:30:00Z',
-    usageCount: 2
-  }
-]
+    usageCount: 2,
+  },
+];
 
 export default function WalletVault() {
-  const [addresses, setAddresses] = useState<WalletAddress[]>(sampleAddresses)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
-  const [selectedType, setSelectedType] = useState<string>('all')
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [copiedAddress, setCopiedAddress] = useState<string | null>(null)
+  const [addresses, setAddresses] = useState<WalletAddress[]>(sampleAddresses);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [selectedType, setSelectedType] = useState<string>('all');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [copiedAddress, setCopiedAddress] = useState<string | null>(null);
 
   const filteredAddresses = addresses.filter(addr => {
-    const matchesSearch = addr.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         addr.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (addr.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
+    const matchesSearch =
+      addr.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      addr.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (addr.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
 
-    const matchesCategory = selectedCategory === 'all' || addr.category === selectedCategory
-    const matchesType = selectedType === 'all' || addr.type === selectedType
+    const matchesCategory = selectedCategory === 'all' || addr.category === selectedCategory;
+    const matchesType = selectedType === 'all' || addr.type === selectedType;
 
-    return matchesSearch && matchesCategory && matchesType
-  })
+    return matchesSearch && matchesCategory && matchesType;
+  });
 
   const getTypeIcon = (type: WalletAddress['type']) => {
     switch (type) {
-      case 'bitcoin': return Bitcoin
-      case 'lightning': return Zap
-      case 'ethereum': return () => <span className="font-bold text-bitcoinOrange">Ξ</span>
-      case 'solana': return () => <span className="font-bold text-bitcoinOrange">◎</span>
-      default: return () => <span className="font-bold text-bitcoinOrange">₿</span>
+      case 'bitcoin':
+        return Bitcoin;
+      case 'lightning':
+        return Zap;
+      case 'ethereum':
+        return () => <span className="font-bold text-bitcoinOrange">Ξ</span>;
+      case 'solana':
+        return () => <span className="font-bold text-bitcoinOrange">◎</span>;
+      default:
+        return () => <span className="font-bold text-bitcoinOrange">₿</span>;
     }
-  }
+  };
 
   const getCategoryIcon = (category: WalletAddress['category']) => {
     switch (category) {
-      case 'personal': return Users
-      case 'organization': return Building
-      case 'project': return Heart
-      case 'friend': return Users
-      case 'business': return Building
-      case 'donation': return Heart
-      default: return Users
+      case 'personal':
+        return Users;
+      case 'organization':
+        return Building;
+      case 'project':
+        return Heart;
+      case 'friend':
+        return Users;
+      case 'business':
+        return Building;
+      case 'donation':
+        return Heart;
+      default:
+        return Users;
     }
-  }
+  };
 
   const getCategoryColor = (category: WalletAddress['category']) => {
     switch (category) {
-      case 'personal': return 'bg-blue-100 text-blue-700'
-      case 'organization': return 'bg-purple-100 text-purple-700'
-      case 'project': return 'bg-pink-100 text-pink-700'
-      case 'friend': return 'bg-green-100 text-green-700'
-      case 'business': return 'bg-orange-100 text-orange-700'
-      case 'donation': return 'bg-red-100 text-red-700'
-      default: return 'bg-gray-100 text-gray-700'
+      case 'personal':
+        return 'bg-blue-100 text-blue-700';
+      case 'organization':
+        return 'bg-purple-100 text-purple-700';
+      case 'project':
+        return 'bg-pink-100 text-pink-700';
+      case 'friend':
+        return 'bg-green-100 text-green-700';
+      case 'business':
+        return 'bg-orange-100 text-orange-700';
+      case 'donation':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
-  }
+  };
 
   const handleCopyAddress = async (address: string) => {
     try {
-      await navigator.clipboard.writeText(address)
-      setCopiedAddress(address)
-      setTimeout(() => setCopiedAddress(null), 2000)
-    } catch (error) {
-    }
-  }
+      await navigator.clipboard.writeText(address);
+      setCopiedAddress(address);
+      setTimeout(() => setCopiedAddress(null), 2000);
+    } catch (error) {}
+  };
 
   const toggleFavorite = (id: string) => {
-    setAddresses(prev => prev.map(addr =>
-      addr.id === id ? { ...addr, isFavorite: !addr.isFavorite } : addr
-    ))
-  }
+    setAddresses(prev =>
+      prev.map(addr => (addr.id === id ? { ...addr, isFavorite: !addr.isFavorite } : addr))
+    );
+  };
 
   const formatAddress = (address: string) => {
-    if (address.length <= 20) {return address}
-    return `${address.slice(0, 10)}...${address.slice(-8)}`
-  }
+    if (address.length <= 20) {
+      return address;
+    }
+    return `${address.slice(0, 10)}...${address.slice(-8)}`;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
@@ -196,14 +218,14 @@ export default function WalletVault() {
               <Input
                 placeholder="Search addresses by name, address, or description..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={e => setSearchTerm(e.target.value)}
                 className="w-full"
               />
             </div>
             <div className="flex gap-2">
               <select
                 value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
+                onChange={e => setSelectedCategory(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 <option value="all">All Categories</option>
@@ -216,7 +238,7 @@ export default function WalletVault() {
               </select>
               <select
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                onChange={e => setSelectedType(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 <option value="all">All Types</option>
@@ -233,8 +255,8 @@ export default function WalletVault() {
         {/* Address Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAddresses.map((address, index) => {
-            const CategoryIcon = getCategoryIcon(address.category)
-            const TypeIcon = getTypeIcon(address.type)
+            const CategoryIcon = getCategoryIcon(address.category);
+            const TypeIcon = getTypeIcon(address.type);
 
             return (
               <motion.div
@@ -322,9 +344,7 @@ export default function WalletVault() {
                           Used {address.usageCount}x
                         </span>
                         {address.lastUsed && (
-                          <span>
-                            Last: {new Date(address.lastUsed).toLocaleDateString()}
-                          </span>
+                          <span>Last: {new Date(address.lastUsed).toLocaleDateString()}</span>
                         )}
                       </div>
                       <div className="flex gap-1">
@@ -334,7 +354,9 @@ export default function WalletVault() {
                           onClick={() => toggleFavorite(address.id)}
                           className="p-1"
                         >
-                          <Heart className={`w-3 h-3 ${address.isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
+                          <Heart
+                            className={`w-3 h-3 ${address.isFavorite ? 'fill-red-500 text-red-500' : ''}`}
+                          />
                         </Button>
                         <Button variant="outline" size="sm" className="p-1">
                           <Edit className="w-3 h-3" />
@@ -347,7 +369,7 @@ export default function WalletVault() {
                   </div>
                 </Card>
               </motion.div>
-            )
+            );
           })}
         </div>
 
@@ -362,14 +384,12 @@ export default function WalletVault() {
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               {searchTerm || selectedCategory !== 'all' || selectedType !== 'all'
                 ? 'No addresses match your filters'
-                : 'Your wallet vault is empty'
-              }
+                : 'Your wallet vault is empty'}
             </h3>
             <p className="text-gray-600 mb-6">
               {searchTerm || selectedCategory !== 'all' || selectedType !== 'all'
                 ? 'Try adjusting your search or filters'
-                : 'Start by adding your first Bitcoin address'
-              }
+                : 'Start by adding your first Bitcoin address'}
             </p>
             <Button
               onClick={() => setShowAddModal(true)}
@@ -396,7 +416,7 @@ export default function WalletVault() {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-                onClick={(e) => e.stopPropagation()}
+                onClick={e => e.stopPropagation()}
               >
                 <div className="p-8">
                   <h2 className="text-2xl font-bold text-gray-900 mb-6">Add Bitcoin Address</h2>
@@ -477,5 +497,5 @@ export default function WalletVault() {
         </AnimatePresence>
       </div>
     </div>
-  )
+  );
 }

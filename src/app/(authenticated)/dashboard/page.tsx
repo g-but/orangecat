@@ -12,19 +12,12 @@ import Loading from '@/components/Loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
-import {
-  Target,
-  Users,
-  ArrowRight,
-  Eye,
-  BarChart3,
-  Star,
-  Edit3,
-} from 'lucide-react';
+import { BarChart3, Star, Eye, Users, Target } from 'lucide-react';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PROFILE_CATEGORIES } from '@/types/profile';
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
 import { DashboardTimeline } from '@/components/dashboard/DashboardTimeline';
+import { DashboardProjectCard } from '@/components/dashboard/DashboardProjectCard';
 
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated } = useAuth();
@@ -184,7 +177,7 @@ export default function DashboardPage() {
 
   // Profile category for display (use profile_type if available, default to individual) - MEMOIZED
   const profileCategory = useMemo(() => {
-    const profileType = (profile as any)?.profile_type as string | undefined;
+    const profileType = (profile as { profile_type?: string })?.profile_type;
     return profileType && profileType in PROFILE_CATEGORIES
       ? PROFILE_CATEGORIES[profileType as keyof typeof PROFILE_CATEGORIES]
       : PROFILE_CATEGORIES.individual;
@@ -232,37 +225,97 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        {/* Compact Welcome Header */}
-        <div className="relative overflow-hidden bg-gradient-to-r from-orange-50/50 to-tiffany-50/50 rounded-xl border border-gray-100 p-4 sm:p-6 mb-6">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-orange-500 to-tiffany-500 rounded-lg">
-                <span className="text-xl">👤</span>
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                  Welcome back, {profile?.name || profile?.username || 'there'}!
-                </h1>
-                <p className="text-sm text-gray-600">
-                  {totalProjects > 0
-                    ? `${totalProjects} project${totalProjects !== 1 ? 's' : ''}${totalDrafts > 0 ? ` • ${totalDrafts} draft${totalDrafts !== 1 ? 's' : ''}` : ''}`
-                    : "Let's get started"}
-                </p>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-8">
+      {/* Mobile-Optimized Welcome Header */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-orange-50/50 to-tiffany-50/50 rounded-xl border border-gray-100 p-5 sm:p-6 mb-6">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-orange-500 to-tiffany-500 rounded-xl">
+              <span className="text-2xl">👤</span>
             </div>
-            {profileCategory && (
-              <div className={`hidden sm:flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border ${profileCategory.color}`}>
-                <span>{profileCategory.icon}</span>
-                {profileCategory.label}
-              </div>
-            )}
+            <div className="min-w-0 flex-1">
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
+                Welcome back, {profile?.name || profile?.username || 'there'}!
+              </h1>
+              <p className="text-sm text-gray-600 mt-1">
+                {totalProjects > 0
+                  ? `${totalProjects} project${totalProjects !== 1 ? 's' : ''}${totalDrafts > 0 ? ` • ${totalDrafts} draft${totalDrafts !== 1 ? 's' : ''}` : ''}`
+                  : "Let's get started"}
+              </p>
+            </div>
           </div>
+          {profileCategory && (
+            <div className="hidden sm:flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium border border-orange-200 text-orange-700 shrink-0">
+              <span>{profileCategory.icon}</span>
+              {profileCategory.label}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* MOBILE-FIRST RESPONSIVE LAYOUT */}
+      <div className="space-y-6">
+        {/* MOBILE: Compact Metrics Cards (shown above timeline on mobile) */}
+        <div className="block lg:hidden space-y-4">
+          {/* Quick Stats Row - Larger touch targets */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="shadow-card hover:shadow-md transition-shadow cursor-pointer active:scale-95">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-orange-100 to-tiffany-100 rounded-xl">
+                    <Target className="w-6 h-6 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Projects</p>
+                    <p className="text-xl font-bold text-gray-900">{totalProjects}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card hover:shadow-md transition-shadow cursor-pointer active:scale-95">
+              <CardContent className="p-5">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl">
+                    <BarChart3 className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600 mb-1">Raised</p>
+                    <CurrencyDisplay
+                      amount={totalRaised}
+                      currency={primaryCurrency}
+                      className="text-xl font-bold text-gray-900"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Profile Completion & Actions - More prominent on mobile */}
+          <Card className="shadow-card">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-gray-800">Profile Setup</h3>
+                <Link href="/dashboard/info/edit">
+                  <Button variant="outline" size="sm" className="min-h-[44px]">
+                    Complete
+                  </Button>
+                </Link>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
+                <div
+                  className="bg-gradient-to-r from-orange-500 to-tiffany-500 h-3 rounded-full transition-all duration-300"
+                  style={{ width: `${profileCompletion}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-600">{profileCompletion}% complete</p>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* 2-COLUMN LAYOUT: Sidebar + Main Timeline */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* DESKTOP: 2-COLUMN LAYOUT */}
+        <div className="hidden lg:grid lg:grid-cols-12 gap-6">
           {/* LEFT: Compact Sidebar with Metrics and Actions */}
           <DashboardSidebar
             stats={{
@@ -287,15 +340,28 @@ export default function DashboardPage() {
           />
         </div>
 
+        {/* MOBILE: Timeline Feed */}
+        <div className="block lg:hidden">
+          <DashboardTimeline
+            timelineFeed={timelineFeed}
+            isLoading={timelineLoading}
+            error={timelineError}
+            onRefresh={() => user?.id && loadTimelineFeed(user.id)}
+            onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
+            userId={user?.id}
+          />
+        </div>
+      </div>
 
-        {/* My Projects Section */}
-        {safeProjects.length > 0 && (
+      {/* My Projects Section - Hidden on mobile to avoid clutter, shown on desktop */}
+      {safeProjects.length > 0 && (
+        <div className="hidden lg:block">
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>My Projects</CardTitle>
-                  <CardDescription>Your Bitcoin fundraising projects</CardDescription>
+                  <CardDescription>My Bitcoin fundraising projects</CardDescription>
                 </div>
                 <Link href="/dashboard/projects">
                   <Button variant="outline" size="sm">
@@ -305,164 +371,50 @@ export default function DashboardPage() {
                 </Link>
               </div>
             </CardHeader>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="grid gap-4">
-                {safeProjects.slice(0, 3).map(project => {
-                  const goalAmount = project.goal_amount || 0;
-                  const totalFunding = project.total_funding || 0;
-                  const progressPercentage =
-                    goalAmount > 0 ? Math.min((totalFunding / goalAmount) * 100, 100) : 0;
-                  const projectCurrency = project.currency || 'CHF';
-
-                  return (
-                    <div
-                      key={project.id}
-                      className="bg-white border border-gray-200 rounded-xl p-5 hover:shadow-lg hover:border-gray-300 transition-all duration-200 group"
-                    >
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-3 mb-3 flex-wrap">
-                            <Link href={`/projects/${project.id}`} className="flex-1 min-w-0">
-                              <h4 className="font-bold text-lg text-gray-900 hover:text-bitcoinOrange transition-colors duration-200 cursor-pointer group-hover:underline truncate">
-                                {project.title}
-                              </h4>
-                            </Link>
-                            {project.isDraft ? (
-                              <div className="px-3 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap">
-                                Draft
-                              </div>
-                            ) : project.isPaused ? (
-                              <div className="px-3 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 border border-yellow-200 whitespace-nowrap">
-                                Paused
-                              </div>
-                            ) : project.isActive ? (
-                              <div className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 border border-green-200 whitespace-nowrap">
-                                Active
-                              </div>
-                            ) : (
-                              <div className="px-3 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700 border border-gray-200 whitespace-nowrap">
-                                Inactive
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Progress Bar */}
-                          {goalAmount > 0 ? (
-                            <div className="mb-3">
-                              <div className="flex justify-between items-center mb-1">
-                                <span className="text-sm font-medium text-gray-900">
-                                  <CurrencyDisplay
-                                    amount={totalFunding}
-                                    currency={projectCurrency}
-                                    size="sm"
-                                  />{' '}
-                                  raised
-                                </span>
-                                <span className="text-sm font-medium text-bitcoinOrange">
-                                  {progressPercentage.toFixed(0)}%
-                                </span>
-                              </div>
-                              <div className="w-full bg-gray-200 rounded-full h-2 mb-1">
-                                <div
-                                  className="bg-gradient-to-r from-bitcoinOrange to-orange-500 h-2 rounded-full transition-all duration-500"
-                                  style={{ width: `${progressPercentage}%` }}
-                                />
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                of{' '}
-                                <CurrencyDisplay
-                                  amount={goalAmount}
-                                  currency={projectCurrency}
-                                  size="sm"
-                                />{' '}
-                                goal
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="mb-3">
-                              <div className="text-sm font-medium text-gray-900">
-                                <CurrencyDisplay
-                                  amount={totalFunding}
-                                  currency={projectCurrency}
-                                  size="sm"
-                                />{' '}
-                                raised
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Stats Row */}
-                          <div className="flex items-center gap-6 text-sm text-gray-600">
-                            <div className="flex items-center gap-1">
-                              <Users className="w-4 h-4" />
-                              <span className="font-medium">{project.contributor_count || 0}</span>
-                              <span>supporters</span>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 flex-shrink-0">
-                          <Link href={`/projects/${project.id}`}>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="hover:bg-bitcoinOrange/10 hover:border-bitcoinOrange"
-                            >
-                              <Eye className="w-4 h-4 mr-1" />
-                              View
-                            </Button>
-                          </Link>
-                          <Link href={`/projects/create?draft=${project.id}`}>
-                            <Button variant="outline" size="sm" className="hover:bg-gray-100">
-                              <Edit3 className="w-4 h-4 mr-1" />
-                              Edit
-                            </Button>
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                {safeProjects.slice(0, 3).map(project => (
+                  <DashboardProjectCard key={project.id} project={project} />
+                ))}
               </div>
             </CardContent>
           </Card>
-        )}
+        </div>
+      )}
 
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common tasks to get you started</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {totalProjects > 0 ? (
-                <Link href="/dashboard/projects">
-                  <Button variant="outline" className="w-full h-16 flex-col">
-                    <Eye className="w-5 h-5 mb-2" />
-                    Manage Projects
-                  </Button>
-                </Link>
-              ) : (
-                <Link href="/discover">
-                  <Button variant="outline" className="w-full h-16 flex-col">
-                    <Users className="w-5 h-5 mb-2" />
-                    Explore Projects
-                  </Button>
-                </Link>
-              )}
-
-              <Link href="/profile">
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Common tasks to get you started</CardDescription>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {totalProjects > 0 ? (
+              <Link href="/dashboard/projects">
                 <Button variant="outline" className="w-full h-16 flex-col">
-                  <Star className="w-5 h-5 mb-2" />
-                  Update Profile
+                  <Eye className="w-5 h-5 mb-2" />
+                  Manage Projects
                 </Button>
               </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            ) : (
+              <Link href="/discover">
+                <Button variant="outline" className="w-full h-16 flex-col">
+                  <Users className="w-5 h-5 mb-2" />
+                  Explore Projects
+                </Button>
+              </Link>
+            )}
+
+            <Link href="/profile">
+              <Button variant="outline" className="w-full h-16 flex-col">
+                <Star className="w-5 h-5 mb-2" />
+                Update Profile
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
