@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
@@ -12,12 +13,43 @@ import Loading from '@/components/Loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
-import { BarChart3, Star, Eye, Users, Target } from 'lucide-react';
+import { BarChart3, Star, Eye, Users, Target, Wallet, Plus, MessageCircle, Share2, Copy } from 'lucide-react';
+import ProfileShare from '@/components/sharing/ProfileShare';
+import { toast } from 'sonner';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PROFILE_CATEGORIES } from '@/types/profile';
-import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar';
-import { DashboardTimeline } from '@/components/dashboard/DashboardTimeline';
 import { DashboardProjectCard } from '@/components/dashboard/DashboardProjectCard';
+import TasksSection from '@/components/dashboard/TasksSection';
+
+const DashboardSidebar = dynamic(
+  () => import('@/components/dashboard/DashboardSidebar').then(mod => mod.DashboardSidebar),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse h-80" />
+    ),
+  }
+);
+
+const MobileDashboardSidebar = dynamic(
+  () => import('@/components/dashboard/MobileDashboardSidebar').then(mod => mod.MobileDashboardSidebar),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse h-48" />
+    ),
+  }
+);
+
+const DashboardTimeline = dynamic(
+  () => import('@/components/dashboard/DashboardTimeline').then(mod => mod.DashboardTimeline),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse h-96" />
+    ),
+  }
+);
 
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated } = useAuth();
@@ -29,6 +61,7 @@ export default function DashboardPage() {
   const [timelineFeed, setTimelineFeed] = useState<TimelineFeedResponse | null>(null);
   const [timelineLoading, setTimelineLoading] = useState(false);
   const [timelineError, setTimelineError] = useState<string | null>(null);
+  const [showShare, setShowShare] = useState(false);
 
   useEffect(() => {
     if (hydrated) {
@@ -158,6 +191,73 @@ export default function DashboardPage() {
   );
   const totalDrafts = useMemo(() => safeDrafts.length, [safeDrafts]);
 
+  const hasTimelineActivity = useMemo(() => {
+    const feed = timelineFeed as unknown as { events?: unknown[]; items?: unknown[]; data?: unknown[] };
+    return Boolean(feed?.events?.length || feed?.items?.length || feed?.data?.length);
+  }, [timelineFeed]);
+
+  const guidedSuggestions = useMemo(() => {
+    const suggestions: {
+      title: string;
+      description: string;
+      href: string;
+      icon: React.ReactNode;
+    }[] = [];
+
+    if (!hasBitcoinAddress) {
+      suggestions.push({
+        title: 'Add a Bitcoin wallet',
+        description: 'Enable receiving funds and payouts.',
+        href: '/dashboard/wallets',
+        icon: <Wallet className="w-4 h-4 text-orange-600" />,
+      });
+    }
+
+    if (hasAnyDraft) {
+      suggestions.push({
+        title: 'Finish your draft',
+        description: `Complete ${totalDrafts} pending project${totalDrafts > 1 ? 's' : ''}.`,
+        href: '/projects/create',
+        icon: <Target className="w-4 h-4 text-emerald-600" />,
+      });
+    }
+
+    if (safeProjects.length === 0) {
+      suggestions.push({
+        title: 'Create your first project',
+        description: 'Launch a campaign in minutes.',
+        href: '/projects/create',
+        icon: <Plus className="w-4 h-4 text-blue-600" />,
+      });
+    }
+
+    if (!hasTimelineActivity) {
+      suggestions.push({
+        title: 'Post an update',
+        description: 'Share a quick update to engage supporters.',
+        href: '/timeline',
+        icon: <MessageCircle className="w-4 h-4 text-indigo-600" />,
+      });
+    }
+
+    if (suggestions.length === 0) {
+      suggestions.push({
+        title: 'View dashboard',
+        description: 'Check activity across projects and wallets.',
+        href: '/dashboard',
+        icon: <BarChart3 className="w-4 h-4 text-purple-600" />,
+      });
+    }
+
+    return suggestions.slice(0, 4);
+  }, [
+    hasAnyDraft,
+    hasBitcoinAddress,
+    hasTimelineActivity,
+    safeProjects.length,
+    totalDrafts,
+  ]);
+
   // Get featured project (most recent published or highest funded) - MEMOIZED
   const featuredProject = useMemo(() => {
     const publishedProjects = safeProjects.filter(p => !p.isDraft);
@@ -253,66 +353,111 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* MOBILE-FIRST RESPONSIVE LAYOUT */}
-      <div className="space-y-6">
-        {/* MOBILE: Compact Metrics Cards (shown above timeline on mobile) */}
-        <div className="block lg:hidden space-y-4">
-          {/* Quick Stats Row - Larger touch targets */}
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="shadow-card hover:shadow-md transition-shadow cursor-pointer active:scale-95">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-orange-100 to-tiffany-100 rounded-xl">
-                    <Target className="w-6 h-6 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Projects</p>
-                    <p className="text-xl font-bold text-gray-900">{totalProjects}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-card hover:shadow-md transition-shadow cursor-pointer active:scale-95">
-              <CardContent className="p-5">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-green-100 to-emerald-100 rounded-xl">
-                    <BarChart3 className="w-6 h-6 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-1">Raised</p>
-                    <CurrencyDisplay
-                      amount={totalRaised}
-                      currency={primaryCurrency}
-                      className="text-xl font-bold text-gray-900"
+      {/* Invite / Share CTA */}
+      <div className="mb-6">
+        <div className="rounded-xl border border-orange-200 bg-gradient-to-r from-orange-50 to-teal-50 p-4 sm:p-5 shadow-sm">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="font-semibold text-gray-900">Invite friends to OrangeCat</h3>
+              <p className="text-sm text-gray-600">Share your profile link and start building your network</p>
+            </div>
+            <div className="flex items-center gap-2 relative">
+              <Link href="/dashboard/people">
+                <Button variant="outline">
+                  <Users className="w-4 h-4 mr-2" /> Discover People
+                </Button>
+              </Link>
+              <div className="flex items-center gap-2 relative">
+                <Button onClick={() => setShowShare(!showShare)} className="bg-orange-600 hover:bg-orange-700 text-white">
+                  <Share2 className="w-4 h-4 mr-2" /> Share My Profile
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const url = `${window.location.origin}/profiles/${profile?.username || user!.id}`;
+                    navigator.clipboard
+                      .writeText(url)
+                      .then(() => toast.success('Invite link copied'))
+                      .catch(() => toast.error('Failed to copy link'));
+                  }}
+                >
+                  <Copy className="w-4 h-4 mr-2" /> Copy Link
+                </Button>
+                {showShare && (
+                  <div className="absolute right-0 mt-2 z-50">
+                    <ProfileShare
+                      username={profile?.username || user!.id}
+                      profileName={profile?.name || profile?.username || 'My Profile'}
+                      profileBio={profile?.bio || undefined}
+                      onClose={() => setShowShare(false)}
                     />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                )}
+              </div>
+            </div>
           </div>
-
-          {/* Profile Completion & Actions - More prominent on mobile */}
-          <Card className="shadow-card">
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-base font-semibold text-gray-800">Profile Setup</h3>
-                <Link href="/dashboard/info/edit">
-                  <Button variant="outline" size="sm" className="min-h-[44px]">
-                    Complete
-                  </Button>
-                </Link>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 mb-3">
-                <div
-                  className="bg-gradient-to-r from-orange-500 to-tiffany-500 h-3 rounded-full transition-all duration-300"
-                  style={{ width: `${profileCompletion}%` }}
-                ></div>
-              </div>
-              <p className="text-sm text-gray-600">{profileCompletion}% complete</p>
-            </CardContent>
-          </Card>
         </div>
+      </div>
+
+      {/* GUIDED JOURNEY SECTION */}
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+        <Card className="xl:col-span-2">
+          <CardHeader>
+            <CardTitle>Your OrangeCat journey</CardTitle>
+            <CardDescription>Stay on track with clear next steps.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Profile completion</span>
+                <span className="text-sm font-semibold text-gray-900">{profileCompletion}%</span>
+              </div>
+              <div className="h-2 w-full rounded-full bg-gray-100">
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-orange-500 to-tiffany-500 transition-all"
+                  style={{ width: `${profileCompletion}%` }}
+                />
+              </div>
+              <p className="text-xs text-gray-600 mt-2">
+                Complete your profile to build trust and unlock suggestions tailored to you.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
+              {guidedSuggestions.map(suggestion => (
+                <Link key={suggestion.title} href={suggestion.href}>
+                  <div className="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-4 hover:border-orange-200 hover:shadow-sm transition-colors">
+                    <div className="mt-1">{suggestion.icon}</div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{suggestion.title}</h3>
+                      <p className="text-sm text-gray-600 leading-tight">{suggestion.description}</p>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="xl:col-span-1">
+          <TasksSection />
+        </div>
+      </div>
+
+      {/* MOBILE-FIRST RESPONSIVE LAYOUT */}
+      <div className="space-y-6">
+        {/* MOBILE: Rich Sidebar Experience */}
+        <MobileDashboardSidebar
+          stats={{
+            totalProjects,
+            totalDrafts,
+            totalRaised,
+            totalSupporters,
+            primaryCurrency,
+          }}
+          profileCompletion={profileCompletion}
+          profile={profile}
+        />
 
         {/* DESKTOP: 2-COLUMN LAYOUT */}
         <div className="hidden lg:grid lg:grid-cols-12 gap-6">

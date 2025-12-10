@@ -38,6 +38,8 @@ import { AuthProvider } from '@/components/providers/AuthProvider';
 import { SyncManagerInitializer } from '@/components/SyncManagerInitializer';
 import { OfflineQueueIndicator } from '@/components/ui/OfflineQueueIndicator';
 import { ComposerProvider } from '@/contexts/ComposerContext';
+import DevBootstrap from '@/components/DevBootstrap';
+import { ensureMessagingMigrations } from '@/lib/dev/autoMigrate';
 
 // Dynamic imports for non-critical components
 const DynamicToaster = lazy(() => import('sonner').then(module => ({ default: module.Toaster })));
@@ -54,8 +56,13 @@ const DynamicMobileBottomNav = lazy(() => import('@/components/layout/MobileBott
 const DynamicChatbot = lazy(() =>
   import('@/components/ui/SimpleChatbot').then(module => ({ default: module.SimpleChatbot }))
 );
+const DynamicLLMChat = lazy(() =>
+  import('@/components/ui/LLMChat').then(module => ({ default: module.LLMChat }))
+);
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Dev: apply messaging migrations on first server render
+  await ensureMessagingMigrations();
   const headersList = await headers();
 
   // Get current pathname to determine if we're on an authenticated route
@@ -191,85 +198,19 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           dangerouslySetInnerHTML={{
             __html: `
               (function() {
-                if ('serviceWorker' in navigator) {
-                  const isDevelopment = window.location.hostname === 'localhost' || 
-                                       window.location.hostname === '127.0.0.1' ||
-                                       window.location.hostname.includes('localhost') ||
-                                       window.location.hostname === '0.0.0.0';
-                  
-                  if (isDevelopment) {
-                    // In development: Aggressively unregister ALL service workers
-                    console.log('[SW] Development mode detected - disabling service workers');
-                    
-                    // Unregister immediately
-                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                      console.log('[SW] Found', registrations.length, 'service worker(s) to unregister');
-                      const unregisterPromises = registrations.map(function(registration) {
-                        return registration.unregister().then(function(success) {
-                          console.log('[SW] Unregistered:', success);
-                          return success;
-                        });
-                      });
-                      
-                      // Clear ALL caches
-                      return Promise.all(unregisterPromises).then(function() {
-                        return caches.keys();
-                      });
-                    }).then(function(cacheNames) {
-                      console.log('[SW] Found', cacheNames.length, 'cache(s) to delete');
-                      return Promise.all(
-                        cacheNames.map(function(cacheName) {
-                          console.log('[SW] Deleting cache:', cacheName);
-                          return caches.delete(cacheName);
-                        })
-                      );
-                    }).then(function() {
-                      console.log('[SW] All service workers and caches cleared for development');
-                      // Force reload if there was a service worker
-                      if (navigator.serviceWorker.controller) {
-                        console.log('[SW] Service worker was controlling page, reloading...');
-                        window.location.reload();
-                      }
-                    }).catch(function(error) {
-                      console.error('[SW] Error clearing service workers:', error);
-                    });
-                  } else {
-                  // In production: Register service worker normally
-                  window.addEventListener('load', function() {
-                    // Unregister all existing service workers first to clear stale cache
-                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                      for(let registration of registrations) {
-                        registration.unregister();
-                      }
-                      // Then register the new one
-                      return navigator.serviceWorker.register('/sw.js');
-                    }).then(function(registration) {
-                      // Service Worker registration successful
-                      
-                      // Check for updates
-                      registration.addEventListener('updatefound', function() {
-                        const newWorker = registration.installing;
-                        if (newWorker) {
-                          newWorker.addEventListener('statechange', function() {
-                            if (newWorker.state === 'installed') {
-                              if (navigator.serviceWorker.controller) {
-                                // New content available - force reload to get fresh code
-                                window.location.reload();
-                              } else {
-                                // Content cached for first time - app now works offline
-                              }
-                            }
-                          });
-                        }
-                      });
-                    })
-                    .catch(function(error) {
-                      // Service Worker registration failed - app will work without offline features
-                      console.warn('Service Worker registration failed:', error);
-                    });
-                  });
-                  }
+                if (!('serviceWorker' in navigator)) { return; }
+                const isLocalhost = ['localhost', '127.0.0.1', '0.0.0.0'].some(host =>
+                  window.location.hostname === host || window.location.hostname.includes(host)
+                );
+                if (isLocalhost) {
+                  // Skip SW in development to avoid cache noise
+                  return;
                 }
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js').catch(function() {
+                    // Silently fail; app runs without offline cache
+                  });
+                });
               })();
             `,
           }}
@@ -336,6 +277,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       >
         <div id="__next">
           <ClientErrorBoundary>
+            {/* Dev bootstrap: applies messaging migrations automatically in development */}
+            <DevBootstrap />
             <SyncManagerInitializer />
             <AuthProvider>
               <ComposerProvider>
@@ -343,10 +286,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   {/* Global Auth Loader - temporarily disabled for debugging */}
                   {/* <GlobalAuthLoader /> */}
 
-                  {/* Header */}
-                  <Suspense fallback={<Loading />}>
-                    <DynamicUnifiedHeader />
-                  </Suspense>
+                  {/* Header - public routes only; authenticated routes use AuthenticatedShell */}
+                  {!isAuthenticatedRoute && (
+                    <Suspense fallback={<Loading />}>
+                      <DynamicUnifiedHeader />
+                    </Suspense>
+                  )}
 
                   {/* Main Content */}
                   <main className="flex-1 flex flex-col">{children}</main>
@@ -387,6 +332,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {/* Simple Chatbot Assistant - Lazy loaded */}
             <Suspense fallback={null}>
               <DynamicChatbot />
+            </Suspense>
+
+            {/* AI LLM Chat Assistant - Lazy loaded */}
+            <Suspense fallback={null}>
+              <DynamicLLMChat
+                systemPrompt="You are OrangeCat's AI assistant. OrangeCat is a Bitcoin-native crowdfunding platform where users can fund projects directly with Bitcoin. Help users understand the platform, answer questions about Bitcoin crowdfunding, and assist with general inquiries. Be helpful, accurate, and promote the benefits of Bitcoin-based funding."
+                title="OrangeCat AI"
+              />
             </Suspense>
 
             {/* Offline Queue Indicator */}

@@ -120,7 +120,7 @@ export default function ProfileWizard({
     resolver: zodResolver(profileSchema),
     mode: 'onChange',
     defaultValues: {
-      username: profile.username || userEmail?.split('@')[0] || '',
+      username: profile.username || (typeof userEmail === 'string' && userEmail.includes('@') ? userEmail.split('@')[0] : userEmail || ''),
       name: profile.name || '',
       bio: profile.bio || '',
       location_country: profile.location_country || '',

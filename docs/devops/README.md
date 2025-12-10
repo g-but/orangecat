@@ -13,3 +13,9 @@ Source of truth notes:
 - Node.js: v20 across workflows and Docker.
 - Tests and type-checks are blocking in CI with pragmatic coverage gates.
 - Security: strict headers + CSP (reporting enabled), SVG disabled unless sanitized.
+
+## Environment Files Policy (Local)
+- `.env.local` is developer-owned and MUST NOT be deleted or overwritten by scripts or agents.
+- Automated backups live in `.env-backups/`; use `scripts/utils/env-manager.js` to backup/restore.
+- Prefer `env-manager validate` and `setup` over copying `.env.example` onto an existing file.
+- CI uses Vercel-managed env; GitHub Actions must not write to `.env.local`.

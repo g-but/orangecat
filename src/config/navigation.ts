@@ -23,11 +23,10 @@ interface NavigationConfig {
 
 export const navigation: NavigationConfig = {
   main: [
-    { name: 'Create Project', href: '/projects/create' },
     { name: 'Discover', href: '/discover' },
+    { name: 'Community', href: '/community' },
+    { name: 'Channel', href: '/channel' },
     { name: 'About', href: '/about' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'GitHub', href: 'https://github.com/g-but/orangecat' },
   ],
   footer: {
     product: [
@@ -60,9 +59,16 @@ export const navigation: NavigationConfig = {
       },
     ],
   },
+  // Simplified user menu - matches sidebar sections
   user: [
     { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
-    { name: 'Profile', href: '/profile', requiresAuth: true },
+    { name: 'Organizations', href: '/organizations', requiresAuth: true, description: 'Manage Organizations' },
+    { name: 'Assets', href: '/assets', requiresAuth: true, description: 'My Valuable Assets' },
+    { name: 'Loans', href: '/loans', requiresAuth: true, description: 'Peer-to-Peer Lending' },
+    { name: 'Sell', href: '/dashboard/store', requiresAuth: true, description: 'Products & Services' },
+    { name: 'Raise', href: '/dashboard/projects', requiresAuth: true, description: 'Projects & Causes' },
+    { name: 'Network', href: '/organizations', requiresAuth: true, description: 'Organizations, Circles & People' },
+    { name: 'Wallet', href: '/dashboard/wallets', requiresAuth: true },
     { name: 'Settings', href: '/settings', requiresAuth: true },
   ],
   auth: [

@@ -1,4 +1,6 @@
 name: 🚀 One-Button Deploy
+# This workflow is part of the OrangeCat automated deployment system.
+# See docs/deployment/DEPLOYMENT_PROCESS.md for the complete deployment process.
 on:
   workflow_dispatch:
     inputs:
@@ -121,6 +123,16 @@ jobs:
           echo "deployment_url=$DEPLOY_URL" >> $GITHUB_OUTPUT
           echo "✅ Deployment completed: $DEPLOY_URL"
 
+      - name: 🧭 Verify Deployment (Vercel Inspect)
+        if: always()
+        run: |
+          echo "🧭 Inspecting deployment via Vercel CLI..."
+          if [ -n "${{ steps.deploy.outputs.deployment_url }}" ]; then
+            vercel inspect "${{ steps.deploy.outputs.deployment_url }}" --token=${{ secrets.VERCEL_TOKEN }} || echo "⚠️ Inspect failed (non-blocking)"
+          else
+            echo "ℹ️ No deployment URL found to inspect"
+          fi
+
       - name: 🔍 Health Check
         id: health_check
         # Only run health check on production deployments (preview deployments have auth protection)
@@ -181,6 +193,12 @@ jobs:
           echo "  - Vercel token issues"
           echo "  - Health check timeout"
           echo "🆘 Need help? Check: https://github.com/${{ github.repository }}/actions"
+
+      - name: 🌐 Automated Browser Verification
+        if: success() && (github.event.inputs.environment == 'production' || github.ref_name == 'main')
+        run: |
+          echo "🌐 Running automated browser verification..."
+          npm run deploy:verify || echo "⚠️ Browser verification failed - manual check required"
 
       - name: 📈 Performance Audit
         if: success() && (github.event.inputs.environment == 'production' || github.ref_name == 'main')

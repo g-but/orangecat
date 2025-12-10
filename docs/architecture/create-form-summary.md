@@ -1,5 +1,9 @@
 # Project Create Form - Quick Reference
 
+created_date: 2024-11-15  
+last_modified_date: 2025-12-05  
+last_modified_summary: Added asset and loan quick-start templates and enabled form re-prefill hooks
+
 ## What Changed
 
 ### Before (Old Form)
@@ -35,6 +39,9 @@
     📄 index.ts
   📁 templates/
     📄 ProjectTemplates.tsx     → Pre-filled examples
+    📄 AssetTemplates.tsx       → Prefill asset forms with real-world examples
+  📁 loans/
+    📄 LoanTemplates.tsx        → Quick-fill presets for loan dialog
 
 📁 src/components/project/
   📄 MissingWalletBanner.tsx    → Post-creation wallet prompt

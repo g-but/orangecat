@@ -21,6 +21,7 @@ import {
 import { SocialLinksDisplay } from './SocialLinksDisplay';
 import { SocialLink } from '@/types/social';
 import { format } from 'date-fns';
+import { isLocationHidden, getLocationGroupLabel } from '@/lib/location-privacy';
 import Button from '@/components/ui/Button';
 import ModernProfileEditor from './ModernProfileEditor';
 
@@ -193,31 +194,44 @@ export default function ProfileInfoTab({
                 </div>
               </div>
 
-              {/* Location - Always show */}
-              <div className="flex items-start gap-3">
-                <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
-                <div className="flex-1">
-                  <div className="text-sm text-gray-500">Location</div>
-                  {profile.location_search || profile.location ? (
-                    <div className="font-medium text-gray-900">
-                      {profile.location_search || profile.location}
-                    </div>
-                  ) : isOwnProfile ? (
-                    <Link
-                      href="/dashboard/info/edit#location"
-                      className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:underline group"
-                    >
-                      <span className="text-gray-400 italic group-hover:text-orange-600">
-                        Not filled out yet
-                      </span>
-                      <EditIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <span className="text-xs">Click to add</span>
-                    </Link>
-                  ) : (
-                    <div className="text-gray-400 italic">Not filled out yet</div>
-                  )}
+              {/* Location - Respect privacy/group */}
+              {!isLocationHidden((profile as any).location_context) ? (
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500">Location</div>
+                    {profile.location_search || profile.location ||
+                    getLocationGroupLabel((profile as any).location_context) ? (
+                      <div className="font-medium text-gray-900">
+                        {getLocationGroupLabel((profile as any).location_context) ||
+                          profile.location_search ||
+                          profile.location}
+                      </div>
+                    ) : isOwnProfile ? (
+                      <Link
+                        href="/dashboard/info/edit#location"
+                        className="inline-flex items-center gap-2 text-orange-600 hover:text-orange-700 hover:underline group"
+                      >
+                        <span className="text-gray-400 italic group-hover:text-orange-600">
+                          Not filled out yet
+                        </span>
+                        <EditIcon className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <span className="text-xs">Click to add</span>
+                      </Link>
+                    ) : (
+                      <div className="text-gray-400 italic">Not filled out yet</div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="flex items-start gap-3">
+                  <MapPin className="w-5 h-5 text-gray-300 mt-0.5" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-500">Location</div>
+                    <div className="font-medium text-gray-400">Hidden</div>
+                  </div>
+                </div>
+              )}
             </div>
           </section>
 

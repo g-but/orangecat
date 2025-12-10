@@ -180,3 +180,31 @@ Location Filters Applied → Results filtered by location
 - [Database Schema](./database/DB_SCHEMA.md)
 - [Discover Filters](./discover-filters.md)
 - [Location Setup Guide](../guides/LOCATION_SETUP.md)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

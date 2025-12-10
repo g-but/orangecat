@@ -168,6 +168,7 @@ export default function DashboardWalletsPage() {
     };
   }, [user?.id, profile?.id, authLoading, profile]);
 
+
   // Handle wallet add
   const handleAddWallet = async (data: WalletFormData) => {
     // Comprehensive validation before API call
@@ -767,6 +768,7 @@ export default function DashboardWalletsPage() {
                 onFieldFocus={setFocusedField}
               />
             </div>
+
 
             {/* Help Section - Collapsible on Mobile, Open on Desktop */}
             <details

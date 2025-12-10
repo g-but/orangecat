@@ -10,14 +10,18 @@ import type { LucideIcon } from 'lucide-react';
 import type { Initiative } from '@/types/initiative';
 import { ICON_MAP } from './icons';
 
-// Import MVP initiative modules - only projects and fundraising
+// Import initiative modules
 import { projects } from './projects';
 import { fundraising } from './fundraising';
+import { events } from './events';
+import { organizations } from './organizations';
 
-// Export all initiatives in a single record - MVP
+// Export all initiatives in a single record
 export const INITIATIVES: Record<string, Initiative> = {
   projects,
   fundraising,
+  events,
+  organizations,
 };
 
 // Re-export types for backward compatibility

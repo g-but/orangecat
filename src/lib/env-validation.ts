@@ -32,6 +32,9 @@ const OPTIONAL_ENV_VARS = {
 
   // URLs
   NEXT_PUBLIC_APP_URL: 'Application URL',
+
+  // AI/LLM
+  GEMINI_API_KEY: 'Google Gemini API key for LLM chat functionality',
 } as const;
 
 // =====================================================================

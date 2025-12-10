@@ -23,6 +23,10 @@ import {
   Heart,
   Users,
   CheckCircle2,
+  Home,
+  Eye,
+  EyeOff,
+  Coins,
 } from 'lucide-react';
 import type { FieldGuidanceContent, DefaultContent } from '@/lib/project-guidance';
 
@@ -31,10 +35,13 @@ export type ProfileFieldType =
   | 'name'
   | 'bio'
   | 'location'
+  | 'physicalAddress'
   | 'website'
   | 'socialLinks'
   | 'contactEmail'
   | 'phone'
+  | 'privacySettings'
+  | 'currencyPreference'
   | null;
 
 export const profileGuidanceContent: Record<NonNullable<ProfileFieldType>, FieldGuidanceContent> = {
@@ -156,10 +163,62 @@ export const profileGuidanceContent: Record<NonNullable<ProfileFieldType>, Field
       'Use international format (e.g., +41 XX XXX XX XX)',
       'Completely optional',
       'Helps with local connections and urgent contact',
-      'Only visible if you choose to share it',
+      'You can control visibility in privacy settings',
       'Can be left empty if you prefer email only',
     ],
     examples: ['+41 79 123 45 67', '+1 555 123 4567'],
+  },
+  physicalAddress: {
+    icon: React.createElement(Home, { className: 'w-5 h-5 text-orange-600' }),
+    title: 'Physical Address',
+    description:
+      'Your physical address for receiving physical mail or goods. Essential for shipping and local services.',
+    tips: [
+      'Only visible if you enable it in privacy settings',
+      'Required for physical product delivery or local services',
+      'Increases trust for local community connections',
+      'You control who can see this information',
+      'Consider using a P.O. Box if you prefer privacy',
+    ],
+    examples: [
+      'Bahnhofstrasse 1, 8001 Zürich, Switzerland',
+      'Marktplatz 5, 4001 Basel, Switzerland',
+    ],
+  },
+  privacySettings: {
+    icon: React.createElement(EyeOff, { className: 'w-5 h-5 text-orange-600' }),
+    title: 'Privacy Settings',
+    description:
+      'Control what information is visible on your public profile. You enter the data once, then decide who sees it.',
+    tips: [
+      'Toggle visibility for each sensitive field',
+      'Hidden fields are stored securely but not displayed publicly',
+      'Location can be shown at city level even if exact address is hidden',
+      'Review your public profile to see what others see',
+      'More transparency generally builds more trust',
+    ],
+    examples: [
+      'Show email: ON - Phone: OFF',
+      'Show city: ON - Full address: OFF',
+    ],
+  },
+  currencyPreference: {
+    icon: React.createElement(Coins, { className: 'w-5 h-5 text-orange-600' }),
+    title: 'Currency Preference',
+    description:
+      'Choose your preferred currency for viewing amounts. All transactions happen in Bitcoin, but you can see equivalent values in your local currency.',
+    tips: [
+      'Defaults to your country\'s currency (e.g., CHF for Switzerland)',
+      'Does not affect actual transactions - everything settles in Bitcoin',
+      'Helps you understand amounts in familiar terms',
+      'You can switch currencies anytime when viewing or entering amounts',
+      'Exchange rates are updated regularly',
+    ],
+    examples: [
+      'CHF for Switzerland',
+      'EUR for Germany, France, Italy',
+      'USD for United States',
+    ],
   },
 };
 

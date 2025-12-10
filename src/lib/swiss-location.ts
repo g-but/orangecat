@@ -154,3 +154,31 @@ export function extractCantonFromGooglePlaces(
 
   return null;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

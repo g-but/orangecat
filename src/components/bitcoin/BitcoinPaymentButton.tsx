@@ -9,12 +9,14 @@ interface BitcoinPaymentButtonProps {
   projectId: string
   projectTitle: string
   suggestedAmount?: number
+  recipientAddress?: string
 }
 
 export default function BitcoinPaymentButton({
   projectId,
   projectTitle,
-  suggestedAmount = 10000
+  suggestedAmount = 10000,
+  recipientAddress
 }: BitcoinPaymentButtonProps) {
   const [showModal, setShowModal] = useState(false)
 
@@ -35,7 +37,8 @@ export default function BitcoinPaymentButton({
         projectId={projectId}
         projectTitle={projectTitle}
         suggestedAmount={suggestedAmount}
+        recipientAddress={recipientAddress}
       />
     </>
   )
-} 
+}

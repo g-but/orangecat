@@ -106,3 +106,31 @@ node scripts/test/demo-profile-workflow-robust.js
 ```
 
 The browser will open and automatically navigate through all workflows, taking screenshots and keeping the browser open when done.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

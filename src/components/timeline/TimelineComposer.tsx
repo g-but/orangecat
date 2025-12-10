@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
-import { Globe, Lock, FolderPlus, X, Bold, Italic } from 'lucide-react';
+import { Globe, Lock, FolderPlus, X, Bold, Italic, Wifi, WifiOff } from 'lucide-react';
 import { usePostComposer } from '@/hooks/usePostComposerNew';
 import AvatarLink from '@/components/ui/AvatarLink';
 import { cn } from '@/lib/utils';
@@ -31,6 +31,8 @@ export interface TimelineComposerProps {
   placeholder?: string;
   buttonText?: string;
   showBanner?: boolean;
+  /** Parent event ID for replies */
+  parentEventId?: string;
 }
 
 /**
@@ -39,36 +41,26 @@ export interface TimelineComposerProps {
  * Modular component for applying markdown-style formatting (bold/italic)
  * Uses markdown syntax: **bold** and *italic*
  */
-function TextFormatToolbar({
-  textareaRef,
-  onFormat,
-  content,
-}: {
-  textareaRef: React.RefObject<HTMLElement>;
-  onFormat: (format: 'bold' | 'italic') => void;
-  content: string;
-}) {
-  if (!content) return null;
-
+function TextFormatToolbar({ onFormat }: { onFormat: (format: 'bold' | 'italic') => void }) {
   return (
-    <div className="flex items-center gap-1 sm:gap-0.5 mt-2">
+    <div className="flex items-center gap-1">
       <button
         type="button"
         onClick={() => onFormat('bold')}
-        className="p-3 sm:p-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 hover:bg-orange-50 active:bg-orange-100 rounded-full text-gray-400 hover:text-orange-500 transition-colors touch-manipulation"
+        className="h-9 w-9 flex items-center justify-center rounded-full text-sky-600 hover:bg-sky-50 active:bg-sky-100 transition-colors"
         title="Bold (Ctrl+B)"
         aria-label="Make text bold"
       >
-        <Bold className="w-4 h-4 sm:w-4 sm:h-4" />
+        <Bold className="w-4 h-4" />
       </button>
       <button
         type="button"
         onClick={() => onFormat('italic')}
-        className="p-3 sm:p-1.5 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 hover:bg-orange-50 active:bg-orange-100 rounded-full text-gray-400 hover:text-orange-500 transition-colors touch-manipulation"
+        className="h-9 w-9 flex items-center justify-center rounded-full text-sky-600 hover:bg-sky-50 active:bg-sky-100 transition-colors"
         title="Italic (Ctrl+I)"
         aria-label="Make text italic"
       >
-        <Italic className="w-4 h-4 sm:w-4 sm:h-4" />
+        <Italic className="w-4 h-4" />
       </button>
     </div>
   );
@@ -165,11 +157,28 @@ const TimelineComposer = React.memo(function TimelineComposer({
   placeholder,
   buttonText = 'Post',
   showBanner = true,
+  parentEventId,
 }: TimelineComposerProps) {
   const { user, profile } = useAuth();
   const [showProjects, setShowProjects] = useState(false);
   const editorRef = useRef<HTMLDivElement>(null);
   const [isComposing, setIsComposing] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
+
+  // Track online/offline status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    setIsOnline(navigator.onLine);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // Use the post composer hook
   const postComposer = usePostComposer({
@@ -181,6 +190,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
       setShowProjects(false);
     },
     onOptimisticUpdate,
+    parentEventId,
   });
 
   // Determine if posting to own timeline
@@ -201,18 +211,21 @@ const TimelineComposer = React.memo(function TimelineComposer({
 
   // Sync markdown content to HTML in editor (only when not actively composing)
   useEffect(() => {
-    if (!editorRef.current || isComposing) return;
-    
+    // Skip syncing while composing or when the editor is focused to avoid cursor drops
+    if (!editorRef.current || isComposing || document.activeElement === editorRef.current) {
+      return;
+    }
+
     const currentHtml = editorRef.current.innerHTML.replace(/\s+/g, ' ').trim();
     const expectedHtml = markdownToHtml(postComposer.content).replace(/\s+/g, ' ').trim();
-    
+
     // Only update if significantly different (avoid cursor jumping on every keystroke)
     if (currentHtml !== expectedHtml && expectedHtml !== '<br>') {
       const selection = getSelectionRange(editorRef.current);
       const wasFocused = document.activeElement === editorRef.current;
-      
+
       editorRef.current.innerHTML = expectedHtml || '<br>';
-      
+
       // Restore cursor position and focus
       if (selection && wasFocused) {
         requestAnimationFrame(() => {
@@ -269,12 +282,29 @@ const TimelineComposer = React.memo(function TimelineComposer({
           postComposer.setContent(markdown);
         }
         
-        // Auto-resize
+        // Auto-resize with a higher cap for long pastes
         editorRef.current.style.height = 'auto';
-        editorRef.current.style.height = `${Math.min(editorRef.current.scrollHeight, 200)}px`;
+        const maxHeight = 480; // px cap to avoid covering screen
+        editorRef.current.style.height = `${Math.min(editorRef.current.scrollHeight, maxHeight)}px`;
       }
       setIsComposing(false);
     }, 10);
+  }, [postComposer]);
+
+  // Handle paste to strip formatting and avoid broken HTML fragments
+  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
+    if (!editorRef.current) return;
+
+    e.preventDefault();
+    const text = e.clipboardData.getData('text/plain');
+
+    // Insert plain text at the cursor
+    document.execCommand('insertText', false, text);
+
+    // Sync markdown from the updated HTML
+    const html = editorRef.current.innerHTML;
+    const markdown = htmlToMarkdown(html);
+    postComposer.setContent(markdown);
   }, [postComposer]);
 
   // Handle keyboard shortcuts (desktop only - mobile keyboards don't have Ctrl/Cmd)
@@ -332,8 +362,8 @@ const TimelineComposer = React.memo(function TimelineComposer({
   );
 
   return (
-    <div className="border-b border-gray-200 bg-white px-3 sm:px-4 py-3 transition-all safe-area-padding-x">
-      <div className="flex gap-2 sm:gap-3">
+    <div className="max-w-2xl mx-auto border-b border-gray-200 bg-white px-4 sm:px-5 py-4 transition-all">
+      <div className="flex gap-3">
         {/* User Avatar - Using AvatarLink component */}
         <div className="pt-0.5 sm:pt-1 flex-shrink-0">
           <AvatarLink
@@ -345,40 +375,38 @@ const TimelineComposer = React.memo(function TimelineComposer({
             className="flex-shrink-0"
             isCurrentUser={true}
           />
-          </div>
+        </div>
 
         {/* Content Area */}
         <div className="flex-1 min-w-0">
           {/* Subtle Context Indicator (Replacement for Banner) */}
           {!postingToOwnTimeline && showBanner && (
             <ContextIndicator targetName={targetName} />
-            )}
+          )}
 
           {/* ContentEditable Input - Shows formatted text inline (like X) */}
           <div
             ref={editorRef}
             contentEditable
             onInput={handleInput}
-              onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            onKeyDown={handleKeyDown}
             data-placeholder={placeholder || defaultPlaceholder}
+            role="textbox"
+            aria-multiline="true"
+            aria-label="Compose new post"
             className={cn(
-              'w-full min-h-[3rem] sm:min-h-[3rem] text-base sm:text-lg',
+              'w-full min-h-[6rem] text-[17px] leading-6',
               'border-none bg-transparent p-0 focus:outline-none',
               'leading-relaxed break-words',
+              'max-h-[60vh] overflow-y-auto',
               'empty:before:content-[attr(data-placeholder)]',
               'empty:before:text-gray-400',
               'empty:before:pointer-events-none',
               postComposer.isPosting && 'opacity-50 cursor-not-allowed'
             )}
-            style={{ fontSize: '16px' }} // Prevent iOS zoom on focus
+            style={{ fontSize: '17px' }} // Prevent iOS zoom on focus
             suppressContentEditableWarning
-            />
-
-          {/* Text Formatting Toolbar */}
-          <TextFormatToolbar
-            textareaRef={editorRef as any}
-            onFormat={handleFormat}
-            content={postComposer.content}
           />
 
           {/* Project Selection Panel (Collapsible) */}
@@ -404,69 +432,73 @@ const TimelineComposer = React.memo(function TimelineComposer({
               </div>
             )}
 
-          {/* Bottom Toolbar - Mobile optimized */}
-          <div className="flex items-center justify-between mt-3 pt-2 border-t border-gray-100">
-            <div className="flex items-center gap-1 sm:gap-1 text-orange-500">
-              {/* Visibility Toggle (Icon only) - 44px touch target */}
-                <button
-                  type="button"
-                  onClick={() =>
-                    postComposer.setVisibility(
-                      postComposer.visibility === 'public' ? 'private' : 'public'
-                    )
-                  }
-                  disabled={postComposer.isPosting}
-                className="p-3 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 hover:bg-orange-50 active:bg-orange-100 rounded-full transition-colors text-gray-400 hover:text-orange-500 disabled:opacity-50 touch-manipulation"
-                title={
-                    postComposer.visibility === 'public'
-                    ? 'Public - Everyone can see'
-                    : 'Private - Only you can see'
-                }
-                aria-label={`Post visibility: ${postComposer.visibility}`}
-                >
-                  {postComposer.visibility === 'public' ? (
-                  <Globe className="w-4 h-4 sm:w-4 sm:h-4" />
-                  ) : (
-                  <Lock className="w-4 h-4 sm:w-4 sm:h-4" />
-                  )}
-                </button>
+          {/* Bottom Toolbar - mirrors X layout */}
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
+            <div className="flex items-center gap-2 text-sky-600">
+              <TextFormatToolbar onFormat={handleFormat} />
 
-              {/* Project Toggle (Icon only) - 44px touch target */}
               {allowProjectSelection && postComposer.userProjects.length > 0 && (
                 <button
                   type="button"
                   onClick={showProjects ? handleCloseProjects : handleOpenProjects}
                   className={cn(
-                    'p-3 sm:p-2 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full transition-colors touch-manipulation',
+                    'h-9 w-9 flex items-center justify-center rounded-full transition-colors touch-manipulation',
                     showProjects || postComposer.selectedProjects.length > 0
-                      ? 'text-orange-600 bg-orange-100 active:bg-orange-200'
-                      : 'text-gray-400 hover:bg-orange-50 active:bg-orange-100 hover:text-orange-500'
+                      ? 'text-sky-700 bg-sky-50'
+                      : 'text-sky-600 hover:bg-sky-50 active:bg-sky-100'
                   )}
-                  title="Cross-post to Projects"
+                  title="Cross-post to projects"
                   aria-label="Toggle project selection"
                 >
-                  <FolderPlus className="w-4 h-4 sm:w-4 sm:h-4" />
+                  <FolderPlus className="w-4 h-4" />
                 </button>
               )}
+
+              <button
+                type="button"
+                onClick={() =>
+                  postComposer.setVisibility(
+                    postComposer.visibility === 'public' ? 'private' : 'public'
+                  )
+                }
+                disabled={postComposer.isPosting}
+                className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-sky-50 active:bg-sky-100 transition-colors text-sky-600 disabled:opacity-50 touch-manipulation"
+                title={
+                  postComposer.visibility === 'public'
+                    ? 'Public - Everyone can see'
+                    : 'Private - Only you can see'
+                }
+                aria-label={`Post visibility: ${postComposer.visibility}`}
+              >
+                {postComposer.visibility === 'public' ? (
+                  <Globe className="w-4 h-4" />
+                ) : (
+                  <Lock className="w-4 h-4" />
+                )}
+              </button>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
-              {/* Subtle Character Count - Larger on mobile */}
+            <div className="flex items-center gap-3">
+              {!isOnline && (
+                <div className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
+                  <WifiOff className="w-3 h-3" />
+                  <span>Offline</span>
+                </div>
+              )}
               {postComposer.content.length > 0 && (
-                <div className={cn('text-sm sm:text-xs font-medium', characterCountColor)}>
+                <div className={cn('text-sm font-medium', characterCountColor)}>
                   {postComposer.content.length}/500
                 </div>
               )}
 
-              {/* Post Button - Already has 44px min-height from Button component */}
-                <Button
-                  onClick={postComposer.handlePost}
-                  disabled={isButtonDisabled}
-                className="bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white rounded-full px-5 sm:px-5 py-2 sm:py-1.5 text-sm font-bold shadow-sm disabled:opacity-50 disabled:shadow-none transition-all touch-manipulation"
-                  size="sm"
+              <Button
+                onClick={postComposer.handlePost}
+                disabled={isButtonDisabled}
+                className="rounded-full px-5 py-2 text-sm font-bold bg-sky-500 hover:bg-sky-600 active:bg-sky-700 text-white shadow-sm disabled:opacity-50 disabled:shadow-none transition-all"
+                size="sm"
               >
                 {postComposer.isPosting ? 'Posting...' : buttonText}
-                </Button>
+              </Button>
             </div>
           </div>
         </div>

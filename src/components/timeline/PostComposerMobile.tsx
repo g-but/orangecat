@@ -69,46 +69,44 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false);
   const [showProjectSelector, setShowProjectSelector] = useState(false);
 
-  // Preload project selection modal when composer opens (for instant opening)
+  // Lazy load project selection modal (always available, only rendered when needed)
   const LazyProjectSelectionModal = dynamic(
-    () => import('./ProjectSelectionModal').then(module => ({ default: module.default })),
+    () => import('./ProjectSelectionModal'),
     { ssr: false, loading: () => null }
   );
 
-  // Preload modal component when composer opens
+  // Sync markdown content to HTML in editor (only when not actively composing or focused)
   useEffect(() => {
-    if (fullScreen && showProjectSelection) {
-      // Preload the modal component so it's ready when user clicks
-      import('./ProjectSelectionModal');
-    }
-  }, [fullScreen, showProjectSelection]);
-
-  // Sync markdown content to HTML in editor (only when not actively composing)
-  useEffect(() => {
-    if (!editorRef.current || isComposing) {
+    const editor = editorRef.current;
+    if (!editor || isComposing) {
       return;
     }
 
-    const currentHtml = editorRef.current.innerHTML.replace(/\s+/g, ' ').trim();
+    // Do not re-render the HTML while the user is actively typing to avoid cursor jumps
+    if (document.activeElement === editor) {
+      return;
+    }
+
+    const currentHtml = editor.innerHTML.replace(/\s+/g, ' ').trim();
     const expectedHtml = markdownToHtml(composer.content).replace(/\s+/g, ' ').trim();
 
     // Only update if significantly different (avoid cursor jumping on every keystroke)
     if (currentHtml !== expectedHtml && expectedHtml !== '<br>') {
-      const selection = getSelectionRange(editorRef.current);
-      const wasFocused = document.activeElement === editorRef.current;
+      const selection = getSelectionRange(editor);
+      const wasFocused = document.activeElement === editor;
 
-      editorRef.current.innerHTML = sanitizeHtml(expectedHtml || '<br>');
+      editor.innerHTML = sanitizeHtml(expectedHtml || '<br>');
 
       // Restore cursor position and focus
       if (selection && wasFocused) {
         requestAnimationFrame(() => {
-          if (editorRef.current) {
+          if (editor) {
             try {
-              setSelectionRange(editorRef.current, selection.start, selection.end);
-              editorRef.current.focus();
+              setSelectionRange(editor, selection.start, selection.end);
+              editor.focus();
             } catch (e) {
               // Fallback: just focus
-              editorRef.current.focus();
+              editor.focus();
             }
           }
         });
@@ -118,11 +116,11 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
 
   // Auto-focus on mount (mobile-friendly)
   useEffect(() => {
-    if (autoFocus && editorRef.current && !compact) {
+    if ((autoFocus || fullScreen || isOpen) && editorRef.current && !compact) {
       // Delay focus for mobile keyboards
       setTimeout(() => editorRef.current?.focus(), 100);
     }
-  }, [autoFocus, compact]);
+  }, [autoFocus, compact, fullScreen, isOpen]);
 
   // Handle input in contentEditable
   const handleInput = useCallback(() => {
@@ -143,14 +141,29 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
           composer.setContent(markdown);
         }
 
-        // Auto-resize
+        // Auto-resize with generous cap for long pastes; allow scroll after cap
         editorRef.current.style.height = 'auto';
-        const maxHeight = fullScreen ? 300 : 120;
+        const maxHeight = fullScreen ? 480 : 320; // px
         editorRef.current.style.height = `${Math.min(editorRef.current.scrollHeight, maxHeight)}px`;
+        editorRef.current.style.overflowY = editorRef.current.scrollHeight > maxHeight ? 'auto' : 'hidden';
       }
       setIsComposing(false);
     }, 10);
   }, [composer, fullScreen]);
+
+  // Handle paste to force plain text (no rich formatting)
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      if (!editorRef.current) return;
+      e.preventDefault();
+      const text = e.clipboardData.getData('text/plain');
+      document.execCommand('insertText', false, text);
+      const html = sanitizeHtml(editorRef.current.innerHTML);
+      const markdown = htmlToMarkdown(html);
+      composer.setContent(markdown);
+    },
+    [composer]
+  );
 
   // Formatting handler - uses document.execCommand for contentEditable
   const handleFormat = useCallback(
@@ -282,7 +295,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
             <div className="flex items-center gap-3 mb-4">
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-gray-900">
-                  {user?.user_metadata?.name || user?.email?.split('@')[0] || 'You'}
+                  {user?.user_metadata?.name || (typeof user?.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : user?.email || 'You')}
                 </div>
                 {showVisibilityToggle && (
                   <button
@@ -306,20 +319,22 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
               ref={editorRef}
               contentEditable
               onInput={handleInput}
+            onPaste={handlePaste}
               onKeyDown={handleKeyDown}
               data-placeholder={fullScreen ? "What's happening?" : placeholder}
               className={cn(
                 'w-full border-0 bg-transparent',
                 'focus:outline-none focus:ring-0',
                 'leading-relaxed break-words',
+              'max-h-[60vh] overflow-y-auto',
                 'empty:before:content-[attr(data-placeholder)]',
                 'empty:before:text-gray-500',
                 'empty:before:pointer-events-none',
                 fullScreen
-                  ? 'text-xl min-h-[120px]'
-                  : compact
-                    ? 'text-sm min-h-[40px] max-h-[80px]'
-                    : 'text-base min-h-[60px] max-h-[120px]',
+                ? 'text-xl min-h-[120px]'
+                : compact
+                  ? 'text-sm min-h-[40px]'
+                  : 'text-base min-h-[60px]',
                 composer.isPosting && 'opacity-50 cursor-not-allowed'
               )}
               style={{ fontSize: fullScreen ? '20px' : '16px' }} // Prevent iOS zoom on focus

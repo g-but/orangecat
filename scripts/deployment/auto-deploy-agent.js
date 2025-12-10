@@ -428,8 +428,10 @@ class AutoDeployAgent {
       
       missing_env_vars: {
         canFix: true,
-        description: 'Set missing environment variables from .env.example',
-        commands: ['cp .env.example .env.local || echo "# Add your environment variables here" > .env.local']
+        description: 'Validate or initialize env via Env Manager (non-destructive)',
+        commands: [
+          'node scripts/utils/env-manager.js validate || node scripts/utils/env-manager.js setup'
+        ]
       },
       
       uncommitted_changes: {

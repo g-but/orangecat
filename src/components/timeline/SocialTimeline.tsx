@@ -2,11 +2,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { timelineService } from '@/services/timeline';
 import TimelineLayout from './TimelineLayout';
-import { TimelineFeedResponse } from '@/types/timeline';
+import { TimelineDisplayEvent, TimelineFeedResponse } from '@/types/timeline';
 import Button from '@/components/ui/Button';
-import { LucideIcon, TrendingUp, Clock, Flame, Plus } from 'lucide-react';
+import { LucideIcon, TrendingUp, Clock, Flame, Plus, Search, Loader2, X } from 'lucide-react';
 import { logger } from '@/utils/logger';
 import TimelineComposer from './TimelineComposer';
+import { TimelineSkeleton } from './TimelineSkeleton';
 
 export interface SocialTimelineProps {
   // Page identity
@@ -75,6 +76,11 @@ export default function SocialTimeline({
   const [optimisticEvents, setOptimisticEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<TimelineDisplayEvent[] | null>(null);
+  const [searchTotal, setSearchTotal] = useState<number | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [searching, setSearching] = useState(false);
 
   // Handle optimistic event updates
   const handleOptimisticUpdate = useCallback(
@@ -215,11 +221,56 @@ export default function SocialTimeline({
 
   // Handle load more
   const handleLoadMore = useCallback(() => {
+    if (searchResults !== null) {
+      // Disable pagination while search results are active
+      return;
+    }
+
     if (!timelineFeed?.pagination.hasNext) {
       return;
     }
     loadTimelineFeed(sortBy, timelineFeed.pagination.page + 1);
-  }, [timelineFeed, sortBy, loadTimelineFeed]);
+  }, [timelineFeed, sortBy, loadTimelineFeed, searchResults]);
+
+  const isSearchActive = searchResults !== null;
+
+  const handleSearch = useCallback(
+    async (e?: React.FormEvent) => {
+      e?.preventDefault();
+
+      const query = searchQuery.trim();
+      if (query.length < 2) {
+        setSearchError('Enter at least 2 characters');
+        setSearchResults(null);
+        setSearchTotal(null);
+        return;
+      }
+
+      setSearching(true);
+      setSearchError(null);
+
+      const result = await timelineService.searchPosts(query, { limit: 30, offset: 0 });
+
+      if (!result.success) {
+        setSearchError(result.error || 'Search failed. Please try again.');
+        setSearchResults(null);
+        setSearchTotal(null);
+      } else {
+        setSearchResults(result.posts || []);
+        setSearchTotal(result.total ?? result.posts?.length ?? 0);
+      }
+
+      setSearching(false);
+    },
+    [searchQuery]
+  );
+
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    setSearchResults(null);
+    setSearchTotal(null);
+    setSearchError(null);
+  }, []);
 
   // Load data on mount and when dependencies change
   useEffect(() => {
@@ -291,9 +342,43 @@ export default function SocialTimeline({
     </div>
   );
 
+  const searchControls = (
+    <div className="border-b border-gray-200 bg-white px-4 py-3">
+      <form onSubmit={handleSearch} className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search posts (title or description)..."
+            className="w-full rounded-full border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
+          />
+        </div>
+        <Button type="submit" size="sm" disabled={searching} className="gap-2">
+          {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+          {searching ? 'Searching' : 'Search'}
+        </Button>
+        {isSearchActive && (
+          <Button type="button" size="sm" variant="ghost" onClick={handleClearSearch} className="text-gray-600">
+            <X className="w-4 h-4 mr-1" />
+            Clear
+          </Button>
+        )}
+      </form>
+      {searchError && <p className="text-sm text-red-600 mt-2">{searchError}</p>}
+      {isSearchActive && !searchError && (
+        <p className="text-xs text-gray-500 mt-2">
+          Showing {searchResults?.length || 0} of {searchTotal ?? searchResults?.length ?? 0} results
+        </p>
+      )}
+    </div>
+  );
+
   const inlineComposer =
     showInlineComposer && user ? (
       <div ref={composerRef}>
+        {searchControls}
         <TimelineComposer
           targetOwnerId={timelineOwnerId || (mode === 'timeline' ? user.id : undefined)}
           targetOwnerType={timelineOwnerType}
@@ -309,6 +394,8 @@ export default function SocialTimeline({
         />
       </div>
     ) : undefined;
+
+  const postComposer = inlineComposer === undefined ? searchControls : undefined;
 
   // Calculate stats
   const timelineStats =
@@ -339,15 +426,56 @@ export default function SocialTimeline({
     metadata: { totalEvents: 0, featuredEvents: 0, lastUpdated: new Date().toISOString() },
   };
 
+  // Override feed when search is active
+  const activeFeed: TimelineFeedResponse = isSearchActive
+    ? {
+        events: searchResults || [],
+        pagination: {
+          page: 1,
+          limit: searchResults?.length || 0,
+          total: searchResults?.length || 0,
+          hasNext: false,
+          hasPrev: false,
+        },
+        filters: {
+          ...timelineFeedContent.filters,
+          search: searchQuery,
+        },
+        metadata: {
+          ...timelineFeedContent.metadata,
+          totalEvents: searchResults?.length || 0,
+          lastUpdated: new Date().toISOString(),
+        },
+      }
+    : timelineFeedContent;
+
   // Single, clean empty state (no double loading)
   const emptyState =
-    isInitialLoad || loading ? (
-      <div className="text-center py-16">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-500 mx-auto mb-4"></div>
-        <p className="text-gray-500 text-lg">
-          Loading {mode === 'timeline' ? 'your journey' : 'community'}...
-        </p>
-      </div>
+    isSearchActive ? (
+      searching ? (
+        <TimelineSkeleton count={3} />
+      ) : searchError ? (
+        <div className="text-center py-10">
+          <Icon className="w-14 h-14 text-red-300 mx-auto mb-3" />
+          <p className="text-red-600 text-lg mb-2">{searchError}</p>
+          <Button variant="outline" onClick={handleClearSearch}>
+            Clear Search
+          </Button>
+        </div>
+      ) : activeFeed.events.length === 0 ? (
+        <div className="text-center py-10">
+          <Icon className="w-14 h-14 text-gray-300 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-gray-900 mb-1">No posts found</h3>
+          <p className="text-gray-600">Try another search term.</p>
+          <div className="mt-4">
+            <Button variant="secondary" onClick={handleClearSearch}>
+              Clear search
+            </Button>
+          </div>
+        </div>
+      ) : null
+    ) : isInitialLoad || loading ? (
+      <TimelineSkeleton count={5} />
     ) : error ? (
       <div className="text-center py-16">
         <div className="mb-4">
@@ -409,7 +537,7 @@ export default function SocialTimeline({
       gradientFrom={gradientFrom}
       gradientVia={gradientVia}
       gradientTo={gradientTo}
-      feed={timelineFeedContent}
+      feed={activeFeed}
       onEventUpdate={handleEventUpdate}
       onLoadMore={handleLoadMore}
       stats={timelineStats}
@@ -419,6 +547,7 @@ export default function SocialTimeline({
       additionalHeaderContent={headerContent}
       emptyState={emptyState}
       inlineComposer={inlineComposer}
+      postComposer={postComposer}
     />
   );
 }

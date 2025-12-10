@@ -13,6 +13,7 @@ interface BitcoinPaymentModalProps {
   projectId: string
   projectTitle: string
   suggestedAmount?: number
+  recipientAddress?: string
 }
 
 export default function BitcoinPaymentModal({
@@ -20,20 +21,48 @@ export default function BitcoinPaymentModal({
   onClose,
   projectId,
   projectTitle,
-  suggestedAmount = 10000
+  suggestedAmount = 10000,
+  recipientAddress
 }: BitcoinPaymentModalProps) {
   const [paymentType, setPaymentType] = useState<PaymentType>('lightning')
   const [amount, setAmount] = useState(suggestedAmount)
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null)
   const [loading, setLoading] = useState(false)
+  const [transactionId, setTransactionId] = useState<string | null>(null)
 
   const handleCreatePayment = async () => {
     setLoading(true)
     
     const description = `Donation to ${projectTitle}`
+
+    // Record pending transaction for transparency
+    try {
+      const res = await fetch('/api/transactions', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId,
+          amount_sats: amount,
+          payment_method: paymentType,
+        }),
+      })
+      if (res.ok) {
+        try {
+          const data = await res.json()
+          if (data?.id) setTransactionId(data.id)
+        } catch { /* ignore */ }
+      }
+    } catch { /* ignore */ }
+
     const result = paymentType === 'lightning' 
       ? await bitcoinPaymentService.createLightningPayment(projectId, amount, description)
-      : await bitcoinPaymentService.createOnChainPayment(projectId, amount, description, 'bc1dummy')
+      : await bitcoinPaymentService.createOnChainPayment(
+          projectId,
+          amount,
+          description,
+          recipientAddress || ''
+        )
     
     if (result.success && result.paymentRequest) {
       setPaymentRequest(result.paymentRequest)
@@ -113,10 +142,13 @@ export default function BitcoinPaymentModal({
               <div className="text-sm text-gray-600">
                 Amount: {paymentRequest.amount} sats
               </div>
+              {transactionId && (
+                <div className="text-xs text-gray-500">Transaction created</div>
+              )}
             </div>
           )}
         </div>
       </div>
     </div>
   )
-} 
+}

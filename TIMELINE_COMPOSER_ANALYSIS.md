@@ -1,7 +1,21 @@
+created_date: 2025-11-20
+last_modified_date: 2025-12-07
+last_modified_summary: "Repost modal now mirrors X: comment-first with attached source card."
+
 # TimelineComposer UI/UX Analysis
 
-**Date:** 2025-11-20
 **Approach:** First Principles
+
+## ✅ Recent Update (2025-12-07)
+
+- Repost modal mirrors X quote flow: comment-first layout with your avatar, 280-char counter, and attached source card beneath.
+- Simple repost remains one click; quote button aligns with main post CTA styling for clarity.
+
+## ✅ Recent Update (2025-12-06)
+
+- Timeline surface now mirrors X: single centered column with border rails, sticky header, and lightweight white background.
+- Composer matches X affordances: larger line height, always-visible formatting/visibility controls, round icon buttons, and compact bottom bar.
+- Post cards drop heavy cards/shadows in favor of flat row dividers and hover states to keep focus on content.
 
 ## 🔍 Issues Identified
 
