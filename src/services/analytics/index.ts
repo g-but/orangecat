@@ -221,10 +221,10 @@ class AnalyticsService {
       isDemo: false,
       timeline: FEATURE_FLAGS.organizations.timeline,
       stats: {
-        totalOrganizations: this.createMetricValue(0, 'real'),
-        totalMembers: this.createMetricValue(0, 'real'),
-        combinedTreasury: this.createMetricValue('0.000 BTC', 'real'),
-        activeProposals: this.createMetricValue(0, 'real'),
+        totalOrganizations: this.createMetricValue(0, 'api'),
+        totalMembers: this.createMetricValue(0, 'api'),
+        combinedTreasury: this.createMetricValue('0.000 BTC', 'api'),
+        activeProposals: this.createMetricValue(0, 'api'),
       },
     };
   }
@@ -236,10 +236,10 @@ class AnalyticsService {
       isDemo: false,
       timeline: FEATURE_FLAGS.events.timeline,
       stats: {
-        totalEvents: this.createMetricValue(0, 'real'),
-        totalAttendees: this.createMetricValue(0, 'real'),
-        totalRevenue: this.createMetricValue('0.000 BTC', 'real'),
-        upcomingEvents: this.createMetricValue(0, 'real'),
+        totalEvents: this.createMetricValue(0, 'api'),
+        totalAttendees: this.createMetricValue(0, 'api'),
+        totalRevenue: this.createMetricValue('0.000 BTC', 'api'),
+        upcomingEvents: this.createMetricValue(0, 'api'),
       },
     };
   }
@@ -251,10 +251,10 @@ class AnalyticsService {
       isDemo: false,
       timeline: FEATURE_FLAGS.projects.timeline,
       stats: {
-        totalProjects: this.createMetricValue(0, 'real'),
-        totalContributors: this.createMetricValue(0, 'real'),
-        totalFunding: this.createMetricValue('0.000 BTC', 'real'),
-        avgProgress: this.createMetricValue('0%', 'real'),
+        totalProjects: this.createMetricValue(0, 'database'),
+        totalContributors: this.createMetricValue(0, 'database'),
+        totalFunding: this.createMetricValue('0.000 BTC', 'database'),
+        avgProgress: this.createMetricValue('0%', 'database'),
       },
     };
   }
@@ -266,10 +266,10 @@ class AnalyticsService {
       isDemo: false,
       timeline: FEATURE_FLAGS.assets.timeline,
       stats: {
-        totalAssets: this.createMetricValue(0, 'real'),
-        totalEarnings: this.createMetricValue('0.000 BTC', 'real'),
-        totalRentals: this.createMetricValue(0, 'real'),
-        availableAssets: this.createMetricValue(0, 'real'),
+        totalAssets: this.createMetricValue(0, 'api'),
+        totalEarnings: this.createMetricValue('0.000 BTC', 'api'),
+        totalRentals: this.createMetricValue(0, 'api'),
+        availableAssets: this.createMetricValue(0, 'api'),
       },
     };
   }

@@ -19,10 +19,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
+import MessagePanel from '@/components/messaging/MessagePanel';
 
 interface Notification {
   id: string;
-  type: 'payment' | 'lightning' | 'project' | 'social' | 'system';
+  type: 'payment' | 'lightning' | 'project' | 'social' | 'system' | 'message';
   title: string;
   message: string;
   timestamp: Date;
@@ -33,6 +34,8 @@ interface Notification {
     projectId?: string;
     currency?: 'BTC' | 'SATS';
     userId?: string;
+    conversationId?: string;
+    messageId?: string;
   };
 }
 
@@ -48,8 +51,9 @@ export default function NotificationCenter({
   className = '',
 }: NotificationCenterProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [filter, setFilter] = useState<'all' | 'unread' | 'payments' | 'projects'>('all');
+  const [filter, setFilter] = useState<'all' | 'unread' | 'payments' | 'projects' | 'messages'>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [showMessages, setShowMessages] = useState(false);
 
   // Mock notifications data (in real app, fetch from API)
   useEffect(() => {
@@ -61,7 +65,7 @@ export default function NotificationCenter({
         message: 'You received 0.001 BTC for your "Open Source Project" project',
         timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutes ago
         read: false,
-        actionUrl: '/dashboard/analytics',
+        actionUrl: '/dashboard',
         metadata: { amount: 0.001, projectId: 'camp_1', currency: 'BTC' },
       },
       {
@@ -71,7 +75,7 @@ export default function NotificationCenter({
         message: 'You received 50,000 sats via Lightning for your project',
         timestamp: new Date(Date.now() - 1000 * 60 * 15), // 15 minutes ago
         read: false,
-        actionUrl: '/dashboard/analytics',
+        actionUrl: '/dashboard',
         metadata: { amount: 50000, projectId: 'camp_1', currency: 'SATS' },
       },
       {
@@ -101,7 +105,7 @@ export default function NotificationCenter({
         message: 'Your weekly project performance report is ready',
         timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
         read: true,
-        actionUrl: '/dashboard/analytics',
+        actionUrl: '/dashboard',
       },
     ];
 
@@ -121,6 +125,8 @@ export default function NotificationCenter({
         return <TrendingUp className="w-5 h-5 text-green-500" />;
       case 'social':
         return <Users className="w-5 h-5 text-blue-500" />;
+      case 'message':
+        return <MessageSquare className="w-5 h-5 text-purple-500" />;
       case 'system':
         return <Settings className="w-5 h-5 text-gray-500" />;
       default:
@@ -137,6 +143,9 @@ export default function NotificationCenter({
     }
     if (filter === 'projects') {
       return notification.type === 'project';
+    }
+    if (filter === 'messages') {
+      return notification.type === 'message';
     }
     return true;
   });
@@ -164,6 +173,13 @@ export default function NotificationCenter({
   const handleNotificationClick = (notification: Notification) => {
     if (!notification.read) {
       markAsRead(notification.id);
+    }
+
+    if (notification.type === 'message' && notification.metadata?.conversationId) {
+      // Open message conversation
+      setShowMessages(true);
+      onClose(); // Close notification center
+      return;
     }
 
     if (notification.actionUrl) {
@@ -202,6 +218,7 @@ export default function NotificationCenter({
               { key: 'unread', label: 'Unread' },
               { key: 'payments', label: 'Payments' },
               { key: 'projects', label: 'Projects' },
+              { key: 'messages', label: 'Messages' },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -331,18 +348,33 @@ export default function NotificationCenter({
           {filteredNotifications.length > 0 && (
             <div className="pt-4 mt-4 border-t border-gray-200">
               <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    setShowMessages(true);
+                    onClose();
+                  }}
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Messages
+                </Button>
                 <Button variant="outline" size="sm" className="flex-1">
                   <Settings className="w-4 h-4 mr-2" />
                   Settings
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  View All
                 </Button>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
+
+      {/* Message Panel */}
+      <MessagePanel
+        isOpen={showMessages}
+        onClose={() => setShowMessages(false)}
+      />
     </div>
   );
 }

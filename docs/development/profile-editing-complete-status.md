@@ -230,3 +230,31 @@ This document tracks what we've accomplished and what remains to be done for the
 - All editing functionality is complete
 - Only missing piece is **displaying** the new data on public profiles
 - This is a quick fix - just need to add display sections to existing components
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

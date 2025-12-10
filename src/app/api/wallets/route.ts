@@ -13,6 +13,7 @@ import {
   logWalletError,
   handleSupabaseError,
   createWalletErrorResponse,
+  isTableNotFoundError,
 } from '@/lib/wallets/errorHandling';
 import { rateLimitWrite } from '@/lib/rate-limit';
 import { apiRateLimited, apiSuccess, apiBadRequest } from '@/lib/api/standardResponse';
@@ -75,7 +76,7 @@ export async function GET(request: NextRequest) {
     return apiSuccess(data || [], { cache: 'SHORT' });
   } catch (error) {
     logger.error('Unexpected error in GET /api/wallets', { error });
-    return handleSupabaseError('fetch wallets', error, { profileId, projectId });
+    return handleSupabaseError('fetch wallets', error);
   }
 }
 
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as WalletFormData & {
       profile_id?: string;
       project_id?: string;
+      force_duplicate?: boolean;
     };
 
     // Validate entity ownership

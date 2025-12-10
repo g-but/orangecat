@@ -46,6 +46,9 @@ headers: {
 ### **📁 File Upload**
 - [Upload API](uploads.md) - Avatar and banner image uploads
 
+### **🤖 AI Chat**
+- [Chat API](chat.md) - AI assistant integration using Google Gemini
+
 ---
 
 ## 🎯 Quick Start

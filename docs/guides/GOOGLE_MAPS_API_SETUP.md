@@ -115,3 +115,31 @@ After setup, test in browser:
 
 - [Google Places API Docs](https://developers.google.com/maps/documentation/places/web-service)
 - [Pricing Information](https://developers.google.com/maps/documentation/places/web-service/usage-and-billing)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

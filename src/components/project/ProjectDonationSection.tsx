@@ -12,6 +12,7 @@
 'use client';
 
 import { Bitcoin, ExternalLink, Heart, Copy, ShieldCheck } from 'lucide-react';
+import BitcoinPaymentButton from '@/components/bitcoin/BitcoinPaymentButton';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +25,7 @@ interface ProjectDonationSectionProps {
   projectId: string;
   bitcoinAddress: string | null;
   lightningAddress: string | null;
+  projectTitle?: string;
   isOwner?: boolean;
 }
 
@@ -31,6 +33,7 @@ export function ProjectDonationSection({
   projectId,
   bitcoinAddress,
   lightningAddress,
+  projectTitle = 'Project',
   isOwner = false,
 }: ProjectDonationSectionProps) {
   const { user } = useAuth();
@@ -157,19 +160,31 @@ export function ProjectDonationSection({
 
           {/* Donate Button - Scrolls to donation addresses */}
           {(bitcoinAddress || lightningAddress) && (
-            <Button
-              onClick={() => {
-                const donationSection = document.getElementById('bitcoin-donation-section');
-                if (donationSection) {
-                  donationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-              }}
-              className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
-              aria-label="Scroll to donation addresses"
-            >
-              <Bitcoin className="w-4 h-4 mr-2" aria-hidden="true" />
-              Donate Bitcoin
-            </Button>
+            <div className="flex-1">
+              {/* Open payment modal for smoother UX */}
+              <div className="hidden sm:block">
+                <BitcoinPaymentButton
+                  projectId={projectId}
+                  projectTitle={projectTitle}
+                  suggestedAmount={10000}
+                  recipientAddress={bitcoinAddress || undefined}
+                />
+              </div>
+              {/* Fallback: scroll to donation addresses on small screens */}
+              <div className="sm:hidden">
+                <Button
+                  onClick={() => {
+                    const donationSection = document.getElementById('bitcoin-donation-section');
+                    if (donationSection) donationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className="w-full bg-orange-600 hover:bg-orange-700 text-white"
+                  aria-label="Scroll to donation addresses"
+                >
+                  <Bitcoin className="w-4 h-4 mr-2" aria-hidden="true" />
+                  Donate Bitcoin
+                </Button>
+              </div>
+            </div>
           )}
         </div>
         <p className="text-sm text-gray-500 mt-3">

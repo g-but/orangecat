@@ -6,74 +6,51 @@ import { cookies as getNextCookies } from 'next/headers';
 import { Database } from '@/types/database';
 import { logger } from '@/utils/logger';
 
-// Environment variables with fallbacks for build time
-// IMPORTANT: Keep server/client configuration in sync
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+// Environment variables (fail-fast in production, safe fallbacks in dev only)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey =
   process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Warn if using fallback values in production
-if (
-  (!process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    (!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY &&
-      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) &&
-  process.env.NODE_ENV === 'production'
-) {
-  logger.warn(
-    'Using fallback Supabase configuration on the server. Authentication and profile APIs may not work correctly.',
-    {
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-        ? 'Publishable Key Set'
-        : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-          ? 'Anon Key Set'
-          : 'Missing',
-    },
-    'Supabase'
-  );
+if (process.env.NODE_ENV === 'production') {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    logger.error('Missing Supabase configuration in production environment', {}, 'Supabase')
+    throw new Error('Supabase environment variables are not set in production')
+  }
+} else {
+  // Development: log a clear warning if missing (server can still start, but features may be limited)
+  if (!supabaseUrl || !supabaseAnonKey) {
+    logger.warn('Supabase env missing in development. Some features may not work.', {}, 'Supabase')
+  }
 }
 
 // Create a server-side Supabase client
 export const createServerClient = async () => {
   const cookieStore = await getNextCookies();
 
-  return createSupabaseServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+  return createSupabaseServerClient<Database>(supabaseUrl as string, supabaseAnonKey as string, {
     cookies: {
       getAll() {
-        return cookieStore.getAll().map(cookie => ({
-          name: cookie.name,
-          value: cookie.value,
-        }));
+        const allCookies = cookieStore.getAll();
+        // Debug: Log cookie names in development
+        if (process.env.NODE_ENV === 'development') {
+          const cookieNames = allCookies.map(c => c.name);
+          if (cookieNames.length > 0) {
+            console.log('Available cookies:', cookieNames);
+          }
+        }
+        return allCookies;
       },
-      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+      setAll(cookiesToSet) {
         try {
           cookiesToSet.forEach(({ name, value, options }) => {
-            // The `set` method here will throw an error if called from a Server Component
-            // It's primarily for use in Route Handlers and Server Actions
-            // For Server Components, reading cookies is fine, but setting them needs a different approach (e.g., in middleware or actions)
             cookieStore.set(name, value, options);
           });
         } catch (error) {
-          // Gracefully handle errors if `set` is called in an unsupported context (e.g. Server Components during render)
-          // console.error('Error setting cookies in Supabase server client:', error);
+          // Gracefully handle errors if `set` is called in an unsupported context
+          console.warn('Failed to set cookies in server client:', error);
         }
       },
-      // Optional: If you need individual get/set/remove for specific scenarios, though getAll/setAll is preferred
-      // get(name: string) {
-      //   return cookieStore.get(name)?.value
-      // },
-      // set(name: string, value: string, options: CookieOptions) {
-      //   try {
-      //     cookieStore.set(name, value, options)
-      //   } catch (error) { /* Handle error */ }
-      // },
-      // remove(name: string, options: CookieOptions) {
-      //   try {
-      //     cookieStore.set(name, '', options) // Removing by setting an empty value with options
-      //   } catch (error) { /* Handle error */ }
-      // },
     },
   });
 };

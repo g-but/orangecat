@@ -31,6 +31,7 @@ import MobileSearchModal from '@/components/search/MobileSearchModal';
 import UserProfileDropdown from '@/components/ui/UserProfileDropdown';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import NotificationCenter from '@/components/notifications/NotificationCenter';
 
 interface UnifiedHeaderProps {
   showSearch?: boolean;
@@ -57,6 +58,7 @@ const UnifiedHeader = React.memo(function UnifiedHeader({
   hideForRoutes = AUTHENTICATED_ROUTES_WITH_OWN_HEADER,
 }: UnifiedHeaderProps) {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile, signOut } = useAuth();
@@ -225,6 +227,7 @@ const UnifiedHeader = React.memo(function UnifiedHeader({
                 </button>
               )}
 
+
               {/* Authenticated User Actions */}
               {user && (
                 <>
@@ -233,6 +236,7 @@ const UnifiedHeader = React.memo(function UnifiedHeader({
 
                   {/* Notifications - X-style */}
                   <button
+                    onClick={() => setShowNotifications(true)}
                     className="relative p-3 min-h-[44px] min-w-[44px] text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all duration-150 flex items-center justify-center"
                     aria-label="Notifications"
                   >
@@ -450,6 +454,12 @@ const UnifiedHeader = React.memo(function UnifiedHeader({
       {showSearch && (
         <MobileSearchModal isOpen={showMobileSearch} onClose={() => setShowMobileSearch(false)} />
       )}
+
+      {/* Notification Center */}
+      <NotificationCenter
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
 
       {/* Spacer to prevent content overlap */}
       <div className="h-16" />

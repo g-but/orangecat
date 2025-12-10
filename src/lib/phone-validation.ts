@@ -115,3 +115,31 @@ export function formatPhoneNumberForDisplay(phone: string): string {
   // For other formats, return normalized
   return normalized;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

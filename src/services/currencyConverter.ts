@@ -9,9 +9,8 @@
  * - Provides reactive updates when BTC price changes
  */
 
+import { CURRENCY_CODES, type CurrencyCode } from '@/config/currencies';
 import { logger } from '@/utils/logger';
-
-export type CurrencyCode = 'BTC' | 'SATS' | 'CHF' | 'USD' | 'EUR';
 
 export interface ExchangeRates {
   btcToChf: number;

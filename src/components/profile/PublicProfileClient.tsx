@@ -11,12 +11,14 @@ import Button from '@/components/ui/Button';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import ProfileShare from '@/components/sharing/ProfileShare';
 import ProfileViewTabs from '@/components/profile/ProfileViewTabs';
-import ProfileOverviewTab from '@/components/profile/ProfileOverviewTab';
-import ProfileTimelineTab from '@/components/profile/ProfileTimelineTab';
-import ProfileProjectsTab from '@/components/profile/ProfileProjectsTab';
-import ProfilePeopleTab from '@/components/profile/ProfilePeopleTab';
-import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
-import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
+import dynamic from 'next/dynamic';
+
+const ProfileOverviewTab = dynamic(() => import('@/components/profile/ProfileOverviewTab'));
+const ProfileTimelineTab = dynamic(() => import('@/components/profile/ProfileTimelineTab'));
+const ProfileProjectsTab = dynamic(() => import('@/components/profile/ProfileProjectsTab'));
+const ProfilePeopleTab = dynamic(() => import('@/components/profile/ProfilePeopleTab'));
+const ProfileInfoTab = dynamic(() => import('@/components/profile/ProfileInfoTab'));
+const ProfileWalletsTab = dynamic(() => import('@/components/profile/ProfileWalletsTab'));
 import {
   Bitcoin,
   Zap,
@@ -342,25 +344,39 @@ export default function PublicProfileClient({
             </div>
 
             {!isOwnProfile && (
-              <Button
-                onClick={handleFollowToggle}
-                disabled={isFollowLoading}
-                size="sm"
-                className={cn(
-                  'shadow-lg text-xs sm:text-sm',
-                  isFollowing
-                    ? 'bg-gray-600 hover:bg-gray-700 text-white'
-                    : 'bg-orange-600 hover:bg-orange-700 text-white'
-                )}
-              >
-                <Users className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
-                <span className="hidden sm:inline">
-                  {isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
-                </span>
-                <span className="sm:hidden">
-                  {isFollowLoading ? '...' : isFollowing ? '−' : '+'}
-                </span>
-              </Button>
+              <>
+                {/* Message Button */}
+                <Button
+                  onClick={() => router.push(`/messages?user=${profile.id}`)}
+                  variant="outline"
+                  size="sm"
+                  className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg text-xs sm:text-sm"
+                >
+                  <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Message</span>
+                </Button>
+
+                {/* Follow Button */}
+                <Button
+                  onClick={handleFollowToggle}
+                  disabled={isFollowLoading}
+                  size="sm"
+                  className={cn(
+                    'shadow-lg text-xs sm:text-sm',
+                    isFollowing
+                      ? 'bg-gray-600 hover:bg-gray-700 text-white'
+                      : 'bg-orange-600 hover:bg-orange-700 text-white'
+                  )}
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">
+                    {isFollowLoading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
+                  </span>
+                  <span className="sm:hidden">
+                    {isFollowLoading ? '...' : isFollowing ? '−' : '+'}
+                  </span>
+                </Button>
+              </>
             )}
           </div>
         </div>

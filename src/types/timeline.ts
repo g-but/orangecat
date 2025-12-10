@@ -285,10 +285,12 @@ export interface TimelineDisplayEvent extends Omit<TimelineEvent, 'eventType' | 
 
   // Interaction data
   likesCount?: number;
+  dislikesCount?: number;
   commentsCount?: number;
   sharesCount?: number;
   repostsCount?: number;
   userLiked?: boolean;
+  userDisliked?: boolean;
   userShared?: boolean;
   userCommented?: boolean;
   userReposted?: boolean;
@@ -403,6 +405,7 @@ export interface TimelineEventResponse {
   success: boolean;
   event?: TimelineEvent;
   error?: string;
+  metadata?: Record<string, any>;
 }
 
 // ==================== EVENT TYPE CONFIGURATIONS ====================

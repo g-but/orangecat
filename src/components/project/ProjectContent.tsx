@@ -143,6 +143,7 @@ export function ProjectContent({ project }: ProjectContentProps) {
         {/* Donation Section */}
         <ProjectDonationSection
           projectId={project.id}
+          projectTitle={(project as any).title || 'Project'}
           bitcoinAddress={project.bitcoin_address}
           lightningAddress={project.lightning_address}
           isOwner={project.isOwner}

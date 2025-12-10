@@ -88,16 +88,17 @@ async function respondWithProfile(
 }
 
 async function ensureProfileRecord(supabase: SupabaseServer, user: any) {
-  const username =
-    user.email && user.email.includes('@')
-      ? user.email.split('@')[0]
-      : `user_${user.id?.toString().slice(0, 8) || 'unknown'}`;
+  const rawEmail: string | null = typeof user.email === 'string' ? user.email : null;
+  const emailName = rawEmail && rawEmail.includes('@') ? rawEmail.split('@')[0] : null;
+  const username = emailName && emailName.length > 0
+    ? emailName
+    : `user_${user.id?.toString().slice(0, 8) || 'unknown'}`;
 
   const name =
     user.user_metadata?.full_name ||
     user.user_metadata?.name ||
     user.user_metadata?.display_name ||
-    (user.email && user.email.split('@')[0]) ||
+    (emailName && emailName.length > 0 ? emailName : null) ||
     'User';
 
   try {
@@ -174,6 +175,8 @@ export async function PUT(request: NextRequest) {
       'location_city',
       'location_zip',
       'location_search',
+      // Allow saving extra context/flags for location privacy/grouping
+      'location_context',
       'latitude',
       'longitude',
       'location',

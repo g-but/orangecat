@@ -176,17 +176,17 @@ export function WalletCard({ wallet, isExpanded, onToggle, className }: WalletCa
               <Download className="w-4 h-4 mr-2" />
               Download
             </Button>
-            <Button variant="outline" asChild>
-              <a
-                href={wallet.downloadUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2"
-              >
+            <a
+              href={wallet.downloadUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2"
+            >
+              <Button variant="outline" className="flex items-center gap-2">
                 <ExternalLink className="w-4 h-4" />
                 Website
-              </a>
-            </Button>
+              </Button>
+            </a>
           </div>
         </div>
 

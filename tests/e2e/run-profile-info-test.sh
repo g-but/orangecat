@@ -30,3 +30,31 @@ echo "📸 Check screenshots in: tests/screenshots/profile-info-workflow/"
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

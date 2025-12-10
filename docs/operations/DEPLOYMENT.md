@@ -1,23 +1,45 @@
 ---
 created_date: 2025-06-05
-last_modified_date: 2025-06-10
-last_modified_summary: Updated production URL from orangecat.com to orangecat.ch and clarified deployment configuration
+last_modified_date: 2025-12-10
+last_modified_summary: DEPRECATED - This document is no longer the single source of truth. See docs/deployment/DEPLOYMENT_PROCESS.md for the current deployment process.
 ---
 
-# OrangeCat Deployment Guide
+# ⚠️ DEPRECATED: OrangeCat Deployment Guide
 
-## ⚠️ CRITICAL: ONLY Deployment Method
+## 🚨 IMPORTANT NOTICE
 
-**There is ONLY ONE way to deploy OrangeCat to production:**
+**This document is DEPRECATED and should not be used.**
 
-### 🚀 GitHub → Vercel Auto-Deployment Workflow
+The single source of truth for OrangeCat deployment is now:
 
-1. **Commit changes** to your branch
-2. **Push to GitHub** 
-3. **Merge to main branch** (or push directly to main)
-4. **Vercel automatically deploys** from main branch
+## 📖 **[Current Deployment Process](../deployment/DEPLOYMENT_PROCESS.md)**
 
-**DO NOT use Vercel CLI directly. DO NOT use manual deployment scripts.**
+---
+
+## Legacy Information (For Reference Only)
+
+This document previously described a manual deployment process. That process has been replaced with a fully automated system.
+
+### Old Process (DEPRECATED)
+- Manual GitHub commits
+- Manual Vercel deployments
+- No automated verification
+
+### New Process (CURRENT)
+- Single command: `npm run deploy`
+- Fully automated end-to-end deployment
+- Browser verification included
+- Real-time monitoring
+
+---
+
+## Migration Required
+
+If you're following old deployment instructions:
+
+1. **Stop using manual deployment methods**
+2. **Use the new automated system**: `npm run deploy`
+3. **Read the new documentation**: [DEPLOYMENT_PROCESS.md](../deployment/DEPLOYMENT_PROCESS.md)
 
 ---
 

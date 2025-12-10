@@ -52,10 +52,10 @@ test.describe('Profile Info Workflow', () => {
     await page.goto('http://localhost:3000/dashboard');
     await page.waitForLoadState('networkidle');
 
-    // Click "My Info" in sidebar
-    const myInfoLink = page.getByRole('link', { name: /my info/i });
-    await expect(myInfoLink).toBeVisible();
-    await myInfoLink.click();
+    // Click "Profile" in sidebar
+    const profileLink = page.getByRole('link', { name: /profile/i });
+    await expect(profileLink).toBeVisible();
+    await profileLink.click();
 
     // Wait for navigation
     await page.waitForURL('**/dashboard/info**', { timeout: 5000 });
@@ -71,7 +71,7 @@ test.describe('Profile Info Workflow', () => {
     await expect(page).toHaveURL(/\/dashboard\/info$/);
 
     // Verify page title
-    const pageTitle = page.getByRole('heading', { name: /my info/i });
+    const pageTitle = page.getByRole('heading', { name: /my profile/i });
     await expect(pageTitle).toBeVisible();
 
     // Verify Edit Profile button is present
@@ -323,3 +323,18 @@ test.describe('Profile Info Workflow', () => {
     await expect(manageWalletsButton).toBeVisible();
   });
 });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

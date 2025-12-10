@@ -1,8 +1,20 @@
 import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
-import ProjectPageClient from '@/components/project/ProjectPageClient';
+import dynamic from 'next/dynamic';
 import { notFound } from 'next/navigation';
 import { ROUTES } from '@/lib/routes';
+
+const ProjectPageClient = dynamic(() => import('@/components/project/ProjectPageClient'), {
+  loading: () => (
+    <div className="max-w-5xl mx-auto p-6">
+      <div className="animate-pulse space-y-4">
+        <div className="h-10 w-2/3 bg-gray-100 rounded" />
+        <div className="h-4 w-1/2 bg-gray-100 rounded" />
+        <div className="h-72 w-full bg-gray-100 rounded" />
+      </div>
+    </div>
+  ),
+});
 
 interface PageProps {
   params: Promise<{ id: string }>;

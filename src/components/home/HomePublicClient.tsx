@@ -23,6 +23,7 @@ const TrustSection = dynamic(() => import('@/components/home/sections/TrustSecti
   loading: () => <div className="h-96 bg-white animate-pulse" />,
 });
 
+
 /**
  * Home Public Client - Progressive Loading Strategy
  *
@@ -51,6 +52,7 @@ export default function HomePublicClient() {
       <Suspense fallback={<div className="h-96 bg-gradient-to-br from-gray-50 to-gray-100 animate-pulse" />}>
         <HowItWorksSection />
       </Suspense>
+
 
       <Suspense fallback={<div className="h-96 bg-gradient-to-br from-tiffany-50 to-orange-50 animate-pulse" />}>
         <TransparencySection />
