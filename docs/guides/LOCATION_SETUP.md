@@ -144,3 +144,31 @@ Nominatim has a rate limit of **1 request per second**. The component automatica
 
 - [Nominatim API Documentation](https://nominatim.org/release-docs/develop/api/Overview/)
 - [OpenStreetMap](https://www.openstreetmap.org/)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

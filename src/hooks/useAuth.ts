@@ -1,3 +1,4 @@
+"use client";
 import { useAuthStore } from '@/stores/auth'
 import { useRouter, usePathname } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
@@ -22,6 +23,7 @@ export function useRequireAuth() {
   const { user, session, profile, isLoading, hydrated } = useAuthStore();
   const [isConsistent, setIsConsistent] = useState(true);
   const router = useRouter();
+  const pathname = usePathname();
   const [checkedAuth, setCheckedAuth] = useState(false);
 
   // Simplified consistency check - allow transitional states
@@ -47,17 +49,17 @@ export function useRequireAuth() {
   useEffect(() => {
     // Wait until hydration and initial loading completes
     if (!hydrated || isLoading) {return;}
-    
+
     // More lenient authentication check - focus on user presence
     const isAuthenticated = !!user;
-    
+
     if (!isAuthenticated) {
       router.push('/auth?from=protected');
     }
-    
+
     // Mark that we've checked authentication
     setCheckedAuth(true);
-  }, [user, session, isLoading, hydrated, router]);
+  }, [user, isLoading, hydrated, router]);
 
   return { 
     user, 

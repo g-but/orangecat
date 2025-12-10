@@ -1,8 +1,8 @@
 # UX Improvement Plan: Header & Navigation Consistency
 
 **Created:** 2025-01-21  
-**Last Modified:** 2025-01-21  
-**Last Modified Summary:** Initial comprehensive UX analysis and improvement plan
+**Last Modified:** 2025-12-05  
+**Last Modified Summary:** Raised header scroll hysteresis to remove flicker on timeline header
 
 ## Executive Summary
 
@@ -52,6 +52,8 @@ This document provides a fact-based, first-principles analysis of header and nav
 - `AuthenticatedHeader.tsx`: No scroll hiding logic
 
 **UX Impact:** Inconsistent access to navigation - users lose header on profile pages but not dashboard.
+
+**Update 2025-12-05:** Increased `useHeaderScroll` hysteresis (larger scroll delta threshold + always-show near top) to stop flickering on timeline header while keeping scroll-hide ergonomics on other routes.
 
 ### 2. Bottom Navigation Inconsistencies
 

@@ -8,3 +8,5 @@
 
 export { ProjectTemplates, PROJECT_TEMPLATES } from './ProjectTemplates';
 export type { ProjectTemplate } from './ProjectTemplates';
+export { AssetTemplates, ASSET_TEMPLATES } from './AssetTemplates';
+export type { AssetTemplate } from './AssetTemplates';

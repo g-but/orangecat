@@ -4,23 +4,29 @@
  * Single source of truth for all navigation items across the application
  *
  * Created: 2025-01-07
- * Last Modified: 2025-01-07
- * Last Modified Summary: Added sidebar navigation config (navigationSections, bottomNavItems, navigationLabels)
+ * Last Modified: 2025-12-02
+ * Last Modified Summary: Added Personal Economy navigation (Store, Services, Causes, Cat) with clear categories
  */
 
 import { ComponentType, SVGProps } from 'react';
-import type { User } from '@supabase/supabase-js';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import {
   Home,
   Users,
   Rocket,
   Settings,
-  User,
+  User as UserIcon,
+  MessageSquare,
   Compass,
   BookOpen,
   Globe,
   Wallet,
-  Info,
+  Package,
+  Briefcase,
+  Heart,
+  Banknote,
+  CircleDot,
+  Building,
 } from 'lucide-react';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
 
@@ -39,7 +45,7 @@ export interface NavigationItem {
  * @param user - Supabase User object or null
  * @returns Array of navigation items appropriate for the auth state
  */
-export function getNavigationItems(user: User | null): NavigationItem[] {
+export function getNavigationItems(user: SupabaseUser | null): NavigationItem[] {
   if (user) {
     return [
       { name: 'Dashboard', href: '/dashboard' },
@@ -59,7 +65,7 @@ export function getNavigationItems(user: User | null): NavigationItem[] {
 /**
  * Check if a navigation item should be shown based on auth state
  */
-export function shouldShowNavigationItem(item: NavigationItem, user: User | null): boolean {
+export function shouldShowNavigationItem(item: NavigationItem, user: SupabaseUser | null): boolean {
   if (item.requiresAuth) {
     return user !== null;
   }
@@ -69,13 +75,18 @@ export function shouldShowNavigationItem(item: NavigationItem, user: User | null
 /**
  * Sidebar navigation sections for authenticated users
  *
- * Navigation items with "My" prefix for personal items:
- * Order matches public profile tabs: Dashboard, Info, Projects, People, Wallets
+ * Simplified to 6 unified sections (one verb per section):
+ * 1. Home - Your unified dashboard (activity, timeline, profile)
+ * 2. Sell - Products and services for Bitcoin
+ * 3. Raise - All fundraising (projects, causes)
+ * 4. Network - Trust networks and P2P finance (circles, loans, people)
+ * 5. Wallet - Your Bitcoin wallets
+ * 6. Explore - Public discovery (discover, community feed)
  */
 export const navigationSections: NavSection[] = [
   {
-    id: 'main',
-    title: 'Main',
+    id: 'home',
+    title: 'Home',
     priority: 1,
     defaultExpanded: true,
     requiresAuth: true,
@@ -84,42 +95,135 @@ export const navigationSections: NavSection[] = [
         name: 'Dashboard',
         href: '/dashboard',
         icon: Home,
-        description: 'Your main dashboard',
+        description: 'Your activity overview',
         requiresAuth: true,
       },
       {
-        name: 'My Info',
-        href: '/dashboard/info',
-        icon: Info,
-        description: 'View your profile information',
-        requiresAuth: true,
-      },
-      {
-        name: 'My Timeline',
+        name: 'Timeline',
         href: '/timeline',
         icon: BookOpen,
-        description: 'Manage your timeline and posts',
+        description: 'Your posts and updates',
         requiresAuth: true,
       },
       {
-        name: 'My Projects',
+        name: 'Messages',
+        href: '/messages',
+        icon: MessageSquare,
+        description: 'Private conversations',
+        requiresAuth: true,
+      },
+      {
+        name: 'Profile',
+        href: '/dashboard/info',
+        icon: UserIcon,
+        description: 'Your public profile',
+        requiresAuth: true,
+      },
+    ],
+  },
+  {
+    id: 'sell',
+    title: 'Sell',
+    priority: 2,
+    defaultExpanded: true,
+    requiresAuth: true,
+    items: [
+      {
+        name: 'Products',
+        href: '/dashboard/store',
+        icon: Package,
+        description: 'Physical and digital goods',
+        requiresAuth: true,
+      },
+      {
+        name: 'Services',
+        href: '/dashboard/services',
+        icon: Briefcase,
+        description: 'Skills and expertise',
+        requiresAuth: true,
+      },
+    ],
+  },
+  {
+    id: 'raise',
+    title: 'Raise',
+    priority: 3,
+    defaultExpanded: true,
+    requiresAuth: true,
+    items: [
+      {
+        name: 'Projects',
         href: '/dashboard/projects',
         icon: Rocket,
-        description: 'Your projects dashboard',
+        description: 'Crowdfunding campaigns',
         requiresAuth: true,
       },
       {
-        name: 'My People',
+        name: 'Causes',
+        href: '/dashboard/causes',
+        icon: Heart,
+        description: 'Charitable fundraising',
+        requiresAuth: true,
+      },
+    ],
+  },
+  {
+    id: 'network',
+    title: 'Network',
+    priority: 4,
+    defaultExpanded: true,
+    requiresAuth: true,
+    items: [
+      {
+        name: 'Organizations',
+        href: '/organizations',
+        icon: Building,
+        description: 'Teams, circles & governance',
+        requiresAuth: true,
+      },
+      // Network is only for people and circles
+      {
+        name: 'People',
         href: '/dashboard/people',
         icon: Users,
-        description: 'People you are connected to',
+        description: 'Your connections',
+        requiresAuth: true,
+      },
+    ],
+  },
+  {
+    id: 'manage',
+    title: 'Manage',
+    priority: 5,
+    defaultExpanded: true,
+    requiresAuth: true,
+    items: [
+      {
+        name: 'Wallets',
+        href: '/dashboard/wallets',
+        icon: Wallet,
+        description: 'Bitcoin wallets and balances',
         requiresAuth: true,
       },
       {
-        name: 'My Wallets',
-        href: '/dashboard/wallets',
-        icon: Wallet,
-        description: 'Manage your Bitcoin wallets',
+        name: 'Organizations',
+        href: '/organizations',
+        icon: Building,
+        description: 'Manage teams and governance',
+        requiresAuth: true,
+      },
+      {
+        name: 'Assets',
+        href: '/assets',
+        icon: Briefcase,
+        description: 'List assets and manage collateral',
+        requiresAuth: true,
+      },
+      {
+        name: 'Loans',
+        href: '/loans',
+        icon: Banknote,
+        description: 'Peer-to-peer lending marketplace',
         requiresAuth: true,
       },
     ],
@@ -127,7 +231,7 @@ export const navigationSections: NavSection[] = [
   {
     id: 'explore',
     title: 'Explore',
-    priority: 2,
+    priority: 6,
     defaultExpanded: true,
     requiresAuth: false,
     items: [
@@ -135,14 +239,22 @@ export const navigationSections: NavSection[] = [
         name: 'Discover',
         href: '/discover',
         icon: Compass,
-        description: 'Discover projects and people',
+        description: 'Find projects and people',
         requiresAuth: false,
       },
       {
         name: 'Community',
         href: '/community',
         icon: Globe,
-        description: 'Public timeline and community posts',
+        description: 'Public timeline',
+        requiresAuth: false,
+      },
+      {
+        name: 'Channel',
+        href: '/channel',
+        icon: BookOpen,
+        description: 'Video & audio (coming soon)',
+        comingSoon: true,
         requiresAuth: false,
       },
     ],
@@ -158,7 +270,7 @@ export const bottomNavItems: NavItem[] = [
   {
     name: 'View My Profile',
     href: '/profiles/me',
-    icon: User,
+    icon: UserIcon,
     description: 'View your public profile',
     requiresAuth: true,
   },

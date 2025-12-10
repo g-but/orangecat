@@ -1,8 +1,8 @@
 # DynamicSidebar Refactor - DRY & Consistent UX
 
 **Created**: 2025-11-24  
-**Last Modified**: 2025-11-28  
-**Last Modified Summary**: Extended DynamicSidebar usage to wallets with dedicated guidance config
+**Last Modified**: 2025-12-05  
+**Last Modified Summary**: Fixed asset guidance JSX crash and aligned security wrapper context for asset endpoints
 
 ## Problem Identified
 
@@ -17,6 +17,13 @@ Initially, I created a **duplicate component** (`FieldGuidanceSidebar`) when we 
 Instead of creating a new component, we **refactored the existing `DynamicSidebar`** to accept content as props.
 
 ### What Changed
+
+**2025-12-05**
+
+- Converted `asset-guidance` to use `React.createElement` (no JSX in `.ts` files) to stop Next.js SWC parse errors that blocked `/assets` and `/assets/create`.
+- Passed Supabase user context into `withSecurity` for asset-related APIs to return clean 401/429 responses instead of 500s when unauthenticated or rate-limited.
+
+---
 
 1. **Made `DynamicSidebar` generic** - Accepts `guidanceContent` and `defaultContent` as props
 2. **Extracted project content** - Moved to `lib/project-guidance.ts`

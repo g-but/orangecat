@@ -16,6 +16,8 @@ export interface PostComposerOptions {
   enableDrafts?: boolean;
   enableRetry?: boolean;
   maxLength?: number;
+  /** Parent event ID for replies/comments */
+  parentEventId?: string;
 }
 
 export interface PostComposerState {
@@ -65,6 +67,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     enableDrafts = true,
     enableRetry = true,
     maxLength = 500,
+    parentEventId,
   } = options;
 
   // Core state - simple and clear
@@ -308,7 +311,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         actorId: user.id,
         subjectType,
         subjectId: subjectId || user.id,
-        title: postContent.length > 50 ? postContent.substring(0, 47) + '...' : postContent,
+        title: '',
         description: postContent,
         visibility,
         metadata: {
@@ -316,12 +319,14 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
           cross_posted: subjectId && subjectId !== user.id,
           cross_posted_projects: selectedProjects.length > 0 ? selectedProjects : undefined,
           is_optimistic: true,
+          is_reply: !!parentEventId,
         },
+        parentEventId,
         eventTimestamp: now,
         actor_data: {
           id: user.id,
-          display_name: user.user_metadata?.name || user.email?.split('@')[0] || 'You',
-          username: user.email?.split('@')[0] || user.id,
+          display_name: user.user_metadata?.name || (typeof user.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : null) || 'You',
+          username: (typeof user.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : null) || user.id,
           avatar_url: user.user_metadata?.avatar_url,
         },
         like_count: 0,
@@ -329,7 +334,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         comment_count: 0,
       };
     },
-    [user, subjectType, subjectId, visibility, selectedProjects]
+    [user, subjectType, subjectId, visibility, selectedProjects, parentEventId]
   );
 
   // Main posting logic
@@ -348,7 +353,9 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       }
 
       const postContent = content.trim();
-      const title = postContent.length > 50 ? postContent.substring(0, 47) + '...' : postContent;
+      // Use content as the title fallback so we always satisfy DB NOT NULL
+      const title =
+        postContent.length <= 120 ? postContent : `${postContent.slice(0, 117).trimEnd()}...`;
 
       // Create optimistic event immediately
       const optimisticEvent = createOptimisticEvent(postContent);
@@ -373,29 +380,48 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         });
       });
 
-      // Add community timeline for public posts
-      if (visibility === 'public') {
+      // Add community timeline for public posts (only for non-replies)
+      if (visibility === 'public' && !parentEventId) {
         timelineContexts.push({
           timeline_type: 'community',
           timeline_owner_id: null,
         });
       }
 
-      // Create single post with visibility contexts (no duplicates!)
-      const mainPostResult = await timelineService.createEventWithVisibility({
-        eventType: 'status_update',
-        actorId: user.id,
-        subjectType,
-        subjectId: subjectId || user.id,
-        title,
-        description: postContent,
-        visibility,
-        metadata: {
-          is_user_post: true,
-          cross_posted_count: selectedProjects.length,
-        },
-        timelineContexts,
-      });
+      // For replies, use createEvent which properly supports parentEventId
+      // For regular posts, use createEventWithVisibility for cross-posting support
+      let mainPostResult;
+      if (parentEventId) {
+        mainPostResult = await timelineService.createEvent({
+          eventType: 'status_update',
+          actorId: user.id,
+          subjectType,
+          subjectId: subjectId || user.id,
+          title,
+          description: postContent,
+          visibility,
+          metadata: {
+            is_user_post: true,
+            is_reply: true,
+          },
+          parentEventId,
+        });
+      } else {
+        mainPostResult = await timelineService.createEventWithVisibility({
+          eventType: 'status_update',
+          actorId: user.id,
+          subjectType,
+          subjectId: subjectId || user.id,
+          title,
+          description: postContent,
+          visibility,
+          metadata: {
+            is_user_post: true,
+            cross_posted_count: selectedProjects.length,
+          },
+          timelineContexts,
+        });
+      }
 
       if (!mainPostResult.success) {
         const errorMsg = mainPostResult.error || 'Failed to create post';
@@ -508,8 +534,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
           actorId: user.id,
           subjectType,
           subjectId: subjectId || user.id,
-          title:
-            content.trim().length > 50 ? content.trim().substring(0, 47) + '...' : content.trim(),
+          title,
           description: content.trim(),
           visibility,
           metadata: {
@@ -523,6 +548,38 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         // Provide feedback and reset form
         setError(null);
         setPostSuccess(true); // Use success state to show a confirmation message
+
+        // Show informative message about offline queuing
+        if (onOptimisticUpdate) {
+          // Create a temporary optimistic event to show in UI
+          const offlineEvent = {
+            id: `offline-${Date.now()}`,
+            eventType: 'status_update',
+            actorId: user.id,
+            subjectType,
+            subjectId: subjectId || user.id,
+            title: '',
+            description: content.trim(),
+            visibility,
+            eventTimestamp: new Date().toISOString(),
+            actor_data: {
+              id: user.id,
+              display_name: user.user_metadata?.name || (typeof user.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : null) || 'You',
+              username: (typeof user.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : null) || user.id,
+              avatar_url: user.user_metadata?.avatar_url,
+            },
+            like_count: 0,
+            share_count: 0,
+            comment_count: 0,
+            metadata: {
+              ...postPayload.metadata,
+              is_offline_queued: true,
+              offline_queued_at: new Date().toISOString(),
+            },
+          };
+          onOptimisticUpdate(offlineEvent);
+        }
+
         reset();
       } catch (err) {
         setError('Failed to save post for offline sending.');

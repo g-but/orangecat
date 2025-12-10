@@ -295,6 +295,10 @@ export default function TimelineView({
   // Render timeline
   return (
     <div className="space-y-4">
+      {/* Focus handling: if ?focus=<eventId> present, scroll that post into view */}
+      {mergedFeed && (
+        <FocusScroller />
+      )}
       {/* Timeline Composer - Show at top if enabled */}
       {showComposer && user && (
         <TimelineComposer
@@ -326,4 +330,25 @@ export default function TimelineView({
       )}
     </div>
   );
+}
+
+// Helper component to handle focus scrolling post-render
+function FocusScroller() {
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const focusId = params.get('focus');
+      if (focusId) {
+        const el = document.querySelector(`[data-event-id="${focusId}"]`);
+        if (el) {
+          (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' });
+          (el as HTMLElement).classList.add('ring-2', 'ring-orange-400', 'ring-offset-2');
+          setTimeout(() => {
+            (el as HTMLElement).classList.remove('ring-2', 'ring-orange-400', 'ring-offset-2');
+          }, 1800);
+        }
+      }
+    } catch {}
+  }, []);
+  return null;
 }

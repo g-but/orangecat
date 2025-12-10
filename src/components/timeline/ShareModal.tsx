@@ -29,6 +29,12 @@ export function ShareModal({ isOpen, onClose, onShare, defaultText = '', isSubmi
           id="share-text"
           value={text}
           onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              onShare(text);
+            }
+          }}
           rows={4}
           className="w-full border rounded-md p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
           maxLength={500}

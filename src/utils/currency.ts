@@ -1,6 +1,8 @@
 // Currency utility functions for Bitcoin and Swiss franc conversions
 // Replaces the old "bits" system with proper Bitcoin terminology
 
+import { type CurrencyCode } from '@/config/currencies';
+
 export interface CurrencyConversion {
   bitcoin: number      // Amount in BTC
   satoshis: number     // Amount in satoshis (smallest Bitcoin unit)
@@ -205,8 +207,6 @@ export function validateBTCAmount(amount: number): boolean {
 // -------------------------
 // Currency conversion
 // -------------------------
-
-type CurrencyCode = 'BTC' | 'SATS' | 'USD' | string;
 
 type Rates = Record<string, number>;
 

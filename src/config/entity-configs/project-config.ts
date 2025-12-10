@@ -1,0 +1,208 @@
+/**
+ * PROJECT ENTITY CONFIGURATION
+ *
+ * Defines the form structure, validation, and guidance for project creation.
+ *
+ * Created: 2025-12-06
+ * Last Modified: 2025-12-06
+ * Last Modified Summary: Initial project configuration
+ */
+
+import { Rocket } from 'lucide-react';
+import { projectSchema, type ProjectData } from '@/lib/validation';
+import {
+  projectGuidanceContent,
+  projectDefaultGuidance,
+} from '@/lib/entity-guidance/project-guidance';
+import type { EntityConfig, FieldGroup } from '@/components/create/types';
+
+// ==================== FIELD GROUPS ====================
+
+const fieldGroups: FieldGroup[] = [
+  {
+    id: 'basic',
+    title: 'Basic Information',
+    description: 'Essential details about your project',
+    fields: [
+      {
+        name: 'title',
+        label: 'Project Title',
+        type: 'text',
+        placeholder: 'e.g., Build a Community Garden',
+        required: true,
+        colSpan: 2,
+      },
+      {
+        name: 'description',
+        label: 'Project Description',
+        type: 'textarea',
+        placeholder: 'Describe your project in detail...',
+        rows: 6,
+        required: true,
+        colSpan: 2,
+        hint: 'Be specific about what you\'re building, who it helps, and why it matters.',
+      },
+    ],
+  },
+  {
+    id: 'funding',
+    title: 'Funding Goals',
+    description: 'Set your funding target and Bitcoin payment details',
+    fields: [
+      {
+        name: 'goal_amount',
+        label: 'Funding Goal',
+        type: 'currency',
+        placeholder: '10000',
+        hint: 'Optional: Set a funding target for your project',
+      },
+      {
+        name: 'currency',
+        label: 'Currency',
+        type: 'select',
+        options: [
+          { value: 'CHF', label: 'Swiss Franc (CHF)' },
+          { value: 'USD', label: 'US Dollar (USD)' },
+          { value: 'EUR', label: 'Euro (EUR)' },
+          { value: 'BTC', label: 'Bitcoin (BTC)' },
+          { value: 'SATS', label: 'Satoshis (SATS)' },
+        ],
+        hint: 'Choose your preferred currency for funding',
+      },
+      {
+        name: 'funding_purpose',
+        label: 'Funding Purpose',
+        type: 'textarea',
+        placeholder: 'How will the funds be used?',
+        rows: 3,
+        hint: 'Explain how donations will be spent and what impact they\'ll create.',
+      },
+    ],
+  },
+  {
+    id: 'bitcoin',
+    title: 'Bitcoin & Payments',
+    description: 'Bitcoin addresses for receiving donations',
+    fields: [
+      {
+        name: 'bitcoin_address',
+        label: 'Bitcoin Address',
+        type: 'bitcoin_address',
+        placeholder: 'bc1q... or 1...',
+        hint: 'Your Bitcoin address for receiving donations',
+      },
+      {
+        name: 'lightning_address',
+        label: 'Lightning Address',
+        type: 'text',
+        placeholder: 'you@lightning.address',
+        hint: 'Optional: Lightning Network address for instant payments',
+      },
+    ],
+  },
+  {
+    id: 'details',
+    title: 'Project Details',
+    description: 'Additional information about your project',
+    fields: [
+      {
+        name: 'website_url',
+        label: 'Project Website',
+        type: 'url',
+        placeholder: 'https://your-project.com',
+        hint: 'Optional: Link to your project website or landing page',
+      },
+      {
+        name: 'category',
+        label: 'Category',
+        type: 'text',
+        placeholder: 'e.g., Technology, Environment, Education',
+        hint: 'Main category that best describes your project',
+      },
+      {
+        name: 'tags',
+        label: 'Tags',
+        type: 'tags',
+        placeholder: 'Add relevant tags...',
+        hint: 'Add tags to help people discover your project',
+      },
+      {
+        name: 'start_date',
+        label: 'Start Date',
+        type: 'date',
+        hint: 'Optional: When do you plan to start the project?',
+      },
+      {
+        name: 'target_completion',
+        label: 'Target Completion',
+        type: 'date',
+        hint: 'Optional: When do you expect to complete the project?',
+      },
+    ],
+  },
+];
+
+// ==================== CONFIGURATION ====================
+
+export const projectConfig: EntityConfig<ProjectData> = {
+  // Entity metadata
+  type: 'project',
+  name: 'Project',
+  namePlural: 'Projects',
+
+  // Icons
+  icon: Rocket,
+  colorTheme: 'orange',
+
+  // Navigation
+  backUrl: '/projects',
+  successUrl: '/projects/[id]',
+
+  // API configuration
+  apiEndpoint: '/api/projects',
+
+  // UI configuration
+  pageTitle: 'Create Project',
+  pageDescription: 'Start a crowdfunding campaign for your Bitcoin-powered project.',
+  formTitle: 'Project Information',
+  formDescription: 'Tell your story and set funding goals',
+
+  // Form configuration
+  fieldGroups,
+  validationSchema: projectSchema,
+  defaultValues: {
+    title: '',
+    description: '',
+    goal_amount: undefined,
+    currency: 'SATS',
+    funding_purpose: '',
+    bitcoin_address: '',
+    lightning_address: '',
+    website_url: '',
+    category: '',
+    tags: [],
+    start_date: '',
+    target_completion: '',
+  },
+
+  // Guidance
+  guidanceContent: projectGuidanceContent,
+  defaultGuidance: projectDefaultGuidance,
+
+  // Success messaging
+  successMessage: 'Project created successfully!',
+  successRedirectDelay: 2000,
+};
+
+
+
+
+
+
+
+
+
+
+
+
+

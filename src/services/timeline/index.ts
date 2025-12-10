@@ -14,6 +14,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { withApiRetry } from '@/utils/retry';
 import {
   TimelineEvent,
   TimelineDisplayEvent,
@@ -94,6 +95,12 @@ class TimelineService {
         timeline_owner_id: ctx.timeline_owner_id,
       }));
 
+      // Ensure title is never null (DB constraint)
+      const safeTitle =
+        request.title?.trim() ||
+        request.description?.trim()?.slice(0, 140) ||
+        'Update';
+
       // Use database function to create post with visibility contexts
       // The function returns JSONB, so we need to parse it
       const { data, error } = await supabase.rpc('create_post_with_visibility', {
@@ -101,7 +108,7 @@ class TimelineService {
         p_actor_id: actorId,
         p_subject_type: request.subjectType || 'profile',
         p_subject_id: request.subjectId || null,
-        p_title: request.title,
+        p_title: safeTitle,
         p_description: request.description || null,
         p_visibility: request.visibility || 'public',
         p_metadata: request.metadata || {},
@@ -244,10 +251,15 @@ class TimelineService {
       }
 
       // Prepare event data - match database function parameter names exactly
+      const safeTitle =
+        request.title?.trim() ||
+        request.description?.trim()?.slice(0, 140) ||
+        'Update';
+
       const eventData = {
         p_event_type: request.eventType || 'post_created',
         p_subject_type: request.subjectType || 'profile',
-        p_title: request.title,
+        p_title: safeTitle,
         p_event_subtype: request.eventSubtype || null,
         p_actor_id: actorId,
         p_actor_type: 'user' as TimelineActorType,
@@ -859,6 +871,7 @@ class TimelineService {
     pagination?: Partial<TimelinePagination>
   ): Promise<TimelineFeedResponse> {
     try {
+      return await withApiRetry(async () => {
       const page = pagination?.page || 1;
       const limit = Math.min(pagination?.limit || this.DEFAULT_PAGE_SIZE, this.MAX_PAGE_SIZE);
       const offset = (page - 1) * limit;
@@ -961,6 +974,7 @@ class TimelineService {
           lastUpdated: new Date().toISOString(),
         },
       };
+      }, { maxAttempts: 2, baseDelay: 500 }); // Quick retry for feed loading
     } catch (error) {
       logger.error('Error fetching community timeline feed', error, 'Timeline');
       // Return empty feed instead of throwing
@@ -993,18 +1007,19 @@ class TimelineService {
     userId?: string
   ): Promise<{ success: boolean; liked: boolean; likeCount: number; error?: string }> {
     try {
-      const targetUserId = userId || (await this.getCurrentUserId());
-      if (!targetUserId) {
-        return { success: false, liked: false, likeCount: 0, error: 'Authentication required' };
-      }
+      return await withApiRetry(async () => {
+        const targetUserId = userId || (await this.getCurrentUserId());
+        if (!targetUserId) {
+          return { success: false, liked: false, likeCount: 0, error: 'Authentication required' };
+        }
 
-      // Check if user already liked this event
-      const { data: existingLike } = await supabase
-        .from('timeline_likes')
-        .select('id')
-        .eq('event_id', eventId)
-        .eq('user_id', targetUserId)
-        .single();
+        // Check if user already liked this event
+        const { data: existingLike } = await supabase
+          .from('timeline_likes')
+          .select('id')
+          .eq('event_id', eventId)
+          .eq('user_id', targetUserId)
+          .single();
 
       if (existingLike) {
         // Unlike the event
@@ -1084,9 +1099,115 @@ class TimelineService {
           return { success: true, liked: true, likeCount: count || 0 };
         }
       }
+      }, { maxAttempts: 2 }); // Only retry once for likes to avoid spam
     } catch (error) {
       logger.error('Error toggling like on timeline event', error, 'Timeline');
       return { success: false, liked: false, likeCount: 0, error: 'Internal server error' };
+    }
+  }
+
+  /**
+   * Toggle dislike on a timeline event (for scam detection and wisdom of crowds)
+   */
+  async toggleDislike(
+    eventId: string,
+    userId?: string
+  ): Promise<{ success: boolean; disliked: boolean; dislikeCount: number; error?: string }> {
+    try {
+      const targetUserId = userId || (await this.getCurrentUserId());
+      if (!targetUserId) {
+        return { success: false, disliked: false, dislikeCount: 0, error: 'Authentication required' };
+      }
+
+      // Check if user already disliked this event
+      const { data: existingDislike } = await supabase
+        .from('timeline_dislikes')
+        .select('id')
+        .eq('event_id', eventId)
+        .eq('user_id', targetUserId)
+        .single();
+
+      if (existingDislike) {
+        // Undislike the event
+        try {
+          const { data, error } = await supabase.rpc('undislike_timeline_event', {
+            p_event_id: eventId,
+            p_user_id: targetUserId,
+          });
+
+          if (error) {
+            logger.error('Failed to undislike timeline event', error, 'Timeline');
+            return { success: false, disliked: false, dislikeCount: 0, error: error.message };
+          }
+
+          return {
+            success: true,
+            disliked: false,
+            dislikeCount: data.dislike_count || 0,
+          };
+        } catch (dbError) {
+          logger.warn(
+            'Database function not available for undislike, using fallback',
+            dbError,
+            'Timeline'
+          );
+          const { error: delErr } = await supabase
+            .from('timeline_dislikes')
+            .delete()
+            .eq('event_id', eventId)
+            .eq('user_id', targetUserId);
+          if (delErr) {
+            logger.error('Fallback undislike failed', delErr, 'Timeline');
+            return { success: false, disliked: false, dislikeCount: 0, error: delErr.message };
+          }
+          const { count } = await supabase
+            .from('timeline_dislikes')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', eventId);
+          return { success: true, disliked: false, dislikeCount: count || 0 };
+        }
+      } else {
+        // Dislike the event
+        try {
+          const { data, error } = await supabase.rpc('dislike_timeline_event', {
+            p_event_id: eventId,
+            p_user_id: targetUserId,
+          });
+
+          if (error) {
+            logger.error('Failed to dislike timeline event', error, 'Timeline');
+            return { success: false, disliked: false, dislikeCount: 0, error: error.message };
+          }
+
+          return {
+            success: true,
+            disliked: true,
+            dislikeCount: data.dislike_count || 0,
+          };
+        } catch (dbError) {
+          logger.warn(
+            'Database function not available for dislike, using fallback',
+            dbError,
+            'Timeline'
+          );
+          // Fallback: insert into timeline_dislikes and return new count
+          const { error: insertErr } = await supabase
+            .from('timeline_dislikes')
+            .insert({ event_id: eventId, user_id: targetUserId });
+          if (insertErr) {
+            logger.error('Fallback dislike failed', insertErr, 'Timeline');
+            return { success: false, disliked: false, dislikeCount: 0, error: insertErr.message };
+          }
+          const { count } = await supabase
+            .from('timeline_dislikes')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', eventId);
+          return { success: true, disliked: true, dislikeCount: count || 0 };
+        }
+      }
+    } catch (error) {
+      logger.error('Error toggling dislike on timeline event', error, 'Timeline');
+      return { success: false, disliked: false, dislikeCount: 0, error: 'Internal server error' };
     }
   }
 
@@ -1337,6 +1458,119 @@ class TimelineService {
     } catch (error) {
       logger.error('Error getting event comments', error, 'Timeline');
       return [];
+    }
+  }
+
+  /**
+   * Update a comment's content
+   */
+  async updateComment(
+    commentId: string,
+    content: string,
+    userId?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const targetUserId = userId || (await this.getCurrentUserId());
+      if (!targetUserId) {
+        return { success: false, error: 'Authentication required' };
+      }
+
+      try {
+        const { error } = await supabase.rpc('update_timeline_comment', {
+          p_comment_id: commentId,
+          p_user_id: targetUserId,
+          p_content: content,
+        });
+
+        if (error) {
+          logger.error('Failed to update timeline comment', error, 'Timeline');
+          return { success: false, error: error.message };
+        }
+
+        return { success: true };
+      } catch (dbError) {
+        logger.warn(
+          'Database function not available for comment updates, using fallback',
+          dbError,
+          'Timeline'
+        );
+        // Fallback: update directly in timeline_comments table
+        const { error: updateErr } = await supabase
+          .from('timeline_comments')
+          .update({ content, updated_at: new Date().toISOString() })
+          .eq('id', commentId)
+          .eq('user_id', targetUserId);
+
+        if (updateErr) {
+          logger.error('Fallback update comment failed', updateErr, 'Timeline');
+          return { success: false, error: updateErr.message };
+        }
+
+        return { success: true };
+      }
+    } catch (error) {
+      logger.error('Error updating timeline comment', error, 'Timeline');
+      return { success: false, error: 'Internal server error' };
+    }
+  }
+
+  /**
+   * Delete a comment (soft delete)
+   */
+  async deleteComment(
+    commentId: string,
+    userId?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const targetUserId = userId || (await this.getCurrentUserId());
+      if (!targetUserId) {
+        return { success: false, error: 'Authentication required' };
+      }
+
+      try {
+        const { error } = await supabase.rpc('delete_timeline_comment', {
+          p_comment_id: commentId,
+          p_user_id: targetUserId,
+        });
+
+        if (!error) {
+          return { success: true };
+        }
+
+        // If the RPC is missing or failed, fall back to direct table update
+        logger.warn(
+          'RPC delete_timeline_comment failed, attempting direct delete fallback',
+          error,
+          'Timeline'
+        );
+      } catch (dbError) {
+        logger.warn(
+          'Database function not available for comment deletion, using fallback',
+          dbError,
+          'Timeline'
+        );
+      }
+
+      // Fallback: soft delete by updating deleted_at timestamp
+      const { error: deleteErr } = await supabase
+        .from('timeline_comments')
+        .update({
+          deleted_at: new Date().toISOString(),
+          content: '[deleted]',
+        })
+        .eq('id', commentId)
+        .eq('user_id', targetUserId)
+        .is('deleted_at', null);
+
+      if (deleteErr) {
+        logger.error('Fallback delete comment failed', deleteErr, 'Timeline');
+        return { success: false, error: deleteErr.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      logger.error('Error deleting timeline comment', error, 'Timeline');
+      return { success: false, error: 'Internal server error' };
     }
   }
 
@@ -1594,28 +1828,6 @@ class TimelineService {
   }
 
   /**
-   * Update event visibility
-   */
-  async updateEventVisibility(eventId: string, visibility: TimelineVisibility): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('timeline_events')
-        .update({ visibility })
-        .eq('id', eventId);
-
-      if (error) {
-        logger.error('Failed to update event visibility', error, 'Timeline');
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      logger.error('Error updating event visibility', error, 'Timeline');
-      return false;
-    }
-  }
-
-  /**
    * Update event content (title, description, metadata)
    */
   async updateEvent(
@@ -1660,6 +1872,115 @@ class TimelineService {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       logger.error('Error updating timeline event', error, 'Timeline');
       return { success: false, error: errorMessage };
+    }
+  }
+
+  /**
+   * Get a single event by ID with full enrichment
+   */
+  async getEventById(eventId: string): Promise<{ success: boolean; event?: TimelineDisplayEvent; error?: string }> {
+    try {
+      // Try enriched view first
+      const { data: event, error } = await supabase
+        .from('enriched_timeline_events')
+        .select('*')
+        .eq('id', eventId)
+        .eq('is_deleted', false)
+        .single();
+
+      if (error) {
+        // Fallback to raw table
+        const { data: rawEvent, error: rawError } = await supabase
+          .from('timeline_events')
+          .select('*')
+          .eq('id', eventId)
+          .eq('is_deleted', false)
+          .single();
+
+        if (rawError || !rawEvent) {
+          return { success: false, error: 'Event not found' };
+        }
+
+        const enriched = await this.enrichEventsForDisplay([rawEvent]);
+        return { success: true, event: enriched[0] };
+      }
+
+      const enriched = await this.enrichEventsForDisplay([event]);
+      return { success: true, event: enriched[0] };
+    } catch (error) {
+      logger.error('Error fetching event by ID', error, 'Timeline');
+      return { success: false, error: 'Failed to fetch event' };
+    }
+  }
+
+  /**
+   * Get replies to a specific event (for thread view)
+   */
+  async getReplies(eventId: string, limit: number = 50): Promise<{ success: boolean; replies?: TimelineDisplayEvent[]; error?: string }> {
+    try {
+      // Get comments/replies for this event
+      const { data: comments, error: commentsError } = await supabase
+        .from('timeline_comments')
+        .select(`
+          id,
+          event_id,
+          user_id,
+          content,
+          parent_comment_id,
+          created_at,
+          updated_at,
+          is_deleted,
+          profiles:user_id (
+            id,
+            username,
+            name,
+            avatar_url
+          )
+        `)
+        .eq('event_id', eventId)
+        .eq('is_deleted', false)
+        .is('parent_comment_id', null) // Top-level comments only
+        .order('created_at', { ascending: true })
+        .limit(limit);
+
+      if (commentsError) {
+        logger.error('Error fetching replies', commentsError, 'Timeline');
+        return { success: false, error: 'Failed to fetch replies' };
+      }
+
+      // Transform comments to display events format
+      const replies: TimelineDisplayEvent[] = (comments || []).map((comment: any) => ({
+        id: comment.id,
+        title: '',
+        description: comment.content,
+        visibility: 'public' as const,
+        isFeatured: false,
+        eventTimestamp: comment.created_at,
+        createdAt: comment.created_at,
+        created_at: comment.created_at,
+        updatedAt: comment.updated_at,
+        isDeleted: false,
+        parentEventId: eventId,
+        actor: {
+          id: comment.profiles?.id || comment.user_id,
+          name: comment.profiles?.name || 'Unknown',
+          username: comment.profiles?.username || '',
+          avatar: comment.profiles?.avatar_url || null,
+          type: 'user' as const,
+        },
+        icon: null as any,
+        iconColor: 'blue',
+        displayType: 'reply',
+        timeAgo: '',
+        isRecent: true,
+        likesCount: 0,
+        commentsCount: 0,
+      }));
+
+      return { success: true, replies };
+    } catch (error) {
+      logger.error('Error fetching replies', error, 'Timeline');
+      return { success: false, error: 'Failed to fetch replies' };
     }
   }
 
@@ -1789,7 +2110,14 @@ class TimelineService {
     valid: boolean;
     error?: string;
   } {
-    if (!request.title?.trim()) {
+    const hasTitle = !!request.title?.trim();
+    const isStatusUpdate = request.eventType === 'status_update';
+    const isRepost =
+      !!request.metadata?.is_repost ||
+      !!request.metadata?.is_quote_repost ||
+      !!request.parentEventId;
+
+    if (!hasTitle && !(isStatusUpdate || isRepost)) {
       return { valid: false, error: 'Title is required' };
     }
 
@@ -2151,6 +2479,105 @@ class TimelineService {
       case 'user_followed':
         // Could update follower counts, send welcome messages, etc.
         break;
+    }
+  }
+
+  /**
+   * Search posts by query string
+   * Searches in title, description, and actor names
+   */
+  async searchPosts(
+    query: string,
+    options?: {
+      limit?: number;
+      offset?: number;
+    }
+  ): Promise<{
+    success: boolean;
+    posts?: TimelineDisplayEvent[];
+    total?: number;
+    error?: string;
+  }> {
+    try {
+      if (!query || query.trim().length < 2) {
+        return { success: false, error: 'Search query must be at least 2 characters' };
+      }
+
+      const searchQuery = query.trim().toLowerCase();
+      const limit = Math.min(options?.limit || 20, 50);
+      const offset = options?.offset || 0;
+
+      // Search in enriched_timeline_events view
+      // Using ilike for case-insensitive search
+      const { data: events, error, count } = await supabase
+        .from('enriched_timeline_events')
+        .select('*', { count: 'exact' })
+        .eq('visibility', 'public')
+        .eq('is_deleted', false)
+        .or(`title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`)
+        .order('event_timestamp', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        logger.error('Search query failed', error, 'Timeline');
+        return { success: false, error: 'Search failed. Please try again.' };
+      }
+
+      // Transform to display events
+      const displayEvents = (events || []).map((event: any) => {
+        const timelineEvent = this.mapDbEventToTimelineEvent(event);
+
+        return {
+          ...timelineEvent,
+          eventType: undefined as any,
+          eventSubtype: undefined as any,
+          icon: this.getEventIcon(timelineEvent.eventType),
+          iconColor: this.getEventColor(timelineEvent.eventType),
+          displayType: this.getEventDisplayType(timelineEvent.eventType),
+          displaySubtype: timelineEvent.eventSubtype,
+          actor: event.actor_data
+            ? {
+                id: event.actor_data.id,
+                name: event.actor_data.display_name || event.actor_data.username || 'Unknown',
+                username: event.actor_data.username,
+                avatar: event.actor_data.avatar_url,
+                type: 'user' as TimelineActorType,
+              }
+            : undefined,
+          subject: event.subject_data
+            ? {
+                id: event.subject_data.id,
+                name:
+                  event.subject_data.type === 'profile'
+                    ? event.subject_data.display_name || event.subject_data.username
+                    : event.subject_data.title,
+                type: event.subject_data.type,
+                url:
+                  event.subject_data.type === 'profile'
+                    ? `/profiles/${event.subject_data.username || event.subject_data.id}`
+                    : `/projects/${event.subject_data.id}`,
+              }
+            : undefined,
+          formattedAmount: this.formatAmount(timelineEvent),
+          timeAgo: this.getTimeAgo(timelineEvent.eventTimestamp),
+          isRecent: this.isEventRecent(timelineEvent.eventTimestamp),
+          likesCount: event.like_count || 0,
+          sharesCount: event.share_count || 0,
+          commentsCount: event.comment_count || 0,
+          userLiked: false,
+          userShared: false,
+          userCommented: false,
+        } as TimelineDisplayEvent;
+      });
+
+      return {
+        success: true,
+        posts: displayEvents,
+        total: count || 0,
+      };
+    } catch (error) {
+      logger.error('Error searching posts', error, 'Timeline');
+      return { success: false, error: 'Search failed. Please try again.' };
     }
   }
 }

@@ -29,3 +29,9 @@ Bitcoin-powered crowdfunding platform built for transparency and impact with nat
 - Update TASK_QUEUE.md when claiming/completing tasks
 - Log all activities in AGENTS_SYNC.md
 
+## Protected Files Policy
+- Never delete or overwrite local environment files: `.env.local` and the `.env-backups/` directory.
+- Always use `node scripts/utils/env-manager.js backup` before any change to env files, and `restore` to recover.
+- Do not run commands that recreate `.env.local` if it already exists. Prefer `validate` or `setup` via Env Manager.
+- CI/agents must not modify developer-local env files; only read them or use Vercel env management.
+- If an automation suggests copying `.env.example` over `.env.local`, reject it and use the Env Manager instead.

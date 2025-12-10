@@ -72,10 +72,14 @@ export default function AvatarLink({
   isCurrentUser = false,
 }: AvatarLinkProps) {
   // Determine profile URL - prefer username, fallback to userId or /profiles/me
-  const profileUrl = username
-    ? `/profiles/${username}`
-    : userId
-      ? `/profiles/${userId}`
+  // Ensure username is a valid non-empty string before using it in URL
+  const validUsername = username && typeof username === 'string' && username.trim().length > 0;
+  const validUserId = userId && typeof userId === 'string' && userId.trim().length > 0;
+  
+  const profileUrl = validUsername
+    ? `/profiles/${encodeURIComponent(username.trim())}`
+    : validUserId
+      ? `/profiles/${encodeURIComponent(userId.trim())}`
       : isCurrentUser
         ? '/profiles/me'
         : '#';
@@ -83,9 +87,12 @@ export default function AvatarLink({
   const displayName = name || username || 'User';
   const initial = displayName.charAt(0).toUpperCase();
 
+  // Ensure href is always a valid string
+  const safeHref = typeof profileUrl === 'string' ? profileUrl : '#';
+
   return (
     <Link
-      href={profileUrl}
+      href={safeHref}
       className={cn(
         'relative flex-shrink-0 inline-block transition-all duration-200',
         'hover:ring-2 hover:ring-orange-200 rounded-full',

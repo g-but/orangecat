@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
 // List of public routes that don't require auth
 const publicRoutes = [
@@ -19,7 +20,7 @@ const publicRoutes = [
 
 // Routes that should redirect to /auth if user is not logged in
 // Note: /profiles/ is public, /profile/ is protected (own profile)
-const protectedRoutes = ['/dashboard', '/profile/', '/settings'];
+const protectedRoutes = ['/dashboard', '/profile/', '/settings', '/loans', '/circles', '/assets', '/timeline', '/messages'];
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -85,35 +86,49 @@ export async function middleware(request: NextRequest) {
     !isPublicRoute && protectedRoutes.some(route => pathname.startsWith(route));
 
   if (isProtectedRoute) {
-    try {
-      // Optimized cookie check - check most common patterns first
-      const cookies = request.cookies;
-      const accessToken =
-        cookies.get('sb-access-token')?.value ||
-        cookies.get('supabase-auth-token')?.value ||
-        cookies.get('supabase.auth.token')?.value;
+    // Validate token with Supabase to avoid stale/forged cookies passing through
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-      // Only do expensive cookie iteration if simple checks fail
-      if (!accessToken) {
-        const allCookies = cookies.getAll();
-        const hasAuthCookie = allCookies.some(
-          cookie =>
-            (cookie.name.startsWith('sb-') && cookie.name.endsWith('-auth-token')) ||
-            (cookie.name.includes('supabase') &&
-              cookie.name.includes('auth') &&
-              cookie.value &&
-              cookie.value.length > 10)
-        );
+    if (!supabaseUrl || !supabaseAnonKey) {
+      const redirectUrl = new URL('/auth', request.url);
+      redirectUrl.searchParams.set('mode', 'login');
+      redirectUrl.searchParams.set('from', pathname);
+      return NextResponse.redirect(redirectUrl);
+    }
 
-        if (!hasAuthCookie) {
-          const redirectUrl = new URL('/auth', request.url);
-          redirectUrl.searchParams.set('mode', 'login');
-          redirectUrl.searchParams.set('from', pathname);
-          return NextResponse.redirect(redirectUrl);
-        }
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+      },
+    });
+
+    const tokenFromCookies =
+      request.cookies.get('sb-access-token')?.value ||
+      request.cookies.get('supabase-auth-token')?.value ||
+      request.cookies.get('supabase.auth.token')?.value;
+
+    if (!tokenFromCookies) {
+      // In development we rely on client-side Supabase session (localStorage), so allow through
+      if (process.env.NODE_ENV !== 'development') {
+        const redirectUrl = new URL('/auth', request.url);
+        redirectUrl.searchParams.set('mode', 'login');
+        redirectUrl.searchParams.set('from', pathname);
+        return NextResponse.redirect(redirectUrl);
       }
-    } catch (error) {
-      // Silently fail - let request proceed (client-side will handle auth)
+      return response;
+    }
+
+    const { data, error } = await supabase.auth.getUser(tokenFromCookies);
+    if (error || !data.user) {
+      if (process.env.NODE_ENV !== 'development') {
+        const redirectUrl = new URL('/auth', request.url);
+        redirectUrl.searchParams.set('mode', 'login');
+        redirectUrl.searchParams.set('from', pathname);
+        return NextResponse.redirect(redirectUrl);
+      }
+      return response;
     }
   }
 

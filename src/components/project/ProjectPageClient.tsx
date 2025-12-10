@@ -4,15 +4,17 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import { ArrowLeft, Bitcoin } from 'lucide-react';
-import { MissingWalletBanner } from '@/components/project/MissingWalletBanner';
-import CampaignShare from '@/components/sharing/CampaignShare';
-import ProjectMediaGallery from '@/components/project/ProjectMediaGallery';
-import ProjectSummaryRail from '@/components/project/ProjectSummaryRail';
-import { ProjectHeader } from '@/components/project/ProjectHeader';
-import { ProjectContent } from '@/components/project/ProjectContent';
-import ProjectTimeline from '@/components/project/ProjectTimeline';
+import dynamic from 'next/dynamic';
 import { ROUTES } from '@/lib/routes';
 import { useState, useEffect } from 'react';
+
+const MissingWalletBanner = dynamic(() => import('@/components/project/MissingWalletBanner'));
+const CampaignShare = dynamic(() => import('@/components/sharing/CampaignShare'));
+const ProjectMediaGallery = dynamic(() => import('@/components/project/ProjectMediaGallery'));
+const ProjectSummaryRail = dynamic(() => import('@/components/project/ProjectSummaryRail'));
+const ProjectHeader = dynamic(() => import('@/components/project/ProjectHeader'));
+const ProjectContent = dynamic(() => import('@/components/project/ProjectContent'));
+const ProjectTimeline = dynamic(() => import('@/components/project/ProjectTimeline'));
 
 interface Project {
   id: string;

@@ -6,21 +6,6 @@
     "auditLog": "/home/g/dev/orangecat/logs/.988a9e615c70cb8f387540c142c015feefe8a176-audit.json",
     "files": [
         {
-            "date": 1763515859783,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-19.log",
-            "hash": "ca914e64b02dead3c4ef9e7358fbeca3a8eeeb1d9c0ef9a0025c3e34ce7d1e10"
-        },
-        {
-            "date": 1763647698652,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-20.log",
-            "hash": "a36330fabbd410e69170098e389b8c5122d6aa319a229e9544f34e6ee7811bf4"
-        },
-        {
-            "date": 1763742283907,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-21.log",
-            "hash": "ff58fdbc9e44e30395fb4d6d323044cc93335d9ad182dae86be5823f25d4f9c3"
-        },
-        {
             "date": 1764237625152,
             "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-11-27.log",
             "hash": "8628725935f0c6fd2da304f6a09d03bcc352184875e0185c494c695a7d538629"
@@ -39,6 +24,26 @@
             "date": 1764681903390,
             "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-02.log",
             "hash": "59683bd9b29d7df3bf822e6c2b354a2c788abbcb1370977a6e30d29e2018319b"
+        },
+        {
+            "date": 1764892876191,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-05.log",
+            "hash": "3807fd10799c82a1a358f2c44fb982f59532cc11ab2d96157ef45941c786593b"
+        },
+        {
+            "date": 1765116896938,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-07.log",
+            "hash": "476e5c89475eec85da7af3403c77bc63ae44472ff8954eb4d387e6a090156226"
+        },
+        {
+            "date": 1765151165924,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-08.log",
+            "hash": "2e9225bb58a1cc85d1e2c75deffa31837ab10c3413513711e424d1fc28708b10"
+        },
+        {
+            "date": 1765291714745,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-09.log",
+            "hash": "39470eca8d0c3192d1fef6302739278404b1db0069016a4889fadd8f14341cc9"
         }
     ],
     "hashType": "sha256"

@@ -87,6 +87,17 @@ export default function AuthPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [hydrationTimedOut, setHydrationTimedOut] = useState(false);
+
+  // Safety timeout: if hydration takes too long, show the form anyway
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hydrated) {
+        setHydrationTimedOut(true);
+      }
+    }, 3000); // 3 second timeout
+    return () => clearTimeout(timer);
+  }, [hydrated]);
   const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -229,16 +240,14 @@ export default function AuthPage() {
     setRetryCount(0);
   };
 
-  // Show initial loading
-  const isInitialLoading = !hydrated && redirectLoading;
-
+  // Only show loading if we have a session and are already hydrated (redirecting to dashboard)
+  // For auth page: always show the form - users can log in even if auth state isn't hydrated yet
   if (session && hydrated) {
     return <Loading fullScreen message="Welcome back! Setting up your dashboard..." />;
   }
 
-  if (isInitialLoading) {
-    return <Loading fullScreen message="Loading your account..." />;
-  }
+  // Don't block the form - show it immediately
+  // The form will work even if hydration is still pending
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">

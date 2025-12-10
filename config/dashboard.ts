@@ -17,7 +17,7 @@ export const dashboardCards: DashboardCard[] = [
     description: 'View and manage your fundraising pages',
     action: {
       label: 'View Pages',
-      href: '/pages',
+      href: '/(authenticated)/dashboard/projects',
       variant: 'outline'
     }
   },
@@ -27,8 +27,8 @@ export const dashboardCards: DashboardCard[] = [
     description: 'View your donation history and analytics',
     action: {
       label: 'View Donations',
-      href: '/donations',
+      href: '/(authenticated)/dashboard/analytics',
       variant: 'outline'
     }
   }
-] 
+]
