@@ -25,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const fetchProfile = useAuthStore(state => state.fetchProfile);
   const clear = useAuthStore(state => state.clear);
   const listenerRef = useRef<{ data: { subscription: { unsubscribe: () => void } } } | null>(null);
+  const hasSyncedInitialSession = useRef(false);
 
   useEffect(() => {
     // Prevent duplicate listeners
@@ -35,6 +36,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     logger.info('Setting up auth state change listener', undefined, 'Auth');
 
+    // Keep server-side auth cookies in sync so API routes can read the session
+    const syncSessionToServer = async (event: AuthChangeEvent, session: Session | null) => {
+      try {
+        await fetch('/api/auth/callback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ event, session }),
+        });
+      } catch (error) {
+        logger.warn('Failed to sync auth session to server', { error }, 'Auth');
+      }
+    };
+
     // NOTE: We don't call getSession() here because:
     // 1. onAuthStateChange will fire INITIAL_SESSION event with the current session
     // 2. This prevents duplicate session checks and excessive lock acquisitions
@@ -44,6 +59,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: Session | null) => {
+      await syncSessionToServer(event, session);
+
       logger.debug(
         'Auth state change detected',
         {
@@ -148,6 +165,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     listenerRef.current = { data: { subscription } };
+
+    // Immediately sync any existing session once on mount to avoid early 401s
+    const primeSession = async () => {
+      if (hasSyncedInitialSession.current) return;
+      hasSyncedInitialSession.current = true;
+      const { data } = await supabase.auth.getSession();
+      if (data?.session) {
+        await syncSessionToServer('INITIAL_SESSION', data.session);
+      }
+    };
+    primeSession().catch(error => {
+      logger.warn('Failed to prime auth session on mount', { error }, 'Auth');
+    });
 
     // Cleanup on unmount
     return () => {

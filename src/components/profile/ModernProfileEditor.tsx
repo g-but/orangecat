@@ -22,6 +22,11 @@ import {
 import { toast } from 'sonner';
 import { Profile } from '@/types/profile';
 import { ProfileFormData } from '@/types/database';
+import {
+  buildLocationContext,
+  parseLocationContext,
+  type LocationMode,
+} from '@/lib/location-privacy';
 import { ProfileStorageService } from '@/services/profile/storage';
 import ProfileWizard from './ProfileWizard';
 import { SocialLinksEditor } from './SocialLinksEditor';
@@ -166,7 +171,7 @@ export default function ModernProfileEditor({
     mode: 'onChange',
     reValidateMode: 'onChange',
     defaultValues: {
-      username: profile.username || userEmail?.split('@')[0] || '',
+      username: profile.username || (typeof userEmail === 'string' && userEmail.includes('@') ? userEmail.split('@')[0] : userEmail || ''),
       name: profile.name || '',
       bio: profile.bio || '',
       location_country: profile.location_country || '',
@@ -177,6 +182,9 @@ export default function ModernProfileEditor({
       location_search: profile.location_search || profile.location || '',
       latitude: profile.latitude || undefined,
       longitude: profile.longitude || undefined,
+      // Include context so privacy/group can be persisted
+      // Note: may contain tokens like [HIDE] or [GROUP]:<label>
+      location_context: (profile as any).location_context || '',
       // Keep legacy location for backward compatibility
       location: profile.location || '',
       avatar_url: profile.avatar_url || '',
@@ -195,6 +203,17 @@ export default function ModernProfileEditor({
   // Watch for username changes to auto-update display name if empty
   const watchedUsername = form.watch('username');
   const watchedDisplayName = form.watch('name');
+  const watchedLocationContext = form.watch('location_context');
+  const watchedLocationSearch = form.watch('location_search');
+
+  // Local UI state for location visibility/group
+  const [locationMode, setLocationMode] = useState<LocationMode>(() =>
+    parseLocationContext((profile as any).location_context).mode
+  );
+  const [locationGroupLabel, setLocationGroupLabel] = useState<string>(() => {
+    const parsed = parseLocationContext((profile as any).location_context);
+    return parsed.groupLabel || '';
+  });
 
   useEffect(() => {
     if (watchedUsername && !watchedDisplayName) {
@@ -256,6 +275,29 @@ export default function ModernProfileEditor({
     setIsSaving(true);
 
     try {
+      // Apply location privacy/group mode before normalization/save
+      let adjusted: ProfileFormValues = { ...data };
+      if (locationMode === 'hidden') {
+        adjusted.location_context = buildLocationContext(
+          adjusted.location_context,
+          'hidden'
+        );
+        // Keep stored location data, but UI will hide it
+      } else if (locationMode === 'group') {
+        const group = locationGroupLabel?.trim() || '';
+        // Use group label as the display location and clear structured geo
+        adjusted.location_search = group;
+        adjusted.location_country = '' as any;
+        adjusted.location_city = '' as any;
+        adjusted.location_zip = '' as any;
+        adjusted.latitude = undefined;
+        adjusted.longitude = undefined;
+        adjusted.location_context = buildLocationContext(adjusted.location_context, 'group', group);
+      } else {
+        // actual: ensure tokens removed
+        adjusted.location_context = buildLocationContext(adjusted.location_context, 'actual');
+      }
+
       // Ensure social_links includes current state, converting null labels to undefined
       const normalizedLinks =
         socialLinks.length > 0
@@ -269,7 +311,7 @@ export default function ModernProfileEditor({
           : undefined;
 
       const dataWithSocialLinks = {
-        ...data,
+        ...adjusted,
         social_links: normalizedLinks,
       };
 
@@ -312,7 +354,7 @@ export default function ModernProfileEditor({
       <ProfileWizard
         profile={profile}
         userId={userId}
-        userEmail={userEmail || ''}
+        userEmail={(typeof userEmail === 'string' ? userEmail : '') || ''}
         onSave={onSave}
         onCancel={onCancel}
       />
@@ -490,6 +532,10 @@ export default function ModernProfileEditor({
                                 form.setValue('latitude', locationData.latitude);
                                 form.setValue('longitude', locationData.longitude);
                               }
+                              // If user was in group mode, switch back to actual
+                              if (locationMode !== 'actual') {
+                                setLocationMode('actual');
+                              }
                             } else {
                               // Clear location data
                               form.setValue('location_country', '');
@@ -504,13 +550,61 @@ export default function ModernProfileEditor({
                         />
                       </FormControl>
                       <FormDescription className="text-xs text-gray-500">
-                        Just type your city or address – we will look it up and store the structured
-                        location.
+                        Choose how this appears below: show real city, hide it, or use a custom
+                        group like "Moon" or "Hell".
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                {/* Location visibility/group controls */}
+                <div className="mt-2 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <div className="text-xs font-medium text-gray-700 mb-2">Location visibility</div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+                    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="radio"
+                        name="location_mode"
+                        className="accent-orange-600"
+                        checked={locationMode === 'actual'}
+                        onChange={() => setLocationMode('actual')}
+                      />
+                      Show actual city/region
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="radio"
+                        name="location_mode"
+                        className="accent-orange-600"
+                        checked={locationMode === 'hidden'}
+                        onChange={() => setLocationMode('hidden')}
+                      />
+                      Hide my location
+                    </label>
+                    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                      <input
+                        type="radio"
+                        name="location_mode"
+                        className="accent-orange-600"
+                        checked={locationMode === 'group'}
+                        onChange={() => setLocationMode('group')}
+                      />
+                      Use custom group
+                    </label>
+                  </div>
+                  {locationMode === 'group' && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <Input
+                        placeholder="e.g., Hell, Moon, 69420"
+                        value={locationGroupLabel}
+                        onChange={e => setLocationGroupLabel(e.target.value)}
+                        className="max-w-sm"
+                      />
+                      <span className="text-xs text-gray-500">People with the same label see each other.</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Hidden fields for structured location data */}
@@ -519,6 +613,7 @@ export default function ModernProfileEditor({
               <input type="hidden" {...form.register('location_zip')} />
               <input type="hidden" {...form.register('latitude')} />
               <input type="hidden" {...form.register('longitude')} />
+              <input type="hidden" {...form.register('location_context')} />
 
               {/* SECTION: Online presence */}
               <div className="space-y-4 rounded-xl border border-gray-200 bg-white/80 px-4 py-5 sm:px-5 sm:py-6">

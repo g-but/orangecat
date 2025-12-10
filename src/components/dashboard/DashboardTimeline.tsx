@@ -8,6 +8,7 @@ import TimelineComponent from '@/components/timeline/TimelineComponent';
 import TimelineComposer from '@/components/timeline/TimelineComposer';
 import { TimelineFeedResponse } from '@/types/timeline';
 import { BookOpen, MessageSquare, Compass, RefreshCw, AlertCircle } from 'lucide-react';
+import { TimelinePostSkeleton } from '@/components/ui/Skeleton';
 
 interface DashboardTimelineProps {
   timelineFeed: TimelineFeedResponse | null;
@@ -35,61 +36,58 @@ export function DashboardTimeline({
   const router = useRouter();
 
   return (
-    <main className="lg:col-span-9 space-y-6">
-      {/* Timeline Composer - Use existing component! */}
-      <Card className="shadow-card">
-        <CardContent className="p-4">
-          <TimelineComposer
-            targetOwnerId={userId}
-            targetOwnerType="profile"
-            allowProjectSelection={true}
-            onPostCreated={onPostSuccess}
-            placeholder="Share an update..."
-            buttonText="Post"
-          />
-        </CardContent>
-      </Card>
+    <main className="lg:col-span-9 space-y-4">
+      {/* Composer surface matches timeline UI */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <TimelineComposer
+          targetOwnerId={userId}
+          targetOwnerType="profile"
+          allowProjectSelection={true}
+          onPostCreated={onPostSuccess}
+          placeholder="Share an update..."
+          buttonText="Post"
+        />
+      </div>
 
-      {/* Timeline Feed */}
-      <Card className="shadow-card">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>My Timeline</CardTitle>
-              <CardDescription>Recent activities, posts, and updates</CardDescription>
-            </div>
-            <Link href="/timeline">
-              <Button variant="outline" size="sm">
-                <BookOpen className="w-4 h-4 mr-2" />
-                View Full Timeline
-              </Button>
-            </Link>
+      {/* Timeline feed surface matches timeline UI */}
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div>
+            <CardTitle className="text-lg font-semibold text-gray-900">My Timeline</CardTitle>
+            <CardDescription className="text-sm text-gray-500">
+              Recent activities, posts, and updates
+            </CardDescription>
           </div>
-        </CardHeader>
-        <CardContent className="p-6">
+          <Link href="/timeline">
+            <Button variant="outline" size="sm">
+              <BookOpen className="w-4 h-4 mr-2" />
+              View Full Timeline
+            </Button>
+          </Link>
+        </div>
+        <div className="p-0">
           {isLoading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto mb-4"></div>
-              <p className="text-gray-500">Loading your activity feed...</p>
+            <div className="py-4">
+              {[...Array(3)].map((_, idx) => (
+                <TimelinePostSkeleton key={idx} />
+              ))}
             </div>
           ) : error ? (
-            <div className="text-center py-8 text-red-600">
+            <div className="text-center py-10 text-red-600 px-6">
               <AlertCircle className="w-12 h-12 mx-auto mb-4" />
               <p className="mb-2">Failed to load timeline</p>
               <p className="text-sm text-gray-500 mb-4">{error}</p>
               <Button variant="outline" onClick={onRefresh}>
                 <RefreshCw className="w-4 h-4 mr-2" />
-                Try Again
+                Retry
               </Button>
             </div>
           ) : timelineFeed && timelineFeed.events.length > 0 ? (
             <TimelineComponent
               feed={timelineFeed}
-              onLoadMore={() => {
-                // TODO: Implement pagination
-              }}
+              onLoadMore={onRefresh}
               showFilters={false}
-              compact={true}
+              compact={false}
             />
           ) : (
             <div className="text-center py-12 text-gray-500">
@@ -116,8 +114,10 @@ export function DashboardTimeline({
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </main>
   );
 }
+
+export default DashboardTimeline;

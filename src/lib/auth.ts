@@ -1,5 +1,5 @@
 import { logger } from '@/utils/logger'
-import { supabase } from './db'
+import { supabase } from '@/lib/supabase/browser'
 import type { User } from '@supabase/supabase-js'
 
 export async function getCurrentUser(): Promise<User | null> {

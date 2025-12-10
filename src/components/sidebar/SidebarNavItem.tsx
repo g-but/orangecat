@@ -15,6 +15,7 @@ import Link from 'next/link';
 import type { NavItem } from '@/hooks/useNavigation';
 import { navigationLabels } from '@/config/navigationConfig';
 import { SIDEBAR_COLORS, SIDEBAR_SPACING } from '@/constants/sidebar';
+import { useMessagesUnread } from '@/hooks/useMessagesUnread';
 
 interface SidebarNavItemProps {
   item: NavItem;
@@ -30,6 +31,8 @@ interface SidebarNavItemProps {
  * Supports both collapsed (icons only) and expanded (icons + text) states
  */
 export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: SidebarNavItemProps) {
+  const showMessagesBadge = item.href === '/messages';
+  const { count } = showMessagesBadge ? useMessagesUnread(30000) : { count: 0 } as any;
   const linkClasses = [
     'group flex items-center py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative',
     SIDEBAR_SPACING.ITEM_HEIGHT,
@@ -40,7 +43,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
     isActive
       ? `${SIDEBAR_COLORS.ACTIVE_BACKGROUND} ${SIDEBAR_COLORS.ACTIVE_TEXT} shadow-sm border ${SIDEBAR_COLORS.ACTIVE_BORDER}`
       : item.comingSoon
-        ? 'text-gray-400 cursor-not-allowed'
+        ? `text-gray-500 ${SIDEBAR_COLORS.HOVER_BACKGROUND} hover:text-gray-700`
         : `${SIDEBAR_COLORS.TEXT_PRIMARY} ${SIDEBAR_COLORS.HOVER_BACKGROUND} hover:text-gray-900`,
   ].join(' ');
 
@@ -51,7 +54,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
     isActive
       ? 'text-tiffany-600'
       : item.comingSoon
-        ? 'text-gray-400'
+        ? 'text-gray-400 group-hover:text-gray-500'
         : 'text-gray-400 group-hover:text-gray-600',
   ].join(' ');
 
@@ -64,19 +67,18 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
 
   return (
     <Link
-      href={item.comingSoon ? '#' : item.href}
+      href={item.href}
       className={linkClasses}
       title={isExpanded ? undefined : item.name}
-      onClick={e => {
-        if (item.comingSoon) {
-          e.preventDefault();
-        } else if (onNavigate) {
-          onNavigate();
-        }
-      }}
+      onClick={onNavigate}
       aria-label={item.comingSoon ? `${item.name} - ${navigationLabels.COMING_SOON}` : item.name}
     >
       <item.icon className={iconClasses} />
+
+      {/* Collapsed sidebar: tiny unread dot for Messages */}
+      {showMessagesBadge && count > 0 && !isExpanded && (
+        <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-sky-500"></span>
+      )}
 
       <span className={textClasses}>{item.name}</span>
 
@@ -96,10 +98,17 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
         </span>
       )}
 
-      {/* Badge */}
+      {/* Static badge */}
       {item.badge && !item.comingSoon && isExpanded && (
         <span className="ml-auto text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-medium">
           {item.badge}
+        </span>
+      )}
+
+      {/* Dynamic messages unread badge */}
+      {showMessagesBadge && count > 0 && isExpanded && (
+        <span className="ml-auto text-xs bg-sky-500 text-white px-2 py-0.5 rounded-full font-medium">
+          {count > 99 ? '99+' : count}
         </span>
       )}
     </Link>

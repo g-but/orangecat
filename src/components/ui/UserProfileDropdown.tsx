@@ -168,15 +168,16 @@ export default function UserProfileDropdown({
     } else if (user?.user_metadata?.full_name) {
       displayName = user.user_metadata.full_name;
     } else if (email) {
-      // Extract name from email more intelligently
-      const emailName = email.split('@')[0];
+      // Extract name from email safely
+      const atIndex = email.indexOf('@');
+      const emailName = atIndex > 0 ? email.slice(0, atIndex) : email;
       displayName = emailName.replace(/[._-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     } else {
       displayName = 'User';
     }
   }
 
-  const firstName = displayName.split(' ')[0];
+  const firstName = (displayName || '').split(' ')[0] || 'User';
   const username = profile?.username;
 
   // Debug logging (remove in production)

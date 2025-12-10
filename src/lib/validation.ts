@@ -254,6 +254,101 @@ export function normalizeProfileData(data: unknown): ProfileData {
   return normalized;
 }
 
+// Personal Economy validation schemas
+export const userProductSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
+  description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  price_sats: z.number().positive('Price must be positive'),
+  currency: z.enum(['SATS', 'BTC']).default('SATS'),
+  product_type: z.enum(['physical', 'digital', 'service']).default('physical'),
+  images: z.array(z.string().url()).optional().default([]),
+  thumbnail_url: z.string().url().optional().nullable().or(z.literal('')),
+  inventory_count: z.number().int().min(-1).default(-1), // -1 = unlimited
+  fulfillment_type: z.enum(['manual', 'automatic', 'digital']).default('manual'),
+  category: z.string().max(50).optional().nullable().or(z.literal('')),
+  tags: z.array(z.string()).optional().default([]),
+  status: z.enum(['draft', 'active', 'paused', 'sold_out']).default('draft'),
+  is_featured: z.boolean().default(false),
+});
+
+export const userServiceSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
+  description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  category: z.string().min(1, 'Category is required').max(50),
+  hourly_rate_sats: z.number().positive().optional().nullable(),
+  fixed_price_sats: z.number().positive().optional().nullable(),
+  currency: z.enum(['SATS', 'BTC']).default('SATS'),
+  duration_minutes: z.number().positive().optional().nullable(),
+  availability_schedule: z.any().optional(), // JSON object for complex scheduling
+  service_location_type: z.enum(['remote', 'onsite', 'both']).default('remote'),
+  service_area: z.string().max(200).optional().nullable().or(z.literal('')),
+  images: z.array(z.string().url()).optional().default([]),
+  portfolio_links: z.array(z.string().url()).optional().default([]),
+  status: z.enum(['draft', 'active', 'paused', 'unavailable']).default('draft'),
+}).refine(
+  data => data.hourly_rate_sats || data.fixed_price_sats,
+  {
+    message: "At least one pricing method (hourly or fixed) is required",
+    path: ["hourly_rate_sats"], // This will show the error on hourly_rate_sats field
+  }
+);
+
+export const userCauseSchema = z.object({
+  title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
+  description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  cause_category: z.string().min(1, 'Category is required').max(50),
+  goal_sats: z.number().positive().optional().nullable(),
+  currency: z.enum(['SATS', 'BTC']).default('SATS'),
+  bitcoin_address: z.string().optional().nullable().or(z.literal('')),
+  lightning_address: z.string().optional().nullable().or(z.literal('')),
+  distribution_rules: z.any().optional(), // JSON object for distribution rules
+  beneficiaries: z.array(z.any()).optional().default([]), // Array of beneficiary objects
+  status: z.enum(['draft', 'active', 'completed', 'paused']).default('draft'),
+});
+
+export const userAIAssistantSchema = z.object({
+  assistant_name: z.string().max(50).default('My Cat'),
+  personality_prompt: z.string().max(1000).optional().nullable().or(z.literal('')),
+  training_data: z.any().optional().default({}),
+  status: z.enum(['coming_soon', 'training', 'active', 'paused']).default('coming_soon'),
+  is_enabled: z.boolean().default(false),
+  response_style: z.enum(['friendly', 'professional', 'casual']).default('friendly'),
+  allowed_topics: z.array(z.string()).optional().default([]),
+  blocked_topics: z.array(z.string()).optional().default([]),
+});
+
+// Organization validation
+export const organizationSchema = z.object({
+  name: z.string().min(1, 'Organization name is required').max(100, 'Name must be at most 100 characters'),
+  slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be at most 100 characters')
+    .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
+  type: z.enum(['dao', 'company', 'nonprofit', 'community', 'cooperative', 'foundation', 'collective', 'guild', 'syndicate', 'circle']),
+  description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  website_url: z.string().url().optional().nullable().or(z.literal('')),
+  governance_model: z.enum(['hierarchical', 'flat', 'democratic', 'consensus', 'liquid_democracy', 'quadratic_voting', 'stake_weighted', 'reputation_based']),
+  treasury_address: z.string().optional().nullable().or(z.literal('')),
+  lightning_address: z.string().optional().nullable().or(z.literal('')),
+});
+
+// Loan validation
+export const loanSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be at most 100 characters'),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(1000, 'Description must be at most 1000 characters'),
+  loan_category_id: z.string().optional().nullable().or(z.literal('')),
+  original_amount: z.number().positive('Amount must be greater than 0'),
+  remaining_balance: z.number().positive('Balance must be greater than 0'),
+  interest_rate: z.number().min(0).max(100).optional().nullable(),
+  bitcoin_address: z.string().optional().nullable().or(z.literal('')),
+  lightning_address: z.string().optional().nullable().or(z.literal('')),
+  fulfillment_type: z.enum(['manual', 'automatic']).default('manual'),
+});
+
 export type ProfileData = z.infer<typeof profileSchema>;
 export type ProjectData = z.infer<typeof projectSchema>;
 export type TransactionData = z.infer<typeof transactionSchema>;
+export type UserProductFormData = z.infer<typeof userProductSchema>;
+export type UserServiceFormData = z.infer<typeof userServiceSchema>;
+export type UserCauseFormData = z.infer<typeof userCauseSchema>;
+export type UserAIAssistantFormData = z.infer<typeof userAIAssistantSchema>;
+export type OrganizationFormData = z.infer<typeof organizationSchema>;
+export type LoanFormData = z.infer<typeof loanSchema>;

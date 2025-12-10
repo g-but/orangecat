@@ -1,13 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { X, Repeat2, MessageSquare } from 'lucide-react';
+import { X } from 'lucide-react';
 import { TimelineDisplayEvent } from '@/types/timeline';
 import AvatarLink from '@/components/ui/AvatarLink';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+
+const QUOTE_MAX_LENGTH = 280;
 
 interface RepostModalProps {
   isOpen: boolean;
@@ -16,15 +18,14 @@ interface RepostModalProps {
   onSimpleRepost: () => Promise<void>;
   onQuoteRepost: (quoteText: string) => Promise<void>;
   isReposting?: boolean;
+  currentUser?: {
+    id?: string | null;
+    name?: string | null;
+    username?: string | null;
+    avatar?: string | null;
+  };
 }
 
-/**
- * RepostModal Component
- * 
- * X/Twitter-style repost modal with two options:
- * 1. Simple Repost - Just repost without adding commentary
- * 2. Quote Repost - Add your own commentary to the repost
- */
 export function RepostModal({
   isOpen,
   onClose,
@@ -32,27 +33,98 @@ export function RepostModal({
   onSimpleRepost,
   onQuoteRepost,
   isReposting = false,
+  currentUser,
 }: RepostModalProps) {
-  const [showQuoteComposer, setShowQuoteComposer] = useState(false);
   const [quoteText, setQuoteText] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   if (!isOpen) return null;
 
+  const cleanText = (text?: string | null) =>
+    (text || '')
+      .replace(/^Reposted from .*?:\s*/i, '')
+      .replace(/^Quote repost from .*?:\s*/i, '')
+      .trim();
+
+  // Prefer original author info when available
+  const originalAuthor = {
+    name: (event.metadata as any)?.original_actor_name || event.actor.name || 'User',
+    username:
+      (event.metadata as any)?.original_actor_username ||
+      event.actor.username ||
+      (event.metadata as any)?.original_actor_id ||
+      '',
+    id: (event.metadata as any)?.original_actor_id || event.actor.id,
+    avatar: (event.metadata as any)?.original_actor_avatar || event.actor.avatar || null,
+  };
+
+  // Extract original body, stripping legacy separators
+  const originalBody = (() => {
+    if ((event.metadata as any)?.original_description) {
+      return cleanText((event.metadata as any)?.original_description);
+    }
+    if (event.description?.includes('\n\n---\n\n')) {
+      const [maybeQuote, maybeOriginal] = event.description.split('\n\n---\n\n');
+      return cleanText(maybeOriginal) || cleanText(maybeQuote);
+    }
+    return cleanText(event.description);
+  })();
+
   const handleSimpleRepost = async () => {
+    if (isReposting) return;
     await onSimpleRepost();
     onClose();
   };
 
   const handleQuoteRepost = async () => {
+    if (isReposting) return;
     if (quoteText.trim()) {
       await onQuoteRepost(quoteText.trim());
       setQuoteText('');
-      setShowQuoteComposer(false);
+      // keep quote mode open for next use; modal will close
       onClose();
     }
   };
 
+  // Focus textarea when opened
+  useEffect(() => {
+    if (isOpen && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isOpen]);
+
+  // Global keyboard handling: Esc to close, Ctrl/Cmd+Enter to submit
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+        return;
+      }
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (quoteText.trim()) {
+          handleQuoteRepost();
+        } else {
+          handleSimpleRepost();
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, quoteText]);
+
   const timeAgo = formatDistanceToNow(new Date(event.eventTimestamp), { addSuffix: true });
+  const remainingCharacters = QUOTE_MAX_LENGTH - quoteText.length;
+  const currentActor = {
+    id: currentUser?.id || 'me',
+    name: currentUser?.name || 'You',
+    username: currentUser?.username || '',
+    avatar: currentUser?.avatar || null,
+  };
+  const canQuote = quoteText.trim().length > 0 && remainingCharacters >= 0 && !isReposting;
 
   return (
     <>
@@ -66,13 +138,13 @@ export function RepostModal({
       {/* Modal */}
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
         <Card
-          className="w-full max-w-md bg-white rounded-2xl shadow-2xl pointer-events-auto animate-scale-in"
+          className="w-full max-w-xl bg-white rounded-2xl shadow-2xl pointer-events-auto animate-scale-in"
           onClick={(e) => e.stopPropagation()}
         >
           <CardContent className="p-0">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Repost</h2>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+              <div className="text-sm font-semibold text-gray-900">Repost</div>
               <button
                 onClick={onClose}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -82,127 +154,111 @@ export function RepostModal({
               </button>
             </div>
 
-            {/* Original Post Preview */}
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-start gap-3">
+            {/* Quote-first layout like X */}
+            <div className="p-4 space-y-3">
+              <div className="flex gap-3">
                 <AvatarLink
-                  username={event.actor.username}
-                  userId={event.actor.id}
-                  avatarUrl={event.actor.avatar}
-                  name={event.actor.name}
+                  username={currentActor.username || null}
+                  userId={currentActor.id}
+                  avatarUrl={currentActor.avatar}
+                  name={currentActor.name}
                   size={40}
                   className="flex-shrink-0"
                 />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-1.5 mb-1 flex-wrap">
-                    <Link
-                      href={event.actor.username ? `/profiles/${event.actor.username}` : `/profiles/${event.actor.id}`}
-                      className="font-semibold text-sm text-gray-900 hover:text-orange-600"
-                    >
-                      {event.actor.name}
-                    </Link>
-                    {event.actor.username && (
-                      <>
-                        <Link
-                          href={`/profiles/${event.actor.username}`}
-                          className="text-gray-500 text-sm hover:text-orange-600"
-                        >
-                          @{event.actor.username}
-                        </Link>
-                        <span className="text-gray-400">·</span>
-                      </>
-                    )}
-                    <span className="text-gray-500 text-sm">{timeAgo}</span>
-                  </div>
-                  {event.description && (
-                    <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">
-                      {event.description}
-                    </p>
-                  )}
-                </div>
+                <textarea
+                  id="quote-text"
+                  ref={textareaRef}
+                  value={quoteText}
+                  onChange={(e) => setQuoteText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                      e.preventDefault();
+                      handleQuoteRepost();
+                    }
+                  }}
+                  rows={4}
+                  className="w-full border border-gray-200 rounded-2xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none bg-gray-50 placeholder:text-gray-500"
+                  placeholder="Add a comment"
+                  maxLength={QUOTE_MAX_LENGTH}
+                  aria-label="Add your comment before reposting"
+                  autoFocus
+                />
               </div>
-            </div>
-
-            {/* Repost Options */}
-            {!showQuoteComposer ? (
-              <div className="p-2">
-                {/* Simple Repost Option */}
-                <button
-                  onClick={handleSimpleRepost}
-                  disabled={isReposting}
-                  className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                    <Repeat2 className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <div className="font-semibold text-gray-900">Repost</div>
-                    <div className="text-sm text-gray-500">Share this post to your timeline</div>
-                  </div>
-                </button>
-
-                {/* Quote Repost Option */}
-                <button
-                  onClick={() => setShowQuoteComposer(true)}
-                  disabled={isReposting}
-                  className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <MessageSquare className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <div className="font-semibold text-gray-900">Quote</div>
-                    <div className="text-sm text-gray-500">Add a comment to your repost</div>
-                  </div>
-                </button>
-              </div>
-            ) : (
-              /* Quote Composer */
-              <div className="p-4 space-y-4">
-                <div>
-                  <label htmlFor="quote-text" className="block text-sm font-medium text-gray-700 mb-2">
-                    Add a comment
-                  </label>
-                  <textarea
-                    id="quote-text"
-                    value={quoteText}
-                    onChange={(e) => setQuoteText(e.target.value)}
-                    rows={4}
-                    className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                    placeholder="Add your thoughts..."
-                    maxLength={500}
-                    autoFocus
-                  />
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-gray-500">
-                      {quoteText.length}/500 characters
-                    </span>
-                  </div>
+              <div className="flex items-center justify-between text-sm px-1">
+                <div className="flex items-center gap-2 text-gray-500">
+                  <span
+                    className={
+                      remainingCharacters <= 20
+                        ? 'text-orange-600 font-semibold'
+                        : 'text-gray-500'
+                    }
+                  >
+                    {remainingCharacters}
+                  </span>
+                  <span className="text-gray-400">characters left</span>
+                  <span className="hidden sm:inline text-gray-400">·</span>
+                  <span className="hidden sm:inline text-gray-400">Ctrl/Cmd + Enter to post</span>
                 </div>
-
                 <div className="flex items-center gap-2">
                   <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowQuoteComposer(false);
-                      setQuoteText('');
-                    }}
+                    variant="ghost"
+                    onClick={handleSimpleRepost}
                     disabled={isReposting}
-                    className="flex-1"
+                    className="h-9 px-3 text-sm"
                   >
-                    Cancel
+                    Repost
                   </Button>
                   <Button
                     onClick={handleQuoteRepost}
-                    disabled={!quoteText.trim() || isReposting}
+                    disabled={!canQuote}
                     isLoading={isReposting}
-                    className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+                    className="h-9 px-4 text-sm bg-orange-600 hover:bg-orange-700 text-white rounded-full"
                   >
-                    {isReposting ? 'Posting...' : 'Quote Repost'}
+                    Quote post
                   </Button>
                 </div>
               </div>
-            )}
+
+              {/* Original Post Preview (X-style) */}
+              <div className="border border-gray-200 rounded-2xl bg-gray-50 p-3 hover:bg-gray-100 transition-colors">
+                <div className="flex items-start gap-3">
+                  <AvatarLink
+                    username={originalAuthor.username || null}
+                    userId={originalAuthor.id}
+                    avatarUrl={originalAuthor.avatar}
+                    name={originalAuthor.name}
+                    size={36}
+                    className="flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-1 flex-wrap">
+                      <Link
+                        href={
+                          originalAuthor.username
+                            ? `/profiles/${originalAuthor.username}`
+                            : `/profiles/${originalAuthor.id}`
+                        }
+                        className="font-semibold text-sm text-gray-900 hover:underline"
+                      >
+                        {originalAuthor.name}
+                      </Link>
+                      {originalAuthor.username && (
+                        <>
+                          <span className="text-gray-500 text-sm">@{originalAuthor.username}</span>
+                          <span className="text-gray-400 text-sm">·</span>
+                        </>
+                      )}
+                      <span className="text-gray-500 text-sm">{timeAgo}</span>
+                    </div>
+                    {originalBody && (
+                      <p className="text-sm text-gray-900 whitespace-pre-wrap break-words leading-relaxed">
+                        {originalBody}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

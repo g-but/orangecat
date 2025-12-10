@@ -92,3 +92,31 @@ If you want to fix the Cursor browser tool itself:
 - No multiple tabs issue
 
 The script is at: `scripts/test/demo-profile-workflow.js`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

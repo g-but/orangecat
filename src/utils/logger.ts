@@ -72,7 +72,7 @@ class Logger {
 
   private output(entry: LogEntry): void {
     const { timestamp, level, message, data, source } = entry
-    
+
     // In production, use structured logging
     if (LOGGER_CONFIG.environment === 'production') {
       // Send to proper logging service in production
@@ -86,16 +86,21 @@ class Logger {
     // Development logging with colors and formatting
     const prefix = `[${timestamp}] ${level.toUpperCase()}`
     const sourceInfo = source ? ` (${source})` : ''
-    
+    const payload = data !== undefined ? data : ''
+
     switch (level) {
       case 'debug':
-        break
+        console.debug(prefix + sourceInfo + ':', message, payload)
+        return
       case 'info':
-        break
+        console.info(prefix + sourceInfo + ':', message, payload)
+        return
       case 'warn':
-        break
+        console.warn(prefix + sourceInfo + ':', message, payload)
+        return
       case 'error':
-        break
+        console.error(prefix + sourceInfo + ':', message, payload)
+        return
     }
   }
 

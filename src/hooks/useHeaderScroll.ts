@@ -29,7 +29,7 @@ export function useHeaderScroll(options: UseHeaderScrollOptions = {}): UseHeader
   const lastScrollRef = useRef<number>(0);
   const tickingRef = useRef<boolean>(false);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const minScrollDelta = 5; // Minimum scroll delta to prevent flickering from tiny movements
+  const minScrollDelta = 16; // Minimum scroll delta to prevent flickering from tiny movements and layout shifts
 
   useEffect(() => {
     const handleScroll = () => {
@@ -39,6 +39,15 @@ export function useHeaderScroll(options: UseHeaderScrollOptions = {}): UseHeader
           const scrollDelta = Math.abs(current - lastScrollRef.current);
 
           setIsScrolled(current > 0);
+
+          // When near the top, always show the header and clear pending hides
+          if (current <= scrollThreshold) {
+            if (hideTimeoutRef.current) {
+              clearTimeout(hideTimeoutRef.current);
+              hideTimeoutRef.current = null;
+            }
+            setIsHidden(false);
+          }
 
           if (hideOnScrollDown) {
             // Only process if scroll delta is significant enough to prevent flickering

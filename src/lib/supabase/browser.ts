@@ -4,26 +4,25 @@ import { createBrowserClient } from '@supabase/ssr'
 import { Database } from '@/types/database'
 import { logger } from '@/utils/logger'
 
-// Environment variables with fallbacks for production builds
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0'
+// Environment variables (must be present; no client-side fallbacks)
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-// Log warning if using fallback values
-if (!process.env.NEXT_PUBLIC_SUPABASE_URL || (!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+if (!supabaseUrl || !supabaseAnonKey) {
+  // Fail fast to avoid leaking placeholder keys or silently using wrong project
+  const message = 'Supabase client misconfigured: set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY).'
   if (process.env.NODE_ENV === 'development') {
-    logger.error('Supabase configuration error', {
-      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? 'Set' : 'Missing',
-      supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ? 'Publishable Key Set' : process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'Anon Key Set' : 'Missing',
-      message: 'Missing required environment variables. Check .env.local file.'
-    }, 'Supabase')
-  } else {
-    logger.warn('Using fallback Supabase configuration. Authentication features may not work correctly.', undefined, 'Supabase')
+    throw new Error(message)
   }
+  // In production, throw to prevent shipping a broken auth client
+  throw new Error(message)
 }
 
-// Validate URL format
+// Validate URL format early
 if (!supabaseUrl.startsWith('https://') || !supabaseUrl.includes('.supabase.co')) {
-      logger.warn('Supabase URL format looks incorrect. Expected format: https://your-project.supabase.co', undefined, 'Supabase')
+  throw new Error('Supabase URL format looks incorrect. Expected https://<project>.supabase.co')
 }
 
 // Safe storage with localStorage/sessionStorage fallback

@@ -69,36 +69,30 @@ export function ProjectCardSkeleton() {
  */
 export function TimelinePostSkeleton() {
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          {/* Avatar */}
-          <Skeleton className="h-12 w-12 rounded-full flex-shrink-0" />
+    <div className="flex gap-3 px-4 py-4 border-b border-gray-200 bg-white">
+      {/* Avatar */}
+      <Skeleton className="h-11 w-11 rounded-full flex-shrink-0" />
 
-          {/* Author and timestamp */}
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-3 w-24" />
-          </div>
+      <div className="flex-1 space-y-3">
+        {/* Header */}
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-3 w-16" />
         </div>
 
-        {/* More menu */}
-        <Skeleton className="h-8 w-8 rounded-full" />
-      </div>
+        {/* Content */}
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-3/4" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-2/3" />
+        </div>
 
-      {/* Content */}
-      <div className="space-y-2">
-        <Skeleton className="h-5 w-2/3" />
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-4/5" />
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-6 pt-2 border-t border-gray-100 dark:border-gray-800">
-        <Skeleton className="h-4 w-16" />
-        <Skeleton className="h-4 w-16" />
-        <Skeleton className="h-4 w-16" />
+        {/* Actions */}
+        <div className="flex items-center gap-6 pt-2">
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-16" />
+        </div>
       </div>
     </div>
   );

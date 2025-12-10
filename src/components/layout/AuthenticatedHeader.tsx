@@ -11,7 +11,7 @@
 
 'use client';
 
-import { Menu, Bell, Search } from 'lucide-react';
+import { Menu, Bell, Search, MessageSquare } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
@@ -24,6 +24,8 @@ import EnhancedSearchBar from '@/components/search/EnhancedSearchBar';
 import MobileSearchModal from '@/components/search/MobileSearchModal';
 import UserProfileDropdown from '@/components/ui/UserProfileDropdown';
 import { SIDEBAR_Z_INDEX, SIDEBAR_COLORS } from '@/constants/sidebar';
+import { useRouter } from 'next/navigation';
+import { useMessagesUnread } from '@/hooks/useMessagesUnread';
 
 interface AuthenticatedHeaderProps {
   onToggleSidebar: () => void;
@@ -46,8 +48,10 @@ export function AuthenticatedHeader({
 }: AuthenticatedHeaderProps) {
   const pathname = usePathname();
   const { user } = useAuth();
+  const router = useRouter();
   const navigation = getNavigationItems(user);
   const { isScrolled, isHidden } = useHeaderScroll();
+  const { count: unread } = useMessagesUnread();
 
   const isActive = (href: string) => {
     if (href === '/dashboard') {
@@ -136,6 +140,26 @@ export function AuthenticatedHeader({
             <div className="hidden sm:block flex-shrink-0">
             <HeaderCreateButton />
             </div>
+
+            {/* Messages */}
+            <button
+              onClick={() => router.push('/messages')}
+              className="relative p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors flex-shrink-0"
+              aria-label="Messages"
+            >
+              <MessageSquare className="w-5 h-5" />
+              {unread > 0 && (
+                <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-sky-500 text-white text-[10px] leading-[18px] text-center">
+                  {unread > 99 ? '99+' : unread}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => router.push('/messages')}
+              className="hidden sm:inline-flex px-2.5 py-1.5 text-xs font-medium text-white bg-sky-600 hover:bg-sky-700 rounded-lg transition-colors"
+            >
+              New
+            </button>
 
             {/* Notifications - Responsive padding */}
             <button className="relative p-1.5 sm:p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors flex-shrink-0">

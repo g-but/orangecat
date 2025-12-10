@@ -2,11 +2,20 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import SocialTimeline from '@/components/timeline/SocialTimeline';
-import PostComposerMobile from '@/components/timeline/PostComposerMobile';
+import dynamic from 'next/dynamic';
 import { BookOpen, Plus } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useComposer } from '@/contexts/ComposerContext';
+
+const SocialTimeline = dynamic(() => import('@/components/timeline/SocialTimeline'), {
+  ssr: false,
+  loading: () => <div className="h-[400px] rounded-xl border border-gray-100 bg-white shadow-sm animate-pulse" />,
+});
+
+const PostComposerMobile = dynamic(() => import('@/components/timeline/PostComposerMobile'), {
+  ssr: false,
+  loading: () => <div className="h-[320px] rounded-xl border border-gray-100 bg-white shadow-sm animate-pulse" />,
+});
 
 /**
  * My Timeline Page - Personal Timeline

@@ -36,70 +36,64 @@ function analyzeBundle() {
       return;
     }
     
-    // Read build manifest
-    const manifest = JSON.parse(fs.readFileSync(buildManifest, 'utf8'));
-    
-    if (process.env.NODE_ENV === 'development') console.log('📊 Bundle Analysis Results:');
-    // REMOVED: console.log statement
+    // Read build manifest (pages) and app-build-manifest (app router)
+    const manifests = [];
+    manifests.push(JSON.parse(fs.readFileSync(buildManifest, 'utf8')));
+    const appManifestPath = path.join(process.cwd(), '.next', 'app-build-manifest.json');
+    if (fs.existsSync(appManifestPath)) {
+      manifests.push(JSON.parse(fs.readFileSync(appManifestPath, 'utf8')));
+    }
     
     // Analyze main chunks
     let totalJS = 0;
-    let violations = [];
+    const pageSizes = {};
+    const violations = [];
     
-    Object.entries(manifest.pages).forEach(([page, files]) => {
-      const jsFiles = files.filter(file => file.endsWith('.js'));
-      const jsSize = jsFiles.reduce((acc, file) => {
-        const filePath = path.join(process.cwd(), '.next', 'static', file);
-        if (fs.existsSync(filePath)) {
-          return acc + fs.statSync(filePath).size;
+    manifests.forEach(manifest => {
+      Object.entries(manifest.pages || {}).forEach(([page, files]) => {
+        const jsFiles = files.filter(file => file.endsWith('.js'));
+        const jsSize = jsFiles.reduce((acc, file) => {
+          // Paths in manifest already include "static/..." prefix
+          const filePath = path.join(process.cwd(), '.next', file);
+          if (fs.existsSync(filePath)) {
+            return acc + fs.statSync(filePath).size;
+          }
+          return acc;
+        }, 0);
+        
+        totalJS += jsSize;
+        // If page already seen, keep the larger size (conservative)
+        pageSizes[page] = Math.max(pageSizes[page] || 0, jsSize);
+        
+        if (jsSize > BUNDLE_SIZE_LIMITS['chunks/pages/']) {
+          violations.push(`${page} exceeds size limit: ${formatBytes(jsSize)}`);
         }
-        return acc;
-      }, 0);
-      
-      totalJS += jsSize;
-      
-      // REMOVED: console.log statement
-      
-      if (jsSize > BUNDLE_SIZE_LIMITS['chunks/pages/']) {
-        violations.push(`${page} exceeds size limit: ${formatBytes(jsSize)}`);
-      }
+      });
     });
     
     // Check performance budgets
-    // REMOVED: console.log statement
-    // REMOVED: console.log statement
-    
-    // REMOVED: console.log statement
     if (totalJS > PERFORMANCE_BUDGETS.totalJavaScript) {
       violations.push(`Total JavaScript exceeds budget: ${formatBytes(totalJS)}`);
     }
     
-    // Recommendations
-    if (violations.length > 0) {
-      // REMOVED: console.log statement
-      // REMOVED: console.log statement
-      
-      // REMOVED: console.log statement
-      // REMOVED: console.log statement
-      // REMOVED: console.log statement
-      // REMOVED: console.log statement
-      // REMOVED: console.log statement
-    } else {
-      // REMOVED: console.log statement
-    }
+    // Build top offenders list
+    const topPages = Object.entries(pageSizes)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([page, size]) => ({ page, size, formatted: formatBytes(size) }));
     
     // Generate report
     const report = {
       timestamp: new Date().toISOString(),
       totalJavaScript: totalJS,
+      totalJavaScriptFormatted: formatBytes(totalJS),
       violations,
+      topPages,
       recommendations: generateRecommendations(totalJS, violations)
     };
     
     const reportPath = path.join(process.cwd(), '.next', 'bundle-analysis.json');
     fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-    
-    // REMOVED: console.log statement
     
   } catch (error) {
     console.error('❌ Bundle analysis failed:', error.message);

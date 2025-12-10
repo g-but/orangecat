@@ -20,5 +20,5 @@ export default async function Demo({ params }: DemoPageProps) {
 }
 
 export async function generateStaticParams() {
-  return [{ initiative: 'projects' }, { initiative: 'fundraising' }];
+  return [{ initiative: 'projects' }, { initiative: 'fundraising' }, { initiative: 'events' }, { initiative: 'organizations' }];
 }

@@ -1,8 +1,8 @@
 # Timeline Unification Implementation
 
-**Created:** 2025-11-21  
-**Last Modified:** 2025-11-21  
-**Last Modified Summary:** Implemented unified timeline with context-aware features, multi-select functionality, and responsive improvements
+created_date: 2025-11-21  
+last_modified_date: 2025-12-08  
+last_modified_summary: Added reply thread support, clickable cards, mention links, and timeline search entry point
 
 ## Executive Summary
 
@@ -56,6 +56,32 @@ Successfully unified both timeline implementations (public profile timeline and 
 - Profile timeline: Shows posts WHERE profile is the subject (posts on that profile's timeline)
 
 This clarifies why posts differ between the two timelines.
+
+### 5. Thread View & Reply Support ✅
+
+**Files Modified:**
+- `src/hooks/usePostComposerNew.ts`
+- `src/components/timeline/TimelineComposer.tsx`
+- `src/components/timeline/PostCard.tsx`
+- `src/app/(authenticated)/post/[id]/page.tsx`
+
+**Changes:**
+- `TimelineComposer` now accepts `parentEventId` and passes it through to posting logic.
+- Replies use `timelineService.createEvent` to correctly persist `parentEventId`.
+- `PostCard` is clickable (with interactive-element guard) to open the thread view.
+- Reply composer on the thread page wires `parentEventId` for contextual replies.
+
+### 6. Mentions & Timeline Search ✅
+
+**Files Modified:**
+- `src/utils/markdown.tsx`
+- `src/services/timeline/index.ts`
+- `src/components/timeline/SocialTimeline.tsx`
+
+**Changes:**
+- Lightweight mention parsing renders `@username` as profile links and auto-links URLs without pulling in heavy markdown deps.
+- Added `timelineService.searchPosts` against `enriched_timeline_events` (public visibility) with pagination inputs.
+- Timeline page now has a search bar with clear-state handling and search-aware empty states; search results disable pagination while active.
 
 ## Architecture
 
