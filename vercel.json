@@ -6,13 +6,13 @@
   "outputDirectory": ".next",
   "devCommand": "npm run dev",
   "installCommand": "npm install && npm install --include=optional sharp",
-  
+
   "env": {
     "NODE_ENV": "production",
     "NEXT_TELEMETRY_DISABLED": "1",
     "NPM_CONFIG_FUND": "false"
   },
-  
+
   "build": {
     "env": {
       "NODE_ENV": "production",
@@ -23,7 +23,7 @@
       "SHARP_VERSION": "0.34.2"
     }
   },
-  
+
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30,
@@ -34,7 +34,7 @@
       "memory": 1024
     }
   },
-  
+
   "headers": [
     {
       "source": "/(.*)",
@@ -97,7 +97,7 @@
       ]
     }
   ],
-  
+
   "redirects": [
     {
       "source": "/health",
@@ -110,7 +110,7 @@
       "permanent": false
     }
   ],
-  
+
   "rewrites": [
     {
       "source": "/sitemap.xml",
@@ -121,7 +121,7 @@
       "destination": "/api/robots"
     }
   ],
-  
+
   "crons": [
     {
       "path": "/api/cron/cleanup",
@@ -132,9 +132,10 @@
   "github": {
     "autoAlias": false,
     "autoJobCancelation": true,
-    "silent": false
+    "silent": false,
+    "enabled": true
   },
 
   "cleanUrls": true,
   "trailingSlash": false
-} 
+}
