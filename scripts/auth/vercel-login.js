@@ -9,182 +9,163 @@
  * Usage: node scripts/auth/vercel-login.js
  */
 
-const { spawn } = require('child_process')
-const fs = require('fs')
-const path = require('path')
+const { spawn } = require('child_process');
+const fs = require('fs');
+const path = require('path');
 
 class VercelAuth {
   constructor() {
-    this.envFile = path.join(process.cwd(), '.env.local')
+    this.envFile = path.join(process.cwd(), '.env.local');
   }
 
   async runVercelLogin() {
     return new Promise((resolve, reject) => {
-      console.log('🔗 Starting Vercel CLI login...')
+      console.log('🔗 Starting Vercel CLI login...');
 
       const vercel = spawn('npx', ['vercel', 'login'], {
         stdio: 'inherit',
-        shell: true
-      })
+        shell: true,
+      });
 
-      vercel.on('close', (code) => {
+      vercel.on('close', code => {
         if (code === 0) {
-          console.log('✅ Vercel login successful')
-          resolve()
+          console.log('✅ Vercel login successful');
+          resolve();
         } else {
-          reject(new Error(`Vercel login failed with exit code ${code}`))
+          reject(new Error(`Vercel login failed with exit code ${code}`));
         }
-      })
+      });
 
-      vercel.on('error', (error) => {
-        reject(new Error(`Failed to start Vercel CLI: ${error.message}`))
-      })
-    })
+      vercel.on('error', error => {
+        reject(new Error(`Failed to start Vercel CLI: ${error.message}`));
+      });
+    });
   }
 
   async getVercelToken() {
     return new Promise((resolve, reject) => {
-      console.log('🔑 Getting Vercel access token...')
+      console.log('🔑 Getting Vercel access token...');
 
       const vercel = spawn('npx', ['vercel', 'token', 'add', 'orangecat-dev', '--yes'], {
         stdio: ['pipe', 'pipe', 'pipe'],
-        shell: true
-      })
+        shell: true,
+      });
 
-      let stdout = ''
-      let stderr = ''
+      let stdout = '';
+      let stderr = '';
 
-      vercel.stdout.on('data', (data) => {
-        stdout += data.toString()
-      })
+      vercel.stdout.on('data', data => {
+        stdout += data.toString();
+      });
 
-      vercel.stderr.on('data', (data) => {
-        stderr += data.toString()
-      })
+      vercel.stderr.on('data', data => {
+        stderr += data.toString();
+      });
 
-      vercel.on('close', (code) => {
+      vercel.on('close', code => {
         if (code === 0) {
           // Extract token from output
-          const tokenMatch = stdout.match(/Token: (\w+)/) || stdout.match(/(\w{64,})/)
+          const tokenMatch = stdout.match(/Token: (\w+)/) || stdout.match(/(\w{64,})/);
           if (tokenMatch) {
-            resolve(tokenMatch[1])
+            resolve(tokenMatch[1]);
           } else {
-            console.log('⚠️  Could not extract token automatically.')
-            console.log('📋 Please run: npx vercel token add orangecat-dev')
-            console.log('📋 Then add the token manually to .env.local as VERCEL_TOKEN')
-            resolve(null)
+            console.log('⚠️  Could not extract token automatically.');
+            console.log('📋 Please run: npx vercel token add orangecat-dev');
+            console.log('📋 Then add the token manually to .env.local as VERCEL_TOKEN');
+            resolve(null);
           }
         } else {
-          console.log('⚠️  Could not get token automatically.')
-          console.log('📋 Please run: npx vercel token add orangecat-dev')
-          console.log('📋 Then add the token manually to .env.local as VERCEL_TOKEN')
-          resolve(null)
+          console.log('⚠️  Could not get token automatically.');
+          console.log('📋 Please run: npx vercel token add orangecat-dev');
+          console.log('📋 Then add the token manually to .env.local as VERCEL_TOKEN');
+          resolve(null);
         }
-      })
+      });
 
-      vercel.on('error', (error) => {
-        reject(new Error(`Failed to get Vercel token: ${error.message}`))
-      })
-    })
+      vercel.on('error', error => {
+        reject(new Error(`Failed to get Vercel token: ${error.message}`));
+      });
+    });
   }
 
   async updateEnvFile(token) {
-    if (!token) return
+    if (!token) return;
 
-    console.log('💾 Updating .env.local with Vercel token...')
+    console.log('💾 Updating .env.local with Vercel token...');
 
     // Create backup
     if (fs.existsSync(this.envFile)) {
-      const backupFile = `${this.envFile}.backup.${Date.now()}`
-      fs.copyFileSync(this.envFile, backupFile)
-      console.log(`💾 Backup created: ${path.basename(backupFile)}`)
+      const backupFile = `${this.envFile}.backup.${Date.now()}`;
+      fs.copyFileSync(this.envFile, backupFile);
+      console.log(`💾 Backup created: ${path.basename(backupFile)}`);
     }
 
-    let envContent = ''
+    let envContent = '';
     if (fs.existsSync(this.envFile)) {
-      envContent = fs.readFileSync(this.envFile, 'utf8')
+      envContent = fs.readFileSync(this.envFile, 'utf8');
     }
 
-    // Remove existing VERCEL_TOKEN lines
-    envContent = envContent.split('\n')
-      .filter(line => !line.startsWith('VERCEL_TOKEN='))
-      .join('\n')
+    // Remove existing VERCEL_TOKEN and VERCEL_ACCESS_TOKEN lines (preserve other content)
+    const lines = envContent.split('\n');
+    const filteredLines = lines.filter(line => {
+      const trimmed = line.trim();
+      return !trimmed.startsWith('VERCEL_TOKEN=') && !trimmed.startsWith('VERCEL_ACCESS_TOKEN=');
+    });
 
-    // Add new token
+    // Add new token at the end (preserve existing structure)
+    if (filteredLines.length > 0 && !filteredLines[filteredLines.length - 1].trim()) {
+      // Remove trailing empty line if exists
+      filteredLines.pop();
+    }
+
+    // Add Vercel token section if not present
     if (!envContent.includes('# Vercel Configuration')) {
-      envContent += '\n\n# Vercel Configuration\n'
+      filteredLines.push('');
+      filteredLines.push('# Vercel Configuration');
     }
-    envContent += `VERCEL_TOKEN=${token}\n`
+    filteredLines.push(`VERCEL_TOKEN=${token}`);
+    filteredLines.push(''); // Add trailing newline
 
-    fs.writeFileSync(this.envFile, envContent)
-    console.log('✅ Vercel token saved to .env.local')
+    fs.writeFileSync(this.envFile, filteredLines.join('\n'));
+    console.log('✅ Vercel token saved to .env.local (preserved existing content)');
   }
 
   async run() {
     try {
-      console.log('🚀 VERCEL OAUTH LOGIN')
-      console.log('===================')
+      console.log('🚀 VERCEL OAUTH LOGIN');
+      console.log('===================');
 
       // Run Vercel login
-      await this.runVercelLogin()
+      await this.runVercelLogin();
 
       // Get token
-      const token = await this.getVercelToken()
+      const token = await this.getVercelToken();
 
       // Update environment file
       if (token) {
-        await this.updateEnvFile(token)
-        console.log('\n🎉 SUCCESS! Vercel authentication complete.')
-        console.log('🔄 Restart your terminal or run: direnv reload')
-        console.log('📝 Token saved to .env.local')
+        await this.updateEnvFile(token);
+        console.log('\n🎉 SUCCESS! Vercel authentication complete.');
+        console.log('🔄 Restart your terminal or run: direnv reload');
+        console.log('📝 Token saved to .env.local');
       } else {
-        console.log('\n⚠️  Manual token setup required.')
-        console.log('📋 Add your Vercel token to .env.local as VERCEL_TOKEN')
+        console.log('\n⚠️  Manual token setup required.');
+        console.log('📋 Add your Vercel token to .env.local as VERCEL_TOKEN');
       }
-
     } catch (error) {
-      console.error('❌ ERROR:', error.message)
-      console.log('\n🔧 Manual setup instructions:')
-      console.log('   1. Run: npx vercel login')
-      console.log('   2. Run: npx vercel token add orangecat-dev')
-      console.log('   3. Add the token to .env.local as VERCEL_TOKEN')
-      process.exit(1)
+      console.error('❌ ERROR:', error.message);
+      console.log('\n🔧 Manual setup instructions:');
+      console.log('   1. Run: npx vercel login');
+      console.log('   2. Run: npx vercel token add orangecat-dev');
+      console.log('   3. Add the token to .env.local as VERCEL_TOKEN');
+      process.exit(1);
     }
   }
 }
 
 // Run if called directly
 if (require.main === module) {
-  const auth = new VercelAuth()
-  auth.run()
+  const auth = new VercelAuth();
+  auth.run();
 }
 
-module.exports = VercelAuth
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+module.exports = VercelAuth;
