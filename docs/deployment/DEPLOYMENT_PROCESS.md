@@ -1,7 +1,7 @@
 ---
 created_date: 2025-12-10
-last_modified_date: 2025-12-10
-last_modified_summary: Added Next.js security requirement for Vercel deployments
+last_modified_date: 2025-01-21
+last_modified_summary: Updated to use GitHub + Vercel automatic deployment integration
 ---
 
 # 🚀 OrangeCat Deployment Process
@@ -25,16 +25,64 @@ All other deployment methods, scripts, and documentation are deprecated and will
 
 ## 🚀 How to Deploy
 
-### The Only Way to Deploy
+### Automatic Deployment (Recommended)
+
+OrangeCat uses **GitHub + Vercel integration** for automatic deployments:
+
+1. **Push to main branch**
+
+   ```bash
+   git push origin main
+   ```
+
+2. **Vercel automatically deploys**
+   - Builds the application
+   - Deploys to production
+   - Updates production URL
+
+That's it! No manual steps required.
+
+> **Note**: First-time setup required. See [GitHub + Vercel Setup Guide](./GITHUB_VERCEL_SETUP.md) for initial configuration.
+
+### Manual Deployment (Alternative)
+
+If you need to deploy manually:
 
 ```bash
 # From anywhere in the project
 npm run deploy
 ```
 
-That's it. The system handles everything else automatically.
+This triggers the automated deployment script with quality checks.
+
+### What Happens When You Push to Main
+
+1. **GitHub Webhook** (immediate)
+   - GitHub notifies Vercel of the push
+   - Vercel starts deployment process
+
+2. **GitHub Actions CI** (3-5 minutes, parallel)
+   - Runs linting checks
+   - Type checking
+   - Unit and integration tests
+   - Security scans
+   - Build verification
+
+3. **Vercel Build & Deploy** (5-8 minutes)
+   - Clones repository
+   - Installs dependencies
+   - Builds application
+   - Deploys to production
+   - Updates production URL
+
+4. **Deployment Status** (immediate)
+   - GitHub shows deployment status
+   - Vercel dashboard updates
+   - Production site updated
 
 ### What Happens When You Run `npm run deploy`
+
+The manual deployment script performs:
 
 1. **Code Quality Checks** (2-3 minutes)
    - Lint code
@@ -44,20 +92,14 @@ That's it. The system handles everything else automatically.
 2. **Commit & Push** (1-2 minutes)
    - Stages all changes
    - Creates conventional commit message
-   - Pushes to main branch
+   - Pushes to main branch (triggers automatic deployment)
 
-3. **GitHub Actions Deployment** (5-8 minutes)
-   - Triggers production workflow
-   - Builds application
-   - Deploys to Vercel
-   - Health checks
-
-4. **Browser Verification** (2-3 minutes)
+3. **Browser Verification** (2-3 minutes, optional)
    - Opens production site in browser
    - Clicks through key user flows
    - Verifies functionality
 
-5. **Notification** (immediate)
+4. **Notification** (immediate)
    - Reports success/failure
    - Provides monitoring links
 
@@ -112,17 +154,27 @@ Location: `scripts/deployment/deploy.js`
 - Browser verification
 ```
 
-#### 2. GitHub Actions Workflow
+#### 2. GitHub Actions CI Workflow
 
-Location: `.github/workflows/production-deploy.yml`
+Location: `.github/workflows/ci.yml`
 
 ```yaml
-# Production deployment pipeline
-- Build & test
-- Vercel deployment
-- Health validation
-- Performance audit
+# CI pipeline (runs in parallel with Vercel deployment)
+- Lint & type check
+- Unit tests
+- Integration tests
+- Build verification
+- Security scans
 ```
+
+#### 2b. Vercel GitHub Integration
+
+- **Automatic deployment** on push to `main`
+- **Preview deployments** for pull requests
+- **Zero-downtime** deployments
+- **Built-in CI/CD** via Vercel platform
+
+See [GitHub + Vercel Setup Guide](./GITHUB_VERCEL_SETUP.md) for configuration details.
 
 #### 3. Browser Verification
 
@@ -152,10 +204,36 @@ Location: `scripts/deployment/monitor.js`
 
 ## 📊 Deployment Flow Diagram
 
+### Automatic Deployment (Push to Main)
+
 ```
-User says "deploy"
+Push to main branch
        ↓
-  npm run deploy
+┌─────────────────┐
+│ GitHub Webhook  │ ← Notifies Vercel
+└─────────────────┘
+       ↓
+┌─────────────────┐     ┌─────────────────┐
+│ GitHub Actions   │     │ Vercel Build    │ ← Parallel execution
+│ CI Checks        │     │ & Deploy        │
+│ - Lint           │     │ - Install deps  │
+│ - Type check     │     │ - Build app     │
+│ - Tests          │     │ - Deploy        │
+│ - Security       │     │ - Update URL    │
+└─────────────────┘     └─────────────────┘
+       ↓                         ↓
+┌─────────────────────────────────┐
+│ Deployment Status Updates       │
+│ - GitHub commit status          │
+│ - Vercel dashboard             │
+│ - Production site live          │
+└─────────────────────────────────┘
+```
+
+### Manual Deployment (npm run deploy)
+
+```
+npm run deploy
        ↓
 ┌─────────────────┐
 │ Code Quality    │ ← Lint, TypeScript, Security
@@ -166,19 +244,12 @@ User says "deploy"
 └─────────────────┘
        ↓
 ┌─────────────────┐
-│ GitHub Actions  │ ← Trigger production workflow
+│ Automatic       │ ← Triggers automatic deployment
+│ Deployment      │    (see flow above)
 └─────────────────┘
        ↓
 ┌─────────────────┐
-│ Vercel Deploy   │ ← Build & deploy to production
-└─────────────────┘
-       ↓
-┌─────────────────┐
-│ Health Checks   │ ← API endpoints, database
-└─────────────────┘
-       ↓
-┌─────────────────┐
-│ Browser Verify  │ ← Click through user flows
+│ Browser Verify  │ ← Optional verification
 └─────────────────┘
        ↓
 ┌─────────────────┐
@@ -657,6 +728,7 @@ npm run deploy:rollback
 
 ## 📚 Related Documentation
 
+- **[GitHub + Vercel Setup Guide](./GITHUB_VERCEL_SETUP.md)** - Initial configuration and setup
 - [Architecture Overview](../architecture/ARCHITECTURE.md)
 - [Development Setup](../development/SETUP.md)
 - [Environment Configuration](../development/environment-management.md)
