@@ -14,7 +14,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import TimelineComposer from '@/components/timeline/TimelineComposer';
-import { TimelineEventComponent } from '@/components/timeline/TimelineComponent';
+import { PostCard } from '@/components/timeline/PostCard';
 import { timelineService } from '@/services/timeline';
 import { useAuth } from '@/hooks/useAuth';
 import { Plus, Trash2, X } from 'lucide-react';
@@ -47,7 +47,7 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
 
       const response = await timelineService.getProfileFeed(
         profile.id,
-        { visibility: isOwnProfile ? undefined : 'public' },
+        { visibility: isOwnProfile ? undefined : ['public'] },
         { page: 1, limit: 10 }
       );
 
@@ -265,7 +265,7 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
                   </div>
                 )}
                 <div className={selectionMode ? 'pl-8' : ''}>
-                  <TimelineEventComponent
+                  <PostCard
                     event={event}
                     onUpdate={(updates) => handleEventUpdate(event.id, updates)}
                     compact={true}

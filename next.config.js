@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 
+const path = require('path');
+
 let withBundleAnalyzer = config => config;
 try {
   withBundleAnalyzer = require('@next/bundle-analyzer')({
@@ -139,11 +141,13 @@ const nextConfig = {
 
   // TypeScript and ESLint validation enabled for code quality
   typescript: {
-    ignoreBuildErrors: true, // Temporarily disabled to unblock production deployment
+    // Allow builds to proceed even with type errors while we harden types
+    ignoreBuildErrors: true,
   },
 
   eslint: {
-    ignoreDuringBuilds: true, // Allow builds to succeed despite linting issues
+    // Avoid blocking builds on lint while refactoring
+    ignoreDuringBuilds: true,
   },
 
   // Remove X-Powered-By header
@@ -160,10 +164,11 @@ const nextConfig = {
     const { dev, isServer, webpack } = options;
 
     // Prevent watching parent directories to avoid EMFILE errors
-    // Use explicit patterns and absolute paths to limit scope
+    // Use glob patterns to ignore files outside project scope
     config.watchOptions = {
       ...config.watchOptions,
       ignored: [
+        // Ignore common build/cache directories
         '**/node_modules/**',
         '**/.git/**',
         '**/.next/**',
@@ -178,13 +183,21 @@ const nextConfig = {
         '**/coverage/**',
         '**/dist/**',
         '**/build/**',
-        '/home/g/**',
-        '/home/**',
-        '!**/orangecat/**',
+        '**/migration-testing/**',
+        '**/cypress/**',
+        '**/playwright-report/**',
+        '**/test-results/**',
+        // Ignore parent directories (prevents EMFILE errors)
+        '../**',
+        '../../**',
+        '../../../**',
+        '../../../../**',
+        // Ignore hidden files and directories
+        '**/.*/**',
       ],
       followSymlinks: false,
-      aggregateTimeout: 300,
-      poll: 1000, // Use polling to prevent filesystem traversal issues
+      aggregateTimeout: 500, // Increased for stability
+      poll: false, // Use native file watching (faster and more efficient)
     };
 
     // Note: Manual webpack externals REMOVED - they cause build issues on Vercel
@@ -222,6 +235,8 @@ const nextConfig = {
         })
       );
     }
+
+    // Note: if needed, aliases can be added here
 
     return config;
   },

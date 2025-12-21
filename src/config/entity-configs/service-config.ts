@@ -14,6 +14,7 @@ import {
   serviceDefaultGuidance,
 } from '@/lib/entity-guidance/service-guidance';
 import type { EntityConfig, FieldGroup } from '@/components/create/types';
+import { SERVICE_TEMPLATES, type ServiceTemplate } from '@/components/create/templates';
 
 // ==================== CONSTANTS ====================
 
@@ -159,7 +160,7 @@ export const serviceConfig: EntityConfig<UserServiceFormData> = {
   colorTheme: 'tiffany',
   backUrl: '/dashboard/services',
   apiEndpoint: '/api/services',
-  successUrl: '/dashboard/services',
+  successUrl: '/dashboard/services/[id]',
   pageTitle: 'Create Service',
   pageDescription: 'Offer your expertise to the community',
   formTitle: 'Service Details',
@@ -169,5 +170,6 @@ export const serviceConfig: EntityConfig<UserServiceFormData> = {
   defaultValues,
   guidanceContent: serviceGuidanceContent as any,
   defaultGuidance: serviceDefaultGuidance,
+  templates: SERVICE_TEMPLATES as unknown as ServiceTemplate[],
 };
 

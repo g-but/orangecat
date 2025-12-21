@@ -26,8 +26,7 @@ export type WalletCategory =
   | 'custom';
 
 // Constants for validation
-const MAX_LABEL_LENGTH = 100;
-const MAX_DESCRIPTION_LENGTH = 500;
+import { MAX_LABEL_LENGTH, MAX_DESCRIPTION_LENGTH } from '@/lib/wallets/constants';
 const SATS_PER_BTC = 100_000_000;
 
 export const WALLET_CATEGORIES: Record<

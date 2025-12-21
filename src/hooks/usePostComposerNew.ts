@@ -4,12 +4,13 @@ import { offlineQueueService } from '@/lib/offline-queue';
 import { timelineService } from '@/services/timeline';
 import { logger } from '@/utils/logger';
 import { useAuth } from '@/hooks/useAuth';
+import { TimelineVisibility } from '@/types/timeline';
 
 export interface PostComposerOptions {
   subjectType?: 'profile' | 'project';
   subjectId?: string;
   allowProjectSelection?: boolean;
-  defaultVisibility?: 'public' | 'private';
+  defaultVisibility?: TimelineVisibility;
   onSuccess?: (event?: any) => void;
   onOptimisticUpdate?: (event: any) => void;
   debounceMs?: number;
@@ -24,8 +25,8 @@ export interface PostComposerState {
   // Form state
   content: string;
   setContent: (content: string) => void;
-  visibility: 'public' | 'private';
-  setVisibility: (visibility: 'public' | 'private') => void;
+  visibility: TimelineVisibility;
+  setVisibility: (visibility: TimelineVisibility) => void;
   selectedProjects: string[];
   setSelectedProjects: (projects: string[]) => void;
 
@@ -72,7 +73,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
 
   // Core state - simple and clear
   const [content, setContent] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'private'>(defaultVisibility);
+  const [visibility, setVisibility] = useState<TimelineVisibility>(defaultVisibility || 'public');
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);

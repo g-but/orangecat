@@ -30,19 +30,19 @@ export async function POST(req: NextRequest) {
 
     // Soft delete messages (only messages sent by current user)
     // PURE RLS: relies on 'Message senders can update their messages' policy
-    const { error: updErr, count } = await supabase
+    const { error: updErr, data } = await supabase
       .from('messages')
-      .update({ is_deleted: true })
+      .update({ is_deleted: true } as any)
       .in('id', ids)
       .eq('conversation_id', conversationId)
       .eq('sender_id', user.id)
-      .select('id', { count: 'exact', head: true })
+      .select('id')
 
     if (updErr) {
       return NextResponse.json({ error: 'Failed to delete messages', details: (updErr as any)?.message || (updErr as any)?.code }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, deleted: count || 0 })
+    return NextResponse.json({ success: true, deleted: data?.length || 0 })
   } catch (error) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

@@ -26,7 +26,7 @@ interface MissingWalletBannerProps {
 /**
  * Banner prompting project owners to add a Bitcoin address
  */
-export function MissingWalletBanner({
+export default function MissingWalletBanner({
   projectId,
   isOwner,
   className = '',

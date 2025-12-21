@@ -8,7 +8,7 @@
 
 import { NextResponse } from 'next/server';
 import { logger } from '@/utils/logger';
-import type { ErrorResponse } from '@/app/api/wallets/route';
+import { apiError, type ApiErrorResponse } from '@/lib/api/standardResponse';
 
 /**
  * Parse error from API response
@@ -16,7 +16,16 @@ import type { ErrorResponse } from '@/app/api/wallets/route';
 export async function parseErrorResponse(response: Response): Promise<string> {
   try {
     const errorData = await response.json();
-    return errorData.error || response.statusText || 'Unknown error';
+    // Handle standardized shape: { success: false, error: { message } }
+    if (errorData && errorData.success === false && errorData.error) {
+      const msg = typeof errorData.error === 'string' ? errorData.error : errorData.error.message;
+      return msg || response.statusText || 'Unknown error';
+    }
+    // Legacy shape: { error: string }
+    if (typeof errorData?.error === 'string') {
+      return errorData.error;
+    }
+    return response.statusText || 'Unknown error';
   } catch {
     return response.statusText || 'Unknown error';
   }
@@ -29,16 +38,10 @@ export function createWalletErrorResponse(
   error: string,
   code: string,
   status: number = 500,
-  field?: string
-): NextResponse<ErrorResponse> {
-  return NextResponse.json<ErrorResponse>(
-    {
-      error,
-      code,
-      ...(field && { field }),
-    },
-    { status }
-  );
+  details?: any
+): NextResponse<ApiErrorResponse> {
+  // Use standardized API error shape
+  return apiError(error, code, status, details);
 }
 
 /**
@@ -77,7 +80,7 @@ export function handleSupabaseError(
   operation: string,
   error: unknown,
   context?: Record<string, unknown>
-): NextResponse<ErrorResponse> {
+): NextResponse<ApiErrorResponse> {
   logWalletError(operation, error, context);
 
   if (isTableNotFoundError(error)) {

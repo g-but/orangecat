@@ -10,6 +10,7 @@ import TimelineComposer from '@/components/timeline/TimelineComposer';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 /**
  * Thread View Page - X-style conversation thread
@@ -23,7 +24,7 @@ export default function PostPage() {
   const params = useParams();
   const router = useRouter();
   const { user } = useAuth();
-  const postId = params.id as string;
+  const postId = params?.id as string;
 
   const [mainPost, setMainPost] = useState<TimelineDisplayEvent | null>(null);
   const [parentPosts, setParentPosts] = useState<TimelineDisplayEvent[]>([]);
@@ -31,9 +32,40 @@ export default function PostPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const updateReplyTree = useCallback(
+    (items: TimelineDisplayEvent[], eventId: string, updates: Partial<TimelineDisplayEvent>): TimelineDisplayEvent[] => {
+      return items.map(item => {
+        if (item.id === eventId) {
+          return { ...item, ...updates };
+        }
+        if (item.replies && item.replies.length > 0) {
+          return { ...item, replies: updateReplyTree(item.replies, eventId, updates) };
+        }
+        return item;
+      });
+    },
+    []
+  );
+
+  const appendReplyToTree = useCallback(
+    (items: TimelineDisplayEvent[], parentId: string, reply: TimelineDisplayEvent): TimelineDisplayEvent[] => {
+      return items.map(item => {
+        if (item.id === parentId) {
+          const nextReplies = [...(item.replies || []), reply];
+          return { ...item, replies: nextReplies, replyCount: nextReplies.length };
+        }
+        if (item.replies && item.replies.length > 0) {
+          return { ...item, replies: appendReplyToTree(item.replies, parentId, reply) };
+        }
+        return item;
+      });
+    },
+    []
+  );
+
   // Fetch the main post and its context
   const fetchPost = useCallback(async () => {
-    if (!postId) return;
+    if (!postId) {return;}
 
     setIsLoading(true);
     setError(null);
@@ -52,7 +84,7 @@ export default function PostPage() {
       // Fetch parent chain if this is a reply
       if (result.event.parentEventId) {
         const parents: TimelineDisplayEvent[] = [];
-        let currentParentId = result.event.parentEventId;
+        let currentParentId: string | undefined = result.event.parentEventId;
 
         // Walk up the parent chain (limit to 10 to prevent infinite loops)
         for (let i = 0; i < 10 && currentParentId; i++) {
@@ -90,15 +122,44 @@ export default function PostPage() {
     if (eventId === mainPost?.id) {
       setMainPost(prev => prev ? { ...prev, ...updates } : null);
     } else {
-      setReplies(prev => prev.map(r => r.id === eventId ? { ...r, ...updates } : r));
+      setReplies(prev => updateReplyTree(prev, eventId, updates));
       setParentPosts(prev => prev.map(p => p.id === eventId ? { ...p, ...updates } : p));
     }
-  }, [mainPost?.id]);
+  }, [mainPost?.id, updateReplyTree]);
 
   // Handle new reply created
   const handleReplyCreated = useCallback(() => {
     fetchPost(); // Refresh to get new reply
   }, [fetchPost]);
+
+  const handleNestedReplyCreated = useCallback(
+    (parentId: string, reply: TimelineDisplayEvent) => {
+      setReplies(prev => appendReplyToTree(prev, parentId, reply));
+    },
+    [appendReplyToTree]
+  );
+
+  const renderReplies = useCallback(
+    (items: TimelineDisplayEvent[], depth: number = 0) => {
+      return items.map(reply => (
+        <div
+          key={reply.id}
+          className={cn(
+            depth === 0 ? 'border-b border-gray-200' : 'border-l border-gray-100',
+            depth > 0 ? 'pl-4 ml-4' : ''
+          )}
+        >
+          <PostCard
+            event={reply}
+            onUpdate={(updates) => handlePostUpdate(reply.id, updates)}
+            onReplyCreated={(newReply) => handleNestedReplyCreated(reply.id, newReply)}
+          />
+          {reply.replies && reply.replies.length > 0 && renderReplies(reply.replies, depth + 1)}
+        </div>
+      ));
+    },
+    [handleNestedReplyCreated, handlePostUpdate]
+  );
 
   if (isLoading) {
     return (
@@ -223,13 +284,7 @@ export default function PostPage() {
             <div className="px-4 py-3 border-b border-gray-200">
               <h2 className="font-bold text-gray-900">Replies</h2>
             </div>
-            {replies.map((reply) => (
-              <PostCard
-                key={reply.id}
-                event={reply}
-                onUpdate={(updates) => handlePostUpdate(reply.id, updates)}
-              />
-            ))}
+            {renderReplies(replies)}
           </div>
         )}
 

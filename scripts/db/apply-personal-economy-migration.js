@@ -52,21 +52,49 @@ async function applyMigration() {
     console.log('📄 Migration file loaded successfully');
     console.log(`📏 File size: ${migrationSQL.length} characters\n`);
 
-    // Since Supabase JS client doesn't support raw SQL execution easily,
-    // we'll provide instructions for manual application
-    console.log('⚠️  Direct SQL execution via JS client is limited in Supabase.');
-    console.log('📋 To apply this migration:\n');
+    // Apply RLS policy fixes
+    console.log('🔧 Applying RLS policy fixes...\n');
 
-    console.log('   Option 1 - Via Supabase Dashboard:');
-    console.log('   1. Go to: https://supabase.com/dashboard');
-    console.log('   2. Select your project');
-    console.log('   3. Go to SQL Editor');
-    console.log('   4. Copy and paste the entire migration file:');
-    console.log(`      ${migrationPath}`);
-    console.log('   5. Click "Run"\n');
+    const rlsFixes = `
+-- Admin policies for service role operations
+CREATE POLICY "Admin can manage all products"
+  ON user_products FOR ALL
+  USING (auth.jwt() ->> 'role' = 'service_role')
+  WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
 
-    console.log('   Option 2 - Via Supabase CLI (if installed):');
-    console.log('   supabase db push\n');
+CREATE POLICY "Admin can manage all services"
+  ON user_services FOR ALL
+  USING (auth.jwt() ->> 'role' = 'service_role')
+  WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+
+CREATE POLICY "Admin can manage all causes"
+  ON user_causes FOR ALL
+  USING (auth.jwt() ->> 'role' = 'service_role')
+  WITH CHECK (auth.jwt() ->> 'role' = 'service_role');
+`;
+
+    try {
+      // Try to execute the RLS fixes using RPC if available
+      console.log('Attempting to apply RLS policy fixes...');
+      // Note: This would require creating an RPC function in Supabase
+      console.log('⚠️  RLS fixes need to be applied manually via Supabase Dashboard SQL Editor.');
+      console.log('📋 Copy and run this SQL:\n');
+      console.log(rlsFixes);
+      console.log('\n');
+
+      console.log('⚠️  Original migration still needs manual application.');
+      console.log('📋 To apply the full migration:\n');
+
+      console.log('   Option 1 - Via Supabase Dashboard:');
+      console.log('   1. Go to: https://supabase.com/dashboard');
+      console.log('   2. Select your project');
+      console.log('   3. Go to SQL Editor');
+      console.log('   4. Copy and paste the entire migration file:');
+      console.log(`      ${migrationPath}`);
+      console.log('   5. Click "Run"\n');
+
+      console.log('   Option 2 - Via Supabase CLI (if installed):');
+      console.log('   supabase db push\n');
 
     // Test if we can connect to Supabase
     console.log('🔍 Testing Supabase connection...');
@@ -96,6 +124,12 @@ async function applyMigration() {
 }
 
 applyMigration();
+
+
+
+
+
+
 
 
 

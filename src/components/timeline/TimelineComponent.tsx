@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
-import { TimelineDisplayEvent, TimelineFeedResponse } from '@/types/timeline';
-import { timelineService } from '@/services/timeline';
+import React, { useState, useCallback, useEffect } from 'react';
+import { TimelineDisplayEvent, TimelineFeedResponse, TimelineVisibility } from '@/types/timeline';
 import { logger } from '@/utils/logger';
 import { useToast } from '@/hooks/useToast';
 import { PostCard } from './PostCard';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Trash2, X } from 'lucide-react';
+import { Trash2, CheckSquare } from 'lucide-react';
+import { usePostSelection } from '@/hooks/usePostSelection';
+import { BulkActionsToolbar } from './BulkActionsToolbar';
 
 interface TimelineComponentProps {
   feed: TimelineFeedResponse;
@@ -16,43 +17,8 @@ interface TimelineComponentProps {
   onLoadMore?: () => void;
   showFilters?: boolean;
   compact?: boolean;
-  enableMultiSelect?: boolean; // Enable multi-select mode for bulk operations
+  enableMultiSelect?: boolean;
 }
-
-interface TimelineEventProps {
-  event: TimelineDisplayEvent;
-  onUpdate: (updates: Partial<TimelineDisplayEvent>) => void;
-  compact?: boolean;
-  isSelected?: boolean; // For multi-select mode
-  onToggleSelect?: (eventId: string) => void; // For multi-select mode
-  selectionMode?: boolean; // Whether multi-select mode is active
-  onAddEvent?: (event: TimelineDisplayEvent) => void; // For optimistic inserts (reposts/quotes)
-}
-
-
-// Simplified TimelineEventComponent using PostCard
-const TimelineEventComponent: React.FC<TimelineEventProps> = ({
-  event,
-  onUpdate,
-  compact = false,
-  isSelected = false,
-  onToggleSelect,
-  selectionMode = false,
-}) => {
-  const handleDelete = useCallback(() => {
-    logger.info('Post deleted', { eventId: event.id }, 'TimelineEventComponent');
-  }, [event.id]);
-
-  return (
-    <PostCard
-      event={event}
-      onUpdate={onUpdate}
-      onDelete={handleDelete}
-      compact={compact}
-      showMetrics={true}
-    />
-  );
-};
 
 export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   feed,
@@ -63,134 +29,109 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   enableMultiSelect = false,
 }) => {
   const [events, setEvents] = useState(feed.events);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedEventIds, setSelectedEventIds] = useState<Set<string>>(new Set());
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
-  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
-  const { success, error } = useToast();
+  const { success: showSuccess, error: showError } = useToast();
 
+  // Sync events when feed changes (e.g., from optimistic updates)
+  useEffect(() => {
+    setEvents(feed.events);
+  }, [feed.events]);
+
+  // Use centralized selection hook (DRY)
+  const {
+    selectedIds,
+    isSelectionMode,
+    isProcessing,
+    toggleSelectionMode,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    isSelected,
+    bulkDelete,
+    bulkSetVisibility,
+    selectedCount,
+    canPerformBulkAction,
+  } = usePostSelection({
+    onPostsDeleted: (deletedIds) => {
+      // Remove deleted events from local state
+      setEvents(prev => prev.filter(e => !deletedIds.includes(e.id)));
+      showSuccess(`Successfully deleted ${deletedIds.length} ${deletedIds.length === 1 ? 'post' : 'posts'}`);
+    },
+    onVisibilityChanged: (eventIds, newVisibility) => {
+      // Update visibility in local state
+      setEvents(prev =>
+        prev.map(e =>
+          eventIds.includes(e.id) ? { ...e, visibility: newVisibility } : e
+        )
+      );
+      showSuccess(
+        `Changed visibility of ${eventIds.length} ${eventIds.length === 1 ? 'post' : 'posts'} to ${newVisibility}`
+      );
+    },
+  });
+
+  // Handle individual event updates
   const handleEventUpdate = useCallback(
     (eventId: string, updates: Partial<TimelineDisplayEvent>) => {
       setEvents(prevEvents => {
-        // If post is deleted, remove it from the list
         if (updates.isDeleted) {
-          setSelectedEventIds(prev => {
-            const next = new Set(prev);
-            next.delete(eventId);
-            return next;
-          });
           return prevEvents.filter(event => event.id !== eventId);
         }
-        // Otherwise, update it
-        return prevEvents.map(event => (event.id === eventId ? { ...event, ...updates } : event));
+        return prevEvents.map(event =>
+          event.id === eventId ? { ...event, ...updates } : event
+        );
       });
       onEventUpdate?.(eventId, updates);
     },
     [onEventUpdate]
   );
 
-  // Note: Removed optimistic event addition to prevent hooks errors
-  // New events should be handled by timeline refresh/refetch instead
-
-  // Multi-select handlers
-  const toggleSelectionMode = useCallback(() => {
-    setSelectionMode(prev => !prev);
-    setSelectedEventIds(new Set());
-  }, []);
-
-  const toggleEventSelection = useCallback((eventId: string) => {
-    setSelectedEventIds(prev => {
-      const next = new Set(prev);
-      if (next.has(eventId)) {
-        next.delete(eventId);
-      } else {
-        next.add(eventId);
-      }
-      return next;
-    });
+  // Handle individual post deletion
+  const handlePostDelete = useCallback((eventId: string) => {
+    setEvents(prev => prev.filter(e => e.id !== eventId));
+    logger.info('Post deleted', { eventId }, 'TimelineComponent');
   }, []);
 
   // Filter out deleted events
   const visibleEvents = events.filter(event => !event.isDeleted);
 
-  const selectAll = useCallback(() => {
-    const visible = events.filter(event => !event.isDeleted);
-    if (selectedEventIds.size === visible.length) {
-      setSelectedEventIds(new Set());
-    } else {
-      setSelectedEventIds(new Set(visible.map(e => e.id)));
-    }
-  }, [events, selectedEventIds.size]);
+  // Handle bulk delete with confirmation
+  const handleBulkDeleteClick = useCallback(() => {
+    setShowBulkDeleteConfirm(true);
+  }, []);
 
-  const handleBulkDelete = useCallback(async () => {
-    if (selectedEventIds.size === 0) {
-      return;
-    }
-
-    // Store original state for rollback
-    const originalEvents = [...events];
-    const originalSelectedIds = new Set(selectedEventIds);
-
-    // Optimistic update - remove events from UI immediately
-    setEvents(prev => prev.filter(e => !selectedEventIds.has(e.id)));
-    setSelectedEventIds(new Set());
+  const handleBulkDeleteConfirm = useCallback(async () => {
     setShowBulkDeleteConfirm(false);
-    setSelectionMode(false);
+    const result = await bulkDelete(visibleEvents);
 
-    try {
-      setIsBulkDeleting(true);
-
-      const deletePromises = Array.from(originalSelectedIds).map(eventId =>
-        timelineService.deleteEvent(eventId, 'Bulk deleted by user')
-      );
-
-      // Use Promise.allSettled to handle partial failures
-      const results = await Promise.allSettled(deletePromises);
-
-      // Check for failures
-      const failures = results.filter(result => result.status === 'rejected');
-      const successes = results.filter(result => result.status === 'fulfilled');
-
-      if (failures.length > 0) {
-        logger.warn(`Bulk delete: ${successes.length} succeeded, ${failures.length} failed`, {
-          failures: failures.map((f, i) => ({ eventId: Array.from(originalSelectedIds)[i], error: f.reason })),
-        }, 'Timeline');
-
-        // Rollback failed deletions
-        const failedEventIds = failures.map((_, i) => Array.from(originalSelectedIds)[i]);
-        const eventsToRestore = originalEvents.filter(e => failedEventIds.includes(e.id));
-
-        setEvents(prev => {
-          // Remove any events that were successfully deleted, keep the failed ones
-          const successfulEventIds = successes.map((_, i) => Array.from(originalSelectedIds)[i]);
-          const remainingEvents = prev.filter(e => !successfulEventIds.includes(e.id));
-          // Add back the failed events
-          return [...remainingEvents, ...eventsToRestore];
-        });
-
-        // Show appropriate error message
-        if (successes.length === 0) {
-          error('Failed to delete any posts. Please try again.');
-        } else {
-          error(`Deleted ${successes.length} posts, but ${failures.length} failed. The failed posts have been restored.`);
-        }
+    if (!result.success && result.failureCount > 0) {
+      if (result.successCount === 0) {
+        showError('Failed to delete posts. Please try again.');
       } else {
-        logger.info(`Successfully bulk deleted ${successes.length} events`, null, 'Timeline');
+        showError(
+          `Deleted ${result.successCount} posts, but ${result.failureCount} failed.`
+        );
       }
-    } catch (error) {
-      logger.error('Unexpected error during bulk delete', error, 'Timeline');
-
-      // Rollback all changes on unexpected error
-      setEvents(originalEvents);
-      setSelectedEventIds(originalSelectedIds);
-      setShowBulkDeleteConfirm(true);
-      setSelectionMode(true);
-
-      error('An unexpected error occurred. All changes have been reverted.');
-    } finally {
-      setIsBulkDeleting(false);
     }
-  }, [selectedEventIds, events]);
+  }, [bulkDelete, visibleEvents, showError]);
+
+  // Handle bulk visibility change
+  const handleBulkVisibilityChange = useCallback(
+    async (visibility: TimelineVisibility) => {
+      const result = await bulkSetVisibility(visibleEvents, visibility);
+
+      if (!result.success && result.failureCount > 0) {
+        if (result.successCount === 0) {
+          showError('Failed to change visibility. Please try again.');
+        } else {
+          showError(
+            `Changed ${result.successCount} posts, but ${result.failureCount} failed.`
+          );
+        }
+      }
+    },
+    [bulkSetVisibility, visibleEvents, showError]
+  );
 
   // Don't render anything if empty - let parent handle empty state
   if (visibleEvents.length === 0) {
@@ -198,67 +139,60 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   }
 
   return (
-    <div className="space-y-0 sm:space-y-4">
-      {/* Multi-Select Controls - Only show if enabled */}
+    <div className="space-y-0">
+      {/* Multi-Select Controls */}
       {enableMultiSelect && (
-        <div className="sticky top-16 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-3 mb-4 sm:mb-0">
-          <div className="flex items-center justify-between">
-            {!selectionMode ? (
+        <>
+          {!isSelectionMode ? (
+            // Entry point to selection mode - small button
+            <div className="sticky top-16 z-10 bg-white/95 backdrop-blur-md border-b border-gray-200 px-4 py-2.5">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={toggleSelectionMode}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 text-sm"
               >
+                <CheckSquare className="w-4 h-4" />
                 <span>Select Posts</span>
               </Button>
-            ) : (
-              <div className="flex items-center gap-3 flex-1">
-                <Button variant="ghost" size="sm" onClick={selectAll} className="text-sm">
-                  {selectedEventIds.size === visibleEvents.length ? 'Deselect All' : 'Select All'}
-                </Button>
-                <span className="text-sm text-gray-600">
-                  {selectedEventIds.size} {selectedEventIds.size === 1 ? 'post' : 'posts'} selected
-                </span>
-                <div className="flex items-center gap-2 ml-auto">
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => setShowBulkDeleteConfirm(true)}
-                    disabled={selectedEventIds.size === 0}
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete ({selectedEventIds.size})
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={toggleSelectionMode}>
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+            </div>
+          ) : (
+            // Full bulk actions toolbar when in selection mode
+            <BulkActionsToolbar
+              selectedCount={selectedCount}
+              totalCount={visibleEvents.length}
+              isProcessing={isProcessing}
+              onSelectAll={() => selectAll(visibleEvents)}
+              onClearSelection={clearSelection}
+              onExitSelectionMode={toggleSelectionMode}
+              onBulkDelete={handleBulkDeleteClick}
+              onBulkVisibilityChange={handleBulkVisibilityChange}
+              className="top-16"
+            />
+          )}
+        </>
       )}
 
-      {/* Events List - X/Twitter style: no spacing on mobile, spacing on desktop */}
+      {/* Events List */}
       <div className="space-y-0">
         {visibleEvents.map(event => (
-          <TimelineEventComponent
+          <PostCard
             key={event.id}
             event={event}
             onUpdate={updates => handleEventUpdate(event.id, updates)}
+            onDelete={() => handlePostDelete(event.id)}
             compact={compact}
-            isSelected={selectedEventIds.has(event.id)}
-            onToggleSelect={toggleEventSelection}
-            selectionMode={selectionMode}
+            showMetrics={true}
+            isSelectionMode={isSelectionMode}
+            isSelected={isSelected(event.id)}
+            onToggleSelect={toggleSelection}
           />
         ))}
       </div>
 
       {/* Load More */}
       {feed.pagination.hasNext && onLoadMore && (
-        <div className="text-center pt-4">
+        <div className="text-center pt-4 pb-6">
           <Button onClick={onLoadMore} variant="outline">
             Load More
           </Button>
@@ -276,7 +210,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
                 </div>
                 <div>
                   <h2 className="text-xl font-semibold">
-                    Delete {selectedEventIds.size} {selectedEventIds.size === 1 ? 'post' : 'posts'}?
+                    Delete {selectedCount} {selectedCount === 1 ? 'post' : 'posts'}?
                   </h2>
                   <p className="text-sm text-gray-600">This action cannot be undone</p>
                 </div>
@@ -284,8 +218,8 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
 
               <p className="text-gray-700 mb-6">
                 Are you sure you want to delete{' '}
-                {selectedEventIds.size === 1 ? 'this post' : 'these posts'}?
-                {selectedEventIds.size > 1 && ' They will be'} permanently removed from your
+                {selectedCount === 1 ? 'this post' : 'these posts'}?
+                {selectedCount > 1 && ' They will be'} permanently removed from your
                 timeline.
               </p>
 
@@ -293,12 +227,16 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
                 <Button
                   variant="outline"
                   onClick={() => setShowBulkDeleteConfirm(false)}
-                  disabled={isBulkDeleting}
+                  disabled={isProcessing}
                 >
                   Cancel
                 </Button>
-                <Button variant="danger" onClick={handleBulkDelete} disabled={isBulkDeleting}>
-                  {isBulkDeleting ? 'Deleting...' : 'Delete'}
+                <Button
+                  variant="danger"
+                  onClick={handleBulkDeleteConfirm}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Deleting...' : 'Delete'}
                 </Button>
               </div>
             </CardContent>
@@ -310,4 +248,3 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
 };
 
 export default TimelineComponent;
-export { TimelineEventComponent };

@@ -45,7 +45,7 @@ export async function GET(
       } else {
         // If email field doesn't exist in profiles, try to find user by email in auth.users
         // Use service role client if available for admin access
-        const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+        const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
         
         if (serviceRoleKey && supabaseUrl) {

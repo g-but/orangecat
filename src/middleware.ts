@@ -15,12 +15,14 @@ const publicRoutes = [
   '/about',
   '/blog',
   '/profiles', // Public profile pages (shareable)
-  '/projects', // Public project pages (shareable)
+  '/projects', // Public project listing (redirects to discover)
+  '/funding', // Public funding information
+  '/onboarding', // Public onboarding flow
 ];
 
 // Routes that should redirect to /auth if user is not logged in
 // Note: /profiles/ is public, /profile/ is protected (own profile)
-const protectedRoutes = ['/dashboard', '/profile/', '/settings', '/loans', '/circles', '/assets', '/timeline', '/messages'];
+const protectedRoutes = ['/dashboard', '/profile/', '/settings', '/loans', '/circles', '/assets', '/timeline', '/messages', '/projects/create'];
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;

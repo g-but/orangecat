@@ -73,6 +73,13 @@ const fieldGroups: FieldGroup[] = [
         hint: 'What does your organization do? Who are your members?',
       },
       {
+        name: 'category',
+        label: 'Category',
+        type: 'text',
+        placeholder: 'e.g., Technology, Education, Finance',
+        hint: 'Optional: Categorize your organization for discovery',
+      },
+      {
         name: 'website_url',
         label: 'Website',
         type: 'url',
@@ -94,6 +101,25 @@ const fieldGroups: FieldGroup[] = [
           { value: 'stake_weighted', label: 'Stake Weighted', description: 'Voting power based on stake' },
           { value: 'reputation_based', label: 'Reputation Based', description: 'Voting power based on reputation' },
         ],
+      },
+    ],
+  },
+  {
+    id: 'visibility',
+    title: 'Visibility & Membership',
+    description: 'Control who can see and join your organization',
+    fields: [
+      {
+        name: 'is_public',
+        label: 'Public Organization',
+        type: 'checkbox',
+        hint: 'Public organizations are visible to everyone and appear in search results',
+      },
+      {
+        name: 'requires_approval',
+        label: 'Require Approval for Membership',
+        type: 'checkbox',
+        hint: 'If enabled, new members must be approved before joining',
       },
     ],
   },
@@ -124,7 +150,7 @@ const fieldGroups: FieldGroup[] = [
 
 export const organizationConfig: EntityConfig<OrganizationFormData> = {
   // Entity metadata
-  type: 'circle', // Using circle as the entity type since organizations are like advanced circles
+  type: 'organization',
   name: 'Organization',
   namePlural: 'Organizations',
 
@@ -153,33 +179,33 @@ export const organizationConfig: EntityConfig<OrganizationFormData> = {
     slug: '',
     description: '',
     type: 'community',
+    category: '',
+    tags: [],
     governance_model: 'hierarchical',
     website_url: '',
     treasury_address: '',
     lightning_address: '',
+    avatar_url: '',
+    banner_url: '',
+    is_public: true,
+    requires_approval: true,
   },
 
   // Guidance
   guidanceContent: organizationGuidanceContent,
   defaultGuidance: organizationDefaultGuidance,
 
-  // API configuration
-  apiEndpoint: '/api/organizations',
-  redirectPath: '/organizations/[slug]',
-
-  // Navigation
-  backUrl: '/organizations',
-  successUrl: '/organizations/[slug]',
-
-  // UI configuration
-  pageTitle: 'Create Organization',
-  pageDescription: 'Form a new Bitcoin-powered organization with governance and treasury management.',
-  formTitle: 'Organization Details',
-  formDescription: 'Set up your organization\'s basic information',
-
   // Success messaging
   successMessage: 'Organization created successfully!',
 };
+
+
+
+
+
+
+
+
 
 
 

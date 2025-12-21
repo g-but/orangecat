@@ -14,6 +14,7 @@ import {
   productDefaultGuidance,
 } from '@/lib/entity-guidance/product-guidance';
 import type { EntityConfig, FieldGroup } from '@/components/create/types';
+import { PRODUCT_TEMPLATES, type ProductTemplate } from '@/components/create/templates';
 
 // ==================== FIELD GROUPS ====================
 
@@ -129,7 +130,7 @@ export const productConfig: EntityConfig<UserProductFormData> = {
   colorTheme: 'orange',
   backUrl: '/dashboard/store',
   apiEndpoint: '/api/products',
-  successUrl: '/dashboard/store/:id/edit',
+  successUrl: '/dashboard/store/[id]',
   pageTitle: 'Create Product',
   pageDescription: 'Add a new product to your personal marketplace',
   formTitle: 'Product Details',
@@ -139,5 +140,6 @@ export const productConfig: EntityConfig<UserProductFormData> = {
   defaultValues,
   guidanceContent: productGuidanceContent as any,
   defaultGuidance: productDefaultGuidance,
+  templates: PRODUCT_TEMPLATES as unknown as ProductTemplate[],
 };
 

@@ -1,12 +1,17 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React from 'react';
 import { Heart, MessageCircle, Share2, ThumbsDown, Repeat2 } from 'lucide-react';
 import { ShareModal } from '@/components/timeline/ShareModal';
 import { TimelineDisplayEvent } from '@/types/timeline';
-import { timelineService } from '@/services/timeline';
-import { useAuth } from '@/hooks/useAuth';
-import { logger } from '@/utils/logger';
+import { usePostInteractions } from '@/hooks/usePostInteractions';
+
+/**
+ * PostActions Component
+ *
+ * Renders interaction buttons (like, dislike, comment, repost, share) for a post.
+ * All business logic is delegated to the usePostInteractions hook for DRY compliance.
+ */
 
 interface PostActionsProps {
   event: TimelineDisplayEvent;
@@ -25,104 +30,18 @@ export function PostActions({
   onRepostClick,
   isReposting = false
 }: PostActionsProps) {
-  const { user } = useAuth();
-  const [isLiking, setIsLiking] = useState(false);
-  const [isDisliking, setIsDisliking] = useState(false);
-  const [isSharing, setIsSharing] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
-
-  // Like handler with optimistic updates
-  const handleLike = useCallback(async () => {
-    if (isLiking) return;
-
-    const originalLiked = !!event.userLiked;
-    const originalCount = event.likesCount || 0;
-    const nextLiked = !originalLiked;
-    const nextCount = Math.max(0, originalCount + (nextLiked ? 1 : -1));
-
-    // Optimistic update
-    onUpdate({ userLiked: nextLiked, likesCount: nextCount });
-    setIsLiking(true);
-
-    try {
-      const result = await timelineService.toggleLike(event.id);
-      if (result.success) {
-        onUpdate({ userLiked: result.liked, likesCount: result.likeCount });
-      } else {
-        // Revert on failure
-        onUpdate({ userLiked: originalLiked, likesCount: originalCount });
-      }
-    } catch (error) {
-      logger.error('Failed to toggle like', error, 'PostActions');
-      onUpdate({ userLiked: originalLiked, likesCount: originalCount });
-    } finally {
-      setIsLiking(false);
-    }
-  }, [event.id, event.userLiked, event.likesCount, isLiking, onUpdate]);
-
-  // Dislike handler with optimistic updates
-  const handleDislike = useCallback(async () => {
-    if (isDisliking) return;
-
-    const originalDisliked = !!event.userDisliked;
-    const originalCount = event.dislikesCount || 0;
-    const nextDisliked = !originalDisliked;
-    const nextCount = Math.max(0, originalCount + (nextDisliked ? 1 : -1));
-
-    // Optimistic update
-    onUpdate({ userDisliked: nextDisliked, dislikesCount: nextCount });
-    setIsDisliking(true);
-
-    try {
-      const result = await timelineService.toggleDislike(event.id);
-      if (result.success) {
-        onUpdate({ userDisliked: result.disliked, dislikesCount: result.dislikeCount });
-      } else {
-        // Revert on failure
-        onUpdate({ userDisliked: originalDisliked, dislikesCount: originalCount });
-      }
-    } catch (error) {
-      logger.error('Failed to toggle dislike', error, 'PostActions');
-      onUpdate({ userDisliked: originalDisliked, dislikesCount: originalCount });
-    } finally {
-      setIsDisliking(false);
-    }
-  }, [event.id, event.userDisliked, event.dislikesCount, isDisliking, onUpdate]);
-
-  // Share handlers
-  const handleShareOpen = useCallback(() => {
-    setShareOpen(true);
-  }, []);
-
-  const handleShareConfirm = useCallback(async (shareText: string) => {
-    if (isSharing) return;
-
-    const originalCount = event.sharesCount || 0;
-    // Optimistic update
-    onUpdate({ userShared: true, sharesCount: originalCount + 1 });
-    setIsSharing(true);
-
-    try {
-      const result = await timelineService.shareEvent(
-        event.id,
-        shareText?.trim() || 'Shared from timeline',
-        'public'
-      );
-      if (result.success) {
-        onUpdate({ userShared: true, sharesCount: result.shareCount });
-      } else {
-        // Revert on failure
-        onUpdate({ userShared: false, sharesCount: originalCount });
-      }
-    } catch (error) {
-      logger.error('Failed to share event', error, 'PostActions');
-      onUpdate({ userShared: false, sharesCount: originalCount });
-    } finally {
-      setIsSharing(false);
-      setShareOpen(false);
-    }
-  }, [event.id, isSharing, onUpdate]);
-
+  // Delegate all interaction logic to the hook
+  const {
+    isLiking,
+    handleLike,
+    isDisliking,
+    handleDislike,
+    isSharing,
+    shareOpen,
+    handleShareOpen,
+    handleShareClose,
+    handleShareConfirm,
+  } = usePostInteractions({ event, onUpdate, onAddEvent });
 
   return (
     <>
@@ -135,7 +54,14 @@ export function PostActions({
         >
           <MessageCircle className="w-5 h-5" />
           <span className="text-sm">
-            {(event.commentsCount || 0) > 0 ? event.commentsCount : ''}
+            {(() => {
+              const replyTotal =
+                event.replyCount ??
+                (Array.isArray(event.replies) ? event.replies.length : undefined) ??
+                event.commentsCount ??
+                0;
+              return replyTotal > 0 ? replyTotal : '';
+            })()}
           </span>
         </button>
 
@@ -205,7 +131,7 @@ export function PostActions({
       {/* Share Modal */}
       <ShareModal
         isOpen={shareOpen}
-        onClose={() => setShareOpen(false)}
+        onClose={handleShareClose}
         onShare={handleShareConfirm}
         defaultText=""
         isSubmitting={isSharing}
@@ -213,6 +139,24 @@ export function PostActions({
     </>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

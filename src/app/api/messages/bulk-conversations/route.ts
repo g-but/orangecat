@@ -17,18 +17,18 @@ export async function POST(req: NextRequest) {
 
     // Default behavior: leave conversations (soft remove for this user)
     // PURE RLS: relies on 'Users can update their own participation' policy
-    const { error: updErr, count } = await supabase
+    const { error: updErr, data } = await supabase
       .from('conversation_participants')
-      .update({ is_active: false })
+      .update({ is_active: false } as any)
       .in('conversation_id', ids)
       .eq('user_id', user.id)
-      .select('conversation_id', { count: 'exact', head: true })
+      .select('conversation_id')
 
     if (updErr) {
       return NextResponse.json({ error: 'Failed to update conversations', details: (updErr as any)?.message || (updErr as any)?.code }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, updated: count || 0 })
+    return NextResponse.json({ success: true, updated: data?.length || 0 })
   } catch (e: any) {
     return NextResponse.json({ error: e?.message || 'Internal server error' }, { status: 500 })
   }

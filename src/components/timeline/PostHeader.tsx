@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { MoreHorizontal, Lock } from 'lucide-react';
+import { MoreHorizontal, Lock, Pencil, Trash2 } from 'lucide-react';
 import { TimelineDisplayEvent } from '@/types/timeline';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -11,11 +11,43 @@ interface PostHeaderProps {
   showMenu?: boolean;
   onMenuToggle?: () => void;
   onEdit?: () => void;
+  onDelete?: () => void;
   canEdit?: boolean;
   isSimpleRepost?: boolean;
 }
 
-export function PostHeader({ event, showMenu, onMenuToggle, onEdit, canEdit, isSimpleRepost }: PostHeaderProps) {
+export function PostHeader({
+  event,
+  showMenu,
+  onMenuToggle,
+  onEdit,
+  onDelete,
+  canEdit,
+  isSimpleRepost,
+}: PostHeaderProps) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!showMenu) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onMenuToggle?.();
+      }
+    };
+
+    // Use setTimeout to avoid immediate trigger from the toggle click
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside);
+    }, 0);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showMenu, onMenuToggle]);
+
   const formatTimestamp = (timestamp: string) => {
     try {
       return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
@@ -25,12 +57,19 @@ export function PostHeader({ event, showMenu, onMenuToggle, onEdit, canEdit, isS
   };
 
   // For simple reposts, show the original author instead of the reposter
-  const displayAuthor = isSimpleRepost ? {
-    id: event.metadata?.original_actor_id || event.actor.id,
-    name: event.metadata?.original_actor_name || event.actor.name,
-    username: event.metadata?.original_actor_username || event.actor.username,
-    avatar: event.metadata?.original_actor_avatar || event.actor.avatar,
-  } : event.actor;
+  const displayAuthor = isSimpleRepost
+    ? {
+        id: event.metadata?.original_actor_id || event.actor.id,
+        name: event.metadata?.original_actor_name || event.actor.name,
+        username: event.metadata?.original_actor_username || event.actor.username,
+        avatar: event.metadata?.original_actor_avatar || event.actor.avatar,
+      }
+    : event.actor;
+
+  // Handle both camelCase and snake_case from DB/enrichment
+  const timestamp = event.eventTimestamp || event.createdAt || (event as any).created_at;
+  const updatedTimestamp = event.updatedAt || (event as any).updated_at;
+  const isEdited = updatedTimestamp && updatedTimestamp !== timestamp;
 
   return (
     <div className="flex items-center gap-1 flex-wrap">
@@ -38,6 +77,7 @@ export function PostHeader({ event, showMenu, onMenuToggle, onEdit, canEdit, isS
       <Link
         href={`/profiles/${displayAuthor.username}`}
         className="font-bold text-[15px] text-gray-900 hover:underline"
+        onClick={(e) => e.stopPropagation()}
       >
         {displayAuthor.name}
       </Link>
@@ -45,6 +85,7 @@ export function PostHeader({ event, showMenu, onMenuToggle, onEdit, canEdit, isS
       <Link
         href={`/profiles/${displayAuthor.username}`}
         className="text-gray-500 text-[15px]"
+        onClick={(e) => e.stopPropagation()}
       >
         @{displayAuthor.username}
       </Link>
@@ -53,28 +94,33 @@ export function PostHeader({ event, showMenu, onMenuToggle, onEdit, canEdit, isS
 
       {/* Timestamp */}
       <time
-        dateTime={event.created_at}
+        dateTime={timestamp}
         className="text-gray-500 text-[15px] hover:underline"
-        title={new Date(event.created_at).toLocaleString()}
+        title={timestamp ? new Date(timestamp).toLocaleString() : undefined}
       >
-        {formatTimestamp(event.created_at)}
+        {timestamp ? formatTimestamp(timestamp) : ''}
       </time>
 
       {/* Visibility Indicator - only show if private */}
       {event.visibility === 'private' && (
-        <Lock className="w-3.5 h-3.5 text-gray-400 ml-1" title="Private post" />
+        <span title="Private post">
+          <Lock className="w-3.5 h-3.5 text-gray-400 ml-1" />
+        </span>
       )}
 
       {/* Edited indicator */}
-      {event.updated_at && event.updated_at !== event.created_at && (
-        <span className="text-gray-400 text-[13px]" title={`Edited ${formatTimestamp(event.updated_at)}`}>
+      {isEdited && (
+        <span
+          className="text-gray-400 text-[13px]"
+          title={updatedTimestamp ? `Edited ${formatTimestamp(updatedTimestamp)}` : 'Edited'}
+        >
           · edited
         </span>
       )}
 
       {/* Menu Button - moved to end of line */}
       {canEdit && onMenuToggle && (
-        <div className="relative ml-auto">
+        <div className="relative ml-auto" ref={menuRef}>
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -82,31 +128,39 @@ export function PostHeader({ event, showMenu, onMenuToggle, onEdit, canEdit, isS
             }}
             className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-1.5 -mr-1.5 transition-colors"
             aria-label="Post options"
+            aria-expanded={showMenu}
+            aria-haspopup="menu"
           >
             <MoreHorizontal className="w-4 h-4" />
           </button>
 
           {/* Dropdown Menu */}
           {showMenu && (
-            <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
+            <div
+              className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-lg z-50"
+              role="menu"
+            >
               <div className="py-1">
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit?.();
-                    onMenuToggle();
                   }}
-                  className="w-full text-left px-4 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                  className="w-full text-left px-4 py-2.5 text-[15px] text-gray-700 hover:bg-gray-50 flex items-center gap-3"
+                  role="menuitem"
                 >
+                  <Pencil className="w-4 h-4" />
                   Edit post
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onMenuToggle();
+                    onDelete?.();
                   }}
-                  className="w-full text-left px-4 py-2.5 text-[15px] text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  className="w-full text-left px-4 py-2.5 text-[15px] text-red-600 hover:bg-red-50 flex items-center gap-3"
+                  role="menuitem"
                 >
+                  <Trash2 className="w-4 h-4" />
                   Delete post
                 </button>
               </div>
@@ -117,6 +171,14 @@ export function PostHeader({ event, showMenu, onMenuToggle, onEdit, canEdit, isS
     </div>
   );
 }
+
+export default PostHeader;
+
+
+
+
+
+
 
 
 

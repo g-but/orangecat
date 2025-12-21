@@ -5,6 +5,7 @@ import { Profile } from '@/types/database';
 import { Wallet } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import ProfileWalletSection from '@/components/profile/ProfileWalletSection';
+import { toast } from 'sonner';
 
 interface ProfileWalletsTabProps {
   profile: Profile;
@@ -37,9 +38,17 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
         if (response.ok) {
           const data = await response.json();
           setWallets(data.data || []);
+        } else {
+          const errText = await response.text().catch(() => '');
+          toast.error('Unable to load wallets', {
+            description: errText || 'Please try again.',
+          });
+          setWallets([]);
         }
       } catch (error) {
         logger.error('Failed to load wallets', error, 'ProfileWalletsTab');
+        toast.error('Network error loading wallets');
+        setWallets([]);
       } finally {
         setLoading(false);
       }

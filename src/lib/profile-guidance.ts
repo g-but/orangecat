@@ -26,7 +26,7 @@ import {
   Home,
   Eye,
   EyeOff,
-  Coins,
+  Coin,
 } from 'lucide-react';
 import type { FieldGuidanceContent, DefaultContent } from '@/lib/project-guidance';
 
@@ -203,7 +203,7 @@ export const profileGuidanceContent: Record<NonNullable<ProfileFieldType>, Field
     ],
   },
   currencyPreference: {
-    icon: React.createElement(Coins, { className: 'w-5 h-5 text-orange-600' }),
+    icon: React.createElement(Coin, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Currency Preference',
     description:
       'Choose your preferred currency for viewing amounts. All transactions happen in Bitcoin, but you can see equivalent values in your local currency.',

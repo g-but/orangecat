@@ -60,7 +60,7 @@ const postHandler = withSecurity<CollateralInput>(
 
     return NextResponse.json({ success: true, id: created.id })
   },
-  CollateralSchema,
+  CollateralSchema as z.ZodType<CollateralInput>,
   { rateLimiter: apiRateLimiter, requireAuth: true, logActivity: true }
 )
 
@@ -78,7 +78,6 @@ export async function POST(req: Request) {
   }
 
   try {
-    // @ts-expect-error wrapper handles validation
     return await postHandler(body, { ip, userId })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to attach collateral'

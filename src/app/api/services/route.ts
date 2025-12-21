@@ -1,136 +1,73 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import supabaseAdmin from '@/services/supabase/admin';
-import { userServiceSchema, type UserServiceFormData } from '@/lib/validation';
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiValidationError,
-  apiInternalError,
-  handleApiError,
-  handleSupabaseError,
-} from '@/lib/api/standardResponse';
-import { rateLimit, rateLimitWrite, createRateLimitResponse } from '@/lib/rate-limit';
+import { userServiceSchema } from '@/domain/services/schema';
+import { apiSuccess, apiUnauthorized, apiInternalError, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { compose } from '@/lib/api/compose';
+import { withZodBody } from '@/lib/api/withZod';
+import { withRateLimit } from '@/lib/api/withRateLimit';
+import { createService, listEntitiesPage } from '@/domain/commerce/service';
+import { withRequestId } from '@/lib/api/withRequestId';
+import { getPagination, getString } from '@/lib/api/query';
+import { rateLimitWrite } from '@/lib/rate-limit';
 import { apiRateLimited } from '@/lib/api/standardResponse';
 
 // GET /api/services - Get all active services
-export async function GET(request: NextRequest) {
+export const GET = compose(withRequestId(), withRateLimit('read'))(async (request: NextRequest) => {
   try {
-    // Rate limiting check
-    const rateLimitResult = rateLimit(request);
-    if (!rateLimitResult.success) {
-      return createRateLimitResponse(rateLimitResult);
-    }
-
     const supabase = await createServerClient();
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
-    const category = searchParams.get('category');
-    const userId = searchParams.get('user_id');
+    const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 })
+    const category = getString(request.url, 'category');
+    const userId = getString(request.url, 'user_id');
+    // Show drafts if requesting own user
+    const { data: { user } } = await supabase.auth.getUser();
+    const includeOwnDrafts = Boolean(userId && user && userId === user.id)
 
-    let query = supabase
-      .from('user_services')
-      .select('*')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+    const { items, total } = await listEntitiesPage('user_services', {
+      limit,
+      offset,
+      category,
+      userId,
+      includeOwnDrafts,
+    })
 
-    // Add optional filters
-    if (category) {
-      query = query.eq('category', category);
-    }
-    if (userId) {
-      query = query.eq('user_id', userId);
-    }
+    // Use private cache for user-specific queries, public for general listings
+    const cacheControl = userId
+      ? 'private, no-cache, no-store, must-revalidate'
+      : 'public, s-maxage=60, stale-while-revalidate=300';
 
-    const { data: services, error } = await query;
-
-    if (error) {
-      return apiInternalError('Failed to fetch services', { details: error.message });
-    }
-
-    // Services are ready to return as-is
-    const servicesWithProfiles = services || [];
-
-    return apiSuccess(servicesWithProfiles, {
+    return apiSuccess(items, {
+      page: Math.floor(offset / limit) + 1,
+      limit,
+      total,
       headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+        'Cache-Control': cacheControl,
       },
     });
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
 
 // POST /api/services - Create new service
-export async function POST(request: NextRequest) {
+export const POST = compose(withRequestId(), withZodBody(userServiceSchema))(async (request: NextRequest, ctx) => {
   try {
     const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return apiUnauthorized();
 
-    if (authError || !user) {
-      return apiUnauthorized();
+    // Write rate limit per user
+    const rl = rateLimitWrite(user.id)
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000)
+      logger.warn('Service creation rate limit exceeded', { userId: user.id })
+      return apiRateLimited('Too many service creation requests. Please slow down.', retryAfter)
     }
 
-    // Rate limiting check - 20 writes per minute per user
-    const rateLimitResult = rateLimitWrite(user.id);
-    if (!rateLimitResult.success) {
-      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
-      logger.warn('Service creation rate limit exceeded', { userId: user.id });
-      return apiRateLimited('Too many service creation requests. Please slow down.', retryAfter);
-    }
-
-    const body = await request.json();
-    const validatedData = userServiceSchema.parse(body);
-
-    const insertPayload = {
-      user_id: user.id,
-      title: validatedData.title,
-      description: validatedData.description,
-      category: validatedData.category,
-      hourly_rate_sats: validatedData.hourly_rate_sats,
-      fixed_price_sats: validatedData.fixed_price_sats,
-      currency: validatedData.currency ?? 'SATS',
-      duration_minutes: validatedData.duration_minutes,
-      availability_schedule: validatedData.availability_schedule,
-      service_location_type: validatedData.service_location_type ?? 'remote',
-      service_area: validatedData.service_area,
-      images: validatedData.images ?? [],
-      portfolio_links: validatedData.portfolio_links ?? [],
-      status: 'draft', // Services start as draft
-    };
-
-    // Use admin client to bypass RLS for server-side inserts
-    const { data: service, error } = await supabaseAdmin
-      .from('user_services')
-      .insert(insertPayload)
-      .select('*')
-      .single();
-
-    if (error) {
-      logger.error('Service creation failed', {
-        userId: user.id,
-        error: error.message,
-        code: error.code,
-      });
-      return handleSupabaseError(error);
-    }
-
-    logger.info('Service created successfully', { userId: user.id, serviceId: service.id });
+    const service = await createService(user.id, ctx.body)
+    logger.info('Service created successfully', { serviceId: service.id });
     return apiSuccess(service, { status: 201 });
   } catch (error) {
-    if (error instanceof Error && error.name === 'ZodError') {
-      const zodError = error as any;
-      return apiValidationError('Invalid service data', {
-        details: zodError.errors || zodError.message,
-      });
-    }
     return handleApiError(error);
   }
-}
-
+});

@@ -10,6 +10,9 @@ export async function GET(
     const conversation = await fetchConversationSummary(conversationId)
     return NextResponse.json({ conversation })
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    // Propagate specific status codes from service errors
+    const status = (error as any)?.status || 500
+    const message = error instanceof Error ? error.message : 'Internal server error'
+    return NextResponse.json({ error: message }, { status });
   }
 }

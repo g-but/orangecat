@@ -3,29 +3,37 @@
  *
  * Main sidebar component that combines user profile and navigation
  *
- * Sidebar has only 2 states:
+ * Hover-to-expand pattern:
+ * - Sidebar defaults to icons only (w-16) when collapsed
+ * - On hover: expands to show text labels (w-52) smoothly
+ * - Manual toggle: expands to full width (w-64) and stays expanded
+ * - Always visible when user is logged in
+ *
+ * Sidebar states:
  * 1. Icons only (default, collapsed) - w-16
- * 2. Icons + text (expanded) - w-64
+ * 2. Icons + text on hover - w-52 (temporary, on hover)
+ * 3. Icons + text (manually expanded) - w-64 (persistent)
  *
  * Behavior:
- * - Default: icons only
- * - Hover: expands to icons+text, collapses on unhover (only when not manually opened)
- * - Hamburger menu: expands to icons+text, stays expanded until clicked again
+ * - Default: icons only (w-16 fixed)
+ * - Hover: expands to w-52 to show text labels (smooth transition)
+ * - Hamburger menu: expands to w-64, stays expanded until clicked again
+ * - Mobile: slides in/out, no hover expansion
  *
  * Created: 2025-01-07
- * Last Modified: 2025-01-27
- * Last Modified Summary: Simplified sidebar to two states (icons-only or icons+text)
+ * Last Modified: 2025-12-12
+ * Last Modified Summary: Changed to hover-to-expand pattern - sidebar expands on hover to show text labels
  */
 
 'use client';
 
+import { useState } from 'react';
 import { Menu } from 'lucide-react';
-import { useSidebarHover } from '@/hooks/useSidebarHover';
 import { SidebarUserProfile } from './SidebarUserProfile';
 import { SidebarNavigation } from './SidebarNavigation';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
 import type { Profile } from '@/types/database';
-import { navigationLabels } from '@/config/navigationConfig';
+import { navigationLabels } from '@/config/navigation';
 import {
   SIDEBAR_WIDTHS,
   SIDEBAR_Z_INDEX,
@@ -45,7 +53,7 @@ interface SidebarProps {
   };
   isItemActive: (href: string) => boolean;
   toggleSidebar: () => void;
-  toggleSection: (sectionId: string) => void;
+  toggleSection: (sectionId: string) => boolean;
   onNavigate?: () => void;
 }
 
@@ -60,9 +68,7 @@ export function Sidebar({
   toggleSection,
   onNavigate,
 }: SidebarProps) {
-  const { isHovered, setIsHovered, isExpanded } = useSidebarHover({
-    isSidebarOpen: navigationState.isSidebarOpen,
-  });
+  const [isHovered, setIsHovered] = useState(false);
 
   const handleNavigate = () => {
     if (navigationState.isSidebarOpen && onNavigate) {
@@ -70,33 +76,35 @@ export function Sidebar({
     }
   };
 
-  // Determine sidebar width and visibility
-  // Two states: collapsed (icons only) or expanded (icons+text)
-  const isExpandedState = isExpanded; // true when manually opened OR hovered
-  const sidebarWidth = isExpandedState ? SIDEBAR_WIDTHS.EXPANDED : SIDEBAR_WIDTHS.COLLAPSED;
+  // Sidebar width logic:
+  // - If manually opened: w-64 (full expanded)
+  // - If hovered (and not manually opened): w-52 (show text labels)
+  // - Otherwise: w-16 (icons only)
+  const sidebarWidth = navigationState.isSidebarOpen 
+    ? SIDEBAR_WIDTHS.EXPANDED  // w-64 when manually opened
+    : isHovered
+      ? SIDEBAR_WIDTHS.HOVER_EXPANDED  // w-52 on hover (desktop only)
+      : SIDEBAR_WIDTHS.COLLAPSED; // w-16 when collapsed (default)
 
   // Mobile: sidebar slides in/out based on isSidebarOpen
-  // Desktop: sidebar is always visible, width changes based on expanded state
+  // Desktop: sidebar is always visible
   const sidebarTranslate = navigationState.isSidebarOpen
     ? 'translate-x-0' // Mobile: visible when opened
-    : isHovered
-      ? 'translate-x-0' // Desktop: visible on hover (even when not manually opened)
-      : '-translate-x-full lg:translate-x-0'; // Mobile: hidden | Desktop: visible (collapsed width)
+    : '-translate-x-full lg:translate-x-0'; // Mobile: hidden | Desktop: visible
+
+  // isExpanded is true when manually opened OR when hovered (on desktop)
+  // This controls whether text labels are shown
+  const isExpanded = navigationState.isSidebarOpen || (isHovered && typeof window !== 'undefined' && window.innerWidth >= 1024);
 
   return (
     <aside
-      className={`fixed bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg transition-all ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} border-r ${SIDEBAR_COLORS.BORDER} ${sidebarWidth} ${sidebarTranslate} overflow-y-auto overflow-x-hidden`}
+      className={`fixed bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg transition-all ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} border-r ${SIDEBAR_COLORS.BORDER} ${sidebarWidth} ${sidebarTranslate} overflow-y-auto overflow-x-hidden lg:overflow-x-visible`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         paddingLeft: 'env(safe-area-inset-left, 0px)',
         top: 'calc(4rem + env(safe-area-inset-top, 0px))',
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => {
-        // Only collapse on unhover if sidebar is not manually opened
-        if (!navigationState.isSidebarOpen) {
-          setIsHovered(false);
-        }
       }}
     >
       <div className="flex flex-col h-full min-w-0">
