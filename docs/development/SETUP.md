@@ -38,20 +38,12 @@ cp config/production.env.template .env.local
 # Required: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY
 ```
 
-### 4. Set Up Database (Optional - Local Development)
-```bash
-# Install Supabase CLI
-npm install -g supabase
+### 4. Database Setup
+OrangeCat uses **cloud Supabase only**. No database setup required.
 
-# Link your project
-supabase link --project-ref your-project-ref
-
-# Start local Supabase
-supabase start
-
-# Apply migrations
-supabase db reset
-```
+- Database is pre-configured and running in the cloud
+- All migrations are applied automatically
+- Environment variables are already configured
 
 ### 5. Start Development Server
 ```bash
@@ -70,9 +62,9 @@ npm run dev:clean
 - **Environment**: Development uses `.env.local`
 
 ### Supabase Configuration
-- **Local Development**: `supabase start` for local database
-- **Production**: Uses hosted Supabase instance
-- **Migrations**: Automatic via Supabase CLI
+- **Development & Production**: Uses hosted Supabase instance only
+- **No Local Database**: Cloud-only setup for consistency and resource efficiency
+- **Migrations**: Via Supabase dashboard or API
 
 ### VS Code Extensions (Recommended)
 ```json
@@ -209,15 +201,16 @@ npm run fresh:start
 ```
 
 ### Database Issues
+OrangeCat uses cloud Supabase - no local database to manage.
+
 ```bash
-# Reset local database
-supabase db reset
+# Check cloud database connectivity
+node scripts/diagnostics/check-supabase.js
 
-# Check Supabase status
-supabase status
+# View database logs (via Supabase dashboard)
+# https://app.supabase.com/project/ohkueislstxomdjavyhs/dashboard
 
-# View logs
-supabase logs
+# For schema changes, use the dashboard SQL editor
 ```
 
 ### Permission Issues

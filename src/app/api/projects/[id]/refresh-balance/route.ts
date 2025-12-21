@@ -144,7 +144,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       updated_at: balance.updated_at,
     });
   } catch (error) {
-    logger.error('Unexpected error refreshing project balance', { projectId, error });
+    logger.error('Unexpected error refreshing project balance', { error });
     return apiInternalError('Failed to refresh balance');
   }
 }

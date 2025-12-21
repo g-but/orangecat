@@ -22,7 +22,7 @@ export async function GET(
     // Create a client for storage operations
     const supabaseStorage = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
     );
 
     // Get user's projects (simplified MVP - no organizations)
@@ -99,7 +99,8 @@ export async function GET(
       { cache: 'SHORT' }
     );
   } catch (error) {
-    logger.error('Unexpected error fetching user projects', { userId, error });
+    // userId may not be in scope if params failed; log without it
+    logger.error('Unexpected error fetching user projects', { error });
     return apiInternalError('Failed to fetch projects');
   }
 }

@@ -177,25 +177,24 @@ CHF:  CHF 4,489.80
 
 ---
 
-### 5. ProjectTemplates
+### 5. Templates (Projects, Assets, Services)
 
-**Path**: `src/components/create/templates/ProjectTemplates.tsx`
+**Paths**:
+- `src/components/create/templates/ProjectTemplates.tsx`
+- `src/components/create/templates/AssetTemplates.tsx`
+- `src/components/create/templates/ServiceTemplates.tsx`
 
-**Purpose**: Reduce blank-page anxiety with pre-filled examples
+**Purpose**: Reduce blank-page anxiety with pre-filled examples.
 
-**Available Templates**:
-
-1. **Community Garden** - CHF, community/education/environment
-2. **Animal Shelter** - CHF, charity/health/humanitarian
-3. **Art Exhibition** - EUR, creative/community/business
-4. **Open Source Project** - SATS, technology/education
+**Available (examples)**:
+- Projects: Community Garden, Animal Shelter, Art Exhibition, Open Source Project
+- Assets: Digital Collectible, Physical Item, Membership Pass
+- Services: 1-hour Consultation, Design Sprint, Bug Fix Bundle, Copy Edit, On-site Session
 
 **Behavior**:
-
-- Displayed below main form
-- Click to prefill entire form
-- Scrolls user back to top
-- Toast notification confirms loading
+- Displayed near the form; click to prefill form defaults.
+- Non-destructive; user can edit after applying.
+- Reuses `EntityForm` initial values to keep DRY.
 
 ---
 

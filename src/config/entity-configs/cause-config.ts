@@ -133,7 +133,7 @@ export const causeConfig: EntityConfig<UserCauseFormData> = {
   colorTheme: 'rose',
   backUrl: '/dashboard/causes',
   apiEndpoint: '/api/causes',
-  successUrl: '/dashboard/causes',
+  successUrl: '/dashboard/causes/[id]',
   pageTitle: 'Create Cause',
   pageDescription: 'Start a charitable fundraising campaign',
   formTitle: 'Cause Details',

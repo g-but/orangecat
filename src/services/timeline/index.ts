@@ -1914,69 +1914,53 @@ class TimelineService {
   }
 
   /**
-   * Get replies to a specific event (for thread view)
+   * Get replies to a specific event (thread-friendly, uses parent_event_id)
+   * Builds a small reply tree to enable nested replies in the UI.
    */
-  async getReplies(eventId: string, limit: number = 50): Promise<{ success: boolean; replies?: TimelineDisplayEvent[]; error?: string }> {
+  async getReplies(
+    eventId: string,
+    limit: number = 50
+  ): Promise<{ success: boolean; replies?: TimelineDisplayEvent[]; error?: string }> {
     try {
-      // Get comments/replies for this event
-      const { data: comments, error: commentsError } = await supabase
-        .from('timeline_comments')
-        .select(`
-          id,
-          event_id,
-          user_id,
-          content,
-          parent_comment_id,
-          created_at,
-          updated_at,
-          is_deleted,
-          profiles:user_id (
-            id,
-            username,
-            name,
-            avatar_url
-          )
-        `)
-        .eq('event_id', eventId)
-        .eq('is_deleted', false)
-        .is('parent_comment_id', null) // Top-level comments only
-        .order('created_at', { ascending: true })
-        .limit(limit);
+      const buildTree = async (
+        parentId: string,
+        depth: number
+      ): Promise<TimelineDisplayEvent[]> => {
+        // Limit depth to avoid accidental cycles
+        if (depth > 3) {
+          return [];
+        }
 
-      if (commentsError) {
-        logger.error('Error fetching replies', commentsError, 'Timeline');
-        return { success: false, error: 'Failed to fetch replies' };
-      }
+        const { data: childEvents, error } = await supabase
+          .from('timeline_events')
+          .select('*')
+          .eq('parent_event_id', parentId)
+          .eq('is_deleted', false)
+          .order('created_at', { ascending: true })
+          .limit(depth === 0 ? limit : 50);
 
-      // Transform comments to display events format
-      const replies: TimelineDisplayEvent[] = (comments || []).map((comment: any) => ({
-        id: comment.id,
-        title: '',
-        description: comment.content,
-        visibility: 'public' as const,
-        isFeatured: false,
-        eventTimestamp: comment.created_at,
-        createdAt: comment.created_at,
-        created_at: comment.created_at,
-        updatedAt: comment.updated_at,
-        isDeleted: false,
-        parentEventId: eventId,
-        actor: {
-          id: comment.profiles?.id || comment.user_id,
-          name: comment.profiles?.name || 'Unknown',
-          username: comment.profiles?.username || '',
-          avatar: comment.profiles?.avatar_url || null,
-          type: 'user' as const,
-        },
-        icon: null as any,
-        iconColor: 'blue',
-        displayType: 'reply',
-        timeAgo: '',
-        isRecent: true,
-        likesCount: 0,
-        commentsCount: 0,
-      }));
+        if (error) {
+          logger.error('Error fetching replies', error, 'Timeline');
+          return [];
+        }
 
+        const enrichedChildren = await this.enrichEventsForDisplay(childEvents || []);
+
+        // Recursively fetch children for each reply
+        const withNested = [];
+        for (const reply of enrichedChildren) {
+          const nestedReplies = await buildTree(reply.id, depth + 1);
+          withNested.push({
+            ...reply,
+            replies: nestedReplies,
+            replyCount: nestedReplies.length,
+          });
+        }
+
+        return withNested;
+      };
+
+      const replies = await buildTree(eventId, 0);
       return { success: true, replies };
     } catch (error) {
       logger.error('Error fetching replies', error, 'Timeline');
@@ -2578,6 +2562,111 @@ class TimelineService {
     } catch (error) {
       logger.error('Error searching posts', error, 'Timeline');
       return { success: false, error: 'Search failed. Please try again.' };
+    }
+  }
+
+  /**
+   * Create a quote reply (different from quote repost)
+   * Quote replies create threaded conversations for networked thoughts
+   */
+  async createQuoteReply(
+    parentPostId: string,
+    actorId: string,
+    content: string,
+    quotedContent: string,
+    visibility: TimelineVisibility = 'public'
+  ): Promise<TimelineEventResponse> {
+    try {
+      const { data, error } = await withApiRetry(() =>
+        supabase.rpc('create_quote_reply', {
+          p_parent_event_id: parentPostId,
+          p_actor_id: actorId,
+          p_content: content,
+          p_quoted_content: quotedContent,
+          p_visibility: visibility,
+        })
+      );
+
+      if (error) {
+        logger.error('Failed to create quote reply', error, 'Timeline');
+        return { success: false, error: error.message };
+      }
+
+      if (!data) {
+        return { success: false, error: 'Failed to create quote reply' };
+      }
+
+      // Fetch the created event
+      const eventResult = await this.getEventById(data);
+      if (!eventResult.success || !eventResult.event) {
+        return { success: false, error: 'Quote reply created but failed to fetch' };
+      }
+
+      return { success: true, event: eventResult.event };
+
+    } catch (error) {
+      logger.error('Error creating quote reply', error, 'Timeline');
+      return { success: false, error: 'Failed to create quote reply. Please try again.' };
+    }
+  }
+
+  /**
+   * Get all posts in a thread
+   */
+  async getThreadPosts(threadId: string): Promise<TimelineFeedResponse> {
+    try {
+      const { data, error } = await withApiRetry(() =>
+        supabase.rpc('get_thread_posts', {
+          p_thread_id: threadId,
+          p_limit: 50,
+          p_offset: 0,
+        })
+      );
+
+      if (error) {
+        logger.error('Failed to get thread posts', error, 'Timeline');
+        return { success: false, error: error.message };
+      }
+
+      if (!data || data.length === 0) {
+        return { success: true, posts: [], total: 0 };
+      }
+
+      // Convert to display events
+      const displayEvents = data.map((event: any) => ({
+        ...event,
+        eventType: event.event_type,
+        actor: {
+          id: event.actor_id,
+          name: event.actor_name || 'Unknown',
+          username: event.actor_username,
+          avatar: event.actor_avatar,
+          type: 'user' as TimelineActorType,
+        },
+        timeAgo: this.formatTimeAgo(new Date(event.event_timestamp)),
+        isRecent: this.isRecent(new Date(event.event_timestamp)),
+        likesCount: 0,
+        commentsCount: 0,
+        sharesCount: 0,
+        userLiked: false,
+        userShared: false,
+        userCommented: false,
+        parentPostId: event.parent_event_id,
+        threadId: event.thread_id,
+        threadDepth: event.thread_depth,
+        isQuoteReply: event.is_quote_reply,
+        quotedContent: event.metadata?.quoted_content,
+      } as TimelineDisplayEvent));
+
+      return {
+        success: true,
+        posts: displayEvents,
+        total: data.length,
+      };
+
+    } catch (error) {
+      logger.error('Error getting thread posts', error, 'Timeline');
+      return { success: false, error: 'Failed to load thread. Please try again.' };
     }
   }
 }

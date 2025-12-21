@@ -52,6 +52,7 @@ interface ProfileLayoutProps {
     projectCount: number;
     totalRaised: number;
     followerCount?: number;
+    followingCount?: number;
     walletCount?: number;
   };
   mode?: 'view' | 'edit';
@@ -236,6 +237,25 @@ export default function ProfileLayout({
     },
   ];
 
+  // For public profiles, hide tabs with no content
+  const filteredTabs = tabs.filter(tab => {
+    if (isOwnProfile) return true;
+    switch (tab.id) {
+      case 'projects':
+        return (stats?.projectCount || 0) > 0;
+      case 'people':
+        return ((stats?.followerCount || 0) + (stats?.followingCount || 0)) > 0;
+      case 'wallets':
+        return (
+          (stats?.walletCount || 0) > 0 ||
+          !!profile.bitcoin_address ||
+          !!profile.lightning_address
+        );
+      default:
+        return true; // overview, info, timeline always visible
+    }
+  });
+
   return (
     <div
       className={cn('min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100', className)}
@@ -366,7 +386,7 @@ export default function ProfileLayout({
           </div>
 
           {/* Tabbed Content - View Only */}
-          <ProfileViewTabs tabs={tabs} defaultTab="timeline" />
+          <ProfileViewTabs tabs={filteredTabs} defaultTab="timeline" />
         </div>
       </div>
     </div>

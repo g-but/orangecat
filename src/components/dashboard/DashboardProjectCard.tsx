@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { Users, Eye, Edit3 } from 'lucide-react';
-import { Project } from '@/types/project';
+import { Project } from '@/stores/projectStore';
 
 interface DashboardProjectCardProps {
   project: Project;
@@ -131,6 +131,24 @@ export function DashboardProjectCard({ project }: DashboardProjectCardProps) {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

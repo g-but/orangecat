@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY
 
 // During static builds (e.g., Vercel build step) the service-role key may be
 // intentionally absent for security.  To prevent the build from crashing we
@@ -13,13 +13,13 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
 function createDummyClient() {
   return new Proxy({}, {
     get() {
-      throw new Error('Supabase Admin client requested, but required environment variables are missing (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY). Configure these in your deployment environment.')
+      throw new Error('Supabase Admin client requested, but required environment variables are missing (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY). Configure these in your deployment environment.')
     },
   }) as unknown as ReturnType<typeof createClient>
 }
 
-const supabaseAdmin = (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY)
-  ? createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+const supabaseAdmin = (SUPABASE_URL && SUPABASE_SECRET_KEY)
+  ? createClient(SUPABASE_URL, SUPABASE_SECRET_KEY, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,

@@ -6,7 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/auth';
 import Loading from '@/components/Loading';
 import ModernProfileEditor from '@/components/profile/ModernProfileEditor';
-import { Profile, ProfileFormData } from '@/types/database';
+import { Profile } from '@/types/profile';
+import { ProfileFormData } from '@/types/database';
 import { toast } from 'sonner';
 import { Edit, HelpCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { DynamicSidebar } from '@/components/create/DynamicSidebar';
@@ -100,10 +101,6 @@ const getProfileCompletionPercentage = (profile: Profile | null): number => {
   }
 
   const total = PROFILE_COMPLETION_FIELDS.length;
-  if (total === 0) {
-    return 0;
-  }
-
   const completed = PROFILE_COMPLETION_FIELDS.filter(field => field.isComplete(profile)).length;
 
   return Math.round((completed / total) * 100);
@@ -135,8 +132,9 @@ export default function DashboardInfoEditPage() {
   useEffect(() => {
     if (!authLoading) {
       if (storeProfile) {
-        setProfile(storeProfile);
-        setCompletionPercentage(getProfileCompletionPercentage(storeProfile));
+        // Cast to Profile since database type and profile.ts type differ slightly
+        setProfile(storeProfile as unknown as Profile);
+        setCompletionPercentage(getProfileCompletionPercentage(storeProfile as unknown as Profile));
       }
       setIsLoading(false);
     }
@@ -362,7 +360,7 @@ export default function DashboardInfoEditPage() {
               </Card>
 
               {/* Dynamic Guidance - Desktop Only */}
-              <DynamicSidebar<ProfileFieldType>
+              <DynamicSidebar<NonNullable<ProfileFieldType>>
                 activeField={focusedField}
                 guidanceContent={profileGuidanceContent}
                 defaultContent={profileDefaultContent}
@@ -427,7 +425,7 @@ export default function DashboardInfoEditPage() {
                 </button>
               </div>
               <div className="p-4">
-                <DynamicSidebar<ProfileFieldType>
+                <DynamicSidebar<NonNullable<ProfileFieldType>>
                   activeField={focusedField}
                   guidanceContent={profileGuidanceContent}
                   defaultContent={profileDefaultContent}

@@ -28,90 +28,20 @@ const playfairDisplay = Playfair_Display({
   adjustFontFallback: true,
 });
 import './globals.css';
-import ClientErrorBoundary from '@/components/ClientErrorBoundary';
-import { Suspense, lazy } from 'react';
-import Loading, { GlobalAuthLoader } from '@/components/Loading';
-import { createServerClient } from '@/lib/supabase/server';
-import { headers } from 'next/headers';
 import Script from 'next/script';
 import { AuthProvider } from '@/components/providers/AuthProvider';
-import { SyncManagerInitializer } from '@/components/SyncManagerInitializer';
-import { OfflineQueueIndicator } from '@/components/ui/OfflineQueueIndicator';
-import { ComposerProvider } from '@/contexts/ComposerContext';
-import DevBootstrap from '@/components/DevBootstrap';
-import { ensureMessagingMigrations } from '@/lib/dev/autoMigrate';
+import { AppShell } from '@/components/layout/AppShell';
+import { Toaster } from '@/components/ui/sonner';
+import Loading from '@/components/Loading';
+import { Suspense } from 'react';
+import { MessagesUnreadProvider } from '@/contexts/MessagesUnreadContext';
 
-// Dynamic imports for non-critical components
-const DynamicToaster = lazy(() => import('sonner').then(module => ({ default: module.Toaster })));
-const DynamicToastContainer = lazy(() => import('@/components/ui/Toast'));
-const DynamicAnalytics = lazy(() =>
-  import('@vercel/analytics/react').then(module => ({ default: module.Analytics }))
-);
-const DynamicSpeedInsights = lazy(() =>
-  import('@vercel/speed-insights/next').then(module => ({ default: module.SpeedInsights }))
-);
-const DynamicUnifiedHeader = lazy(() => import('@/components/layout/UnifiedHeader'));
-const DynamicFooter = lazy(() => import('@/components/layout/Footer'));
-const DynamicMobileBottomNav = lazy(() => import('@/components/layout/MobileBottomNav'));
-const DynamicChatbot = lazy(() =>
-  import('@/components/ui/SimpleChatbot').then(module => ({ default: module.SimpleChatbot }))
-);
-const DynamicLLMChat = lazy(() =>
-  import('@/components/ui/LLMChat').then(module => ({ default: module.LLMChat }))
-);
+// Force dynamic rendering to avoid problematic static pre-render of 404
+export const dynamic = 'force-dynamic';
+
+// Temporarily disable non-critical dynamic components while isolating build issue
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  // Dev: apply messaging migrations on first server render
-  await ensureMessagingMigrations();
-  const headersList = await headers();
-
-  // Get current pathname to determine if we're on an authenticated route
-  const pathname = headersList.get('x-pathname') || '';
-  const isAuthenticatedRoute =
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/profile') ||
-    pathname.startsWith('/settings') ||
-    pathname.startsWith('/assets') ||
-    pathname.startsWith('/people') ||
-    pathname.startsWith('/events') ||
-    pathname.startsWith('/organizations') ||
-    pathname.startsWith('/projects') ||
-    pathname.startsWith('/funding');
-
-  // PERFORMANCE OPTIMIZATION: Only fetch auth data for authenticated routes
-  // Public pages (homepage, discover, blog, etc.) don't need auth data
-  // This saves 500ms-2s on every public page load
-  let user = null;
-  let profile = null;
-
-  if (isAuthenticatedRoute) {
-    const supabase = await createServerClient();
-
-    // Get user for secure auth state (getUser() validates token with server)
-    const {
-      data: { user: userData },
-      error: userError,
-    } = await supabase.auth.getUser();
-
-    user = userData;
-
-    // Try to get profile data if user exists and is authenticated
-    if (user && !userError) {
-      try {
-        const { data: profileData, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (!error && profileData) {
-          profile = profileData;
-        }
-      } catch (error) {
-        // Profile fetch error in RootLayout - silently handle
-      }
-    }
-  }
 
   return (
     <html
@@ -276,76 +206,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         suppressHydrationWarning={true}
       >
         <div id="__next">
-          <ClientErrorBoundary>
-            {/* Dev bootstrap: applies messaging migrations automatically in development */}
-            <DevBootstrap />
-            <SyncManagerInitializer />
-            <AuthProvider>
-              <ComposerProvider>
-                <div className="relative min-h-screen flex flex-col">
-                  {/* Global Auth Loader - temporarily disabled for debugging */}
-                  {/* <GlobalAuthLoader /> */}
-
-                  {/* Header - public routes only; authenticated routes use AuthenticatedShell */}
-                  {!isAuthenticatedRoute && (
-                    <Suspense fallback={<Loading />}>
-                      <DynamicUnifiedHeader />
-                    </Suspense>
-                  )}
-
-                  {/* Main Content */}
-                  <main className="flex-1 flex flex-col">{children}</main>
-
-                  {/* Footer */}
-                  <Suspense fallback={<div className="h-16" />}>
-                    <DynamicFooter />
-                  </Suspense>
-
-                  {/* Mobile Bottom Navigation - Available on all routes */}
-                  <Suspense fallback={null}>
-                    <DynamicMobileBottomNav />
-                  </Suspense>
-                </div>
-              </ComposerProvider>
-            </AuthProvider>
-
-            {/* Toast Notifications */}
-            <Suspense fallback={null}>
-              <DynamicToaster position="top-right" />
-            </Suspense>
-
-            {/* Custom Toast Container */}
-            <Suspense fallback={null}>
-              <DynamicToastContainer />
-            </Suspense>
-
-            {/* Analytics */}
-            <Suspense fallback={null}>
-              <DynamicAnalytics />
-            </Suspense>
-
-            {/* Speed Insights */}
-            <Suspense fallback={null}>
-              <DynamicSpeedInsights />
-            </Suspense>
-
-            {/* Simple Chatbot Assistant - Lazy loaded */}
-            <Suspense fallback={null}>
-              <DynamicChatbot />
-            </Suspense>
-
-            {/* AI LLM Chat Assistant - Lazy loaded */}
-            <Suspense fallback={null}>
-              <DynamicLLMChat
-                systemPrompt="You are OrangeCat's AI assistant. OrangeCat is a Bitcoin-native crowdfunding platform where users can fund projects directly with Bitcoin. Help users understand the platform, answer questions about Bitcoin crowdfunding, and assist with general inquiries. Be helpful, accurate, and promote the benefits of Bitcoin-based funding."
-                title="OrangeCat AI"
-              />
-            </Suspense>
-
-            {/* Offline Queue Indicator */}
-            <OfflineQueueIndicator />
-          </ClientErrorBoundary>
+          <AuthProvider>
+            <MessagesUnreadProvider>
+              <Suspense fallback={<Loading fullScreen contextual message="Loading layout..." /> }>
+                <AppShell>
+                  {children}
+                </AppShell>
+              </Suspense>
+            </MessagesUnreadProvider>
+          </AuthProvider>
         </div>
+        <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
   );

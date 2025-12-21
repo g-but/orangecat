@@ -146,7 +146,7 @@ export const loanConfig: EntityConfig<LoanFormData> = {
 
   // Navigation
   backUrl: '/loans',
-  successUrl: '/loans',
+  successUrl: '/loans/[id]',
 
   // API configuration
   apiEndpoint: '/api/loans',

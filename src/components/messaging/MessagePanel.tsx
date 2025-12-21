@@ -2,13 +2,14 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { MessageSquare, Search, Plus, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Search, Plus, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
 import ConversationList from './ConversationList';
 import MessageView from './MessageView';
 import { cn } from '@/lib/utils';
 import NewConversationModal from './NewConversationModal';
+import { useAuth } from '@/hooks/useAuth';
 
 interface MessagePanelProps {
   isOpen: boolean;
@@ -27,9 +28,15 @@ export default function MessagePanel({
   fullPage = false,
 }: MessagePanelProps) {
   const router = useRouter();
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(
-    initialConversationId || null
-  );
+  const { user, hydrated, isLoading } = useAuth();
+
+  // Track if auth is truly ready (hydrated + not loading + has checked user)
+  const isAuthReady = hydrated && !isLoading;
+
+  // Don't set conversation ID until auth is ready to prevent "not found" errors
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  const [hasInitializedFromUrl, setHasInitializedFromUrl] = useState(false);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewModal, setShowNewModal] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'requests'>('all');
@@ -82,34 +89,100 @@ export default function MessagePanel({
     }
   }
 
+  // Initialize conversation ID from URL only after auth is ready
+  // This prevents "conversation not found" errors during auth hydration
   useEffect(() => {
-    if (initialConversationId) {
-      setSelectedConversationId(initialConversationId);
+    if (!isAuthReady) {
+      // Don't do anything until auth is ready
+      return;
     }
-  }, [initialConversationId]);
+
+    if (user && initialConversationId && !hasInitializedFromUrl) {
+      // Auth is ready and we have a user - now safe to load the conversation
+      setSelectedConversationId(initialConversationId);
+      setHasInitializedFromUrl(true);
+    } else if (!user) {
+      // No user - clear selection
+      setSelectedConversationId(null);
+      setHasInitializedFromUrl(false);
+    } else if (!initialConversationId && selectedConversationId && hasInitializedFromUrl) {
+      // URL changed to /messages without id - clear the selected conversation
+      // Only clear if we had previously initialized from URL (to avoid clearing on initial load)
+      setSelectedConversationId(null);
+      setHasInitializedFromUrl(false);
+    }
+  }, [initialConversationId, user, isAuthReady, hasInitializedFromUrl, selectedConversationId]);
+
+  // Reset initialization flag when URL changes
+  useEffect(() => {
+    if (initialConversationId !== selectedConversationId) {
+      setHasInitializedFromUrl(false);
+    }
+  }, [initialConversationId, selectedConversationId]);
 
   if (!isOpen) {
     return null;
   }
 
+  // Show loading state while auth is hydrating
+  // This prevents race conditions where we try to load conversations before auth is ready
+  if (!isAuthReady) {
+    const loadingContent = (
+      <div
+        className={cn(
+          'flex h-full bg-white shadow-lg items-center justify-center',
+          fullPage
+            ? 'w-full rounded-none'
+            : 'w-full max-w-5xl rounded-2xl border border-gray-200'
+        )}
+      >
+        <div className="text-center p-10">
+          <Loader2 className="w-8 h-8 animate-spin text-orange-500 mx-auto mb-4" />
+          <p className="text-gray-600">Loading messages...</p>
+        </div>
+      </div>
+    );
+
+    if (fullPage) {
+      return (
+        <div className={cn('h-[calc(100vh-4rem)]', className)}>
+          {loadingContent}
+        </div>
+      );
+    }
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="w-full max-w-4xl h-[80vh] max-h-[700px]">
+          {loadingContent}
+        </div>
+      </div>
+    );
+  }
+
   const content = (
     <div
       className={cn(
-        'flex h-full bg-white shadow-lg',
+        'flex h-full bg-white shadow-lg relative',
+        // Mobile: single column (flex-col), Desktop: two columns (flex-row)
+        'flex-col md:flex-row',
+        // Prevent horizontal overflow on mobile
+        'overflow-hidden',
         fullPage
           ? 'w-full rounded-none'
-          : 'w-full max-w-5xl rounded-2xl border border-gray-200 overflow-hidden'
+          : 'w-full max-w-5xl rounded-2xl border border-gray-200'
       )}
     >
       {/* Conversations Sidebar */}
       <div
         className={cn(
-          'border-r border-gray-200 flex flex-col bg-gray-50/60',
-          fullPage ? 'w-[23rem]' : 'w-[23rem]',
-          // On mobile, show as overlay when conversation is selected
-          !fullPage && selectedConversationId ? 'hidden md:flex' : 'flex',
-          // On mobile when no conversation selected, take full width
-          !fullPage && !selectedConversationId ? 'w-full md:w-80' : ''
+          'border-r border-gray-200 flex flex-col bg-gray-50/60 transition-transform duration-300 ease-in-out',
+          // Mobile: full width when no conversation, hidden when conversation selected
+          // Desktop: fixed width
+          selectedConversationId
+            ? 'hidden md:flex md:w-80' // Hide on mobile when conversation selected, show on desktop
+            : 'flex w-full md:w-80', // Full width on mobile when no conversation, fixed on desktop
+          fullPage && 'w-[23rem]'
         )}
       >
         {/* Header */}
@@ -215,24 +288,30 @@ export default function MessagePanel({
                 toggleConvSelect(conversationId);
                 return;
               }
+              // Set conversation immediately for smooth mobile transition
               setSelectedConversationId(conversationId);
-              router.push(`/messages?id=${conversationId}`);
+              // Update URL for deep linking
+              router.push(`/messages?id=${conversationId}`, { scroll: false });
             }}
           />
         </div>
       </div>
 
-      {/* Message View */}
+      {/* Message View - X-style full-screen on mobile */}
       <div
         className={cn(
-          'flex-1 flex flex-col bg-white',
-          selectedConversationId ? 'flex' : 'hidden md:flex'
+          'flex-1 flex flex-col bg-white transition-opacity duration-200 ease-in-out min-h-0',
+          // Mobile: full width when conversation selected, hidden when no conversation
+          // Desktop: always visible
+          selectedConversationId 
+            ? 'flex w-full' // Show full width when conversation selected
+            : 'hidden md:flex' // Hide on mobile when no conversation, show on desktop
         )}
       >
         {selectedConversationId ? (
           <MessageView
             conversationId={selectedConversationId}
-            onBack={(reason) => {
+            onBack={(reason?: 'forbidden' | 'not_found' | 'unknown' | 'network') => {
               setSelectedConversationId(null)
               // Remove id from the URL when navigating back
               router.push('/messages')
@@ -269,8 +348,14 @@ export default function MessagePanel({
         isOpen={showNewModal}
         onClose={() => setShowNewModal(false)}
         onCreated={(convId) => {
+          // When a new conversation is created:
+          // - select it in the UI
+          // - refresh the list so it appears in the sidebar
+          // - update the URL for deep-linking
           setSelectedConversationId(convId);
           setShowNewModal(false);
+          setRefreshSignal((s) => s + 1);
+          router.push(`/messages?id=${convId}`, { scroll: false });
         }}
       />
     </div>

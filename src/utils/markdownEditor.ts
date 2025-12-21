@@ -92,7 +92,7 @@ export function setSelectionRange(element: HTMLElement, start: number, end: numb
 
   const range = document.createRange();
   let charCount = 0;
-  let nodeStack = [element];
+  const nodeStack = [element];
   let node: Node | undefined;
   let foundStart = false;
 

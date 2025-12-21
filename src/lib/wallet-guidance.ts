@@ -16,7 +16,7 @@ import {
   FileText,
   KeyRound,
   Shield,
-  Coins,
+  Coin,
   PiggyBank,
   RefreshCcw,
 } from 'lucide-react';
@@ -107,7 +107,7 @@ export const walletGuidanceContent: Record<NonNullable<WalletFieldType>, FieldGu
     examples: ['1200 CHF for one month of rent', '400 CHF for winter heating costs'],
   },
   goalCurrency: {
-    icon: React.createElement(Coins, { className: 'w-5 h-5 text-orange-600' }),
+    icon: React.createElement(Coin, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Goal Currency',
     description:
       'The currency is only for display – all donations still arrive in Bitcoin, but you can explain your goal in CHF, EUR, USD, BTC, or SATS.',

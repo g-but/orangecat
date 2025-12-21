@@ -87,7 +87,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       { cache: 'SHORT' }
     );
   } catch (error) {
-    logger.error('Unexpected error fetching following', { userId: id, error });
+    logger.error('Unexpected error fetching following', { error });
     return apiInternalError('Internal server error');
   }
 }

@@ -23,6 +23,7 @@ export type TimelineEventType =
   | 'post_liked'
   | 'post_commented'
   | 'status_update'
+  | 'quote_reply'
   | 'achievement_shared'
   | 'reflection_posted'
 
@@ -298,6 +299,18 @@ export interface TimelineDisplayEvent extends Omit<TimelineEvent, 'eventType' | 
   // Threading
   replies?: TimelineDisplayEvent[];
   replyCount?: number;
+  parentPostId?: string;
+  threadId?: string;
+  threadDepth?: number;
+  isQuoteReply?: boolean;
+  threadRepliesCount?: number;
+  quotedContent?: string;
+  threadParticipants?: Array<{
+    id: string;
+    name: string;
+    username: string;
+    avatar?: string;
+  }>;
 }
 
 /**

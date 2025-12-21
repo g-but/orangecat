@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contextual Loader Demo - Orange Cat</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-bounce-delay-1 { animation: bounce 1s infinite; animation-delay: 0.1s; }
+        .animate-bounce-delay-2 { animation: bounce 1s infinite; animation-delay: 0.2s; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen p-8">
+        <div class="max-w-6xl mx-auto">
+            <!-- Header -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                    🚀 Contextual Loading Experience
+                </h1>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    Instead of boring loading spinners, users see exactly what they can do on each page.
+                    This transforms waiting time into an engaging preview!
+                </p>
+            </div>
+
+            <!-- Route Selector -->
+            <div class="mb-8 bg-white rounded-xl shadow-sm border p-6">
+                <h2 class="text-xl font-semibold mb-4">Select a Route to Preview:</h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3" id="routeSelector">
+                    <!-- Routes will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Contextual Loader Display -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
+                <div class="mb-4">
+                    <h2 class="text-xl font-semibold text-gray-900">
+                        Loading experience for: <code class="bg-gray-100 px-2 py-1 rounded text-sm" id="currentRoute">/dashboard</code>
+                    </h2>
+                </div>
+                <div id="loaderContainer" class="border border-gray-200 rounded-lg overflow-hidden">
+                    <!-- Contextual loader will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Benefits Section -->
+            <div class="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-8 border border-blue-100">
+                <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">
+                    🎯 Why This Improves UX
+                </h2>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">⚡</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Faster Perceived Loading</h3>
+                        <p class="text-sm text-gray-600">Users feel pages load faster because they're engaged with content</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">🎯</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Clear Expectations</h3>
+                        <p class="text-sm text-gray-600">Users know exactly what they'll find before the page loads</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">📱</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Mobile Optimized</h3>
+                        <p class="text-sm text-gray-600">Beautiful, responsive design for all devices</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                            <span class="text-2xl">🔄</span>
+                        </div>
+                        <h3 class="font-semibold text-gray-900 mb-2">Context Aware</h3>
+                        <p class="text-sm text-gray-600">Different content for different pages - fully personalized</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const routes = [
+            { path: '/', label: 'Home', title: 'Your Dashboard', subtitle: 'Your personal command center', color: 'blue', actions: [
+                { icon: '📈', text: 'Track your activity and progress' },
+                { icon: '💬', text: 'Connect with your network' },
+                { icon: '➕', text: 'Create new projects or services' },
+                { icon: '📊', text: 'View analytics and insights' }
+            ]},
+            { path: '/dashboard/projects', label: 'Projects', title: 'Projects', subtitle: 'Bring your ideas to life', color: 'indigo', actions: [
+                { icon: '🚀', text: 'Start a new crowdfunding campaign' },
+                { icon: '🎯', text: 'Set goals and track progress' },
+                { icon: '👥', text: 'Build your supporter community' },
+                { icon: '💰', text: 'Manage funds and rewards' }
+            ]},
+            { path: '/dashboard/services', label: 'Services', title: 'Services', subtitle: 'Offer your expertise', color: 'teal', actions: [
+                { icon: '➕', text: 'List your skills and services' },
+                { icon: '💰', text: 'Set competitive pricing' },
+                { icon: '📅', text: 'Manage your availability' },
+                { icon: '⭐', text: 'Build your reputation' }
+            ]},
+            { path: '/dashboard/wallets', label: 'Wallets', title: 'Bitcoin Wallets', subtitle: 'Manage your digital assets', color: 'yellow', actions: [
+                { icon: '🪙', text: 'View your Bitcoin balance' },
+                { icon: '💳', text: 'Send and receive payments' },
+                { icon: '🏦', text: 'Connect external wallets' },
+                { icon: '📊', text: 'Track your portfolio value' }
+            ]},
+            { path: '/about', label: 'About', title: 'About Orange Cat', subtitle: 'Learn about our mission', color: 'blue', actions: [
+                { icon: '📖', text: 'Read our story and values' },
+                { icon: '👥', text: 'Meet the team behind the vision' },
+                { icon: '🎯', text: 'Understand our goals' },
+                { icon: '❤️', text: 'See how we\'re making an impact' }
+            ]},
+            { path: '/blog', label: 'Blog', title: 'Blog', subtitle: 'Stay informed and inspired', color: 'indigo', actions: [
+                { icon: '📖', text: 'Read latest articles and updates' },
+                { icon: '📈', text: 'Learn about Bitcoin and finance' },
+                { icon: '👥', text: 'Discover community stories' },
+                { icon: '💡', text: 'Get inspired by new ideas' }
+            ]}
+        ];
+
+        let currentRoute = routes[0];
+
+        function renderLoader(route) {
+            const container = document.getElementById('loaderContainer');
+            const colorClasses = {
+                blue: { bg: 'bg-blue-50', iconBg: 'bg-blue-100', icon: 'text-blue-600', dot: 'bg-blue-600' },
+                indigo: { bg: 'bg-indigo-50', iconBg: 'bg-indigo-100', icon: 'text-indigo-600', dot: 'bg-indigo-600' },
+                teal: { bg: 'bg-teal-50', iconBg: 'bg-teal-100', icon: 'text-teal-600', dot: 'bg-teal-600' },
+                yellow: { bg: 'bg-yellow-50', iconBg: 'bg-yellow-100', icon: 'text-yellow-600', dot: 'bg-yellow-600' }
+            };
+            const colors = colorClasses[route.color] || colorClasses.blue;
+
+            container.innerHTML = `
+                <div class="flex items-center justify-center min-h-[400px] p-8 ${colors.bg}">
+                    <div class="max-w-md w-full rounded-2xl p-8 text-center">
+                        <div class="flex justify-center mb-6">
+                            <div class="w-16 h-16 ${colors.iconBg} rounded-full flex items-center justify-center">
+                                <span class="text-4xl">${route.actions[0].icon}</span>
+                            </div>
+                        </div>
+                        <h2 class="text-2xl font-bold text-gray-900 mb-2">${route.title}</h2>
+                        <p class="text-gray-600 mb-8">${route.subtitle}</p>
+                        <div class="space-y-4 text-left">
+                            ${route.actions.map(action => `
+                                <div class="flex items-start space-x-3 p-3 rounded-lg bg-white/50 backdrop-blur-sm">
+                                    <span class="text-2xl">${action.icon}</span>
+                                    <span class="text-sm text-gray-700 leading-relaxed flex-1">${action.text}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="mt-8 flex justify-center">
+                            <div class="flex space-x-1">
+                                <div class="w-2 h-2 ${colors.dot} rounded-full animate-bounce"></div>
+                                <div class="w-2 h-2 ${colors.dot} rounded-full animate-bounce-delay-1"></div>
+                                <div class="w-2 h-2 ${colors.dot} rounded-full animate-bounce-delay-2"></div>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-4">Preparing your personalized experience...</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRouteButtons() {
+            const container = document.getElementById('routeSelector');
+            container.innerHTML = routes.map(route => `
+                <button
+                    onclick="selectRoute('${route.path}')"
+                    class="px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        currentRoute.path === route.path
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }"
+                >
+                    ${route.label}
+                </button>
+            `).join('');
+        }
+
+        function selectRoute(path) {
+            currentRoute = routes.find(r => r.path === path) || routes[0];
+            document.getElementById('currentRoute').textContent = path;
+            renderLoader(currentRoute);
+            renderRouteButtons();
+        }
+
+        // Initialize
+        renderRouteButtons();
+        renderLoader(currentRoute);
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -172,3 +172,21 @@ Nominatim has a rate limit of **1 request per second**. The component automatica
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

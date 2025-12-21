@@ -312,12 +312,13 @@ export default function DashboardWalletsPage() {
         return;
       }
 
-      // Check if there's a duplicate warning
-      if (responseData.duplicateWarning) {
+      // Standardized shape: { success: true, data: { wallet, duplicateWarning? } }
+      const duplicateWarning = responseData?.data?.duplicateWarning;
+      if (duplicateWarning) {
         logger.info(
           'Duplicate wallet warning triggered',
           {
-            existingCount: responseData.duplicateWarning.existingWallets?.length,
+            existingCount: duplicateWarning.existingWallets?.length,
             profileId: profile.id,
           },
           'WalletManagement'
@@ -326,12 +327,12 @@ export default function DashboardWalletsPage() {
         setDuplicateDialog({
           isOpen: true,
           walletData: data,
-          existingWallets: responseData.duplicateWarning.existingWallets,
+          existingWallets: duplicateWarning.existingWallets,
         });
         return; // Don't proceed with adding the wallet yet
       }
 
-      const newWallet = responseData.wallet || responseData;
+      const newWallet = responseData?.data?.wallet || responseData?.data;
 
       if (!newWallet || !newWallet.id) {
         logger.error(
@@ -417,7 +418,7 @@ export default function DashboardWalletsPage() {
       }
 
       const responseData = await response.json();
-      const newWallet = responseData.wallet || responseData;
+      const newWallet = responseData?.data?.wallet || responseData?.data;
 
       // Update wallets state
       setWallets(prev => [newWallet, ...prev]);
@@ -884,13 +885,15 @@ export default function DashboardWalletsPage() {
         )}
 
         {/* Duplicate Wallet Dialog */}
-        <DuplicateWalletDialog
-          isOpen={duplicateDialog.isOpen}
-          onClose={handleCancelDuplicateWallet}
-          onConfirm={handleConfirmDuplicateWallet}
-          walletData={duplicateDialog.walletData}
-          existingWallets={duplicateDialog.existingWallets || []}
-        />
+        {duplicateDialog.walletData && (
+          <DuplicateWalletDialog
+            isOpen={duplicateDialog.isOpen}
+            onClose={handleCancelDuplicateWallet}
+            onConfirm={handleConfirmDuplicateWallet}
+            walletData={duplicateDialog.walletData}
+            existingWallets={duplicateDialog.existingWallets || []}
+          />
+        )}
       </div>
     </div>
   );

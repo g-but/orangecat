@@ -17,8 +17,8 @@ try {
 } catch {}
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
-const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-const service = process.env.SUPABASE_SERVICE_ROLE_KEY
+const anon = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const service = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
 
 function log(section, message, extra) {
   const ts = new Date().toISOString()
@@ -27,7 +27,7 @@ function log(section, message, extra) {
 }
 
 if (!url || !anon) {
-  log('ERROR', 'Missing Supabase env vars. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local')
+  log('ERROR', 'Missing Supabase env vars. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY) in .env.local')
   process.exit(1)
 }
 

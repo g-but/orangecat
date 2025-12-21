@@ -37,7 +37,7 @@ interface ProjectHeaderProps {
   getStatusInfo: (status: string) => { label: string; className: string };
 }
 
-export function ProjectHeader({ project, isOwner, onShare, getStatusInfo }: ProjectHeaderProps) {
+export default function ProjectHeader({ project, isOwner, onShare, getStatusInfo }: ProjectHeaderProps) {
   const statusInfo = getStatusInfo(project.status);
   const creatorProfileUrl = project.profiles?.username
     ? `/profile/${project.profiles.username}`

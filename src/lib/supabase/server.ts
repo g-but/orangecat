@@ -31,15 +31,7 @@ export const createServerClient = async () => {
   return createSupabaseServerClient<Database>(supabaseUrl as string, supabaseAnonKey as string, {
     cookies: {
       getAll() {
-        const allCookies = cookieStore.getAll();
-        // Debug: Log cookie names in development
-        if (process.env.NODE_ENV === 'development') {
-          const cookieNames = allCookies.map(c => c.name);
-          if (cookieNames.length > 0) {
-            console.log('Available cookies:', cookieNames);
-          }
-        }
-        return allCookies;
+        return cookieStore.getAll();
       },
       setAll(cookiesToSet) {
         try {

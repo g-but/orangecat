@@ -13,17 +13,21 @@ import { Plus, DollarSign, Target, TrendingUp } from 'lucide-react';
 import loansService from '@/services/loans';
 import { Loan, LoanOffer } from '@/types/loans';
 import { toast } from 'sonner';
+import CommercePagination from '@/components/commerce/CommercePagination';
 
 export default function LoanDashboard() {
   const [myLoans, setMyLoans] = useState<Loan[]>([]);
   const [myOffers, setMyOffers] = useState<LoanOffer[]>([]);
   const [availableLoans, setAvailableLoans] = useState<Loan[]>([]);
+  const [availablePage, setAvailablePage] = useState(1);
+  const [availableTotal, setAvailableTotal] = useState(0);
+  const availablePageSize = 12;
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+  }, [availablePage]);
 
   const loadDashboardData = async () => {
     try {
@@ -36,9 +40,13 @@ export default function LoanDashboard() {
       }
 
       // Load available loans for offering
-      const availableResult = await loansService.getAvailableLoans();
+      const availableResult = await loansService.getAvailableLoans(undefined, {
+        pageSize: availablePageSize,
+        offset: (availablePage - 1) * availablePageSize,
+      });
       if (availableResult.success) {
         setAvailableLoans(availableResult.loans || []);
+        setAvailableTotal(availableResult.total || 0);
       }
 
       // Load offers I've made
@@ -155,7 +163,15 @@ export default function LoanDashboard() {
             </CardHeader>
             <CardContent>
               {availableLoans.length > 0 ? (
-                <AvailableLoans loans={availableLoans} onOfferMade={loadDashboardData} />
+                <>
+                  <AvailableLoans loans={availableLoans} onOfferMade={loadDashboardData} />
+                  <CommercePagination
+                    page={availablePage}
+                    limit={availablePageSize}
+                    total={availableTotal}
+                    onPageChange={setAvailablePage}
+                  />
+                </>
               ) : (
                 <div className="text-center py-12">
                   <Target className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

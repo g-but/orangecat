@@ -48,6 +48,10 @@ const safeStorage = {
 }
 
 // Create the browser client with optimized configuration for authentication
+// Control debug logging via environment variable (default: only in development)
+const enableAuthDebug = process.env.NEXT_PUBLIC_SUPABASE_DEBUG === 'true' || 
+  (process.env.NEXT_PUBLIC_SUPABASE_DEBUG !== 'false' && process.env.NODE_ENV === 'development');
+
 const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: safeStorage, // Use safe storage wrapper
@@ -56,7 +60,7 @@ const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
     detectSessionInUrl: true,
     // Fixed: Aligned timeout with auth operations
     flowType: 'pkce',
-    debug: process.env.NODE_ENV === 'development',
+    debug: enableAuthDebug, // Controlled by NEXT_PUBLIC_SUPABASE_DEBUG env var
   },
   // Fixed: Increased timeout to match auth operations (20s)
   global: {
@@ -124,7 +128,7 @@ export const createSupabaseClient = () =>
       autoRefreshToken: true,
       detectSessionInUrl: true,
       flowType: 'pkce',
-      debug: process.env.NODE_ENV === 'development',
+      debug: enableAuthDebug, // Controlled by NEXT_PUBLIC_SUPABASE_DEBUG env var
     },
     global: {
       fetch: (url, options = {}) => {
@@ -133,7 +137,7 @@ export const createSupabaseClient = () =>
         const timeoutId = setTimeout(() => timeoutController.abort(), 20000);
 
         // Combine with existing signal if present
-        let combinedSignal = timeoutController.signal;
+        const combinedSignal = timeoutController.signal;
         if (options.signal) {
           // If there's an existing signal, abort our timeout when the existing signal aborts
           options.signal.addEventListener('abort', () => {
