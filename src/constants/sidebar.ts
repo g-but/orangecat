@@ -26,6 +26,7 @@ export const SIDEBAR_WIDTHS = {
 export const SIDEBAR_Z_INDEX = {
   SIDEBAR: 'z-40',
   OVERLAY: 'z-40',
+  TOOLTIP: 'z-50', // Tooltips appear above sidebar but below header
   HEADER: 'z-50',
   HEADER_VALUE: 50,
   SIDEBAR_VALUE: 40,

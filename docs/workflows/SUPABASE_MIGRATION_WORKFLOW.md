@@ -278,7 +278,7 @@ Use this checklist for every migration:
 
 ### Execution:
 
-- [ ] Run migration script: `node apply-migration.js`
+- [ ] Run migration script: `node scripts/db/apply-migration.js`
 - [ ] Check for 200 status code
 - [ ] Verify success message in response
 - [ ] Test features in application immediately

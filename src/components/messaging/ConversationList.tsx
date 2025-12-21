@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Users, MessageSquare, RefreshCw, Trash2 } from 'lucide-react';
 import AvatarLink from '@/components/ui/AvatarLink';
@@ -8,26 +9,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useConversations } from '@/features/messaging/hooks';
 import { toast } from 'sonner';
-
-interface Conversation {
-  id: string;
-  title: string | null;
-  is_group: boolean;
-  last_message_at: string;
-  last_message_preview: string | null;
-  last_message_sender_id: string;
-  participants: Array<{
-    user_id: string;
-    username: string;
-    name: string;
-    avatar_url: string;
-    role: string;
-    joined_at: string;
-    last_read_at: string;
-    is_active: boolean;
-  }>;
-  unread_count: number;
-}
+import type { Conversation } from '@/features/messaging/types';
 
 interface ConversationListProps {
   searchQuery: string;
@@ -161,6 +143,23 @@ export default function ConversationList({
     );
   });
 
+  const buildProfileHref = (participant?: Conversation['participants'][number]) => {
+    if (!participant) return null;
+    if (participant.username && typeof participant.username === 'string' && participant.username.trim()) {
+      return `/profiles/${encodeURIComponent(participant.username.trim())}`;
+    }
+    if (participant.user_id && typeof participant.user_id === 'string' && participant.user_id.trim()) {
+      return `/profiles/${encodeURIComponent(participant.user_id.trim())}`;
+    }
+    return null;
+  };
+
+  const getPrimaryParticipant = (conversation: Conversation) => {
+    return (conversation.participants || []).find(
+      p => p && p.is_active && p.user_id !== currentUserId
+    );
+  };
+
   const getConversationDisplayName = (conversation: Conversation) => {
     if (conversation.title) {
       return conversation.title;
@@ -186,6 +185,12 @@ export default function ConversationList({
       .map(p => p.name || p.username || 'Unknown')
       .filter(Boolean)
       .join(', ') + (otherParticipants.length > 3 ? ` +${otherParticipants.length - 3}` : '');
+  };
+
+  const getConversationProfileHref = (conversation: Conversation) => {
+    if (conversation.is_group) return null;
+    const primary = getPrimaryParticipant(conversation);
+    return buildProfileHref(primary);
   };
 
   const getConversationAvatar = (conversation: Conversation) => {
@@ -323,7 +328,17 @@ export default function ConversationList({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium text-gray-900 truncate">
-                      {getConversationDisplayName(conversation)}
+                      {(() => {
+                        const href = getConversationProfileHref(conversation);
+                        const name = getConversationDisplayName(conversation);
+                        return href ? (
+                          <Link href={href} className="hover:underline">
+                            {name}
+                          </Link>
+                        ) : (
+                          name
+                        );
+                      })()}
                     </h3>
                     {conversation.unread_count > 0 && (
                       <span className="bg-orange-500 text-white text-[11px] leading-4 rounded-full px-2 py-0.5">

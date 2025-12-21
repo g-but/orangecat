@@ -1,19 +1,7 @@
 import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
-import dynamic from 'next/dynamic';
 import { notFound, redirect } from 'next/navigation';
-
-const PublicProfileClient = dynamic(() => import('@/components/profile/PublicProfileClient'), {
-  loading: () => (
-    <div className="max-w-5xl mx-auto p-6">
-      <div className="animate-pulse space-y-4">
-        <div className="h-10 w-1/2 bg-gray-100 rounded" />
-        <div className="h-4 w-1/3 bg-gray-100 rounded" />
-        <div className="h-64 w-full bg-gray-100 rounded" />
-      </div>
-    </div>
-  ),
-});
+import ProfilePageClient from '@/components/profile/ProfilePageClient';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -234,9 +222,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
-      <PublicProfileClient
-        profile={profile}
-        projects={projects || []}
+      <ProfilePageClient
+        profile={profile as any}
+        projects={(projects || []) as any}
         stats={{
           projectCount,
           totalRaised,

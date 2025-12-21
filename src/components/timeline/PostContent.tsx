@@ -21,6 +21,7 @@ export function PostContent({ event }: PostContentProps) {
     avatar: event.metadata?.original_actor_avatar || event.actor.avatar || '/default-avatar.svg',
   };
   const originalDescription = event.metadata?.original_description || '';
+  const originalEventId = event.metadata?.original_event_id;
 
   // Get the content to display
   const getDisplayContent = () => {
@@ -65,7 +66,7 @@ export function PostContent({ event }: PostContentProps) {
       {/* Titles removed for fluid, threads-like design */}
 
       {/* Event Description/Content */}
-      {displayContent && !isRepost && (
+      {displayContent && (!isRepost || isQuoteRepost) && (
         <div className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-line break-words max-w-prose">
           {renderMarkdownToReact(displayContent)}
         </div>
@@ -95,7 +96,7 @@ export function PostContent({ event }: PostContentProps) {
       )}
 
       {/* Quoted Original Post (for quote reposts) */}
-      {isQuoteRepost && event.metadata?.original_event_id && (
+      {isQuoteRepost && originalEventId && (
         <div className="mt-3 overflow-hidden rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors">
           <div className="p-3 sm:p-4 space-y-2">
             <div className="flex items-start gap-3">
@@ -125,9 +126,19 @@ export function PostContent({ event }: PostContentProps) {
                 </div>
               </div>
             </div>
-            {originalDescription && (
+            {originalDescription ? (
               <div className="text-gray-900 text-[15px] leading-relaxed whitespace-pre-line break-words">
                 {renderMarkdownToReact(originalDescription)}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500">
+                Original post
+                <Link
+                  href={`?focus=${originalEventId}`}
+                  className="ml-2 text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  View
+                </Link>
               </div>
             )}
           </div>

@@ -95,19 +95,29 @@ export default function NewConversationModal({
       setCreatingId(profileId);
       setError(null);
 
-      const res = await fetch('/api/messages', {
+      // Use /api/messages/open which handles self / direct / group cases
+      const res = await fetch('/api/messages/open', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
         body: JSON.stringify({ participantIds: [profileId] }),
       });
 
       const data = await res.json();
 
       if (!res.ok || !data.conversationId) {
-        throw new Error(data.error || data.details?.[0]?.message || 'Failed to create conversation');
+        const errorMessage = data.error || data.details || data.hint || 'Failed to create conversation';
+        console.error('Failed to create conversation:', { 
+          status: res.status, 
+          error: data.error, 
+          details: data.details,
+          code: data.code,
+          hint: data.hint 
+        });
+        throw new Error(errorMessage);
       }
+      // Note: onCreated handler in parent already closes the modal via setShowNewModal(false)
       onCreated(data.conversationId);
-      onClose();
     } catch (e) {
       console.error('Error creating conversation:', e);
       setError(e instanceof Error ? e.message : 'Failed to create conversation');
@@ -187,13 +197,13 @@ export default function NewConversationModal({
                     creatingId === p.id && 'opacity-60'
                   )}
                   onClick={() => {
-                    if (!creatingId) startConversation(p.id)
+                    if (!creatingId) startConversation(p.id);
                   }}
                   onKeyDown={(e) => {
-                    if (creatingId) return
+                    if (creatingId) return;
                     if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      startConversation(p.id)
+                      e.preventDefault();
+                      startConversation(p.id);
                     }
                   }}
                 >
@@ -215,8 +225,8 @@ export default function NewConversationModal({
                     disabled={!!creatingId && creatingId !== p.id}
                     className="bg-orange-500 hover:bg-orange-600 text-white flex-shrink-0"
                     onClick={(e) => {
-                      e.stopPropagation()
-                      if (!creatingId) startConversation(p.id)
+                      e.stopPropagation();
+                      if (!creatingId) startConversation(p.id);
                     }}
                   >
                     {creatingId === p.id ? (

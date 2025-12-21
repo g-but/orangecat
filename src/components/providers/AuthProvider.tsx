@@ -75,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       switch (event) {
         case 'INITIAL_SESSION':
           // Initial session load - set state with existing session
+          logger.info('INITIAL_SESSION event received', { hasSession: !!session, hasUser: !!session?.user }, 'Auth');
           if (session?.user) {
             const storedUser = useAuthStore.getState().user;
 
@@ -93,11 +94,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Always clear profile on initial session to prevent stale data
             setInitialAuthState(session.user, session, null);
+            logger.info('Set initial auth state with user', { userId: session.user.id }, 'Auth');
             // Fetch profile in background
             fetchProfile().catch(err => {
               logger.warn('Failed to fetch profile on initial session', { error: err }, 'Auth');
             });
           } else {
+            logger.info('No session found, setting null auth state', undefined, 'Auth');
             setInitialAuthState(null, null, null);
           }
           break;
@@ -167,16 +170,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     listenerRef.current = { data: { subscription } };
 
     // Immediately sync any existing session once on mount to avoid early 401s
+    // Also set local state to ensure hydrated becomes true even if onAuthStateChange is delayed
     const primeSession = async () => {
       if (hasSyncedInitialSession.current) return;
       hasSyncedInitialSession.current = true;
+      logger.info('Starting prime session check', undefined, 'Auth');
       const { data } = await supabase.auth.getSession();
-      if (data?.session) {
+      logger.info('Prime session result', { hasSession: !!data?.session, hasUser: !!data?.session?.user }, 'Auth');
+
+      if (data?.session?.user) {
         await syncSessionToServer('INITIAL_SESSION', data.session);
+        // Set local state immediately to prevent loading state hang
+        setInitialAuthState(data.session.user, data.session, null);
+        logger.info('Prime session: set auth state with user', { userId: data.session.user.id }, 'Auth');
+        fetchProfile().catch(err => {
+          logger.warn('Failed to fetch profile during prime session', { error: err }, 'Auth');
+        });
+      } else {
+        // Critical: Set hydrated to true even when no session
+        // This prevents infinite loading state on unauthenticated pages
+        logger.info('Prime session: no user found, setting null auth state', undefined, 'Auth');
+        setInitialAuthState(null, null, null);
       }
     };
     primeSession().catch(error => {
       logger.warn('Failed to prime auth session on mount', { error }, 'Auth');
+      // Fallback: Force hydrated state after 3 seconds to prevent infinite loading
+      setTimeout(() => {
+        const currentState = useAuthStore.getState();
+        if (!currentState.hydrated) {
+          logger.warn('Force setting hydrated state after prime session failure', undefined, 'Auth');
+          setInitialAuthState(null, null, null);
+        }
+      }, 3000);
     });
 
     // Cleanup on unmount

@@ -1,20 +1,39 @@
+/**
+ * Conversation Messages API Route
+ *
+ * GET /api/messages/[conversationId] - Fetch messages with pagination
+ * POST /api/messages/[conversationId] - Send a new message
+ *
+ * @module api/messages/[conversationId]
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
-import { fetchConversationSummary, fetchMessages as svcFetchMessages, sendMessage as svcSendMessage } from '@/features/messaging/service.server';
+import {
+  fetchMessages as svcFetchMessages,
+  sendMessage as svcSendMessage,
+} from '@/features/messaging/service.server';
+import {
+  enforceRateLimit,
+  getRateLimitHeaders,
+  PAGINATION,
+  VALIDATION,
+  MESSAGE_TYPES,
+  PARTICIPANT_ROLES,
+} from '@/features/messaging/lib';
 
 // Schema for sending a message
 const sendMessageSchema = z.object({
-  content: z.string().min(1).max(1000),
-  messageType: z.enum(['text', 'image', 'file', 'system']).default('text'),
+  content: z.string().min(VALIDATION.MESSAGE_MIN_LENGTH).max(VALIDATION.MESSAGE_MAX_LENGTH),
+  messageType: z.enum([MESSAGE_TYPES.TEXT, MESSAGE_TYPES.IMAGE, MESSAGE_TYPES.FILE, MESSAGE_TYPES.SYSTEM]).default(MESSAGE_TYPES.TEXT),
   metadata: z.record(z.any()).optional(),
 });
 
-// Pagination constants
-const DEFAULT_PAGE_SIZE = 50;
-const MAX_PAGE_SIZE = 100;
-
+/**
+ * GET - Fetch messages for a conversation with cursor-based pagination
+ */
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ conversationId: string }> }
@@ -24,116 +43,127 @@ export async function GET(
     const { searchParams } = new URL(request.url);
 
     // Parse pagination params
-    const cursor = searchParams.get('cursor'); // ISO timestamp of oldest message loaded
+    const cursor = searchParams.get('cursor');
     const limitParam = searchParams.get('limit');
     const limit = Math.min(
-      parseInt(limitParam || String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE,
-      MAX_PAGE_SIZE
+      parseInt(limitParam || String(PAGINATION.MESSAGES_DEFAULT), 10) || PAGINATION.MESSAGES_DEFAULT,
+      PAGINATION.MESSAGES_MAX
     );
 
-    // Authenticate user from cookies
+    // Authenticate user
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Verify user is a participant in the conversation first
-    const { data: participant, error: partError } = await supabase
+    // Use admin client for participant check to bypass RLS
+    const admin = createAdminClient();
+
+    // Verify user is a participant
+    const { data: participant, error: partError } = await admin
       .from('conversation_participants')
-      .select('*')
+      .select('user_id, last_read_at, is_active')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
       .eq('is_active', true)
-      .single();
+      .maybeSingle();
 
     if (partError || !participant) {
-      // Check if conversation exists at all
-      const { data: convExists } = await supabase
+      const { data: convExists } = await admin
         .from('conversations')
         .select('id')
         .eq('id', conversationId)
-        .single();
+        .maybeSingle();
 
       if (!convExists) {
-        // Fallback: attempt client-like assembly for robustness (some RLS/view delays)
-        // Return a generic 404 but include a hint to let client try fallback if desired
-        return NextResponse.json({ error: 'Conversation not found', hint: 'client_fallback_allowed' }, { status: 404 });
+        return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
       }
-      return NextResponse.json({ error: 'Access denied', hint: 'client_fallback_allowed' }, { status: 403 });
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
     }
 
-    // Use service for messages + pagination
-    const { messages: sortedMessages, pagination } = await svcFetchMessages(conversationId, cursor || undefined, limit)
+    // Fetch messages using service
+    const { messages, pagination } = await svcFetchMessages(
+      conversationId,
+      cursor || undefined,
+      limit
+    );
 
-    // Get conversation info with participants using RPC or fallback to building it manually
-    let conversationData = null;
-
-    // Try to get from conversation_details view first (includes participants)
-    const { data: convDetails, error: convDetailsError } = await supabase
-      .from('conversation_details')
+    // Get conversation info
+    const { data: conv, error: convError } = await admin
+      .from('conversations')
       .select('*')
       .eq('id', conversationId)
       .single();
 
-    if (!convDetailsError && convDetails) {
-      conversationData = convDetails;
-    } else {
-      // Fallback: build conversation data manually
-      const { data: conv, error: convError } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('id', conversationId)
-        .single();
-
-      if (convError || !conv) {
-        return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
-      }
-
-      // Fetch participants separately
-      const { data: participants } = await supabase
-        .from('conversation_participants')
-        .select(`
-          user_id,
-          role,
-          joined_at,
-          last_read_at,
-          is_active,
-          profiles:user_id (
-            id,
-            username,
-            name,
-            avatar_url
-          )
-        `)
-        .eq('conversation_id', conversationId);
-
-      // Transform participants to expected format
-      const formattedParticipants = (participants || []).map(p => ({
-        user_id: p.user_id,
-        username: (p.profiles as any)?.username || '',
-        name: (p.profiles as any)?.name || '',
-        avatar_url: (p.profiles as any)?.avatar_url || '',
-        role: p.role,
-        joined_at: p.joined_at,
-        last_read_at: p.last_read_at,
-        is_active: p.is_active,
-      }));
-
-      conversationData = {
-        ...conv,
-        participants: formattedParticipants,
-        unread_count: 0, // Calculate if needed
-      };
+    if (convError || !conv) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ conversation: conversationData, messages: sortedMessages, pagination });
+    // Fetch participants
+    const { data: participants } = await admin
+      .from('conversation_participants')
+      .select(
+        `
+        user_id,
+        role,
+        joined_at,
+        last_read_at,
+        is_active,
+        profiles:user_id (id, username, name, avatar_url)
+      `
+      )
+      .eq('conversation_id', conversationId);
+
+    // Format participants
+    const formattedParticipants = (participants || []).map((p: any) => ({
+      user_id: p.user_id,
+      username: p.profiles?.username || '',
+      name: p.profiles?.name || '',
+      avatar_url: p.profiles?.avatar_url || '',
+      role: p.role,
+      joined_at: p.joined_at,
+      last_read_at: p.last_read_at,
+      is_active: p.is_active,
+    }));
+
+    // Calculate unread count
+    const userParticipant = formattedParticipants.find((p) => p.user_id === user.id);
+    let unreadCount = 0;
+    if (userParticipant?.last_read_at) {
+      const { count } = await admin
+        .from('messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', user.id)
+        .gt('created_at', userParticipant.last_read_at)
+        .eq('is_deleted', false);
+      unreadCount = count || 0;
+    }
+
+    return NextResponse.json({
+      conversation: {
+        ...conv,
+        participants: formattedParticipants,
+        unread_count: unreadCount,
+      },
+      messages,
+      pagination,
+    });
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[api/messages/[id]] GET error:', message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
+/**
+ * POST - Send a new message to the conversation
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ conversationId: string }> }
@@ -141,55 +171,86 @@ export async function POST(
   try {
     const { conversationId } = await params;
 
-    // Authenticate user from cookies
+    // Authenticate user
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // Rate limiting
+    const rateLimitResult = enforceRateLimit('MESSAGE_SEND', user.id);
+    if (!rateLimitResult.allowed) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded. Please slow down.' },
+        { status: 429, headers: getRateLimitHeaders(rateLimitResult) }
+      );
+    }
+
+    // Parse and validate body
     const body = await request.json();
     const validation = sendMessageSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({
-        error: 'Invalid request data',
-        details: validation.error.issues
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid request data',
+          details: validation.error.issues,
+        },
+        { status: 400 }
+      );
     }
 
     const { content, messageType, metadata } = validation.data;
 
-    // Ensure membership: if missing or inactive, add or activate user membership
-    const { data: participantMaybe } = await supabase
+    // Use admin client to bypass RLS for participant check
+    const admin = createAdminClient();
+
+    // Check membership (with auto-reactivation for soft-deleted participants)
+    const { data: participantMaybe, error: partError } = await admin
       .from('conversation_participants')
       .select('user_id, is_active')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!participantMaybe) {
-      try {
-        const admin = createAdminClient();
-        await admin
-          .from('conversation_participants')
-          .insert({ conversation_id: conversationId, user_id: user.id, role: 'member', is_active: true });
-      } catch {
-        return NextResponse.json({ error: 'Not a participant in this conversation' }, { status: 403 });
-      }
-    } else if ((participantMaybe as any).is_active === false) {
-      await supabase
+    if (partError || !participantMaybe) {
+      // Not a participant - cannot send
+      return NextResponse.json(
+        { error: 'Not a participant in this conversation' },
+        { status: 403 }
+      );
+    }
+
+    // Reactivate if soft-deleted
+    if ((participantMaybe as any).is_active === false) {
+      await admin
         .from('conversation_participants')
         .update({ is_active: true, last_read_at: new Date().toISOString() })
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id);
     }
 
-    // Send using service; realtime will sync full message
-    const newId = await svcSendMessage(conversationId, user.id, content, messageType, metadata || null)
-    return NextResponse.json({ success: true, id: newId })
+    // Send message
+    const newId = await svcSendMessage(
+      conversationId,
+      user.id,
+      content,
+      messageType,
+      metadata || null
+    );
+
+    return NextResponse.json(
+      { success: true, id: newId },
+      { headers: getRateLimitHeaders(rateLimitResult) }
+    );
   } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[api/messages/[id]] POST error:', message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

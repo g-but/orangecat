@@ -1,20 +1,8 @@
 import { Briefcase } from 'lucide-react'
-import { z } from 'zod'
 import type { EntityConfig, FieldGroup } from '@/components/create/types'
 import { assetGuidanceContent, assetDefaultGuidance } from '@/lib/entity-guidance/asset-guidance'
-import { CURRENCY_CODES, currencySelectOptions, DEFAULT_CURRENCY } from '@/config/currencies'
-
-export const assetSchema = z.object({
-  title: z.string().min(3).max(100),
-  type: z.enum(['real_estate', 'business', 'vehicle', 'equipment', 'securities', 'other']),
-  description: z.string().max(2000).optional().nullable(),
-  location: z.string().max(200).optional().nullable(),
-  estimated_value: z.number().positive().optional().nullable(),
-  currency: z.enum(CURRENCY_CODES).default(DEFAULT_CURRENCY),
-  documents: z.array(z.string().url()).optional().nullable(),
-})
-
-export type AssetFormData = z.infer<typeof assetSchema>
+import { currencySelectOptions, DEFAULT_CURRENCY } from '@/config/currencies'
+import { assetSchema, type AssetFormData } from '@/lib/validation'
 
 const fieldGroups: FieldGroup[] = [
   {
@@ -76,7 +64,7 @@ export const assetConfig: EntityConfig<AssetFormData> = {
   colorTheme: 'blue',
   backUrl: '/assets',
   apiEndpoint: '/api/assets',
-  successUrl: '/assets',
+  successUrl: '/assets/[id]',
   pageTitle: 'Create Asset',
   pageDescription: 'List an asset you own. You can use it later as collateral for loans.',
   formTitle: 'Asset Details',

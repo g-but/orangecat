@@ -1,5 +1,3 @@
-'use server';
-
 import { redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import HomePublicClient from '@/components/home/HomePublicClient';

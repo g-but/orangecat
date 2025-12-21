@@ -50,7 +50,7 @@ npm run w
 **Quick Start:**
 
 ```bash
-node apply-migration.js supabase/migrations/your-migration.sql
+node scripts/db/apply-migration.js supabase/migrations/your-migration.sql
 ```
 
 ---
@@ -138,12 +138,12 @@ node apply-migration.js migration.sql
 
 ## 🔧 Essential Scripts
 
-### Migration Scripts (Project Root)
+### Migration Scripts
 
 **Primary script:**
 
 ```bash
-apply-social-features-migration.js
+node scripts/db/apply-social-features-migration.js
 ```
 
 - Auto-reads token from `.env.local`
@@ -153,7 +153,7 @@ apply-social-features-migration.js
 **Alternative script:**
 
 ```bash
-apply-timeline-migration.js
+node scripts/db/apply-timeline-migration.js
 ```
 
 - Same functionality as above
@@ -177,7 +177,7 @@ grep SUPABASE_ACCESS_TOKEN .env.local
 # supabase/migrations/YYYYMMDD_description.sql
 
 # 3. Apply migration
-node apply-migration.js supabase/migrations/YYYYMMDD_description.sql
+node scripts/db/apply-migration.js supabase/migrations/YYYYMMDD_description.sql
 
 # 4. Verify
 # Run verification queries from MIGRATION_QUICK_REFERENCE.md

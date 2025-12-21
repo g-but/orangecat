@@ -1,6 +1,40 @@
 {
-  "ignore_dirs": ["node_modules", ".git", ".next", "build", "dist"]
+  "ignore_dirs": [
+    "node_modules",
+    ".git",
+    ".next",
+    "build",
+    "dist",
+    "mcp-servers",
+    "test-results",
+    "logs",
+    ".playwright-mcp",
+    "__pycache__",
+    "coverage",
+    ".cache",
+    "tmp"
+  ],
+  "root_restrict_files": [".watchmanconfig"],
+  "settle": 20
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

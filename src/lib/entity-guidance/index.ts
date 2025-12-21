@@ -5,8 +5,8 @@
  * Used by the unified EntityForm component.
  *
  * Created: 2025-12-03
- * Last Modified: 2025-12-04
- * Last Modified Summary: Added Circle and Loan guidance exports
+ * Last Modified: 2025-12-16
+ * Last Modified Summary: Consolidated project guidance, removed legacy imports
  */
 
 // Product guidance
@@ -44,7 +44,27 @@ export {
   type LoanFieldType,
 } from './loan-guidance';
 
-// Re-export existing guidance from lib/
+// Asset guidance
+export {
+  assetGuidanceContent,
+  assetDefaultGuidance,
+} from './asset-guidance';
+
+// Organization guidance
+export {
+  organizationGuidanceContent,
+  organizationDefaultGuidance,
+  type OrganizationFieldType,
+} from './organization-guidance';
+
+// Project guidance (single source of truth - in this directory)
+export {
+  projectGuidanceContent,
+  projectDefaultGuidance,
+  type ProjectFieldType,
+} from './project-guidance';
+
+// Re-export profile/wallet guidance from lib/ (these are used elsewhere)
 export {
   profileGuidanceContent,
   profileDefaultContent,
@@ -56,10 +76,4 @@ export {
   walletDefaultContent,
   type WalletFieldType,
 } from '@/lib/wallet-guidance';
-
-export {
-  projectGuidanceContent,
-  projectDefaultContent,
-  type ProjectFieldType,
-} from '@/lib/project-guidance';
 

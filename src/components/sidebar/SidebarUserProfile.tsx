@@ -36,14 +36,14 @@ export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarU
 
   return (
     <div
-      className={`px-2 sm:px-3 lg:px-4 py-2 sm:py-3 lg:py-4 border-b border-gray-100 flex-shrink-0 ${
+      className={`px-2 sm:px-3 lg:px-3 py-2 sm:py-3 lg:py-3 border-b border-gray-100 flex-shrink-0 transition-all duration-200 ${
         isExpanded ? 'block' : 'hidden lg:flex lg:flex-col lg:items-center'
       }`}
     >
       <Link
         href={profileUrl}
-        className={`flex items-center hover:bg-gray-50 p-1.5 sm:p-2 lg:p-3 rounded-xl transition-all duration-200 group w-full ${
-          isExpanded ? 'space-x-2 sm:space-x-3' : 'lg:flex-col lg:space-y-2 lg:space-x-0'
+        className={`flex items-center hover:bg-gray-50 p-1.5 sm:p-2 lg:p-2 rounded-xl transition-all duration-200 group w-full ${
+          isExpanded ? 'space-x-2 sm:space-x-3' : 'lg:flex-col lg:space-y-2 lg:space-x-0 lg:justify-center'
         }`}
         onClick={(e) => {
           // Only call onNavigate if provided (for mobile sidebar closing)
@@ -62,6 +62,7 @@ export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarU
               height={isExpanded ? 40 : 36}
               className="rounded-full object-cover transition-all duration-300 group-hover:ring-2 group-hover:ring-tiffany-200"
               onError={() => setAvatarError(true)}
+              unoptimized={profile.avatar_url?.includes('supabase.co')}
             />
           ) : (
             <DefaultAvatar
@@ -71,7 +72,7 @@ export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarU
           )}
           <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 border-2 border-white rounded-full" />
         </div>
-        <div className={`flex-1 min-w-0 ${isExpanded ? 'block' : 'hidden lg:hidden'}`}>
+        <div className={`flex-1 min-w-0 transition-all duration-200 ${isExpanded ? 'block opacity-100' : 'hidden lg:hidden opacity-0'}`}>
           <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate group-hover:text-tiffany-700 transition-colors">
             {profile.name || profile.username || 'User'}
           </p>

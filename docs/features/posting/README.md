@@ -1,4 +1,7 @@
 # Posting System Documentation
+created_date: 2024-11-01
+last_modified_date: 2025-12-11
+last_modified_summary: Added sign-in prompt and quote repost text rendering fix
 
 ## Overview
 

@@ -1,8 +1,8 @@
 # Messaging System Notes
 
 created_date: 2025-12-08  
-last_modified_date: 2025-12-10  
-last_modified_summary: WhatsApp-style ticks + safer bulk delete UX  
+last_modified_date: 2025-12-11  
+last_modified_summary: Link avatars/names in DM list and header to profiles  
 
 - Conversations now load via `get_user_conversations` RPC to avoid duplicate rows from older views.  
 - Detail view fallback uses `conversation_details` with a safe `maybeSingle` to prevent "Conversation not found" when multiple rows existed.  

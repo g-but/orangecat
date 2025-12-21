@@ -11,7 +11,7 @@
 grep SUPABASE_ACCESS_TOKEN .env.local
 
 # 2. Apply migration
-node apply-migration.js supabase/migrations/your-migration.sql
+node scripts/db/apply-migration.js supabase/migrations/your-migration.sql
 
 # 3. Verify in Supabase SQL Editor
 SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';

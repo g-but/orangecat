@@ -40,6 +40,9 @@ export interface Message {
     name: string
     avatar_url: string | null
   }
+  is_read?: boolean
+  is_delivered?: boolean
+  status?: 'pending' | 'failed' | 'sent' | 'delivered' | 'read'
 }
 
 export interface Pagination {

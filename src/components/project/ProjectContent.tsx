@@ -32,7 +32,7 @@ interface ProjectContentProps {
   };
 }
 
-export function ProjectContent({ project }: ProjectContentProps) {
+export default function ProjectContent({ project }: ProjectContentProps) {
   const progressPercentage = project.goal_amount
     ? Math.min(((project.raised_amount || 0) / project.goal_amount) * 100, 100)
     : 0;

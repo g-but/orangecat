@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import type { Database } from '@/types/database'
 
 export async function GET(_req: NextRequest) {
   try {
@@ -15,12 +16,18 @@ export async function GET(_req: NextRequest) {
     // list user conversations, then filter client-side for a single-participant DM.
     let conversationId: string | null = null
     {
+      type ConversationDetail = {
+        id: string
+        is_group: boolean
+        participants: Array<{ user_id: string }> | null
+        created_at: string
+      }
       const { data: convs } = await supabase
         .from('conversation_details')
         .select('*')
         .order('created_at', { ascending: false })
       if (Array.isArray(convs)) {
-        const selfConv = convs.find((c: any) => {
+        const selfConv = (convs as ConversationDetail[]).find((c) => {
           if (c.is_group) return false
           const parts = Array.isArray(c.participants) ? c.participants : []
           return parts.length === 1 && parts[0]?.user_id === user.id
@@ -55,18 +62,27 @@ export async function GET(_req: NextRequest) {
       }
 
       const createWithServer = async () => {
+        const conversationInsert: Database['public']['Tables']['conversations']['Insert'] = {
+          created_by: user.id,
+          is_group: false,
+        }
         const { data: convIns, error: convErr } = await supabase
           .from('conversations')
-          .insert({ created_by: user.id, is_group: false })
+          .insert(conversationInsert)
           .select('id')
           .single()
         if (convErr || !convIns) {
           throw convErr || new Error('conv insert failed')
         }
         conversationId = convIns.id as string
+        const participantInsert: Database['public']['Tables']['conversation_participants']['Insert'] = {
+          conversation_id: conversationId,
+          user_id: user.id,
+          role: 'member',
+        }
         const { error: partErr } = await supabase
           .from('conversation_participants')
-          .insert({ conversation_id: conversationId, user_id: user.id, role: 'member' })
+          .insert(participantInsert)
         if (partErr) {
           // Roll back conversation if participant insert fails
           await supabase.from('conversations').delete().eq('id', conversationId)
@@ -81,18 +97,27 @@ export async function GET(_req: NextRequest) {
         if (process.env.NODE_ENV !== 'production') {
           try {
             const admin = createAdminClient()
+            const conversationInsert: Database['public']['Tables']['conversations']['Insert'] = {
+              created_by: user.id,
+              is_group: false,
+            }
             const { data: convIns, error: convErr } = await admin
               .from('conversations')
-              .insert({ created_by: user.id, is_group: false })
+              .insert(conversationInsert)
               .select('id')
               .single()
             if (convErr || !convIns) {
               return NextResponse.json({ error: 'Failed to create conversation (admin)', details: (convErr as any)?.message || (convErr as any)?.code }, { status: 500 })
             }
             conversationId = convIns.id as string
+            const participantInsert: Database['public']['Tables']['conversation_participants']['Insert'] = {
+              conversation_id: conversationId,
+              user_id: user.id,
+              role: 'member',
+            }
             const { error: partErr } = await admin
               .from('conversation_participants')
-              .insert({ conversation_id: conversationId, user_id: user.id, role: 'member' })
+              .insert(participantInsert)
             if (partErr) {
               await admin.from('conversations').delete().eq('id', conversationId)
               return NextResponse.json({ error: 'Failed to add participant (admin)', details: (partErr as any)?.message || (partErr as any)?.code }, { status: 500 })

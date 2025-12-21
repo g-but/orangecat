@@ -13,7 +13,7 @@
 
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
-import { navigationLabels } from '@/config/navigationConfig';
+import { navigationLabels } from '@/config/navigation';
 import { SIDEBAR_SPACING } from '@/constants/sidebar';
 import { SidebarNavItem } from './SidebarNavItem';
 
@@ -49,9 +49,9 @@ export function SidebarNavigation({
 
           return (
             <div key={section.id} className={`space-y-1 sm:space-y-2 ${SIDEBAR_SPACING.PADDING_X}`}>
-              {/* Section Header */}
+              {/* Section Header - shows when expanded (hover or manual) */}
               <div
-                className={`flex items-center justify-between ${isExpanded ? 'px-0' : 'px-0'} ${isExpanded ? 'block' : 'hidden lg:block lg:opacity-0 lg:max-h-0 lg:overflow-hidden'}`}
+                className={`flex items-center justify-between transition-all duration-200 ${isExpanded ? 'block px-0' : 'hidden lg:hidden'}`}
               >
                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   {section.title}

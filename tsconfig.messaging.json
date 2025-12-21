@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "skipLibCheck": true,
+    "incremental": false
+  },
+  "include": [
+    "src/components/messaging/MessageView/index.tsx",
+    "src/components/messaging/MessageView/MessageHeader.tsx",
+    "src/components/messaging/MessageView/MessageList.tsx",
+    "src/components/messaging/MessageView/MessageItem.tsx",
+    "src/components/messaging/MessageComposer.tsx",
+    "src/hooks/useMessageSubscription.ts",
+    "src/features/messaging/hooks/useMessages.ts",
+    "src/features/messaging/hooks/useReadReceipts.ts",
+    "src/features/messaging/lib/**/*.ts",
+    "src/features/messaging/types.ts",
+    "src/lib/supabase/browser.ts"
+  ]
+}

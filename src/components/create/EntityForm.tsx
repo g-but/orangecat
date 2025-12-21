@@ -23,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { ZodError } from 'zod';
+import { toast } from 'sonner';
 
 import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
@@ -114,7 +115,7 @@ export function EntityForm<T extends Record<string, any>>({
 
   // Field change handler
   const handleFieldChange = useCallback((field: keyof T, value: any) => {
-    let updatedData = { ...formState.data, [field]: value };
+    const updatedData = { ...formState.data, [field]: value };
 
     // Auto-generate slug from name for organizations
     if (field === 'name' && config.entityType === 'organization') {
@@ -159,6 +160,7 @@ export function EntityForm<T extends Record<string, any>>({
       const response = await fetch(url, {
         method: mode === 'edit' ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Include cookies so server can read auth session
         body: JSON.stringify(validatedData),
       });
 
@@ -169,12 +171,27 @@ export function EntityForm<T extends Record<string, any>>({
 
       const result = await response.json();
 
+      // Show success toast
+      toast.success(`${config.name} ${mode === 'create' ? 'created' : 'updated'} successfully!`, {
+        description: mode === 'create'
+          ? `Your ${config.name.toLowerCase()} "${result.data?.title || result.data?.name || ''}" has been created.`
+          : `Your changes have been saved.`,
+        duration: 4000,
+      });
+
       // Success callback
       if (onSuccess) {
         onSuccess(result.data);
       } else {
-        // Default: redirect to success URL
-        const redirectUrl = config.successUrl.replace(':id', result.data?.id || '');
+        // Default: redirect to success URL with dynamic placeholder replacement
+        // Supports both :field and [field] patterns
+        let redirectUrl = config.successUrl;
+        if (result.data) {
+          // Replace :field patterns (e.g., :id, :slug)
+          redirectUrl = redirectUrl.replace(/:(\w+)/g, (_, field) => result.data[field] || '');
+          // Replace [field] patterns (e.g., [id], [slug])
+          redirectUrl = redirectUrl.replace(/\[(\w+)\]/g, (_, field) => result.data[field] || '');
+        }
         router.push(redirectUrl);
       }
     } catch (error) {
@@ -192,6 +209,13 @@ export function EntityForm<T extends Record<string, any>>({
           errors: { general: errorMsg },
           isSubmitting: false,
         }));
+
+        // Show error toast
+        toast.error(`Failed to ${mode} ${config.name.toLowerCase()}`, {
+          description: errorMsg,
+          duration: 5000,
+        });
+
         if (onError) {
           onError(errorMsg);
         }
@@ -201,7 +225,9 @@ export function EntityForm<T extends Record<string, any>>({
 
   // Check visibility conditions for fields
   const isFieldVisible = useCallback((field: { showWhen?: { field: string; value: string | string[] | boolean } }) => {
-    if (!field.showWhen) return true;
+    if (!field.showWhen) {
+      return true;
+    }
     const { field: condField, value: condValue } = field.showWhen;
     const currentValue = formState.data[condField as keyof T];
     
@@ -267,7 +293,9 @@ export function EntityForm<T extends Record<string, any>>({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {group.fields.map((field) => {
-                        if (!isFieldVisible(field)) return null;
+                        if (!isFieldVisible(field)) {
+                          return null;
+                        }
 
                         return (
                           <div

@@ -216,5 +216,11 @@ export default function ProfileWalletSection({
   }
 
   // No wallets and not own profile - show nothing
-  return null;
+  return (
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6 text-center text-gray-600">
+      <Bitcoin className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+      <h3 className="text-lg font-semibold text-gray-700 mb-1">No wallets shared yet</h3>
+      <p className="text-sm text-gray-500">This profile has not added any wallets you can send to yet.</p>
+    </div>
+  );
 }
