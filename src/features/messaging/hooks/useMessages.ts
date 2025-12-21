@@ -77,7 +77,7 @@ export function useMessages(
    */
   const fetchMessages = useCallback(
     async (cursor?: string) => {
-      if (!conversationId || !enabled) return;
+      if (!conversationId || !enabled) {return;}
 
       try {
         if (!cursor) {
@@ -156,7 +156,7 @@ export function useMessages(
    * Fallback to client-side Supabase for 401 errors
    */
   const fetchFromClient = useCallback(async () => {
-    if (!conversationId) return;
+    if (!conversationId) {return;}
 
     try {
       const { data: conv } = await supabase
@@ -192,7 +192,7 @@ export function useMessages(
    * Load older messages
    */
   const loadMore = useCallback(async () => {
-    if (!pagination?.hasMore || isLoadingMore || !pagination.nextCursor) return;
+    if (!pagination?.hasMore || isLoadingMore || !pagination.nextCursor) {return;}
     await fetchMessages(pagination.nextCursor);
   }, [pagination, isLoadingMore, fetchMessages]);
 
@@ -201,24 +201,36 @@ export function useMessages(
    */
   const addOptimisticMessage = useCallback((message: Message) => {
     setMessages((prev) => {
-      // Deduplicate first
-      const uniquePrev = Array.from(
-        new Map(prev.map((m) => [m.id, m])).values()
-      );
+      // Use Map to ensure no duplicates
+      const messageMap = new Map<string, Message>();
+      prev.forEach((m) => {
+        messageMap.set(m.id, m);
+      });
       
-      if (uniquePrev.find((m) => m.id === message.id)) {
-        return uniquePrev;
+      // Check if message already exists (shouldn't for optimistic)
+      if (messageMap.has(message.id)) {
+        debugLog('[useMessages] Optimistic message already exists, skipping:', message.id);
+        return Array.from(messageMap.values());
       }
+
+      const messageWithStatus = applyReadStatus([message])[0];
+      messageMap.set(message.id, messageWithStatus);
       
-      const withNew = [...uniquePrev, message];
-      const unique = Array.from(
-        new Map(withNew.map((m) => [m.id, m])).values()
-      );
-      return unique.sort(
+      const result = Array.from(messageMap.values()).sort(
         (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
       );
+
+      // Final deduplication check
+      const finalMap = new Map<string, Message>();
+      result.forEach((m) => {
+        if (!finalMap.has(m.id)) {
+          finalMap.set(m.id, m);
+        }
+      });
+
+      return Array.from(finalMap.values());
     });
-  }, []);
+  }, [applyReadStatus]);
 
   /**
    * Replace optimistic message with real one
@@ -226,23 +238,43 @@ export function useMessages(
   const confirmMessage = useCallback(
     (tempId: string, realMessage: Message) => {
       setMessages((prev) => {
-        // Deduplicate first
-        const uniquePrev = Array.from(
-          new Map(prev.map((m) => [m.id, m])).values()
-        );
+        // Use Map to ensure no duplicates
+        const messageMap = new Map<string, Message>();
         
-        const withoutOptimistic = uniquePrev.filter((m) => m.id !== tempId);
-        if (withoutOptimistic.find((m) => m.id === realMessage.id)) {
-          return withoutOptimistic;
+        // Add all messages except the temp one
+        prev.forEach((m) => {
+          if (m.id !== tempId) {
+            // If real message already exists, keep the most recent
+            if (m.id === realMessage.id) {
+              const existing = messageMap.get(m.id);
+              if (!existing || new Date(m.created_at) > new Date(existing.created_at)) {
+                messageMap.set(m.id, m);
+              }
+            } else {
+              messageMap.set(m.id, m);
+            }
+          }
+        });
+        
+        // Add the real message if it doesn't already exist
+        if (!messageMap.has(realMessage.id)) {
+          const messageWithStatus = applyReadStatus([realMessage])[0];
+          messageMap.set(realMessage.id, messageWithStatus);
         }
-        const messageWithStatus = applyReadStatus([realMessage])[0];
-        const withNew = [...withoutOptimistic, messageWithStatus];
-        const unique = Array.from(
-          new Map(withNew.map((m) => [m.id, m])).values()
-        );
-        return unique.sort(
+
+        const result = Array.from(messageMap.values()).sort(
           (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
+
+        // Final deduplication check
+        const finalMap = new Map<string, Message>();
+        result.forEach((m) => {
+          if (!finalMap.has(m.id)) {
+            finalMap.set(m.id, m);
+          }
+        });
+
+        return Array.from(finalMap.values());
       });
     },
     [applyReadStatus]
@@ -261,31 +293,43 @@ export function useMessages(
   const handleNewMessage = useCallback(
     (message: Message) => {
       setMessages((prev) => {
-        // Deduplicate first
-        const uniquePrev = Array.from(
-          new Map(prev.map((m) => [m.id, m])).values()
-        );
+        // Deduplicate first - use Map to ensure no duplicates by ID
+        const messageMap = new Map<string, Message>();
+        prev.forEach((m) => {
+          // Keep the most recent version if duplicate exists
+          const existing = messageMap.get(m.id);
+          if (!existing || new Date(m.created_at) > new Date(existing.created_at)) {
+            messageMap.set(m.id, m);
+          }
+        });
         
-        const existingIndex = uniquePrev.findIndex((m) => m.id === message.id);
+        const uniquePrev = Array.from(messageMap.values());
         const messageWithStatus = applyReadStatus([message])[0];
 
-        if (existingIndex >= 0) {
-          // Update existing
-          const updated = [...uniquePrev];
-          updated[existingIndex] = { ...updated[existingIndex], ...messageWithStatus };
-          return updated.sort(
-            (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
+        // Check if message already exists
+        const existingMessage = messageMap.get(message.id);
+        if (existingMessage) {
+          // Update existing message with latest data
+          messageMap.set(message.id, { ...existingMessage, ...messageWithStatus });
+        } else {
+          // Add new message
+          messageMap.set(message.id, messageWithStatus);
         }
 
-        // Add new and deduplicate
-        const withNew = [...uniquePrev, messageWithStatus];
-        const unique = Array.from(
-          new Map(withNew.map((m) => [m.id, m])).values()
-        );
-        return unique.sort(
+        // Convert back to array, sort, and ensure no duplicates
+        const result = Array.from(messageMap.values()).sort(
           (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
         );
+
+        // Final safety check - should never have duplicates at this point
+        const finalMap = new Map<string, Message>();
+        result.forEach((m) => {
+          if (!finalMap.has(m.id)) {
+            finalMap.set(m.id, m);
+          }
+        });
+
+        return Array.from(finalMap.values());
       });
     },
     [applyReadStatus]
@@ -295,7 +339,7 @@ export function useMessages(
    * Mark conversation as read
    */
   const markAsRead = useCallback(async () => {
-    if (!conversationId || !userId) return;
+    if (!conversationId || !userId) {return;}
 
     try {
       await fetch(API_ROUTES.CONVERSATION_READ(conversationId), {
