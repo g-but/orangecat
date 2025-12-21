@@ -100,6 +100,8 @@ export function useRealtimeConnection(
 
       // Check if channel is still subscribed
       const channelState = channelRef.current.state;
+      debugLog('[useRealtimeConnection] Heartbeat check - channel state:', channelState);
+      
       if (channelState !== 'joined' && channelState !== 'joining') {
         debugLog('[useRealtimeConnection] Heartbeat detected dead connection, reconnecting...');
         updateStatus('reconnecting');
@@ -107,7 +109,7 @@ export function useRealtimeConnection(
         attemptReconnect();
       }
     }, 30000); // Check every 30 seconds
-  }, []);
+  }, [updateStatus, attemptReconnect]);
 
   /**
    * Stop heartbeat
@@ -158,6 +160,18 @@ export function useRealtimeConnection(
 
     updateStatus('reconnecting');
 
+    // Set a timeout to detect if subscription never completes
+    const subscriptionTimeout = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      const channelState = channelRef.current?.state;
+      if (channelState !== 'joined' && channelState !== 'joining') {
+        debugLog('[useRealtimeConnection] Subscription timeout - channel state:', channelState);
+        updateStatus('error', new Error('Subscription timeout - connection failed'));
+        stopHeartbeat();
+        attemptReconnect();
+      }
+    }, 10000); // 10 second timeout
+
     const channel = supabase
       .channel('realtime-connection-monitor', {
         config: {
@@ -167,6 +181,11 @@ export function useRealtimeConnection(
       })
       .subscribe(async (subscribeStatus, err) => {
         if (!isMountedRef.current) return;
+
+        // Clear timeout on any status change
+        clearTimeout(subscriptionTimeout);
+
+        debugLog('[useRealtimeConnection] Subscription status:', subscribeStatus, err?.message);
 
         if (subscribeStatus === 'SUBSCRIBED') {
           reconnectAttemptsRef.current = 0;
@@ -179,8 +198,10 @@ export function useRealtimeConnection(
               connected_at: new Date().toISOString(),
               user_agent: navigator.userAgent,
             });
+            debugLog('[useRealtimeConnection] Presence tracked successfully');
           } catch (err) {
             debugLog('[useRealtimeConnection] Error tracking presence:', err);
+            // Don't fail the connection if presence tracking fails
           }
         } else if (subscribeStatus === 'CHANNEL_ERROR' || subscribeStatus === 'TIMED_OUT') {
           debugLog('[useRealtimeConnection] Connection error:', err);
@@ -192,6 +213,9 @@ export function useRealtimeConnection(
           updateStatus('disconnected');
           stopHeartbeat();
           attemptReconnect();
+        } else {
+          // Handle other statuses (JOINING, etc.)
+          debugLog('[useRealtimeConnection] Intermediate status:', subscribeStatus);
         }
       });
 
