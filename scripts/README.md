@@ -7,6 +7,8 @@ This directory contains all automation scripts organized by purpose.
 - **`analysis/`** - Bundle analysis, documentation checking, and optimization tools
 - **`auth-fix/`** - Scripts to fix authentication and RLS policy issues
 - **`db/`** - Database operations, migrations, and schema management
+  - Migration scripts moved from root: `apply-migration.js`, `apply-*-migration.js`
+  - Old schema files archived in `db/archive/`
 - **`deployment/`** - Deployment, production setup, and monitoring scripts
 - **`dev/`** - Development helpers, local setup, and debugging tools
 - **`diagnostics/`** - Health checks and system diagnostics
@@ -17,6 +19,7 @@ This directory contains all automation scripts organized by purpose.
 - **`schema-fix/`** - Database schema fixes and migrations
 - **`storage/`** - Supabase storage bucket setup and management
 - **`test/`** - Testing utilities and validation scripts
+  - Test/debug scripts moved from root: `test-*.js`, `check-*.js`, `debug-*.js`
 
 ## Usage
 

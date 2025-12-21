@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { fetchUserConversations, openConversation } from '@/features/messaging/service.server';
 
@@ -12,19 +13,39 @@ const createConversationSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
+    const supabase = await createServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    console.log('Messages API: Fetching conversations for user', user.id);
     const url = new URL(request.url)
     const limitParam = url.searchParams.get('limit')
     const limit = Math.min(parseInt(limitParam || '30', 10) || 30, 100)
     const conversations = await fetchUserConversations(limit);
+    console.log('Messages API: Returning', conversations.length, 'conversations');
     return NextResponse.json({ conversations });
   } catch (error) {
     console.error('Messages API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error('Error details:', { errorMessage, errorStack });
+    return NextResponse.json({ 
+      error: 'Internal server error',
+      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
+    }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    const supabase = await createServerClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const validation = createConversationSchema.safeParse(body);
 

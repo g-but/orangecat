@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { BookOpen, Plus } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import { useComposer } from '@/contexts/ComposerContext';
+import Loading from '@/components/Loading';
 
 const SocialTimeline = dynamic(() => import('@/components/timeline/SocialTimeline'), {
   ssr: false,
@@ -26,10 +27,10 @@ const PostComposerMobile = dynamic(() => import('@/components/timeline/PostCompo
  *
  * Built with best practices: DRY, maintainable, modular, high quality code
  */
-export default function MyTimelinePage() {
+function TimelineContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isLoading, isAuthenticated } = useRequireAuth();
   const { isOpen: isGlobalComposerOpen, closeComposer } = useComposer();
   const [showComposer, setShowComposer] = useState(false);
 
@@ -38,7 +39,7 @@ export default function MyTimelinePage() {
 
   // Detect ?compose=true in URL and open X-style composer (fallback for direct navigation)
   useEffect(() => {
-    const composeParam = searchParams.get('compose');
+    const composeParam = searchParams?.get('compose');
     if (composeParam === 'true' && !isGlobalComposerOpen) {
       setShowComposer(true);
     } else if (composeParam !== 'true') {
@@ -50,7 +51,7 @@ export default function MyTimelinePage() {
   const handleCloseComposer = () => {
     setShowComposer(false);
     closeComposer(); // Also close global composer
-    const newParams = new URLSearchParams(searchParams.toString());
+    const newParams = new URLSearchParams(searchParams?.toString() || '');
     newParams.delete('compose');
     const newUrl = newParams.toString() ? `/timeline?${newParams.toString()}` : '/timeline';
     router.replace(newUrl, { scroll: false });
@@ -61,6 +62,16 @@ export default function MyTimelinePage() {
     handleCloseComposer();
     // Timeline will auto-refresh via SocialTimeline's onPostCreated
   };
+
+  // Show loading while auth is being checked
+  if (isLoading) {
+    return <Loading fullScreen contextual message="Loading timeline..." />;
+  }
+
+  // useRequireAuth will redirect if not authenticated
+  if (!isAuthenticated) {
+    return <Loading fullScreen contextual message="Redirecting to login..." />;
+  }
 
   return (
     <>
@@ -87,7 +98,7 @@ export default function MyTimelinePage() {
           fullScreen={true}
           isOpen={showComposer}
           onClose={handleCloseComposer}
-          onPostCreated={handlePostCreated}
+          onSuccess={handlePostCreated}
           autoFocus={true}
           showProjectSelection={true}
           placeholder="What's happening?"
@@ -95,5 +106,13 @@ export default function MyTimelinePage() {
         />
       )}
     </>
+  );
+}
+
+export default function MyTimelinePage() {
+  return (
+    <Suspense fallback={<Loading fullScreen contextual message="Loading timeline..." />}>
+      <TimelineContent />
+    </Suspense>
   );
 }

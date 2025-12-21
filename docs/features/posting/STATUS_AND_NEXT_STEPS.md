@@ -1,10 +1,18 @@
 # Mobile-First Posting System - Status & Next Steps
 
+created_date: 2025-11-16
+last_modified_date: 2025-12-11
+last_modified_summary: Simplified composer defaults and enabled nested replies via parent_event_id
+
 **Date:** 2025-11-16
 **PRD:** `mobile-first-posting-system.md`
 **Related:** `POST_DESIGN_IMPROVEMENTS.md` (completed)
 
 ---
+
+## Recent Updates (2025-12-11)
+- Composer defaults to a minimal, single-action experience with quick audience presets (public/followers/only me).
+- Replies now use `parent_event_id` with nested rendering for thread view (no separate comments table in UI).
 
 ## Current Status: Week 1 ✅ Complete + Partial Week 2
 

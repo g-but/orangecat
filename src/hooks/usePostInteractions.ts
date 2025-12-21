@@ -25,12 +25,14 @@ export interface UsePostInteractionsReturn {
   isSharing: boolean;
   shareOpen: boolean;
   handleShareOpen: () => void;
+  handleShareClose: () => void;
   handleShareConfirm: (shareText: string) => Promise<void>;
 
   // Repost functionality
   isReposting: boolean;
   repostModalOpen: boolean;
   handleRepostClick: () => void;
+  handleRepostClose: () => void;
   handleSimpleRepost: () => Promise<void>;
   handleQuoteRepost: (quoteText: string) => Promise<void>;
 }
@@ -52,7 +54,7 @@ export function usePostInteractions({
 
   // Like handler with optimistic updates
   const handleLike = useCallback(async () => {
-    if (isLiking) return;
+    if (isLiking) {return;}
 
     const originalLiked = !!event.userLiked;
     const originalCount = event.likesCount || 0;
@@ -81,7 +83,7 @@ export function usePostInteractions({
 
   // Dislike handler with optimistic updates
   const handleDislike = useCallback(async () => {
-    if (isDisliking) return;
+    if (isDisliking) {return;}
 
     const originalDisliked = !!event.userDisliked;
     const originalCount = event.dislikesCount || 0;
@@ -113,8 +115,12 @@ export function usePostInteractions({
     setShareOpen(true);
   }, []);
 
+  const handleShareClose = useCallback(() => {
+    setShareOpen(false);
+  }, []);
+
   const handleShareConfirm = useCallback(async (shareText: string) => {
-    if (isSharing) return;
+    if (isSharing) {return;}
 
     const originalCount = event.sharesCount || 0;
     // Optimistic update
@@ -144,12 +150,16 @@ export function usePostInteractions({
 
   // Repost handlers
   const handleRepostClick = useCallback(() => {
-    if (!user?.id) return;
+    if (!user?.id) {return;}
     setRepostModalOpen(true);
   }, [user?.id]);
 
+  const handleRepostClose = useCallback(() => {
+    setRepostModalOpen(false);
+  }, []);
+
   const handleSimpleRepost = useCallback(async () => {
-    if (isReposting || !user?.id) return;
+    if (isReposting || !user?.id) {return;}
 
     setIsReposting(true);
     try {
@@ -176,7 +186,8 @@ export function usePostInteractions({
       if (result.success) {
         logger.info('Successfully reposted event', null, 'usePostInteractions');
         if (result.event && onAddEvent) {
-          onAddEvent(result.event);
+          // Cast to TimelineDisplayEvent - the timeline will refresh with full data anyway
+          onAddEvent(result.event as unknown as TimelineDisplayEvent);
         }
         setRepostModalOpen(false);
       } else {
@@ -192,7 +203,7 @@ export function usePostInteractions({
   }, [event.id, event.actor.id, event.actor.name, event.description, isReposting, user?.id, onAddEvent]);
 
   const handleQuoteRepost = useCallback(async (quoteText: string) => {
-    if (isReposting || !user?.id || !quoteText.trim()) return;
+    if (isReposting || !user?.id || !quoteText.trim()) {return;}
 
     setIsReposting(true);
     try {
@@ -221,7 +232,8 @@ export function usePostInteractions({
       if (result.success) {
         logger.info('Successfully quote reposted event', null, 'usePostInteractions');
         if (result.event && onAddEvent) {
-          onAddEvent(result.event);
+          // Cast to TimelineDisplayEvent - the timeline will refresh with full data anyway
+          onAddEvent(result.event as unknown as TimelineDisplayEvent);
         }
         setRepostModalOpen(false);
       } else {
@@ -249,16 +261,36 @@ export function usePostInteractions({
     isSharing,
     shareOpen,
     handleShareOpen,
+    handleShareClose,
     handleShareConfirm,
 
     // Repost functionality
     isReposting,
     repostModalOpen,
     handleRepostClick,
+    handleRepostClose,
     handleSimpleRepost,
     handleQuoteRepost,
   };
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

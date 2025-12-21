@@ -38,8 +38,6 @@ export function RepostModal({
   const [quoteText, setQuoteText] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
-  if (!isOpen) return null;
-
   const cleanText = (text?: string | null) =>
     (text || '')
       .replace(/^Reposted from .*?:\s*/i, '')
@@ -86,7 +84,7 @@ export function RepostModal({
     }
   };
 
-  // Focus textarea when opened
+  // Focus textarea when opened - hook must be called unconditionally
   useEffect(() => {
     if (isOpen && textareaRef.current) {
       textareaRef.current.focus();
@@ -115,6 +113,9 @@ export function RepostModal({
     return () => window.removeEventListener('keydown', handler);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, quoteText]);
+
+  // Early return AFTER all hooks
+  if (!isOpen) return null;
 
   const timeAgo = formatDistanceToNow(new Date(event.eventTimestamp), { addSuffix: true });
   const remainingCharacters = QUOTE_MAX_LENGTH - quoteText.length;

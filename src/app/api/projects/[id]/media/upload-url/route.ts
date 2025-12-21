@@ -111,7 +111,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       token: data.token,
     });
   } catch (error) {
-    logger.error('Unexpected error generating upload URL', { projectId, error });
+    logger.error('Unexpected error generating upload URL', { error });
     return apiInternalError('Failed to generate upload URL');
   }
 }

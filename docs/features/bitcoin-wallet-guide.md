@@ -1,8 +1,8 @@
 # Bitcoin Wallet Guide Feature
 
 **Created**: 2025-06-05  
-**Last Modified**: 2025-06-05  
-**Last Modified Summary**: Initial creation of Bitcoin wallet guide feature documentation
+**Last Modified**: 2025-12-11  
+**Last Modified Summary**: Documented wallet tab visibility and send flow improvements
 
 ## Overview
 

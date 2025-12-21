@@ -23,11 +23,26 @@ export interface NavigationItem {
   description?: string;
 }
 
-interface HeaderNavigationProps {
+// Variant A: Horizontal header links
+interface HeaderNavBarProps {
   items: NavigationItem[];
   isActive: (href: string) => boolean;
   className?: string;
 }
+
+// Variant B: Mobile drawer navigation used by Header.tsx
+interface MobileDrawerProps {
+  navigation: NavigationItem[];
+  footer: {
+    product?: Array<{ name: string; href: string }>
+    company?: Array<{ name: string; href: string }>
+    legal?: Array<{ name: string; href: string }>
+    social?: Array<{ name: string; href: string; icon?: any }>
+  };
+  onClose: () => void;
+}
+
+type HeaderNavigationProps = HeaderNavBarProps | MobileDrawerProps;
 
 /**
  * Header Navigation Component
@@ -35,26 +50,72 @@ interface HeaderNavigationProps {
  * Renders navigation links with consistent styling and active state indicators
  * Supports dropdown menus for items with children
  */
-export function HeaderNavigation({ items, isActive, className }: HeaderNavigationProps) {
+export function HeaderNavigation(props: HeaderNavigationProps) {
+  // Variant B: Mobile drawer (navigation + footer + onClose)
+  if ('navigation' in props) {
+    const { navigation, footer, onClose } = props;
+    const navItems = Array.isArray(navigation) ? navigation : [];
+    return (
+      <div className="flex flex-col h-full">
+        <div className="p-4 space-y-1">
+          {navItems.map((item) => (
+            item.href ? (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="block px-3 py-2 rounded-lg text-base text-gray-700 hover:text-orange-600 hover:bg-gray-50"
+                onClick={onClose}
+              >
+                {item.name}
+              </Link>
+            ) : null
+          ))}
+        </div>
+
+        {/* Footer sections */}
+        <div className="mt-auto border-t border-gray-100">
+          {(['product', 'company', 'legal'] as const).map((sectionKey) => {
+            const section = footer?.[sectionKey] || [];
+            if (!section || section.length === 0) return null;
+            return (
+              <div key={sectionKey} className="p-4">
+                <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
+                  {sectionKey}
+                </div>
+                <div className="grid grid-cols-1 gap-1">
+                  {section.map((link) => (
+                    <Link
+                      key={`${sectionKey}-${link.href}`}
+                      href={link.href}
+                      className="px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-orange-600 hover:bg-gray-50"
+                      onClick={onClose}
+                    >
+                      {link.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  // Variant A: Horizontal header links (default)
+  const { items = [], isActive, className } = props as HeaderNavBarProps;
+  const safeItems = Array.isArray(items) ? items : [];
+  const activeFn = typeof isActive === 'function' ? isActive : () => false;
   return (
     <nav className={cn('flex items-center space-x-1', className)}>
-      {items.map((item, index) => {
+      {safeItems.map((item) => {
         if (item.children && item.children.length > 0) {
-          return <HeaderNavDropdown key={item.name} item={item} isActive={isActive} />;
+          return <HeaderNavDropdown key={item.name} item={item} isActive={activeFn} />;
         }
 
-        // Skip items without href (shouldn't happen, but defensive)
-        if (!item.href) {
-          return null;
-        }
-
+        if (!item.href) return null;
         return (
-          <HeaderNavLink
-            key={item.href}
-            href={item.href}
-            label={item.name}
-            isActive={isActive(item.href)}
-          />
+          <HeaderNavLink key={item.href} href={item.href} label={item.name} isActive={activeFn(item.href)} />
         );
       })}
     </nav>

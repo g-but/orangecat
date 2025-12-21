@@ -1,3 +1,7 @@
+created_date: 2025-06-06
+last_modified_date: 2025-12-11
+last_modified_summary: "Documented Playwright dev-server port expectation and removed temporary instrumentation"
+
 # 🐛 OrangeCat Debugging Guide
 
 **Comprehensive guide to debugging OrangeCat applications, from development to production.**
@@ -30,6 +34,9 @@
 - **Document findings** - Help future debugging
 
 ## 🛠️ Development Debugging Tools
+
+### Dev server port for Playwright E2E
+- Run the Next dev server on port **3003** when executing `npm run test:e2e:node`, or update the test base URL if you intentionally change ports. This avoids `ERR_CONNECTION_REFUSED` during homepage navigation.
 
 ### Browser DevTools (Frontend)
 

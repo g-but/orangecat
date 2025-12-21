@@ -2,6 +2,8 @@
 import React, { useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
+import { ContextualLoader } from '@/components/navigation/ContextualLoader'
+import { cn } from '@/lib/utils'
 
 interface Props {
   fullScreen?: boolean
@@ -9,6 +11,7 @@ interface Props {
   size?: 'small' | 'medium' | 'large'
   overlay?: boolean
   className?: string
+  contextual?: boolean
 }
 
 export default function Loading({
@@ -16,7 +19,8 @@ export default function Loading({
   message = 'Loading...',
   size = 'medium',
   overlay = false,
-  className = ''
+  className = '',
+  contextual = false
 }: Props) {
   // Size mapping
   const sizeClasses = {
@@ -34,6 +38,19 @@ export default function Loading({
   const overlayClasses = overlay 
     ? 'fixed inset-0 bg-black/30 backdrop-blur-sm z-loading flex items-center justify-center'
     : ''
+
+  // Show contextual loader for better UX during navigation
+  if (contextual && fullScreen) {
+    return (
+      <div className={cn(
+        "min-h-screen flex items-center justify-center",
+        overlay ? "fixed inset-0 bg-white/95 backdrop-blur-sm z-loading" : "",
+        className
+      )} suppressHydrationWarning>
+        <ContextualLoader />
+      </div>
+    );
+  }
 
   const content = (
     <div className="flex flex-col items-center space-y-3" suppressHydrationWarning>

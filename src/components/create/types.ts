@@ -4,9 +4,16 @@
  * Shared type definitions for the modular entity creation system.
  * Enables consistent form building across products, services, causes, etc.
  *
+ * SINGLE SOURCE OF TRUTH for:
+ * - Field configuration types
+ * - Entity configuration types
+ * - Template types
+ * - Guidance types
+ * - Form state types
+ *
  * Created: 2025-12-03
- * Last Modified: 2025-12-03
- * Last Modified Summary: Initial type definitions for unified creation system
+ * Last Modified: 2025-12-16
+ * Last Modified Summary: Added unified template types and improved documentation
  */
 
 import { ReactNode } from 'react';
@@ -112,7 +119,7 @@ export interface DefaultGuidance {
 
 export interface EntityConfig<T extends Record<string, any> = Record<string, any>> {
   /** Entity type identifier */
-  type: 'product' | 'service' | 'cause' | 'loan' | 'circle' | 'project' | 'wallet' | 'asset';
+  type: 'product' | 'service' | 'cause' | 'loan' | 'circle' | 'project' | 'asset' | 'organization';
   /** Display name (singular) */
   name: string;
   /** Display name (plural) */
@@ -125,7 +132,7 @@ export interface EntityConfig<T extends Record<string, any> = Record<string, any
   backUrl: string;
   /** API endpoint for CRUD */
   apiEndpoint: string;
-  /** Success redirect URL (can include :id placeholder) */
+  /** Success redirect URL (use [field] placeholders, e.g., /products/[id]) */
   successUrl: string;
   /** Page title */
   pageTitle: string;
@@ -196,6 +203,59 @@ export interface GuidancePanelProps {
   defaultGuidance: DefaultGuidance;
   /** Optional additional content (e.g., currency converter) */
   additionalContent?: ReactNode;
+}
+
+// ==================== TEMPLATE TYPES ====================
+
+/**
+ * Unified template interface - SINGLE SOURCE OF TRUTH
+ *
+ * All entity templates (Products, Services, Assets, Projects, etc.)
+ * must conform to this interface for consistency.
+ *
+ * Note: Use `defaults` (not `data`) to store the prefill values.
+ */
+export interface EntityTemplate<T extends Record<string, any> = Record<string, any>> {
+  /** Unique identifier for the template */
+  id: string;
+  /** Icon to display (ReactNode, typically a Lucide icon) */
+  icon: ReactNode;
+  /** Display name for the template */
+  name: string;
+  /** Short description/tagline */
+  tagline: string;
+  /** Default values to prefill the form with */
+  defaults: Partial<T>;
+}
+
+/**
+ * Props for template picker/selector components
+ */
+export interface TemplatePickerProps<T extends EntityTemplate> {
+  /** Label to display (e.g., "Products", "Services") */
+  label: string;
+  /** Array of available templates */
+  templates: T[];
+  /** Callback when a template is selected */
+  onSelectTemplate: (template: T) => void;
+  /** Optional CSS class name */
+  className?: string;
+}
+
+/**
+ * Return type for useTemplateSelection hook
+ */
+export interface UseTemplateSelectionReturn<T extends Record<string, any>> {
+  /** Current template values (empty object if none selected) */
+  templateValues: Partial<T>;
+  /** Config with merged default values */
+  mergedConfig: EntityConfig<T>;
+  /** Handler to call when template is selected */
+  handleSelectTemplate: (template: EntityTemplate<T>) => void;
+  /** Reset template selection */
+  resetTemplate: () => void;
+  /** Whether a template has been selected */
+  hasTemplateSelected: boolean;
 }
 
 

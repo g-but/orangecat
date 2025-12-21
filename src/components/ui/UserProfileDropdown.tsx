@@ -156,7 +156,7 @@ export default function UserProfileDropdown({
   const email = user?.email || session?.user?.email || '';
 
   // Show loading state while profile is being fetched
-  const isProfileLoading = user && !profile;
+  const isProfileLoading = !!(user && !profile);
 
   // PRIORITY: Profile data first, then fallback to user metadata, then email
   let displayName = 'Loading...';
@@ -281,7 +281,12 @@ export default function UserProfileDropdown({
 
       {isOpen && (
         <div
-          className="absolute right-0 mt-3 w-80 rounded-2xl shadow-2xl bg-white border border-gray-100 z-50 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 origin-top-right overflow-hidden"
+          className="fixed z-50 rounded-2xl shadow-2xl bg-white border border-gray-100 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 origin-top-right overflow-hidden"
+          style={{
+            top: buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + 12 : 'auto',
+            right: buttonRef.current ? Math.max(16, window.innerWidth - buttonRef.current.getBoundingClientRect().right) : 'auto',
+            width: Math.min(320, window.innerWidth - 32),
+          }}
           role="menu"
           aria-orientation="vertical"
           aria-label="User menu"

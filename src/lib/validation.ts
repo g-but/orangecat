@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import DOMPurify from 'dompurify';
 import { validatePhoneNumber, normalizePhoneNumber } from './phone-validation';
+import { CURRENCY_CODES, DEFAULT_CURRENCY } from '@/config/currencies';
 
 // Profile validation
 // Note: Server-side normalizes empty strings to undefined before validation
@@ -271,6 +272,37 @@ export const userProductSchema = z.object({
   is_featured: z.boolean().default(false),
 });
 
+export const userCircleSchema = z.object({
+  name: z.string().min(3, 'Name must be at least 3 characters').max(50, 'Name must be under 50 characters'),
+  description: z.string().max(500, 'Description must be under 500 characters').optional().nullable(),
+  category: z.string().min(1, 'Please select a category'),
+
+  // Enhanced visibility and membership
+  visibility: z.enum(['public', 'private', 'hidden']).default('private'),
+  max_members: z.number().int().positive().optional().nullable(),
+  member_approval: z.enum(['auto', 'manual', 'invite']).default('manual'),
+
+  // Geographic features
+  location_restricted: z.boolean().default(false),
+  location_radius_km: z.number().int().positive().optional().nullable(),
+
+  // Economic features
+  bitcoin_address: z.string().optional().nullable(),
+  wallet_purpose: z.string().max(200).optional().nullable(),
+  contribution_required: z.boolean().default(false),
+  contribution_amount: z.number().positive().optional().nullable(),
+
+  // Activity settings
+  activity_level: z.enum(['casual', 'regular', 'intensive']).default('regular'),
+  meeting_frequency: z.enum(['none', 'weekly', 'monthly', 'quarterly']).default('none'),
+
+  // Advanced features
+  enable_projects: z.boolean().default(false),
+  enable_events: z.boolean().default(true),
+  enable_discussions: z.boolean().default(true),
+  require_member_intro: z.boolean().default(false),
+});
+
 export const userServiceSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
   description: z.string().max(1000).optional().nullable().or(z.literal('')),
@@ -319,15 +351,35 @@ export const userAIAssistantSchema = z.object({
 
 // Organization validation
 export const organizationSchema = z.object({
-  name: z.string().min(1, 'Organization name is required').max(100, 'Name must be at most 100 characters'),
+  name: z.string().min(1, 'Organization name is required').max(255, 'Name must be at most 255 characters'),
   slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be at most 100 characters')
-    .regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
+    .regex(/^[a-z0-9][a-z0-9\-]*[a-z0-9]$/, 'Slug must start and end with alphanumeric characters and can contain hyphens'),
   type: z.enum(['dao', 'company', 'nonprofit', 'community', 'cooperative', 'foundation', 'collective', 'guild', 'syndicate', 'circle']),
-  description: z.string().max(1000).optional().nullable().or(z.literal('')),
-  website_url: z.string().url().optional().nullable().or(z.literal('')),
-  governance_model: z.enum(['hierarchical', 'flat', 'democratic', 'consensus', 'liquid_democracy', 'quadratic_voting', 'stake_weighted', 'reputation_based']),
-  treasury_address: z.string().optional().nullable().or(z.literal('')),
-  lightning_address: z.string().optional().nullable().or(z.literal('')),
+  description: z.string().max(5000).optional().nullable().or(z.literal('')),
+  category: z.string().max(100).optional().nullable().or(z.literal('')),
+  tags: z.array(z.string()).default([]).optional(),
+  website_url: z.string().url().optional().nullable().or(z.literal('')).refine(
+    val => !val || val.trim() === '' || /^https?:\/\/.+/i.test(val),
+    'Please enter a valid URL (e.g., https://example.com)'
+  ),
+  governance_model: z.enum(['hierarchical', 'flat', 'democratic', 'consensus', 'liquid_democracy', 'quadratic_voting', 'stake_weighted', 'reputation_based']).default('hierarchical'),
+  treasury_address: z.string().max(255).optional().nullable().or(z.literal('')),
+  lightning_address: z.string().max(255).optional().nullable().or(z.literal('')),
+  avatar_url: z.string().url().optional().nullable().or(z.literal('')),
+  banner_url: z.string().url().optional().nullable().or(z.literal('')),
+  is_public: z.boolean().default(true),
+  requires_approval: z.boolean().default(true),
+});
+
+// Asset validation
+export const assetSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be at most 100 characters'),
+  type: z.enum(['real_estate', 'business', 'vehicle', 'equipment', 'securities', 'other']),
+  description: z.string().max(2000).optional().nullable().or(z.literal('')),
+  location: z.string().max(200).optional().nullable().or(z.literal('')),
+  estimated_value: z.number().positive().optional().nullable(),
+  currency: z.enum(CURRENCY_CODES).default(DEFAULT_CURRENCY),
+  documents: z.array(z.string().url()).optional().nullable().default([]),
 });
 
 // Loan validation
@@ -348,7 +400,9 @@ export type ProjectData = z.infer<typeof projectSchema>;
 export type TransactionData = z.infer<typeof transactionSchema>;
 export type UserProductFormData = z.infer<typeof userProductSchema>;
 export type UserServiceFormData = z.infer<typeof userServiceSchema>;
+export type UserCircleFormData = z.infer<typeof userCircleSchema>;
 export type UserCauseFormData = z.infer<typeof userCauseSchema>;
 export type UserAIAssistantFormData = z.infer<typeof userAIAssistantSchema>;
 export type OrganizationFormData = z.infer<typeof organizationSchema>;
+export type AssetFormData = z.infer<typeof assetSchema>;
 export type LoanFormData = z.infer<typeof loanSchema>;

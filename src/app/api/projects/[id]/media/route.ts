@@ -133,7 +133,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     return apiSuccess({ media });
   } catch (error) {
-    logger.error('Unexpected error uploading media', { projectId, error });
+    logger.error('Unexpected error uploading media', { error });
     return apiInternalError('Failed to create media');
   }
 }

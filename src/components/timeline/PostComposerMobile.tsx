@@ -21,9 +21,20 @@ import { sanitizeHtml } from '@/lib/validation';
 /**
  * MOBILE-FIRST Post Composer Component
  *
+ * SECONDARY COMPOSER for full-screen mobile modal posting.
  * Designed for touch-first interaction with progressive enhancement for larger screens.
- * Features: Bottom sheet UI, touch-optimized controls, offline support, auto-save drafts
- * Supports X-style full-screen mode via fullScreen prop
+ *
+ * Features:
+ * - Bottom sheet UI for full-screen modal
+ * - Touch-optimized controls (min 44px targets)
+ * - Offline support, auto-save drafts
+ * - X-style full-screen mode via fullScreen prop
+ *
+ * NOTE: For inline timeline posting, use TimelineComposer.
+ * TODO: This component shares ~70% logic with TimelineComposer.
+ * Future consolidation should merge this into TimelineComposer with a `fullScreen` prop.
+ *
+ * @see TimelineComposer for inline posting variant
  */
 
 export interface PostComposerMobileProps extends PostComposerOptions {

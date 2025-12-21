@@ -2,38 +2,41 @@
  * AssetTemplates Component
  *
  * Quick-start inspiration for asset creation.
- * Mirrors the project template UX with concise, realistic examples.
+ * Uses unified EntityTemplate interface for consistency.
+ *
+ * Updated to use:
+ * - `defaults` instead of `data` (unified interface)
+ * - TemplatePicker for consistent UI
  */
 
 'use client';
 
 import React from 'react';
 import { Building, Warehouse, Car, Shield } from 'lucide-react';
-import Card from '@/components/ui/Card';
 import { type CurrencyCode } from '@/config/currencies';
+import { TemplatePicker } from './TemplatePicker';
+import type { EntityTemplate } from '../types';
 
-export interface AssetTemplate {
-  id: string;
-  name: string;
-  icon: React.ReactNode;
-  tagline: string;
-  data: {
-    title: string;
-    type: 'real_estate' | 'business' | 'vehicle' | 'equipment' | 'securities' | 'other';
-    description?: string | null;
-    location?: string | null;
-    estimated_value?: number | null;
-    currency?: CurrencyCode;
-  };
+// Asset-specific template defaults type
+interface AssetDefaults {
+  title: string;
+  type: 'real_estate' | 'business' | 'vehicle' | 'equipment' | 'securities' | 'other';
+  description?: string | null;
+  location?: string | null;
+  estimated_value?: number | null;
+  currency?: CurrencyCode;
 }
+
+// Use unified EntityTemplate interface
+export type AssetTemplate = EntityTemplate<AssetDefaults>;
 
 export const ASSET_TEMPLATES: AssetTemplate[] = [
   {
     id: 'rental-unit',
     name: 'Rental Apartment',
-    icon: <Building className="w-5 h-5" />,
+    icon: <Building className="w-4 h-4" />,
     tagline: 'Income-producing city apartment, used as loan collateral',
-    data: {
+    defaults: {
       title: 'Zurich 2BR Rental (Kreis 4)',
       type: 'real_estate',
       description:
@@ -46,9 +49,9 @@ export const ASSET_TEMPLATES: AssetTemplate[] = [
   {
     id: 'mining-rig',
     name: 'Mining Hardware',
-    icon: <Warehouse className="w-5 h-5" />,
+    icon: <Warehouse className="w-4 h-4" />,
     tagline: 'Bitcoin mining rig with documented hash rate',
-    data: {
+    defaults: {
       title: 'S19 XP Hyd. Miner (Managed)',
       type: 'equipment',
       description:
@@ -61,9 +64,9 @@ export const ASSET_TEMPLATES: AssetTemplate[] = [
   {
     id: 'delivery-van',
     name: 'Delivery Van',
-    icon: <Car className="w-5 h-5" />,
+    icon: <Car className="w-4 h-4" />,
     tagline: 'Small business vehicle with service history',
-    data: {
+    defaults: {
       title: '2021 VW Transporter T6.1',
       type: 'vehicle',
       description:
@@ -76,9 +79,9 @@ export const ASSET_TEMPLATES: AssetTemplate[] = [
   {
     id: 'equity-stake',
     name: 'Startup Equity',
-    icon: <Shield className="w-5 h-5" />,
+    icon: <Shield className="w-4 h-4" />,
     tagline: 'Minority equity position in revenue-generating SaaS',
-    data: {
+    defaults: {
       title: 'Equity Stake – SaaS AR Platform',
       type: 'business',
       description:
@@ -97,39 +100,12 @@ interface AssetTemplatesProps {
 
 export function AssetTemplates({ onSelectTemplate, className = '' }: AssetTemplatesProps) {
   return (
-    <div className={`space-y-4 ${className}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <Shield className="w-5 h-5 text-blue-600" />
-        <h3 className="text-lg font-semibold text-gray-900">Asset Examples</h3>
-      </div>
-      <p className="text-sm text-gray-600">
-        Click an example to prefill the form. Adjust details to match your asset.
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {ASSET_TEMPLATES.map(template => (
-          <Card
-            key={template.id}
-            className="p-4 hover:shadow-md transition-all cursor-pointer border-2 border-transparent hover:border-blue-200"
-            onClick={() => onSelectTemplate(template)}
-          >
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                {template.icon}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-semibold text-gray-900 mb-1">{template.name}</h4>
-                <p className="text-xs text-gray-600 line-clamp-2">{template.tagline}</p>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-      <div className="mt-2 p-3 rounded-lg bg-blue-50 border border-blue-200">
-        <p className="text-xs text-blue-800">
-          💡 Examples are starting points. Verify values and avoid sensitive data before saving.
-        </p>
-      </div>
-    </div>
+    <TemplatePicker
+      label="Assets"
+      templates={ASSET_TEMPLATES}
+      onSelectTemplate={onSelectTemplate}
+      className={className}
+    />
   );
 }
 

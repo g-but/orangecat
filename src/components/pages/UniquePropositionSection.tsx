@@ -1,6 +1,6 @@
 'use client'
 
-import { Sparkles, Coins, Brain, Code } from 'lucide-react'
+import { Coins,  Brain, Code } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 
 interface UniquePropositionSectionProps {

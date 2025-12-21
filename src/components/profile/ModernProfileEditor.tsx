@@ -276,7 +276,7 @@ export default function ModernProfileEditor({
 
     try {
       // Apply location privacy/group mode before normalization/save
-      let adjusted: ProfileFormValues = { ...data };
+      const adjusted: ProfileFormValues = { ...data };
       if (locationMode === 'hidden') {
         adjusted.location_context = buildLocationContext(
           adjusted.location_context,

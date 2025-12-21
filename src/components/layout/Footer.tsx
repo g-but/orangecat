@@ -2,25 +2,15 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { navigation } from '@/config/navigation';
+import { footerNavigation } from '@/config/navigation';
+import { shouldShowFooter } from '@/config/routes';
 import Logo from './Logo';
 import { usePathname } from 'next/navigation';
 import { ArrowUp } from 'lucide-react';
 
 const Footer = React.memo(function Footer() {
   const pathname = usePathname();
-  // Check if current page is an authenticated page
-  const isAuthPage =
-    pathname &&
-    (pathname.startsWith('/dashboard') ||
-      pathname.startsWith('/profile') ||
-      pathname.startsWith('/settings') ||
-      pathname.startsWith('/assets') ||
-      pathname.startsWith('/people') ||
-      pathname.startsWith('/events') ||
-      pathname.startsWith('/organizations') ||
-      pathname.startsWith('/projects') ||
-      pathname.startsWith('/projects/create'));
+  const shouldRender = shouldShowFooter(pathname);
 
   const scrollToTop = () => {
     if (typeof window !== 'undefined' && window.scrollTo) {
@@ -29,7 +19,7 @@ const Footer = React.memo(function Footer() {
   };
 
   // Don't render footer on authenticated pages to avoid layout conflicts with sidebar
-  if (isAuthPage) {
+  if (!shouldRender) {
     return null;
   }
 
@@ -59,7 +49,7 @@ const Footer = React.memo(function Footer() {
 
             {/* Social Links */}
             <div className="flex space-x-4">
-              {navigation.footer.social.map(item => (
+              {footerNavigation.social.map(item => (
                 <a
                   key={item.name}
                   href={item.href}
@@ -85,7 +75,7 @@ const Footer = React.memo(function Footer() {
               <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-full"></div>
             </h3>
             <ul className="space-y-3">
-              {navigation.main.map(item => (
+              {footerNavigation.product.map(item => (
                 <li key={item.name}>
                   <Link
                     href={item.href}
@@ -109,7 +99,7 @@ const Footer = React.memo(function Footer() {
               <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-full"></div>
             </h3>
             <ul className="space-y-3">
-              {navigation.footer.legal.map(item => (
+              {footerNavigation.legal.map(item => (
                 <li key={item.name}>
                   <Link
                     href={item.href}

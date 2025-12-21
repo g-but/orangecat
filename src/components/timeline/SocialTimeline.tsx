@@ -8,6 +8,7 @@ import { LucideIcon, TrendingUp, Clock, Flame, Plus, Search, Loader2, X } from '
 import { logger } from '@/utils/logger';
 import TimelineComposer from './TimelineComposer';
 import { TimelineSkeleton } from './TimelineSkeleton';
+import { filterOptimisticEvents } from '@/utils/timeline';
 
 export interface SocialTimelineProps {
   // Page identity
@@ -91,26 +92,14 @@ export default function SocialTimeline({
     [onOptimisticUpdate]
   );
 
-  // Merge optimistic events with real feed
+  // Merge optimistic events with real feed using shared utility (DRY)
   const mergedFeed = React.useMemo(() => {
     if (!timelineFeed) {
       return null;
     }
 
-    // Remove optimistic events that have been replaced by real events
-    const filteredOptimistic = optimisticEvents.filter(
-      optEvent =>
-        !timelineFeed.events.some((realEvent: any) => {
-          // Match by content and timestamp (simple heuristic)
-          return (
-            realEvent.description === optEvent.description &&
-            Math.abs(
-              new Date(realEvent.eventTimestamp).getTime() -
-                new Date(optEvent.eventTimestamp).getTime()
-            ) < 5000
-          ); // 5 second window
-        })
-    );
+    // Use centralized utility to filter optimistic events
+    const filteredOptimistic = filterOptimisticEvents(optimisticEvents, timelineFeed.events);
 
     return {
       ...timelineFeed,
@@ -132,6 +121,7 @@ export default function SocialTimeline({
       }, 1500); // Wait 1.5 seconds for auth state to restore
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [hydrated]);
 
   // Load timeline feed based on mode
@@ -166,7 +156,7 @@ export default function SocialTimeline({
           setTimelineFeed(feed);
         } else {
           setTimelineFeed(prev => {
-            if (!prev) return feed;
+            if (!prev) {return feed;}
             return {
               ...feed,
               events: [...prev.events, ...feed.events],

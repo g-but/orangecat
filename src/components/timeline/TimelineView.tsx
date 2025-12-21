@@ -8,6 +8,7 @@ import TimelineComponent from './TimelineComponent';
 import TimelineComposer from './TimelineComposer';
 import Button from '@/components/ui/Button';
 import { logger } from '@/utils/logger';
+import { filterOptimisticEvents } from '@/utils/timeline';
 
 /**
  * TimelineView Component - Reusable Timeline Display
@@ -85,25 +86,19 @@ export default function TimelineView({
     setOptimisticEvents(prev => prev.filter(event => event.id !== optimisticId));
   }, []);
 
-  // Merge optimistic events with real feed
+  // Merge optimistic events with real feed using shared utility (DRY)
   const mergedEvents = React.useMemo(() => {
-    if (!feed?.events) return optimisticEvents;
+    if (!feed?.events) {return optimisticEvents;}
 
-    // Remove optimistic events that have been replaced by real events
-    const filteredOptimistic = optimisticEvents.filter(optEvent =>
-      !feed.events.some(realEvent => {
-        // Match by content and timestamp (simple heuristic)
-        return realEvent.description === optEvent.description &&
-               Math.abs(new Date(realEvent.eventTimestamp).getTime() - new Date(optEvent.eventTimestamp).getTime()) < 5000; // 5 second window
-      })
-    );
+    // Use centralized utility to filter optimistic events
+    const filteredOptimistic = filterOptimisticEvents(optimisticEvents, feed.events);
 
     return [...filteredOptimistic, ...feed.events];
   }, [feed?.events, optimisticEvents]);
 
   // Create merged feed for rendering (must be declared before any early returns)
   const mergedFeed = React.useMemo(() => {
-    if (!feed) return null;
+    if (!feed) {return null;}
     return {
       ...feed,
       events: mergedEvents,
@@ -300,22 +295,42 @@ export default function TimelineView({
         <FocusScroller />
       )}
       {/* Timeline Composer - Show at top if enabled */}
-      {showComposer && user && (
-        <TimelineComposer
-          targetOwnerId={ownerId}
-          targetOwnerType={ownerType}
-          allowProjectSelection={feedType === 'profile' || feedType === 'project'}
-          onPostCreated={handlePostCreated}
-          placeholder={
-            feedType === 'profile'
-              ? 'Write on this timeline...'
-              : feedType === 'project'
-                ? 'Share an update about this project...'
-                : "What's on your mind?"
-          }
-          buttonText="Post"
-          showBanner={Boolean(ownerId && ownerId !== user.id)}
-        />
+      {showComposer && (
+        user ? (
+          <TimelineComposer
+            targetOwnerId={ownerId}
+            targetOwnerType={ownerType}
+            allowProjectSelection={feedType === 'profile' || feedType === 'project'}
+            onPostCreated={handlePostCreated}
+            placeholder={
+              feedType === 'profile'
+                ? 'Write on this timeline...'
+                : feedType === 'project'
+                  ? 'Share an update about this project...'
+                  : "What's on your mind?"
+            }
+            buttonText="Post"
+            showBanner={Boolean(ownerId && ownerId !== user.id)}
+          />
+        ) : (
+          <div className="rounded-xl border border-dashed border-gray-200 bg-white/80 px-4 py-5 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-medium text-gray-900">Sign in to post</p>
+                <p className="text-sm text-gray-600">You need to be signed in to write on this timeline.</p>
+              </div>
+              <Button
+                onClick={() => {
+                  const redirect = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/profiles/me';
+                  window.location.href = `/auth?redirect=${encodeURIComponent(redirect)}`;
+                }}
+                className="bg-orange-500 hover:bg-orange-600 text-white"
+              >
+                Sign in
+              </Button>
+            </div>
+          </div>
+        )
       )}
 
       {/* Timeline Feed */}

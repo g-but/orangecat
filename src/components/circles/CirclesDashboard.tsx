@@ -19,6 +19,8 @@ export function CirclesDashboard() {
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
+  const toast = useToast();
+
   useEffect(() => {
     loadDashboardData();
   }, []);
@@ -41,7 +43,7 @@ export function CirclesDashboard() {
 
     } catch (error) {
       console.error('Failed to load circles data:', error);
-      useToast().error('Failed to load circles data');
+      toast.error('Failed to load circles data');
     } finally {
       setLoading(false);
     }
@@ -50,7 +52,7 @@ export function CirclesDashboard() {
   const handleCircleCreated = () => {
     setCreateDialogOpen(false);
     loadDashboardData();
-    useToast().success('Circle created successfully!');
+    toast.success('Circle created successfully!');
   };
 
   if (loading) {
@@ -167,6 +169,24 @@ export function CirclesDashboard() {
     </div>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

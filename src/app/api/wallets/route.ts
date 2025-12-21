@@ -16,15 +16,18 @@ import {
   isTableNotFoundError,
 } from '@/lib/wallets/errorHandling';
 import { rateLimitWrite } from '@/lib/rate-limit';
-import { apiRateLimited, apiSuccess, apiBadRequest } from '@/lib/api/standardResponse';
+import {
+  apiRateLimited,
+  apiSuccess,
+  apiBadRequest,
+  apiUnauthorized,
+  apiError,
+  apiCreated,
+  apiForbidden,
+  apiValidationError,
+} from '@/lib/api/standardResponse';
 import { validateOneOfIds, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
-
-interface ErrorResponse {
-  error: string;
-  code?: string;
-  field?: string;
-}
 
 type SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
 
@@ -89,10 +92,7 @@ export async function POST(request: NextRequest) {
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Unauthorized', code: 'UNAUTHORIZED' },
-        { status: 401 }
-      );
+      return apiUnauthorized();
     }
 
     // Rate limiting check - 30 writes per minute per user
@@ -111,17 +111,11 @@ export async function POST(request: NextRequest) {
 
     // Validate entity ownership
     if (!body.profile_id && !body.project_id) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'profile_id or project_id required', code: 'MISSING_ENTITY' },
-        { status: 400 }
-      );
+      return apiError('profile_id or project_id required', 'MISSING_ENTITY', 400);
     }
 
     if (body.profile_id && body.project_id) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Cannot specify both profile_id and project_id', code: 'INVALID_ENTITY' },
-        { status: 400 }
-      );
+      return apiError('Cannot specify both profile_id and project_id', 'INVALID_ENTITY', 400);
     }
 
     // Validate UUID format
@@ -129,19 +123,13 @@ export async function POST(request: NextRequest) {
     const entityId = body.profile_id || body.project_id!;
     const entityType = body.profile_id ? 'profile' : 'project';
     if (!uuidRegex.test(entityId)) {
-      return NextResponse.json<ErrorResponse>(
-        { error: 'Invalid entity ID format', code: 'INVALID_ID' },
-        { status: 400 }
-      );
+      return apiError('Invalid entity ID format', 'INVALID_ID', 400);
     }
 
     // Validate form data
     const validation = validateWalletFormData(body);
     if (!validation.valid) {
-      return NextResponse.json<ErrorResponse>(
-        { error: validation.error || 'Validation failed', code: 'VALIDATION_ERROR' },
-        { status: 400 }
-      );
+      return apiValidationError(validation.error || 'Validation failed');
     }
 
     // Verify ownership
@@ -152,11 +140,7 @@ export async function POST(request: NextRequest) {
           profile_id: body.profile_id,
           user_id: user.id,
         });
-        return createWalletErrorResponse(
-          'Forbidden: Profile does not belong to this user',
-          'FORBIDDEN',
-          403
-        );
+        return apiForbidden('Forbidden: Profile does not belong to this user');
       }
     } else if (body.project_id) {
       const { data: project } = await supabase
@@ -166,10 +150,7 @@ export async function POST(request: NextRequest) {
         .single();
 
       if (!project || project.user_id !== user.id) {
-        return NextResponse.json<ErrorResponse>(
-          { error: 'Forbidden', code: 'FORBIDDEN' },
-          { status: 403 }
-        );
+        return apiForbidden();
       }
     }
 
@@ -182,13 +163,11 @@ export async function POST(request: NextRequest) {
     // Double-check validation for security
     const addressValidation = validateAddressOrXpub(sanitized.address_or_xpub);
     if (!addressValidation.valid) {
-      return NextResponse.json<ErrorResponse>(
-        {
-          error: addressValidation.error || 'Invalid address/xpub',
-          code: 'INVALID_ADDRESS',
-          field: 'address_or_xpub',
-        },
-        { status: 400 }
+      return apiError(
+        addressValidation.error || 'Invalid address/xpub',
+        'INVALID_ADDRESS',
+        400,
+        { field: 'address_or_xpub' }
       );
     }
 
@@ -247,7 +226,7 @@ export async function POST(request: NextRequest) {
       isFirstWallet = walletCount === 0;
 
       if (walletCount >= MAX_WALLETS_PER_ENTITY) {
-        return createWalletErrorResponse(
+        return apiError(
           `Maximum ${MAX_WALLETS_PER_ENTITY} wallets allowed per profile/project`,
           'WALLET_LIMIT_REACHED',
           400
@@ -288,36 +267,12 @@ export async function POST(request: NextRequest) {
       if (error) {
         // Check for specific error messages
         if (error.message.includes(`Maximum ${MAX_WALLETS_PER_ENTITY}`)) {
-          return createWalletErrorResponse(
-            `Maximum ${MAX_WALLETS_PER_ENTITY} wallets allowed`,
-            'WALLET_LIMIT',
-            400
-          );
+          return apiError(`Maximum ${MAX_WALLETS_PER_ENTITY} wallets allowed`, 'WALLET_LIMIT', 400);
         }
 
-        // If the wallets table is missing, fall back to profile-based storage
-        if (isTableNotFoundError(error) && body.profile_id) {
-          const fallbackWallet = await addFallbackProfileWallet(supabase, body.profile_id, {
-            label: sanitized.label,
-            description: sanitized.description || null,
-            address_or_xpub: sanitized.address_or_xpub,
-            wallet_type: walletType,
-            category: sanitized.category,
-            category_icon: sanitized.category_icon || '💰',
-            behavior_type: body.behavior_type || 'general',
-            budget_amount: body.budget_amount || null,
-            budget_period: body.budget_period || null,
-            goal_amount: sanitized.goal_amount || null,
-            goal_currency: sanitized.goal_currency || null,
-            goal_deadline: sanitized.goal_deadline || null,
-            is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
-          });
-
-          const fallbackResponse = {
-            wallet: fallbackWallet,
-            ...(duplicateInfo && { duplicateWarning: duplicateInfo }),
-          };
-          return NextResponse.json(fallbackResponse, { status: 201 });
+        // If the wallets table is missing, return a clear, consistent error
+        if (isTableNotFoundError(error)) {
+          return apiError('Wallets table not available', 'TABLE_NOT_FOUND', 503);
         }
 
         return handleSupabaseError('create wallet', error, { entityId });
@@ -331,37 +286,15 @@ export async function POST(request: NextRequest) {
         entityId,
       });
 
-      const response = {
+      const responseData = {
         wallet,
         ...(duplicateInfo && { duplicateWarning: duplicateInfo }),
       };
-      return NextResponse.json(response, { status: 201 });
+      return apiCreated(responseData);
     } catch (insertError: unknown) {
-      // If the wallets table truly does not exist, fall back to profile metadata storage
-      if (isTableNotFoundError(insertError) && body.profile_id) {
-        const fallbackWallet = await addFallbackProfileWallet(supabase, body.profile_id, {
-          label: sanitized.label,
-          description: sanitized.description || null,
-          address_or_xpub: sanitized.address_or_xpub,
-          wallet_type: walletType,
-          category: sanitized.category,
-          category_icon: sanitized.category_icon || '💰',
-          behavior_type: body.behavior_type || 'general',
-          budget_amount: body.budget_amount || null,
-          budget_period: body.budget_period || null,
-          goal_amount: sanitized.goal_amount || null,
-          goal_currency: sanitized.goal_currency || null,
-          goal_deadline: sanitized.goal_deadline || null,
-          is_primary: body.is_primary !== undefined ? body.is_primary : isFirstWallet,
-        });
-
-        const fallbackResponse = {
-          wallet: fallbackWallet,
-          ...(duplicateInfo && { duplicateWarning: duplicateInfo }),
-        };
-        return NextResponse.json(fallbackResponse, { status: 201 });
+      if (isTableNotFoundError(insertError)) {
+        return apiError('Wallets table not available', 'TABLE_NOT_FOUND', 503);
       }
-
       return handleSupabaseError('create wallet', insertError, { entityId });
     }
   } catch (error) {
