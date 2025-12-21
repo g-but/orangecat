@@ -1,6 +1,6 @@
 'use client'
 
-import { Coins,  Brain, Code } from 'lucide-react'
+import { Coins, Brain, Code, Sparkles } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
 
 interface UniquePropositionSectionProps {
@@ -67,9 +67,9 @@ export default function UniquePropositionSection({
         
         <div className="mt-8 text-center">
           <div className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-100 to-green-100 px-6 py-3 rounded-full">
-                {/* <Sparkles */} className="w-5 h-5 text-orange-600" />
+            <Sparkles className="w-5 h-5 text-orange-600" />
             <span className="font-semibold text-gray-900">Bitcoin × AI × Open Source = The Future</span>
-                {/* <Sparkles */} className="w-5 h-5 text-green-600" />
+            <Sparkles className="w-5 h-5 text-green-600" />
           </div>
         </div>
       </CardContent>
