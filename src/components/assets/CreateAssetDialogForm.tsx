@@ -24,7 +24,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Loader2 } from 'lucide-react';
-import { assetSchema } from '@/config/entity-configs/asset-config';
+import { assetSchema } from '@/lib/validation';
 import { AssetTemplates } from '@/components/create/templates';
 import { currencySelectOptions, DEFAULT_CURRENCY } from '@/config/currencies';
 
@@ -181,7 +181,7 @@ export function CreateAssetDialog({
                       step="0.01"
                       placeholder="100000.00"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                      onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -202,7 +202,7 @@ export function CreateAssetDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {currencySelectOptions.map((option) => (
+                      {currencySelectOptions.map(option => (
                         <SelectItem key={option.value} value={option.value}>
                           {option.value}
                         </SelectItem>
@@ -216,12 +216,7 @@ export function CreateAssetDialog({
           </div>
 
           <div className="flex justify-end gap-3 pt-6 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={loading}
-            >
+            <Button type="button" variant="outline" onClick={onCancel} disabled={loading}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
