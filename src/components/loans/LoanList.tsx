@@ -15,7 +15,7 @@ import {
   Edit,
   Trash2,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
@@ -37,11 +37,16 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'paid_off': return 'bg-blue-100 text-blue-800';
-      case 'refinanced': return 'bg-purple-100 text-purple-800';
-      case 'defaulted': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'paid_off':
+        return 'bg-blue-100 text-blue-800';
+      case 'refinanced':
+        return 'bg-purple-100 text-purple-800';
+      case 'defaulted':
+        return 'bg-red-100 text-red-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -59,7 +64,9 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
   };
 
   const calculateProgress = (original: number, remaining: number) => {
-    if (original === 0) return 0;
+    if (original === 0) {
+      return 0;
+    }
     return ((original - remaining) / original) * 100;
   };
 
@@ -84,7 +91,9 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
 
   const handleDelete = async (loan: Loan) => {
     const confirmed = window.confirm('Delete this loan? This cannot be undone.');
-    if (!confirmed) return;
+    if (!confirmed) {
+      return;
+    }
     try {
       const result = await loansService.deleteLoan(loan.id);
       if (result.success) {
@@ -115,7 +124,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
 
   return (
     <div className="space-y-4">
-      {loans.map((loan) => {
+      {loans.map(loan => {
         const progress = calculateProgress(loan.original_amount, loan.remaining_balance);
 
         return (
@@ -182,8 +191,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
                   <p className="text-lg font-semibold">
                     {loan.monthly_payment
                       ? formatCurrency(loan.monthly_payment, loan.currency)
-                      : 'N/A'
-                    }
+                      : 'N/A'}
                   </p>
                 </div>
               </div>
@@ -215,7 +223,9 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
                   )}
                   <div className="flex items-center gap-2 text-sm">
                     <span className="text-muted-foreground">Listed:</span>
-                    <span>{formatDistanceToNow(new Date(loan.created_at), { addSuffix: true })}</span>
+                    <span>
+                      {formatDistanceToNow(new Date(loan.created_at), { addSuffix: true })}
+                    </span>
                   </div>
                 </div>
 
@@ -242,19 +252,25 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
 
               {/* Action Buttons */}
               <div className="flex gap-2 pt-2 border-t">
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => handleViewOffers(loan)}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => handleViewOffers(loan)}
+                >
                   <MessageSquare className="h-4 w-4" />
                   View Offers
-                </Button>
-                <Button variant="outline" size="sm" className="gap-2" onClick={() => handleEdit(loan)}>
-                  <TrendingUp className="h-4 w-4" />
-                  Edit Loan
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleToggleVisibility(loan)}
+                  className="gap-2"
+                  onClick={() => handleEdit(loan)}
                 >
+                  <TrendingUp className="h-4 w-4" />
+                  Edit Loan
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => handleToggleVisibility(loan)}>
                   {loan.is_public ? 'Make Private' : 'Make Public'}
                 </Button>
                 <Button

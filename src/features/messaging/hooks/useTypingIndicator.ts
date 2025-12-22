@@ -68,7 +68,9 @@ export function useTypingIndicator(
    */
   const sendTypingStatus = useCallback(
     async (isTyping: boolean) => {
-      if (!conversationId || !user?.id || !enabled) return;
+      if (!conversationId || !user?.id || !enabled) {
+        return;
+      }
 
       try {
         await supabase.rpc('set_typing_indicator', {
@@ -89,7 +91,9 @@ export function useTypingIndicator(
    * Start typing - call on keypress
    */
   const startTyping = useCallback(() => {
-    if (!enabled || !conversationId || !user?.id) return;
+    if (!enabled || !conversationId || !user?.id) {
+      return;
+    }
 
     // Clear any pending stop timeout
     if (typingTimeoutRef.current) {
@@ -114,7 +118,9 @@ export function useTypingIndicator(
    * Stop typing - call on blur, send, etc.
    */
   const stopTyping = useCallback(() => {
-    if (!enabled || !conversationId || !user?.id) return;
+    if (!enabled || !conversationId || !user?.id) {
+      return;
+    }
 
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
@@ -141,12 +147,14 @@ export function useTypingIndicator(
       try {
         const { data } = await supabase
           .from('typing_indicators')
-          .select(`
+          .select(
+            `
             user_id,
             started_at,
             expires_at,
             profiles:user_id (username, name)
-          `)
+          `
+          )
           .eq('conversation_id', conversationId)
           .neq('user_id', user.id)
           .gt('expires_at', new Date().toISOString());
@@ -181,14 +189,12 @@ export function useTypingIndicator(
           table: 'typing_indicators',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        async (payload) => {
+        async payload => {
           debugLog('[useTypingIndicator] typing change:', payload.eventType);
 
           if (payload.eventType === 'DELETE') {
             // Remove from typing users
-            setTypingUsers((prev) =>
-              prev.filter((u) => u.userId !== (payload.old as any).user_id)
-            );
+            setTypingUsers(prev => prev.filter(u => u.userId !== (payload.old as any).user_id));
           } else if (payload.new && (payload.new as any).user_id !== user.id) {
             // Add or update typing user
             const typingUserId = (payload.new as any).user_id;
@@ -196,7 +202,7 @@ export function useTypingIndicator(
 
             // Check if expired
             if (expiresAt < new Date()) {
-              setTypingUsers((prev) => prev.filter((u) => u.userId !== typingUserId));
+              setTypingUsers(prev => prev.filter(u => u.userId !== typingUserId));
               return;
             }
 
@@ -207,10 +213,10 @@ export function useTypingIndicator(
               .eq('id', typingUserId)
               .single();
 
-            setTypingUsers((prev) => {
-              const existing = prev.find((u) => u.userId === typingUserId);
+            setTypingUsers(prev => {
+              const existing = prev.find(u => u.userId === typingUserId);
               if (existing) {
-                return prev.map((u) =>
+                return prev.map(u =>
                   u.userId === typingUserId
                     ? { ...u, startedAt: new Date((payload.new as any).started_at) }
                     : u
@@ -239,10 +245,12 @@ export function useTypingIndicator(
         sendTypingStatus(true);
       }
       // Also clean up expired typing users
-      setTypingUsers((prev) => prev.filter((u) => {
-        const age = Date.now() - u.startedAt.getTime();
-        return age < 15000; // Remove if no update for 15s
-      }));
+      setTypingUsers(prev =>
+        prev.filter(u => {
+          const age = Date.now() - u.startedAt.getTime();
+          return age < 15000; // Remove if no update for 15s
+        })
+      );
     }, refreshInterval);
 
     return () => {
@@ -273,13 +281,14 @@ export function useTypingIndicator(
   /**
    * Format typing text like Facebook Messenger
    */
-  const typingText = typingUsers.length === 0
-    ? null
-    : typingUsers.length === 1
-    ? `${typingUsers[0].name || typingUsers[0].username} is typing...`
-    : typingUsers.length === 2
-    ? `${typingUsers[0].name || typingUsers[0].username} and ${typingUsers[1].name || typingUsers[1].username} are typing...`
-    : `${typingUsers.length} people are typing...`;
+  const typingText =
+    typingUsers.length === 0
+      ? null
+      : typingUsers.length === 1
+        ? `${typingUsers[0].name || typingUsers[0].username} is typing...`
+        : typingUsers.length === 2
+          ? `${typingUsers[0].name || typingUsers[0].username} and ${typingUsers[1].name || typingUsers[1].username} are typing...`
+          : `${typingUsers.length} people are typing...`;
 
   return {
     typingUsers,

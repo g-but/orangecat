@@ -40,7 +40,7 @@ const fieldGroups: FieldGroup[] = [
         rows: 6,
         required: true,
         colSpan: 2,
-        hint: 'Be specific about what you\'re building, who it helps, and why it matters.',
+        hint: "Be specific about what you're building, who it helps, and why it matters.",
       },
     ],
   },
@@ -75,7 +75,7 @@ const fieldGroups: FieldGroup[] = [
         type: 'textarea',
         placeholder: 'How will the funds be used?',
         rows: 3,
-        hint: 'Explain how donations will be spent and what impact they\'ll create.',
+        hint: "Explain how donations will be spent and what impact they'll create.",
       },
     ],
   },
@@ -193,34 +193,3 @@ export const projectConfig: EntityConfig<ProjectData> = {
   successMessage: 'Project created successfully!',
   successRedirectDelay: 2000,
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

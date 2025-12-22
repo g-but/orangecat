@@ -12,11 +12,14 @@ export type LocationMode = 'actual' | 'hidden' | 'group';
 const HIDE_TOKEN = '[HIDE]';
 const GROUP_PREFIX = '[GROUP]:';
 
-export function parseLocationContext(
-  locationContext?: string | null
-): { mode: LocationMode; groupLabel?: string } {
+export function parseLocationContext(locationContext?: string | null): {
+  mode: LocationMode;
+  groupLabel?: string;
+} {
   const ctx = (locationContext || '').trim();
-  if (!ctx) return { mode: 'actual' };
+  if (!ctx) {
+    return { mode: 'actual' };
+  }
 
   if (ctx.includes(HIDE_TOKEN)) {
     return { mode: 'hidden' };
@@ -25,7 +28,9 @@ export function parseLocationContext(
   const idx = ctx.indexOf(GROUP_PREFIX);
   if (idx >= 0) {
     const label = ctx.substring(idx + GROUP_PREFIX.length).trim();
-    if (label) return { mode: 'group', groupLabel: label };
+    if (label) {
+      return { mode: 'group', groupLabel: label };
+    }
   }
 
   return { mode: 'actual' };
@@ -61,4 +66,3 @@ export function getLocationGroupLabel(locationContext?: string | null): string |
   const parsed = parseLocationContext(locationContext);
   return parsed.mode === 'group' ? parsed.groupLabel : undefined;
 }
-

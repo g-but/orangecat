@@ -60,15 +60,7 @@ export const ROUTE_CONTEXTS = {
    * Routes accessible to both authenticated and non-authenticated users
    * These are informational pages that don't require login
    */
-  universal: [
-    '/about',
-    '/blog',
-    '/docs',
-    '/privacy',
-    '/terms',
-    '/faq',
-    '/coming-soon',
-  ] as const,
+  universal: ['/about', '/blog', '/docs', '/privacy', '/terms', '/faq', '/coming-soon'] as const,
 
   /**
    * Authentication-related routes
@@ -86,9 +78,7 @@ export const ROUTE_CONTEXTS = {
    * Routes that show different content based on auth state
    * (e.g., profiles show different data for own vs others)
    */
-  contextual: [
-    '/profiles',
-  ] as const,
+  contextual: ['/profiles'] as const,
 } as const;
 
 /**
@@ -124,23 +114,23 @@ export const NAVIGATED_ROUTES = [
 /**
  * Routes that should hide the footer (typically authenticated routes)
  */
-export const FOOTER_HIDDEN_ROUTES = [
-  ...ROUTE_CONTEXTS.authenticated,
-] as const;
+export const FOOTER_HIDDEN_ROUTES = [...ROUTE_CONTEXTS.authenticated] as const;
 
 /**
  * Routes that should show the sidebar (authenticated routes)
  */
-export const SIDEBAR_VISIBLE_ROUTES = [
-  ...ROUTE_CONTEXTS.authenticated,
-] as const;
+export const SIDEBAR_VISIBLE_ROUTES = [...ROUTE_CONTEXTS.authenticated] as const;
 
 /**
  * Get the context of a route based on its pathname
  */
 export function getRouteContext(pathname: string): RouteContext {
   // Check authenticated routes first (most specific)
-  if (ROUTE_CONTEXTS.authenticated.some(route => pathname === route || pathname.startsWith(`${route}/`))) {
+  if (
+    ROUTE_CONTEXTS.authenticated.some(
+      route => pathname === route || pathname.startsWith(`${route}/`)
+    )
+  ) {
     return 'authenticated';
   }
 
@@ -150,12 +140,16 @@ export function getRouteContext(pathname: string): RouteContext {
   }
 
   // Check universal routes
-  if (ROUTE_CONTEXTS.universal.some(route => pathname === route || pathname.startsWith(`${route}/`))) {
+  if (
+    ROUTE_CONTEXTS.universal.some(route => pathname === route || pathname.startsWith(`${route}/`))
+  ) {
     return 'universal';
   }
 
   // Check contextual routes
-  if (ROUTE_CONTEXTS.contextual.some(route => pathname === route || pathname.startsWith(`${route}/`))) {
+  if (
+    ROUTE_CONTEXTS.contextual.some(route => pathname === route || pathname.startsWith(`${route}/`))
+  ) {
     return 'contextual';
   }
 
@@ -181,14 +175,18 @@ export function isAuthenticatedRoute(pathname: string): boolean {
  * Check if a route should show the footer
  */
 export function shouldShowFooter(pathname: string): boolean {
-  return !FOOTER_HIDDEN_ROUTES.some(route => pathname === route || pathname.startsWith(`${route}/`));
+  return !FOOTER_HIDDEN_ROUTES.some(
+    route => pathname === route || pathname.startsWith(`${route}/`)
+  );
 }
 
 /**
  * Check if a route should show the sidebar
  */
 export function shouldShowSidebar(pathname: string): boolean {
-  return SIDEBAR_VISIBLE_ROUTES.some(route => pathname === route || pathname.startsWith(`${route}/`));
+  return SIDEBAR_VISIBLE_ROUTES.some(
+    route => pathname === route || pathname.startsWith(`${route}/`)
+  );
 }
 
 /**
@@ -205,18 +203,3 @@ export function isPublicRoute(pathname: string): boolean {
   const context = getRouteContext(pathname);
   return context === 'public' || context === 'universal' || context === 'auth';
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

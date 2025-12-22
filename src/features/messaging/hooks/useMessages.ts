@@ -67,17 +67,85 @@ export function useMessages(
   );
 
   // Read receipts hook
-  const { applyReadStatus, refresh: refreshReadReceipts, participantReadTimes } = useReadReceipts(conversationId, {
+  const {
+    applyReadStatus,
+    refresh: refreshReadReceipts,
+    participantReadTimes,
+  } = useReadReceipts(conversationId, {
     enabled: enabled && !!conversationId,
     userId,
   });
 
   /**
+   * Fallback to client-side Supabase for 401 errors
+   */
+  const fetchFromClient = useCallback(async () => {
+    if (!conversationId) {
+      return;
+    }
+
+    try {
+      const { data: conv } = await supabase
+        .from('conversation_details')
+        .select('*')
+        .eq('id', conversationId)
+        .maybeSingle();
+
+      if (!conv) {
+        setError('not_found');
+        return;
+      }
+
+      setConversation(conv as any);
+
+      const { data: msgs } = await supabase
+        .from('message_details')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      const messagesWithStatus = applyReadStatus((msgs as Message[]) || []);
+      setMessages(messagesWithStatus);
+      setPagination({ hasMore: false, nextCursor: null, count: msgs?.length || 0 });
+      setError(null);
+    } catch (err) {
+      debugLog('Client fallback failed:', err);
+      setError('unknown');
+    }
+  }, [conversationId, applyReadStatus]);
+
+  /**
+   * Mark conversation as read
+   */
+  const markAsRead = useCallback(async () => {
+    if (!conversationId || !userId) {
+      return;
+    }
+
+    try {
+      await fetch(API_ROUTES.CONVERSATION_READ(conversationId), {
+        method: 'POST',
+        credentials: 'same-origin',
+      });
+      // Refresh read receipts after marking as read
+      setTimeout(() => refreshReadReceipts(), TIMING.READ_RECEIPT_RECALC_DELAY_MS);
+    } catch (err) {
+      debugLog('Error marking as read:', err);
+    }
+  }, [conversationId, userId, refreshReadReceipts]);
+
+  /**
    * Fetch messages from API
+   *
+   * Note: This callback depends on `markAsRead` and `fetchFromClient`, which
+   * must be declared before this hook to avoid temporal dead zone issues with
+   * the dependency array in some bundler/transpilation scenarios.
    */
   const fetchMessages = useCallback(
     async (cursor?: string) => {
-      if (!conversationId || !enabled) {return;}
+      if (!conversationId || !enabled) {
+        return;
+      }
 
       try {
         if (!cursor) {
@@ -113,22 +181,19 @@ export function useMessages(
         setPagination(data.pagination);
 
         // Apply read status and deduplicate
+        // Call applyReadStatus directly - it's stable and doesn't need to be in dependencies
         const messagesWithStatus = applyReadStatus(data.messages || []);
 
         if (cursor) {
           // Prepend older messages
-          setMessages((prev) => {
+          setMessages(prev => {
             // Deduplicate existing messages first
-            const uniquePrev = Array.from(
-              new Map(prev.map((m) => [m.id, m])).values()
-            );
-            const existingIds = new Set(uniquePrev.map((m) => m.id));
+            const uniquePrev = Array.from(new Map(prev.map(m => [m.id, m])).values());
+            const existingIds = new Set(uniquePrev.map(m => m.id));
             const newMessages = messagesWithStatus.filter((m: Message) => !existingIds.has(m.id));
             const combined = [...newMessages, ...uniquePrev];
             // Final deduplication
-            return Array.from(
-              new Map(combined.map((m) => [m.id, m])).values()
-            );
+            return Array.from(new Map(combined.map(m => [m.id, m])).values());
           });
         } else {
           // Deduplicate and set
@@ -149,100 +214,71 @@ export function useMessages(
         setIsLoadingMore(false);
       }
     },
-    [conversationId, enabled, applyReadStatus]
+    // applyReadStatus is stable (depends on stable calculateMessageStatus) - call it directly
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [conversationId, enabled, markAsRead, fetchFromClient]
   );
-
-  /**
-   * Fallback to client-side Supabase for 401 errors
-   */
-  const fetchFromClient = useCallback(async () => {
-    if (!conversationId) {return;}
-
-    try {
-      const { data: conv } = await supabase
-        .from('conversation_details')
-        .select('*')
-        .eq('id', conversationId)
-        .maybeSingle();
-
-      if (!conv) {
-        setError('not_found');
-        return;
-      }
-
-      setConversation(conv as any);
-
-      const { data: msgs } = await supabase
-        .from('message_details')
-        .select('*')
-        .eq('conversation_id', conversationId)
-        .order('created_at', { ascending: true });
-
-      const messagesWithStatus = applyReadStatus((msgs as Message[]) || []);
-      setMessages(messagesWithStatus);
-      setPagination({ hasMore: false, nextCursor: null, count: msgs?.length || 0 });
-      setError(null);
-    } catch (err) {
-      debugLog('Client fallback failed:', err);
-      setError('unknown');
-    }
-  }, [conversationId, applyReadStatus]);
 
   /**
    * Load older messages
    */
   const loadMore = useCallback(async () => {
-    if (!pagination?.hasMore || isLoadingMore || !pagination.nextCursor) {return;}
+    if (!pagination?.hasMore || isLoadingMore || !pagination.nextCursor) {
+      return;
+    }
     await fetchMessages(pagination.nextCursor);
   }, [pagination, isLoadingMore, fetchMessages]);
 
   /**
    * Add an optimistic message
    */
-  const addOptimisticMessage = useCallback((message: Message) => {
-    setMessages((prev) => {
-      // Use Map to ensure no duplicates
-      const messageMap = new Map<string, Message>();
-      prev.forEach((m) => {
-        messageMap.set(m.id, m);
-      });
-      
-      // Check if message already exists (shouldn't for optimistic)
-      if (messageMap.has(message.id)) {
-        debugLog('[useMessages] Optimistic message already exists, skipping:', message.id);
-        return Array.from(messageMap.values());
-      }
+  const addOptimisticMessage = useCallback(
+    (message: Message) => {
+      setMessages(prev => {
+        // Use Map to ensure no duplicates
+        const messageMap = new Map<string, Message>();
+        prev.forEach(m => {
+          messageMap.set(m.id, m);
+        });
 
-      const messageWithStatus = applyReadStatus([message])[0];
-      messageMap.set(message.id, messageWithStatus);
-      
-      const result = Array.from(messageMap.values()).sort(
-        (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      );
-
-      // Final deduplication check
-      const finalMap = new Map<string, Message>();
-      result.forEach((m) => {
-        if (!finalMap.has(m.id)) {
-          finalMap.set(m.id, m);
+        // Check if message already exists (shouldn't for optimistic)
+        if (messageMap.has(message.id)) {
+          debugLog('[useMessages] Optimistic message already exists, skipping:', message.id);
+          return Array.from(messageMap.values());
         }
-      });
 
-      return Array.from(finalMap.values());
-    });
-  }, [applyReadStatus]);
+        const messageWithStatus = applyReadStatus([message])[0];
+        messageMap.set(message.id, messageWithStatus);
+
+        const result = Array.from(messageMap.values()).sort(
+          (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+
+        // Final deduplication check
+        const finalMap = new Map<string, Message>();
+        result.forEach(m => {
+          if (!finalMap.has(m.id)) {
+            finalMap.set(m.id, m);
+          }
+        });
+
+        return Array.from(finalMap.values());
+      });
+    },
+    [applyReadStatus]
+  );
 
   /**
    * Replace optimistic message with real one
    */
   const confirmMessage = useCallback(
     (tempId: string, realMessage: Message) => {
-      setMessages((prev) => {
+      setMessages(prev => {
         // Use Map to ensure no duplicates
         const messageMap = new Map<string, Message>();
-        
+
         // Add all messages except the temp one
-        prev.forEach((m) => {
+        prev.forEach(m => {
           if (m.id !== tempId) {
             // If real message already exists, keep the most recent
             if (m.id === realMessage.id) {
@@ -255,7 +291,7 @@ export function useMessages(
             }
           }
         });
-        
+
         // Add the real message if it doesn't already exist
         if (!messageMap.has(realMessage.id)) {
           const messageWithStatus = applyReadStatus([realMessage])[0];
@@ -268,7 +304,7 @@ export function useMessages(
 
         // Final deduplication check
         const finalMap = new Map<string, Message>();
-        result.forEach((m) => {
+        result.forEach(m => {
           if (!finalMap.has(m.id)) {
             finalMap.set(m.id, m);
           }
@@ -284,7 +320,7 @@ export function useMessages(
    * Remove a message (for failed optimistic messages)
    */
   const removeMessage = useCallback((messageId: string) => {
-    setMessages((prev) => prev.filter((m) => m.id !== messageId));
+    setMessages(prev => prev.filter(m => m.id !== messageId));
   }, []);
 
   /**
@@ -292,17 +328,17 @@ export function useMessages(
    */
   const handleNewMessage = useCallback(
     (message: Message) => {
-      setMessages((prev) => {
+      setMessages(prev => {
         // Deduplicate first - use Map to ensure no duplicates by ID
         const messageMap = new Map<string, Message>();
-        prev.forEach((m) => {
+        prev.forEach(m => {
           // Keep the most recent version if duplicate exists
           const existing = messageMap.get(m.id);
           if (!existing || new Date(m.created_at) > new Date(existing.created_at)) {
             messageMap.set(m.id, m);
           }
         });
-        
+
         const uniquePrev = Array.from(messageMap.values());
         const messageWithStatus = applyReadStatus([message])[0];
 
@@ -323,7 +359,7 @@ export function useMessages(
 
         // Final safety check - should never have duplicates at this point
         const finalMap = new Map<string, Message>();
-        result.forEach((m) => {
+        result.forEach(m => {
           if (!finalMap.has(m.id)) {
             finalMap.set(m.id, m);
           }
@@ -335,53 +371,43 @@ export function useMessages(
     [applyReadStatus]
   );
 
-  /**
-   * Mark conversation as read
-   */
-  const markAsRead = useCallback(async () => {
-    if (!conversationId || !userId) {return;}
-
-    try {
-      await fetch(API_ROUTES.CONVERSATION_READ(conversationId), {
-        method: 'POST',
-        credentials: 'same-origin',
-      });
-      // Refresh read receipts after marking as read
-      setTimeout(() => refreshReadReceipts(), TIMING.READ_RECEIPT_RECALC_DELAY_MS);
-    } catch (err) {
-      debugLog('Error marking as read:', err);
-    }
-  }, [conversationId, userId, refreshReadReceipts]);
-
   // Recalculate message status when read receipts change
   const prevReadTimesRef = useRef<string>('');
-  
+
   useEffect(() => {
     // Create a key from current read times to detect changes
     const readTimesKey = Array.from(participantReadTimes.entries())
       .map(([id, time]) => `${id}:${time?.getTime() || 'null'}`)
       .sort()
       .join(',');
-    
+
     // Only recalculate if read times actually changed and we have messages
-    if (messages.length > 0 && readTimesKey !== prevReadTimesRef.current && participantReadTimes.size > 0) {
+    // Use a ref to check messages length without adding it to dependencies
+    const currentMessages = messages;
+    if (
+      currentMessages.length > 0 &&
+      readTimesKey !== prevReadTimesRef.current &&
+      participantReadTimes.size > 0
+    ) {
       debugLog('[useMessages] Read receipts changed, recalculating status', {
-        messageCount: messages.length,
+        messageCount: currentMessages.length,
         readTimesSize: participantReadTimes.size,
       });
       prevReadTimesRef.current = readTimesKey;
-      setMessages((prev) => {
+      setMessages(prev => {
         // Deduplicate by ID first, then apply read status
-        const uniqueMessages = Array.from(
-          new Map(prev.map((m) => [m.id, m])).values()
-        );
+        // applyReadStatus is stable - call it directly without including in dependencies
+        const uniqueMessages = Array.from(new Map(prev.map(m => [m.id, m])).values());
         return applyReadStatus(uniqueMessages);
       });
     } else if (prevReadTimesRef.current === '' && participantReadTimes.size > 0) {
       // Initialize on first load
       prevReadTimesRef.current = readTimesKey;
     }
-  }, [participantReadTimes, applyReadStatus]); // Recalculate when read times change
+    // Only depend on participantReadTimes - messages.length is checked inside but not a dependency
+    // applyReadStatus is stable and called directly
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [participantReadTimes]); // Only recalculate when read receipts change
 
   // Initial fetch
   useEffect(() => {

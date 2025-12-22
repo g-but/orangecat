@@ -166,6 +166,7 @@
 **Goal**: Make timeline look and feel like X with proper threading
 
 **Tasks**:
+
 1. **Visual Redesign**
    - Cleaner post cards (more minimal, X-like)
    - Better spacing and typography
@@ -192,6 +193,7 @@
 **Goal**: Enable true networked conversations
 
 **Tasks**:
+
 1. **Multi-Participant Threads**
    - Multiple people in same thread
    - Thread branching (reply to specific post in thread)
@@ -216,6 +218,7 @@
 **Goal**: Enable collective consciousness through threaded conversations
 
 **Tasks**:
+
 1. **Thread Aggregation**
    - Summarize thread insights
    - Extract key points from threads
@@ -246,12 +249,14 @@
 **Why**: Timeline is the foundation for threaded conversations. Making it X-like enables all future features.
 
 **Steps**:
+
 1. Improve post card design (X-like minimalism)
 2. Add quote reply functionality
 3. Implement thread visualization
 4. Add thread navigation
 
 **Benefits**:
+
 - Immediate UX improvement
 - Enables threaded conversations
 - Foundation for networked thoughts
@@ -262,12 +267,14 @@
 **Why**: Messages already work well, could add threading to messages.
 
 **Steps**:
+
 1. Add message threading (reply to specific messages)
 2. Add message reactions
 3. Improve message search
 4. Add message forwarding
 
 **Benefits**:
+
 - Messages become more powerful
 - Different use case (private vs public)
 - Less visible but still valuable
@@ -277,11 +284,13 @@
 **Why**: Work on both simultaneously with different teams/priorities.
 
 **Steps**:
+
 - Team A: Timeline improvements
 - Team B: Messages enhancements
 - Coordinate on shared threading concepts
 
 **Benefits**:
+
 - Faster overall progress
 - Shared learnings
 - More complex to manage
@@ -291,6 +300,7 @@
 ## Recommended Approach: **Option 1 - Fix Timeline First** ⭐
 
 **Reasoning**:
+
 1. **Foundation for Vision**: Threaded timeline is core to "networked thoughts" and "hive mind"
 2. **User Visibility**: Timeline improvements are immediately visible to all users
 3. **Enables Future Features**: Quote replies and threading enable collective intelligence features
@@ -298,6 +308,7 @@
 5. **Messages Already Work**: Messages are functional, timeline needs more work
 
 **Next Actions**:
+
 1. Review and approve this assessment
 2. Prioritize Phase 1 tasks
 3. Create detailed implementation plan for X-like timeline
@@ -309,16 +320,19 @@
 ## Technical Debt & Blockers
 
 ### Database Migrations
+
 - Some timeline migrations may need verification
 - Check `supabase/migrations/` for unapplied migrations
 - Verify `timeline_likes`, `timeline_comments` tables exist
 
 ### Code Organization
+
 - Timeline code is well-organized but could benefit from threading-specific modules
 - Consider `src/components/timeline/threading/` directory
 - Consider `src/services/timeline/threading.ts` service
 
 ### Performance
+
 - Thread loading may need optimization (nested queries)
 - Consider caching thread structures
 - Consider lazy loading thread branches
@@ -328,6 +342,7 @@
 ## Success Metrics
 
 ### Phase 1 Success Criteria
+
 - [ ] Timeline looks and feels like X
 - [ ] Quote replies work and create threads
 - [ ] Thread visualization is clear and intuitive
@@ -335,11 +350,13 @@
 - [ ] Users can follow conversation threads
 
 ### Phase 2 Success Criteria
+
 - [ ] Multi-participant threads work smoothly
 - [ ] Thread discovery helps users find relevant conversations
 - [ ] Thread analytics provide insights
 
 ### Phase 3 Success Criteria
+
 - [ ] Thread aggregation provides value
 - [ ] Collective knowledge features are useful
 - [ ] Hive mind interface is intuitive
@@ -355,29 +372,3 @@
 **Timeline**: 2-3 weeks for Phase 1, then iterative improvements toward long-term vision.
 
 **Risk**: Low - building on solid foundation, clear path forward.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

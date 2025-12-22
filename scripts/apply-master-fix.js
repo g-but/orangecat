@@ -27,7 +27,7 @@ async function applyMasterFix() {
   console.log('🚀 Applying OrangeCat Database Master Fix...');
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
+    auth: { autoRefreshToken: false, persistSession: false },
   });
 
   try {
@@ -58,9 +58,14 @@ async function applyMasterFix() {
           // If exec_sql doesn't exist, try direct query
           if (error.message.includes('function exec_sql')) {
             console.log('⚠️  exec_sql function not available, trying direct execution...');
-            const { error: directError } = await supabase.from('_supabase_migration_temp').select('*').limit(1);
+            const { error: directError } = await supabase
+              .from('_supabase_migration_temp')
+              .select('*')
+              .limit(1);
             if (directError) {
-              console.log('⚠️  Cannot execute SQL directly. Please run the master fix manually in Supabase SQL editor.');
+              console.log(
+                '⚠️  Cannot execute SQL directly. Please run the master fix manually in Supabase SQL editor.'
+              );
               break;
             }
           } else {
@@ -89,9 +94,10 @@ async function applyMasterFix() {
       console.log('🔄 Commerce features (products, services, loans) should now work.');
     } else {
       console.log('\n⚠️  No statements were executed.');
-      console.log('💡 Manual application required - run supabase/sql/database_master_fix.sql in Supabase SQL editor');
+      console.log(
+        '💡 Manual application required - run supabase/sql/database_master_fix.sql in Supabase SQL editor'
+      );
     }
-
   } catch (error) {
     console.error('❌ Failed to apply master fix:', error.message);
 
@@ -109,14 +115,3 @@ async function applyMasterFix() {
 
 // Run the fix
 applyMasterFix().catch(console.error);
-
-
-
-
-
-
-
-
-
-
-

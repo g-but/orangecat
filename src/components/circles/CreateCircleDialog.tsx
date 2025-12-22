@@ -40,7 +40,9 @@ import { toast } from 'sonner';
 const circleSchema = z.object({
   name: z.string().min(3, 'Circle name must be at least 3 characters').max(100),
   description: z.string().optional(),
-  category: z.enum(['family', 'friends', 'business', 'investment', 'community', 'project', 'other']).optional(),
+  category: z
+    .enum(['family', 'friends', 'business', 'investment', 'community', 'project', 'other'])
+    .optional(),
   is_public: z.boolean().default(true),
   join_policy: z.enum(['open', 'invite_only', 'closed']).default('open'),
   visibility: z.enum(['public', 'members_only', 'private']).default('public'),
@@ -55,7 +57,11 @@ interface CreateCircleDialogProps {
   onCircleCreated: () => void;
 }
 
-export function CreateCircleDialog({ open, onOpenChange, onCircleCreated }: CreateCircleDialogProps) {
+export function CreateCircleDialog({
+  open,
+  onOpenChange,
+  onCircleCreated,
+}: CreateCircleDialogProps) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<CircleFormData>({
@@ -126,9 +132,7 @@ export function CreateCircleDialog({ open, onOpenChange, onCircleCreated }: Crea
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Basic Information</CardTitle>
-                <CardDescription>
-                  Set up your circle's foundation
-                </CardDescription>
+                <CardDescription>Set up your circle's foundation</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -140,9 +144,7 @@ export function CreateCircleDialog({ open, onOpenChange, onCircleCreated }: Crea
                       <FormControl>
                         <Input placeholder="e.g., Bitcoin Investment Club" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        Choose a descriptive name for your circle
-                      </FormDescription>
+                      <FormDescription>Choose a descriptive name for your circle</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -202,9 +204,7 @@ export function CreateCircleDialog({ open, onOpenChange, onCircleCreated }: Crea
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Privacy & Access</CardTitle>
-                <CardDescription>
-                  Control who can find and join your circle
-                </CardDescription>
+                <CardDescription>Control who can find and join your circle</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -220,10 +220,7 @@ export function CreateCircleDialog({ open, onOpenChange, onCircleCreated }: Crea
                           </FormDescription>
                         </div>
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                       </div>
                       <FormMessage />
@@ -264,9 +261,7 @@ export function CreateCircleDialog({ open, onOpenChange, onCircleCreated }: Crea
                           </SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormDescription>
-                        How new members can join your circle
-                      </FormDescription>
+                      <FormDescription>How new members can join your circle</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -286,8 +281,12 @@ export function CreateCircleDialog({ open, onOpenChange, onCircleCreated }: Crea
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="public">Public - Everyone can see content</SelectItem>
-                          <SelectItem value="members_only">Members Only - Only members can see content</SelectItem>
-                          <SelectItem value="private">Private - Only you can see content</SelectItem>
+                          <SelectItem value="members_only">
+                            Members Only - Only members can see content
+                          </SelectItem>
+                          <SelectItem value="private">
+                            Private - Only you can see content
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription>
@@ -304,9 +303,7 @@ export function CreateCircleDialog({ open, onOpenChange, onCircleCreated }: Crea
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Community Rules</CardTitle>
-                <CardDescription>
-                  Optional guidelines for your circle members
-                </CardDescription>
+                <CardDescription>Optional guidelines for your circle members</CardDescription>
               </CardHeader>
               <CardContent>
                 <FormField
@@ -352,47 +349,3 @@ export function CreateCircleDialog({ open, onOpenChange, onCircleCreated }: Crea
     </Dialog>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

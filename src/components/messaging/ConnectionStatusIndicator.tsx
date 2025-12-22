@@ -2,16 +2,16 @@
 
 /**
  * Connection Status Indicator
- * 
+ *
  * Shows the real-time connection status for messaging.
  * Similar to Facebook Messenger's connection indicator.
- * 
+ *
  * @module messaging/ConnectionStatusIndicator
  */
 
 import React from 'react';
 import { Wifi, WifiOff, RefreshCw, AlertCircle } from 'lucide-react';
-import { useRealtimeConnection } from '@/hooks/useRealtimeConnection';
+import { useConnectionStatus } from '@/stores/messaging';
 import type { ConnectionStatus } from '@/hooks/useRealtimeConnection';
 
 interface ConnectionStatusIndicatorProps {
@@ -73,12 +73,10 @@ export function ConnectionStatusIndicator({
   show = true,
   className = '',
 }: ConnectionStatusIndicatorProps) {
-  const { status, reconnect, isConnected } = useRealtimeConnection({
-    enabled: show,
-  });
+  const status = useConnectionStatus();
 
   // Don't show when connected (only show when there's an issue)
-  if (!show || isConnected) {
+  if (!show || status === 'connected') {
     return null;
   }
 
@@ -96,16 +94,6 @@ export function ConnectionStatusIndicator({
     >
       {display.icon}
       <span className="text-sm font-medium">{display.text}</span>
-      {status === 'error' && (
-        <button
-          onClick={reconnect}
-          className="ml-auto text-xs underline hover:no-underline"
-          aria-label="Retry connection"
-        >
-          Retry
-        </button>
-      )}
     </div>
   );
 }
-

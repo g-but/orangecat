@@ -17,11 +17,7 @@ interface CreateAssetDialogProps {
   onAssetCreated?: () => void;
 }
 
-export function CreateAssetDialog({
-  open,
-  onOpenChange,
-  onAssetCreated,
-}: CreateAssetDialogProps) {
+export function CreateAssetDialog({ open, onOpenChange, onAssetCreated }: CreateAssetDialogProps) {
   const handleAssetCreated = () => {
     toast.success('Asset created successfully!');
     onAssetCreated?.();
@@ -37,50 +33,13 @@ export function CreateAssetDialog({
         <DialogHeader>
           <DialogTitle>Create Asset for Collateral</DialogTitle>
           <DialogDescription>
-            Quickly create an asset that you can use as collateral for your loan.
-            You can edit these details later from the Assets page.
+            Quickly create an asset that you can use as collateral for your loan. You can edit these
+            details later from the Assets page.
           </DialogDescription>
         </DialogHeader>
 
-        <AssetForm
-          onAssetCreated={handleAssetCreated}
-          onCancel={handleClose}
-          mode="quick"
-        />
+        <AssetForm onAssetCreated={handleAssetCreated} onCancel={handleClose} mode="quick" />
       </DialogContent>
     </Dialog>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -13,167 +13,170 @@
  *   node scripts/utils/env-manager.js setup     - Initial setup
  */
 
-const fs = require('fs')
-const path = require('path')
-const crypto = require('crypto')
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
 
 class EnvManager {
   constructor() {
-    this.envFile = path.join(process.cwd(), '.env.local')
-    this.backupDir = path.join(process.cwd(), '.env-backups')
-    this.requiredVars = [
-      'NEXT_PUBLIC_SUPABASE_URL',
-      'NEXT_PUBLIC_SUPABASE_ANON_KEY'
-    ]
+    this.envFile = path.join(process.cwd(), '.env.local');
+    this.backupDir = path.join(process.cwd(), '.env-backups');
+    this.requiredVars = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'];
     this.optionalVars = [
       'GITHUB_TOKEN',
       'VERCEL_TOKEN',
       'NEXT_PUBLIC_SITE_URL',
       'NEXT_PUBLIC_SITE_NAME',
       'NEXT_PUBLIC_BITCOIN_ADDRESS',
-      'NEXT_PUBLIC_LIGHTNING_ADDRESS'
-    ]
+      'NEXT_PUBLIC_LIGHTNING_ADDRESS',
+    ];
   }
 
   log(message, type = 'info') {
-    const timestamp = new Date().toISOString()
+    const timestamp = new Date().toISOString();
     const colors = {
       info: '\x1b[36m',
       success: '\x1b[32m',
       warning: '\x1b[33m',
       error: '\x1b[31m',
-      reset: '\x1b[0m'
-    }
+      reset: '\x1b[0m',
+    };
 
-    console.log(`${colors[type]}[${timestamp}] ${message}${colors.reset}`)
+    console.log(`${colors[type]}[${timestamp}] ${message}${colors.reset}`);
   }
 
   createBackup() {
     if (!fs.existsSync(this.envFile)) {
-      this.log('No .env.local file found to backup', 'warning')
-      return null
+      this.log('No .env.local file found to backup', 'warning');
+      return null;
     }
 
     // Ensure backup directory exists
     if (!fs.existsSync(this.backupDir)) {
-      fs.mkdirSync(this.backupDir, { recursive: true })
+      fs.mkdirSync(this.backupDir, { recursive: true });
     }
 
     // Create backup with timestamp
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-    const hash = crypto.createHash('md5')
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const hash = crypto
+      .createHash('md5')
       .update(fs.readFileSync(this.envFile))
       .digest('hex')
-      .substring(0, 8)
+      .substring(0, 8);
 
-    const backupFile = path.join(this.backupDir, `.env.local.${timestamp}.${hash}.backup`)
+    const backupFile = path.join(this.backupDir, `.env.local.${timestamp}.${hash}.backup`);
 
-    fs.copyFileSync(this.envFile, backupFile)
-    this.log(`✅ Backup created: ${path.basename(backupFile)}`, 'success')
+    fs.copyFileSync(this.envFile, backupFile);
+    this.log(`✅ Backup created: ${path.basename(backupFile)}`, 'success');
 
-    return backupFile
+    return backupFile;
   }
 
   validateEnv() {
     if (!fs.existsSync(this.envFile)) {
-      this.log('❌ .env.local file not found', 'error')
-      return false
+      this.log('❌ .env.local file not found', 'error');
+      return false;
     }
 
-    const content = fs.readFileSync(this.envFile, 'utf8')
-    const envVars = {}
+    const content = fs.readFileSync(this.envFile, 'utf8');
+    const envVars = {};
 
     // Parse environment variables
     content.split('\n').forEach(line => {
-      line = line.trim()
+      line = line.trim();
       if (line && !line.startsWith('#') && line.includes('=')) {
-        const [key, ...valueParts] = line.split('=')
-        envVars[key] = valueParts.join('=')
+        const [key, ...valueParts] = line.split('=');
+        envVars[key] = valueParts.join('=');
       }
-    })
+    });
 
-    let isValid = true
+    let isValid = true;
 
     // Check required variables
     this.requiredVars.forEach(varName => {
-      if (!envVars[varName] || envVars[varName].includes('placeholder') || envVars[varName].includes('your-')) {
-        this.log(`❌ Missing or invalid: ${varName}`, 'error')
-        isValid = false
+      if (
+        !envVars[varName] ||
+        envVars[varName].includes('placeholder') ||
+        envVars[varName].includes('your-')
+      ) {
+        this.log(`❌ Missing or invalid: ${varName}`, 'error');
+        isValid = false;
       } else {
-        this.log(`✅ ${varName}: Set`, 'success')
+        this.log(`✅ ${varName}: Set`, 'success');
       }
-    })
+    });
 
     // Check optional variables
     this.optionalVars.forEach(varName => {
       if (envVars[varName] && !envVars[varName].includes('your-')) {
-        this.log(`✅ ${varName}: Set`, 'success')
+        this.log(`✅ ${varName}: Set`, 'success');
       } else {
-        this.log(`⚠️  ${varName}: Not set`, 'warning')
+        this.log(`⚠️  ${varName}: Not set`, 'warning');
       }
-    })
+    });
 
-    return isValid
+    return isValid;
   }
 
   listBackups() {
     if (!fs.existsSync(this.backupDir)) {
-      this.log('No backup directory found', 'warning')
-      return []
+      this.log('No backup directory found', 'warning');
+      return [];
     }
 
-    const backups = fs.readdirSync(this.backupDir)
+    const backups = fs
+      .readdirSync(this.backupDir)
       .filter(file => file.startsWith('.env.local.') && file.endsWith('.backup'))
       .map(file => path.join(this.backupDir, file))
       .sort()
-      .reverse()
+      .reverse();
 
     if (backups.length === 0) {
-      this.log('No backups found', 'warning')
+      this.log('No backups found', 'warning');
     } else {
-      this.log(`Found ${backups.length} backups:`, 'info')
+      this.log(`Found ${backups.length} backups:`, 'info');
       backups.forEach(backup => {
-        const stats = fs.statSync(backup)
-        const size = (stats.size / 1024).toFixed(1)
-        console.log(`  📁 ${path.basename(backup)} (${size}KB)`)
-      })
+        const stats = fs.statSync(backup);
+        const size = (stats.size / 1024).toFixed(1);
+        console.log(`  📁 ${path.basename(backup)} (${size}KB)`);
+      });
     }
 
-    return backups
+    return backups;
   }
 
   restoreBackup(backupFile = null) {
-    const backups = this.listBackups()
+    const backups = this.listBackups();
 
     if (backups.length === 0) {
-      this.log('No backups available to restore', 'error')
-      return false
+      this.log('No backups available to restore', 'error');
+      return false;
     }
 
     if (!backupFile) {
-      backupFile = backups[0] // Use most recent
+      backupFile = backups[0]; // Use most recent
     }
 
     if (!fs.existsSync(backupFile)) {
-      this.log(`Backup file not found: ${backupFile}`, 'error')
-      return false
+      this.log(`Backup file not found: ${backupFile}`, 'error');
+      return false;
     }
 
     // Create backup of current file before restore
     if (fs.existsSync(this.envFile)) {
-      this.createBackup()
+      this.createBackup();
     }
 
-    fs.copyFileSync(backupFile, this.envFile)
-    this.log(`✅ Restored from: ${path.basename(backupFile)}`, 'success')
+    fs.copyFileSync(backupFile, this.envFile);
+    this.log(`✅ Restored from: ${path.basename(backupFile)}`, 'success');
 
-    return true
+    return true;
   }
 
   setupInitialEnv() {
     if (fs.existsSync(this.envFile)) {
-      this.log('.env.local already exists. Creating backup first...', 'warning')
-      this.createBackup()
+      this.log('.env.local already exists. Creating backup first...', 'warning');
+      this.createBackup();
     }
 
     const envContent = `# OrangeCat Development Environment
@@ -212,11 +215,11 @@ NEXT_PUBLIC_LIGHTNING_ADDRESS=orangecat@getalby.com
 
 # Vercel Configuration
 # VERCEL_TOKEN=your_vercel_token_here
-`
+`;
 
-    fs.writeFileSync(this.envFile, envContent)
-    this.log('✅ Created initial .env.local file', 'success')
-    this.log('🔄 Run: direnv reload', 'info')
+    fs.writeFileSync(this.envFile, envContent);
+    this.log('✅ Created initial .env.local file', 'success');
+    this.log('🔄 Run: direnv reload', 'info');
   }
 
   showHelp() {
@@ -251,92 +254,46 @@ SAFETY FEATURES:
   • Validation of required environment variables
   • Secure token management via OAuth
   • No sensitive data in version control
-`)
+`);
   }
 
   async run() {
-    const command = process.argv[2]
+    const command = process.argv[2];
 
     switch (command) {
       case 'setup':
-        this.setupInitialEnv()
-        break
+        this.setupInitialEnv();
+        break;
 
       case 'backup':
-        this.createBackup()
-        break
+        this.createBackup();
+        break;
 
       case 'validate':
-        this.validateEnv()
-        break
+        this.validateEnv();
+        break;
 
       case 'restore':
-        const backupFile = process.argv[3]
-        this.restoreBackup(backupFile)
-        break
+        const backupFile = process.argv[3];
+        this.restoreBackup(backupFile);
+        break;
 
       case 'list':
-        this.listBackups()
-        break
+        this.listBackups();
+        break;
 
       case 'help':
       default:
-        this.showHelp()
-        break
+        this.showHelp();
+        break;
     }
   }
 }
 
 // Run if called directly
 if (require.main === module) {
-  const manager = new EnvManager()
-  manager.run().catch(console.error)
+  const manager = new EnvManager();
+  manager.run().catch(console.error);
 }
 
-module.exports = EnvManager
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+module.exports = EnvManager;

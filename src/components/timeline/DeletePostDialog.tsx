@@ -51,7 +51,9 @@ export function DeletePostDialog({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
@@ -70,22 +72,18 @@ export function DeletePostDialog({
           </div>
 
           {/* Title */}
-          <h2 className="text-xl font-bold text-gray-900 text-center mb-2">
-            Delete post?
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 text-center mb-2">Delete post?</h2>
 
           {/* Description */}
           <p className="text-gray-600 text-center text-[15px] mb-2">
-            This can&apos;t be undone and it will be removed from your profile,
-            the timeline, and search results.
+            This can&apos;t be undone and it will be removed from your profile, the timeline, and
+            search results.
           </p>
 
           {/* Post preview */}
           {postPreview && (
             <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
-              <p className="text-gray-700 text-sm line-clamp-3">
-                {postPreview}
-              </p>
+              <p className="text-gray-700 text-sm line-clamp-3">{postPreview}</p>
             </div>
           )}
 

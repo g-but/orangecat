@@ -88,13 +88,16 @@ async function applyMigration() {
 
         // Execute the statement
         const { error } = await supabase.rpc('exec_sql', {
-          sql: statement + ';'
+          sql: statement + ';',
         });
 
         if (error) {
           // Try direct execution for some statements
           console.log('   ℹ️  Trying direct execution...');
-          const { error: directError } = await supabase.from('_supabase_migration_temp').select('*').limit(0);
+          const { error: directError } = await supabase
+            .from('_supabase_migration_temp')
+            .select('*')
+            .limit(0);
 
           if (directError) {
             console.log(`   ❌ Statement ${i + 1} failed:`, error.message);
@@ -107,7 +110,6 @@ async function applyMigration() {
           console.log(`   ✅ Statement ${i + 1} executed successfully`);
           successCount++;
         }
-
       } catch (err) {
         console.log(`   ❌ Statement ${i + 1} error:`, err.message);
         errorCount++;
@@ -132,7 +134,6 @@ async function applyMigration() {
     } else {
       console.log('\n⚠️  Some statements failed. Check the errors above.');
     }
-
   } catch (error) {
     console.error('❌ Migration failed:', error.message);
     process.exit(1);
@@ -140,48 +141,3 @@ async function applyMigration() {
 }
 
 applyMigration();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

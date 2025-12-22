@@ -24,7 +24,7 @@ export function CircleList({ circles, onCircleUpdated }: CircleListProps) {
 
   return (
     <div className="space-y-4">
-      {circles.map((circle) => (
+      {circles.map(circle => (
         <Card key={circle.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
@@ -83,47 +83,3 @@ export function CircleList({ circles, onCircleUpdated }: CircleListProps) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

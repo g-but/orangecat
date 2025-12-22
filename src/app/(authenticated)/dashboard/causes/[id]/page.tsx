@@ -1,38 +1,43 @@
-import { notFound, redirect } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
-import EntityDetailLayout from '@/components/entity/EntityDetailLayout'
-import Link from 'next/link'
-import Button from '@/components/ui/Button'
+import { notFound, redirect } from 'next/navigation';
+import { createServerClient } from '@/lib/supabase/server';
+import EntityDetailLayout from '@/components/entity/EntityDetailLayout';
+import Link from 'next/link';
+import Button from '@/components/ui/Button';
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 export default async function CauseDetailPage({ params }: PageProps) {
-  const { id } = await params
-  const supabase = await createServerClient()
-  const { data: auth } = await supabase.auth.getUser()
-  const user = auth?.user
-  if (!user) redirect('/auth?mode=login&from=/dashboard/causes')
+  const { id } = await params;
+  const supabase = await createServerClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
+  if (!user) {
+    redirect('/auth?mode=login&from=/dashboard/causes');
+  }
 
   const { data: cause, error } = await supabase
     .from('user_causes')
     .select('*')
     .eq('id', id)
     .eq('user_id', user.id)
-    .single()
+    .single();
 
-  if (error || !cause) notFound()
+  if (error || !cause) {
+    notFound();
+  }
 
   const headerActions = (
     <Link href={`/dashboard/causes/create?edit=${cause.id}`}>
       <Button>Edit</Button>
     </Link>
-  )
+  );
 
-  const progressPercentage = cause.goal_sats && cause.goal_sats > 0
-    ? Math.min(100, Math.round((cause.total_raised_sats || 0) / cause.goal_sats * 100))
-    : null
+  const progressPercentage =
+    cause.goal_sats && cause.goal_sats > 0
+      ? Math.min(100, Math.round(((cause.total_raised_sats || 0) / cause.goal_sats) * 100))
+      : null;
 
   return (
     <EntityDetailLayout
@@ -49,11 +54,15 @@ export default async function CauseDetailPage({ params }: PageProps) {
             {cause.goal_sats && (
               <>
                 <div className="text-gray-500">Goal</div>
-                <div className="font-medium">{cause.goal_sats} {cause.currency || 'SATS'}</div>
+                <div className="font-medium">
+                  {cause.goal_sats} {cause.currency || 'SATS'}
+                </div>
               </>
             )}
             <div className="text-gray-500">Raised</div>
-            <div className="font-medium">{cause.total_raised_sats || 0} {cause.currency || 'SATS'}</div>
+            <div className="font-medium">
+              {cause.total_raised_sats || 0} {cause.currency || 'SATS'}
+            </div>
             {cause.goal_sats && cause.goal_sats > 0 && progressPercentage !== null && (
               <>
                 <div className="text-gray-500">Progress</div>
@@ -63,7 +72,9 @@ export default async function CauseDetailPage({ params }: PageProps) {
             {cause.total_distributed_sats && cause.total_distributed_sats > 0 && (
               <>
                 <div className="text-gray-500">Distributed</div>
-                <div className="font-medium">{cause.total_distributed_sats} {cause.currency || 'SATS'}</div>
+                <div className="font-medium">
+                  {cause.total_distributed_sats} {cause.currency || 'SATS'}
+                </div>
               </>
             )}
           </div>
@@ -107,7 +118,5 @@ export default async function CauseDetailPage({ params }: PageProps) {
         </div>
       }
     />
-  )
+  );
 }
-
-

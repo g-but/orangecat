@@ -14,11 +14,14 @@ export function useActiveRoute() {
   const pathname = usePathname();
 
   const isActive = (href: string): boolean => {
+    if (!pathname) {
+      return false;
+    }
     if (href === '/') {
       return pathname === '/';
     }
     return pathname.startsWith(href);
   };
 
-  return { isActive, pathname };
+  return { isActive, pathname: pathname || '' };
 }

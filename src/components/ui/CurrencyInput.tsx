@@ -83,10 +83,8 @@ export function CurrencyInput({
   id,
 }: CurrencyInputProps) {
   // Use user's currency preference or default
-  const [inputCurrency, setInputCurrency] = useState<Currency>(
-    userCurrency || defaultCurrency
-  );
-  
+  const [inputCurrency, setInputCurrency] = useState<Currency>(userCurrency || defaultCurrency);
+
   // Local input value (in display currency)
   const [localValue, setLocalValue] = useState<string>('');
   const [isUserEditing, setIsUserEditing] = useState<boolean>(false);
@@ -114,13 +112,15 @@ export function CurrencyInput({
       }
     }
   }, [value, inputCurrency, isUserEditing]);
-  
+
   // Currency breakdown for display
   const breakdown = useMemo(() => {
-    if (!value || value === 0) return null;
+    if (!value || value === 0) {
+      return null;
+    }
     return getCurrencyBreakdown(value);
   }, [value]);
-  
+
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawValue = e.target.value;
@@ -146,15 +146,15 @@ export function CurrencyInput({
 
     onChange(constrainedSats);
   };
-  
+
   // Handle currency switch
   const handleCurrencyChange = (newCurrency: Currency) => {
     setInputCurrency(newCurrency);
-    
+
     // Recalculate local value in new currency
     if (value !== null && value !== undefined) {
       const displayValue = convertFromSats(value, newCurrency);
-      
+
       if (newCurrency === 'SATS') {
         setLocalValue(displayValue.toLocaleString('en-US', { maximumFractionDigits: 0 }));
       } else if (newCurrency === 'BTC') {
@@ -164,9 +164,9 @@ export function CurrencyInput({
       }
     }
   };
-  
+
   const currencyInfo = CURRENCY_INFO[inputCurrency];
-  
+
   return (
     <div className="space-y-2">
       {/* Label */}
@@ -175,7 +175,7 @@ export function CurrencyInput({
           {label}
         </label>
       )}
-      
+
       {/* Input with currency selector */}
       <div className="relative">
         <div className="flex">
@@ -194,15 +194,15 @@ export function CurrencyInput({
             disabled={disabled}
             className={`rounded-r-none ${error ? 'border-red-500' : ''}`}
           />
-          
+
           {allowCurrencySwitch ? (
             <select
               value={inputCurrency}
-              onChange={(e) => handleCurrencyChange(e.target.value as Currency)}
+              onChange={e => handleCurrencyChange(e.target.value as Currency)}
               disabled={disabled}
               className="px-3 py-2 border border-l-0 border-gray-300 rounded-r-md bg-gray-50 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-orange-500 focus:border-transparent cursor-pointer"
             >
-              {ALL_CURRENCIES.map((curr) => (
+              {ALL_CURRENCIES.map(curr => (
                 <option key={curr} value={curr}>
                   {curr}
                 </option>
@@ -215,11 +215,11 @@ export function CurrencyInput({
           )}
         </div>
       </div>
-      
+
       {/* Hint or error */}
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
-      
+
       {/* Currency breakdown */}
       {showBreakdown && breakdown && value && value > 0 && (
         <div className="mt-3 p-3 rounded-lg bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100">
@@ -227,7 +227,7 @@ export function CurrencyInput({
             <ArrowLeftRight className="w-4 h-4 text-orange-600" />
             <span className="text-xs font-semibold text-gray-900">Equivalent to</span>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-2 text-xs">
             {/* BTC */}
             <div className="flex justify-between items-center">
@@ -239,26 +239,26 @@ export function CurrencyInput({
                 {breakdown.btc.toFixed(8).replace(/\.?0+$/, '')}
               </span>
             </div>
-            
+
             {/* Sats */}
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Sats</span>
-              <span className="font-mono font-semibold">
-                {breakdown.sats.toLocaleString()}
-              </span>
+              <span className="font-mono font-semibold">{breakdown.sats.toLocaleString()}</span>
             </div>
-            
+
             {/* Fiat currencies (show only non-selected ones) */}
-            {FIAT_CURRENCIES.filter(c => c !== inputCurrency).slice(0, 2).map((curr) => (
-              <div key={curr} className="flex justify-between items-center">
-                <span className="text-gray-600">{curr}</span>
-                <span className="font-mono font-medium text-gray-700">
-                  {formatCurrency(breakdown.fiat[curr], curr, { showSymbol: true })}
-                </span>
-              </div>
-            ))}
+            {FIAT_CURRENCIES.filter(c => c !== inputCurrency)
+              .slice(0, 2)
+              .map(curr => (
+                <div key={curr} className="flex justify-between items-center">
+                  <span className="text-gray-600">{curr}</span>
+                  <span className="font-mono font-medium text-gray-700">
+                    {formatCurrency(breakdown.fiat[curr], curr, { showSymbol: true })}
+                  </span>
+                </div>
+              ))}
           </div>
-          
+
           <div className="mt-2 pt-2 border-t border-orange-100 flex items-start gap-1">
             <Info className="w-3 h-3 text-orange-500 mt-0.5 flex-shrink-0" />
             <p className="text-[10px] text-gray-600">
@@ -287,12 +287,10 @@ export function CurrencyDisplay({
 }: CurrencyDisplayProps) {
   const displayValue = convertFromSats(sats, currency);
   const breakdown = showBreakdown ? getCurrencyBreakdown(sats) : null;
-  
+
   return (
     <div className={className}>
-      <span className="font-semibold">
-        {formatCurrency(displayValue, currency)}
-      </span>
+      <span className="font-semibold">{formatCurrency(displayValue, currency)}</span>
       {breakdown && (
         <span className="text-sm text-gray-500 ml-2">
           ({formatCurrency(breakdown.sats, 'SATS', { compact: true })})
@@ -301,4 +299,3 @@ export function CurrencyDisplay({
     </div>
   );
 }
-

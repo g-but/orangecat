@@ -1,4 +1,5 @@
 # Comprehensive Messaging System Improvements
+
 ## First-Principles Analysis & Action Plan
 
 **Date:** 2025-01-02  
@@ -12,6 +13,7 @@
 This document provides a comprehensive, first-principles analysis of the messaging system with actionable improvements across all layers. Issues are categorized by severity and implementation complexity.
 
 **Key Findings:**
+
 - **DRY Violations:** 12+ instances of code duplication
 - **Performance Issues:** 8 critical bottlenecks identified
 - **UX Gaps:** 15+ missing features for modern messaging
@@ -25,6 +27,7 @@ This document provides a comprehensive, first-principles analysis of the messagi
 ### 1.1 Duplicate Type Definitions
 
 **Problem:**
+
 ```typescript
 // Found in 4+ files:
 interface Message { ... }  // MessageView.tsx
@@ -33,6 +36,7 @@ interface Message { ... }  // features/messaging/types.ts
 ```
 
 **Solution:**
+
 ```typescript
 // src/features/messaging/types.ts (single source of truth)
 export interface Message {
@@ -67,12 +71,14 @@ import type { Message } from '@/features/messaging/types';
 ### 1.2 Duplicate Realtime Subscription Logic
 
 **Problem:**
+
 - `MessageView` creates subscription
 - `MessagesUnreadContext` creates subscription
 - `useConversations` creates subscription
 - Each has similar setup/teardown logic
 
 **Solution:**
+
 ```typescript
 // src/hooks/useMessageSubscription.ts
 export function useMessageSubscription(
@@ -85,32 +91,36 @@ export function useMessageSubscription(
 ) {
   const { user } = useAuth();
   const { onNewMessage, onOwnMessage, enabled = true } = options;
-  
+
   useEffect(() => {
     if (!conversationId || !user?.id || !enabled) return;
-    
+
     const channel = supabase
       .channel(`messages:${conversationId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `conversation_id=eq.${conversationId}`,
-      }, async (payload) => {
-        if (payload.new.sender_id === user.id) {
-          onOwnMessage?.(payload.new.id);
-        } else {
-          // Fetch full message
-          const { data } = await supabase
-            .from('message_details')
-            .select('*')
-            .eq('id', payload.new.id)
-            .single();
-          if (data) onNewMessage?.(data as Message);
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `conversation_id=eq.${conversationId}`,
+        },
+        async payload => {
+          if (payload.new.sender_id === user.id) {
+            onOwnMessage?.(payload.new.id);
+          } else {
+            // Fetch full message
+            const { data } = await supabase
+              .from('message_details')
+              .select('*')
+              .eq('id', payload.new.id)
+              .single();
+            if (data) onNewMessage?.(data as Message);
+          }
         }
-      })
+      )
       .subscribe();
-    
+
     return () => {
       supabase.removeChannel(channel);
     };
@@ -125,12 +135,14 @@ export function useMessageSubscription(
 ### 1.3 Duplicate Participant Fetching
 
 **Problem:**
+
 - `fetchConversationSummary()` fetches participants
 - `fetchUserConversations()` fetches participants
 - `GET /api/messages/[conversationId]` fetches participants
 - All have similar transformation logic
 
 **Solution:**
+
 ```typescript
 // src/features/messaging/service.server.ts
 async function fetchParticipants(
@@ -139,16 +151,18 @@ async function fetchParticipants(
 ): Promise<Participant[]> {
   const { data } = await admin
     .from('conversation_participants')
-    .select(`
+    .select(
+      `
       user_id,
       role,
       joined_at,
       last_read_at,
       is_active,
       profiles:user_id (id, username, name, avatar_url)
-    `)
+    `
+    )
     .eq('conversation_id', conversationId);
-  
+
   return (data || []).map((p: any) => ({
     user_id: p.user_id,
     username: p.profiles?.username || '',
@@ -169,11 +183,13 @@ async function fetchParticipants(
 ### 1.4 Duplicate Error Handling
 
 **Problem:**
+
 - Same error handling patterns repeated in 5+ components
 - Inconsistent error messages
 - No centralized error recovery
 
 **Solution:**
+
 ```typescript
 // src/utils/messageErrors.ts
 export class MessageError extends Error {
@@ -188,12 +204,12 @@ export class MessageError extends Error {
 
 export function handleMessageError(error: unknown): MessageError {
   if (error instanceof MessageError) return error;
-  
+
   // Network errors
   if (error instanceof TypeError && error.message.includes('fetch')) {
     return new MessageError('Network error', 'NETWORK', true);
   }
-  
+
   // Supabase errors
   if (error && typeof error === 'object' && 'code' in error) {
     const code = (error as any).code;
@@ -201,7 +217,7 @@ export function handleMessageError(error: unknown): MessageError {
       return new MessageError('Conversation not found', 'NOT_FOUND', false);
     }
   }
-  
+
   return new MessageError('Unknown error', 'UNKNOWN', false);
 }
 ```
@@ -213,6 +229,7 @@ export function handleMessageError(error: unknown): MessageError {
 ### 2.1 Missing Features
 
 #### 2.1.1 Message Search Within Conversations
+
 **Priority:** High  
 **Complexity:** Medium
 
@@ -226,9 +243,10 @@ const [searchResults, setSearchResults] = useState<Message[]>([]);
 ```
 
 **Implementation:**
+
 ```sql
 -- Migration: Add search index
-CREATE INDEX idx_messages_content_search 
+CREATE INDEX idx_messages_content_search
 ON messages USING gin(to_tsvector('english', content))
 WHERE is_deleted = false;
 
@@ -260,6 +278,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 ---
 
 #### 2.1.2 Typing Indicators
+
 **Priority:** Medium  
 **Complexity:** Low
 
@@ -269,30 +288,31 @@ const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
 
 // Debounced typing event
 const handleTyping = useMemo(
-  () => debounce(() => {
-    supabase
-      .channel(`typing:${conversationId}`)
-      .send({ type: 'typing', user_id: user.id });
-  }, 500),
+  () =>
+    debounce(() => {
+      supabase.channel(`typing:${conversationId}`).send({ type: 'typing', user_id: user.id });
+    }, 500),
   [conversationId, user.id]
 );
 
 // Subscribe to typing events
 useEffect(() => {
   const channel = supabase.channel(`typing:${conversationId}`);
-  channel.on('broadcast', { event: 'typing' }, (payload) => {
-    if (payload.payload.user_id !== user.id) {
-      setTypingUsers(prev => new Set(prev).add(payload.payload.user_id));
-      setTimeout(() => {
-        setTypingUsers(prev => {
-          const next = new Set(prev);
-          next.delete(payload.payload.user_id);
-          return next;
-        });
-      }, 3000);
-    }
-  }).subscribe();
-  
+  channel
+    .on('broadcast', { event: 'typing' }, payload => {
+      if (payload.payload.user_id !== user.id) {
+        setTypingUsers(prev => new Set(prev).add(payload.payload.user_id));
+        setTimeout(() => {
+          setTypingUsers(prev => {
+            const next = new Set(prev);
+            next.delete(payload.payload.user_id);
+            return next;
+          });
+        }, 3000);
+      }
+    })
+    .subscribe();
+
   return () => supabase.removeChannel(channel);
 }, [conversationId]);
 ```
@@ -300,6 +320,7 @@ useEffect(() => {
 ---
 
 #### 2.1.3 Read Receipts UI
+
 **Priority:** Medium  
 **Complexity:** Low
 
@@ -322,10 +343,12 @@ useEffect(() => {
 ---
 
 #### 2.1.4 Message Reactions
+
 **Priority:** Low  
 **Complexity:** Medium
 
 **Schema Addition:**
+
 ```sql
 CREATE TABLE message_reactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -336,13 +359,14 @@ CREATE TABLE message_reactions (
   UNIQUE(message_id, user_id, emoji)
 );
 
-CREATE INDEX idx_message_reactions_message 
+CREATE INDEX idx_message_reactions_message
 ON message_reactions(message_id);
 ```
 
 ---
 
 #### 2.1.5 Message Editing UI
+
 **Priority:** Medium  
 **Complexity:** Low
 
@@ -353,7 +377,7 @@ ON message_reactions(message_id);
 const handleEdit = async (message: Message) => {
   const newContent = prompt('Edit message:', message.content);
   if (!newContent || newContent === message.content) return;
-  
+
   await fetch(`/api/messages/${conversationId}/${message.id}`, {
     method: 'PATCH',
     body: JSON.stringify({ content: newContent }),
@@ -364,12 +388,14 @@ const handleEdit = async (message: Message) => {
 ---
 
 #### 2.1.6 Virtual Scrolling for Large Lists
+
 **Priority:** High  
 **Complexity:** High
 
 **Problem:** All messages rendered at once, poor performance with 1000+ messages
 
 **Solution:**
+
 ```typescript
 import { useVirtualizer } from '@tanstack/react-virtual';
 
@@ -409,6 +435,7 @@ return (
 ---
 
 #### 2.1.7 Skeleton Loading States
+
 **Priority:** Low  
 **Complexity:** Low
 
@@ -433,20 +460,22 @@ return (
 ### 2.2 UX Polish
 
 #### 2.2.1 Better Scroll Position Restoration
+
 **Current:** Basic scroll restoration on load more
 
 **Improvement:**
+
 ```typescript
 const handleLoadMore = useCallback(async () => {
   if (!pagination?.hasMore || isLoadingMore) return;
-  
+
   const container = messagesContainerRef.current;
   const scrollHeight = container?.scrollHeight || 0;
   const scrollTop = container?.scrollTop || 0;
-  
+
   setIsLoadingMore(true);
   await fetchConversation(pagination.nextCursor);
-  
+
   // Restore scroll position after render
   requestAnimationFrame(() => {
     if (container) {
@@ -460,6 +489,7 @@ const handleLoadMore = useCallback(async () => {
 ---
 
 #### 2.2.2 Connection Status Indicator
+
 **Priority:** Medium  
 **Complexity:** Low
 
@@ -469,10 +499,10 @@ const [isOnline, setIsOnline] = useState(navigator.onLine);
 useEffect(() => {
   const handleOnline = () => setIsOnline(true);
   const handleOffline = () => setIsOnline(false);
-  
+
   window.addEventListener('online', handleOnline);
   window.addEventListener('offline', handleOffline);
-  
+
   return () => {
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);
@@ -493,6 +523,7 @@ useEffect(() => {
 ### 3.1 React Performance
 
 #### 3.1.1 Memoize Expensive Computations
+
 ```typescript
 // MessageView.tsx
 const formattedMessages = useMemo(() => {
@@ -507,13 +538,14 @@ const formattedMessages = useMemo(() => {
 ---
 
 #### 3.1.2 Memoize Callbacks
+
 ```typescript
 const handleNewMessage = useCallback((message: Message) => {
   setMessages(prev => {
     // Deduplicate
     if (prev.find(m => m.id === message.id)) return prev;
-    return [...prev, message].sort((a, b) => 
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    return [...prev, message].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
   });
   setShouldAutoScroll(true);
@@ -523,14 +555,20 @@ const handleNewMessage = useCallback((message: Message) => {
 ---
 
 #### 3.1.3 Reduce Re-renders with React.memo
+
 ```typescript
-const MessageBubble = React.memo(({ message, isCurrentUser }: Props) => {
-  // Component implementation
-}, (prev, next) => {
-  return prev.message.id === next.message.id &&
-         prev.message.content === next.message.content &&
-         prev.isCurrentUser === next.isCurrentUser;
-});
+const MessageBubble = React.memo(
+  ({ message, isCurrentUser }: Props) => {
+    // Component implementation
+  },
+  (prev, next) => {
+    return (
+      prev.message.id === next.message.id &&
+      prev.message.content === next.message.content &&
+      prev.isCurrentUser === next.isCurrentUser
+    );
+  }
+);
 ```
 
 ---
@@ -540,15 +578,17 @@ const MessageBubble = React.memo(({ message, isCurrentUser }: Props) => {
 #### 3.2.1 Missing Composite Indexes
 
 **Current Indexes:**
+
 ```sql
 idx_messages_conversation_created ON messages(conversation_id, created_at ASC)
 idx_messages_sender ON messages(sender_id, created_at DESC)
 ```
 
 **Missing Critical Indexes:**
+
 ```sql
 -- For unread count queries
-CREATE INDEX idx_messages_unread 
+CREATE INDEX idx_messages_unread
 ON messages(conversation_id, created_at DESC)
 WHERE is_deleted = false;
 
@@ -572,6 +612,7 @@ ON message_read_receipts(message_id, user_id);
 #### 3.2.2 Optimize Unread Count Query
 
 **Current:** Separate query per conversation
+
 ```typescript
 // Inefficient: N queries for N conversations
 for (const conv of conversations) {
@@ -584,17 +625,18 @@ for (const conv of conversations) {
 ```
 
 **Optimized:** Single query with aggregation
+
 ```sql
 -- Function: get_unread_counts
 CREATE OR REPLACE FUNCTION get_unread_counts(p_user_id uuid)
 RETURNS TABLE (conversation_id uuid, unread_count bigint) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     cp.conversation_id,
     COUNT(m.id)::bigint as unread_count
   FROM conversation_participants cp
-  LEFT JOIN messages m ON 
+  LEFT JOIN messages m ON
     m.conversation_id = cp.conversation_id
     AND m.sender_id != p_user_id
     AND m.is_deleted = false
@@ -613,9 +655,10 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 **Problem:** Complex joins recalculated on every request
 
 **Solution:**
+
 ```sql
 CREATE MATERIALIZED VIEW conversation_summaries AS
-SELECT 
+SELECT
   c.id,
   c.title,
   c.is_group,
@@ -624,19 +667,19 @@ SELECT
   c.updated_at,
   c.last_message_at,
   (
-    SELECT content 
-    FROM messages 
-    WHERE conversation_id = c.id 
-      AND is_deleted = false 
-    ORDER BY created_at DESC 
+    SELECT content
+    FROM messages
+    WHERE conversation_id = c.id
+      AND is_deleted = false
+    ORDER BY created_at DESC
     LIMIT 1
   ) as last_message_preview,
   (
-    SELECT sender_id 
-    FROM messages 
-    WHERE conversation_id = c.id 
-      AND is_deleted = false 
-    ORDER BY created_at DESC 
+    SELECT sender_id
+    FROM messages
+    WHERE conversation_id = c.id
+      AND is_deleted = false
+    ORDER BY created_at DESC
     LIMIT 1
   ) as last_message_sender_id
 FROM conversations c;
@@ -665,19 +708,18 @@ EXECUTE FUNCTION refresh_conversation_summary();
 #### 3.3.1 Batch Message Fetching
 
 **Current:** One query per new message
+
 ```typescript
 // Inefficient
 messages.forEach(msg => fetchNewMessage(msg.id));
 ```
 
 **Optimized:**
+
 ```typescript
 // Batch fetch
 const messageIds = messages.map(m => m.id);
-const { data } = await supabase
-  .from('message_details')
-  .select('*')
-  .in('id', messageIds);
+const { data } = await supabase.from('message_details').select('*').in('id', messageIds);
 ```
 
 ---
@@ -706,7 +748,7 @@ export async function getCachedConversation(id: string) {
   if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
     return cached.data;
   }
-  
+
   const data = await fetchConversationSummary(id);
   cache.set(id, { data, timestamp: Date.now() });
   return data;
@@ -726,7 +768,7 @@ export async function getCachedConversation(id: string) {
 class MessageQueue {
   private queue: QueuedMessage[] = [];
   private db: IDBDatabase | null = null;
-  
+
   async init() {
     return new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open('messageQueue', 1);
@@ -735,7 +777,7 @@ class MessageQueue {
         this.db = request.result;
         resolve(this.db);
       };
-      request.onupgradeneeded = (e) => {
+      request.onupgradeneeded = e => {
         const db = (e.target as IDBOpenDBRequest).result;
         if (!db.objectStoreNames.contains('messages')) {
           db.createObjectStore('messages', { keyPath: 'id' });
@@ -743,7 +785,7 @@ class MessageQueue {
       };
     });
   }
-  
+
   async enqueue(message: Omit<Message, 'id'>, tempId: string) {
     const queued: QueuedMessage = {
       id: tempId,
@@ -751,19 +793,19 @@ class MessageQueue {
       status: 'pending',
       createdAt: Date.now(),
     };
-    
+
     if (this.db) {
       const tx = this.db.transaction('messages', 'readwrite');
       await tx.objectStore('messages').add(queued);
     }
-    
+
     this.queue.push(queued);
     this.processQueue();
   }
-  
+
   async processQueue() {
     if (!navigator.onLine) return;
-    
+
     for (const message of this.queue) {
       if (message.status === 'pending') {
         try {
@@ -774,7 +816,7 @@ class MessageQueue {
               messageType: message.message_type,
             }),
           });
-          
+
           message.status = 'sent';
           if (this.db) {
             const tx = this.db.transaction('messages', 'readwrite');
@@ -783,7 +825,7 @@ class MessageQueue {
         } catch (error) {
           message.status = 'failed';
           message.retryCount = (message.retryCount || 0) + 1;
-          
+
           if (message.retryCount > 3) {
             message.status = 'permanently_failed';
           }
@@ -800,17 +842,20 @@ class MessageQueue {
 
 ```typescript
 // public/sw.js
-self.addEventListener('fetch', (event) => {
+self.addEventListener('fetch', event => {
   if (event.request.url.includes('/api/messages')) {
     event.respondWith(
       fetch(event.request).catch(() => {
         // Return cached response or queue for later
-        return new Response(JSON.stringify({ 
-          error: 'Offline',
-          queued: true 
-        }), {
-          headers: { 'Content-Type': 'application/json' }
-        });
+        return new Response(
+          JSON.stringify({
+            error: 'Offline',
+            queued: true,
+          }),
+          {
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
       })
     );
   }
@@ -834,9 +879,7 @@ async function retryWithBackoff<T>(
       return await fn();
     } catch (error) {
       if (i === maxRetries - 1) throw error;
-      await new Promise(resolve => 
-        setTimeout(resolve, baseDelay * Math.pow(2, i))
-      );
+      await new Promise(resolve => setTimeout(resolve, baseDelay * Math.pow(2, i)));
     }
   }
   throw new Error('Max retries exceeded');
@@ -850,19 +893,19 @@ async function retryWithBackoff<T>(
 ```typescript
 const useConnectionStatus = () => {
   const [status, setStatus] = useState<'online' | 'offline' | 'slow'>('online');
-  
+
   useEffect(() => {
     let timeout: NodeJS.Timeout;
-    
+
     const checkConnection = async () => {
       const start = Date.now();
       try {
-        await fetch('/api/health', { 
+        await fetch('/api/health', {
           method: 'HEAD',
-          cache: 'no-store' 
+          cache: 'no-store',
         });
         const latency = Date.now() - start;
-        
+
         if (latency > 3000) {
           setStatus('slow');
         } else {
@@ -872,16 +915,16 @@ const useConnectionStatus = () => {
         setStatus('offline');
       }
     };
-    
+
     const interval = setInterval(checkConnection, 30000);
     checkConnection();
-    
+
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
     };
   }, []);
-  
+
   return status;
 };
 ```
@@ -932,11 +975,11 @@ WHERE is_active = true;
 
 ```sql
 -- Add computed column for full-text search
-ALTER TABLE messages 
-ADD COLUMN IF NOT EXISTS content_search tsvector 
+ALTER TABLE messages
+ADD COLUMN IF NOT EXISTS content_search tsvector
 GENERATED ALWAYS AS (to_tsvector('english', content)) STORED;
 
-CREATE INDEX idx_messages_search 
+CREATE INDEX idx_messages_search
 ON messages USING gin(content_search)
 WHERE is_deleted = false;
 ```
@@ -956,17 +999,17 @@ CREATE OR REPLACE FUNCTION update_conversation_metadata()
 RETURNS trigger AS $$
 BEGIN
   UPDATE conversations
-  SET 
+  SET
     participant_count = (
-      SELECT COUNT(*) 
-      FROM conversation_participants 
-      WHERE conversation_id = NEW.conversation_id 
+      SELECT COUNT(*)
+      FROM conversation_participants
+      WHERE conversation_id = NEW.conversation_id
         AND is_active = true
     ),
     total_messages = (
-      SELECT COUNT(*) 
-      FROM messages 
-      WHERE conversation_id = NEW.conversation_id 
+      SELECT COUNT(*)
+      FROM messages
+      WHERE conversation_id = NEW.conversation_id
         AND is_deleted = false
     )
   WHERE id = NEW.conversation_id;
@@ -980,6 +1023,7 @@ $$ LANGUAGE plpgsql;
 ## 6. Implementation Priority
 
 ### Phase 1: Critical (Week 1)
+
 1. ✅ Fix mobile layout (DONE)
 2. ✅ Fix optimistic message replacement (DONE)
 3. Consolidate Message type definitions
@@ -987,6 +1031,7 @@ $$ LANGUAGE plpgsql;
 5. Implement message queue for offline
 
 ### Phase 2: High Priority (Week 2)
+
 1. Virtual scrolling for messages
 2. Message search within conversations
 3. Optimize unread count queries
@@ -994,6 +1039,7 @@ $$ LANGUAGE plpgsql;
 5. Memoize expensive computations
 
 ### Phase 3: Medium Priority (Week 3)
+
 1. Typing indicators
 2. Read receipts UI
 3. Message editing UI
@@ -1001,6 +1047,7 @@ $$ LANGUAGE plpgsql;
 5. Skeleton loading states
 
 ### Phase 4: Nice to Have (Week 4+)
+
 1. Message reactions
 2. Materialized views
 3. Advanced caching
@@ -1012,6 +1059,7 @@ $$ LANGUAGE plpgsql;
 ## 7. Metrics & Success Criteria
 
 ### Performance Targets
+
 - **Message Send Latency:** <200ms (p95)
 - **Message Load Time:** <500ms (p95)
 - **Scroll FPS:** >55fps with 1000+ messages
@@ -1019,11 +1067,13 @@ $$ LANGUAGE plpgsql;
 - **Database Query Time:** <100ms (p95)
 
 ### Reliability Targets
+
 - **Message Delivery Rate:** >99.9%
 - **Offline Queue Success:** >99%
 - **Error Recovery Rate:** >95%
 
 ### UX Targets
+
 - **Time to First Message:** <1s
 - **Search Response Time:** <300ms
 - **Typing Indicator Latency:** <100ms
@@ -1046,7 +1096,7 @@ interface MessageState {
   messages: Map<string, Message[]>; // conversationId -> messages
   optimisticMessages: Map<string, Message>; // tempId -> message
   subscriptions: Map<string, any>; // conversationId -> channel
-  
+
   // Actions
   addConversation: (conv: Conversation) => void;
   addMessage: (convId: string, msg: Message) => void;
@@ -1064,37 +1114,40 @@ export const useMessageStore = create<MessageState>()(
         messages: new Map(),
         optimisticMessages: new Map(),
         subscriptions: new Map(),
-        
-        addConversation: (conv) => set((state) => ({
-          conversations: new Map(state.conversations).set(conv.id, conv),
-        })),
-        
-        addMessage: (convId, msg) => set((state) => {
-          const existing = state.messages.get(convId) || [];
-          if (existing.find(m => m.id === msg.id)) return state;
-          
-          const updated = [...existing, msg].sort((a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-          
-          return {
-            messages: new Map(state.messages).set(convId, updated),
-          };
-        }),
-        
-        replaceOptimistic: (convId, tempId, realMsg) => set((state) => {
-          const existing = state.messages.get(convId) || [];
-          const filtered = existing.filter(m => m.id !== tempId);
-          const updated = [...filtered, realMsg].sort((a, b) =>
-            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-          );
-          
-          return {
-            messages: new Map(state.messages).set(convId, updated),
-            optimisticMessages: new Map(state.optimisticMessages).delete(tempId),
-          };
-        }),
-        
+
+        addConversation: conv =>
+          set(state => ({
+            conversations: new Map(state.conversations).set(conv.id, conv),
+          })),
+
+        addMessage: (convId, msg) =>
+          set(state => {
+            const existing = state.messages.get(convId) || [];
+            if (existing.find(m => m.id === msg.id)) return state;
+
+            const updated = [...existing, msg].sort(
+              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+
+            return {
+              messages: new Map(state.messages).set(convId, updated),
+            };
+          }),
+
+        replaceOptimistic: (convId, tempId, realMsg) =>
+          set(state => {
+            const existing = state.messages.get(convId) || [];
+            const filtered = existing.filter(m => m.id !== tempId);
+            const updated = [...filtered, realMsg].sort(
+              (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+
+            return {
+              messages: new Map(state.messages).set(convId, updated),
+              optimisticMessages: new Map(state.optimisticMessages).delete(tempId),
+            };
+          }),
+
         // ... other actions
       }),
       { name: 'message-store' }
@@ -1108,18 +1161,21 @@ export const useMessageStore = create<MessageState>()(
 ## 9. Testing Strategy
 
 ### Unit Tests
+
 - Message state management
 - Optimistic update logic
 - Error handling
 - Queue processing
 
 ### Integration Tests
+
 - End-to-end message sending
 - Offline/online transitions
 - Multiple tab scenarios
 - Realtime subscription handling
 
 ### Performance Tests
+
 - Load testing with 1000+ messages
 - Virtual scrolling performance
 - Database query performance
@@ -1132,6 +1188,7 @@ export const useMessageStore = create<MessageState>()(
 This comprehensive analysis identifies **50+ improvement opportunities** across all layers of the messaging system. Prioritizing critical fixes and high-impact optimizations will significantly improve user experience, performance, and reliability.
 
 **Key Takeaways:**
+
 1. **DRY violations** are the biggest code quality issue
 2. **Database indexes** are missing for common queries
 3. **Virtual scrolling** is essential for large message lists
@@ -1139,6 +1196,7 @@ This comprehensive analysis identifies **50+ improvement opportunities** across 
 5. **Performance optimizations** can yield 10x improvements
 
 **Next Steps:**
+
 1. Review and prioritize improvements
 2. Create implementation tickets
 3. Set up performance monitoring
@@ -1147,4 +1205,3 @@ This comprehensive analysis identifies **50+ improvement opportunities** across 
 ---
 
 **End of Report**
-

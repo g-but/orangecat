@@ -118,29 +118,29 @@ export const DEFAULT_DISPLAY_SETTINGS: DisplaySettings = {
 export interface UserSettings {
   id: string;
   userId: string;
-  
+
   // Currency
   defaultCurrency: Currency;
   displayCurrency: Currency;
   countryCode: string | null;
-  
+
   // Privacy
   showEmail: boolean;
   showPhone: boolean;
   showPhysicalAddress: boolean;
   showLocation: boolean;
   showExactLocation: boolean;
-  
+
   // Notifications
   emailNotifications: boolean;
   pushNotifications: boolean;
   marketingEmails: boolean;
-  
+
   // Display
   theme: Theme;
   language: Language;
   timezone: string | null;
-  
+
   // Timestamps
   createdAt: string;
   updatedAt: string;
@@ -182,40 +182,3 @@ export const EMPTY_PHYSICAL_ADDRESS: PhysicalAddress = {
   postalCode: null,
   country: null,
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

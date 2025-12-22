@@ -1,11 +1,11 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import Card from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout'
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout';
 import {
   Calendar,
   Bitcoin,
@@ -22,72 +22,86 @@ import {
   PartyPopper,
   Palette,
   Tent,
-  Music
-} from 'lucide-react'
+  Music,
+} from 'lucide-react';
 
 export default function EventsPage() {
-  const router = useRouter()
-  const { user, session } = useAuth()
+  const router = useRouter();
+  const { user, session } = useAuth();
 
   const features = [
     {
       icon: Ticket,
       title: 'Bitcoin Ticketing',
-      description: 'Sell tickets with Bitcoin, accept instant payments, and eliminate payment processing fees'
+      description:
+        'Sell tickets with Bitcoin, accept instant payments, and eliminate payment processing fees',
     },
     {
       icon: QrCode,
       title: 'Smart Check-in',
-      description: 'QR code entry system with real-time attendance tracking and automated verification'
+      description:
+        'QR code entry system with real-time attendance tracking and automated verification',
     },
     {
       icon: Users,
       title: 'RSVP Management',
-      description: 'Track responses, manage capacity limits, and send automated updates to attendees'
+      description:
+        'Track responses, manage capacity limits, and send automated updates to attendees',
     },
     {
       icon: Globe,
       title: 'Global Reach',
-      description: 'Connect with attendees worldwide through Bitcoin-powered event discovery'
+      description: 'Connect with attendees worldwide through Bitcoin-powered event discovery',
     },
     {
       icon: Camera,
       title: 'Event Media',
-      description: 'Share photos, live updates, and create lasting memories with integrated media tools'
+      description:
+        'Share photos, live updates, and create lasting memories with integrated media tools',
     },
     {
       icon: BarChart3,
       title: 'Event Analytics',
-      description: 'Track attendance, engagement, and revenue with comprehensive event insights'
-    }
-  ]
+      description: 'Track attendance, engagement, and revenue with comprehensive event insights',
+    },
+  ];
 
   const eventTypes = [
     {
       category: 'Social Events',
       icon: PartyPopper,
-      examples: ['Birthday Parties', 'Anniversary Celebrations', 'Graduation Parties', 'Holiday Gatherings'],
-      color: 'bg-pink-100 text-pink-700'
+      examples: [
+        'Birthday Parties',
+        'Anniversary Celebrations',
+        'Graduation Parties',
+        'Holiday Gatherings',
+      ],
+      color: 'bg-pink-100 text-pink-700',
     },
     {
       category: 'Art & Culture',
       icon: Palette,
       examples: ['Art Exhibits', 'Gallery Openings', 'Photography Shows', 'Cultural Festivals'],
-      color: 'bg-purple-100 text-purple-700'
+      color: 'bg-purple-100 text-purple-700',
     },
     {
       category: 'Adventure & Travel',
       icon: Tent,
-      examples: ['Weekend Getaways', 'Group Hiking Trips', 'Camping Adventures', 'City Explorations'],
-      color: 'bg-green-100 text-green-700'
+      examples: [
+        'Weekend Getaways',
+        'Group Hiking Trips',
+        'Camping Adventures',
+        'City Explorations',
+      ],
+      color: 'bg-green-100 text-green-700',
     },
     {
       category: 'Community & Business',
       icon: Music,
       examples: ['Local Festivals', 'Professional Meetups', 'Workshops', 'Networking Events'],
-      color: 'bg-blue-100 text-blue-700'
-    }
-  ]
+      color: 'bg-blue-100 text-blue-700',
+    },
+  ];
 
   const benefits = [
     'Zero ticket processing fees - keep 100% of revenue',
@@ -97,20 +111,20 @@ export default function EventsPage() {
     'Integrated event promotion and social sharing',
     'Real-time analytics and performance tracking',
     'Flexible pricing with Bitcoin and fiat options',
-    'Professional event pages with customization'
-  ]
+    'Professional event pages with customization',
+  ];
 
   const handleGetStarted = () => {
     if (session) {
-      router.push('/events/create')
+      router.push('/events/create');
     } else {
-      router.push('/auth?mode=login&redirect=/events/create')
+      router.push('/auth?mode=login&redirect=/events/create');
     }
-  }
+  };
 
   const handleViewDemo = () => {
-    router.push('/demo/events')
-  }
+    router.push('/demo/events');
+  };
 
   return (
     <PageLayout>
@@ -203,28 +217,36 @@ export default function EventsPage() {
               <span className="text-2xl font-bold text-blue-600">1</span>
             </div>
             <h3 className="text-xl font-semibold mb-3">Create Your Event</h3>
-            <p className="text-gray-600">Set up your event details, ticket pricing, and Bitcoin payment address</p>
+            <p className="text-gray-600">
+              Set up your event details, ticket pricing, and Bitcoin payment address
+            </p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-blue-600">2</span>
             </div>
             <h3 className="text-xl font-semibold mb-3">Promote & Sell</h3>
-            <p className="text-gray-600">Share your event and sell tickets with instant Bitcoin payments</p>
+            <p className="text-gray-600">
+              Share your event and sell tickets with instant Bitcoin payments
+            </p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-blue-600">3</span>
             </div>
             <h3 className="text-xl font-semibold mb-3">Manage Attendees</h3>
-            <p className="text-gray-600">Track RSVPs, send updates, and manage your attendee list</p>
+            <p className="text-gray-600">
+              Track RSVPs, send updates, and manage your attendee list
+            </p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-blue-600">4</span>
             </div>
             <h3 className="text-xl font-semibold mb-3">Run the Event</h3>
-            <p className="text-gray-600">Use QR check-in, track attendance, and create memorable experiences</p>
+            <p className="text-gray-600">
+              Use QR check-in, track attendance, and create memorable experiences
+            </p>
           </div>
         </div>
       </PageSection>
@@ -234,7 +256,8 @@ export default function EventsPage() {
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Organize Your Event?</h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Join event organizers worldwide who have created amazing experiences with Bitcoin-powered event management
+            Join event organizers worldwide who have created amazing experiences with
+            Bitcoin-powered event management
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -245,48 +268,12 @@ export default function EventsPage() {
               Create Your Event
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button
-              onClick={handleViewDemo}
-              variant="outline"
-              size="lg"
-            >
+            <Button onClick={handleViewDemo} variant="outline" size="lg">
               View Interactive Demo
             </Button>
           </div>
         </div>
       </PageSection>
     </PageLayout>
-  )
+  );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

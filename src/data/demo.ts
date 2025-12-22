@@ -373,8 +373,12 @@ export const DEMO_STEPS: DemoStep[] = [
  * Format satoshis to human-readable string
  */
 export function formatSats(amount: number): string {
-  if (amount >= 1000000) return `${(amount / 1000000).toFixed(1)}M sats`;
-  if (amount >= 1000) return `${(amount / 1000).toFixed(0)}K sats`;
+  if (amount >= 1000000) {
+    return `${(amount / 1000000).toFixed(1)}M sats`;
+  }
+  if (amount >= 1000) {
+    return `${(amount / 1000).toFixed(0)}K sats`;
+  }
   return `${amount} sats`;
 }
 

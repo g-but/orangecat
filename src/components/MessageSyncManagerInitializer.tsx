@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
  */
 export function MessageSyncManagerInitializer() {
   const { user } = useAuth();
-  
+
   useEffect(() => {
     // Initialize the message sync manager on the client side when the app loads.
     messageSyncManager.init();
@@ -27,4 +27,3 @@ export function MessageSyncManagerInitializer() {
 
   return null;
 }
-

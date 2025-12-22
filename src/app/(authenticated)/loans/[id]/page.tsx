@@ -1,34 +1,38 @@
-import { notFound, redirect } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
-import EntityDetailLayout from '@/components/entity/EntityDetailLayout'
-import Link from 'next/link'
-import Button from '@/components/ui/Button'
+import { notFound, redirect } from 'next/navigation';
+import { createServerClient } from '@/lib/supabase/server';
+import EntityDetailLayout from '@/components/entity/EntityDetailLayout';
+import Link from 'next/link';
+import Button from '@/components/ui/Button';
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 export default async function LoanDetailPage({ params }: PageProps) {
-  const { id } = await params
-  const supabase = await createServerClient()
-  const { data: auth } = await supabase.auth.getUser()
-  const user = auth?.user
-  if (!user) redirect('/auth?mode=login&from=/loans')
+  const { id } = await params;
+  const supabase = await createServerClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
+  if (!user) {
+    redirect('/auth?mode=login&from=/loans');
+  }
 
   const { data: loan, error } = await supabase
     .from('loans')
     .select('*')
     .eq('id', id)
     .eq('user_id', user.id)
-    .single()
+    .single();
 
-  if (error || !loan) notFound()
+  if (error || !loan) {
+    notFound();
+  }
 
   const headerActions = (
     <Link href={`/loans/create?edit=${loan.id}`}>
       <Button>Edit</Button>
     </Link>
-  )
+  );
 
   return (
     <EntityDetailLayout
@@ -43,13 +47,17 @@ export default async function LoanDetailPage({ params }: PageProps) {
             {loan.original_amount && (
               <>
                 <div className="text-gray-500">Original Amount</div>
-                <div className="font-medium">{loan.original_amount} {loan.currency || 'SATS'}</div>
+                <div className="font-medium">
+                  {loan.original_amount} {loan.currency || 'SATS'}
+                </div>
               </>
             )}
             {loan.remaining_balance !== undefined && (
               <>
                 <div className="text-gray-500">Remaining Balance</div>
-                <div className="font-medium">{loan.remaining_balance} {loan.currency || 'SATS'}</div>
+                <div className="font-medium">
+                  {loan.remaining_balance} {loan.currency || 'SATS'}
+                </div>
               </>
             )}
             {loan.interest_rate !== null && loan.interest_rate !== undefined && (
@@ -103,7 +111,5 @@ export default async function LoanDetailPage({ params }: PageProps) {
         </div>
       }
     />
-  )
+  );
 }
-
-

@@ -64,7 +64,12 @@
       "Bash(API_KEY=REDACTED_ANON_KEY curl -s https://ohkueislstxomdjavyhs.supabase.co/rest/v1/ -H 'apikey: $API_KEY' jq -r \".definitions | keys[]\" /tmp/schema.json)",
       "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql \"postgresql://postgres.ohkueislstxomdjavyhs:password@aws-0-eu-central-1.pooler.supabase.com:6543/postgres\" -c \"SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual, with_check FROM pg_policies WHERE tablename = ''user_services'';\")",
       "Bash(PGPASSWORD=REDACTED_SERVICE_KEY psql postgresql://postgres.ohkueislstxomdjavyhs:password@aws-0-eu-central-1.pooler.supabase.com:6543/postgres -c '\\\\d conversations')",
-      "Bash(xargs ls:*)"
+      "Bash(xargs ls:*)",
+      "Bash(PGPASSWORD=\"REDACTED_SERVICE_KEY\" psql \"postgresql://postgres.ohkueislstxomdjavyhs:password@aws-0-eu-central-1.pooler.supabase.com:6543/postgres\" -c \"\nSELECT table_name FROM information_schema.tables \nWHERE table_schema = ''public'' \nAND table_name IN \\(''conversations'', ''messages'', ''conversation_participants'', ''participant_read_times'', ''message_read_receipts''\\)\nORDER BY table_name;\")",
+      "Bash(SERVICE_KEY=\"REDACTED_SERVICE_KEY\" curl -s \"https://ohkueislstxomdjavyhs.supabase.co/rest/v1/conversations?select=*&limit=1\" -H \"apikey: $SERVICE_KEY\" -H \"Authorization: Bearer $SERVICE_KEY\")",
+      "Bash(export SERVICE_KEY:*)",
+      "Bash(bash:*)",
+      "mcp__filesystem__write_file"
     ],
     "deny": [],
     "ask": []

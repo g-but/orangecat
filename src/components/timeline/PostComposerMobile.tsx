@@ -81,10 +81,10 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
   const [showProjectSelector, setShowProjectSelector] = useState(false);
 
   // Lazy load project selection modal (always available, only rendered when needed)
-  const LazyProjectSelectionModal = dynamic(
-    () => import('./ProjectSelectionModal'),
-    { ssr: false, loading: () => null }
-  );
+  const LazyProjectSelectionModal = dynamic(() => import('./ProjectSelectionModal'), {
+    ssr: false,
+    loading: () => null,
+  });
 
   // Sync markdown content to HTML in editor (only when not actively composing or focused)
   useEffect(() => {
@@ -156,7 +156,8 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
         editorRef.current.style.height = 'auto';
         const maxHeight = fullScreen ? 480 : 320; // px
         editorRef.current.style.height = `${Math.min(editorRef.current.scrollHeight, maxHeight)}px`;
-        editorRef.current.style.overflowY = editorRef.current.scrollHeight > maxHeight ? 'auto' : 'hidden';
+        editorRef.current.style.overflowY =
+          editorRef.current.scrollHeight > maxHeight ? 'auto' : 'hidden';
       }
       setIsComposing(false);
     }, 10);
@@ -165,7 +166,9 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
   // Handle paste to force plain text (no rich formatting)
   const handlePaste = useCallback(
     (e: React.ClipboardEvent<HTMLDivElement>) => {
-      if (!editorRef.current) return;
+      if (!editorRef.current) {
+        return;
+      }
       e.preventDefault();
       const text = e.clipboardData.getData('text/plain');
       document.execCommand('insertText', false, text);
@@ -306,7 +309,10 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
             <div className="flex items-center gap-3 mb-4">
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-gray-900">
-                  {user?.user_metadata?.name || (typeof user?.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : user?.email || 'You')}
+                  {user?.user_metadata?.name ||
+                    (typeof user?.email === 'string' && user.email.includes('@')
+                      ? user.email.split('@')[0]
+                      : user?.email || 'You')}
                 </div>
                 {showVisibilityToggle && (
                   <button
@@ -330,22 +336,22 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
               ref={editorRef}
               contentEditable
               onInput={handleInput}
-            onPaste={handlePaste}
+              onPaste={handlePaste}
               onKeyDown={handleKeyDown}
               data-placeholder={fullScreen ? "What's happening?" : placeholder}
               className={cn(
                 'w-full border-0 bg-transparent',
                 'focus:outline-none focus:ring-0',
                 'leading-relaxed break-words',
-              'max-h-[60vh] overflow-y-auto',
+                'max-h-[60vh] overflow-y-auto',
                 'empty:before:content-[attr(data-placeholder)]',
                 'empty:before:text-gray-500',
                 'empty:before:pointer-events-none',
                 fullScreen
-                ? 'text-xl min-h-[120px]'
-                : compact
-                  ? 'text-sm min-h-[40px]'
-                  : 'text-base min-h-[60px]',
+                  ? 'text-xl min-h-[120px]'
+                  : compact
+                    ? 'text-sm min-h-[40px]'
+                    : 'text-base min-h-[60px]',
                 composer.isPosting && 'opacity-50 cursor-not-allowed'
               )}
               style={{ fontSize: fullScreen ? '20px' : '16px' }} // Prevent iOS zoom on focus

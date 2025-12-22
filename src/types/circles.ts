@@ -9,7 +9,14 @@ export type CircleVisibility = 'public' | 'members_only' | 'private';
 
 export type CircleJoinPolicy = 'open' | 'invite_only' | 'closed';
 
-export type CircleCategory = 'family' | 'friends' | 'business' | 'investment' | 'community' | 'project' | 'other';
+export type CircleCategory =
+  | 'family'
+  | 'friends'
+  | 'business'
+  | 'investment'
+  | 'community'
+  | 'project'
+  | 'other';
 
 export type CircleRole = 'owner' | 'admin' | 'moderator' | 'member';
 
@@ -17,7 +24,13 @@ export type CircleMemberStatus = 'active' | 'inactive' | 'suspended' | 'left';
 
 export type CircleInvitationStatus = 'pending' | 'accepted' | 'declined' | 'expired';
 
-export type CircleWalletPurpose = 'general' | 'projects' | 'investment' | 'community' | 'emergency' | 'other';
+export type CircleWalletPurpose =
+  | 'general'
+  | 'projects'
+  | 'investment'
+  | 'community'
+  | 'emergency'
+  | 'other';
 
 export type CircleActivityType =
   | 'joined'
@@ -452,47 +465,3 @@ export interface UseCreateCircleOptions {
 export interface UseUpdateCircleOptions extends UseCreateCircleOptions {
   circleId: string;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

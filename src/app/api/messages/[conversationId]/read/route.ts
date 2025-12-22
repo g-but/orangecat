@@ -8,7 +8,10 @@ export async function POST(
 ) {
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -28,14 +31,20 @@ export async function POST(
       .single();
 
     if (partError || !participant) {
-      return NextResponse.json({ error: 'Not a participant in this conversation' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Not a participant in this conversation' },
+        { status: 403 }
+      );
     }
 
     // Mark conversation as read by updating last_read_at
     // Use admin client to bypass RLS
+    const updateData: { last_read_at: string } = {
+      last_read_at: new Date().toISOString(),
+    };
     const { error: readError } = await admin
       .from('conversation_participants')
-      .update({ last_read_at: new Date().toISOString() })
+      .update(updateData)
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
       .eq('is_active', true);

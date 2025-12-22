@@ -167,10 +167,7 @@ class CirclesService {
     try {
       const userId = await this.getCurrentUserId();
 
-      let query = supabase
-        .from('circles')
-        .select('*')
-        .eq('id', circleId);
+      let query = supabase.from('circles').select('*').eq('id', circleId);
 
       // If user is not authenticated, only show public circles
       if (!userId) {
@@ -197,7 +194,10 @@ class CirclesService {
   /**
    * Get circles for current user
    */
-  async getUserCircles(query?: CirclesQuery, pagination?: Pagination): Promise<CirclesListResponse> {
+  async getUserCircles(
+    query?: CirclesQuery,
+    pagination?: Pagination
+  ): Promise<CirclesListResponse> {
     try {
       const userId = await this.getCurrentUserId();
       if (!userId) {
@@ -213,10 +213,13 @@ class CirclesService {
         // Fallback query
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('circles')
-          .select(`
+          .select(
+            `
             *,
             circle_members!inner(user_id, role, joined_at)
-          `, { count: 'exact' })
+          `,
+            { count: 'exact' }
+          )
           .eq('circle_members.user_id', userId)
           .eq('circle_members.status', 'active');
 
@@ -238,14 +241,14 @@ class CirclesService {
   /**
    * Get public circles available for discovery
    */
-  async getAvailableCircles(query?: CirclesQuery, pagination?: Pagination): Promise<CirclesListResponse> {
+  async getAvailableCircles(
+    query?: CirclesQuery,
+    pagination?: Pagination
+  ): Promise<CirclesListResponse> {
     try {
       const userId = await this.getCurrentUserId();
 
-      let dbQuery = supabase
-        .from('circles')
-        .select('*', { count: 'exact' })
-        .eq('is_public', true);
+      let dbQuery = supabase.from('circles').select('*', { count: 'exact' }).eq('is_public', true);
 
       // Apply filters
       if (query?.category) {
@@ -310,10 +313,7 @@ class CirclesService {
         return { success: false, error: 'Only circle owners can delete circles' };
       }
 
-      const { error } = await supabase
-        .from('circles')
-        .delete()
-        .eq('id', circleId);
+      const { error } = await supabase.from('circles').delete().eq('id', circleId);
 
       if (error) {
         logger.error('Failed to delete circle', error, 'Circles');
@@ -383,13 +383,11 @@ class CirclesService {
         }
       } else {
         // Create new membership
-        const { error } = await supabase
-          .from('circle_members')
-          .insert({
-            circle_id: circleId,
-            user_id: userId,
-            role: 'member',
-          });
+        const { error } = await supabase.from('circle_members').insert({
+          circle_id: circleId,
+          user_id: userId,
+          role: 'member',
+        });
 
         if (error) {
           logger.error('Failed to join circle', error, 'Circles');
@@ -427,14 +425,17 @@ class CirclesService {
         .single();
 
       if (membership?.role === 'owner') {
-        return { success: false, error: 'Circle owners cannot leave. Transfer ownership or delete the circle.' };
+        return {
+          success: false,
+          error: 'Circle owners cannot leave. Transfer ownership or delete the circle.',
+        };
       }
 
       const { error } = await supabase
         .from('circle_members')
         .update({
           status: 'left',
-          status_changed_at: new Date().toISOString()
+          status_changed_at: new Date().toISOString(),
         })
         .eq('circle_id', circleId)
         .eq('user_id', userId);
@@ -486,7 +487,11 @@ class CirclesService {
   /**
    * Update member role/permissions
    */
-  async updateMember(circleId: string, memberId: string, request: UpdateCircleMemberRequest): Promise<{ success: boolean; error?: string }> {
+  async updateMember(
+    circleId: string,
+    memberId: string,
+    request: UpdateCircleMemberRequest
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const userId = await this.getCurrentUserId();
       if (!userId) {
@@ -530,7 +535,11 @@ class CirclesService {
       }
 
       // Check permissions
-      const canManage = await this.checkCirclePermission(request.circle_id, userId, 'canManageWallets');
+      const canManage = await this.checkCirclePermission(
+        request.circle_id,
+        userId,
+        'canManageWallets'
+      );
       if (!canManage) {
         return { success: false, error: 'Insufficient permissions' };
       }
@@ -550,7 +559,12 @@ class CirclesService {
       }
 
       // Log activity
-      await this.logCircleActivity(request.circle_id, userId, 'created_wallet', `Created wallet: ${request.name}`);
+      await this.logCircleActivity(
+        request.circle_id,
+        userId,
+        'created_wallet',
+        `Created wallet: ${request.name}`
+      );
 
       return { success: true, wallets: [data] };
     } catch (error) {
@@ -617,7 +631,12 @@ class CirclesService {
       }
 
       // Log activity
-      await this.logCircleActivity(request.circle_id, userId, 'invited_member', 'Sent invitation to join circle');
+      await this.logCircleActivity(
+        request.circle_id,
+        userId,
+        'invited_member',
+        'Sent invitation to join circle'
+      );
 
       return { success: true, invitation: data };
     } catch (error) {
@@ -631,7 +650,11 @@ class CirclesService {
   /**
    * Get circle activities
    */
-  async getCircleActivities(circleId: string, query?: CircleActivitiesQuery, pagination?: Pagination): Promise<CircleActivitiesResponse> {
+  async getCircleActivities(
+    circleId: string,
+    query?: CircleActivitiesQuery,
+    pagination?: Pagination
+  ): Promise<CircleActivitiesResponse> {
     try {
       const userId = await this.getCurrentUserId();
 
@@ -691,24 +714,36 @@ class CirclesService {
   /**
    * Check if user has specific permission in circle
    */
-  async checkCirclePermission(circleId: string, userId: string, permission: keyof CirclePermissions): Promise<boolean> {
-    if (!userId) return false;
+  async checkCirclePermission(
+    circleId: string,
+    userId: string,
+    permission: keyof CirclePermissions
+  ): Promise<boolean> {
+    if (!userId) {
+      return false;
+    }
 
     try {
       const { data: membership } = await supabase
         .from('circle_members')
-        .select('role, can_invite_members, can_manage_wallets, can_create_projects, can_manage_settings')
+        .select(
+          'role, can_invite_members, can_manage_wallets, can_create_projects, can_manage_settings'
+        )
         .eq('circle_id', circleId)
         .eq('user_id', userId)
         .eq('status', 'active')
         .single();
 
-      if (!membership) return false;
+      if (!membership) {
+        return false;
+      }
 
       const rolePermissions = DEFAULT_CIRCLE_PERMISSIONS[membership.role];
 
       // Check role-based permissions
-      if (rolePermissions[permission]) return true;
+      if (rolePermissions[permission]) {
+        return true;
+      }
 
       // Check custom permissions
       switch (permission) {
@@ -749,16 +784,19 @@ class CirclesService {
   /**
    * Log circle activity
    */
-  private async logCircleActivity(circleId: string, userId: string, activityType: string, description: string): Promise<void> {
+  private async logCircleActivity(
+    circleId: string,
+    userId: string,
+    activityType: string,
+    description: string
+  ): Promise<void> {
     try {
-      await supabase
-        .from('circle_activities')
-        .insert({
-          circle_id: circleId,
-          user_id: userId,
-          activity_type: activityType,
-          description,
-        });
+      await supabase.from('circle_activities').insert({
+        circle_id: circleId,
+        user_id: userId,
+        activity_type: activityType,
+        description,
+      });
     } catch (error) {
       logger.error('Failed to log circle activity', error, 'Circles');
     }
@@ -775,7 +813,10 @@ class CirclesService {
     }
   }
 
-  private validateCreateCircleRequest(request: CreateCircleRequest): { valid: boolean; errors: Array<{ field: string; message: string }> } {
+  private validateCreateCircleRequest(request: CreateCircleRequest): {
+    valid: boolean;
+    errors: Array<{ field: string; message: string }>;
+  } {
     const errors: Array<{ field: string; message: string }> = [];
 
     if (!request.name || request.name.trim().length < 3) {
@@ -800,47 +841,3 @@ export default circlesService;
 
 // Export class for testing
 export { CirclesService };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

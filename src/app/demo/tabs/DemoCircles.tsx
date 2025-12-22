@@ -7,11 +7,7 @@
  */
 
 import { Users, Wallet, PiggyBank, Target } from 'lucide-react';
-import {
-  type DemoCircle,
-  formatSats,
-  getRoleBadgeColor,
-} from '@/data/demo';
+import { type DemoCircle, formatSats, getRoleBadgeColor } from '@/data/demo';
 
 interface DemoCirclesProps {
   circles: DemoCircle[];
@@ -36,7 +32,7 @@ export function DemoCircles({ circles, selectedCircle, onCircleSelect }: DemoCir
 
       {/* Circle Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {circles.map((circle) => (
+        {circles.map(circle => (
           <CircleCard
             key={circle.id}
             circle={circle}
@@ -65,9 +61,7 @@ function CircleCard({ circle, isSelected, onSelect }: CircleCardProps) {
     <button
       onClick={onSelect}
       className={`bg-white rounded-lg border-2 p-4 md:p-6 text-left transition-all w-full ${
-        isSelected
-          ? 'border-orange-500 shadow-lg'
-          : 'border-gray-200 hover:border-gray-300'
+        isSelected ? 'border-orange-500 shadow-lg' : 'border-gray-200 hover:border-gray-300'
       }`}
     >
       <div className="flex items-center justify-between mb-4">
@@ -162,48 +156,3 @@ function CircleDetails({ circle }: CircleDetailsProps) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

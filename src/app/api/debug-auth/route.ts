@@ -9,11 +9,17 @@ export async function GET(request: NextRequest) {
     const supabase = await createServerClient();
     console.log('Supabase client created');
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     console.log('User:', user);
     console.log('Auth error:', authError);
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
     console.log('Session:', session);
     console.log('Session error:', sessionError);
 
@@ -22,7 +28,7 @@ export async function GET(request: NextRequest) {
       authError: authError?.message,
       sessionError: sessionError?.message,
       hasSession: !!session,
-      hasUser: !!user
+      hasUser: !!user,
     });
   } catch (error) {
     console.error('Debug auth error:', error);
@@ -38,11 +44,17 @@ export async function POST(request: NextRequest) {
     const supabase = await createServerClient();
     console.log('Supabase client created');
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     console.log('User:', user);
     console.log('Auth error:', authError);
 
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
     console.log('Session:', session);
     console.log('Session error:', sessionError);
 
@@ -51,36 +63,10 @@ export async function POST(request: NextRequest) {
       authError: authError?.message,
       sessionError: sessionError?.message,
       hasSession: !!session,
-      hasUser: !!user
+      hasUser: !!user,
     });
   } catch (error) {
     console.error('Debug auth error:', error);
     return NextResponse.json({ error: 'Debug failed' }, { status: 500 });
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

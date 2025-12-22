@@ -6,14 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
 import { Progress } from '@/components/ui/progress';
-import {
-  DollarSign,
-  Percent,
-  Target,
-  TrendingUp,
-  User,
-  MessageSquare
-} from 'lucide-react';
+import { DollarSign, Percent, Target, TrendingUp, User, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { MakeOfferDialog } from './MakeOfferDialog';
 
@@ -40,7 +33,9 @@ export function AvailableLoans({ loans, onOfferMade }: AvailableLoansProps) {
   };
 
   const calculateProgress = (original: number, remaining: number) => {
-    if (original === 0) return 0;
+    if (original === 0) {
+      return 0;
+    }
     return ((original - remaining) / original) * 100;
   };
 
@@ -68,7 +63,7 @@ export function AvailableLoans({ loans, onOfferMade }: AvailableLoansProps) {
   return (
     <>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {loans.map((loan) => {
+        {loans.map(loan => {
           const progress = calculateProgress(loan.original_amount, loan.remaining_balance);
 
           return (
@@ -131,11 +126,7 @@ export function AvailableLoans({ loans, onOfferMade }: AvailableLoansProps) {
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
-                  <Button
-                    size="sm"
-                    className="flex-1 gap-1"
-                    onClick={() => handleMakeOffer(loan)}
-                  >
+                  <Button size="sm" className="flex-1 gap-1" onClick={() => handleMakeOffer(loan)}>
                     <Target className="h-3 w-3" />
                     Make Offer
                   </Button>

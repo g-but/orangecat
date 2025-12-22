@@ -69,7 +69,9 @@ export function useComments({ eventId }: UseCommentsProps): UseCommentsReturn {
 
   // Load comments
   const loadComments = useCallback(async () => {
-    if (isLoadingComments) return;
+    if (isLoadingComments) {
+      return;
+    }
 
     setIsLoadingComments(true);
     try {
@@ -113,13 +115,15 @@ export function useComments({ eventId }: UseCommentsProps): UseCommentsReturn {
   const toggleReplies = useCallback((parentId: string) => {
     setExpandedReplies(prev => ({
       ...prev,
-      [parentId]: !prev[parentId]
+      [parentId]: !prev[parentId],
     }));
   }, []);
 
   // Handle comment submission
   const handleComment = useCallback(async () => {
-    if (!commentText.trim() || isCommenting) return;
+    if (!commentText.trim() || isCommenting) {
+      return;
+    }
 
     const originalText = commentText;
     setIsCommenting(true);

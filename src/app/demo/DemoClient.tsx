@@ -10,15 +10,7 @@
 import { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Users,
-  DollarSign,
-  MessageCircle,
-  Target,
-  Home,
-  Play,
-  Pause,
-} from 'lucide-react';
+import { Users, DollarSign, MessageCircle, Target, Home, Play, Pause } from 'lucide-react';
 
 import {
   DEMO_USER,
@@ -154,11 +146,7 @@ export function DemoClient() {
       </AnimatePresence>
 
       {/* Tab Navigation */}
-      <TabNavigation
-        tabs={TABS}
-        activeTab={activeTab}
-        onTabChange={handleTabChange}
-      />
+      <TabNavigation tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Main Content */}
       <div className="container mx-auto px-4 py-8">
@@ -171,11 +159,7 @@ export function DemoClient() {
             exit="exit"
           >
             {activeTab === 'dashboard' && (
-              <DemoDashboard
-                user={DEMO_USER}
-                timeline={DEMO_TIMELINE}
-                projects={DEMO_PROJECTS}
-              />
+              <DemoDashboard user={DEMO_USER} timeline={DEMO_TIMELINE} projects={DEMO_PROJECTS} />
             )}
             {activeTab === 'circles' && (
               <DemoCircles
@@ -185,17 +169,10 @@ export function DemoClient() {
               />
             )}
             {activeTab === 'loans' && (
-              <DemoLoans
-                loans={DEMO_LOANS}
-                availableLoans={DEMO_AVAILABLE_LOANS}
-              />
+              <DemoLoans loans={DEMO_LOANS} availableLoans={DEMO_AVAILABLE_LOANS} />
             )}
-            {activeTab === 'timeline' && (
-              <DemoTimeline timeline={DEMO_TIMELINE} />
-            )}
-            {activeTab === 'projects' && (
-              <DemoProjects projects={DEMO_PROJECTS} />
-            )}
+            {activeTab === 'timeline' && <DemoTimeline timeline={DEMO_TIMELINE} />}
+            {activeTab === 'projects' && <DemoProjects projects={DEMO_PROJECTS} />}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -221,9 +198,7 @@ function DemoHeader({ user }: DemoHeaderProps) {
             <div className="text-2xl">🟠</div>
             <div>
               <h1 className="text-xl font-bold text-gray-900">OrangeCat 3.0</h1>
-              <p className="text-sm text-gray-600">
-                Bitcoin Crowdfunding • Community • Finance
-              </p>
+              <p className="text-sm text-gray-600">Bitcoin Crowdfunding • Community • Finance</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -291,11 +266,7 @@ function DemoControls({
             className="px-3 py-1 text-xs bg-blue-600 text-white rounded flex items-center gap-1 hover:bg-blue-700 transition-colors"
             aria-label={isPlaying ? 'Pause auto play' : 'Start auto play'}
           >
-            {isPlaying ? (
-              <Pause className="w-3 h-3" />
-            ) : (
-              <Play className="w-3 h-3" />
-            )}
+            {isPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3" />}
             {isPlaying ? 'Pause' : 'Auto Play'}
           </button>
           <Link
@@ -321,7 +292,7 @@ function TabNavigation({ tabs, activeTab, onTabChange }: TabNavigationProps) {
     <div className="border-b bg-white">
       <div className="container mx-auto px-4">
         <div className="flex gap-4 sm:gap-8 overflow-x-auto">
-          {tabs.map((tab) => {
+          {tabs.map(tab => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
@@ -354,8 +325,8 @@ function DemoFooter() {
         <div className="text-center">
           <h3 className="text-lg font-semibold mb-2">Ready to Join OrangeCat?</h3>
           <p className="text-gray-600 mb-6">
-            Experience the future of Bitcoin crowdfunding, community building,
-            and peer-to-peer finance.
+            Experience the future of Bitcoin crowdfunding, community building, and peer-to-peer
+            finance.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -376,48 +347,3 @@ function DemoFooter() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

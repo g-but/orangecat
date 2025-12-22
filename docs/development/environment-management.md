@@ -5,6 +5,7 @@
 ## 🚨 The Problem
 
 Traditional `.env` files are fragile:
+
 - Easy to accidentally overwrite with `cp` commands
 - No automatic backups
 - Manual token management
@@ -21,11 +22,13 @@ OrangeCat now uses a **comprehensive environment management system** that preven
 **direnv** automatically loads environment variables when you enter the project directory.
 
 **Installation:**
+
 ```bash
 ./scripts/setup-env.sh  # Installs and configures direnv
 ```
 
 **How it works:**
+
 - Variables load automatically when `cd` into the project
 - No more manual `source .env.local`
 - Environment is isolated to the project directory
@@ -35,17 +38,21 @@ OrangeCat now uses a **comprehensive environment management system** that preven
 Secure authentication without storing tokens in plain text.
 
 **GitHub Login:**
+
 ```bash
 node scripts/auth/github-login.js
 ```
+
 - Uses GitHub's Device Flow OAuth
 - No password/token exposure
 - Automatic token storage in `.env.local`
 
 **Vercel Login:**
+
 ```bash
 node scripts/auth/vercel-login.js
 ```
+
 - Uses Vercel CLI authentication
 - Automatic token generation and storage
 
@@ -58,6 +65,7 @@ node scripts/utils/env-manager.js --help
 ```
 
 **Commands:**
+
 - `setup` - Create initial `.env.local`
 - `backup` - Create backup before changes
 - `validate` - Check required variables
@@ -67,17 +75,20 @@ node scripts/utils/env-manager.js --help
 ### 4. **Automatic Backups**
 
 **Before any change:**
+
 ```bash
 # Automatic backup created
 .env-backups/.env.local.2025-12-02T10-30-45.backup
 ```
 
 **Manual backup:**
+
 ```bash
 node scripts/utils/env-manager.js backup
 ```
 
 **Restore from backup:**
+
 ```bash
 node scripts/utils/env-manager.js restore
 ```
@@ -114,12 +125,14 @@ npm run dev  # Variables are already loaded
 ### Editing Environment Variables
 
 **Safe method:**
+
 ```bash
 # Use direnv's built-in editor
 direnv edit .
 ```
 
 **Alternative:**
+
 ```bash
 # Manual edit with automatic backup
 node scripts/utils/env-manager.js backup
@@ -143,21 +156,25 @@ node scripts/utils/env-manager.js help
 ## 🛡️ Safety Features
 
 ### 1. **Automatic Backups**
+
 - Created before any environment changes
 - Timestamped and hashed for uniqueness
 - Stored in `.env-backups/` (gitignored)
 
 ### 2. **Validation**
+
 - Checks all required variables are set
 - Warns about missing optional variables
 - Prevents deployment with invalid config
 
 ### 3. **No Git Commits**
+
 - `.env.local` is gitignored
 - `.env-backups/` is gitignored
 - `.envrc` is tracked (safe, contains no secrets)
 
 ### 4. **OAuth Security**
+
 - No plaintext tokens in scripts
 - Device Flow authentication
 - Tokens stored securely in environment
@@ -242,6 +259,7 @@ orangecat/
 ## 🎯 Best Practices
 
 ### 1. **Never Edit .envrc Directly**
+
 ```bash
 # ❌ Wrong
 nano .envrc
@@ -251,6 +269,7 @@ direnv edit .
 ```
 
 ### 2. **Always Backup Before Manual Changes**
+
 ```bash
 # Before editing .env.local manually
 node scripts/utils/env-manager.js backup
@@ -258,6 +277,7 @@ nano .env.local
 ```
 
 ### 3. **Use OAuth Authentication**
+
 ```bash
 # ❌ Manual token entry
 echo "GITHUB_TOKEN=ghp_..." >> .env.local
@@ -267,6 +287,7 @@ node scripts/auth/github-login.js
 ```
 
 ### 4. **Validate After Changes**
+
 ```bash
 # Always validate after making changes
 node scripts/utils/env-manager.js validate
@@ -286,49 +307,3 @@ If you encounter issues:
 **Last Updated:** December 2, 2025
 **System Version:** v2.0 (OAuth + direnv)
 **Safety Level:** 🔒 Maximum (Zero credential loss risk)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -7,21 +7,25 @@ Comprehensive rollback automation system that generates, validates, and executes
 ## 🚀 Quick Start
 
 ### Generate Rollbacks for All Migrations
+
 ```bash
 node scripts/migration-rollback.js generate
 ```
 
 ### Validate All Rollback Scripts
+
 ```bash
 node scripts/migration-rollback.js validate
 ```
 
 ### Execute Specific Rollback (Safe Mode)
+
 ```bash
 node scripts/migration-rollback.js execute 20251113000001_timeline_social_features
 ```
 
 ### Generate Emergency Rollback Plan
+
 ```bash
 node scripts/migration-rollback.js emergency
 ```
@@ -29,18 +33,21 @@ node scripts/migration-rollback.js emergency
 ## ✅ What It Does
 
 ### Automatic Rollback Generation
+
 - **Reverse Engineering** - Analyzes forward migrations to generate reverse operations
 - **Smart Parsing** - Recognizes CREATE, ALTER, and INSERT statements
 - **Safety First** - Uses IF EXISTS and CASCADE where appropriate
 - **Manual Markers** - Identifies operations requiring human intervention
 
 ### Rollback Validation
+
 - **Syntax Checking** - Validates generated SQL syntax
 - **Logic Verification** - Ensures rollback operations are sound
 - **Completeness Check** - Verifies all migration components are covered
 - **Safety Assessment** - Confirms rollback won't cause data loss
 
 ### Safe Execution
+
 - **Dry-Run Mode** - Validates without executing production changes
 - **Step-by-Step** - Clear execution phases with checkpoints
 - **Error Recovery** - Procedures for handling execution failures
@@ -49,6 +56,7 @@ node scripts/migration-rollback.js emergency
 ## 📊 Generated Files
 
 ### Rollback Scripts (`*_rollback.sql`)
+
 ```sql
 -- ROLLBACK: 20251113000001_timeline_social_features
 -- Generated: 2025-12-04T12:37:00.470Z
@@ -61,18 +69,22 @@ DROP INDEX IF EXISTS idx_timeline_likes_event;
 ```
 
 ### Documentation (`*_rollback.md`)
+
 Comprehensive rollback procedures with:
+
 - Automated rollback steps
 - Manual verification checklists
 - Emergency recovery procedures
 - Related file references
 
 ### Emergency Plan (`EMERGENCY_ROLLBACK_PLAN.md`)
+
 Complete incident response procedures for production emergencies.
 
 ## 🎯 Rollback Types
 
 ### Simple Rollbacks (Auto-Generated)
+
 ```sql
 -- Forward: CREATE TABLE users (id serial primary key);
 -- Rollback: DROP TABLE IF EXISTS users CASCADE;
@@ -85,6 +97,7 @@ Complete incident response procedures for production emergencies.
 ```
 
 ### Complex Rollbacks (Manual Markers)
+
 ```sql
 -- Forward: INSERT INTO users (name) VALUES ('admin');
 -- Rollback: -- MANUAL: Review data inserted into users table
@@ -94,6 +107,7 @@ Complete incident response procedures for production emergencies.
 ```
 
 ### Conditional Rollbacks (Smart Logic)
+
 ```sql
 -- Forward: ALTER TABLE users ADD CONSTRAINT chk_email...
 -- Rollback: ALTER TABLE users DROP CONSTRAINT IF EXISTS chk_email;
@@ -105,6 +119,7 @@ Complete incident response procedures for production emergencies.
 ## 🚨 Safety Features
 
 ### Pre-Execution Validation
+
 ```bash
 # Always validate before executing
 node scripts/migration-rollback.js validate
@@ -114,12 +129,14 @@ node scripts/migration-rollback.js execute migration_name --dry-run
 ```
 
 ### Execution Safety
+
 - **Transaction Wrapping** - All rollbacks wrapped in transactions
 - **Backup Verification** - Ensures recent backup exists
 - **Dependency Checking** - Validates rollback won't break dependencies
 - **Impact Assessment** - Estimates rollback impact before execution
 
 ### Error Recovery
+
 - **Partial Rollback Handling** - Procedures for incomplete rollbacks
 - **Data Recovery** - Steps to restore accidentally deleted data
 - **State Verification** - Checks system state after rollback
@@ -128,12 +145,15 @@ node scripts/migration-rollback.js execute migration_name --dry-run
 ## 📋 Emergency Rollback Procedure
 
 ### Phase 1: Immediate Response (0-5 minutes)
+
 1. **Stop Deployments**
+
    ```bash
    kubectl scale deployment app --replicas=0
    ```
 
 2. **Enable Maintenance Mode**
+
    ```bash
    curl -X POST /api/admin/maintenance -d '{"enabled": true}'
    ```
@@ -144,13 +164,16 @@ node scripts/migration-rollback.js execute migration_name --dry-run
    ```
 
 ### Phase 2: Assessment (5-15 minutes)
+
 1. **Identify Failed Migration**
+
    ```bash
    # Check recent migrations
    ls -la supabase/migrations/ | tail -10
    ```
 
 2. **Assess Impact**
+
    ```bash
    # Check application logs
    kubectl logs deployment/app --since=1h | grep ERROR
@@ -160,12 +183,15 @@ node scripts/migration-rollback.js execute migration_name --dry-run
    ```
 
 ### Phase 3: Rollback Execution (15-30 minutes)
+
 1. **Execute Automated Rollback**
+
    ```bash
    node scripts/migration-rollback.js execute failed_migration
    ```
 
 2. **Verify Rollback Success**
+
    ```bash
    # Check database state
    psql -c "SELECT count(*) FROM information_schema.tables;"
@@ -175,12 +201,15 @@ node scripts/migration-rollback.js execute migration_name --dry-run
    ```
 
 ### Phase 4: Recovery (30+ minutes)
+
 1. **Restore Application**
+
    ```bash
    kubectl scale deployment app --replicas=3
    ```
 
 2. **Monitor System Health**
+
    ```bash
    # Check error rates
    curl https://api.example.com/metrics/errors
@@ -192,6 +221,7 @@ node scripts/migration-rollback.js execute migration_name --dry-run
 ## 🔧 Integration
 
 ### CI/CD Pipeline Integration
+
 ```yaml
 # .github/workflows/rollback-testing.yml
 name: Rollback Testing
@@ -217,6 +247,7 @@ jobs:
 ```
 
 ### Pre-deployment Checklist
+
 ```bash
 #!/bin/bash
 # rollback-ready-check.sh
@@ -242,6 +273,7 @@ echo "✅ Rollback procedures ready"
 ```
 
 ### Monitoring Integration
+
 ```javascript
 // Rollback monitoring in application
 const rollbackMonitor = {
@@ -250,42 +282,47 @@ const rollbackMonitor = {
       migration: migrationName,
       status: status,
       timestamp: new Date(),
-      environment: process.env.NODE_ENV
+      environment: process.env.NODE_ENV,
     });
   },
 
-  alertOnRollback: (migrationName) => {
+  alertOnRollback: migrationName => {
     slack.send({
       channel: '#incidents',
       text: `🚨 Rollback executed: ${migrationName}`,
-      attachments: [{
-        color: 'danger',
-        fields: [
-          { title: 'Migration', value: migrationName },
-          { title: 'Environment', value: process.env.NODE_ENV },
-          { title: 'Time', value: new Date().toISOString() }
-        ]
-      }]
+      attachments: [
+        {
+          color: 'danger',
+          fields: [
+            { title: 'Migration', value: migrationName },
+            { title: 'Environment', value: process.env.NODE_ENV },
+            { title: 'Time', value: new Date().toISOString() },
+          ],
+        },
+      ],
     });
-  }
+  },
 };
 ```
 
 ## 📊 Success Metrics
 
 ### Rollback Generation Coverage
+
 - **Tables**: 95% automatic rollback generation
 - **Indexes**: 98% automatic rollback generation
 - **Functions**: 92% automatic rollback generation
 - **Complex Migrations**: Manual intervention required
 
 ### Execution Safety
+
 - **Zero Data Loss**: All rollbacks preserve data integrity
 - **Transactional**: All operations wrapped in transactions
 - **Recoverable**: Clear recovery procedures for failures
 - **Auditable**: Complete audit trail of all operations
 
 ### Incident Response
+
 - **MTTR**: Mean Time To Recovery < 30 minutes
 - **Success Rate**: 95% of rollbacks successful
 - **Documentation**: 100% of incidents documented
@@ -294,18 +331,21 @@ const rollbackMonitor = {
 ## 🎯 Best Practices
 
 ### Rollback Development
+
 1. **Generate Early** - Create rollbacks during migration development
 2. **Test Thoroughly** - Validate rollbacks in testing environment
 3. **Document Manual Steps** - Clearly mark operations requiring human intervention
 4. **Version Control** - Keep rollback scripts with forward migrations
 
 ### Emergency Preparedness
+
 1. **Regular Drills** - Practice rollback procedures quarterly
 2. **Backup Verification** - Test backup restoration monthly
 3. **Team Training** - Ensure all team members know rollback procedures
 4. **Tool Maintenance** - Keep rollback tools updated and tested
 
 ### Production Safety
+
 1. **Feature Flags** - Use feature flags for risky changes
 2. **Gradual Rollout** - Deploy to percentage of users first
 3. **Monitoring** - Monitor error rates and performance after deployment
@@ -321,6 +361,7 @@ const rollbackMonitor = {
 ## 🚀 Advanced Usage
 
 ### Custom Rollback Logic
+
 ```javascript
 // In migration-rollback.js
 function generateCustomRollback(migrationContent, migrationName) {
@@ -332,6 +373,7 @@ function generateCustomRollback(migrationContent, migrationName) {
 ```
 
 ### Rollback Orchestration
+
 ```javascript
 // Multi-migration rollback
 async function rollbackMultiple(migrations) {
@@ -343,6 +385,7 @@ async function rollbackMultiple(migrations) {
 ```
 
 ### Automated Testing
+
 ```bash
 # Test rollback in CI
 npm run test:rollback
@@ -354,39 +397,3 @@ npm run test:emergency-rollback
 ---
 
 **Remember:** Rollbacks are your safety net - keep them sharp, tested, and ready! 🛡️
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

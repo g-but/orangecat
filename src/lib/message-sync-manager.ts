@@ -30,9 +30,13 @@ function classifyError(err: any): 'permanent' | 'transient' {
   const status = err?.response?.status ?? err?.status;
   if (typeof status === 'number') {
     // 4xx errors (except 429) are permanent - don't retry
-    if ([400, 401, 403, 404].includes(status)) return 'permanent';
+    if ([400, 401, 403, 404].includes(status)) {
+      return 'permanent';
+    }
     // 429 and 5xx are transient - retry
-    if (status === 429 || status >= 500) return 'transient';
+    if (status === 429 || status >= 500) {
+      return 'transient';
+    }
   }
   // Network or unknown errors treated as transient
   return 'transient';
@@ -88,7 +92,10 @@ async function processMessageQueue(): Promise<void> {
   }
 
   if (!currentUserId) {
-    logger.info('No user bound to message sync manager. Skipping processing.', 'MessageSyncManager');
+    logger.info(
+      'No user bound to message sync manager. Skipping processing.',
+      'MessageSyncManager'
+    );
     return;
   }
 
@@ -121,16 +128,25 @@ async function processMessageQueue(): Promise<void> {
       try {
         const success = await sendQueuedMessage(message);
         if (success) {
-          logger.info(`Successfully synced message ${message.id}. Removing from queue.`, 'MessageSyncManager');
+          logger.info(
+            `Successfully synced message ${message.id}. Removing from queue.`,
+            'MessageSyncManager'
+          );
           await messageQueueService.removeMessageFromQueue(message.id);
         }
       } catch (err) {
         const type = classifyError(err);
         if (type === 'permanent') {
-          logger.warn(`Permanent error for message ${message.id}. Removing from queue.`, 'MessageSyncManager');
+          logger.warn(
+            `Permanent error for message ${message.id}. Removing from queue.`,
+            'MessageSyncManager'
+          );
           await messageQueueService.removeMessageFromQueue(message.id);
         } else {
-          logger.info(`Transient error for message ${message.id}. Will retry.`, 'MessageSyncManager');
+          logger.info(
+            `Transient error for message ${message.id}. Will retry.`,
+            'MessageSyncManager'
+          );
           await messageQueueService.incrementMessageAttemptCount(message.id);
         }
       }
@@ -149,19 +165,24 @@ async function processMessageQueue(): Promise<void> {
 
     // If items remain, schedule a retry with exponential backoff
     if (navigator.onLine && currentUserId) {
-      messageQueueService.getMessageQueueByUser(currentUserId).then((remain) => {
-        if (remain.length > 0) {
-          const maxAttempts = remain.reduce((m, msg) => Math.max(m, msg.attempts || 0), 0);
-          const base = 2000 * Math.pow(2, Math.min(maxAttempts, 5));
-          const jitter = Math.floor(Math.random() * 1000);
-          const delay = Math.min(60000, base + jitter);
-          if (scheduledRetry) clearTimeout(scheduledRetry);
-          scheduledRetry = setTimeout(processMessageQueue, delay);
-          logger.info(`Scheduled next message sync attempt in ${delay}ms.`, 'MessageSyncManager');
-        }
-      }).catch(() => {
-        // Silent fail for retry scheduling
-      });
+      messageQueueService
+        .getMessageQueueByUser(currentUserId)
+        .then(remain => {
+          if (remain.length > 0) {
+            const maxAttempts = remain.reduce((m, msg) => Math.max(m, msg.attempts || 0), 0);
+            const base = 2000 * Math.pow(2, Math.min(maxAttempts, 5));
+            const jitter = Math.floor(Math.random() * 1000);
+            const delay = Math.min(60000, base + jitter);
+            if (scheduledRetry) {
+              clearTimeout(scheduledRetry);
+            }
+            scheduledRetry = setTimeout(processMessageQueue, delay);
+            logger.info(`Scheduled next message sync attempt in ${delay}ms.`, 'MessageSyncManager');
+          }
+        })
+        .catch(() => {
+          // Silent fail for retry scheduling
+        });
     }
   }
 }
@@ -173,7 +194,7 @@ async function processMessageQueue(): Promise<void> {
 function initMessageSync(): void {
   // Listen for the browser coming online
   window.addEventListener('online', processMessageQueue);
-  
+
   // When tab becomes visible again, try syncing
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible') {
@@ -192,4 +213,3 @@ export const messageSyncManager = {
   processQueue: processMessageQueue,
   setCurrentUser: setMessageSyncUser,
 };
-

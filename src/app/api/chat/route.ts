@@ -24,17 +24,11 @@ export async function POST(request: NextRequest) {
 
     // Validate input
     if (!message || typeof message !== 'string') {
-      return Response.json(
-        { error: 'Message is required and must be a string' },
-        { status: 400 }
-      );
+      return Response.json({ error: 'Message is required and must be a string' }, { status: 400 });
     }
 
     if (message.length > 10000) {
-      return Response.json(
-        { error: 'Message too long (max 10,000 characters)' },
-        { status: 400 }
-      );
+      return Response.json({ error: 'Message too long (max 10,000 characters)' }, { status: 400 });
     }
 
     // Get the model
@@ -63,10 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Check if response was blocked
     if (!text || text.trim().length === 0) {
-      return Response.json(
-        { error: 'No response generated' },
-        { status: 500 }
-      );
+      return Response.json({ error: 'No response generated' }, { status: 500 });
     }
 
     // Return the response
@@ -75,39 +66,26 @@ export async function POST(request: NextRequest) {
       model: MODEL_NAME,
       timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Chat API error:', error);
 
     // Handle specific Gemini API errors
     if (error instanceof Error) {
       if (error.message.includes('API_KEY_INVALID')) {
-        return Response.json(
-          { error: 'Invalid API key' },
-          { status: 401 }
-        );
+        return Response.json({ error: 'Invalid API key' }, { status: 401 });
       }
 
       if (error.message.includes('QUOTA_EXCEEDED')) {
-        return Response.json(
-          { error: 'API quota exceeded' },
-          { status: 429 }
-        );
+        return Response.json({ error: 'API quota exceeded' }, { status: 429 });
       }
 
       if (error.message.includes('SAFETY')) {
-        return Response.json(
-          { error: 'Content blocked by safety filters' },
-          { status: 400 }
-        );
+        return Response.json({ error: 'Content blocked by safety filters' }, { status: 400 });
       }
     }
 
     // Generic error
-    return Response.json(
-      { error: 'Failed to generate response' },
-      { status: 500 }
-    );
+    return Response.json({ error: 'Failed to generate response' }, { status: 500 });
   }
 }
 
@@ -124,27 +102,3 @@ export async function GET() {
     timestamp: new Date().toISOString(),
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

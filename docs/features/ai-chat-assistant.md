@@ -16,6 +16,7 @@ OrangeCat includes an AI-powered chat assistant that allows users to interact wi
 ## Technical Implementation
 
 ### LLM Provider
+
 - **Model**: Google Gemini 2.0 Flash-Lite
 - **Pricing**: $0.075 per 1M input tokens, $0.30 per 1M output tokens
 - **Context Window**: 128K tokens
@@ -24,6 +25,7 @@ OrangeCat includes an AI-powered chat assistant that allows users to interact wi
 ### Architecture
 
 #### Frontend Component (`LLMChat.tsx`)
+
 - React component with TypeScript
 - Real-time message display with auto-scroll
 - Error states and loading indicators
@@ -31,6 +33,7 @@ OrangeCat includes an AI-powered chat assistant that allows users to interact wi
 - Click-outside-to-close functionality
 
 #### API Route (`/api/chat`)
+
 - Next.js App Router API route
 - Server-side API key protection
 - Rate limiting (5 requests per 5 minutes per IP)
@@ -38,6 +41,7 @@ OrangeCat includes an AI-powered chat assistant that allows users to interact wi
 - Error handling for various failure modes
 
 #### Integration
+
 - Lazy-loaded component in root layout
 - Available site-wide as a floating chat button
 - System prompt optimized for OrangeCat assistance
@@ -89,6 +93,7 @@ Potential improvements for the AI chat feature:
 ## Cost Management
 
 Current pricing makes this feature very affordable:
+
 - Average conversation: ~500 tokens ($0.00015)
 - 5 conversations per user per 5 minutes: ~$0.00075
 - 1000 daily users: ~$0.75/day
@@ -97,6 +102,7 @@ Current pricing makes this feature very affordable:
 ## Monitoring
 
 The feature includes built-in monitoring through:
+
 - API route error logging
 - Rate limit tracking
 - Usage analytics (tokens consumed, response times)
@@ -107,27 +113,3 @@ The feature includes built-in monitoring through:
 **Created**: 2025-12-09
 **Last Modified**: 2025-12-09
 **Last Modified Summary**: Initial documentation for AI chat assistant feature
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

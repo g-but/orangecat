@@ -18,7 +18,9 @@ import Link from 'next/link';
  * Escapes HTML to prevent XSS attacks
  */
 export function renderMarkdown(text: string): string {
-  if (!text) return '';
+  if (!text) {
+    return '';
+  }
 
   // Escape HTML first to prevent XSS
   const escaped = text
@@ -54,7 +56,9 @@ interface Token {
  * Tokenize text into parseable segments
  */
 function tokenize(text: string): Token[] {
-  if (!text) return [];
+  if (!text) {
+    return [];
+  }
 
   const tokens: Token[] = [];
 
@@ -115,10 +119,14 @@ function tokenize(text: string): Token[] {
  * Returns an array of React nodes
  */
 export function renderMarkdownToReact(text: string): React.ReactNode[] {
-  if (!text) return [];
+  if (!text) {
+    return [];
+  }
 
   const tokens = tokenize(text);
-  if (tokens.length === 0) return [text];
+  if (tokens.length === 0) {
+    return [text];
+  }
 
   return tokens.map((token, index) => {
     const key = `${token.type}-${index}`;
@@ -136,7 +144,7 @@ export function renderMarkdownToReact(text: string): React.ReactNode[] {
             key={key}
             href={`/profiles/${token.username}`}
             className="text-sky-600 hover:text-sky-700 hover:underline font-medium"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             {token.value}
           </Link>
@@ -154,7 +162,7 @@ export function renderMarkdownToReact(text: string): React.ReactNode[] {
             target="_blank"
             rel="noopener noreferrer"
             className="text-sky-600 hover:text-sky-700 hover:underline"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             {displayUrl}
           </a>
@@ -166,4 +174,3 @@ export function renderMarkdownToReact(text: string): React.ReactNode[] {
     }
   });
 }
-

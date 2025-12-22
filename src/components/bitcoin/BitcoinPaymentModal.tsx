@@ -1,19 +1,23 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { X, Bitcoin, Zap, CheckCircle } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import { bitcoinPaymentService, PaymentRequest, PaymentType } from '@/services/bitcoin/paymentService'
-import QRCodeGenerator from './QRCodeGenerator'
+import { useState, useEffect } from 'react';
+import { X, Bitcoin, Zap, CheckCircle } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import {
+  bitcoinPaymentService,
+  PaymentRequest,
+  PaymentType,
+} from '@/services/bitcoin/paymentService';
+import QRCodeGenerator from './QRCodeGenerator';
 
 interface BitcoinPaymentModalProps {
-  isOpen: boolean
-  onClose: () => void
-  projectId: string
-  projectTitle: string
-  suggestedAmount?: number
-  recipientAddress?: string
+  isOpen: boolean;
+  onClose: () => void;
+  projectId: string;
+  projectTitle: string;
+  suggestedAmount?: number;
+  recipientAddress?: string;
 }
 
 export default function BitcoinPaymentModal({
@@ -22,18 +26,18 @@ export default function BitcoinPaymentModal({
   projectId,
   projectTitle,
   suggestedAmount = 10000,
-  recipientAddress
+  recipientAddress,
 }: BitcoinPaymentModalProps) {
-  const [paymentType, setPaymentType] = useState<PaymentType>('lightning')
-  const [amount, setAmount] = useState(suggestedAmount)
-  const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [transactionId, setTransactionId] = useState<string | null>(null)
+  const [paymentType, setPaymentType] = useState<PaymentType>('lightning');
+  const [amount, setAmount] = useState(suggestedAmount);
+  const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [transactionId, setTransactionId] = useState<string | null>(null);
 
   const handleCreatePayment = async () => {
-    setLoading(true)
-    
-    const description = `Donation to ${projectTitle}`
+    setLoading(true);
+
+    const description = `Donation to ${projectTitle}`;
 
     // Record pending transaction for transparency
     try {
@@ -46,32 +50,41 @@ export default function BitcoinPaymentModal({
           amount_sats: amount,
           payment_method: paymentType,
         }),
-      })
+      });
       if (res.ok) {
         try {
-          const data = await res.json()
-          if (data?.id) setTransactionId(data.id)
-        } catch { /* ignore */ }
+          const data = await res.json();
+          if (data?.id) {
+            setTransactionId(data.id);
+          }
+        } catch {
+          /* ignore */
+        }
       }
-    } catch { /* ignore */ }
-
-    const result = paymentType === 'lightning' 
-      ? await bitcoinPaymentService.createLightningPayment(projectId, amount, description)
-      : await bitcoinPaymentService.createOnChainPayment(
-          projectId,
-          amount,
-          description,
-          recipientAddress || ''
-        )
-    
-    if (result.success && result.paymentRequest) {
-      setPaymentRequest(result.paymentRequest)
+    } catch {
+      /* ignore */
     }
-    
-    setLoading(false)
-  }
 
-  if (!isOpen) {return null}
+    const result =
+      paymentType === 'lightning'
+        ? await bitcoinPaymentService.createLightningPayment(projectId, amount, description)
+        : await bitcoinPaymentService.createOnChainPayment(
+            projectId,
+            amount,
+            description,
+            recipientAddress || ''
+          );
+
+    if (result.success && result.paymentRequest) {
+      setPaymentRequest(result.paymentRequest);
+    }
+
+    setLoading(false);
+  };
+
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -113,7 +126,7 @@ export default function BitcoinPaymentModal({
               <Input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(parseInt(e.target.value) || 0)}
+                onChange={e => setAmount(parseInt(e.target.value) || 0)}
                 placeholder="Amount in satoshis"
                 className="text-center"
               />
@@ -139,16 +152,12 @@ export default function BitcoinPaymentModal({
                 label={paymentType === 'lightning' ? 'Lightning Invoice' : 'Bitcoin Address'}
               />
 
-              <div className="text-sm text-gray-600">
-                Amount: {paymentRequest.amount} sats
-              </div>
-              {transactionId && (
-                <div className="text-xs text-gray-500">Transaction created</div>
-              )}
+              <div className="text-sm text-gray-600">Amount: {paymentRequest.amount} sats</div>
+              {transactionId && <div className="text-xs text-gray-500">Transaction created</div>}
             </div>
           )}
         </div>
       </div>
     </div>
-  )
+  );
 }

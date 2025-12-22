@@ -15,7 +15,7 @@ import { logger } from '@/utils/logger';
 import { apiRateLimited } from '@/lib/api/standardResponse';
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 // GET /api/loans/[id] - Get specific loan
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: PageProps) {
     const supabase = await createServerClient();
     const { data: auth } = await supabase.auth.getUser();
     const user = auth?.user;
-    
+
     const { id } = await params;
 
     // For now, only allow users to see their own loans
@@ -171,10 +171,7 @@ export async function DELETE(request: NextRequest, { params }: PageProps) {
       return apiUnauthorized('You can only delete your own loans');
     }
 
-    const { error } = await supabase
-      .from('loans')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('loans').delete().eq('id', id);
 
     if (error) {
       logger.error('Loan deletion failed', {
@@ -192,5 +189,3 @@ export async function DELETE(request: NextRequest, { params }: PageProps) {
     return handleApiError(error);
   }
 }
-
-

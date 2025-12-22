@@ -3,7 +3,8 @@ import { Shield, Lock, Eye, Server, Key, AlertTriangle } from 'lucide-react';
 
 export const metadata = {
   title: 'Security | OrangeCat',
-  description: 'Learn about OrangeCat\'s security practices, data protection, and commitment to user privacy',
+  description:
+    "Learn about OrangeCat's security practices, data protection, and commitment to user privacy",
 };
 
 export default function SecurityPage() {
@@ -16,7 +17,8 @@ export default function SecurityPage() {
     {
       icon: Key,
       title: 'Self-Custody Bitcoin',
-      description: 'We never hold your Bitcoin. You maintain full control over your private keys and funds.',
+      description:
+        'We never hold your Bitcoin. You maintain full control over your private keys and funds.',
     },
     {
       icon: Shield,
@@ -78,9 +80,7 @@ export default function SecurityPage() {
           <div className="flex justify-center mb-4">
             <Shield className="w-16 h-16 text-blue-600" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Security & Privacy
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Security & Privacy</h1>
           <p className="text-xl text-gray-600">
             Your security and privacy are our top priorities at OrangeCat
           </p>
@@ -88,19 +88,18 @@ export default function SecurityPage() {
 
         {/* Security Overview */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">
-            Our Security Philosophy
-          </h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Our Security Philosophy</h2>
           <p className="text-gray-700 mb-6">
-            OrangeCat is built on Bitcoin-first principles, which means we prioritize decentralization,
-            self-custody, and transparency. We never hold your funds, and we design our systems to
-            minimize the data we collect while maximizing security.
+            OrangeCat is built on Bitcoin-first principles, which means we prioritize
+            decentralization, self-custody, and transparency. We never hold your funds, and we
+            design our systems to minimize the data we collect while maximizing security.
           </p>
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-blue-50 p-6 rounded-lg">
               <h3 className="font-semibold text-blue-900 mb-2">Bitcoin Security</h3>
               <p className="text-blue-700 text-sm">
-                Your Bitcoin remains under your control. We facilitate payments but never custody funds.
+                Your Bitcoin remains under your control. We facilitate payments but never custody
+                funds.
               </p>
             </div>
             <div className="bg-green-50 p-6 rounded-lg">
@@ -134,9 +133,7 @@ export default function SecurityPage() {
         <div className="space-y-8">
           {securityPractices.map((practice, index) => (
             <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-              <h3 className="text-xl font-semibold text-gray-900 mb-6">
-                {practice.title}
-              </h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-6">{practice.title}</h3>
               <ul className="space-y-3">
                 {practice.items.map((item, itemIndex) => (
                   <li key={itemIndex} className="flex items-start">
@@ -152,12 +149,10 @@ export default function SecurityPage() {
         {/* Contact Section */}
         <div className="mt-12 bg-gray-900 text-white rounded-lg p-8">
           <div className="text-center">
-            <h3 className="text-2xl font-semibold mb-4">
-              Security Concerns?
-            </h3>
+            <h3 className="text-2xl font-semibold mb-4">Security Concerns?</h3>
             <p className="mb-6 text-gray-300">
-              If you have security concerns or believe you've discovered a vulnerability,
-              please contact us immediately.
+              If you have security concerns or believe you've discovered a vulnerability, please
+              contact us immediately.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
@@ -179,23 +174,11 @@ export default function SecurityPage() {
         {/* Last Updated */}
         <div className="mt-8 text-center text-gray-500">
           <p className="text-sm">
-            This security page was last updated on {new Date().toLocaleDateString()}.
-            Our security practices are continuously reviewed and updated.
+            This security page was last updated on {new Date().toLocaleDateString()}. Our security
+            practices are continuously reviewed and updated.
           </p>
         </div>
       </div>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
