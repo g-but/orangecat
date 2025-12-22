@@ -1,6 +1,6 @@
 /**
  * Markdown Editor Utilities
- * 
+ *
  * Utilities for converting between markdown and HTML for contentEditable editors
  * Used to show formatted text inline (like X/Twitter)
  */
@@ -10,7 +10,9 @@
  * Supports **bold** and *italic*
  */
 export function markdownToHtml(markdown: string): string {
-  if (!markdown) return '';
+  if (!markdown) {
+    return '';
+  }
 
   // Escape HTML first to prevent XSS
   let html = markdown
@@ -37,7 +39,9 @@ export function markdownToHtml(markdown: string): string {
  * Handles <strong>, <em>, <b>, <i> tags
  */
 export function htmlToMarkdown(html: string): string {
-  if (!html) return '';
+  if (!html) {
+    return '';
+  }
 
   // Remove all HTML tags except strong, em, b, i, br
   let markdown = html
@@ -70,7 +74,9 @@ export function htmlToMarkdown(html: string): string {
  */
 export function getSelectionRange(element: HTMLElement): { start: number; end: number } | null {
   const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return null;
+  if (!selection || selection.rangeCount === 0) {
+    return null;
+  }
 
   const range = selection.getRangeAt(0);
   const preCaretRange = range.cloneRange();
@@ -88,7 +94,9 @@ export function getSelectionRange(element: HTMLElement): { start: number; end: n
  */
 export function setSelectionRange(element: HTMLElement, start: number, end: number): void {
   const selection = window.getSelection();
-  if (!selection) return;
+  if (!selection) {
+    return;
+  }
 
   const range = document.createRange();
   let charCount = 0;
@@ -119,4 +127,3 @@ export function setSelectionRange(element: HTMLElement, start: number, end: numb
   selection.removeAllRanges();
   selection.addRange(range);
 }
-

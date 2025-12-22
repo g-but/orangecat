@@ -1,7 +1,12 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { userCircleSchema } from '@/lib/validation';
-import { apiSuccess, apiUnauthorized, apiInternalError, handleApiError } from '@/lib/api/standardResponse';
+import {
+  apiSuccess,
+  apiUnauthorized,
+  apiInternalError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withZodBody } from '@/lib/api/withZod';
@@ -52,15 +57,28 @@ export interface Circle {
 }
 
 // GET /api/circles - Get circles with advanced filtering
-export const GET = compose(withRequestId(), withRateLimit('read'))(async (request: NextRequest) => {
+export const GET = compose(
+  withRequestId(),
+  withRateLimit('read')
+)(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
     const category = getString(request.url, 'category');
-    const visibility = getString(request.url, 'visibility') as 'public' | 'private' | 'hidden' | undefined;
-    const activityLevel = getString(request.url, 'activity_level') as 'casual' | 'regular' | 'intensive' | undefined;
+    const visibility = getString(request.url, 'visibility') as
+      | 'public'
+      | 'private'
+      | 'hidden'
+      | undefined;
+    const activityLevel = getString(request.url, 'activity_level') as
+      | 'casual'
+      | 'regular'
+      | 'intensive'
+      | undefined;
     const hasWallet = getString(request.url, 'has_wallet') === 'true';
     const locationRestricted = getString(request.url, 'location_restricted') === 'true';
     const search = getString(request.url, 'search');
@@ -69,18 +87,28 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
     // Build filters
     const filters: Record<string, any> = {};
 
-    if (category) filters.category = category;
-    if (visibility) filters.visibility = visibility;
-    if (activityLevel) filters.activity_level = activityLevel;
-    if (hasWallet) filters.bitcoin_address = { not: null };
-    if (locationRestricted) filters.location_restricted = true;
+    if (category) {
+      filters.category = category;
+    }
+    if (visibility) {
+      filters.visibility = visibility;
+    }
+    if (activityLevel) {
+      filters.activity_level = activityLevel;
+    }
+    if (hasWallet) {
+      filters.bitcoin_address = { not: null };
+    }
+    if (locationRestricted) {
+      filters.location_restricted = true;
+    }
 
     // Search functionality
     if (search) {
       filters.OR = [
         { name: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
-        { category: { contains: search, mode: 'insensitive' } }
+        { category: { contains: search, mode: 'insensitive' } },
       ];
     }
 
@@ -110,10 +138,7 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
 
       // Show public circles OR circles user is member of
       filters.OR = filters.OR || [];
-      filters.OR.push(
-        { visibility: 'public' },
-        { id: { in: memberCircleIds } }
-      );
+      filters.OR.push({ visibility: 'public' }, { id: { in: memberCircleIds } });
     } else if (!user) {
       // Anonymous users can only see public circles
       filters.visibility = 'public';
@@ -141,10 +166,16 @@ export const GET = compose(withRequestId(), withRateLimit('read'))(async (reques
 });
 
 // POST /api/circles - Create new circle with advanced features
-export const POST = compose(withRequestId(), withZodBody(userCircleSchema))(async (request: NextRequest, ctx) => {
+export const POST = compose(
+  withRequestId(),
+  withZodBody(userCircleSchema)
+)(async (request: NextRequest, ctx) => {
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return apiUnauthorized();
@@ -162,18 +193,19 @@ export const POST = compose(withRequestId(), withZodBody(userCircleSchema))(asyn
     const circle = await createCircle(user.id, ctx.body, supabase);
 
     // Add creator as owner member
-    const { error: memberError } = await supabase
-      .from('circle_members')
-      .insert({
-        circle_id: circle.id,
-        user_id: user.id,
-        role: 'owner',
-        status: 'active',
-        joined_at: new Date().toISOString(),
-      });
+    const { error: memberError } = await supabase.from('circle_members').insert({
+      circle_id: circle.id,
+      user_id: user.id,
+      role: 'owner',
+      status: 'active',
+      joined_at: new Date().toISOString(),
+    });
 
     if (memberError) {
-      logger.error('Failed to add circle creator as member', { error: memberError, circleId: circle.id });
+      logger.error('Failed to add circle creator as member', {
+        error: memberError,
+        circleId: circle.id,
+      });
       // Don't fail the request, but log the error
     }
 
@@ -192,7 +224,7 @@ export const POST = compose(withRequestId(), withZodBody(userCircleSchema))(asyn
       circleId: circle.id,
       creatorId: user.id,
       category: circle.category,
-      visibility: circle.visibility
+      visibility: circle.visibility,
     });
 
     return apiSuccess(circle, { status: 201 });
@@ -201,14 +233,3 @@ export const POST = compose(withRequestId(), withZodBody(userCircleSchema))(asyn
     return handleApiError(error);
   }
 });
-
-
-
-
-
-
-
-
-
-
-

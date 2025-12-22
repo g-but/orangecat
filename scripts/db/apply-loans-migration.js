@@ -62,7 +62,6 @@ async function applyLoansMigration() {
     });
 
     console.log('\n🧪 Ready for testing loans functionality!');
-
   } catch (error) {
     console.error('❌ Migration failed:', error.message);
     process.exit(1);
@@ -72,29 +71,3 @@ async function applyLoansMigration() {
 }
 
 applyLoansMigration();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -239,17 +239,17 @@ export default function ProfileLayout({
 
   // For public profiles, hide tabs with no content
   const filteredTabs = tabs.filter(tab => {
-    if (isOwnProfile) return true;
+    if (isOwnProfile) {
+      return true;
+    }
     switch (tab.id) {
       case 'projects':
         return (stats?.projectCount || 0) > 0;
       case 'people':
-        return ((stats?.followerCount || 0) + (stats?.followingCount || 0)) > 0;
+        return (stats?.followerCount || 0) + (stats?.followingCount || 0) > 0;
       case 'wallets':
         return (
-          (stats?.walletCount || 0) > 0 ||
-          !!profile.bitcoin_address ||
-          !!profile.lightning_address
+          (stats?.walletCount || 0) > 0 || !!profile.bitcoin_address || !!profile.lightning_address
         );
       default:
         return true; // overview, info, timeline always visible

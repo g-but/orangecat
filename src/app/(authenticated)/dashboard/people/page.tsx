@@ -70,7 +70,7 @@ export default function PeoplePage() {
           // Be tolerant to either { data: [...] } or { data: { data: [...] } }
           const followingArray = Array.isArray(followingData.data)
             ? (followingData.data as any[])
-            : (followingData.data?.data || []);
+            : followingData.data?.data || [];
           const transformed = (followingArray || [])
             .map((item: any) => {
               // Handle both nested profiles object and direct profile data
@@ -104,7 +104,7 @@ export default function PeoplePage() {
           // API returns: { data: { data: [...], pagination: {...} } }
           const followersArray = Array.isArray(followersData.data)
             ? (followersData.data as any[])
-            : (followersData.data?.data || []);
+            : followersData.data?.data || [];
           const transformed = (followersArray || [])
             .map((item: any) => {
               // Handle both nested profiles object and direct profile data
@@ -243,21 +243,23 @@ export default function PeoplePage() {
     // Exclude self from All Users list
     .filter(conn => (activeTab === 'all' ? conn.profile.id !== user.id : true))
     .filter(conn => {
-    if (!searchTerm.trim()) return true;
-    const q = searchTerm.trim().toLowerCase();
-    const p = conn.profile;
-    return (
-      (p.username || '').toLowerCase().includes(q) ||
-      (p.name || '').toLowerCase().includes(q) ||
-      (p.bio || '').toLowerCase().includes(q)
-    );
-  });
+      if (!searchTerm.trim()) {
+        return true;
+      }
+      const q = searchTerm.trim().toLowerCase();
+      const p = conn.profile;
+      return (
+        (p.username || '').toLowerCase().includes(q) ||
+        (p.name || '').toLowerCase().includes(q) ||
+        (p.bio || '').toLowerCase().includes(q)
+      );
+    });
   const emptyMessage =
     activeTab === 'following'
       ? "You haven't connected with anyone yet. Start building your Bitcoin network!"
       : activeTab === 'followers'
-      ? 'No one has connected with you yet. Share your profile to get started!'
-      : 'No users found yet.';
+        ? 'No one has connected with you yet. Share your profile to get started!'
+        : 'No users found yet.';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -273,14 +275,15 @@ export default function PeoplePage() {
           </p>
         </div>
 
-        {/* Invite / Share CTA */
-        }
+        {/* Invite / Share CTA */}
         <div className="mb-6">
           <div className="rounded-xl border border-orange-200 bg-gradient-to-r from-orange-50 to-teal-50 p-4 sm:p-5 shadow-sm">
             <div className="flex items-center justify-between gap-3 flex-wrap">
               <div>
                 <h3 className="font-semibold text-gray-900">Invite friends to OrangeCat</h3>
-                <p className="text-sm text-gray-600">Share your profile link and start building your network</p>
+                <p className="text-sm text-gray-600">
+                  Share your profile link and start building your network
+                </p>
               </div>
               <div className="flex items-center gap-2 relative">
                 <Link href="/discover?section=people">
@@ -289,16 +292,22 @@ export default function PeoplePage() {
                   </Button>
                 </Link>
                 <div className="flex items-center gap-2 relative">
-                  <Button onClick={() => setShowShare(!showShare)} className="bg-orange-600 hover:bg-orange-700 text-white">
+                  <Button
+                    onClick={() => setShowShare(!showShare)}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
                     <Share2 className="w-4 h-4 mr-2" /> Share My Profile
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => {
                       const url = `${window.location.origin}/profiles/${currentProfile?.username || user.id}`;
-                      navigator.clipboard.writeText(url).then(() => {
-                        toast.success('Invite link copied');
-                      }).catch(() => toast.error('Failed to copy link'));
+                      navigator.clipboard
+                        .writeText(url)
+                        .then(() => {
+                          toast.success('Invite link copied');
+                        })
+                        .catch(() => toast.error('Failed to copy link'));
                     }}
                   >
                     <Copy className="w-4 h-4 mr-2" /> Copy Link
@@ -307,7 +316,9 @@ export default function PeoplePage() {
                     <div className="absolute right-0 mt-2 z-50">
                       <ProfileShare
                         username={currentProfile?.username || user.id}
-                        profileName={currentProfile?.name || currentProfile?.username || 'My Profile'}
+                        profileName={
+                          currentProfile?.name || currentProfile?.username || 'My Profile'
+                        }
                         profileBio={currentProfile?.bio || undefined}
                         onClose={() => setShowShare(false)}
                       />
@@ -364,8 +375,8 @@ export default function PeoplePage() {
                 activeTab === 'all'
                   ? 'Search all users…'
                   : activeTab === 'following'
-                  ? 'Search following…'
-                  : 'Search followers…'
+                    ? 'Search following…'
+                    : 'Search followers…'
               }
               className="pl-9"
             />

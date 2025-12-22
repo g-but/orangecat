@@ -54,7 +54,9 @@ export function usePostInteractions({
 
   // Like handler with optimistic updates
   const handleLike = useCallback(async () => {
-    if (isLiking) {return;}
+    if (isLiking) {
+      return;
+    }
 
     const originalLiked = !!event.userLiked;
     const originalCount = event.likesCount || 0;
@@ -83,7 +85,9 @@ export function usePostInteractions({
 
   // Dislike handler with optimistic updates
   const handleDislike = useCallback(async () => {
-    if (isDisliking) {return;}
+    if (isDisliking) {
+      return;
+    }
 
     const originalDisliked = !!event.userDisliked;
     const originalCount = event.dislikesCount || 0;
@@ -119,38 +123,45 @@ export function usePostInteractions({
     setShareOpen(false);
   }, []);
 
-  const handleShareConfirm = useCallback(async (shareText: string) => {
-    if (isSharing) {return;}
-
-    const originalCount = event.sharesCount || 0;
-    // Optimistic update
-    onUpdate({ userShared: true, sharesCount: originalCount + 1 });
-    setIsSharing(true);
-
-    try {
-      const result = await timelineService.shareEvent(
-        event.id,
-        shareText?.trim() || 'Shared from timeline',
-        'public'
-      );
-      if (result.success) {
-        onUpdate({ userShared: true, sharesCount: result.shareCount });
-      } else {
-        // Revert on failure
-        onUpdate({ userShared: false, sharesCount: originalCount });
+  const handleShareConfirm = useCallback(
+    async (shareText: string) => {
+      if (isSharing) {
+        return;
       }
-    } catch (error) {
-      logger.error('Failed to share event', error, 'usePostInteractions');
-      onUpdate({ userShared: false, sharesCount: originalCount });
-    } finally {
-      setIsSharing(false);
-      setShareOpen(false);
-    }
-  }, [event.id, isSharing, onUpdate]);
+
+      const originalCount = event.sharesCount || 0;
+      // Optimistic update
+      onUpdate({ userShared: true, sharesCount: originalCount + 1 });
+      setIsSharing(true);
+
+      try {
+        const result = await timelineService.shareEvent(
+          event.id,
+          shareText?.trim() || 'Shared from timeline',
+          'public'
+        );
+        if (result.success) {
+          onUpdate({ userShared: true, sharesCount: result.shareCount });
+        } else {
+          // Revert on failure
+          onUpdate({ userShared: false, sharesCount: originalCount });
+        }
+      } catch (error) {
+        logger.error('Failed to share event', error, 'usePostInteractions');
+        onUpdate({ userShared: false, sharesCount: originalCount });
+      } finally {
+        setIsSharing(false);
+        setShareOpen(false);
+      }
+    },
+    [event.id, isSharing, onUpdate]
+  );
 
   // Repost handlers
   const handleRepostClick = useCallback(() => {
-    if (!user?.id) {return;}
+    if (!user?.id) {
+      return;
+    }
     setRepostModalOpen(true);
   }, [user?.id]);
 
@@ -159,7 +170,9 @@ export function usePostInteractions({
   }, []);
 
   const handleSimpleRepost = useCallback(async () => {
-    if (isReposting || !user?.id) {return;}
+    if (isReposting || !user?.id) {
+      return;
+    }
 
     setIsReposting(true);
     try {
@@ -200,53 +213,75 @@ export function usePostInteractions({
     } finally {
       setIsReposting(false);
     }
-  }, [event.id, event.actor.id, event.actor.name, event.description, isReposting, user?.id, onAddEvent]);
+  }, [
+    event.id,
+    event.actor.id,
+    event.actor.name,
+    event.description,
+    isReposting,
+    user?.id,
+    onAddEvent,
+  ]);
 
-  const handleQuoteRepost = useCallback(async (quoteText: string) => {
-    if (isReposting || !user?.id || !quoteText.trim()) {return;}
-
-    setIsReposting(true);
-    try {
-      const result = await timelineService.createEvent({
-        eventType: 'status_update',
-        actorId: user.id,
-        subjectType: 'profile',
-        subjectId: user.id,
-        title: '',
-        description: quoteText.trim(),
-        visibility: 'public',
-        metadata: {
-          is_quote_repost: true,
-          is_repost: true,
-          original_event_id: event.id,
-          original_actor_id: event.actor.id,
-          original_actor_name: event.actor.name,
-          original_actor_username: event.actor.username,
-          original_actor_avatar: event.actor.avatar,
-          original_description: (event.metadata as any)?.original_description || event.description || '',
-          quote_text: quoteText.trim(),
-        },
-        parentEventId: event.id,
-      });
-
-      if (result.success) {
-        logger.info('Successfully quote reposted event', null, 'usePostInteractions');
-        if (result.event && onAddEvent) {
-          // Cast to TimelineDisplayEvent - the timeline will refresh with full data anyway
-          onAddEvent(result.event as unknown as TimelineDisplayEvent);
-        }
-        setRepostModalOpen(false);
-      } else {
-        logger.error('Failed to quote repost event', result.error, 'usePostInteractions');
-        throw new Error(result.error || 'Failed to quote repost');
+  const handleQuoteRepost = useCallback(
+    async (quoteText: string) => {
+      if (isReposting || !user?.id || !quoteText.trim()) {
+        return;
       }
-    } catch (error) {
-      logger.error('Error quote reposting event', error, 'usePostInteractions');
-      throw error;
-    } finally {
-      setIsReposting(false);
-    }
-  }, [event.id, event.actor.id, event.actor.name, event.description, isReposting, user?.id, onAddEvent]);
+
+      setIsReposting(true);
+      try {
+        const result = await timelineService.createEvent({
+          eventType: 'status_update',
+          actorId: user.id,
+          subjectType: 'profile',
+          subjectId: user.id,
+          title: '',
+          description: quoteText.trim(),
+          visibility: 'public',
+          metadata: {
+            is_quote_repost: true,
+            is_repost: true,
+            original_event_id: event.id,
+            original_actor_id: event.actor.id,
+            original_actor_name: event.actor.name,
+            original_actor_username: event.actor.username,
+            original_actor_avatar: event.actor.avatar,
+            original_description:
+              (event.metadata as any)?.original_description || event.description || '',
+            quote_text: quoteText.trim(),
+          },
+          parentEventId: event.id,
+        });
+
+        if (result.success) {
+          logger.info('Successfully quote reposted event', null, 'usePostInteractions');
+          if (result.event && onAddEvent) {
+            // Cast to TimelineDisplayEvent - the timeline will refresh with full data anyway
+            onAddEvent(result.event as unknown as TimelineDisplayEvent);
+          }
+          setRepostModalOpen(false);
+        } else {
+          logger.error('Failed to quote repost event', result.error, 'usePostInteractions');
+          throw new Error(result.error || 'Failed to quote repost');
+        }
+      } catch (error) {
+        logger.error('Error quote reposting event', error, 'usePostInteractions');
+        throw error;
+      } finally {
+        setIsReposting(false);
+      }
+    },
+    [
+      event.id,
+      event.actor.id,
+      event.actor.name,
+      event.description,
+      isReposting,
+      user?.id,
+      onAddEvent,
+    ]
+  );
 
   return {
     // Like functionality
@@ -273,31 +308,3 @@ export function usePostInteractions({
     handleQuoteRepost,
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

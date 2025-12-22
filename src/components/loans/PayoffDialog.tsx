@@ -16,9 +16,22 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { Input } from '@/components/ui/Input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/Button';
 import { Loader2, DollarSign, CreditCard } from 'lucide-react';
 import loansService from '@/services/loans';
@@ -117,7 +130,7 @@ export function PayoffDialog({ loan, offer, open, onOpenChange, onRecorded }: Pa
                       type="number"
                       step="0.01"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -192,7 +205,12 @@ export function PayoffDialog({ loan, offer, open, onOpenChange, onRecorded }: Pa
             />
 
             <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+              >
                 Cancel
               </Button>
               <Button type="submit" disabled={loading}>
@@ -206,39 +224,3 @@ export function PayoffDialog({ loan, offer, open, onOpenChange, onRecorded }: Pa
     </Dialog>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

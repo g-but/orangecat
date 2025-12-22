@@ -11,24 +11,28 @@ This document describes the implementation of X-style mobile messaging experienc
 ## Key Features
 
 ### 1. Tap-and-Hold Context Menu
+
 - **Mobile**: Long press (500ms) on message bubble to show context menu
 - **Desktop**: Right-click on message bubble
 - **Actions**: Edit and Delete (only for own messages)
 - **X-style**: Smooth fade-in animation, positioned dynamically
 
 ### 2. Message Editing
+
 - **API Endpoint**: `PATCH /api/messages/[messageId]`
 - **UI**: Inline editing with textarea
 - **Indicator**: Shows "(edited)" after timestamp when message is edited
 - **Validation**: Only sender can edit their own messages
 
 ### 3. Mobile Layout (X-Style)
+
 - **Single Column**: Mobile uses single-column layout (different from desktop two-column)
 - **Profile Info**: Shows conversation partner's profile at top (mobile only)
 - **Full-Screen**: Message view takes full width on mobile
 - **Smooth Transitions**: 200-300ms transitions between states
 
 ### 4. Modular Components
+
 - **MessageBubble**: Reusable message bubble component
 - **MessageContextMenu**: Context menu component
 - **DRY Principle**: Shared logic extracted to reusable components
@@ -76,6 +80,7 @@ This document describes the implementation of X-style mobile messaging experienc
 ## Mobile vs Desktop Differences
 
 ### Mobile (Single Column)
+
 - Profile info section at top
 - Full-width message view
 - Rounded input field
@@ -84,6 +89,7 @@ This document describes the implementation of X-style mobile messaging experienc
 - Hidden selection controls (shown on desktop)
 
 ### Desktop (Two Column)
+
 - Side-by-side conversation list and message view
 - Square input field
 - Right-click for context menu
@@ -93,6 +99,7 @@ This document describes the implementation of X-style mobile messaging experienc
 ## User Experience
 
 ### Tap-and-Hold Flow
+
 1. User long-presses message bubble (500ms)
 2. Haptic feedback (if supported)
 3. Context menu appears with Edit/Delete options
@@ -100,6 +107,7 @@ This document describes the implementation of X-style mobile messaging experienc
 5. Menu closes, action executes
 
 ### Edit Flow
+
 1. User taps "Edit" in context menu
 2. Message bubble transforms to editable textarea
 3. User modifies content
@@ -107,6 +115,7 @@ This document describes the implementation of X-style mobile messaging experienc
 5. Message updates with "(edited)" indicator
 
 ### Mobile Navigation
+
 1. User taps conversation in list
 2. Conversation list slides out (hidden on mobile)
 3. Message view slides in (full width)
@@ -116,6 +125,7 @@ This document describes the implementation of X-style mobile messaging experienc
 ## Technical Details
 
 ### API Endpoint
+
 ```typescript
 PATCH /api/messages/[messageId]
 Body: { content: string }
@@ -123,6 +133,7 @@ Response: { success: true, message: Message }
 ```
 
 ### Message Bubble Props
+
 ```typescript
 interface MessageBubbleProps {
   message: Message;
@@ -140,6 +151,7 @@ interface MessageBubbleProps {
 ```
 
 ### Edited Indicator
+
 - Shows " · edited" after timestamp when `message.edited_at` is not null
 - Styled with `text-gray-400` for subtle appearance
 - Only visible on non-optimistic messages
@@ -182,19 +194,3 @@ interface MessageBubbleProps {
 - `src/components/messaging/MessagePanel.tsx`
 - `src/app/api/messages/[messageId]/route.ts`
 - `src/components/messaging/index.ts`
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

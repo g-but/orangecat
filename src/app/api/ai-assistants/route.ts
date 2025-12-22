@@ -66,7 +66,10 @@ export async function POST(request: NextRequest) {
     if (!rateLimitResult.success) {
       const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
       logger.warn('AI assistant creation rate limit exceeded', { userId: user.id });
-      return apiRateLimited('Too many AI assistant creation requests. Please slow down.', retryAfter);
+      return apiRateLimited(
+        'Too many AI assistant creation requests. Please slow down.',
+        retryAfter
+      );
     }
 
     const body = await request.json();
@@ -99,7 +102,10 @@ export async function POST(request: NextRequest) {
       return handleSupabaseError(error);
     }
 
-    logger.info('AI assistant created successfully', { userId: user.id, assistantId: assistant.id });
+    logger.info('AI assistant created successfully', {
+      userId: user.id,
+      assistantId: assistant.id,
+    });
     return apiSuccess(assistant, { status: 201 });
   } catch (error) {
     if (error instanceof Error && error.name === 'ZodError') {
@@ -111,49 +117,3 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

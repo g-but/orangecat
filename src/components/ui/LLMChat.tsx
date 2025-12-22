@@ -25,9 +25,9 @@ interface LLMChatProps {
 export function LLMChat({
   className,
   systemPrompt,
-  placeholder = "Ask me anything...",
-  title = "AI Assistant",
-  maxHeight = "400px"
+  placeholder = 'Ask me anything...',
+  title = 'AI Assistant',
+  maxHeight = '400px',
 }: LLMChatProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -80,7 +80,9 @@ export function LLMChat({
 
   const handleSendMessage = async () => {
     const message = inputValue.trim();
-    if (!message || isLoading) return;
+    if (!message || isLoading) {
+      return;
+    }
 
     setError(null);
     setInputValue('');
@@ -158,9 +160,9 @@ export function LLMChat({
       <Button
         onClick={() => setIsOpen(true)}
         className={cn(
-          "fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full",
-          "bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700",
-          "shadow-lg transition-all hover:scale-110",
+          'fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full',
+          'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700',
+          'shadow-lg transition-all hover:scale-110',
           className
         )}
         aria-label="Open AI chat"
@@ -174,8 +176,8 @@ export function LLMChat({
     <div
       ref={chatRef}
       className={cn(
-        "fixed bottom-6 right-6 z-50 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col",
-        "max-h-[500px]",
+        'fixed bottom-6 right-6 z-50 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col',
+        'max-h-[500px]',
         className
       )}
     >
@@ -215,10 +217,7 @@ export function LLMChat({
       </div>
 
       {/* Messages */}
-      <div
-        className="flex-1 overflow-y-auto p-4 space-y-3"
-        style={{ maxHeight }}
-      >
+      <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ maxHeight }}>
         {messages.length === 0 ? (
           <div className="text-center text-gray-500 text-sm py-8">
             <Bot className="w-8 h-8 mx-auto mb-2 text-gray-400" />
@@ -226,12 +225,12 @@ export function LLMChat({
             <p className="text-xs mt-1">Ask me anything about OrangeCat or general questions.</p>
           </div>
         ) : (
-          messages.map((message) => (
+          messages.map(message => (
             <div
               key={message.id}
               className={cn(
-                "flex gap-2",
-                message.role === 'user' ? "justify-end" : "justify-start"
+                'flex gap-2',
+                message.role === 'user' ? 'justify-end' : 'justify-start'
               )}
             >
               {message.role === 'assistant' && (
@@ -242,22 +241,20 @@ export function LLMChat({
 
               <div
                 className={cn(
-                  "max-w-[75%] px-3 py-2 rounded-2xl text-sm",
-                  message.role === 'user'
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-900"
+                  'max-w-[75%] px-3 py-2 rounded-2xl text-sm',
+                  message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-900'
                 )}
               >
                 <div className="whitespace-pre-wrap">{message.content}</div>
                 <div
                   className={cn(
-                    "text-xs mt-1 opacity-70",
-                    message.role === 'user' ? "text-blue-100" : "text-gray-500"
+                    'text-xs mt-1 opacity-70',
+                    message.role === 'user' ? 'text-blue-100' : 'text-gray-500'
                   )}
                 >
                   {message.timestamp.toLocaleTimeString([], {
                     hour: '2-digit',
-                    minute: '2-digit'
+                    minute: '2-digit',
                   })}
                 </div>
               </div>
@@ -291,7 +288,7 @@ export function LLMChat({
           <Input
             ref={inputRef}
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={e => setInputValue(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder={placeholder}
             disabled={isLoading}
@@ -314,27 +311,3 @@ export function LLMChat({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

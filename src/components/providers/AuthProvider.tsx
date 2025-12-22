@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/stores/auth';
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { useMessagingService } from '@/hooks/useMessagingService';
 import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import { offlineQueueService } from '@/lib/offline-queue';
 
@@ -75,7 +76,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       switch (event) {
         case 'INITIAL_SESSION':
           // Initial session load - set state with existing session
-          logger.info('INITIAL_SESSION event received', { hasSession: !!session, hasUser: !!session?.user }, 'Auth');
+          logger.info(
+            'INITIAL_SESSION event received',
+            { hasSession: !!session, hasUser: !!session?.user },
+            'Auth'
+          );
           if (session?.user) {
             const storedUser = useAuthStore.getState().user;
 
@@ -172,17 +177,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Immediately sync any existing session once on mount to avoid early 401s
     // Also set local state to ensure hydrated becomes true even if onAuthStateChange is delayed
     const primeSession = async () => {
-      if (hasSyncedInitialSession.current) return;
+      if (hasSyncedInitialSession.current) {
+        return;
+      }
       hasSyncedInitialSession.current = true;
       logger.info('Starting prime session check', undefined, 'Auth');
       const { data } = await supabase.auth.getSession();
-      logger.info('Prime session result', { hasSession: !!data?.session, hasUser: !!data?.session?.user }, 'Auth');
+      logger.info(
+        'Prime session result',
+        { hasSession: !!data?.session, hasUser: !!data?.session?.user },
+        'Auth'
+      );
 
       if (data?.session?.user) {
         await syncSessionToServer('INITIAL_SESSION', data.session);
         // Set local state immediately to prevent loading state hang
         setInitialAuthState(data.session.user, data.session, null);
-        logger.info('Prime session: set auth state with user', { userId: data.session.user.id }, 'Auth');
+        logger.info(
+          'Prime session: set auth state with user',
+          { userId: data.session.user.id },
+          'Auth'
+        );
         fetchProfile().catch(err => {
           logger.warn('Failed to fetch profile during prime session', { error: err }, 'Auth');
         });
@@ -199,7 +214,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setTimeout(() => {
         const currentState = useAuthStore.getState();
         if (!currentState.hydrated) {
-          logger.warn('Force setting hydrated state after prime session failure', undefined, 'Auth');
+          logger.warn(
+            'Force setting hydrated state after prime session failure',
+            undefined,
+            'Auth'
+          );
           setInitialAuthState(null, null, null);
         }
       }, 3000);

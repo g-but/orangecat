@@ -57,15 +57,18 @@ export function CreateEntityWorkflow<T extends Record<string, any>>({
     showTemplatesByDefault && TemplateComponent && !initialValues
   );
 
-  const handleTemplateSelect = useCallback((template: Partial<T>) => {
-    // Merge template values with defaults
-    const templateData: Partial<T> = {
-      ...config.defaultValues,
-      ...template,
-    };
-    setSelectedTemplate(templateData);
-    setShowTemplates(false);
-  }, [config.defaultValues]);
+  const handleTemplateSelect = useCallback(
+    (template: Partial<T>) => {
+      // Merge template values with defaults
+      const templateData: Partial<T> = {
+        ...config.defaultValues,
+        ...template,
+      };
+      setSelectedTemplate(templateData);
+      setShowTemplates(false);
+    },
+    [config.defaultValues]
+  );
 
   const handleStartFromScratch = useCallback(() => {
     setSelectedTemplate(config.defaultValues as Partial<T>);
@@ -78,16 +81,12 @@ export function CreateEntityWorkflow<T extends Record<string, any>>({
       <div className="max-w-7xl mx-auto px-4 py-8">
         {pageHeader ? (
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {pageHeader.title}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{pageHeader.title}</h1>
             <p className="text-gray-600">{pageHeader.description}</p>
           </div>
         ) : (
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Create {config.name}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Create {config.name}</h1>
             <p className="text-gray-600">
               {config.pageDescription || `Create a new ${config.name.toLowerCase()}`}
             </p>
@@ -109,20 +108,6 @@ export function CreateEntityWorkflow<T extends Record<string, any>>({
 
   // Show form with selected template or initial values
   return (
-    <EntityForm
-      config={config}
-      initialValues={selectedTemplate || initialValues || undefined}
-    />
+    <EntityForm config={config} initialValues={selectedTemplate || initialValues || undefined} />
   );
 }
-
-
-
-
-
-
-
-
-
-
-

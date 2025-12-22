@@ -35,12 +35,15 @@ export type OrganizationFieldType =
   | 'lightning_address'
   | null;
 
-export const organizationGuidanceContent: Record<NonNullable<OrganizationFieldType>, GuidanceContent> = {
+export const organizationGuidanceContent: Record<
+  NonNullable<OrganizationFieldType>,
+  GuidanceContent
+> = {
   name: {
     icon: React.createElement(Building2, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Organization Name',
     description:
-      'Choose a clear, memorable name that represents your organization\'s purpose and values.',
+      "Choose a clear, memorable name that represents your organization's purpose and values.",
     tips: [
       'Keep it simple and easy to remember',
       'Avoid overly complex or confusing names',
@@ -58,26 +61,21 @@ export const organizationGuidanceContent: Record<NonNullable<OrganizationFieldTy
   slug: {
     icon: React.createElement(Link, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Organization Slug',
-    description:
-      'URL-friendly identifier automatically generated from your organization name.',
+    description: 'URL-friendly identifier automatically generated from your organization name.',
     tips: [
       'Auto-generated from organization name',
-      'Used in your organization\'s URL',
+      "Used in your organization's URL",
       'Keep it short and memorable',
       'Only letters, numbers, and hyphens',
       'Cannot be changed after creation',
     ],
-    examples: [
-      'orange-cat-collective',
-      'bitcoin-builders-guild',
-      'zurich-makerspace',
-    ],
+    examples: ['orange-cat-collective', 'bitcoin-builders-guild', 'zurich-makerspace'],
   },
   type: {
     icon: React.createElement(Settings, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Organization Type',
     description:
-      'Choose the structure that best fits your organization\'s legal and operational needs.',
+      "Choose the structure that best fits your organization's legal and operational needs.",
     tips: [
       'Consider your legal requirements',
       'Think about your governance preferences',
@@ -95,8 +93,7 @@ export const organizationGuidanceContent: Record<NonNullable<OrganizationFieldTy
   description: {
     icon: React.createElement(FileText, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Organization Description',
-    description:
-      'Clearly explain what your organization does, who it serves, and why it exists.',
+    description: 'Clearly explain what your organization does, who it serves, and why it exists.',
     tips: [
       'Start with your mission statement',
       'Explain who benefits from your work',
@@ -113,8 +110,7 @@ export const organizationGuidanceContent: Record<NonNullable<OrganizationFieldTy
   website_url: {
     icon: React.createElement(Globe, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Website URL',
-    description:
-      'Link to your organization\'s website for additional information and credibility.',
+    description: "Link to your organization's website for additional information and credibility.",
     tips: [
       'Use your official website if available',
       'Can be added or changed later',
@@ -131,8 +127,7 @@ export const organizationGuidanceContent: Record<NonNullable<OrganizationFieldTy
   governance_model: {
     icon: React.createElement(Shield, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Governance Model',
-    description:
-      'Define how decisions are made and how power is distributed in your organization.',
+    description: 'Define how decisions are made and how power is distributed in your organization.',
     tips: [
       'Hierarchical: Traditional top-down structure',
       'Democratic: Voting-based decisions',
@@ -151,13 +146,13 @@ export const organizationGuidanceContent: Record<NonNullable<OrganizationFieldTy
     icon: React.createElement(Bitcoin, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Bitcoin Treasury Address',
     description:
-      'Primary Bitcoin address for your organization\'s treasury and financial operations.',
+      "Primary Bitcoin address for your organization's treasury and financial operations.",
     tips: [
       'Use a multi-signature wallet for security',
       'Generate a fresh address for your organization',
       'Consider hardware wallet security',
       'Keep private keys secure and backed up',
-      'This will be your organization\'s main treasury',
+      "This will be your organization's main treasury",
     ],
     examples: [
       'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlhfe2s',
@@ -168,8 +163,7 @@ export const organizationGuidanceContent: Record<NonNullable<OrganizationFieldTy
   lightning_address: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Lightning Address',
-    description:
-      'Lightning Network address for instant, low-fee Bitcoin payments.',
+    description: 'Lightning Network address for instant, low-fee Bitcoin payments.',
     tips: [
       'Optional but recommended for modern payments',
       'Format: yourname@domain.com',
@@ -177,11 +171,7 @@ export const organizationGuidanceContent: Record<NonNullable<OrganizationFieldTy
       'Lower fees than on-chain transactions',
       'Great for donations and small payments',
     ],
-    examples: [
-      'orangecat@ln.address',
-      'guild@lightning.gifts',
-      'makerspace@zbd.gg',
-    ],
+    examples: ['orangecat@ln.address', 'guild@lightning.gifts', 'makerspace@zbd.gg'],
   },
 };
 
@@ -204,34 +194,3 @@ export const organizationDefaultGuidance: DefaultGuidance = {
     'Build lasting communities around shared values',
   ],
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

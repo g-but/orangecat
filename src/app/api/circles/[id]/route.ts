@@ -15,7 +15,7 @@ import { logger } from '@/utils/logger';
 import { apiRateLimited } from '@/lib/api/standardResponse';
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 // GET /api/circles/[id] - Get specific circle
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest, { params }: PageProps) {
     const supabase = await createServerClient();
     const { data: auth } = await supabase.auth.getUser();
     const user = auth?.user;
-    
+
     const { id } = await params;
 
     // Check if circle exists
@@ -232,10 +232,7 @@ export async function DELETE(request: NextRequest, { params }: PageProps) {
     }
 
     // Delete the circle
-    const { error } = await supabase
-      .from('circles')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('circles').delete().eq('id', id);
 
     if (error) {
       logger.error('Circle deletion failed', {
@@ -253,5 +250,3 @@ export async function DELETE(request: NextRequest, { params }: PageProps) {
     return handleApiError(error);
   }
 }
-
-

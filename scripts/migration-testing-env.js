@@ -29,14 +29,14 @@ const colors = {
   blue: '\x1b[34m',
   magenta: '\x1b[35m',
   cyan: '\x1b[36m',
-  bright: '\x1b[1m'
+  bright: '\x1b[1m',
 };
 
 const results = {
   passed: 0,
   failed: 0,
   warnings: 0,
-  details: []
+  details: [],
 };
 
 function log(message, color = 'reset') {
@@ -109,7 +109,7 @@ function createDatabaseBackup(backupName = 'pre_migration_backup') {
 
     // Use pg_dump to create a backup
     execSync(`pg_dump postgresql://postgres:postgres@127.0.0.1:54322/postgres > "${backupPath}"`, {
-      stdio: 'pipe'
+      stdio: 'pipe',
     });
 
     success(`Database backup created: ${path.basename(backupPath)}`);
@@ -135,12 +135,15 @@ function restoreDatabaseBackup(backupPath) {
     info(`Restoring from backup: ${path.basename(backupPath)}`);
 
     // Drop and recreate the database, then restore
-    execSync('psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"', {
-      stdio: 'pipe'
-    });
+    execSync(
+      'psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"',
+      {
+        stdio: 'pipe',
+      }
+    );
 
     execSync(`psql postgresql://postgres:postgres@127.0.0.1:54322/postgres < "${backupPath}"`, {
-      stdio: 'pipe'
+      stdio: 'pipe',
     });
 
     success('Database restored from backup');
@@ -176,7 +179,7 @@ function applyTestMigration(migrationPath) {
 
     // Apply the migration
     execSync(`psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -f "${migrationPath}"`, {
-      stdio: 'pipe'
+      stdio: 'pipe',
     });
 
     success(`Migration applied successfully: ${path.basename(migrationPath)}`);
@@ -244,12 +247,12 @@ function validateDataIntegrity() {
     {
       name: 'Timeline Events Exist',
       query: 'SELECT COUNT(*) as count FROM timeline_events;',
-      expected: 'count >= 0'
+      expected: 'count >= 0',
     },
     {
       name: 'Users Table Exists',
       query: 'SELECT COUNT(*) as count FROM profiles;',
-      expected: 'count >= 0'
+      expected: 'count >= 0',
     },
     {
       name: 'No Orphaned Records',
@@ -259,16 +262,19 @@ function validateDataIntegrity() {
         LEFT JOIN timeline_events te ON tl.event_id = te.id
         WHERE te.id IS NULL;
       `,
-      expected: 'orphaned_likes = 0'
-    }
+      expected: 'orphaned_likes = 0',
+    },
   ];
 
   for (const check of integrityChecks) {
     try {
-      const result = execSync(`psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -t -c "${check.query}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe'
-      }).trim();
+      const result = execSync(
+        `psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -t -c "${check.query}"`,
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }
+      ).trim();
 
       const value = parseInt(result) || 0;
 
@@ -296,17 +302,20 @@ function analyzePerformance() {
         EXPLAIN (ANALYZE, VERBOSE, COSTS, BUFFERS, TIMING)
         SELECT * FROM get_enriched_timeline_feed('00000000-0000-0000-0000-000000000000'::uuid, 20, 0)
         LIMIT 1;
-      `
-    }
+      `,
+    },
   ];
 
   for (const perf of perfQueries) {
     try {
       info(`Analyzing: ${perf.name}`);
-      const result = execSync(`psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "${perf.query}"`, {
-        encoding: 'utf8',
-        stdio: 'pipe'
-      });
+      const result = execSync(
+        `psql postgresql://postgres:postgres@127.0.0.1:54322/postgres -c "${perf.query}"`,
+        {
+          encoding: 'utf8',
+          stdio: 'pipe',
+        }
+      );
 
       // Extract execution time from EXPLAIN output
       const timeMatch = result.match(/Execution Time: ([\d.]+) ms/);
@@ -468,7 +477,8 @@ function listAvailableMigrations() {
     return;
   }
 
-  const migrations = fs.readdirSync(migrationsDir)
+  const migrations = fs
+    .readdirSync(migrationsDir)
     .filter(file => file.endsWith('.sql'))
     .sort()
     .reverse(); // Most recent first
@@ -514,7 +524,9 @@ function showHelp() {
   log('EXAMPLES:', 'bright');
   log('  node scripts/migration-testing-env.js setup');
   log('  node scripts/migration-testing-env.js list');
-  log('  node scripts/migration-testing-env.js supabase/migrations/20251113000001_timeline_social_features.sql');
+  log(
+    '  node scripts/migration-testing-env.js supabase/migrations/20251113000001_timeline_social_features.sql'
+  );
   log('');
 
   log('FEATURES:', 'bright');
@@ -576,7 +588,7 @@ module.exports = {
   validateDataIntegrity,
   analyzePerformance,
   setupTestEnvironment,
-  listAvailableMigrations
+  listAvailableMigrations,
 };
 
 // Run if called directly
@@ -586,39 +598,3 @@ if (require.main === module) {
     process.exit(1);
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

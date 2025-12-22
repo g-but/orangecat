@@ -28,7 +28,9 @@ const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
 let cleanupTimer: NodeJS.Timeout | null = null;
 
 function startCleanupTimer() {
-  if (cleanupTimer) return;
+  if (cleanupTimer) {
+    return;
+  }
 
   cleanupTimer = setInterval(() => {
     const now = Date.now();
@@ -78,10 +80,7 @@ export interface RateLimitResult {
  * @param config - Rate limit configuration
  * @returns Rate limit result with status and metadata
  */
-export function checkRateLimit(
-  identifier: string,
-  config: RateLimitConfig
-): RateLimitResult {
+export function checkRateLimit(identifier: string, config: RateLimitConfig): RateLimitResult {
   startCleanupTimer();
 
   const now = Date.now();
@@ -122,7 +121,10 @@ export function checkRateLimit(
 /**
  * Create a rate limit key for a specific action and user
  */
-export function createRateLimitKey(action: keyof typeof RATE_LIMIT_CONFIGS, userId: string): string {
+export function createRateLimitKey(
+  action: keyof typeof RATE_LIMIT_CONFIGS,
+  userId: string
+): string {
   return `${action}:${userId}`;
 }
 

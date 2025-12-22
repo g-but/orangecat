@@ -48,27 +48,25 @@ export function AvailableCircles({ circles, onCircleJoined }: AvailableCirclesPr
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      {circles.map((circle) => (
+      {circles.map(circle => (
         <Card key={circle.id} className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 <CardTitle className="text-base truncate">{circle.name}</CardTitle>
                 <CardDescription className="text-xs">
-                  {circle.category ? circle.category.charAt(0).toUpperCase() + circle.category.slice(1) : 'Community'}
+                  {circle.category
+                    ? circle.category.charAt(0).toUpperCase() + circle.category.slice(1)
+                    : 'Community'}
                 </CardDescription>
               </div>
-              {circle.is_public && (
-                <Globe className="h-4 w-4 text-green-600 flex-shrink-0" />
-              )}
+              {circle.is_public && <Globe className="h-4 w-4 text-green-600 flex-shrink-0" />}
             </div>
           </CardHeader>
 
           <CardContent className="space-y-3">
             {circle.description && (
-              <p className="text-sm text-muted-foreground line-clamp-2">
-                {circle.description}
-              </p>
+              <p className="text-sm text-muted-foreground line-clamp-2">{circle.description}</p>
             )}
 
             <div className="flex items-center justify-between text-sm">
@@ -96,47 +94,3 @@ export function AvailableCircles({ circles, onCircleJoined }: AvailableCirclesPr
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

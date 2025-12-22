@@ -24,14 +24,15 @@ Content-Type: application/json
 
 #### Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `message` | string | Yes | The user's message (max 10,000 characters) |
-| `systemPrompt` | string | No | Custom system prompt to override default behavior |
+| Parameter      | Type   | Required | Description                                       |
+| -------------- | ------ | -------- | ------------------------------------------------- |
+| `message`      | string | Yes      | The user's message (max 10,000 characters)        |
+| `systemPrompt` | string | No       | Custom system prompt to override default behavior |
 
 #### Response
 
 **Success (200)**:
+
 ```javascript
 {
   "message": "OrangeCat is a Bitcoin-native crowdfunding platform where users can fund projects directly with Bitcoin...",
@@ -43,6 +44,7 @@ Content-Type: application/json
 **Error Responses**:
 
 **400 Bad Request**:
+
 ```javascript
 {
   "error": "Message is required and must be a string"
@@ -50,6 +52,7 @@ Content-Type: application/json
 ```
 
 **429 Rate Limited**:
+
 ```javascript
 {
   "error": "Rate limit exceeded",
@@ -62,6 +65,7 @@ Content-Type: application/json
 ```
 
 **500 Internal Server Error**:
+
 ```javascript
 {
   "error": "Failed to generate response"
@@ -117,13 +121,14 @@ The API handles various error conditions:
 ## Usage Examples
 
 ### Basic Chat
+
 ```javascript
 const response = await fetch('/api/chat', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
-    message: 'What is Bitcoin crowdfunding?'
-  })
+    message: 'What is Bitcoin crowdfunding?',
+  }),
 });
 
 const data = await response.json();
@@ -131,14 +136,15 @@ console.log(data.message);
 ```
 
 ### Custom System Prompt
+
 ```javascript
 const response = await fetch('/api/chat', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
     message: 'Explain Bitcoin to a beginner',
-    systemPrompt: 'You are a patient teacher explaining complex topics simply.'
-  })
+    systemPrompt: 'You are a patient teacher explaining complex topics simply.',
+  }),
 });
 ```
 
@@ -164,27 +170,3 @@ The chat feature is integrated as a floating chat widget available site-wide. Th
 **Created**: 2025-12-09
 **Last Modified**: 2025-12-09
 **Last Modified Summary**: Initial API documentation for chat endpoint
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

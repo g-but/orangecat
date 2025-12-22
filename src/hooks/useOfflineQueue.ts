@@ -70,7 +70,9 @@ export function useOfflineQueue(): OfflineQueueState {
     const handleSyncProgress = (e: Event) => {
       const detail = (e as CustomEvent).detail as { total: number; processed: number } | undefined;
       setIsSyncing(true);
-      if (detail) setProgress({ processed: detail.processed ?? 0, total: detail.total ?? 0 });
+      if (detail) {
+        setProgress({ processed: detail.processed ?? 0, total: detail.total ?? 0 });
+      }
     };
     const handleSyncComplete = () => {
       setIsSyncing(false);
@@ -93,7 +95,10 @@ export function useOfflineQueue(): OfflineQueueState {
         offlineQueueEvents.SYNC_PROGRESS,
         handleSyncProgress as EventListener
       );
-      window.removeEventListener(offlineQueueEvents.SYNC_COMPLETE, handleSyncComplete as EventListener);
+      window.removeEventListener(
+        offlineQueueEvents.SYNC_COMPLETE,
+        handleSyncComplete as EventListener
+      );
       clearInterval(interval);
     };
   }, [refreshQueue]);

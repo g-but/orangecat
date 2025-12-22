@@ -65,7 +65,9 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
    */
   const updatePresence = useCallback(
     async (status: PresenceStatus) => {
-      if (!user?.id || !enabled) return;
+      if (!user?.id || !enabled) {
+        return;
+      }
 
       try {
         await supabase.rpc('update_presence', { p_status: status });
@@ -92,7 +94,9 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
    * Handle visibility change (tab focus/blur)
    */
   useEffect(() => {
-    if (!user?.id || !enabled) return;
+    if (!user?.id || !enabled) {
+      return;
+    }
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
@@ -145,10 +149,7 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
     // Set offline on page unload
     const handleBeforeUnload = () => {
       // Use sendBeacon for reliable offline update
-      navigator.sendBeacon?.(
-        '/api/presence/offline',
-        JSON.stringify({ userId: user.id })
-      );
+      navigator.sendBeacon?.('/api/presence/offline', JSON.stringify({ userId: user.id }));
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
@@ -173,54 +174,50 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
   /**
    * Get presence for specific users
    */
-  const getPresence = useCallback(
-    async (userIds: string[]): Promise<Map<string, UserPresence>> => {
-      const map = new Map<string, UserPresence>();
-      if (!userIds.length) return map;
+  const getPresence = useCallback(async (userIds: string[]): Promise<Map<string, UserPresence>> => {
+    const map = new Map<string, UserPresence>();
+    if (!userIds.length) {
+      return map;
+    }
 
-      try {
-        const { data } = await supabase
-          .from('user_presence')
-          .select('user_id, status, last_seen_at')
-          .in('user_id', userIds);
+    try {
+      const { data } = await supabase
+        .from('user_presence')
+        .select('user_id, status, last_seen_at')
+        .in('user_id', userIds);
 
-        if (data) {
-          for (const row of data) {
-            map.set(row.user_id, {
-              userId: row.user_id,
-              status: row.status as PresenceStatus,
-              lastSeenAt: new Date(row.last_seen_at),
-            });
-          }
+      if (data) {
+        for (const row of data) {
+          map.set(row.user_id, {
+            userId: row.user_id,
+            status: row.status as PresenceStatus,
+            lastSeenAt: new Date(row.last_seen_at),
+          });
         }
-
-        // Fill in missing users as offline
-        for (const userId of userIds) {
-          if (!map.has(userId)) {
-            map.set(userId, {
-              userId,
-              status: 'offline',
-              lastSeenAt: new Date(0),
-            });
-          }
-        }
-      } catch (error) {
-        debugLog('[usePresence] error fetching presence:', error);
       }
 
-      return map;
-    },
-    []
-  );
+      // Fill in missing users as offline
+      for (const userId of userIds) {
+        if (!map.has(userId)) {
+          map.set(userId, {
+            userId,
+            status: 'offline',
+            lastSeenAt: new Date(0),
+          });
+        }
+      }
+    } catch (error) {
+      debugLog('[usePresence] error fetching presence:', error);
+    }
+
+    return map;
+  }, []);
 
   /**
    * Subscribe to presence changes for specific users
    */
   const subscribeToPresence = useCallback(
-    (
-      userIds: string[],
-      callback: (presence: Map<string, UserPresence>) => void
-    ): (() => void) => {
+    (userIds: string[], callback: (presence: Map<string, UserPresence>) => void): (() => void) => {
       if (!userIds.length) {
         return () => {};
       }
@@ -238,7 +235,7 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
             schema: 'public',
             table: 'user_presence',
           },
-          async (payload) => {
+          async payload => {
             const changedUserId = (payload.new as any)?.user_id || (payload.old as any)?.user_id;
             if (userIds.includes(changedUserId)) {
               // Refetch all presence data
@@ -274,10 +271,20 @@ export function formatLastSeen(lastSeenAt: Date): string {
   const hours = Math.floor(diffMs / (1000 * 60 * 60));
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (minutes < 1) return 'Active now';
-  if (minutes < 60) return `Active ${minutes}m ago`;
-  if (hours < 24) return `Active ${hours}h ago`;
-  if (days === 1) return 'Active yesterday';
-  if (days < 7) return `Active ${days}d ago`;
+  if (minutes < 1) {
+    return 'Active now';
+  }
+  if (minutes < 60) {
+    return `Active ${minutes}m ago`;
+  }
+  if (hours < 24) {
+    return `Active ${hours}h ago`;
+  }
+  if (days === 1) {
+    return 'Active yesterday';
+  }
+  if (days < 7) {
+    return `Active ${days}d ago`;
+  }
   return lastSeenAt.toLocaleDateString();
 }

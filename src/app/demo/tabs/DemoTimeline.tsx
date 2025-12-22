@@ -30,7 +30,7 @@ export function DemoTimeline({ timeline }: DemoTimelineProps) {
 
       {/* Timeline Events */}
       <div className="space-y-6">
-        {timeline.map((event) => (
+        {timeline.map(event => (
           <TimelineEventCard key={event.id} event={event} />
         ))}
       </div>
@@ -71,9 +71,7 @@ function TimelineEventCard({ event }: TimelineEventCardProps) {
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3 inline-block">
               <div className="flex items-center gap-2">
                 <Bitcoin className="w-4 h-4 text-orange-600" />
-                <span className="font-semibold text-orange-800">
-                  {formatSats(event.amount)}
-                </span>
+                <span className="font-semibold text-orange-800">{formatSats(event.amount)}</span>
                 <span className="text-orange-600">funded</span>
               </div>
             </div>
@@ -83,10 +81,7 @@ function TimelineEventCard({ event }: TimelineEventCardProps) {
           {event.tags.length > 0 && (
             <div className="flex gap-2 flex-wrap mb-3">
               {event.tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600"
-                >
+                <span key={idx} className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-600">
                   #{tag}
                 </span>
               ))}
@@ -113,48 +108,3 @@ function TimelineEventCard({ event }: TimelineEventCardProps) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -14,16 +14,20 @@ const createConversationSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    console.log('Messages API: Fetching conversations for user', user.id);
-    const url = new URL(request.url)
-    const limitParam = url.searchParams.get('limit')
-    const limit = Math.min(parseInt(limitParam || '30', 10) || 30, 100)
-    const conversations = await fetchUserConversations(limit);
+    console.log('Messages API: Auth user:', user.id);
+    const url = new URL(request.url);
+    const limitParam = url.searchParams.get('limit');
+    const limit = Math.min(parseInt(limitParam || '30', 10) || 30, 100);
+    const conversations = await fetchUserConversations(user.id, limit);
     console.log('Messages API: Returning', conversations.length, 'conversations');
     return NextResponse.json({ conversations });
   } catch (error) {
@@ -31,17 +35,24 @@ export async function GET(request: NextRequest) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
     console.error('Error details:', { errorMessage, errorStack });
-    return NextResponse.json({ 
-      error: 'Internal server error',
-      details: process.env.NODE_ENV === 'development' ? errorMessage : undefined
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+        details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -50,21 +61,24 @@ export async function POST(request: NextRequest) {
     const validation = createConversationSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({
-        error: 'Invalid request data',
-        details: validation.error.issues
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Invalid request data',
+          details: validation.error.issues,
+        },
+        { status: 400 }
+      );
     }
 
     const { participantIds, title, initialMessage } = validation.data;
-    const conversationId = await openConversation(participantIds, title || null)
+    const conversationId = await openConversation(participantIds, title || null);
 
     // Send initial message if provided
     // Initial message is handled by client optimistically or can be posted via POST /messages/:id
 
     return NextResponse.json({
       success: true,
-      conversationId
+      conversationId,
     });
   } catch (error) {
     console.error('Messages API error:', error);

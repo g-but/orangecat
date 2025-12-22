@@ -23,7 +23,14 @@ import { useMobileMenu } from '@/hooks/useMobileMenu';
 import { useActiveRoute } from '@/hooks/useActiveRoute';
 import { HeaderNavigation } from './HeaderNavigation';
 import { getRouteContext, isAuthenticatedRoute } from '@/config/routes';
-import { getHeaderNavigationItems, sidebarSections, bottomNavItems, footerNavigation, userMenuItems, authNavigationItems } from '@/config/navigation';
+import {
+  getHeaderNavigationItems,
+  sidebarSections,
+  bottomNavItems,
+  footerNavigation,
+  userMenuItems,
+  authNavigationItems,
+} from '@/config/navigation';
 import { Z_INDEX_CLASSES } from '@/constants/z-index';
 import Logo from './Logo';
 import AuthButtons from './AuthButtons';
@@ -34,7 +41,8 @@ import UserProfileDropdown from '@/components/ui/UserProfileDropdown';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
-import { useMessagesUnread } from '@/contexts/MessagesUnreadContext';
+import { useUnreadCount } from '@/stores/messaging';
+import { useMessagingService } from '@/hooks/useMessagingService';
 
 interface HeaderProps {
   /** Whether to show the sidebar toggle button (authenticated routes) */
@@ -70,7 +78,7 @@ export function Header({
   const { isScrolled, isHidden } = useHeaderScroll();
   const mobileMenu = useMobileMenu();
   const { isActive } = useActiveRoute();
-  const { count: unreadMessages } = useMessagesUnread();
+  const { count: unreadMessages } = useUnreadCount();
 
   const routeContext = getRouteContext(pathname);
   const isAuthRoute = routeContext === 'authenticated' || routeContext === 'contextual';
@@ -189,7 +197,7 @@ export function Header({
 
             {/* Desktop Navigation Links */}
             <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
-              {navigation.map((item) => (
+              {navigation.map(item => (
                 <Link
                   key={item.name}
                   href={item.href!}
@@ -277,64 +285,47 @@ export function Header({
       </header>
 
       {/* Mobile Search Modal */}
-      {showMobileSearch && (
-        <MobileSearchModal onClose={() => setShowMobileSearch(false)} />
-      )}
+      {showMobileSearch && <MobileSearchModal onClose={() => setShowMobileSearch(false)} />}
 
       {/* Notification Center */}
-      {showNotifications && (
-        <NotificationCenter onClose={() => setShowNotifications(false)} />
-      )}
+      {showNotifications && <NotificationCenter onClose={() => setShowNotifications(false)} />}
 
       {/* Mobile Menu (public routes only) */}
-      {!isAuthRoute && (mobileMenu.isOpen || isClosing) && createPortal(
-        <>
-          {/* Backdrop */}
-          <div className={cn(
-            'fixed inset-0 backdrop-blur-sm transition-opacity duration-300',
-            Z_INDEX_CLASSES.MOBILE_MENU_BACKDROP,
-            mobileMenu.isOpen ? 'opacity-100' : 'opacity-0'
-          )} />
-
-          {/* Mobile Menu Panel */}
-          <div
-            ref={mobileMenuRef}
-            className={cn(
-              'fixed top-16 bottom-0 left-0 w-80 max-w-[85vw] sm:max-w-sm bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto overscroll-contain transition-transform duration-300 ease-out',
-              Z_INDEX_CLASSES.MOBILE_MENU,
-              mobileMenu.isOpen ? 'translate-x-0' : '-translate-x-full'
-            )}
-          >
-            {/* Mobile Navigation */}
-            <HeaderNavigation
-              navigation={navigation}
-              footer={footerNavigation}
-              onClose={() => {
-                setIsClosing(true);
-                mobileMenu.close();
-              }}
+      {!isAuthRoute &&
+        (mobileMenu.isOpen || isClosing) &&
+        createPortal(
+          <>
+            {/* Backdrop */}
+            <div
+              className={cn(
+                'fixed inset-0 backdrop-blur-sm transition-opacity duration-300',
+                Z_INDEX_CLASSES.MOBILE_MENU_BACKDROP,
+                mobileMenu.isOpen ? 'opacity-100' : 'opacity-0'
+              )}
             />
-          </div>
-        </>,
-        document.body
-      )}
+
+            {/* Mobile Menu Panel */}
+            <div
+              ref={mobileMenuRef}
+              className={cn(
+                'fixed top-16 bottom-0 left-0 w-80 max-w-[85vw] sm:max-w-sm bg-white dark:bg-gray-900 shadow-2xl overflow-y-auto overscroll-contain transition-transform duration-300 ease-out',
+                Z_INDEX_CLASSES.MOBILE_MENU,
+                mobileMenu.isOpen ? 'translate-x-0' : '-translate-x-full'
+              )}
+            >
+              {/* Mobile Navigation */}
+              <HeaderNavigation
+                navigation={navigation}
+                footer={footerNavigation}
+                onClose={() => {
+                  setIsClosing(true);
+                  mobileMenu.close();
+                }}
+              />
+            </div>
+          </>,
+          document.body
+        )}
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

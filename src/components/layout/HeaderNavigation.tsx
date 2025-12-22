@@ -34,10 +34,10 @@ interface HeaderNavBarProps {
 interface MobileDrawerProps {
   navigation: NavigationItem[];
   footer: {
-    product?: Array<{ name: string; href: string }>
-    company?: Array<{ name: string; href: string }>
-    legal?: Array<{ name: string; href: string }>
-    social?: Array<{ name: string; href: string; icon?: any }>
+    product?: Array<{ name: string; href: string }>;
+    company?: Array<{ name: string; href: string }>;
+    legal?: Array<{ name: string; href: string }>;
+    social?: Array<{ name: string; href: string; icon?: any }>;
   };
   onClose: () => void;
 }
@@ -58,7 +58,7 @@ export function HeaderNavigation(props: HeaderNavigationProps) {
     return (
       <div className="flex flex-col h-full">
         <div className="p-4 space-y-1">
-          {navItems.map((item) => (
+          {navItems.map(item =>
             item.href ? (
               <Link
                 key={item.href}
@@ -69,21 +69,23 @@ export function HeaderNavigation(props: HeaderNavigationProps) {
                 {item.name}
               </Link>
             ) : null
-          ))}
+          )}
         </div>
 
         {/* Footer sections */}
         <div className="mt-auto border-t border-gray-100">
-          {(['product', 'company', 'legal'] as const).map((sectionKey) => {
+          {(['product', 'company', 'legal'] as const).map(sectionKey => {
             const section = footer?.[sectionKey] || [];
-            if (!section || section.length === 0) return null;
+            if (!section || section.length === 0) {
+              return null;
+            }
             return (
               <div key={sectionKey} className="p-4">
                 <div className="text-xs font-semibold text-gray-500 uppercase mb-2">
                   {sectionKey}
                 </div>
                 <div className="grid grid-cols-1 gap-1">
-                  {section.map((link) => (
+                  {section.map(link => (
                     <Link
                       key={`${sectionKey}-${link.href}`}
                       href={link.href}
@@ -108,14 +110,21 @@ export function HeaderNavigation(props: HeaderNavigationProps) {
   const activeFn = typeof isActive === 'function' ? isActive : () => false;
   return (
     <nav className={cn('flex items-center space-x-1', className)}>
-      {safeItems.map((item) => {
+      {safeItems.map(item => {
         if (item.children && item.children.length > 0) {
           return <HeaderNavDropdown key={item.name} item={item} isActive={activeFn} />;
         }
 
-        if (!item.href) return null;
+        if (!item.href) {
+          return null;
+        }
         return (
-          <HeaderNavLink key={item.href} href={item.href} label={item.name} isActive={activeFn(item.href)} />
+          <HeaderNavLink
+            key={item.href}
+            href={item.href}
+            label={item.name}
+            isActive={activeFn(item.href)}
+          />
         );
       })}
     </nav>

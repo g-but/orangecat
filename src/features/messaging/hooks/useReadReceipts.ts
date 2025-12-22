@@ -52,14 +52,23 @@ export function useReadReceipts(
   const [participantReadTimes, setParticipantReadTimes] = useState<Map<string, Date | null>>(
     new Map()
   );
+  const participantReadTimesRef = useRef<Map<string, Date | null>>(participantReadTimes);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const subscriptionRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+
+  // Keep a ref in sync so our callbacks can stay stable without re-subscribing
+  useEffect(() => {
+    participantReadTimesRef.current = participantReadTimes;
+  }, [participantReadTimes]);
 
   /**
    * Fetch participant read times from the database
    */
   const fetchParticipantReadTimes = useCallback(async () => {
-    if (!conversationId || !enabled) return;
+    if (!conversationId || !enabled || hasError) {
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -71,6 +80,18 @@ export function useReadReceipts(
 
       if (error) {
         debugLog('Error fetching participant read times:', error);
+        // If the error is about a missing table or any database error, disable read receipts
+        if (
+          error.message &&
+          (error.message.includes('participant_read_times') ||
+            error.message.includes('does not exist') ||
+            error.code === '42P17')
+        ) {
+          debugLog('Database schema error detected, disabling read receipts for this session');
+          setHasError(true);
+          setParticipantReadTimes(new Map());
+          return;
+        }
         return;
       }
 
@@ -82,6 +103,8 @@ export function useReadReceipts(
       setParticipantReadTimes(newMap);
     } catch (error) {
       debugLog('Error in fetchParticipantReadTimes:', error);
+      // On any error, set empty map to prevent the UI from breaking
+      setParticipantReadTimes(new Map());
     } finally {
       setIsLoading(false);
     }
@@ -92,7 +115,13 @@ export function useReadReceipts(
    */
   const calculateMessageStatus = useCallback(
     (message: Message): MessageStatus => {
-      if (!userId) return MESSAGE_STATUS.SENT;
+      if (!userId || hasError) {
+        return MESSAGE_STATUS.DELIVERED;
+      }
+
+      // Always read the latest participant read times from a ref to keep
+      // this callback stable and avoid triggering re-subscriptions/fetches
+      const currentReadTimes = participantReadTimesRef.current;
 
       // Optimistic/pending messages
       if (message.id.startsWith('temp-')) {
@@ -109,7 +138,7 @@ export function useReadReceipts(
       // Messages FROM the current user - check if recipients have read
       if (message.sender_id === userId) {
         // Check if any recipient has read this message
-        for (const [participantId, lastReadAt] of participantReadTimes.entries()) {
+        for (const [participantId, lastReadAt] of currentReadTimes.entries()) {
           if (participantId !== userId && lastReadAt) {
             if (messageCreatedAt <= lastReadAt) {
               return MESSAGE_STATUS.READ;
@@ -121,14 +150,14 @@ export function useReadReceipts(
       }
 
       // Messages TO the current user - check if current user has read
-      const userLastReadAt = participantReadTimes.get(userId);
+      const userLastReadAt = currentReadTimes.get(userId);
       if (userLastReadAt && messageCreatedAt <= userLastReadAt) {
         return MESSAGE_STATUS.READ;
       }
 
       return MESSAGE_STATUS.DELIVERED;
     },
-    [userId, participantReadTimes]
+    [userId, hasError]
   );
 
   /**
@@ -136,7 +165,7 @@ export function useReadReceipts(
    */
   const applyReadStatus = useCallback(
     (messages: Message[]): Message[] => {
-      return messages.map((msg) => {
+      return messages.map(msg => {
         const status = calculateMessageStatus(msg);
         return {
           ...msg,
@@ -177,7 +206,7 @@ export function useReadReceipts(
           table: 'conversation_participants',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        (payload) => {
+        payload => {
           // Update the specific participant's read time
           if (payload.new && typeof payload.new === 'object') {
             const { user_id, last_read_at } = payload.new as any;
@@ -187,7 +216,7 @@ export function useReadReceipts(
                 lastReadAt: last_read_at,
                 conversationId,
               });
-              setParticipantReadTimes((prev) => {
+              setParticipantReadTimes(prev => {
                 const newMap = new Map(prev);
                 newMap.set(user_id, last_read_at ? new Date(last_read_at) : null);
                 debugLog('[useReadReceipts] Updated participant read times', {

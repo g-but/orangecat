@@ -43,7 +43,7 @@ export const productGuidanceContent: Record<NonNullable<ProductFieldType>, Guida
     description:
       'The title is the first thing buyers see. Make it clear, descriptive, and searchable.',
     tips: [
-      'Be specific about what you\'re selling',
+      "Be specific about what you're selling",
       'Include key details (size, color, material)',
       'Keep it under 60 characters for best display',
       'Use words buyers would search for',
@@ -59,11 +59,11 @@ export const productGuidanceContent: Record<NonNullable<ProductFieldType>, Guida
     icon: React.createElement(FileText, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Product Description',
     description:
-      'Tell the story of your product. Help buyers understand exactly what they\'re getting.',
+      "Tell the story of your product. Help buyers understand exactly what they're getting.",
     tips: [
       'Start with the most important features',
       'Include dimensions, materials, and specifications',
-      'Explain how it\'s made or sourced',
+      "Explain how it's made or sourced",
       'Mention what makes it unique or special',
       'Add care instructions if relevant',
     ],
@@ -75,8 +75,7 @@ export const productGuidanceContent: Record<NonNullable<ProductFieldType>, Guida
   category: {
     icon: React.createElement(Tag, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Category',
-    description:
-      'Categories help buyers find your product. Choose the most accurate category.',
+    description: 'Categories help buyers find your product. Choose the most accurate category.',
     tips: [
       'Pick the category that best describes your product',
       'If unsure, think about where buyers would look',
@@ -88,10 +87,9 @@ export const productGuidanceContent: Record<NonNullable<ProductFieldType>, Guida
   product_type: {
     icon: React.createElement(Layers, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Product Type',
-    description:
-      'This determines how your product is delivered and what information buyers need.',
+    description: 'This determines how your product is delivered and what information buyers need.',
     tips: [
-      'Physical: Ships to buyer\'s address',
+      "Physical: Ships to buyer's address",
       'Digital: Delivered electronically (files, links)',
       'Service: Work you perform for the buyer',
       'This affects shipping and fulfillment options',
@@ -105,12 +103,11 @@ export const productGuidanceContent: Record<NonNullable<ProductFieldType>, Guida
   price_sats: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Price in Satoshis',
-    description:
-      'Set your price in satoshis (sats). 1 Bitcoin = 100,000,000 sats.',
+    description: 'Set your price in satoshis (sats). 1 Bitcoin = 100,000,000 sats.',
     tips: [
       'Research similar products to price competitively',
       'Consider your costs, time, and materials',
-      'Factor in shipping if you\'re covering it',
+      "Factor in shipping if you're covering it",
       '1000 sats ≈ $1 USD at ~$100k BTC',
       'You can adjust prices anytime',
     ],
@@ -135,13 +132,12 @@ export const productGuidanceContent: Record<NonNullable<ProductFieldType>, Guida
   inventory_count: {
     icon: React.createElement(BarChart3, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Inventory Count',
-    description:
-      'Track how many items you have available. Set to -1 for unlimited stock.',
+    description: 'Track how many items you have available. Set to -1 for unlimited stock.',
     tips: [
       'Set accurate counts to avoid overselling',
       'Use -1 for digital products or unlimited stock',
       'Inventory updates automatically when sold',
-      'You\'ll be notified when stock is low',
+      "You'll be notified when stock is low",
     ],
     examples: [
       '10 - Limited edition items',
@@ -152,8 +148,7 @@ export const productGuidanceContent: Record<NonNullable<ProductFieldType>, Guida
   fulfillment_type: {
     icon: React.createElement(Truck, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Fulfillment Type',
-    description:
-      'How orders will be fulfilled after payment.',
+    description: 'How orders will be fulfilled after payment.',
     tips: [
       'Manual: You handle shipping/delivery yourself',
       'Automatic: System delivers digital files instantly',
@@ -187,13 +182,12 @@ export const productGuidanceContent: Record<NonNullable<ProductFieldType>, Guida
   tags: {
     icon: React.createElement(Tag, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Tags',
-    description:
-      'Tags help buyers discover your product through search.',
+    description: 'Tags help buyers discover your product through search.',
     tips: [
       'Add relevant keywords buyers might search',
       'Include material, style, use case',
       'Use 3-5 focused tags',
-      'Don\'t repeat category in tags',
+      "Don't repeat category in tags",
     ],
     examples: [
       'handmade, ceramic, coffee, gift',
@@ -223,40 +217,3 @@ export const productDefaultGuidance: DefaultGuidance = {
   ],
   hint: '💡 Click on any field to get specific guidance',
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

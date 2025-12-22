@@ -16,8 +16,14 @@ export interface RetryOptions {
  */
 export function isRetryableError(error: any): boolean {
   // Network errors
-  if (!error) return false;
-  if (error.name === 'NetworkError' || error.message?.includes('network') || error.message?.includes('fetch')) {
+  if (!error) {
+    return false;
+  }
+  if (
+    error.name === 'NetworkError' ||
+    error.message?.includes('network') ||
+    error.message?.includes('fetch')
+  ) {
     return true;
   }
 
@@ -54,12 +60,7 @@ function sleep(ms: number): Promise<void> {
  * Calculate delay with exponential backoff and optional jitter
  */
 function calculateDelay(attempt: number, options: RetryOptions): number {
-  const {
-    baseDelay = 1000,
-    maxDelay = 30000,
-    backoffFactor = 2,
-    jitter = true
-  } = options;
+  const { baseDelay = 1000, maxDelay = 30000, backoffFactor = 2, jitter = true } = options;
 
   const delay = Math.min(baseDelay * Math.pow(backoffFactor, attempt - 1), maxDelay);
 
@@ -75,14 +76,8 @@ function calculateDelay(attempt: number, options: RetryOptions): number {
 /**
  * Retry a function with exponential backoff
  */
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  options: RetryOptions = {}
-): Promise<T> {
-  const {
-    maxAttempts = 3,
-    retryCondition = isRetryableError
-  } = options;
+export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
+  const { maxAttempts = 3, retryCondition = isRetryableError } = options;
 
   let lastError: any;
 
@@ -120,9 +115,11 @@ export async function withApiRetry<T>(
 ): Promise<T> {
   return withRetry(fn, {
     ...options,
-    retryCondition: (error) => {
+    retryCondition: error => {
       // More sophisticated error classification for API calls
-      if (!error) return false;
+      if (!error) {
+        return false;
+      }
 
       // HTTP status codes
       const status = error?.response?.status || error?.status;
@@ -157,34 +154,6 @@ export async function withApiRetry<T>(
       }
 
       return false;
-    }
+    },
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
