@@ -25,3 +25,6 @@ export type { ServiceTemplate } from './ServiceTemplates';
 
 export { ProductTemplates, PRODUCT_TEMPLATES } from './ProductTemplates';
 export type { ProductTemplate } from './ProductTemplates';
+
+export { CircleTemplates, CIRCLE_TEMPLATES } from './CircleTemplates';
+export type { CircleTemplate } from './CircleTemplates';

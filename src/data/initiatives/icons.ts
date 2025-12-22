@@ -14,7 +14,7 @@ import {
   Handshake,
   Vote,
   Shield,
-  Coin,
+  Coins,
   FileText,
   BarChart3,
   Award,
@@ -68,7 +68,7 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   Handshake,
   Vote,
   Shield,
-  Coin,
+  Coins,
   FileText,
   BarChart3,
   Award,
@@ -109,4 +109,4 @@ export const ICON_MAP: Record<string, LucideIcon> = {
   Bell,
   Palette,
   AlertTriangle,
-}; 
+};
