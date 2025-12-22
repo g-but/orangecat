@@ -17,6 +17,7 @@ Updated the sidebar to expand on hover, showing text labels while keeping icons-
 ### 1. Sidebar Component (`src/components/sidebar/Sidebar.tsx`)
 
 **Changes:**
+
 - Added hover state tracking with `useState`
 - Modified width logic to support three states:
   - **Collapsed (default):** `w-16` - Icons only
@@ -26,6 +27,7 @@ Updated the sidebar to expand on hover, showing text labels while keeping icons-
 - Updated `isExpanded` logic to include hover state (desktop only)
 
 **Behavior:**
+
 - Default: Sidebar shows icons only (64px width)
 - On hover (desktop): Sidebar expands to 208px to show text labels
 - Manual toggle: Sidebar expands to 256px and stays expanded
@@ -34,12 +36,14 @@ Updated the sidebar to expand on hover, showing text labels while keeping icons-
 ### 2. Sidebar Navigation Item (`src/components/sidebar/SidebarNavItem.tsx`)
 
 **Changes:**
+
 - Updated to show text labels when sidebar is expanded (hover or manual)
 - Removed tooltip on desktop when sidebar expands on hover
 - Kept tooltip as fallback on mobile when collapsed
 - Text labels smoothly transition in/out with opacity
 
 **Behavior:**
+
 - When collapsed: Icon only, tooltip on mobile hover
 - When expanded (hover): Icon + text inline
 - When expanded (manual): Icon + text inline + section headers
@@ -47,12 +51,14 @@ Updated the sidebar to expand on hover, showing text labels while keeping icons-
 ### 3. Sidebar Navigation (`src/components/sidebar/SidebarNavigation.tsx`)
 
 **Changes:**
+
 - Updated section headers to show when expanded (hover or manual)
 - Simplified visibility logic for section headers
 
 ### 4. Sidebar User Profile (`src/components/sidebar/SidebarUserProfile.tsx`)
 
 **Changes:**
+
 - Updated to show user info when sidebar is expanded (hover or manual)
 - Added smooth transitions for text appearance
 - Maintained centered icon layout when collapsed
@@ -60,6 +66,7 @@ Updated the sidebar to expand on hover, showing text labels while keeping icons-
 ### 5. Constants (`src/constants/sidebar.ts`)
 
 **Already had:**
+
 - `HOVER_EXPANDED: 'w-52'` - 208px width for hover expansion
 - Proper width constants defined
 
@@ -103,11 +110,11 @@ Updated the sidebar to expand on hover, showing text labels while keeping icons-
 
 ### Width States
 
-| State | Width | Use Case |
-|-------|-------|----------|
-| Collapsed | 64px (w-16) | Default, icons only |
-| Hover Expanded | 208px (w-52) | Temporary, on hover (desktop) |
-| Manually Expanded | 256px (w-64) | Persistent, full width |
+| State             | Width        | Use Case                      |
+| ----------------- | ------------ | ----------------------------- |
+| Collapsed         | 64px (w-16)  | Default, icons only           |
+| Hover Expanded    | 208px (w-52) | Temporary, on hover (desktop) |
+| Manually Expanded | 256px (w-64) | Persistent, full width        |
 
 ### Transitions
 
@@ -162,19 +169,3 @@ Updated the sidebar to expand on hover, showing text labels while keeping icons-
 - [ ] Add keyboard shortcut to toggle sidebar
 - [ ] Consider adding a "pin expanded" option
 - [ ] Add animation for text label appearance
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -76,7 +76,9 @@ export function usePostEditing({
 
   // Start editing
   const startEditing = useCallback(() => {
-    if (!canEdit) return;
+    if (!canEdit) {
+      return;
+    }
 
     setEditTitle(event.title);
     setEditDescription(event.description || '');
@@ -95,7 +97,9 @@ export function usePostEditing({
 
   // Handle edit submission
   const handleEdit = useCallback(async () => {
-    if (isEditing || !canEdit) return;
+    if (isEditing || !canEdit) {
+      return;
+    }
 
     setIsEditing(true);
     try {
@@ -126,7 +130,9 @@ export function usePostEditing({
 
   // Handle delete
   const handleDelete = useCallback(async () => {
-    if (isDeleting || !canEdit) return;
+    if (isDeleting || !canEdit) {
+      return;
+    }
 
     setIsDeleting(true);
     try {
@@ -179,31 +185,3 @@ export function usePostEditing({
     cancelEditing,
   };
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

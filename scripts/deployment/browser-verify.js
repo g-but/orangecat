@@ -23,7 +23,7 @@ const colors = {
   error: chalk.bold.red,
   warning: chalk.bold.yellow,
   info: chalk.cyan,
-  dim: chalk.dim
+  dim: chalk.dim,
 };
 
 /**
@@ -50,20 +50,19 @@ async function testHomePage(page) {
     console.log(colors.dim(`   Page title: ${title}`));
 
     // Look for main content
-    const hasMainContent = await page.locator('main, [role="main"], .main-content').count() > 0;
+    const hasMainContent = (await page.locator('main, [role="main"], .main-content').count()) > 0;
     if (!hasMainContent) {
       console.log(colors.warning('⚠️ No main content area found'));
     }
 
     // Check for navigation
-    const hasNav = await page.locator('nav, header').count() > 0;
+    const hasNav = (await page.locator('nav, header').count()) > 0;
     if (!hasNav) {
       console.log(colors.warning('⚠️ No navigation found'));
     }
 
     await takeScreenshot(page, 'homepage');
     console.log(colors.success('✅ Home page loaded successfully'));
-
   } catch (error) {
     console.log(colors.error(`❌ Home page test failed: ${error.message}`));
     throw error;
@@ -87,7 +86,8 @@ async function testNavigation(page) {
 
     // Test a few navigation links (safely)
     let testedLinks = 0;
-    for (const link of navLinks.slice(0, 3)) { // Test first 3 links
+    for (const link of navLinks.slice(0, 3)) {
+      // Test first 3 links
       try {
         const href = await link.getAttribute('href');
         if (href && href.startsWith('/') && !href.includes('#') && !href.includes('mailto:')) {
@@ -109,7 +109,6 @@ async function testNavigation(page) {
     } else {
       console.log(colors.warning('⚠️ No navigable links found'));
     }
-
   } catch (error) {
     console.log(colors.error(`❌ Navigation test failed: ${error.message}`));
     throw error;
@@ -132,7 +131,7 @@ async function testAuthFlows(page) {
       'button:has-text("Sign Up")',
       'a:has-text("Login")',
       'a:has-text("Sign In")',
-      'a:has-text("Sign Up")'
+      'a:has-text("Sign Up")',
     ];
 
     let foundAuth = false;
@@ -150,7 +149,6 @@ async function testAuthFlows(page) {
     } else {
       console.log(colors.success('✅ Authentication elements detected'));
     }
-
   } catch (error) {
     console.log(colors.warning(`⚠️ Auth flow test had issues: ${error.message}`));
     // Don't fail for auth issues
@@ -184,7 +182,6 @@ async function testCoreFunctionality(page) {
     console.log(colors.dim(`   Viewport: ${viewport?.width}x${viewport?.height}`));
 
     console.log(colors.success('✅ Core functionality tests passed'));
-
   } catch (error) {
     console.log(colors.error(`❌ Core functionality test failed: ${error.message}`));
     throw error;
@@ -205,7 +202,6 @@ async function testApiHealth(page) {
     } else {
       console.log(colors.warning(`⚠️ API health check returned ${healthResponse.status()}`));
     }
-
   } catch (error) {
     console.log(colors.warning(`⚠️ API health check failed: ${error.message}`));
     // Don't fail deployment for API issues
@@ -227,7 +223,7 @@ async function runVerification() {
     browser = await chromium.launch();
     context = await browser.newContext({
       viewport: { width: 1280, height: 720 },
-      userAgent: 'OrangeCat-Deployment-Verifier/1.0'
+      userAgent: 'OrangeCat-Deployment-Verifier/1.0',
     });
     page = await context.newPage();
 
@@ -251,7 +247,6 @@ async function runVerification() {
 
     console.log(colors.success(`\n🎉 Browser verification completed successfully!`));
     console.log(colors.dim(`All critical functionality verified for ${CONFIG.url}`));
-
   } catch (error) {
     console.log(colors.error(`\n❌ Browser verification failed: ${error.message}`));
     throw error;
@@ -298,24 +293,3 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 
 export { runVerification };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

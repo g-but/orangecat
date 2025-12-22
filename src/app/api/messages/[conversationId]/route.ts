@@ -27,7 +27,9 @@ import {
 // Schema for sending a message
 const sendMessageSchema = z.object({
   content: z.string().min(VALIDATION.MESSAGE_MIN_LENGTH).max(VALIDATION.MESSAGE_MAX_LENGTH),
-  messageType: z.enum([MESSAGE_TYPES.TEXT, MESSAGE_TYPES.IMAGE, MESSAGE_TYPES.FILE, MESSAGE_TYPES.SYSTEM]).default(MESSAGE_TYPES.TEXT),
+  messageType: z
+    .enum([MESSAGE_TYPES.TEXT, MESSAGE_TYPES.IMAGE, MESSAGE_TYPES.FILE, MESSAGE_TYPES.SYSTEM])
+    .default(MESSAGE_TYPES.TEXT),
   metadata: z.record(z.any()).optional(),
 });
 
@@ -46,7 +48,8 @@ export async function GET(
     const cursor = searchParams.get('cursor');
     const limitParam = searchParams.get('limit');
     const limit = Math.min(
-      parseInt(limitParam || String(PAGINATION.MESSAGES_DEFAULT), 10) || PAGINATION.MESSAGES_DEFAULT,
+      parseInt(limitParam || String(PAGINATION.MESSAGES_DEFAULT), 10) ||
+        PAGINATION.MESSAGES_DEFAULT,
       PAGINATION.MESSAGES_MAX
     );
 
@@ -89,6 +92,7 @@ export async function GET(
     // Fetch messages using service
     const { messages, pagination } = await svcFetchMessages(
       conversationId,
+      user.id,
       cursor || undefined,
       limit
     );
@@ -132,7 +136,7 @@ export async function GET(
     }));
 
     // Calculate unread count
-    const userParticipant = formattedParticipants.find((p) => p.user_id === user.id);
+    const userParticipant = formattedParticipants.find(p => p.user_id === user.id);
     let unreadCount = 0;
     if (userParticipant?.last_read_at) {
       const { count } = await admin

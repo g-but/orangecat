@@ -1,10 +1,10 @@
 /**
  * @deprecated This component is no longer used.
- * 
+ *
  * Multi-select functionality has been integrated into TimelineComponent
  * via the enableMultiSelect prop. This component is kept for reference
  * but should not be used in new code.
- * 
+ *
  * See: TimelineComponent with enableMultiSelect prop for multi-select support.
  */
 
@@ -71,20 +71,21 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
   }, [loadEvents]);
 
   // Handle event update (delete, edit, etc.)
-  const handleEventUpdate = useCallback((eventId: string, updates: Partial<TimelineDisplayEvent>) => {
-    if (updates.isDeleted) {
-      setEvents(prev => prev.filter(e => e.id !== eventId));
-      setSelectedEventIds(prev => {
-        const next = new Set(prev);
-        next.delete(eventId);
-        return next;
-      });
-    } else {
-      setEvents(prev => prev.map(e =>
-        e.id === eventId ? { ...e, ...updates } : e
-      ));
-    }
-  }, []);
+  const handleEventUpdate = useCallback(
+    (eventId: string, updates: Partial<TimelineDisplayEvent>) => {
+      if (updates.isDeleted) {
+        setEvents(prev => prev.filter(e => e.id !== eventId));
+        setSelectedEventIds(prev => {
+          const next = new Set(prev);
+          next.delete(eventId);
+          return next;
+        });
+      } else {
+        setEvents(prev => prev.map(e => (e.id === eventId ? { ...e, ...updates } : e)));
+      }
+    },
+    []
+  );
 
   // Toggle selection mode
   const toggleSelectionMode = useCallback(() => {
@@ -116,7 +117,9 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
 
   // Bulk delete
   const handleBulkDelete = useCallback(async () => {
-    if (selectedEventIds.size === 0) return;
+    if (selectedEventIds.size === 0) {
+      return;
+    }
 
     try {
       setIsDeleting(true);
@@ -151,9 +154,7 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
     <Card className="overflow-hidden">
       <CardHeader className="border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Timeline
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Timeline</h3>
 
           {isOwnProfile && (
             <div className="flex items-center gap-2">
@@ -180,11 +181,7 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
                 </>
               ) : (
                 <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={selectAll}
-                  >
+                  <Button variant="ghost" size="sm" onClick={selectAll}>
                     {selectedEventIds.size === events.length ? 'Deselect All' : 'Select All'}
                   </Button>
                   <Button
@@ -198,11 +195,7 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
                       <span className="ml-1">({selectedEventIds.size})</span>
                     )}
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={cancelSelection}
-                  >
+                  <Button variant="ghost" size="sm" onClick={cancelSelection}>
                     <X className="h-4 w-4" />
                   </Button>
                 </>
@@ -235,12 +228,7 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
           ) : error ? (
             <div className="p-8 text-center">
               <p className="text-sm text-red-500">{error}</p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={loadEvents}
-                className="mt-2"
-              >
+              <Button variant="outline" size="sm" onClick={loadEvents} className="mt-2">
                 Retry
               </Button>
             </div>
@@ -267,7 +255,7 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
                 <div className={selectionMode ? 'pl-8' : ''}>
                   <PostCard
                     event={event}
-                    onUpdate={(updates) => handleEventUpdate(event.id, updates)}
+                    onUpdate={updates => handleEventUpdate(event.id, updates)}
                     compact={true}
                   />
                 </div>
@@ -314,11 +302,7 @@ export function TimelineSidePanel({ profile, isOwnProfile }: TimelineSidePanelPr
               >
                 Cancel
               </Button>
-              <Button
-                variant="danger"
-                onClick={handleBulkDelete}
-                disabled={isDeleting}
-              >
+              <Button variant="danger" onClick={handleBulkDelete} disabled={isDeleting}>
                 {isDeleting ? 'Deleting...' : 'Delete'}
               </Button>
             </div>

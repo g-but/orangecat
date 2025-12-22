@@ -167,10 +167,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       return apiUnauthorized('You can only delete your own AI assistants');
     }
 
-    const { error } = await supabase
-      .from('user_ai_assistants')
-      .delete()
-      .eq('id', assistantId);
+    const { error } = await supabase.from('user_ai_assistants').delete().eq('id', assistantId);
 
     if (error) {
       logger.error('AI assistant deletion failed', {
@@ -188,49 +185,3 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
     return handleApiError(error);
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -7,12 +7,7 @@
  */
 
 import { DollarSign, TrendingUp, Target, GraduationCap, Car } from 'lucide-react';
-import {
-  type DemoLoan,
-  type DemoAvailableLoan,
-  formatUSD,
-  getStatusBadgeColor,
-} from '@/data/demo';
+import { type DemoLoan, type DemoAvailableLoan, formatUSD, getStatusBadgeColor } from '@/data/demo';
 
 interface DemoLoansProps {
   loans: DemoLoan[];
@@ -37,7 +32,7 @@ export function DemoLoans({ loans, availableLoans }: DemoLoansProps) {
       </div>
 
       {/* User's Loans */}
-      {loans.map((loan) => (
+      {loans.map(loan => (
         <LoanCard key={loan.id} loan={loan} />
       ))}
 
@@ -65,12 +60,8 @@ function LoanCard({ loan }: LoanCardProps) {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-2xl font-bold text-red-600">
-              {formatUSD(loan.remainingBalance)}
-            </p>
-            <p className="text-sm text-gray-600">
-              {formatUSD(loan.monthlyPayment)}/month
-            </p>
+            <p className="text-2xl font-bold text-red-600">{formatUSD(loan.remainingBalance)}</p>
+            <p className="text-sm text-gray-600">{formatUSD(loan.monthlyPayment)}/month</p>
           </div>
         </div>
       </div>
@@ -98,7 +89,7 @@ function LoanCard({ loan }: LoanCardProps) {
         {/* Refinancing Offers */}
         <div className="space-y-4">
           <h4 className="font-semibold">Refinancing Offers</h4>
-          {loan.offers.map((offer) => (
+          {loan.offers.map(offer => (
             <div key={offer.id} className="border rounded-lg p-4">
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
@@ -115,9 +106,7 @@ function LoanCard({ loan }: LoanCardProps) {
                 </div>
               </div>
               <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm">
-                <span className="text-gray-600">
-                  Monthly: {formatUSD(offer.monthlyPayment)}
-                </span>
+                <span className="text-gray-600">Monthly: {formatUSD(offer.monthlyPayment)}</span>
                 {offer.status === 'pending' && (
                   <div className="flex gap-2">
                     <button className="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 transition-colors">
@@ -151,13 +140,11 @@ function AvailableLoansSection({ loans }: AvailableLoansSectionProps) {
     <div className="bg-white rounded-lg border shadow-sm">
       <div className="p-4 md:p-6 border-b">
         <h3 className="font-semibold">Browse Available Loans</h3>
-        <p className="text-sm text-gray-600">
-          Help others refinance and earn competitive returns
-        </p>
+        <p className="text-sm text-gray-600">Help others refinance and earn competitive returns</p>
       </div>
       <div className="p-4 md:p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {loans.map((loan) => {
+          {loans.map(loan => {
             const Icon = iconMap[loan.type] || DollarSign;
             return (
               <div key={loan.id} className="border rounded-lg p-4">
@@ -183,48 +170,3 @@ function AvailableLoansSection({ loans }: AvailableLoansSectionProps) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

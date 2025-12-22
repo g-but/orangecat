@@ -5,11 +5,13 @@ This directory contains the complete automated deployment system for OrangeCat.
 ## 📋 Scripts Overview
 
 ### Core Deployment
+
 - **`deploy.js`** - Main deployment script (the only way to deploy)
 - **`browser-verify.js`** - Automated browser testing after deployment
 - **`diagnose.js`** - Deployment readiness diagnostics
 
 ### Legacy Scripts (Deprecated)
+
 - **`one-button-deploy.js`** - Old manual deployment trigger
 - **`production-deploy.js`** - Legacy production deployment
 - Other scripts are maintained for reference but should not be used
@@ -17,6 +19,7 @@ This directory contains the complete automated deployment system for OrangeCat.
 ## 🎯 How to Deploy
 
 ### The Only Command You Need
+
 ```bash
 npm run deploy
 ```
@@ -24,6 +27,7 @@ npm run deploy
 This runs the complete automated deployment pipeline.
 
 ### Other Available Commands
+
 ```bash
 # Diagnose deployment readiness
 npm run deploy:diagnose
@@ -38,9 +42,11 @@ npm run deploy:verify
 ## 🔧 Script Details
 
 ### deploy.js
+
 **Purpose**: Complete automated deployment pipeline
 
 **What it does**:
+
 1. Code quality checks (lint, type-check, security)
 2. Git commit and push to main
 3. Trigger GitHub Actions workflow
@@ -51,9 +57,11 @@ npm run deploy:verify
 **Usage**: `npm run deploy`
 
 ### browser-verify.js
+
 **Purpose**: Automated browser testing of deployed site
 
 **What it does**:
+
 1. Launches browser and navigates to production
 2. Tests home page loading
 3. Tests navigation functionality
@@ -64,9 +72,11 @@ npm run deploy:verify
 **Usage**: `npm run deploy:verify`
 
 ### diagnose.js
+
 **Purpose**: Check deployment readiness
 
 **What it does**:
+
 1. Verifies all prerequisites installed
 2. Checks authentication status
 3. Validates project configuration
@@ -92,6 +102,7 @@ npm run deploy:verify
 ## 🚨 Emergency Procedures
 
 ### If Automated Deployment Fails
+
 1. Check GitHub Actions logs
 2. Run diagnostics: `npm run deploy:diagnose`
 3. Manual intervention (rare):
@@ -100,6 +111,7 @@ npm run deploy:verify
    - Check production site manually
 
 ### Rollback
+
 ```bash
 npm run deploy:rollback
 ```
@@ -107,11 +119,13 @@ npm run deploy:rollback
 ## 📊 Monitoring
 
 ### Real-time Monitoring
+
 - Terminal output during deployment
 - GitHub Actions workflow status
 - Vercel deployment dashboard
 
 ### Post-deployment
+
 - Production site: https://orangecat.ch
 - Health check: https://orangecat.ch/api/health
 - GitHub Actions: Repository → Actions tab
@@ -126,29 +140,9 @@ npm run deploy:rollback
 ## 🤝 Contributing
 
 When modifying deployment scripts:
+
 1. Update this README
 2. Update main deployment documentation
 3. Test in staging environment first
 4. Ensure backward compatibility
 5. Update diagnostics to catch new issues
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

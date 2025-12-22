@@ -30,7 +30,7 @@ export function DemoProjects({ projects }: DemoProjectsProps) {
 
       {/* Project Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-        {projects.map((project) => (
+        {projects.map(project => (
           <ProjectCard key={project.id} project={project} />
         ))}
       </div>
@@ -105,48 +105,3 @@ function ProjectCard({ project }: ProjectCardProps) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

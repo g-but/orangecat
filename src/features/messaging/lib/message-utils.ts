@@ -93,7 +93,7 @@ export function applyStatusToMessages(
   currentUserId: string | undefined,
   participantReadTimes: Map<string, Date | null>
 ): Message[] {
-  return messages.map((msg) => {
+  return messages.map(msg => {
     const status = calculateMessageStatus(msg, currentUserId, participantReadTimes);
     return {
       ...msg,
@@ -136,10 +136,7 @@ export function buildParticipantReadTimesMap(
  * - This year: "Nov 15 at 2:30 PM"
  * - Older: "Nov 15, 2023"
  */
-export function formatMessageTime(
-  dateStr: string,
-  options: { short?: boolean } = {}
-): string {
+export function formatMessageTime(dateStr: string, options: { short?: boolean } = {}): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -152,8 +149,12 @@ export function formatMessageTime(
 
   if (options.short) {
     // For compact display in message list
-    if (diffDays === 0) return timeStr;
-    if (diffDays === 1) return 'Yesterday';
+    if (diffDays === 0) {
+      return timeStr;
+    }
+    if (diffDays === 1) {
+      return 'Yesterday';
+    }
     if (diffDays < 7) {
       return date.toLocaleDateString('en-US', { weekday: 'short' });
     }
@@ -161,16 +162,22 @@ export function formatMessageTime(
   }
 
   // Full display
-  if (diffDays === 0) return timeStr;
-  if (diffDays === 1) return `Yesterday ${timeStr}`;
+  if (diffDays === 0) {
+    return timeStr;
+  }
+  if (diffDays === 1) {
+    return `Yesterday ${timeStr}`;
+  }
   if (diffDays < 7) {
     return `${date.toLocaleDateString('en-US', { weekday: 'long' })} ${timeStr}`;
   }
   if (date.getFullYear() === now.getFullYear()) {
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    }) + ` at ${timeStr}`;
+    return (
+      date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+      }) + ` at ${timeStr}`
+    );
   }
   return date.toLocaleDateString('en-US', {
     month: 'short',
@@ -192,11 +199,21 @@ export function formatRelativeTime(dateStr: string): string {
   const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   const weeks = Math.floor(days / 7);
 
-  if (minutes < 1) return 'now';
-  if (minutes < 60) return `${minutes}m`;
-  if (hours < 24) return `${hours}h`;
-  if (days < 7) return `${days}d`;
-  if (weeks < 4) return `${weeks}w`;
+  if (minutes < 1) {
+    return 'now';
+  }
+  if (minutes < 60) {
+    return `${minutes}m`;
+  }
+  if (hours < 24) {
+    return `${hours}h`;
+  }
+  if (days < 7) {
+    return `${days}d`;
+  }
+  if (weeks < 4) {
+    return `${weeks}w`;
+  }
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
@@ -209,8 +226,12 @@ export function getDateDividerText(dateStr: string): string {
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
+  if (diffDays === 0) {
+    return 'Today';
+  }
+  if (diffDays === 1) {
+    return 'Yesterday';
+  }
   if (diffDays < 7) {
     return date.toLocaleDateString('en-US', { weekday: 'long' });
   }
@@ -227,11 +248,10 @@ export function getDateDividerText(dateStr: string): string {
 /**
  * Check if a date divider should be shown between two messages
  */
-export function shouldShowDateDivider(
-  currentMsg: Message,
-  prevMsg: Message | null
-): boolean {
-  if (!prevMsg) return true;
+export function shouldShowDateDivider(currentMsg: Message, prevMsg: Message | null): boolean {
+  if (!prevMsg) {
+    return true;
+  }
   const currentDate = new Date(currentMsg.created_at).toDateString();
   const prevDate = new Date(prevMsg.created_at).toDateString();
   return currentDate !== prevDate;
@@ -253,11 +273,11 @@ export function getConversationDisplayName(
   participants: Participant[],
   currentUserId: string | undefined
 ): string {
-  if (title) return title;
+  if (title) {
+    return title;
+  }
 
-  const otherParticipants = participants.filter(
-    (p) => p.is_active && p.user_id !== currentUserId
-  );
+  const otherParticipants = participants.filter(p => p.is_active && p.user_id !== currentUserId);
 
   if (otherParticipants.length === 0) {
     return 'Notes to Self';
@@ -270,7 +290,7 @@ export function getConversationDisplayName(
   // Group without title - list first few names
   const names = otherParticipants
     .slice(0, 3)
-    .map((p) => p.name || p.username || 'Unknown')
+    .map(p => p.name || p.username || 'Unknown')
     .filter(Boolean)
     .join(', ');
 
@@ -288,14 +308,16 @@ export function getPrimaryParticipant(
   participants: Participant[],
   currentUserId: string | undefined
 ): Participant | undefined {
-  return participants.find((p) => p.is_active && p.user_id !== currentUserId);
+  return participants.find(p => p.is_active && p.user_id !== currentUserId);
 }
 
 /**
  * Build a profile link for a participant
  */
 export function getParticipantProfileHref(participant: Participant | undefined): string | null {
-  if (!participant) return null;
+  if (!participant) {
+    return null;
+  }
   if (participant.username?.trim()) {
     return `/profiles/${encodeURIComponent(participant.username.trim())}`;
   }
@@ -338,7 +360,9 @@ export function validateMessageContent(content: string): {
  * Truncate message preview (like conversation list)
  */
 export function truncateMessagePreview(content: string, maxLength = 50): string {
-  if (content.length <= maxLength) return content;
+  if (content.length <= maxLength) {
+    return content;
+  }
   return content.slice(0, maxLength - 3) + '...';
 }
 
@@ -387,18 +411,13 @@ export function isOptimisticMessage(message: Message): boolean {
  * Merge optimistic messages with confirmed messages
  * Removes duplicates and maintains sort order
  */
-export function mergeMessages(
-  existingMessages: Message[],
-  newMessages: Message[]
-): Message[] {
-  const existingIds = new Set(existingMessages.map((m) => m.id));
-  const uniqueNew = newMessages.filter((m) => !existingIds.has(m.id));
+export function mergeMessages(existingMessages: Message[], newMessages: Message[]): Message[] {
+  const existingIds = new Set(existingMessages.map(m => m.id));
+  const uniqueNew = newMessages.filter(m => !existingIds.has(m.id));
   const merged = [...existingMessages, ...uniqueNew];
 
   // Sort by created_at chronologically
-  return merged.sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-  );
+  return merged.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 }
 
 /**
@@ -409,8 +428,8 @@ export function confirmOptimisticMessage(
   tempId: string,
   confirmedMessage: Message
 ): Message[] {
-  const withoutOptimistic = messages.filter((m) => m.id !== tempId);
-  if (withoutOptimistic.find((m) => m.id === confirmedMessage.id)) {
+  const withoutOptimistic = messages.filter(m => m.id !== tempId);
+  if (withoutOptimistic.find(m => m.id === confirmedMessage.id)) {
     return withoutOptimistic;
   }
   return mergeMessages(withoutOptimistic, [confirmedMessage]);

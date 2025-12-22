@@ -18,9 +18,12 @@ export async function POST(request: NextRequest) {
     const { parentPostId, content, quotedContent, visibility = 'public' } = body;
 
     if (!parentPostId || !content?.trim()) {
-      return NextResponse.json({
-        error: 'Missing required fields: parentPostId and content are required'
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Missing required fields: parentPostId and content are required',
+        },
+        { status: 400 }
+      );
     }
 
     // Create quote reply using the service
@@ -39,36 +42,24 @@ export async function POST(request: NextRequest) {
       if (enrichedResult.success && enrichedResult.event) {
         return NextResponse.json({
           success: true,
-          event: enrichedResult.event
+          event: enrichedResult.event,
         });
       }
     }
 
-    return NextResponse.json({
-      error: result.error || 'Failed to create quote reply'
-    }, { status: 400 });
-
+    return NextResponse.json(
+      {
+        error: result.error || 'Failed to create quote reply',
+      },
+      { status: 400 }
+    );
   } catch (error) {
     console.error('Quote reply creation error:', error);
-    return NextResponse.json({
-      error: 'Internal server error'
-    }, { status: 500 });
+    return NextResponse.json(
+      {
+        error: 'Internal server error',
+      },
+      { status: 500 }
+    );
   }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

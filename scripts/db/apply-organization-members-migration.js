@@ -44,7 +44,10 @@ async function applyMigration() {
     console.log('🚀 Applying Organization Members Migration...\n');
 
     // Read the migration file
-    const migrationPath = join(__dirname, '../../supabase/migrations/20251205100000_add_organization_members.sql');
+    const migrationPath = join(
+      __dirname,
+      '../../supabase/migrations/20251205100000_add_organization_members.sql'
+    );
 
     console.log(`📄 Reading migration from: ${migrationPath}`);
     const migrationSQL = readFileSync(migrationPath, 'utf-8');
@@ -73,7 +76,7 @@ async function applyMigration() {
 
         // Execute the statement directly
         const { error } = await supabase.rpc('exec_sql', {
-          sql: statement + ';'
+          sql: statement + ';',
         });
 
         if (error) {
@@ -83,7 +86,6 @@ async function applyMigration() {
           console.log(`   ✅ Statement ${i + 1} executed successfully`);
           successCount++;
         }
-
       } catch (err) {
         console.log(`   ❌ Statement ${i + 1} error:`, err.message);
         errorCount++;
@@ -111,7 +113,6 @@ async function applyMigration() {
       console.log('\n⚠️  Some statements failed. Check the errors above.');
       console.log('   You may need to run individual statements manually in Supabase.');
     }
-
   } catch (error) {
     console.error('❌ Migration failed:', error.message);
     process.exit(1);
@@ -119,35 +120,3 @@ async function applyMigration() {
 }
 
 applyMigration();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

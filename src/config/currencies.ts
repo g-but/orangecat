@@ -19,7 +19,7 @@ export const CURRENCY_METADATA: Record<
   SATS: { label: 'Satoshis (sats)', symbol: 'sats', precision: 0 },
 };
 
-export const currencySelectOptions = CURRENCY_CODES.map((code) => ({
+export const currencySelectOptions = CURRENCY_CODES.map(code => ({
   value: code,
   label: CURRENCY_METADATA[code].label,
 }));
@@ -27,37 +27,3 @@ export const currencySelectOptions = CURRENCY_CODES.map((code) => ({
 export function isSupportedCurrency(value: string | null | undefined): value is CurrencyCode {
   return !!value && (CURRENCY_CODES as readonly string[]).includes(value.toUpperCase());
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

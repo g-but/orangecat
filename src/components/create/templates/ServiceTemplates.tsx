@@ -78,7 +78,8 @@ export const SERVICE_TEMPLATES: ServiceTemplate[] = [
     tagline: 'Tighten a landing page or email in one pass.',
     defaults: {
       title: 'Copy Edit (one pass)',
-      description: 'Tone, clarity, grammar, and light structure for one page/email. Two revisions included.',
+      description:
+        'Tone, clarity, grammar, and light structure for one page/email. Two revisions included.',
       category: 'Writing',
       hourly_rate_sats: null,
       fixed_price_sats: 60000,
@@ -96,7 +97,8 @@ export const SERVICE_TEMPLATES: ServiceTemplate[] = [
     tagline: 'Local visit for setup, training, or audits.',
     defaults: {
       title: 'On-site Session (2 hours)',
-      description: 'Hands-on help at your location: setup, audits, or training. Travel not included.',
+      description:
+        'Hands-on help at your location: setup, audits, or training. Travel not included.',
       category: 'Coaching',
       hourly_rate_sats: 70000,
       fixed_price_sats: null,
@@ -124,19 +126,3 @@ export function ServiceTemplates({ onSelectTemplate, className = '' }: ServiceTe
     />
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,8 +1,8 @@
 # Real-Time Messaging System Fixes
 
 **Created:** 2025-01-22  
-**Last Modified:** 2025-01-22  
-**Last Modified Summary:** Implemented comprehensive real-time messaging fixes to match Facebook Messenger functionality
+**Last Modified:** 2025-12-22  
+**Last Modified Summary:** Implemented comprehensive real-time messaging fixes, stabilized read-receipt callbacks to prevent repeated message refetches / view refresh, and fixed `useMessages` callback dependency ordering to avoid `markAsRead` initialization errors in Next.js 15
 
 ## Overview
 
@@ -23,6 +23,7 @@ This document describes the fixes implemented to ensure real-time messaging work
 **File:** `src/hooks/useRealtimeConnection.ts`
 
 A comprehensive hook that:
+
 - Monitors Supabase Realtime connection status
 - Provides automatic reconnection with exponential backoff
 - Implements heartbeat mechanism to detect dead connections
@@ -30,6 +31,7 @@ A comprehensive hook that:
 - Provides connection status: `connected`, `disconnected`, `reconnecting`, `error`
 
 **Key Features:**
+
 - Exponential backoff reconnection (1s → 2s → 4s → ... → max 30s)
 - Maximum 10 reconnection attempts
 - Heartbeat check every 30 seconds
@@ -40,12 +42,14 @@ A comprehensive hook that:
 **File:** `src/hooks/useMessageSubscription.ts`
 
 Enhanced the existing subscription hook with:
+
 - Automatic reconnection on connection failures
 - Exponential backoff retry logic
 - Better error handling and status reporting
 - Proper cleanup on unmount
 
 **Improvements:**
+
 - Handles `CHANNEL_ERROR`, `TIMED_OUT`, and `CLOSED` states
 - Automatically retries failed subscriptions
 - Resets retry counter on successful connection
@@ -56,12 +60,14 @@ Enhanced the existing subscription hook with:
 **File:** `src/components/messaging/ConnectionStatusIndicator.tsx`
 
 A visual indicator that:
+
 - Shows connection status when there's an issue
 - Hides when connected (clean UI)
 - Provides retry button for errors
 - Uses appropriate colors and icons
 
 **Status Display:**
+
 - 🟢 **Connected**: Green indicator (hidden when connected)
 - 🟡 **Reconnecting**: Yellow with spinning icon
 - ⚪ **Disconnected**: Gray indicator
@@ -78,6 +84,7 @@ Added the connection status indicator to the message view, positioned below the 
 **File:** `src/features/messaging/lib/constants.ts`
 
 Added timing constants for:
+
 - `HEARTBEAT_INTERVAL_MS`: 30000 (30 seconds)
 - `RECONNECT_INITIAL_DELAY_MS`: 1000 (1 second)
 - `RECONNECT_MAX_DELAY_MS`: 30000 (30 seconds)
@@ -143,12 +150,14 @@ The following tables must be enabled for Supabase Realtime:
 ### Environment Variables
 
 No new environment variables required. Uses existing Supabase configuration:
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
 
 ### Supabase Client Configuration
 
 The Supabase client is configured with Realtime enabled:
+
 ```typescript
 realtime: {
   params: {
@@ -199,6 +208,7 @@ realtime: {
 ## Conclusion
 
 The real-time messaging system now works like Facebook Messenger:
+
 - ✅ Messages appear instantly without refresh
 - ✅ Read receipts update in real-time
 - ✅ Connection status is visible
@@ -207,4 +217,3 @@ The real-time messaging system now works like Facebook Messenger:
 - ✅ Graceful error handling
 
 The system is production-ready and provides a reliable, real-time messaging experience.
-

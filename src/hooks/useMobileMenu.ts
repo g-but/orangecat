@@ -54,6 +54,7 @@ export function useMobileMenu(): UseMobileMenuReturn {
         window.scrollTo(0, scrollY);
       };
     }
+    return undefined;
   }, [isOpen]);
 
   return {

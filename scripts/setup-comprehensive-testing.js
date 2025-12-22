@@ -45,7 +45,7 @@ const testUsers = [
     bio: 'Bitcoin enthusiast and community builder. Creating tools that make crowdfunding accessible to everyone.',
     email: 'alex@test.orangecat',
     bitcoin_address: 'bc1qprojectcreator123456789',
-    location: 'San Francisco, CA'
+    location: 'San Francisco, CA',
   },
   {
     id: 'test-user-2',
@@ -54,7 +54,7 @@ const testUsers = [
     bio: 'Full-stack developer specializing in Bitcoin and Web3 applications. Available for consulting and development work.',
     email: 'maria@test.orangecat',
     bitcoin_address: 'bc1qserviceprovider123456789',
-    location: 'Barcelona, Spain'
+    location: 'Barcelona, Spain',
   },
   {
     id: 'test-user-3',
@@ -63,7 +63,7 @@ const testUsers = [
     bio: 'Angel investor focused on Bitcoin and blockchain projects. Supporting innovative solutions for real-world problems.',
     email: 'bob@test.orangecat',
     bitcoin_address: 'bc1qinvestorbob123456789',
-    location: 'London, UK'
+    location: 'London, UK',
   },
   {
     id: 'test-user-4',
@@ -72,8 +72,8 @@ const testUsers = [
     bio: 'Non-profit organization supporting community projects and social initiatives through Bitcoin crowdfunding.',
     email: 'org@test.orangecat',
     bitcoin_address: 'bc1qcommunityorg123456789',
-    location: 'Berlin, Germany'
-  }
+    location: 'Berlin, Germany',
+  },
 ];
 
 // Test projects
@@ -81,47 +81,51 @@ const testProjects = [
   {
     user_id: 'test-user-1',
     title: 'Open Source Bitcoin Wallet',
-    description: 'Building a user-friendly, open-source Bitcoin wallet with built-in crowdfunding features. This wallet will make it easy for users to support projects directly from their mobile devices.',
+    description:
+      'Building a user-friendly, open-source Bitcoin wallet with built-in crowdfunding features. This wallet will make it easy for users to support projects directly from their mobile devices.',
     goal_amount_sats: 50000000, // 0.5 BTC
     bitcoin_address: 'bc1qwalletproject123456789',
     category: 'development',
     tags: ['bitcoin', 'wallet', 'mobile', 'open-source'],
     status: 'active',
-    published: true
+    published: true,
   },
   {
     user_id: 'test-user-1',
     title: 'Community Garden Initiative',
-    description: 'Transforming abandoned urban lots into community gardens. We need funds for seeds, tools, and community workshops to teach sustainable gardening practices.',
+    description:
+      'Transforming abandoned urban lots into community gardens. We need funds for seeds, tools, and community workshops to teach sustainable gardening practices.',
     goal_amount_sats: 25000000, // 0.25 BTC
     bitcoin_address: 'bc1qgardenproject123456789',
     category: 'community',
     tags: ['environment', 'community', 'sustainability', 'education'],
     status: 'active',
-    published: true
+    published: true,
   },
   {
     user_id: 'test-user-2',
     title: 'Solar Panel Installation Service',
-    description: 'Professional solar panel installation service for residential and small business properties. Making renewable energy accessible and affordable.',
+    description:
+      'Professional solar panel installation service for residential and small business properties. Making renewable energy accessible and affordable.',
     goal_amount_sats: 100000000, // 1 BTC
     bitcoin_address: 'bc1qsolarbusiness123456789',
     category: 'infrastructure',
     tags: ['solar', 'renewable', 'business', 'sustainability'],
     status: 'active',
-    published: true
+    published: true,
   },
   {
     user_id: 'test-user-4',
     title: 'Digital Literacy Program',
-    description: 'Teaching digital skills to underserved communities. From basic computer literacy to advanced topics like Bitcoin and online privacy.',
+    description:
+      'Teaching digital skills to underserved communities. From basic computer literacy to advanced topics like Bitcoin and online privacy.',
     goal_amount_sats: 75000000, // 0.75 BTC
     bitcoin_address: 'bc1qeducationproject123456789',
     category: 'education',
     tags: ['education', 'digital-literacy', 'community', 'privacy'],
     status: 'draft',
-    published: false
-  }
+    published: false,
+  },
 ];
 
 // Test products
@@ -129,39 +133,42 @@ const testProducts = [
   {
     user_id: 'test-user-2',
     title: 'Custom Bitcoin Development Course',
-    description: 'Comprehensive video course teaching Bitcoin development from basics to advanced topics. Includes hands-on projects and lifetime access.',
+    description:
+      'Comprehensive video course teaching Bitcoin development from basics to advanced topics. Includes hands-on projects and lifetime access.',
     price_sats: 500000, // 0.005 BTC
     currency: 'SATS',
     product_type: 'digital',
     category: 'education',
     tags: ['bitcoin', 'development', 'course', 'education'],
     status: 'active',
-    inventory_count: -1 // unlimited
+    inventory_count: -1, // unlimited
   },
   {
     user_id: 'test-user-2',
     title: 'Bitcoin Consulting Session',
-    description: '1-hour consulting session to help with your Bitcoin project. Whether you need technical advice, architecture review, or implementation guidance.',
+    description:
+      '1-hour consulting session to help with your Bitcoin project. Whether you need technical advice, architecture review, or implementation guidance.',
     price_sats: 1000000, // 0.01 BTC
     currency: 'SATS',
     product_type: 'service',
     category: 'consulting',
     tags: ['consulting', 'bitcoin', 'technical', 'advice'],
     status: 'active',
-    inventory_count: -1
+    inventory_count: -1,
   },
   {
     user_id: 'test-user-1',
     title: 'OrangeCat T-Shirt',
-    description: 'Limited edition OrangeCat Bitcoin crowdfunding t-shirt. Made from organic cotton, printed with eco-friendly inks.',
+    description:
+      'Limited edition OrangeCat Bitcoin crowdfunding t-shirt. Made from organic cotton, printed with eco-friendly inks.',
     price_sats: 200000, // 0.002 BTC
     currency: 'SATS',
     product_type: 'physical',
     category: 'merchandise',
     tags: ['merchandise', 't-shirt', 'bitcoin', 'limited-edition'],
     status: 'active',
-    inventory_count: 50
-  }
+    inventory_count: 50,
+  },
 ];
 
 // Test services
@@ -169,36 +176,39 @@ const testServices = [
   {
     user_id: 'test-user-2',
     title: 'Full-Stack Bitcoin Development',
-    description: 'Complete web application development with Bitcoin/Lightning integration. From concept to deployment.',
+    description:
+      'Complete web application development with Bitcoin/Lightning integration. From concept to deployment.',
     category: 'development',
     fixed_price_sats: 5000000, // 0.05 BTC
     currency: 'SATS',
     duration_minutes: 480, // 8 hours
     service_location_type: 'remote',
-    status: 'active'
+    status: 'active',
   },
   {
     user_id: 'test-user-2',
     title: 'Bitcoin Wallet Security Audit',
-    description: 'Comprehensive security audit of your Bitcoin wallet implementation. Includes code review, vulnerability assessment, and recommendations.',
+    description:
+      'Comprehensive security audit of your Bitcoin wallet implementation. Includes code review, vulnerability assessment, and recommendations.',
     category: 'security',
     fixed_price_sats: 2000000, // 0.02 BTC
     currency: 'SATS',
     duration_minutes: 240, // 4 hours
     service_location_type: 'remote',
-    status: 'active'
+    status: 'active',
   },
   {
     user_id: 'test-user-3',
     title: 'Bitcoin Investment Consultation',
-    description: 'Personalized Bitcoin investment strategy consultation. Portfolio review, risk assessment, and long-term planning.',
+    description:
+      'Personalized Bitcoin investment strategy consultation. Portfolio review, risk assessment, and long-term planning.',
     category: 'consulting',
     hourly_rate_sats: 50000, // 500 sats/hour
     currency: 'SATS',
     duration_minutes: 60,
     service_location_type: 'remote',
-    status: 'active'
-  }
+    status: 'active',
+  },
 ];
 
 // Test loans
@@ -206,23 +216,25 @@ const testLoans = [
   {
     user_id: 'test-user-1',
     title: 'Equipment Purchase Loan',
-    description: 'Need to purchase specialized equipment for our open-source development projects. Seeking a short-term loan to bridge the gap.',
+    description:
+      'Need to purchase specialized equipment for our open-source development projects. Seeking a short-term loan to bridge the gap.',
     original_amount: 1000000, // 0.01 BTC
     remaining_balance: 1000000,
     bitcoin_address: 'bc1qloanrequest123456789',
     loan_category_id: 'equipment',
-    status: 'active'
+    status: 'active',
   },
   {
     user_id: 'test-user-4',
     title: 'Community Center Renovation',
-    description: 'Funding needed to renovate our community center for educational programs. This will serve hundreds of community members annually.',
+    description:
+      'Funding needed to renovate our community center for educational programs. This will serve hundreds of community members annually.',
     original_amount: 5000000, // 0.05 BTC
     remaining_balance: 5000000,
     bitcoin_address: 'bc1qcommunityloan123456789',
     loan_category_id: 'infrastructure',
-    status: 'active'
-  }
+    status: 'active',
+  },
 ];
 
 // Test organizations
@@ -230,19 +242,21 @@ const testOrganizations = [
   {
     name: 'Bitcoin Developers Guild',
     slug: 'bitcoin-dev-guild',
-    description: 'A community of Bitcoin developers working together to build better tools and educate the next generation of developers.',
+    description:
+      'A community of Bitcoin developers working together to build better tools and educate the next generation of developers.',
     created_by: 'test-user-2',
     website: 'https://bitcoindevguild.org',
-    bitcoin_address: 'bc1qdevguild123456789'
+    bitcoin_address: 'bc1qdevguild123456789',
   },
   {
     name: 'Sustainable Communities Network',
     slug: 'sustainable-communities',
-    description: 'Connecting communities working on environmental sustainability projects. Sharing knowledge, resources, and funding opportunities.',
+    description:
+      'Connecting communities working on environmental sustainability projects. Sharing knowledge, resources, and funding opportunities.',
     created_by: 'test-user-4',
     website: 'https://sustainablecommunities.net',
-    bitcoin_address: 'bc1qsustainable123456789'
-  }
+    bitcoin_address: 'bc1qsustainable123456789',
+  },
 ];
 
 async function createTestUsers() {
@@ -254,7 +268,7 @@ async function createTestUsers() {
       const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
         email: user.email,
         password: 'TestPassword123!',
-        user_metadata: { name: user.name }
+        user_metadata: { name: user.name },
       });
 
       if (authError && !authError.message.includes('already registered')) {
@@ -265,19 +279,17 @@ async function createTestUsers() {
       const userId = authUser?.user?.id || user.id;
 
       // Create profile
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          username: user.username,
-          name: user.name,
-          bio: user.bio,
-          email: user.email,
-          bitcoin_address: user.bitcoin_address,
-          location: user.location,
-          status: 'active',
-          verification_status: 'verified'
-        });
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: userId,
+        username: user.username,
+        name: user.name,
+        bio: user.bio,
+        email: user.email,
+        bitcoin_address: user.bitcoin_address,
+        location: user.location,
+        status: 'active',
+        verification_status: 'verified',
+      });
 
       if (profileError) {
         console.log(`   ❌ Profile ${user.username}: ${profileError.message}`);
@@ -295,11 +307,7 @@ async function createTestProjects() {
 
   for (const project of testProjects) {
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .insert(project)
-        .select()
-        .single();
+      const { data, error } = await supabase.from('projects').insert(project).select().single();
 
       if (error) {
         console.log(`   ❌ Project "${project.title}": ${error.message}`);
@@ -361,11 +369,7 @@ async function createTestLoans() {
 
   for (const loan of testLoans) {
     try {
-      const { data, error } = await supabase
-        .from('loans')
-        .insert(loan)
-        .select()
-        .single();
+      const { data, error } = await supabase.from('loans').insert(loan).select().single();
 
       if (error) {
         console.log(`   ❌ Loan "${loan.title}": ${error.message}`);
@@ -383,11 +387,7 @@ async function createTestOrganizations() {
 
   for (const org of testOrganizations) {
     try {
-      const { data, error } = await supabase
-        .from('organizations')
-        .insert(org)
-        .select()
-        .single();
+      const { data, error } = await supabase.from('organizations').insert(org).select().single();
 
       if (error) {
         console.log(`   ❌ Organization "${org.name}": ${error.message}`);
@@ -395,14 +395,12 @@ async function createTestOrganizations() {
         console.log(`   ✅ Created organization: ${org.name}`);
 
         // Add creator as owner
-        const { error: memberError } = await supabase
-          .from('organization_members')
-          .insert({
-            organization_id: data.id,
-            user_id: org.created_by,
-            role: 'owner',
-            status: 'active'
-          });
+        const { error: memberError } = await supabase.from('organization_members').insert({
+          organization_id: data.id,
+          user_id: org.created_by,
+          role: 'owner',
+          status: 'active',
+        });
 
         if (memberError) {
           console.log(`   ⚠️  Could not add owner to ${org.name}: ${memberError.message}`);
@@ -430,7 +428,7 @@ async function createSampleTransactions() {
       status: 'completed',
       transaction_hash: 'sample_tx_hash_1',
       message: 'Excited to support Bitcoin wallet development!',
-      public_visibility: true
+      public_visibility: true,
     },
     {
       amount_sats: 500000, // 0.005 BTC
@@ -443,8 +441,8 @@ async function createSampleTransactions() {
       status: 'completed',
       lightning_payment_hash: 'sample_lightning_hash_1',
       message: 'Love the community garden initiative!',
-      public_visibility: true
-    }
+      public_visibility: true,
+    },
   ];
 
   for (const transaction of sampleTransactions) {
@@ -472,22 +470,25 @@ async function createSampleTimelinePosts() {
   const samplePosts = [
     {
       user_id: 'test-user-1',
-      content: 'Just launched our new Bitcoin wallet project! 🎉 Check it out at /projects/wallet and consider supporting if you believe in user-friendly Bitcoin tools.',
+      content:
+        'Just launched our new Bitcoin wallet project! 🎉 Check it out at /projects/wallet and consider supporting if you believe in user-friendly Bitcoin tools.',
       visibility: 'public',
-      post_type: 'text'
+      post_type: 'text',
     },
     {
       user_id: 'test-user-2',
-      content: 'Available for Bitcoin development consulting! Whether you need help with wallet integration, Lightning Network, or general Web3 development, I can help. DM me or check my services.',
+      content:
+        'Available for Bitcoin development consulting! Whether you need help with wallet integration, Lightning Network, or general Web3 development, I can help. DM me or check my services.',
       visibility: 'public',
-      post_type: 'text'
+      post_type: 'text',
     },
     {
       user_id: 'test-user-4',
-      content: 'Our community center renovation project is now live! We\'re raising funds to create a space for digital literacy workshops and community events. Every bit helps! 🌱',
+      content:
+        "Our community center renovation project is now live! We're raising funds to create a space for digital literacy workshops and community events. Every bit helps! 🌱",
       visibility: 'public',
-      post_type: 'text'
-    }
+      post_type: 'text',
+    },
   ];
 
   // Note: Timeline posts table might be named differently (posts, timeline_events, etc.)
@@ -514,7 +515,9 @@ async function runSetup() {
 
     console.log('📊 Created Test Data Summary:');
     console.log(`   👥 ${testUsers.length} test users`);
-    console.log(`   🎯 ${testProjects.length} projects (${testProjects.filter(p => p.status === 'active').length} active)`);
+    console.log(
+      `   🎯 ${testProjects.length} projects (${testProjects.filter(p => p.status === 'active').length} active)`
+    );
     console.log(`   🛒 ${testProducts.length} products`);
     console.log(`   🔧 ${testServices.length} services`);
     console.log(`   💰 ${testLoans.length} loan requests`);
@@ -528,7 +531,6 @@ async function runSetup() {
     console.log('2. Login with test users (password: TestPassword123!)');
     console.log('3. Test all workflows using TESTING_WORKFLOWS_GUIDE.md');
     console.log('4. Run verification: node scripts/db-verify-fixes.mjs');
-
   } catch (error) {
     console.error('\n💥 SETUP FAILED:', error.message);
     process.exit(1);
@@ -537,14 +539,3 @@ async function runSetup() {
 
 // Run the setup
 runSetup();
-
-
-
-
-
-
-
-
-
-
-

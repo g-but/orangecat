@@ -42,7 +42,9 @@ export function MessageContextMenu({
 
   // Close menu when clicking outside
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
 
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
@@ -73,7 +75,9 @@ export function MessageContextMenu({
 
   // Adjust position to keep menu in viewport
   useEffect(() => {
-    if (!isOpen || !menuRef.current) return;
+    if (!isOpen || !menuRef.current) {
+      return;
+    }
 
     const menu = menuRef.current;
     const rect = menu.getBoundingClientRect();
@@ -103,17 +107,15 @@ export function MessageContextMenu({
     menu.style.top = `${adjustedY}px`;
   }, [isOpen, position]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/20"
-        onClick={onClose}
-        onTouchStart={onClose}
-      />
-      
+      <div className="fixed inset-0 z-40 bg-black/20" onClick={onClose} onTouchStart={onClose} />
+
       {/* Menu */}
       <div
         ref={menuRef}
@@ -131,7 +133,7 @@ export function MessageContextMenu({
       >
         {canEdit && (
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onEdit();
               onClose();
@@ -147,10 +149,10 @@ export function MessageContextMenu({
             <span>Edit</span>
           </button>
         )}
-        
+
         {canDelete && (
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onDelete();
               onClose();
@@ -170,7 +172,7 @@ export function MessageContextMenu({
         {/* Close button (mobile) */}
         <div className="border-t border-gray-100 mt-1 pt-1 md:hidden">
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onClose();
             }}
@@ -189,19 +191,3 @@ export function MessageContextMenu({
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

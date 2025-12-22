@@ -29,16 +29,14 @@ export default function TestLoaderPage() {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            🚀 Contextual Loader Test
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">🚀 Contextual Loader Test</h1>
           <p className="text-lg text-gray-600">
             Select a route to see the contextual loading experience
           </p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
-          {routes.map((route) => (
+          {routes.map(route => (
             <button
               key={route}
               onClick={() => setSelectedRoute(route)}
@@ -56,7 +54,8 @@ export default function TestLoaderPage() {
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
           <div className="mb-4">
             <h2 className="text-xl font-semibold text-gray-900">
-              Loading experience for: <code className="bg-gray-100 px-2 py-1 rounded text-sm">{selectedRoute}</code>
+              Loading experience for:{' '}
+              <code className="bg-gray-100 px-2 py-1 rounded text-sm">{selectedRoute}</code>
             </h2>
           </div>
           <div className="border border-gray-200 rounded-lg overflow-hidden">
@@ -67,18 +66,3 @@ export default function TestLoaderPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

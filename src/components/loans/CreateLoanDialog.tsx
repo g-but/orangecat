@@ -41,28 +41,30 @@ import { LoanTemplates, type LoanTemplateData } from './LoanTemplates';
 import { CreateAssetDialog } from '../assets/CreateAssetDialog';
 import { CURRENCY_CODES, currencySelectOptions, DEFAULT_CURRENCY } from '@/config/currencies';
 
-const loanSchema = z.object({
-  title: z.string().min(3, 'Title must be at least 3 characters'),
-  description: z.string().optional(),
-  loan_category_id: z.string().optional(),
-  original_amount: z.number().min(0.01, 'Amount must be greater than 0'),
-  remaining_balance: z.number().min(0.01, 'Balance must be greater than 0'),
-  interest_rate: z.number().min(0).max(100).optional(),
-  monthly_payment: z.number().min(0).optional(),
-  currency: z.enum(CURRENCY_CODES).default(DEFAULT_CURRENCY),
-  lender_name: z.string().optional(),
-  loan_number: z.string().optional(),
-  origination_date: z.string().optional(),
-  maturity_date: z.string().optional(),
-  is_public: z.boolean().default(true),
-  is_negotiable: z.boolean().default(true),
-  minimum_offer_amount: z.number().min(0).optional(),
-  preferred_terms: z.string().optional(),
-  contact_method: z.enum(['platform', 'email', 'phone']).default('platform'),
-}).refine((data) => data.remaining_balance <= data.original_amount, {
-  message: 'Remaining balance cannot exceed original amount',
-  path: ['remaining_balance'],
-});
+const loanSchema = z
+  .object({
+    title: z.string().min(3, 'Title must be at least 3 characters'),
+    description: z.string().optional(),
+    loan_category_id: z.string().optional(),
+    original_amount: z.number().min(0.01, 'Amount must be greater than 0'),
+    remaining_balance: z.number().min(0.01, 'Balance must be greater than 0'),
+    interest_rate: z.number().min(0).max(100).optional(),
+    monthly_payment: z.number().min(0).optional(),
+    currency: z.enum(CURRENCY_CODES).default(DEFAULT_CURRENCY),
+    lender_name: z.string().optional(),
+    loan_number: z.string().optional(),
+    origination_date: z.string().optional(),
+    maturity_date: z.string().optional(),
+    is_public: z.boolean().default(true),
+    is_negotiable: z.boolean().default(true),
+    minimum_offer_amount: z.number().min(0).optional(),
+    preferred_terms: z.string().optional(),
+    contact_method: z.enum(['platform', 'email', 'phone']).default('platform'),
+  })
+  .refine(data => data.remaining_balance <= data.original_amount, {
+    message: 'Remaining balance cannot exceed original amount',
+    path: ['remaining_balance'],
+  });
 
 type LoanFormData = z.infer<typeof loanSchema>;
 
@@ -89,7 +91,15 @@ export function CreateLoanDialog({
   const [categories, setCategories] = useState<LoanCategory[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
-  const [assets, setAssets] = useState<Array<{ id: string; title: string; estimated_value: number | null; currency: string; verification_status: string }>>([]);
+  const [assets, setAssets] = useState<
+    Array<{
+      id: string;
+      title: string;
+      estimated_value: number | null;
+      currency: string;
+      verification_status: string;
+    }>
+  >([]);
   const [assetsLoading, setAssetsLoading] = useState(false);
   const [selectedAssetId, setSelectedAssetId] = useState<string>('');
   const [pledgedValue, setPledgedValue] = useState<string>('');
@@ -194,9 +204,13 @@ export function CreateLoanDialog({
             setAssets(items);
           }
         } catch (e: any) {
-          if (!cancelled) setAssetsError(e?.message || 'Failed to load assets');
+          if (!cancelled) {
+            setAssetsError(e?.message || 'Failed to load assets');
+          }
         } finally {
-          if (!cancelled) setAssetsLoading(false);
+          if (!cancelled) {
+            setAssetsLoading(false);
+          }
         }
       })();
     }
@@ -251,9 +265,10 @@ export function CreateLoanDialog({
         preferred_terms: data.preferred_terms || undefined,
       };
 
-      const result = mode === 'edit' && loanId
-        ? await loansService.updateLoan(loanId, loanData)
-        : await loansService.createLoan(loanData);
+      const result =
+        mode === 'edit' && loanId
+          ? await loansService.updateLoan(loanId, loanData)
+          : await loansService.createLoan(loanData);
 
       if (result.success) {
         // Attach collateral if selected and we are creating
@@ -338,9 +353,7 @@ export function CreateLoanDialog({
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg">Basic Information</CardTitle>
-                <CardDescription>
-                  Tell us about your loan
-                </CardDescription>
+                <CardDescription>Tell us about your loan</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -352,9 +365,7 @@ export function CreateLoanDialog({
                       <FormControl>
                         <Input placeholder="e.g., My Credit Card Debt" {...field} />
                       </FormControl>
-                      <FormDescription>
-                        A descriptive name for your loan listing
-                      </FormDescription>
+                      <FormDescription>A descriptive name for your loan listing</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -378,17 +389,22 @@ export function CreateLoanDialog({
                         </FormControl>
                         <SelectContent>
                           {categoriesLoading && (
-                            <div className="px-3 py-2 text-sm text-muted-foreground">Loading categories...</div>
+                            <div className="px-3 py-2 text-sm text-muted-foreground">
+                              Loading categories...
+                            </div>
                           )}
-                          {!categoriesLoading && categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.name}
-                            </SelectItem>
-                          ))}
+                          {!categoriesLoading &&
+                            categories.map(category => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.name}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       {categoriesError && (
-                        <FormDescription className="text-red-600">{categoriesError}</FormDescription>
+                        <FormDescription className="text-red-600">
+                          {categoriesError}
+                        </FormDescription>
                       )}
                       <FormMessage />
                     </FormItem>
@@ -425,9 +441,7 @@ export function CreateLoanDialog({
                   <DollarSign className="h-4 w-4" />
                   Financial Details
                 </CardTitle>
-                <CardDescription>
-                  Current loan information
-                </CardDescription>
+                <CardDescription>Current loan information</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -443,7 +457,7 @@ export function CreateLoanDialog({
                             step="0.01"
                             placeholder="5000.00"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -463,7 +477,7 @@ export function CreateLoanDialog({
                             step="0.01"
                             placeholder="3500.00"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -488,7 +502,7 @@ export function CreateLoanDialog({
                             step="0.01"
                             placeholder="24.99"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -508,7 +522,7 @@ export function CreateLoanDialog({
                             step="0.01"
                             placeholder="125.00"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -530,7 +544,7 @@ export function CreateLoanDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {currencySelectOptions.map((option) => (
+                          {currencySelectOptions.map(option => (
                             <SelectItem key={option.value} value={option.value}>
                               {option.label}
                             </SelectItem>
@@ -551,9 +565,7 @@ export function CreateLoanDialog({
                   <Building className="h-4 w-4" />
                   Lender Information
                 </CardTitle>
-                <CardDescription>
-                  Details about your current lender (optional)
-                </CardDescription>
+                <CardDescription>Details about your current lender (optional)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <FormField
@@ -601,19 +613,14 @@ export function CreateLoanDialog({
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <FormLabel>Public Listing</FormLabel>
-                    <FormDescription>
-                      Allow anyone to see and offer on your loan
-                    </FormDescription>
+                    <FormDescription>Allow anyone to see and offer on your loan</FormDescription>
                   </div>
                   <FormField
                     control={form.control}
                     name="is_public"
                     render={({ field }) => (
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                     )}
                   />
@@ -622,19 +629,14 @@ export function CreateLoanDialog({
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <FormLabel>Negotiable Terms</FormLabel>
-                    <FormDescription>
-                      Allow offerers to propose different terms
-                    </FormDescription>
+                    <FormDescription>Allow offerers to propose different terms</FormDescription>
                   </div>
                   <FormField
                     control={form.control}
                     name="is_negotiable"
                     render={({ field }) => (
                       <FormControl>
-                        <Switch
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
+                        <Switch checked={field.value} onCheckedChange={field.onChange} />
                       </FormControl>
                     )}
                   />
@@ -652,7 +654,7 @@ export function CreateLoanDialog({
                           step="0.01"
                           placeholder="Only accept offers above this amount"
                           {...field}
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                          onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                         />
                       </FormControl>
                       <FormDescription>
@@ -676,9 +678,7 @@ export function CreateLoanDialog({
                           {...field}
                         />
                       </FormControl>
-                      <FormDescription>
-                        Let offerers know what terms you prefer
-                      </FormDescription>
+                      <FormDescription>Let offerers know what terms you prefer</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -702,9 +702,7 @@ export function CreateLoanDialog({
                           <SelectItem value="phone">Phone</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormDescription>
-                        How you prefer to be contacted about offers
-                      </FormDescription>
+                      <FormDescription>How you prefer to be contacted about offers</FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -726,47 +724,66 @@ export function CreateLoanDialog({
               <CardContent className="space-y-4">
                 <div>
                   <FormLabel>Select Asset</FormLabel>
-                  <Select onValueChange={v => {
-                    if (v === '__create_asset__') {
-                      setShowCreateAsset(true);
-                      return;
-                    }
-                    setSelectedAssetId(v);
-                    const found = assets.find(a => a.id === v);
-                    if (found) {
-                      setPledgedCurrency(found.currency || DEFAULT_CURRENCY);
-                    }
-                  }} value={selectedAssetId}>
+                  <Select
+                    onValueChange={v => {
+                      if (v === '__create_asset__') {
+                        setShowCreateAsset(true);
+                        return;
+                      }
+                      setSelectedAssetId(v);
+                      const found = assets.find(a => a.id === v);
+                      if (found) {
+                        setPledgedCurrency(found.currency || DEFAULT_CURRENCY);
+                      }
+                    }}
+                    value={selectedAssetId}
+                  >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder={assetsLoading ? 'Loading assets...' : 'No asset selected'} />
+                        <SelectValue
+                          placeholder={assetsLoading ? 'Loading assets...' : 'No asset selected'}
+                        />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
                       {assetsLoading && (
-                        <div className="px-3 py-2 text-sm text-muted-foreground">Loading assets...</div>
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          Loading assets...
+                        </div>
                       )}
                       {!assetsLoading && assets.length === 0 && (
-                        <div className="px-3 py-2 text-sm text-muted-foreground">No assets found. Create one under Assets.</div>
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          No assets found. Create one under Assets.
+                        </div>
                       )}
-                      {!assetsLoading && assets.map(a => (
-                        <SelectItem key={a.id} value={a.id}>
-                          {a.title} {a.estimated_value ? `(${a.estimated_value} ${a.currency})` : ''}
-                        </SelectItem>
-                      ))}
+                      {!assetsLoading &&
+                        assets.map(a => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.title}{' '}
+                            {a.estimated_value ? `(${a.estimated_value} ${a.currency})` : ''}
+                          </SelectItem>
+                        ))}
                       {/* Create Asset Option */}
                       <SelectItem value="__create_asset__" className="text-blue-600 font-medium">
                         ➕ Create New Asset
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  {assetsError && <FormDescription className="text-red-600">{assetsError}</FormDescription>}
+                  {assetsError && (
+                    <FormDescription className="text-red-600">{assetsError}</FormDescription>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <FormLabel>Pledged Value</FormLabel>
-                    <Input type="number" step="0.01" value={pledgedValue} onChange={e => setPledgedValue(e.target.value)} placeholder="Optional" />
+                    <Input
+                      type="number"
+                      step="0.01"
+                      value={pledgedValue}
+                      onChange={e => setPledgedValue(e.target.value)}
+                      placeholder="Optional"
+                    />
                   </div>
                   <div>
                     <FormLabel>Currency</FormLabel>
@@ -777,7 +794,7 @@ export function CreateLoanDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {currencySelectOptions.map((option) => (
+                        {currencySelectOptions.map(option => (
                           <SelectItem key={option.value} value={option.value}>
                             {option.label}
                           </SelectItem>

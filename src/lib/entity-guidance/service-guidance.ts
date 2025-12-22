@@ -47,7 +47,7 @@ export const serviceGuidanceContent: Record<NonNullable<ServiceFieldType>, Guida
       'Include your specialty or niche',
       'Keep it concise but descriptive',
       'Use industry-standard terminology',
-      'Avoid jargon that clients won\'t understand',
+      "Avoid jargon that clients won't understand",
     ],
     examples: [
       'Bitcoin Consulting & Strategy',
@@ -65,7 +65,7 @@ export const serviceGuidanceContent: Record<NonNullable<ServiceFieldType>, Guida
       'Start with what you do and for whom',
       'Highlight your experience and credentials',
       'Explain your process or approach',
-      'Mention what\'s included in your service',
+      "Mention what's included in your service",
       'Add testimonials or results if available',
     ],
     examples: [
@@ -130,8 +130,7 @@ export const serviceGuidanceContent: Record<NonNullable<ServiceFieldType>, Guida
   duration_minutes: {
     icon: React.createElement(Clock, { className: 'w-5 h-5 text-tiffany-600' }),
     title: 'Typical Duration',
-    description:
-      'How long does a typical session or engagement last? This helps clients plan.',
+    description: 'How long does a typical session or engagement last? This helps clients plan.',
     tips: [
       'Set realistic expectations',
       'Include any prep or follow-up time',
@@ -147,8 +146,7 @@ export const serviceGuidanceContent: Record<NonNullable<ServiceFieldType>, Guida
   service_location_type: {
     icon: React.createElement(MapPin, { className: 'w-5 h-5 text-tiffany-600' }),
     title: 'Service Location',
-    description:
-      'Where can you deliver your service? This affects who can hire you.',
+    description: 'Where can you deliver your service? This affects who can hire you.',
     tips: [
       'Remote: Work from anywhere, serve global clients',
       'On-site: Meet clients in person',
@@ -164,8 +162,7 @@ export const serviceGuidanceContent: Record<NonNullable<ServiceFieldType>, Guida
   service_area: {
     icon: React.createElement(MapPin, { className: 'w-5 h-5 text-tiffany-600' }),
     title: 'Service Area',
-    description:
-      'For on-site services, specify where you can travel to meet clients.',
+    description: 'For on-site services, specify where you can travel to meet clients.',
     tips: [
       'Be specific about your coverage area',
       'Include cities or regions you serve',
@@ -218,40 +215,3 @@ export const serviceDefaultGuidance: DefaultGuidance = {
   ],
   hint: '💡 Click on any field to get specific guidance',
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

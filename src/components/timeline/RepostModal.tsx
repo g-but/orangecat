@@ -69,13 +69,17 @@ export function RepostModal({
   })();
 
   const handleSimpleRepost = async () => {
-    if (isReposting) return;
+    if (isReposting) {
+      return;
+    }
     await onSimpleRepost();
     onClose();
   };
 
   const handleQuoteRepost = async () => {
-    if (isReposting) return;
+    if (isReposting) {
+      return;
+    }
     if (quoteText.trim()) {
       await onQuoteRepost(quoteText.trim());
       setQuoteText('');
@@ -93,7 +97,9 @@ export function RepostModal({
 
   // Global keyboard handling: Esc to close, Ctrl/Cmd+Enter to submit
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      return;
+    }
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -115,7 +121,9 @@ export function RepostModal({
   }, [isOpen, quoteText]);
 
   // Early return AFTER all hooks
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   const timeAgo = formatDistanceToNow(new Date(event.eventTimestamp), { addSuffix: true });
   const remainingCharacters = QUOTE_MAX_LENGTH - quoteText.length;
@@ -140,7 +148,7 @@ export function RepostModal({
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
         <Card
           className="w-full max-w-xl bg-white rounded-2xl shadow-2xl pointer-events-auto animate-scale-in"
-          onClick={(e) => e.stopPropagation()}
+          onClick={e => e.stopPropagation()}
         >
           <CardContent className="p-0">
             {/* Header */}
@@ -170,8 +178,8 @@ export function RepostModal({
                   id="quote-text"
                   ref={textareaRef}
                   value={quoteText}
-                  onChange={(e) => setQuoteText(e.target.value)}
-                  onKeyDown={(e) => {
+                  onChange={e => setQuoteText(e.target.value)}
+                  onKeyDown={e => {
                     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
                       e.preventDefault();
                       handleQuoteRepost();
@@ -189,9 +197,7 @@ export function RepostModal({
                 <div className="flex items-center gap-2 text-gray-500">
                   <span
                     className={
-                      remainingCharacters <= 20
-                        ? 'text-orange-600 font-semibold'
-                        : 'text-gray-500'
+                      remainingCharacters <= 20 ? 'text-orange-600 font-semibold' : 'text-gray-500'
                     }
                   >
                     {remainingCharacters}
@@ -264,7 +270,9 @@ export function RepostModal({
         </Card>
       </div>
 
-      <style dangerouslySetInnerHTML={{__html: `
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @keyframes scale-in {
           from {
             opacity: 0;
@@ -278,8 +286,9 @@ export function RepostModal({
         .animate-scale-in {
           animation: scale-in 0.2s ease-out;
         }
-      `}} />
+      `,
+        }}
+      />
     </>
   );
 }
-

@@ -7,7 +7,14 @@ export type WalletType = 'address' | 'xpub';
 
 export type WalletBehaviorType = 'general' | 'recurring_budget' | 'one_time_goal';
 
-export type BudgetPeriod = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
+export type BudgetPeriod =
+  | 'daily'
+  | 'weekly'
+  | 'biweekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'yearly'
+  | 'custom';
 
 export type GoalStatus = 'active' | 'paused' | 'reached' | 'purchased' | 'cancelled' | 'archived';
 
@@ -582,7 +589,9 @@ export function reachedAlertThreshold(
   budget: number,
   threshold: number = 80
 ): boolean {
-  if (budget <= 0) return false;
+  if (budget <= 0) {
+    return false;
+  }
   const percentUsed = (spent / budget) * 100;
   return percentUsed >= threshold;
 }
@@ -663,12 +672,10 @@ export function formatCurrency(amount: number, currency: string): string {
 /**
  * Check if a milestone has been reached
  */
-export function checkMilestone(
-  current: number,
-  goal: number,
-  milestonePercent: number
-): boolean {
-  if (goal <= 0) return false;
+export function checkMilestone(current: number, goal: number, milestonePercent: number): boolean {
+  if (goal <= 0) {
+    return false;
+  }
   const progress = (current / goal) * 100;
   return progress >= milestonePercent;
 }

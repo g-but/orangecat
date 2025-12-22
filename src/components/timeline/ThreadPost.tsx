@@ -33,7 +33,7 @@ export function ThreadPost({
   const isQuoteReply = event.isQuoteReply || false;
 
   return (
-    <div className={cn("relative", className)}>
+    <div className={cn('relative', className)}>
       {/* Thread visualization */}
       {showThreadLine && threadDepth > 0 && (
         <div className="absolute left-4 top-0 bottom-0 pointer-events-none">
@@ -48,7 +48,7 @@ export function ThreadPost({
       {/* Post content with indentation */}
       <div
         className={cn(
-          threadDepth > 0 && "ml-8", // Base indentation for thread posts
+          threadDepth > 0 && 'ml-8', // Base indentation for thread posts
           threadDepth > 1 && `ml-${8 + (threadDepth - 1) * 4}` // Additional indentation for deeper threads
         )}
         style={threadDepth > 1 ? { marginLeft: `${8 + (threadDepth - 1) * 16}px` } : undefined}
@@ -56,9 +56,7 @@ export function ThreadPost({
         {/* Quote reply indicator */}
         {isQuoteReply && event.quotedContent && (
           <div className="mb-2 p-3 bg-gray-50 border-l-4 border-blue-400 rounded-r-md">
-            <div className="text-sm text-gray-600 italic">
-              "{event.quotedContent}"
-            </div>
+            <div className="text-sm text-gray-600 italic">"{event.quotedContent}"</div>
           </div>
         )}
 
@@ -94,20 +92,16 @@ export function ThreadView({
   className,
 }: ThreadViewProps) {
   if (!events || events.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        No posts in this thread.
-      </div>
-    );
+    return <div className="text-center py-8 text-gray-500">No posts in this thread.</div>;
   }
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div className={cn('space-y-4', className)}>
       {events.map((event, index) => (
         <ThreadPost
           key={event.id}
           event={event}
-          onUpdate={(updates) => onUpdate(event.id, updates)}
+          onUpdate={updates => onUpdate(event.id, updates)}
           onDelete={onDelete ? () => onDelete(event.id) : undefined}
           onReplyCreated={onReplyCreated}
           showThreadLine={index > 0} // Don't show thread line for root post
@@ -117,20 +111,3 @@ export function ThreadView({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

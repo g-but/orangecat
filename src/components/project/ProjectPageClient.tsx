@@ -241,7 +241,9 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
 
 // Helper function to format currency
 function formatCurrency(amount: number | null, currency: string): string {
-  if (!amount) return `0 ${currency}`;
+  if (!amount) {
+    return `0 ${currency}`;
+  }
 
   if (currency === 'BTC') {
     return `${amount.toFixed(8)} BTC`;

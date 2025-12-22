@@ -12,7 +12,7 @@ import chalk from 'chalk';
 // Configuration
 const CONFIG = {
   productionUrl: 'https://www.orangecat.ch',
-  githubRepo: process.env.GITHUB_REPOSITORY || 'g-but/orangecat'
+  githubRepo: process.env.GITHUB_REPOSITORY || 'g-but/orangecat',
 };
 
 // Colors
@@ -21,7 +21,7 @@ const colors = {
   error: chalk.bold.red,
   warning: chalk.bold.yellow,
   info: chalk.cyan,
-  dim: chalk.dim
+  dim: chalk.dim,
 };
 
 /**
@@ -138,24 +138,3 @@ export { notifySuccess, notifyFailure, notifyProgress };
 if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

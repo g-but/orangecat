@@ -43,7 +43,9 @@ export default function NewConversationModal({
       setTimeout(() => inputRef.current?.focus(), 100);
     }
     return () => {
-      if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
     };
   }, [isOpen]);
 
@@ -67,7 +69,9 @@ export default function NewConversationModal({
         ? `/api/profiles?limit=20&search=${encodeURIComponent(q)}`
         : '/api/profiles?limit=20';
       const res = await fetch(url, { credentials: 'same-origin', signal: controller.signal });
-      if (!res.ok) throw new Error('Failed to load people');
+      if (!res.ok) {
+        throw new Error('Failed to load people');
+      }
       const data = await res.json();
       // API returns { success: true, data: [...] } but older responses nested under data.data
       const arr = Array.isArray(data.data)
@@ -77,7 +81,9 @@ export default function NewConversationModal({
           : [];
       setProfiles(arr);
     } catch (e) {
-      if ((e as any)?.name === 'AbortError') return;
+      if ((e as any)?.name === 'AbortError') {
+        return;
+      }
       setError(e instanceof Error ? e.message : 'Failed to load people');
     } finally {
       setLoading(false);
@@ -86,7 +92,9 @@ export default function NewConversationModal({
 
   const handleChange = (val: string) => {
     setSearch(val);
-    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
     timeoutRef.current = window.setTimeout(() => fetchProfiles(val), 300);
   };
 
@@ -106,13 +114,14 @@ export default function NewConversationModal({
       const data = await res.json();
 
       if (!res.ok || !data.conversationId) {
-        const errorMessage = data.error || data.details || data.hint || 'Failed to create conversation';
-        console.error('Failed to create conversation:', { 
-          status: res.status, 
-          error: data.error, 
+        const errorMessage =
+          data.error || data.details || data.hint || 'Failed to create conversation';
+        console.error('Failed to create conversation:', {
+          status: res.status,
+          error: data.error,
           details: data.details,
           code: data.code,
-          hint: data.hint 
+          hint: data.hint,
         });
         throw new Error(errorMessage);
       }
@@ -126,13 +135,17 @@ export default function NewConversationModal({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div
       className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
+      onClick={e => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
       }}
     >
       <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -154,7 +167,7 @@ export default function NewConversationModal({
             <input
               ref={inputRef}
               value={search}
-              onChange={(e) => handleChange(e.target.value)}
+              onChange={e => handleChange(e.target.value)}
               placeholder="Search by name or @username"
               className="w-full pl-11 pr-4 py-3 bg-gray-100 border-0 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
             />
@@ -186,7 +199,7 @@ export default function NewConversationModal({
             </div>
           ) : (
             <div className="py-2">
-              {profiles.map((p) => (
+              {profiles.map(p => (
                 <div
                   key={p.id}
                   role="button"
@@ -197,10 +210,14 @@ export default function NewConversationModal({
                     creatingId === p.id && 'opacity-60'
                   )}
                   onClick={() => {
-                    if (!creatingId) startConversation(p.id);
+                    if (!creatingId) {
+                      startConversation(p.id);
+                    }
                   }}
-                  onKeyDown={(e) => {
-                    if (creatingId) return;
+                  onKeyDown={e => {
+                    if (creatingId) {
+                      return;
+                    }
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       startConversation(p.id);
@@ -224,16 +241,14 @@ export default function NewConversationModal({
                     size="sm"
                     disabled={!!creatingId && creatingId !== p.id}
                     className="bg-orange-500 hover:bg-orange-600 text-white flex-shrink-0"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
-                      if (!creatingId) startConversation(p.id);
+                      if (!creatingId) {
+                        startConversation(p.id);
+                      }
                     }}
                   >
-                    {creatingId === p.id ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      'Message'
-                    )}
+                    {creatingId === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Message'}
                   </Button>
                 </div>
               ))}

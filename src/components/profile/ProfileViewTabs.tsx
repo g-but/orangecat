@@ -40,7 +40,7 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
   const initialTab =
     tabFromUrl && tabs.some(t => t.id === tabFromUrl)
       ? tabFromUrl
-      : defaultTab || (tabs.find(t => t.id === 'timeline')?.id || tabs[0]?.id);
+      : defaultTab || tabs.find(t => t.id === 'timeline')?.id || tabs[0]?.id;
 
   const [activeTab, setActiveTab] = useState(initialTab);
   const [loadedTabs, setLoadedTabs] = useState<Set<string>>(new Set([initialTab]));
@@ -57,10 +57,12 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
 
   // Check scroll position and update fade indicators
   const updateScrollIndicators = useCallback(() => {
-    if (!navRef.current) return;
+    if (!navRef.current) {
+      return;
+    }
     const nav = navRef.current;
     const { scrollLeft, scrollWidth, clientWidth } = nav;
-    
+
     setShowLeftFade(scrollLeft > 0);
     setShowRightFade(scrollLeft < scrollWidth - clientWidth - 1);
   }, []);
@@ -72,14 +74,14 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
       const button = activeTabRef.current;
       const navRect = nav.getBoundingClientRect();
       const buttonRect = button.getBoundingClientRect();
-      
+
       // Only scroll on mobile (when nav is scrollable)
       if (nav.scrollWidth > nav.clientWidth) {
         const scrollLeft = nav.scrollLeft;
         const buttonLeft = buttonRect.left - navRect.left + scrollLeft;
         const buttonRight = buttonLeft + buttonRect.width;
         const navWidth = nav.clientWidth;
-        
+
         // Scroll if button is outside visible area
         if (buttonLeft < scrollLeft) {
           nav.scrollTo({ left: buttonLeft - 16, behavior: 'smooth' });
@@ -87,7 +89,7 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
           nav.scrollTo({ left: buttonRight - navWidth + 16, behavior: 'smooth' });
         }
       }
-      
+
       // Update indicators after scroll
       setTimeout(updateScrollIndicators, 100);
     }
@@ -128,10 +130,10 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
         {showRightFade && (
           <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent pointer-events-none z-10 sm:hidden" />
         )}
-        <nav 
+        <nav
           ref={navRef}
           onScroll={updateScrollIndicators}
-          className="-mb-px flex space-x-0 sm:space-x-3 md:space-x-6 lg:space-x-8 overflow-x-auto scrollbar-hide scroll-smooth touch-pan-x" 
+          className="-mb-px flex space-x-0 sm:space-x-3 md:space-x-6 lg:space-x-8 overflow-x-auto scrollbar-hide scroll-smooth touch-pan-x"
           aria-label="Tabs"
           style={{
             WebkitOverflowScrolling: 'touch',

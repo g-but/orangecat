@@ -32,7 +32,7 @@ function getDisplayName(conversation: Conversation, currentUserId: string | unde
 
   const participants = conversation.participants || [];
   const otherParticipants = participants.filter(
-    (p) => p && p.is_active && p.user_id !== currentUserId
+    p => p && p.is_active && p.user_id !== currentUserId
   );
 
   if (otherParticipants.length === 1) {
@@ -46,7 +46,7 @@ function getDisplayName(conversation: Conversation, currentUserId: string | unde
   return (
     otherParticipants
       .slice(0, 3)
-      .map((p) => p.name || p.username)
+      .map(p => p.name || p.username)
       .join(', ') + (otherParticipants.length > 3 ? ` +${otherParticipants.length - 3}` : '')
   );
 }
@@ -58,10 +58,12 @@ function getPrimaryParticipant(
   conversation: Conversation,
   currentUserId: string | undefined
 ): Participant | null {
-  if (conversation.is_group) return null;
+  if (conversation.is_group) {
+    return null;
+  }
 
   const participants = conversation.participants || [];
-  return participants.find((p) => p && p.is_active && p.user_id !== currentUserId) || null;
+  return participants.find(p => p && p.is_active && p.user_id !== currentUserId) || null;
 }
 
 export default function MessageHeader({
