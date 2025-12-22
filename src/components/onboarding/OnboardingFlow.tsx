@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -19,7 +19,7 @@ import {
   CheckCircle,
   Sparkles,
   Bitcoin,
-  Building
+  Building,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -52,10 +52,12 @@ export function OnboardingFlow() {
           <div className="text-center">
             <div className="mb-6">
               <Bitcoin className="h-16 w-16 text-orange-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Welcome to the Future of Bitcoin Crowdfunding</h2>
+              <h2 className="text-2xl font-bold mb-2">
+                Welcome to the Future of Bitcoin Crowdfunding
+              </h2>
               <p className="text-muted-foreground">
-                OrangeCat has evolved from simple crowdfunding to a comprehensive financial platform.
-                Discover your new superpowers!
+                OrangeCat has evolved from simple crowdfunding to a comprehensive financial
+                platform. Discover your new superpowers!
               </p>
             </div>
           </div>
@@ -70,8 +72,8 @@ export function OnboardingFlow() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  List your loans for refinancing or browse community lending opportunities.
-                  Beat high-interest lenders with peer-to-peer offers!
+                  List your loans for refinancing or browse community lending opportunities. Beat
+                  high-interest lenders with peer-to-peer offers!
                 </p>
               </CardContent>
             </Card>
@@ -85,8 +87,8 @@ export function OnboardingFlow() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Like, comment, share, and engage with posts. Build community around
-                  projects you care about with full social features.
+                  Like, comment, share, and engage with posts. Build community around projects you
+                  care about with full social features.
                 </p>
               </CardContent>
             </Card>
@@ -105,7 +107,8 @@ export function OnboardingFlow() {
             <Building className="h-12 w-12 text-orange-500 mx-auto mb-4" />
             <h3 className="text-xl font-semibold mb-2">Break Free from High-Interest Debt</h3>
             <p className="text-muted-foreground">
-              List your existing loans and receive competitive refinancing offers from the community.
+              List your existing loans and receive competitive refinancing offers from the
+              community.
             </p>
           </div>
 
@@ -148,11 +151,21 @@ export function OnboardingFlow() {
                 <div>
                   <h4 className="font-semibold mb-2">What Makes My Loans Special?</h4>
                   <ul className="text-sm space-y-1 text-muted-foreground">
-                    <li>• <strong>Peer-to-peer:</strong> Direct connection with lenders</li>
-                    <li>• <strong>Bitcoin-powered:</strong> Fast, low-fee transactions</li>
-                    <li>• <strong>Community-driven:</strong> Wisdom of crowds for better rates</li>
-                    <li>• <strong>Transparent:</strong> Full visibility into terms and conditions</li>
-                    <li>• <strong>Flexible:</strong> Refinance or payoff options</li>
+                    <li>
+                      • <strong>Peer-to-peer:</strong> Direct connection with lenders
+                    </li>
+                    <li>
+                      • <strong>Bitcoin-powered:</strong> Fast, low-fee transactions
+                    </li>
+                    <li>
+                      • <strong>Community-driven:</strong> Wisdom of crowds for better rates
+                    </li>
+                    <li>
+                      • <strong>Transparent:</strong> Full visibility into terms and conditions
+                    </li>
+                    <li>
+                      • <strong>Flexible:</strong> Refinance or payoff options
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -188,14 +201,12 @@ export function OnboardingFlow() {
                   <Heart className="h-5 w-5 text-red-500" />
                   Like & Dislike
                 </CardTitle>
-                <CardDescription>
-                  Show appreciation or flag potential issues
-                </CardDescription>
+                <CardDescription>Show appreciation or flag potential issues</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Like posts you support and dislike those that might be suspicious.
-                  Help the community identify scams and celebrate great projects.
+                  Like posts you support and dislike those that might be suspicious. Help the
+                  community identify scams and celebrate great projects.
                 </p>
               </CardContent>
             </Card>
@@ -206,14 +217,12 @@ export function OnboardingFlow() {
                   <MessageCircle className="h-5 w-5 text-green-500" />
                   Comments & Threads
                 </CardTitle>
-                <CardDescription>
-                  Discuss projects in detail
-                </CardDescription>
+                <CardDescription>Discuss projects in detail</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Ask questions, share feedback, and build discussions around projects.
-                  Threaded replies keep conversations organized.
+                  Ask questions, share feedback, and build discussions around projects. Threaded
+                  replies keep conversations organized.
                 </p>
               </CardContent>
             </Card>
@@ -224,14 +233,12 @@ export function OnboardingFlow() {
                   <Share2 className="h-5 w-5 text-purple-500" />
                   Share & Repost
                 </CardTitle>
-                <CardDescription>
-                  Spread the word about great projects
-                </CardDescription>
+                <CardDescription>Spread the word about great projects</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Share projects with your network. Add your own commentary to help
-                  others discover amazing Bitcoin projects.
+                  Share projects with your network. Add your own commentary to help others discover
+                  amazing Bitcoin projects.
                 </p>
               </CardContent>
             </Card>
@@ -242,14 +249,12 @@ export function OnboardingFlow() {
                   <Target className="h-5 w-5 text-orange-500" />
                   Community Moderation
                 </CardTitle>
-                <CardDescription>
-                  Collective wisdom against scams
-                </CardDescription>
+                <CardDescription>Collective wisdom against scams</CardDescription>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  High dislike counts help identify potential issues. Community-driven
-                  moderation keeps OrangeCat safe and trustworthy.
+                  High dislike counts help identify potential issues. Community-driven moderation
+                  keeps OrangeCat safe and trustworthy.
                 </p>
               </CardContent>
             </Card>
@@ -262,11 +267,21 @@ export function OnboardingFlow() {
                 <div>
                   <h4 className="font-semibold mb-2">Why Social Features Matter</h4>
                   <ul className="text-sm space-y-1 text-muted-foreground">
-                    <li>• <strong>Discovery:</strong> Find projects through shares and likes</li>
-                    <li>• <strong>Trust:</strong> Community feedback builds credibility</li>
-                    <li>• <strong>Engagement:</strong> Discussions drive project success</li>
-                    <li>• <strong>Safety:</strong> Collective moderation against scams</li>
-                    <li>• <strong>Network:</strong> Connect with like-minded Bitcoin enthusiasts</li>
+                    <li>
+                      • <strong>Discovery:</strong> Find projects through shares and likes
+                    </li>
+                    <li>
+                      • <strong>Trust:</strong> Community feedback builds credibility
+                    </li>
+                    <li>
+                      • <strong>Engagement:</strong> Discussions drive project success
+                    </li>
+                    <li>
+                      • <strong>Safety:</strong> Collective moderation against scams
+                    </li>
+                    <li>
+                      • <strong>Network:</strong> Connect with like-minded Bitcoin enthusiasts
+                    </li>
                   </ul>
                 </div>
               </div>
@@ -298,9 +313,7 @@ export function OnboardingFlow() {
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>
-                  Everything at your fingertips
-                </CardDescription>
+                <CardDescription>Everything at your fingertips</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex items-center gap-3 p-3 border rounded-lg">
@@ -314,7 +327,9 @@ export function OnboardingFlow() {
                   <Target className="h-5 w-5 text-blue-500" />
                   <div>
                     <p className="font-medium">Create Project</p>
-                    <p className="text-sm text-muted-foreground">Start a new crowdfunding campaign</p>
+                    <p className="text-sm text-muted-foreground">
+                      Start a new crowdfunding campaign
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 border rounded-lg">
@@ -330,9 +345,7 @@ export function OnboardingFlow() {
             <Card>
               <CardHeader>
                 <CardTitle>Activity Overview</CardTitle>
-                <CardDescription>
-                  Track your engagement and progress
-                </CardDescription>
+                <CardDescription>Track your engagement and progress</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
@@ -362,8 +375,8 @@ export function OnboardingFlow() {
                 <div>
                   <h4 className="font-semibold mb-2">Ready to Start Your Journey?</h4>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Your OrangeCat dashboard is your gateway to Bitcoin crowdfunding, peer-to-peer lending,
-                    and community engagement. Everything you need to succeed is right here.
+                    Your OrangeCat dashboard is your gateway to Bitcoin crowdfunding, peer-to-peer
+                    lending, and community engagement. Everything you need to succeed is right here.
                   </p>
                   <div className="flex gap-2">
                     <Badge>Projects</Badge>
@@ -446,7 +459,9 @@ export function OnboardingFlow() {
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-primary/10 rounded-lg">
-                    {React.createElement(steps[currentStep].icon, { className: "h-6 w-6 text-primary" })}
+                    {React.createElement(steps[currentStep].icon, {
+                      className: 'h-6 w-6 text-primary',
+                    })}
                   </div>
                   <div>
                     <CardTitle className="text-xl">{steps[currentStep].title}</CardTitle>
@@ -454,20 +469,14 @@ export function OnboardingFlow() {
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                {steps[currentStep].content}
-              </CardContent>
+              <CardContent>{steps[currentStep].content}</CardContent>
             </Card>
           </motion.div>
         </AnimatePresence>
 
         {/* Navigation */}
         <div className="flex justify-between items-center">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentStep === 0}
-          >
+          <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
             Previous
           </Button>
 
@@ -475,7 +484,7 @@ export function OnboardingFlow() {
             {steps[currentStep].action && (
               <Button
                 onClick={() => handleAction(steps[currentStep].action!.href)}
-                variant={steps[currentStep].action.primary ? "default" : "outline"}
+                variant={steps[currentStep].action.primary ? 'default' : 'outline'}
               >
                 {steps[currentStep].action.label}
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -508,8 +517,8 @@ export function OnboardingFlow() {
                 index === currentStep
                   ? 'bg-primary'
                   : completedSteps.has(index)
-                  ? 'bg-primary/60'
-                  : 'bg-gray-300'
+                    ? 'bg-primary/60'
+                    : 'bg-gray-300'
               }`}
             />
           ))}
