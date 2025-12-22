@@ -1,8 +1,11 @@
 import { Metadata } from 'next';
-import dynamic from 'next/dynamic';
+import nextDynamic from 'next/dynamic';
 import { getAllStories, getAllCategories } from '@/lib/stories';
 
-const StoriesPageClient = dynamic(() => import('@/components/stories/StoriesPageClient'), {
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const StoriesPageClient = nextDynamic(() => import('@/components/stories/StoriesPageClient'), {
   loading: () => (
     <div className="max-w-5xl mx-auto p-6">
       <div className="animate-pulse space-y-4">
