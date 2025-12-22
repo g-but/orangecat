@@ -26,7 +26,7 @@ import {
   Home,
   Eye,
   EyeOff,
-  Coin,
+  Coins,
 } from 'lucide-react';
 import type { FieldGuidanceContent, DefaultContent } from '@/lib/project-guidance';
 
@@ -197,10 +197,7 @@ export const profileGuidanceContent: Record<NonNullable<ProfileFieldType>, Field
       'Review your public profile to see what others see',
       'More transparency generally builds more trust',
     ],
-    examples: [
-      'Show email: ON - Phone: OFF',
-      'Show city: ON - Full address: OFF',
-    ],
+    examples: ['Show email: ON - Phone: OFF', 'Show city: ON - Full address: OFF'],
   },
   currencyPreference: {
     icon: React.createElement(Coin, { className: 'w-5 h-5 text-orange-600' }),
@@ -208,17 +205,13 @@ export const profileGuidanceContent: Record<NonNullable<ProfileFieldType>, Field
     description:
       'Choose your preferred currency for viewing amounts. All transactions happen in Bitcoin, but you can see equivalent values in your local currency.',
     tips: [
-      'Defaults to your country\'s currency (e.g., CHF for Switzerland)',
+      "Defaults to your country's currency (e.g., CHF for Switzerland)",
       'Does not affect actual transactions - everything settles in Bitcoin',
       'Helps you understand amounts in familiar terms',
       'You can switch currencies anytime when viewing or entering amounts',
       'Exchange rates are updated regularly',
     ],
-    examples: [
-      'CHF for Switzerland',
-      'EUR for Germany, France, Italy',
-      'USD for United States',
-    ],
+    examples: ['CHF for Switzerland', 'EUR for Germany, France, Italy', 'USD for United States'],
   },
 };
 
