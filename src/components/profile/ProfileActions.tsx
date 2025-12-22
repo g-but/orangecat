@@ -40,7 +40,9 @@ export default function ProfileActions({
 
   // Handle follow/unfollow
   const handleFollowToggle = async () => {
-    if (isFollowLoading) return;
+    if (isFollowLoading) {
+      return;
+    }
 
     setIsFollowLoading(true);
     try {

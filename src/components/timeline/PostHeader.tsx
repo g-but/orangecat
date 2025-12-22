@@ -29,7 +29,9 @@ export function PostHeader({
 
   // Close menu when clicking outside
   useEffect(() => {
-    if (!showMenu) return;
+    if (!showMenu) {
+      return;
+    }
 
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -77,7 +79,7 @@ export function PostHeader({
       <Link
         href={`/profiles/${displayAuthor.username}`}
         className="font-bold text-[15px] text-gray-900 hover:underline"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         {displayAuthor.name}
       </Link>
@@ -85,7 +87,7 @@ export function PostHeader({
       <Link
         href={`/profiles/${displayAuthor.username}`}
         className="text-gray-500 text-[15px]"
-        onClick={(e) => e.stopPropagation()}
+        onClick={e => e.stopPropagation()}
       >
         @{displayAuthor.username}
       </Link>
@@ -122,7 +124,7 @@ export function PostHeader({
       {canEdit && onMenuToggle && (
         <div className="relative ml-auto" ref={menuRef}>
           <button
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               onMenuToggle();
             }}
@@ -142,7 +144,7 @@ export function PostHeader({
             >
               <div className="py-1">
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     onEdit?.();
                   }}
@@ -153,7 +155,7 @@ export function PostHeader({
                   Edit post
                 </button>
                 <button
-                  onClick={(e) => {
+                  onClick={e => {
                     e.stopPropagation();
                     onDelete?.();
                   }}
@@ -173,19 +175,3 @@ export function PostHeader({
 }
 
 export default PostHeader;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

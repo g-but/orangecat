@@ -28,7 +28,12 @@ interface LoanOffersDialogProps {
   onOfferUpdated?: () => void;
 }
 
-export function LoanOffersDialog({ loan, open, onOpenChange, onOfferUpdated }: LoanOffersDialogProps) {
+export function LoanOffersDialog({
+  loan,
+  open,
+  onOpenChange,
+  onOfferUpdated,
+}: LoanOffersDialogProps) {
   const [offers, setOffers] = useState<LoanOffer[]>([]);
   const [loading, setLoading] = useState(false);
   const [actioningId, setActioningId] = useState<string | null>(null);
@@ -67,7 +72,7 @@ export function LoanOffersDialog({ loan, open, onOpenChange, onOfferUpdated }: L
         await loadOffers();
         // If accepted, open payoff dialog so borrower can record payoff
         if (accept) {
-          const accepted = offers.find((o) => o.id === offerId);
+          const accepted = offers.find(o => o.id === offerId);
           if (accepted) {
             setPayoffLoan(loan);
             setPayoffOffer(accepted);
@@ -94,11 +99,16 @@ export function LoanOffersDialog({ loan, open, onOpenChange, onOfferUpdated }: L
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'accepted': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'expired': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'accepted':
+        return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'expired':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
@@ -123,7 +133,7 @@ export function LoanOffersDialog({ loan, open, onOpenChange, onOfferUpdated }: L
           </div>
         ) : (
           <div className="space-y-3">
-            {offers.map((offer) => (
+            {offers.map(offer => (
               <Card key={offer.id}>
                 <CardContent className="py-4 space-y-2">
                   <div className="flex items-start justify-between">
@@ -145,9 +155,7 @@ export function LoanOffersDialog({ loan, open, onOpenChange, onOfferUpdated }: L
                         </div>
                       )}
                       {offer.terms && (
-                        <div className="text-sm text-muted-foreground">
-                          Terms: {offer.terms}
-                        </div>
+                        <div className="text-sm text-muted-foreground">Terms: {offer.terms}</div>
                       )}
                     </div>
                     {offer.status === 'pending' && (
@@ -210,39 +218,3 @@ export function LoanOffersDialog({ loan, open, onOpenChange, onOfferUpdated }: L
     </Dialog>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

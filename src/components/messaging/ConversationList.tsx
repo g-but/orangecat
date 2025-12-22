@@ -41,30 +41,35 @@ export default function ConversationList({
   const pressTimerRef = React.useRef<number | null>(null);
   const currentUserId = user?.id;
 
-  const { conversations, loading, refresh, removeLocal } = useConversations(searchQuery, selectedConversationId)
+  const { conversations, loading, refresh, removeLocal } = useConversations(
+    searchQuery,
+    selectedConversationId
+  );
 
   const handleDeleteOne = async (id: string) => {
-    removeLocal([id])
+    removeLocal([id]);
     try {
       const res = await fetch('/api/messages/bulk-conversations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ids: [id] })
-      })
+        body: JSON.stringify({ ids: [id] }),
+      });
       if (!res.ok) {
-        await refresh()
+        await refresh();
       }
     } catch {
-      await refresh()
+      await refresh();
     }
-  }
+  };
 
   // External refresh signal from parent
   React.useEffect(() => {
-    if (typeof refreshSignal !== 'number') return;
+    if (typeof refreshSignal !== 'number') {
+      return;
+    }
     refresh();
-  }, [refreshSignal, refresh])
+  }, [refreshSignal, refresh]);
 
   const clearPressTimer = () => {
     if (pressTimerRef.current) {
@@ -74,7 +79,9 @@ export default function ConversationList({
   };
 
   const toggleSelect = (id: string, desired?: 'select' | 'deselect') => {
-    if (!onToggleSelect) return;
+    if (!onToggleSelect) {
+      return;
+    }
     const alreadySelected = selectedIds?.has(id);
     const shouldSelect = desired ? desired === 'select' : !alreadySelected;
     if (shouldSelect && !alreadySelected) {
@@ -111,7 +118,9 @@ export default function ConversationList({
   };
 
   const handlePointerEnter = (conversationId: string) => {
-    if (!isPointerSelecting || !dragAction) return;
+    if (!isPointerSelecting || !dragAction) {
+      return;
+    }
     toggleSelect(conversationId, dragAction);
   };
 
@@ -121,7 +130,9 @@ export default function ConversationList({
     setDragAction(null);
   };
 
-  const filteredConversations = conversations.filter(conversation => {
+  const conversationsArray = Array.isArray(conversations) ? conversations : [];
+
+  const filteredConversations = conversationsArray.filter(conversation => {
     if (filterTab === 'requests') {
       return conversation.unread_count > 0;
     }
@@ -137,18 +148,29 @@ export default function ConversationList({
     }
 
     // Search in participant names/usernames
-    return conversation.participants.some(participant =>
-      participant.name?.toLowerCase().includes(searchLower) ||
-      participant.username?.toLowerCase().includes(searchLower)
+    return conversation.participants.some(
+      participant =>
+        participant.name?.toLowerCase().includes(searchLower) ||
+        participant.username?.toLowerCase().includes(searchLower)
     );
   });
 
   const buildProfileHref = (participant?: Conversation['participants'][number]) => {
-    if (!participant) return null;
-    if (participant.username && typeof participant.username === 'string' && participant.username.trim()) {
+    if (!participant) {
+      return null;
+    }
+    if (
+      participant.username &&
+      typeof participant.username === 'string' &&
+      participant.username.trim()
+    ) {
       return `/profiles/${encodeURIComponent(participant.username.trim())}`;
     }
-    if (participant.user_id && typeof participant.user_id === 'string' && participant.user_id.trim()) {
+    if (
+      participant.user_id &&
+      typeof participant.user_id === 'string' &&
+      participant.user_id.trim()
+    ) {
       return `/profiles/${encodeURIComponent(participant.user_id.trim())}`;
     }
     return null;
@@ -180,15 +202,19 @@ export default function ConversationList({
     }
 
     // For groups without title, show participant names
-    return otherParticipants
-      .slice(0, 3)
-      .map(p => p.name || p.username || 'Unknown')
-      .filter(Boolean)
-      .join(', ') + (otherParticipants.length > 3 ? ` +${otherParticipants.length - 3}` : '');
+    return (
+      otherParticipants
+        .slice(0, 3)
+        .map(p => p.name || p.username || 'Unknown')
+        .filter(Boolean)
+        .join(', ') + (otherParticipants.length > 3 ? ` +${otherParticipants.length - 3}` : '')
+    );
   };
 
   const getConversationProfileHref = (conversation: Conversation) => {
-    if (conversation.is_group) return null;
+    if (conversation.is_group) {
+      return null;
+    }
     const primary = getPrimaryParticipant(conversation);
     return buildProfileHref(primary);
   };
@@ -214,9 +240,21 @@ export default function ConversationList({
       // Ensure all values are valid strings or null
       return (
         <AvatarLink
-          username={participant?.username && typeof participant.username === 'string' ? participant.username : null}
-          userId={participant?.user_id && typeof participant.user_id === 'string' ? participant.user_id : null}
-          avatarUrl={participant?.avatar_url && typeof participant.avatar_url === 'string' ? participant.avatar_url : null}
+          username={
+            participant?.username && typeof participant.username === 'string'
+              ? participant.username
+              : null
+          }
+          userId={
+            participant?.user_id && typeof participant.user_id === 'string'
+              ? participant.user_id
+              : null
+          }
+          avatarUrl={
+            participant?.avatar_url && typeof participant.avatar_url === 'string'
+              ? participant.avatar_url
+              : null
+          }
           name={participant?.name && typeof participant.name === 'string' ? participant.name : null}
           size={40}
           className="flex-shrink-0"
@@ -285,7 +323,7 @@ export default function ConversationList({
         filteredConversations.map(conversation => (
           <div
             key={conversation.id}
-            onPointerDown={(e) =>
+            onPointerDown={e =>
               handlePointerDown(e, conversation.id, selectedIds?.has(conversation.id) || false)
             }
             onPointerEnter={() => handlePointerEnter(conversation.id)}
@@ -297,7 +335,7 @@ export default function ConversationList({
                 return;
               }
             }}
-            onClick={(e) => {
+            onClick={e => {
               // If we were dragging or in selection mode, don't navigate
               if (isPointerSelecting || selectionMode) {
                 e.preventDefault();
@@ -307,7 +345,8 @@ export default function ConversationList({
             }}
             className={cn(
               'p-3 sm:p-4 hover:bg-gray-50 cursor-pointer transition-all duration-150 flex items-start gap-3 group',
-              selectedConversationId === conversation.id && 'bg-white shadow-sm border-l-4 border-orange-500',
+              selectedConversationId === conversation.id &&
+                'bg-white shadow-sm border-l-4 border-orange-500',
               selectionMode && 'pr-3'
             )}
           >
@@ -315,9 +354,9 @@ export default function ConversationList({
               <input
                 type="checkbox"
                 checked={selectedIds?.has(conversation.id) || false}
-                onChange={(e) => {
+                onChange={e => {
                   e.stopPropagation();
-                  onToggleSelect?.(conversation.id)
+                  onToggleSelect?.(conversation.id);
                 }}
                 className="mt-2"
               />
@@ -352,7 +391,9 @@ export default function ConversationList({
                   <div className="flex items-center gap-2 text-xs text-gray-500">
                     <span>
                       {conversation.last_message_at
-                        ? formatDistanceToNow(new Date(conversation.last_message_at), { addSuffix: true })
+                        ? formatDistanceToNow(new Date(conversation.last_message_at), {
+                            addSuffix: true,
+                          })
                         : 'No messages'}
                     </span>
                     <span className="w-1 h-1 rounded-full bg-gray-300" />
@@ -368,7 +409,10 @@ export default function ConversationList({
                     type="button"
                     aria-label="Delete conversation"
                     className="p-1 rounded-md text-gray-400 hover:text-red-600 hover:bg-red-50 self-start"
-                    onClick={(e) => { e.stopPropagation(); handleDeleteOne(conversation.id) }}
+                    onClick={e => {
+                      e.stopPropagation();
+                      handleDeleteOne(conversation.id);
+                    }}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

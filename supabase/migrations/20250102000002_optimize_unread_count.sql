@@ -60,3 +60,4 @@ $$;
 COMMENT ON FUNCTION get_unread_counts(uuid) IS 'Returns unread message count per conversation for a user. Optimized single-query approach.';
 COMMENT ON FUNCTION get_total_unread_count(uuid) IS 'Returns total unread message count across all conversations for a user.';
 
+

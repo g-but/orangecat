@@ -29,7 +29,7 @@ const colors = {
   blue: '\x1b[34m',
   magenta: '\x1b[35m',
   cyan: '\x1b[36m',
-  bright: '\x1b[1m'
+  bright: '\x1b[1m',
 };
 
 const results = {
@@ -37,7 +37,7 @@ const results = {
   validated: 0,
   executed: 0,
   errors: 0,
-  warnings: 0
+  warnings: 0,
 };
 
 function log(message, color = 'reset') {
@@ -95,7 +95,7 @@ function generateRollbackScript(migrationPath) {
     '',
     ...rollbackStatements,
     '',
-    `-- Rollback completed: ${migrationName}`
+    `-- Rollback completed: ${migrationName}`,
   ].join('\n');
 
   fs.writeFileSync(rollbackPath, rollbackContent);
@@ -124,7 +124,10 @@ function generateRollbackStatements(migrationContent, migrationName) {
     }
 
     // Indexes
-    else if (line.toUpperCase().startsWith('CREATE INDEX') || line.toUpperCase().startsWith('CREATE UNIQUE INDEX')) {
+    else if (
+      line.toUpperCase().startsWith('CREATE INDEX') ||
+      line.toUpperCase().startsWith('CREATE UNIQUE INDEX')
+    ) {
       const indexMatch = line.match(/CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:\w+\s+)?ON\s+(\w+)/i);
       if (indexMatch) {
         const indexNameMatch = line.match(/CREATE\s+(?:UNIQUE\s+)?INDEX\s+(\w+)/i);
@@ -135,7 +138,10 @@ function generateRollbackStatements(migrationContent, migrationName) {
     }
 
     // Views
-    else if (line.toUpperCase().startsWith('CREATE VIEW') || line.toUpperCase().startsWith('CREATE OR REPLACE VIEW')) {
+    else if (
+      line.toUpperCase().startsWith('CREATE VIEW') ||
+      line.toUpperCase().startsWith('CREATE OR REPLACE VIEW')
+    ) {
       const viewMatch = line.match(/CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+["`]?(\w+)["`]?/i);
       if (viewMatch) {
         statements.push(`DROP VIEW IF EXISTS ${viewMatch[1]};`);
@@ -143,7 +149,10 @@ function generateRollbackStatements(migrationContent, migrationName) {
     }
 
     // Functions
-    else if (line.toUpperCase().startsWith('CREATE FUNCTION') || line.toUpperCase().startsWith('CREATE OR REPLACE FUNCTION')) {
+    else if (
+      line.toUpperCase().startsWith('CREATE FUNCTION') ||
+      line.toUpperCase().startsWith('CREATE OR REPLACE FUNCTION')
+    ) {
       const funcMatch = line.match(/CREATE\s+(?:OR\s+REPLACE\s+)?FUNCTION\s+["`]?(\w+)["`]?/i);
       if (funcMatch) {
         statements.push(`DROP FUNCTION IF EXISTS ${funcMatch[1]};`);
@@ -187,7 +196,9 @@ function generateRollbackStatements(migrationContent, migrationName) {
         else if (alterLine.toUpperCase().includes('ADD CONSTRAINT')) {
           const constraintMatch = alterLine.match(/ADD\s+CONSTRAINT\s+(\w+)/i);
           if (constraintMatch) {
-            statements.push(`ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${constraintMatch[1]};`);
+            statements.push(
+              `ALTER TABLE ${tableName} DROP CONSTRAINT IF EXISTS ${constraintMatch[1]};`
+            );
           }
         }
       }
@@ -196,7 +207,9 @@ function generateRollbackStatements(migrationContent, migrationName) {
     // INSERT statements (data seeding) - these can't be easily rolled back
     else if (line.toUpperCase().startsWith('INSERT INTO')) {
       warning(`Migration contains data seeding (INSERT). Manual rollback required.`);
-      statements.push(`-- MANUAL: Review data inserted into ${line.match(/INSERT\s+INTO\s+(\w+)/i)?.[1] || 'unknown table'}`);
+      statements.push(
+        `-- MANUAL: Review data inserted into ${line.match(/INSERT\s+INTO\s+(\w+)/i)?.[1] || 'unknown table'}`
+      );
     }
   }
 
@@ -243,9 +256,11 @@ function validateRollbackScript(rollbackPath) {
     }
 
     // Unexpected statements in rollback
-    else if (!trimmed.toUpperCase().startsWith('BEGIN') &&
-             !trimmed.toUpperCase().startsWith('COMMIT') &&
-             !trimmed.toUpperCase().startsWith('ROLLBACK')) {
+    else if (
+      !trimmed.toUpperCase().startsWith('BEGIN') &&
+      !trimmed.toUpperCase().startsWith('COMMIT') &&
+      !trimmed.toUpperCase().startsWith('ROLLBACK')
+    ) {
       warning(`Unexpected statement in rollback: ${trimmed.substring(0, 50)}...`);
       issues++;
     }
@@ -291,9 +306,11 @@ function executeSafeRollback(rollbackPath) {
       const stmt = statements[i].trim();
       if (stmt && !stmt.startsWith('--')) {
         // Basic syntax validation
-        if (stmt.toUpperCase().includes('DROP ') ||
-            stmt.toUpperCase().includes('ALTER TABLE') ||
-            stmt.toUpperCase().includes('-- MANUAL')) {
+        if (
+          stmt.toUpperCase().includes('DROP ') ||
+          stmt.toUpperCase().includes('ALTER TABLE') ||
+          stmt.toUpperCase().includes('-- MANUAL')
+        ) {
           info(`✓ Statement ${i + 1}: ${stmt.substring(0, 60)}...`);
         } else {
           warning(`Unexpected statement ${i + 1}: ${stmt.substring(0, 60)}...`);
@@ -304,7 +321,6 @@ function executeSafeRollback(rollbackPath) {
     success('Rollback syntax validation passed');
     results.executed++;
     return true;
-
   } catch (err) {
     error(`Rollback validation failed: ${err.message}`);
     return false;
@@ -588,7 +604,8 @@ async function generateRollbacks() {
   section('Generating Rollback Scripts');
 
   const migrationsDir = path.join(process.cwd(), 'supabase', 'migrations');
-  const migrationFiles = fs.readdirSync(migrationsDir)
+  const migrationFiles = fs
+    .readdirSync(migrationsDir)
     .filter(file => file.endsWith('.sql') && !file.includes('_rollback'))
     .sort();
 
@@ -609,7 +626,8 @@ async function validateRollbacks() {
   section('Validating Rollback Scripts');
 
   const migrationsDir = path.join(process.cwd(), 'supabase', 'migrations');
-  const rollbackFiles = fs.readdirSync(migrationsDir)
+  const rollbackFiles = fs
+    .readdirSync(migrationsDir)
     .filter(file => file.endsWith('_rollback.sql'))
     .sort();
 
@@ -659,8 +677,12 @@ function generateSummary() {
   log(`❌ Errors: ${results.errors}`, 'red');
   log(`⚠️  Warnings: ${results.warnings}`, 'yellow');
 
-  const total = results.generated + results.validated + results.executed + results.errors + results.warnings;
-  const successRate = total > 0 ? (((results.generated + results.validated + results.executed) / total) * 100).toFixed(1) : 0;
+  const total =
+    results.generated + results.validated + results.executed + results.errors + results.warnings;
+  const successRate =
+    total > 0
+      ? (((results.generated + results.validated + results.executed) / total) * 100).toFixed(1)
+      : 0;
 
   log(`📈 Success Rate: ${successRate}%`, results.errors === 0 ? 'green' : 'red');
 
@@ -716,7 +738,7 @@ module.exports = {
   validateRollbackScript,
   executeSafeRollback,
   generateRollbackStatements,
-  generateEmergencyPlan
+  generateEmergencyPlan,
 };
 
 // Run if called directly
@@ -726,39 +748,3 @@ if (require.main === module) {
     process.exit(1);
   });
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

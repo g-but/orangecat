@@ -109,7 +109,7 @@ function RecentActivityCard({ timeline }: RecentActivityCardProps) {
         <p className="text-sm text-gray-600">Your latest interactions</p>
       </div>
       <div className="p-4 md:p-6 space-y-4">
-        {timeline.map((item) => (
+        {timeline.map(item => (
           <div
             key={item.id}
             className="flex items-start gap-3 pb-4 border-b last:border-b-0 last:pb-0"
@@ -150,7 +150,7 @@ function ActiveProjectsCard({ projects }: ActiveProjectsCardProps) {
         <p className="text-sm text-gray-600">Projects you're supporting</p>
       </div>
       <div className="p-4 md:p-6 space-y-4">
-        {projects.map((project) => (
+        {projects.map(project => (
           <div key={project.id} className="pb-4 border-b last:border-b-0 last:pb-0">
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center gap-3">
@@ -192,48 +192,3 @@ function ActiveProjectsCard({ projects }: ActiveProjectsCardProps) {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -10,23 +10,31 @@ const SYNC_PROGRESS = 'message-queue:sync-progress';
 const SYNC_COMPLETE = 'message-queue:sync-complete';
 
 export function messageQueueUpdated(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   window.dispatchEvent(new CustomEvent(UPDATED));
 }
 
 export function messageSyncStart(total: number): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   window.dispatchEvent(new CustomEvent(SYNC_START, { detail: { total, processed: 0 } }));
 }
 
 export function messageSyncProgress(processed: number, total: number): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   const detail: MessageSyncProgressDetail = { processed, total };
   window.dispatchEvent(new CustomEvent(SYNC_PROGRESS, { detail }));
 }
 
 export function messageSyncComplete(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   window.dispatchEvent(new CustomEvent(SYNC_COMPLETE));
 }
 
@@ -36,4 +44,3 @@ export const messageQueueEvents = {
   SYNC_PROGRESS,
   SYNC_COMPLETE,
 };
-

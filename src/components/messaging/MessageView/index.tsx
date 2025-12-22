@@ -65,7 +65,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
   useMessageSubscription(conversationId, {
     enabled: !!conversationId && !!currentUserId,
     onReadReceiptUpdate: refreshReadReceipts,
-    onOwnMessage: async (messageId) => {
+    onOwnMessage: async messageId => {
       // Fetch the confirmed message
       try {
         const { data: newMessage } = await supabase
@@ -87,7 +87,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
         // Realtime will handle it
       }
     },
-    onNewMessage: async (message) => {
+    onNewMessage: async message => {
       console.log('[MessageView] Received new message via real-time:', {
         id: message.id,
         senderId: message.sender_id,
@@ -152,16 +152,22 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
   // Context menu handlers
   const handleMessageLongPress = useCallback(
     (message: Message, position?: { x: number; y: number }) => {
-      setMenuState({ open: true, position: position || { x: window.innerWidth / 2, y: window.innerHeight / 2 }, message });
+      setMenuState({
+        open: true,
+        position: position || { x: window.innerWidth / 2, y: window.innerHeight / 2 },
+        message,
+      });
     },
     []
   );
 
-  const closeMenu = useCallback(() => setMenuState((s) => ({ ...s, open: false })), []);
+  const closeMenu = useCallback(() => setMenuState(s => ({ ...s, open: false })), []);
 
   const handleEdit = useCallback(async () => {
     const msg = menuState.message;
-    if (!msg) return;
+    if (!msg) {
+      return;
+    }
     const existing = msg.content || '';
     // Simple prompt-based edit for now
     const updated = window.prompt('Edit message:', existing);
@@ -176,7 +182,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
         body: JSON.stringify({ content: updated.trim() }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({} as any));
+        const data = await res.json().catch(() => ({}) as any);
         toast.error(data.error || 'Failed to edit message');
       } else {
         // Fetch updated message and apply
@@ -198,7 +204,9 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
 
   const handleDelete = useCallback(async () => {
     const msg = menuState.message;
-    if (!msg) return;
+    if (!msg) {
+      return;
+    }
     try {
       const res = await fetch('/api/messages/bulk-delete', {
         method: 'POST',
@@ -207,7 +215,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
         body: JSON.stringify({ conversationId, ids: [msg.id] }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({} as any));
+        const data = await res.json().catch(() => ({}) as any);
         toast.error(data.error || 'Failed to delete message');
       } else {
         removeMessage(msg.id);
@@ -237,15 +245,15 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
             {error === 'forbidden'
               ? 'Access Denied'
               : error === 'not_found'
-              ? 'Conversation Not Found'
-              : 'Error Loading Messages'}
+                ? 'Conversation Not Found'
+                : 'Error Loading Messages'}
           </h3>
           <p className="text-gray-600 mb-4">
             {error === 'forbidden'
               ? "You don't have access to this conversation"
               : error === 'not_found'
-              ? 'This conversation may have been deleted'
-              : 'Please try again'}
+                ? 'This conversation may have been deleted'
+                : 'Please try again'}
           </p>
           <Button onClick={() => onBack(error)}>Go Back</Button>
         </div>
@@ -306,8 +314,16 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
         onClose={closeMenu}
         onEdit={handleEdit}
         onDelete={handleDelete}
-        canEdit={!!menuState.message && menuState.message.sender_id === currentUserId && !menuState.message.is_deleted}
-        canDelete={!!menuState.message && menuState.message.sender_id === currentUserId && !menuState.message.is_deleted}
+        canEdit={
+          !!menuState.message &&
+          menuState.message.sender_id === currentUserId &&
+          !menuState.message.is_deleted
+        }
+        canDelete={
+          !!menuState.message &&
+          menuState.message.sender_id === currentUserId &&
+          !menuState.message.is_deleted
+        }
       />
     </div>
   );

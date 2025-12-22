@@ -35,7 +35,9 @@ export function ThreadContext({
 
   // Load thread posts
   const loadThread = useCallback(async () => {
-    if (!threadId) return;
+    if (!threadId) {
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -69,39 +71,42 @@ export function ThreadContext({
   }, [loadThread]);
 
   // Handle navigation
-  const navigateToPost = useCallback((direction: 'prev' | 'next') => {
-    const newIndex = direction === 'prev'
-      ? Math.max(0, currentIndex - 1)
-      : Math.min(threadPosts.length - 1, currentIndex + 1);
+  const navigateToPost = useCallback(
+    (direction: 'prev' | 'next') => {
+      const newIndex =
+        direction === 'prev'
+          ? Math.max(0, currentIndex - 1)
+          : Math.min(threadPosts.length - 1, currentIndex + 1);
 
-    if (newIndex !== currentIndex) {
-      setCurrentIndex(newIndex);
-      const post = threadPosts[newIndex];
-      if (post) {
-        onNavigate?.(post.id);
+      if (newIndex !== currentIndex) {
+        setCurrentIndex(newIndex);
+        const post = threadPosts[newIndex];
+        if (post) {
+          onNavigate?.(post.id);
+        }
       }
-    }
-  }, [currentIndex, threadPosts, onNavigate]);
+    },
+    [currentIndex, threadPosts, onNavigate]
+  );
 
   // Handle post updates
   const handlePostUpdate = useCallback((postId: string, updates: Partial<TimelineDisplayEvent>) => {
-    setThreadPosts(prev =>
-      prev.map(post =>
-        post.id === postId ? { ...post, ...updates } : post
-      )
-    );
+    setThreadPosts(prev => prev.map(post => (post.id === postId ? { ...post, ...updates } : post)));
   }, []);
 
   // Handle new replies
-  const handleReplyCreated = useCallback((reply: TimelineDisplayEvent) => {
-    if (reply.threadId === threadId) {
-      setThreadPosts(prev => [...prev, reply]);
-    }
-  }, [threadId]);
+  const handleReplyCreated = useCallback(
+    (reply: TimelineDisplayEvent) => {
+      if (reply.threadId === threadId) {
+        setThreadPosts(prev => [...prev, reply]);
+      }
+    },
+    [threadId]
+  );
 
   if (loading) {
     return (
-      <div className={cn("flex items-center justify-center py-8", className)}>
+      <div className={cn('flex items-center justify-center py-8', className)}>
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
@@ -109,14 +114,9 @@ export function ThreadContext({
 
   if (error) {
     return (
-      <div className={cn("text-center py-8 text-red-600", className)}>
+      <div className={cn('text-center py-8 text-red-600', className)}>
         <p>{error}</p>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={loadThread}
-          className="mt-2"
-        >
+        <Button variant="outline" size="sm" onClick={loadThread} className="mt-2">
           Try Again
         </Button>
       </div>
@@ -125,7 +125,7 @@ export function ThreadContext({
 
   if (!threadPosts.length) {
     return (
-      <div className={cn("text-center py-8 text-gray-500", className)}>
+      <div className={cn('text-center py-8 text-gray-500', className)}>
         <MessageCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
         <p>No posts in this thread.</p>
       </div>
@@ -133,12 +133,10 @@ export function ThreadContext({
   }
 
   const currentPost = threadPosts[currentIndex];
-  const threadParticipants = Array.from(
-    new Set(threadPosts.map(post => post.actor.id))
-  ).length;
+  const threadParticipants = Array.from(new Set(threadPosts.map(post => post.actor.id))).length;
 
   return (
-    <div className={cn("bg-white border border-gray-200 rounded-lg", className)}>
+    <div className={cn('bg-white border border-gray-200 rounded-lg', className)}>
       {/* Thread Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-100">
         <div className="flex items-center gap-3">
@@ -185,12 +183,7 @@ export function ThreadContext({
           </Button>
 
           {onClose && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="ml-2"
-            >
+            <Button variant="ghost" size="sm" onClick={onClose} className="ml-2">
               Close
             </Button>
           )}
@@ -236,10 +229,12 @@ export function ThreadIndicator({
   onShowThread,
   className,
 }: ThreadIndicatorProps) {
-  if (!threadId || replyCount === 0) return null;
+  if (!threadId || replyCount === 0) {
+    return null;
+  }
 
   return (
-    <div className={cn("flex items-center gap-1 text-xs text-gray-500", className)}>
+    <div className={cn('flex items-center gap-1 text-xs text-gray-500', className)}>
       <MessageCircle className="w-3 h-3" />
       <span>Part of thread ({replyCount} replies)</span>
       {onShowThread && (
@@ -255,20 +250,3 @@ export function ThreadIndicator({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

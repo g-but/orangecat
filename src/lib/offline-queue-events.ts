@@ -9,7 +9,9 @@ const SYNC_PROGRESS = 'offline-queue:sync-progress';
 const SYNC_COMPLETE = 'offline-queue:sync-complete';
 
 export function queueUpdated(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   // New namespaced event
   window.dispatchEvent(new CustomEvent(UPDATED));
   // Back-compat for any legacy listeners
@@ -17,18 +19,24 @@ export function queueUpdated(): void {
 }
 
 export function syncStart(total: number): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   window.dispatchEvent(new CustomEvent(SYNC_START, { detail: { total, processed: 0 } }));
 }
 
 export function syncProgress(processed: number, total: number): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   const detail: SyncProgressDetail = { processed, total };
   window.dispatchEvent(new CustomEvent(SYNC_PROGRESS, { detail }));
 }
 
 export function syncComplete(): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {
+    return;
+  }
   window.dispatchEvent(new CustomEvent(SYNC_COMPLETE));
 }
 
@@ -38,4 +46,3 @@ export const offlineQueueEvents = {
   SYNC_PROGRESS,
   SYNC_COMPLETE,
 };
-

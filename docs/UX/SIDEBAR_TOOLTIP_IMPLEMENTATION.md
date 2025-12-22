@@ -11,12 +11,14 @@ This document describes the implementation of an Instagram-style tooltip pattern
 ## Problem Statement
 
 ### Previous Implementation (Layout-Shifting)
+
 - **Sidebar expanded on hover**: Changed from `w-16` (64px) to `w-64` (256px)
 - **Content pushed**: Main content area shifted right when sidebar expanded
 - **Disruptive UX**: Visual jumps and layout reflows on hover
 - **Not smooth**: Users experienced jarring movements
 
 ### Desired Behavior (Instagram-Style)
+
 - **Fixed sidebar width**: Stays at `w-16` (64px) when collapsed
 - **Tooltip overlay**: Text labels appear as tooltips on hover
 - **No layout shift**: Tooltips overlay content, nothing moves
@@ -81,14 +83,15 @@ const [isHovered, setIsHovered] = useState(false);
 ```typescript
 // Sidebar.tsx
 // Fixed width - only expands when manually opened
-const sidebarWidth = navigationState.isSidebarOpen 
-  ? SIDEBAR_WIDTHS.EXPANDED  // w-64
+const sidebarWidth = navigationState.isSidebarOpen
+  ? SIDEBAR_WIDTHS.EXPANDED // w-64
   : SIDEBAR_WIDTHS.COLLAPSED; // w-16 (fixed, never expands on hover)
 ```
 
 ## User Experience
 
 ### Before
+
 1. User hovers over icon
 2. Sidebar expands from 64px to 256px
 3. Main content shifts right
@@ -98,6 +101,7 @@ const sidebarWidth = navigationState.isSidebarOpen
 7. **Result**: Jarring, disruptive experience
 
 ### After
+
 1. User hovers over icon
 2. Tooltip appears instantly (overlay)
 3. Nothing moves or shifts
@@ -145,19 +149,3 @@ const sidebarWidth = navigationState.isSidebarOpen
 - `src/hooks/useSidebarHover.ts` (deprecated for hover expansion)
 - `src/constants/sidebar.ts`
 - `src/app/globals.css`
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

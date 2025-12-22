@@ -28,7 +28,7 @@ export function PostActions({
   onAddEvent,
   onToggleComments,
   onRepostClick,
-  isReposting = false
+  isReposting = false,
 }: PostActionsProps) {
   // Delegate all interaction logic to the hook
   const {
@@ -76,9 +76,7 @@ export function PostActions({
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           <Repeat2 className={`w-5 h-5 ${event.userReposted ? 'fill-current' : ''}`} />
-          <span className="text-sm">
-            {(event.repostsCount || 0) > 0 ? event.repostsCount : ''}
-          </span>
+          <span className="text-sm">{(event.repostsCount || 0) > 0 ? event.repostsCount : ''}</span>
         </button>
 
         {/* Like */}
@@ -92,9 +90,7 @@ export function PostActions({
           } disabled:opacity-50 disabled:cursor-not-allowed`}
         >
           <Heart className={`w-5 h-5 ${event.userLiked ? 'fill-current' : ''}`} />
-          <span className="text-sm">
-            {(event.likesCount || 0) > 0 ? event.likesCount : ''}
-          </span>
+          <span className="text-sm">{(event.likesCount || 0) > 0 ? event.likesCount : ''}</span>
         </button>
 
         {/* Dislike */}
@@ -139,31 +135,3 @@ export function PostActions({
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -40,9 +40,9 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
     icon: React.createElement(Heart, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Cause Title',
     description:
-      'Your cause title should inspire action. Make it clear what you\'re raising funds for.',
+      "Your cause title should inspire action. Make it clear what you're raising funds for.",
     tips: [
-      'Be specific about what you\'re funding',
+      "Be specific about what you're funding",
       'Create emotional connection',
       'Include location or beneficiary if relevant',
       'Keep it under 60 characters',
@@ -50,7 +50,7 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
     ],
     examples: [
       'Help Build a School in Guatemala',
-      'Medical Treatment for Maria\'s Recovery',
+      "Medical Treatment for Maria's Recovery",
       'Clean Water Project - Kenya Village',
       'Support Local Animal Shelter Renovation',
     ],
@@ -61,7 +61,7 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
     description:
       'Tell the story behind your cause. Help donors understand the impact of their contribution.',
     tips: [
-      'Explain the problem you\'re addressing',
+      "Explain the problem you're addressing",
       'Share who will benefit and how',
       'Be transparent about fund usage',
       'Include timeline and milestones',
@@ -94,8 +94,7 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
   goal_sats: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Fundraising Goal',
-    description:
-      'Set a realistic fundraising goal. Leave empty for open-ended fundraising.',
+    description: 'Set a realistic fundraising goal. Leave empty for open-ended fundraising.',
     tips: [
       'Calculate actual costs needed',
       'Include all expenses and buffer',
@@ -112,19 +111,14 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
   currency: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Display Currency',
-    description:
-      'Choose how to display your goal. All donations are received in Bitcoin.',
+    description: 'Choose how to display your goal. All donations are received in Bitcoin.',
     tips: [
       'SATS is the Bitcoin standard',
       'Fiat display helps donors understand value',
       'Goal can be shown in any currency',
       'Actual donations always in Bitcoin',
     ],
-    examples: [
-      '10,000,000 SATS',
-      '0.1 BTC',
-      '$10,000 equivalent in BTC',
-    ],
+    examples: ['10,000,000 SATS', '0.1 BTC', '$10,000 equivalent in BTC'],
   },
   bitcoin_address: {
     icon: React.createElement(Bitcoin, { className: 'w-5 h-5 text-rose-600' }),
@@ -147,8 +141,7 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
   lightning_address: {
     icon: React.createElement(Zap, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Lightning Address',
-    description:
-      'Lightning address for instant, low-fee donations. Great for smaller amounts.',
+    description: 'Lightning address for instant, low-fee donations. Great for smaller amounts.',
     tips: [
       'Looks like an email: you@wallet.com',
       'Instant settlement, near-zero fees',
@@ -156,17 +149,12 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
       'Get one from Alby, Wallet of Satoshi, etc.',
       'Combines well with on-chain address',
     ],
-    examples: [
-      'yourcause@getalby.com',
-      'donations@walletofsatoshi.com',
-      'yourname@ln.tips',
-    ],
+    examples: ['yourcause@getalby.com', 'donations@walletofsatoshi.com', 'yourname@ln.tips'],
   },
   beneficiaries: {
     icon: React.createElement(Users, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Beneficiaries',
-    description:
-      'Who will benefit from this fundraiser? Be transparent about where funds go.',
+    description: 'Who will benefit from this fundraiser? Be transparent about where funds go.',
     tips: [
       'Name specific individuals or organizations',
       'Explain their connection to the cause',
@@ -201,40 +189,3 @@ export const causeDefaultGuidance: DefaultGuidance = {
   ],
   hint: '💡 Click on any field to get specific guidance',
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -29,11 +29,11 @@ interface RateCache {
 const cache: RateCache = {
   rates: {
     // Default rates (will be updated from API)
-    'BTC_USD': 97000,
-    'BTC_EUR': 91000,
-    'BTC_CHF': 86000,
-    'BTC_GBP': 78000,
-    'BTC_SATS': 100000000, // Fixed: 1 BTC = 100M sats
+    BTC_USD: 97000,
+    BTC_EUR: 91000,
+    BTC_CHF: 86000,
+    BTC_GBP: 78000,
+    BTC_SATS: 100000000, // Fixed: 1 BTC = 100M sats
   },
   lastUpdated: null,
   expiresAt: null,
@@ -102,11 +102,7 @@ export function convertToSats(amount: number, fromCurrency: Currency): number {
 /**
  * Convert between any two currencies (via sats)
  */
-export function convert(
-  amount: number,
-  fromCurrency: Currency,
-  toCurrency: Currency
-): number {
+export function convert(amount: number, fromCurrency: Currency, toCurrency: Currency): number {
   if (fromCurrency === toCurrency) {
     return amount;
   }
@@ -132,9 +128,10 @@ export function formatCurrency(
   const info = CURRENCY_INFO[currency];
 
   if (currency === 'SATS') {
-    const formatted = compact && amount >= 1000000
-      ? `${(amount / 1000000).toFixed(1)}M`
-      : amount.toLocaleString(locale, { maximumFractionDigits: 0 });
+    const formatted =
+      compact && amount >= 1000000
+        ? `${(amount / 1000000).toFixed(1)}M`
+        : amount.toLocaleString(locale, { maximumFractionDigits: 0 });
     return showSymbol ? `${formatted} sats` : formatted;
   }
 
@@ -202,10 +199,13 @@ export function getCurrencyBreakdown(sats: number): CurrencyBreakdown {
   return {
     sats,
     btc: satsToBtc(sats),
-    fiat: FIAT_CURRENCIES.reduce((acc, currency) => {
-      acc[currency] = satsToFiat(sats, currency);
-      return acc;
-    }, {} as Record<FiatCurrency, number>),
+    fiat: FIAT_CURRENCIES.reduce(
+      (acc, currency) => {
+        acc[currency] = satsToFiat(sats, currency);
+        return acc;
+      },
+      {} as Record<FiatCurrency, number>
+    ),
   };
 }
 
@@ -224,35 +224,37 @@ export function updateRates(rates: Record<string, number>): void {
  * Get current rate for a currency pair
  */
 export function getRate(from: Currency, to: Currency): number {
-  if (from === to) return 1;
-  
+  if (from === to) {
+    return 1;
+  }
+
   const key = `${from}_${to}`;
   if (cache.rates[key]) {
     return cache.rates[key];
   }
-  
+
   // Try reverse rate
   const reverseKey = `${to}_${from}`;
   if (cache.rates[reverseKey]) {
     return 1 / cache.rates[reverseKey];
   }
-  
+
   // Go through BTC
   const toBtcKey = `BTC_${from}`;
   const fromBtcKey = `BTC_${to}`;
-  
+
   if (from === 'BTC' && cache.rates[fromBtcKey]) {
     return cache.rates[fromBtcKey];
   }
   if (to === 'BTC' && cache.rates[toBtcKey]) {
     return 1 / cache.rates[toBtcKey];
   }
-  
+
   // Convert via BTC
   if (cache.rates[toBtcKey] && cache.rates[fromBtcKey]) {
     return cache.rates[fromBtcKey] / cache.rates[toBtcKey];
   }
-  
+
   return 0;
 }
 
@@ -277,7 +279,9 @@ export async function fetchRates(): Promise<void> {
  * Check if rates are stale and need refresh
  */
 export function ratesNeedRefresh(): boolean {
-  if (!cache.expiresAt) return true;
+  if (!cache.expiresAt) {
+    return true;
+  }
   return new Date() > cache.expiresAt;
 }
 
@@ -287,15 +291,18 @@ export function ratesNeedRefresh(): boolean {
  * Parse user input to number, handling locale-specific formatting
  */
 export function parseAmount(input: string, locale: string = 'en-US'): number | null {
-  if (!input || input.trim() === '') return null;
-  
+  if (!input || input.trim() === '') {
+    return null;
+  }
+
   // Remove currency symbols and whitespace
   let cleaned = input.replace(/[^0-9.,\-]/g, '').trim();
-  
+
   // Handle European format (1.234,56) vs US format (1,234.56)
-  const hasCommaDecimal = cleaned.includes(',') && 
+  const hasCommaDecimal =
+    cleaned.includes(',') &&
     (cleaned.indexOf(',') > cleaned.lastIndexOf('.') || !cleaned.includes('.'));
-  
+
   if (hasCommaDecimal) {
     // European format: swap comma and period
     cleaned = cleaned.replace(/\./g, '').replace(',', '.');
@@ -303,7 +310,7 @@ export function parseAmount(input: string, locale: string = 'en-US'): number | n
     // US format: remove thousands separators
     cleaned = cleaned.replace(/,/g, '');
   }
-  
+
   const parsed = parseFloat(cleaned);
   return isNaN(parsed) ? null : parsed;
 }
@@ -318,7 +325,7 @@ export function validateAmount(
   if (amount < 0) {
     return { valid: false, error: 'Amount cannot be negative' };
   }
-  
+
   if (currency === 'SATS') {
     if (!Number.isInteger(amount)) {
       return { valid: false, error: 'Satoshis must be a whole number' };
@@ -327,13 +334,13 @@ export function validateAmount(
       return { valid: false, error: 'Amount exceeds maximum Bitcoin supply' };
     }
   }
-  
+
   if (currency === 'BTC') {
     if (amount > 21_000_000) {
       return { valid: false, error: 'Amount exceeds maximum Bitcoin supply' };
     }
   }
-  
+
   return { valid: true };
 }
 
@@ -358,40 +365,3 @@ export const currencyService = {
 };
 
 export default currencyService;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

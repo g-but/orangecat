@@ -47,7 +47,9 @@ async function createTables() {
     console.log('');
     console.log('🔗 Please apply the migration manually:');
     console.log('   1. Go to: https://supabase.com/dashboard/project/ohkueislstxomdjavyhs/sql/new');
-    console.log('   2. Copy the entire SQL from: supabase/migrations/20251202_create_personal_economy_tables.sql');
+    console.log(
+      '   2. Copy the entire SQL from: supabase/migrations/20251202_create_personal_economy_tables.sql'
+    );
     console.log('   3. Paste and click Run');
     console.log('');
     console.log('✅ This will create:');
@@ -79,7 +81,6 @@ async function createTables() {
     console.log('   1. Apply migration via Supabase Dashboard');
     console.log('   2. Run: node test-personal-economy.js');
     console.log('   3. Test the features at http://localhost:3000/dashboard');
-
   } catch (error) {
     console.error('❌ Error:', error.message);
     process.exit(1);
@@ -87,48 +88,3 @@ async function createTables() {
 }
 
 createTables();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

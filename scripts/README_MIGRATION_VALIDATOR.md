@@ -7,11 +7,13 @@ This script validates Supabase migration files for common syntax errors and best
 ## 🚀 Quick Start
 
 ### Validate All Migrations
+
 ```bash
 node scripts/validate-migration-sql.js
 ```
 
 ### Validate Specific Migration
+
 ```bash
 node scripts/validate-migration-sql.js supabase/migrations/20251113000001_timeline_social_features.sql
 ```
@@ -19,12 +21,14 @@ node scripts/validate-migration-sql.js supabase/migrations/20251113000001_timeli
 ## ✅ What It Checks
 
 ### Critical Errors (Must Fix)
+
 - **CREATE INDEX expressions** - Ensures CASE expressions are properly parenthesized
 - **Function parameter order** - Required parameters must come before optional ones
 - **SQL injection risks** - Warns about unsafe dynamic queries
 - **Obvious typos** - Common SQL keyword misspellings
 
 ### Warnings (Should Review)
+
 - **Unquoted identifiers** - Potentially problematic table/column names
 - **RLS policy issues** - Missing USING clauses or auth.uid() checks
 - **Statement structure** - Missing semicolons or malformed statements
@@ -32,6 +36,7 @@ node scripts/validate-migration-sql.js supabase/migrations/20251113000001_timeli
 ## 🎯 Key Validations
 
 ### CREATE INDEX Expressions
+
 ```sql
 -- ❌ WRONG (will fail):
 CREATE INDEX idx_test ON table_name(
@@ -47,6 +52,7 @@ CREATE INDEX idx_test ON table_name(
 ```
 
 ### Function Parameters
+
 ```sql
 -- ❌ WRONG (will fail):
 CREATE FUNCTION my_func(
@@ -62,6 +68,7 @@ CREATE FUNCTION my_func(
 ```
 
 ### RLS Policies
+
 ```sql
 -- ⚠️ WARNING: Missing auth.uid() NULL check
 CREATE POLICY "Users can view own data" ON my_table
@@ -96,6 +103,7 @@ Migrations are ready for deployment.
 ## 🔧 Integration
 
 ### Pre-commit Hook
+
 Add to your `.pre-commit` or CI pipeline:
 
 ```bash
@@ -111,6 +119,7 @@ fi
 ```
 
 ### CI/CD Pipeline
+
 ```yaml
 # .github/workflows/migration-validation.yml
 name: Migration Validation
@@ -131,12 +140,14 @@ jobs:
 ## 🎯 Best Practices
 
 ### Before Writing Migrations
+
 1. **Run validator** on your migration file before testing
 2. **Fix all critical errors** before attempting execution
 3. **Review warnings** and fix where appropriate
 4. **Test locally** with `supabase db reset && supabase db push`
 
 ### Common Issues Caught
+
 - Missing parentheses in CREATE INDEX expressions
 - Wrong parameter order in function definitions
 - Unquoted identifiers that conflict with SQL keywords
@@ -150,10 +161,12 @@ jobs:
 ## 🚨 When Validation Fails
 
 **Critical Errors (❌):**
+
 - Must be fixed before deployment
 - Will cause migration failures in production
 
 **Warnings (⚠️):**
+
 - Should be reviewed and fixed where possible
 - May cause issues in edge cases
 
@@ -169,39 +182,3 @@ This validator has prevented multiple production incidents by catching:
 ---
 
 **Remember:** Better to fail fast in development than crash in production! 🚀
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

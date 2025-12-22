@@ -39,7 +39,10 @@ function MessageStatusIcon({ message }: { message: Message }) {
   // Check status field first, then fallback to is_read/is_delivered flags
   const status = message.status;
   const isRead = status === MESSAGE_STATUS.READ || message.is_read === true;
-  const isDelivered = status === MESSAGE_STATUS.DELIVERED || message.is_delivered === true || status === MESSAGE_STATUS.SENT;
+  const isDelivered =
+    status === MESSAGE_STATUS.DELIVERED ||
+    message.is_delivered === true ||
+    status === MESSAGE_STATUS.SENT;
 
   // Failed messages
   if (status === MESSAGE_STATUS.FAILED) {
@@ -80,12 +83,17 @@ export default function MessageItem({
   const isOptimistic = isOptimisticMessage(message);
   const timerRef = useRef<number | null>(null);
 
-  const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
-    if (!onLongPress) return;
-    const touch = e.touches[0];
-    const pos = { x: touch.clientX, y: touch.clientY };
-    timerRef.current = window.setTimeout(() => onLongPress(message, pos), TIMING.LONG_PRESS_MS);
-  }, [onLongPress, message]);
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (!onLongPress) {
+        return;
+      }
+      const touch = e.touches[0];
+      const pos = { x: touch.clientX, y: touch.clientY };
+      timerRef.current = window.setTimeout(() => onLongPress(message, pos), TIMING.LONG_PRESS_MS);
+    },
+    [onLongPress, message]
+  );
 
   const clearLongPress = useCallback(() => {
     if (timerRef.current) {
@@ -109,7 +117,7 @@ export default function MessageItem({
       <div className={cn('flex', isCurrentUser ? 'justify-end' : 'justify-start')}>
         <div
           className={cn('max-w-[70%]', isOptimistic && 'opacity-70')}
-          onContextMenu={(e) => {
+          onContextMenu={e => {
             if (onLongPress) {
               e.preventDefault();
               onLongPress(message, { x: e.clientX, y: e.clientY });
@@ -145,9 +153,7 @@ export default function MessageItem({
             )}
 
             {/* Edited indicator */}
-            {message.edited_at && (
-              <span className="text-gray-400 italic">edited</span>
-            )}
+            {message.edited_at && <span className="text-gray-400 italic">edited</span>}
           </div>
         </div>
       </div>

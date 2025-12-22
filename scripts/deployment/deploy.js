@@ -36,7 +36,7 @@ const colors = {
   error: chalk.bold.red,
   warning: chalk.bold.yellow,
   info: chalk.cyan,
-  dim: chalk.dim
+  dim: chalk.dim,
 };
 
 /**
@@ -44,7 +44,8 @@ const colors = {
  */
 function showBanner() {
   console.clear();
-  console.log(colors.title(`
+  console.log(
+    colors.title(`
 ╔══════════════════════════════════════════════════════════════╗
 ║                    🚀 ORANGECAT DEPLOYER                    ║
 ║              Automated Production Deployment                 ║
@@ -52,7 +53,8 @@ function showBanner() {
 ║  This is the ONLY way to deploy OrangeCat to production.    ║
 ║                                                              ║
 ╚══════════════════════════════════════════════════════════════╝
-  `));
+  `)
+  );
 }
 
 /**
@@ -65,7 +67,7 @@ function execCommand(command, description, options = {}) {
     const result = execSync(command, {
       stdio: options.silent ? 'pipe' : 'inherit',
       encoding: 'utf8',
-      ...options
+      ...options,
     });
 
     console.log(colors.success(`✅ ${description} complete`));
@@ -138,7 +140,10 @@ async function triggerGitHubWorkflow() {
   console.log(colors.info('\n🚀 PHASE 3: Triggering GitHub Actions\n'));
 
   // Use the existing one-button-deploy script
-  execCommand('node scripts/deployment/one-button-deploy.js production --force', 'Triggering production deployment');
+  execCommand(
+    'node scripts/deployment/one-button-deploy.js production --force',
+    'Triggering production deployment'
+  );
 
   console.log(colors.success('✅ GitHub Actions triggered'));
 }
@@ -167,9 +172,12 @@ async function monitorDeployment() {
   while (attempts < maxAttempts) {
     try {
       // Check if workflow is running/completed
-      const workflowStatus = execSync('gh run list --workflow=one-button-deploy.yml --limit=1 --json=status,conclusion', {
-        encoding: 'utf8'
-      });
+      const workflowStatus = execSync(
+        'gh run list --workflow=one-button-deploy.yml --limit=1 --json=status,conclusion',
+        {
+          encoding: 'utf8',
+        }
+      );
 
       const status = JSON.parse(workflowStatus)[0];
 
@@ -181,7 +189,9 @@ async function monitorDeployment() {
           throw new Error(`GitHub Actions failed with conclusion: ${status.conclusion}`);
         }
       } else if (status.status === 'in_progress') {
-        console.log(colors.info(`⏳ GitHub Actions in progress... (${attempts + 1}/${maxAttempts})`));
+        console.log(
+          colors.info(`⏳ GitHub Actions in progress... (${attempts + 1}/${maxAttempts})`)
+        );
       }
 
       await new Promise(resolve => setTimeout(resolve, 10000)); // 10 seconds
@@ -220,7 +230,8 @@ async function verifyWithBrowser() {
 function showDeploymentSummary(startTime) {
   const duration = Math.round((Date.now() - startTime) / 1000 / 60); // minutes
 
-  console.log(colors.success(`
+  console.log(
+    colors.success(`
 
 ╔══════════════════════════════════════════════════════════════╗
 ║                    🎉 DEPLOYMENT SUCCESS                    ║
@@ -255,7 +266,8 @@ Production Site: ${CONFIG.productionUrl}
 Need help? Check docs/deployment/DEPLOYMENT_PROCESS.md
 ══════════════════════════════════════════════════════════════
 
-  `));
+  `)
+  );
 }
 
 /**
@@ -264,7 +276,8 @@ Need help? Check docs/deployment/DEPLOYMENT_PROCESS.md
 function handleFailure(error, startTime) {
   const duration = Math.round((Date.now() - startTime) / 1000 / 60);
 
-  console.log(colors.error(`
+  console.log(
+    colors.error(`
 
 ╔══════════════════════════════════════════════════════════════╗
 ║                    🚨 DEPLOYMENT FAILED                     ║
@@ -298,7 +311,8 @@ Production Site: ${CONFIG.productionUrl}
 
 ══════════════════════════════════════════════════════════════
 
-  `));
+  `)
+  );
 
   process.exit(1);
 }
@@ -312,16 +326,18 @@ async function main() {
   try {
     showBanner();
 
-    console.log(colors.warning(`
+    console.log(
+      colors.warning(`
 ⚠️  PRODUCTION DEPLOYMENT WARNING
 This will deploy to the live production environment.
 The process will take ~10-15 minutes and is fully automated.
 
 Press Ctrl+C to cancel, or Enter to continue...
-    `));
+    `)
+    );
 
     // Wait for user confirmation
-    await new Promise((resolve) => {
+    await new Promise(resolve => {
       process.stdin.once('data', resolve);
     });
 
@@ -342,7 +358,6 @@ Press Ctrl+C to cancel, or Enter to continue...
 
     // Success!
     showDeploymentSummary(startTime);
-
   } catch (error) {
     handleFailure(error, startTime);
   }
@@ -354,7 +369,7 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-process.on('unhandledRejection', (error) => {
+process.on('unhandledRejection', error => {
   console.log(colors.error(`\n❌ Unhandled error: ${error.message}`));
   process.exit(1);
 });
@@ -363,24 +378,3 @@ process.on('unhandledRejection', (error) => {
 if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

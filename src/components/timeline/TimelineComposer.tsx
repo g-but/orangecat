@@ -7,7 +7,12 @@ import { Globe, Lock, FolderPlus, X, Bold, Italic, Wifi, WifiOff, Users } from '
 import { usePostComposer } from '@/hooks/usePostComposerNew';
 import AvatarLink from '@/components/ui/AvatarLink';
 import { cn } from '@/lib/utils';
-import { markdownToHtml, htmlToMarkdown, getSelectionRange, setSelectionRange } from '@/utils/markdownEditor';
+import {
+  markdownToHtml,
+  htmlToMarkdown,
+  getSelectionRange,
+  setSelectionRange,
+} from '@/utils/markdownEditor';
 
 /**
  * TimelineComposer Component - X-Inspired Minimal Design
@@ -47,7 +52,7 @@ export interface TimelineComposerProps {
 
 /**
  * Text Formatting Toolbar Component
- * 
+ *
  * Modular component for applying markdown-style formatting (bold/italic)
  * Uses markdown syntax: **bold** and *italic*
  */
@@ -78,7 +83,7 @@ function TextFormatToolbar({ onFormat }: { onFormat: (format: 'bold' | 'italic')
 
 /**
  * Project Selection Panel Component
- * 
+ *
  * Collapsible panel for selecting projects to cross-post
  * Uses progressive disclosure - hidden by default
  */
@@ -95,7 +100,9 @@ function ProjectSelectionPanel({
   onClose: () => void;
   isPosting: boolean;
 }) {
-  if (projects.length === 0) return null;
+  if (projects.length === 0) {
+    return null;
+  }
 
   return (
     <div className="mt-3 p-3 bg-orange-50/50 rounded-xl border border-orange-100">
@@ -141,7 +148,7 @@ function ProjectSelectionPanel({
 
 /**
  * Context Indicator Component
- * 
+ *
  * Subtle indicator showing where the post will appear
  * Replaces the large banner with minimal design
  */
@@ -154,7 +161,6 @@ function ContextIndicator({ targetName }: { targetName: string }) {
     </div>
   );
 }
-
 
 const TimelineComposer = React.memo(function TimelineComposer({
   targetOwnerId,
@@ -269,44 +275,51 @@ const TimelineComposer = React.memo(function TimelineComposer({
   }, [postComposer.content, isComposing]);
 
   // Formatting handler - uses document.execCommand for contentEditable
-  const handleFormat = useCallback((format: 'bold' | 'italic') => {
-    if (!editorRef.current) return;
-
-    // Focus editor if not already focused
-    editorRef.current.focus();
-
-    // Use document.execCommand for formatting (works with contentEditable)
-    // Note: execCommand is deprecated but still widely supported
-    const command = format === 'bold' ? 'bold' : 'italic';
-    document.execCommand(command, false);
-    
-    // Sync back to markdown after a brief delay to let browser update
-    setTimeout(() => {
-      if (editorRef.current) {
-        const html = editorRef.current.innerHTML;
-        const markdown = htmlToMarkdown(html);
-        postComposer.setContent(markdown);
+  const handleFormat = useCallback(
+    (format: 'bold' | 'italic') => {
+      if (!editorRef.current) {
+        return;
       }
-    }, 0);
-  }, [postComposer]);
+
+      // Focus editor if not already focused
+      editorRef.current.focus();
+
+      // Use document.execCommand for formatting (works with contentEditable)
+      // Note: execCommand is deprecated but still widely supported
+      const command = format === 'bold' ? 'bold' : 'italic';
+      document.execCommand(command, false);
+
+      // Sync back to markdown after a brief delay to let browser update
+      setTimeout(() => {
+        if (editorRef.current) {
+          const html = editorRef.current.innerHTML;
+          const markdown = htmlToMarkdown(html);
+          postComposer.setContent(markdown);
+        }
+      }, 0);
+    },
+    [postComposer]
+  );
 
   // Handle input in contentEditable
   const handleInput = useCallback(() => {
-    if (!editorRef.current) return;
-    
+    if (!editorRef.current) {
+      return;
+    }
+
     setIsComposing(true);
-    
+
     // Debounce the markdown conversion slightly to avoid cursor jumping
     setTimeout(() => {
       if (editorRef.current) {
         const html = editorRef.current.innerHTML;
         const markdown = htmlToMarkdown(html);
-        
+
         // Only update if different to avoid unnecessary re-renders
         if (markdown !== postComposer.content) {
           postComposer.setContent(markdown);
         }
-        
+
         // Auto-resize with a higher cap for long pastes
         editorRef.current.style.height = 'auto';
         const maxHeight = 480; // px cap to avoid covering screen
@@ -317,50 +330,61 @@ const TimelineComposer = React.memo(function TimelineComposer({
   }, [postComposer]);
 
   // Handle paste to strip formatting and avoid broken HTML fragments
-  const handlePaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
-    if (!editorRef.current) return;
+  const handlePaste = useCallback(
+    (e: React.ClipboardEvent<HTMLDivElement>) => {
+      if (!editorRef.current) {
+        return;
+      }
 
-    e.preventDefault();
-    const text = e.clipboardData.getData('text/plain');
+      e.preventDefault();
+      const text = e.clipboardData.getData('text/plain');
 
-    // Insert plain text at the cursor
-    document.execCommand('insertText', false, text);
+      // Insert plain text at the cursor
+      document.execCommand('insertText', false, text);
 
-    // Sync markdown from the updated HTML
-    const html = editorRef.current.innerHTML;
-    const markdown = htmlToMarkdown(html);
-    postComposer.setContent(markdown);
-  }, [postComposer]);
+      // Sync markdown from the updated HTML
+      const html = editorRef.current.innerHTML;
+      const markdown = htmlToMarkdown(html);
+      postComposer.setContent(markdown);
+    },
+    [postComposer]
+  );
 
   // Handle keyboard shortcuts (desktop only - mobile keyboards don't have Ctrl/Cmd)
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-    // Ctrl/Cmd + Enter to post (desktop only)
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      if (!postComposer.isPosting && postComposer.content.trim()) {
-        postComposer.handlePost();
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      // Ctrl/Cmd + Enter to post (desktop only)
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        if (!postComposer.isPosting && postComposer.content.trim()) {
+          postComposer.handlePost();
+        }
       }
-    }
-    // Escape to cancel
-    if (e.key === 'Escape' && onCancel) {
-      onCancel();
-    }
-    // Ctrl/Cmd + B for bold (desktop only)
-    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-      e.preventDefault();
-      handleFormat('bold');
-    }
-    // Ctrl/Cmd + I for italic (desktop only)
-    if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
-      e.preventDefault();
-      handleFormat('italic');
-    }
-  }, [postComposer, onCancel, handleFormat]);
+      // Escape to cancel
+      if (e.key === 'Escape' && onCancel) {
+        onCancel();
+      }
+      // Ctrl/Cmd + B for bold (desktop only)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
+        e.preventDefault();
+        handleFormat('bold');
+      }
+      // Ctrl/Cmd + I for italic (desktop only)
+      if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+        e.preventDefault();
+        handleFormat('italic');
+      }
+    },
+    [postComposer, onCancel, handleFormat]
+  );
 
   // Project selection handlers
-  const handleToggleProject = useCallback((id: string) => {
-    postComposer.toggleProjectSelection(id);
-  }, [postComposer]);
+  const handleToggleProject = useCallback(
+    (id: string) => {
+      postComposer.toggleProjectSelection(id);
+    },
+    [postComposer]
+  );
 
   const handleCloseProjects = useCallback(() => {
     setShowProjects(false);
@@ -372,17 +396,19 @@ const TimelineComposer = React.memo(function TimelineComposer({
 
   // Character count color
   const characterCountColor = useMemo(() => {
-    if (postComposer.content.length > 450) return 'text-red-500';
-    if (postComposer.content.length > 400) return 'text-orange-500';
+    if (postComposer.content.length > 450) {
+      return 'text-red-500';
+    }
+    if (postComposer.content.length > 400) {
+      return 'text-orange-500';
+    }
     return 'text-gray-400';
   }, [postComposer.content.length]);
 
   // Button disabled state
   const isButtonDisabled = useMemo(
     () =>
-      !postComposer.content.trim() ||
-      postComposer.isPosting ||
-      postComposer.content.length > 500,
+      !postComposer.content.trim() || postComposer.isPosting || postComposer.content.length > 500,
     [postComposer.content, postComposer.isPosting]
   );
 
@@ -405,9 +431,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
         {/* Content Area */}
         <div className="flex-1 min-w-0">
           {/* Subtle Context Indicator (Replacement for Banner) */}
-          {!postingToOwnTimeline && showBanner && (
-            <ContextIndicator targetName={targetName} />
-          )}
+          {!postingToOwnTimeline && showBanner && <ContextIndicator targetName={targetName} />}
 
           {/* ContentEditable Input - Shows formatted text inline (like X) */}
           <div
@@ -444,19 +468,19 @@ const TimelineComposer = React.memo(function TimelineComposer({
               onClose={handleCloseProjects}
               isPosting={postComposer.isPosting}
             />
-            )}
+          )}
 
-            {/* Error/Success Messages */}
-            {postComposer.error && (
-              <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-                {postComposer.error}
-              </div>
-            )}
-            {postComposer.postSuccess && (
-              <div className="mt-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-                ✓ Post shared successfully!
-              </div>
-            )}
+          {/* Error/Success Messages */}
+          {postComposer.error && (
+            <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+              {postComposer.error}
+            </div>
+          )}
+          {postComposer.postSuccess && (
+            <div className="mt-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
+              ✓ Post shared successfully!
+            </div>
+          )}
 
           {/* Bottom Toolbar - simplified by default */}
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">

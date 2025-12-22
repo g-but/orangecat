@@ -1,39 +1,45 @@
-import { notFound, redirect } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
-import EntityDetailLayout from '@/components/entity/EntityDetailLayout'
-import Link from 'next/link'
-import Button from '@/components/ui/Button'
+import { notFound, redirect } from 'next/navigation';
+import { createServerClient } from '@/lib/supabase/server';
+import EntityDetailLayout from '@/components/entity/EntityDetailLayout';
+import Link from 'next/link';
+import Button from '@/components/ui/Button';
 
 interface PageProps {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }
 
 export default async function ServiceDetailPage({ params }: PageProps) {
-  const { id } = await params
-  const supabase = await createServerClient()
-  const { data: auth } = await supabase.auth.getUser()
-  const user = auth?.user
-  if (!user) redirect('/auth?mode=login&from=/dashboard/services')
+  const { id } = await params;
+  const supabase = await createServerClient();
+  const { data: auth } = await supabase.auth.getUser();
+  const user = auth?.user;
+  if (!user) {
+    redirect('/auth?mode=login&from=/dashboard/services');
+  }
 
   const { data: service, error } = await supabase
     .from('user_services')
     .select('*')
     .eq('id', id)
     .eq('user_id', user.id)
-    .single()
+    .single();
 
-  if (error || !service) notFound()
+  if (error || !service) {
+    notFound();
+  }
 
   const headerActions = (
     <Link href={`/dashboard/services/create?edit=${service.id}`}>
       <Button>Edit</Button>
     </Link>
-  )
+  );
 
   const priceLabel = [
     service.hourly_rate_sats ? `${service.hourly_rate_sats} sats/hour` : null,
     service.fixed_price_sats ? `${service.fixed_price_sats} sats` : null,
-  ].filter(Boolean).join(' or ')
+  ]
+    .filter(Boolean)
+    .join(' or ');
 
   return (
     <EntityDetailLayout
@@ -69,6 +75,5 @@ export default async function ServiceDetailPage({ params }: PageProps) {
         </div>
       }
     />
-  )
+  );
 }
-

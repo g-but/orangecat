@@ -11,7 +11,11 @@ interface EditPostModalProps {
   isOpen: boolean;
   onClose: () => void;
   event: TimelineDisplayEvent;
-  onSave: (updates: { title: string; description: string; visibility: TimelineVisibility }) => Promise<void>;
+  onSave: (updates: {
+    title: string;
+    description: string;
+    visibility: TimelineVisibility;
+  }) => Promise<void>;
   isSaving?: boolean;
 }
 
@@ -62,9 +66,10 @@ export function EditPostModal({
     setError(null);
 
     try {
-      const title = trimmedContent.length <= 120
-        ? trimmedContent
-        : `${trimmedContent.slice(0, 117).trimEnd()}...`;
+      const title =
+        trimmedContent.length <= 120
+          ? trimmedContent
+          : `${trimmedContent.slice(0, 117).trimEnd()}...`;
 
       await onSave({
         title,
@@ -90,7 +95,9 @@ export function EditPostModal({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   const hasChanges =
     content.trim() !== (event.description || event.title || '').trim() ||
@@ -106,10 +113,7 @@ export function EditPostModal({
       onKeyDown={handleKeyDown}
     >
       {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
       <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-xl animate-in fade-in-0 zoom-in-95 duration-200">
@@ -154,11 +158,11 @@ export function EditPostModal({
           {/* Textarea */}
           <Textarea
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={e => setContent(e.target.value)}
             placeholder="What's happening?"
             className={cn(
-              "min-h-[150px] text-[17px] leading-relaxed border-none bg-transparent p-0 focus:ring-0 resize-none placeholder:text-gray-500",
-              isOverLimit && "text-red-600"
+              'min-h-[150px] text-[17px] leading-relaxed border-none bg-transparent p-0 focus:ring-0 resize-none placeholder:text-gray-500',
+              isOverLimit && 'text-red-600'
             )}
             disabled={isSaving}
             autoFocus
@@ -171,10 +175,10 @@ export function EditPostModal({
               <button
                 onClick={() => setVisibility(visibility === 'public' ? 'private' : 'public')}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                  'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
                   visibility === 'public'
-                    ? "text-sky-600 bg-sky-50 hover:bg-sky-100"
-                    : "text-gray-600 bg-gray-100 hover:bg-gray-200"
+                    ? 'text-sky-600 bg-sky-50 hover:bg-sky-100'
+                    : 'text-gray-600 bg-gray-100 hover:bg-gray-200'
                 )}
                 disabled={isSaving}
               >
@@ -193,10 +197,9 @@ export function EditPostModal({
             </div>
 
             {/* Character count */}
-            <div className={cn(
-              "text-sm",
-              isOverLimit ? "text-red-600 font-medium" : "text-gray-400"
-            )}>
+            <div
+              className={cn('text-sm', isOverLimit ? 'text-red-600 font-medium' : 'text-gray-400')}
+            >
               {charCount.toLocaleString()} / {maxChars.toLocaleString()}
             </div>
           </div>

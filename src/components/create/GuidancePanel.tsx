@@ -39,12 +39,8 @@ export function GuidancePanel({
     return (
       <div className="sticky top-4">
         <div className="p-4 rounded-xl border border-orange-200 bg-orange-50/60">
-          <h2 className="font-semibold text-gray-900 mb-2">
-            {defaultGuidance.title}
-          </h2>
-          <p className="text-sm text-gray-700 mb-3">
-            {defaultGuidance.description}
-          </p>
+          <h2 className="font-semibold text-gray-900 mb-2">{defaultGuidance.title}</h2>
+          <p className="text-sm text-gray-700 mb-3">{defaultGuidance.description}</p>
           <ul className="text-sm text-gray-700 space-y-2">
             {defaultGuidance.features.map((feature, index) => (
               <li key={index} className="flex items-start gap-2">
@@ -69,9 +65,7 @@ export function GuidancePanel({
     return (
       <div className="sticky top-4">
         <Card className="p-4">
-          <p className="text-sm text-gray-600">
-            No guidance available for this field.
-          </p>
+          <p className="text-sm text-gray-600">No guidance available for this field.</p>
         </Card>
       </div>
     );
@@ -86,9 +80,7 @@ export function GuidancePanel({
             {content.icon}
           </div>
           <div>
-            <h3 className="text-base font-semibold text-gray-900">
-              {content.title}
-            </h3>
+            <h3 className="text-base font-semibold text-gray-900">{content.title}</h3>
             <p className="text-xs text-gray-500">Guidance</p>
           </div>
         </div>
@@ -103,10 +95,7 @@ export function GuidancePanel({
           </h4>
           <ul className="space-y-1.5">
             {content.tips.map((tip, index) => (
-              <li
-                key={index}
-                className="flex items-start gap-2 text-xs text-gray-600"
-              >
+              <li key={index} className="flex items-start gap-2 text-xs text-gray-600">
                 <CheckCircle2 className="w-3.5 h-3.5 text-green-600 mt-0.5 flex-shrink-0" />
                 <span>{tip}</span>
               </li>
@@ -135,48 +124,9 @@ export function GuidancePanel({
 
         {/* Additional Content (e.g., currency converter) */}
         {additionalContent && (
-          <div className="mt-3 pt-3 border-t border-gray-100">
-            {additionalContent}
-          </div>
+          <div className="mt-3 pt-3 border-t border-gray-100">{additionalContent}</div>
         )}
       </Card>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

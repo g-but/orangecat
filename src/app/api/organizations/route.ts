@@ -71,20 +71,31 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/organizations - Create new organization
-export const POST = compose(withRequestId(), withZodBody(organizationSchema))(async (request: NextRequest, ctx) => {
+export const POST = compose(
+  withRequestId(),
+  withZodBody(organizationSchema)
+)(async (request: NextRequest, ctx) => {
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
-
-    const rl = rateLimitWrite(user.id)
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000)
-      logger.warn('Organization creation rate limit exceeded', { userId: user.id })
-      return apiRateLimited('Too many organization creation requests. Please slow down.', retryAfter)
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return apiUnauthorized();
     }
 
-    const organization = await createOrganization(user.id, ctx.body, supabase)
+    const rl = rateLimitWrite(user.id);
+    if (!rl.success) {
+      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
+      logger.warn('Organization creation rate limit exceeded', { userId: user.id });
+      return apiRateLimited(
+        'Too many organization creation requests. Please slow down.',
+        retryAfter
+      );
+    }
+
+    const organization = await createOrganization(user.id, ctx.body, supabase);
     logger.info('Organization created successfully', { organizationId: organization.id });
     return apiSuccess(organization, { status: 201 });
   } catch (error) {

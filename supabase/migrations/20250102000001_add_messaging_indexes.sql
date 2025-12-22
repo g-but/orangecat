@@ -57,3 +57,4 @@ COMMENT ON INDEX idx_messages_active IS 'Partial index for non-deleted messages 
 COMMENT ON INDEX idx_messages_sender_conversation IS 'Optimizes sender-based message queries';
 COMMENT ON INDEX idx_messages_content_search IS 'Full-text search for message content';
 
+

@@ -72,9 +72,7 @@ export default function StatusPage() {
       <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            System Status
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">System Status</h1>
           <p className="text-xl text-gray-600">
             Current status and uptime information for OrangeCat services
           </p>
@@ -86,19 +84,13 @@ export default function StatusPage() {
             <div className="flex items-center space-x-3">
               <CheckCircle className="w-8 h-8 text-green-500" />
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900">
-                  All Systems Operational
-                </h2>
-                <p className="text-gray-600">
-                  All OrangeCat services are running normally
-                </p>
+                <h2 className="text-2xl font-semibold text-gray-900">All Systems Operational</h2>
+                <p className="text-gray-600">All OrangeCat services are running normally</p>
               </div>
             </div>
             <div className="text-right">
               <p className="text-sm text-gray-500">Last updated</p>
-              <p className="text-sm font-medium text-gray-900">
-                {new Date().toLocaleString()}
-              </p>
+              <p className="text-sm font-medium text-gray-900">{new Date().toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -106,9 +98,7 @@ export default function StatusPage() {
         {/* Service Status */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Service Status
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900">Service Status</h3>
           </div>
 
           <div className="divide-y divide-gray-200">
@@ -118,24 +108,20 @@ export default function StatusPage() {
                   <div className="flex items-center space-x-3">
                     {getStatusIcon(service.status)}
                     <div>
-                      <h4 className="font-medium text-gray-900">
-                        {service.name}
-                      </h4>
-                      <p className="text-sm text-gray-500">
-                        {service.uptime} uptime
-                      </p>
+                      <h4 className="font-medium text-gray-900">{service.name}</h4>
+                      <p className="text-sm text-gray-500">{service.uptime} uptime</p>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-4">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(service.status)}`}>
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(service.status)}`}
+                    >
                       {service.status.charAt(0).toUpperCase() + service.status.slice(1)}
                     </span>
                     <div className="text-right">
                       <p className="text-xs text-gray-500">Last checked</p>
-                      <p className="text-xs text-gray-900">
-                        {service.lastChecked}
-                      </p>
+                      <p className="text-xs text-gray-900">{service.lastChecked}</p>
                     </div>
                   </div>
                 </div>
@@ -146,17 +132,13 @@ export default function StatusPage() {
 
         {/* Contact Information */}
         <div className="mt-8 bg-blue-50 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">
-            Experiencing Issues?
-          </h3>
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">Experiencing Issues?</h3>
           <p className="text-blue-700 mb-4">
-            If you're experiencing problems with OrangeCat, please check our FAQ or contact our support team.
+            If you're experiencing problems with OrangeCat, please check our FAQ or contact our
+            support team.
           </p>
           <div className="flex space-x-4">
-            <a
-              href="/faq"
-              className="text-blue-600 hover:text-blue-800 font-medium"
-            >
+            <a href="/faq" className="text-blue-600 hover:text-blue-800 font-medium">
               Visit FAQ →
             </a>
             <a
@@ -171,15 +153,3 @@ export default function StatusPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-

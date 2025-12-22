@@ -7,6 +7,7 @@
 ## Problem
 
 The application was making **10-20+ requests per minute** to `/api/messages` just to display an unread message count badge, causing:
+
 - High server load
 - Unnecessary database queries (30-100+ per minute)
 - Poor performance
@@ -32,6 +33,7 @@ The application was making **10-20+ requests per minute** to `/api/messages` jus
 - **~90% reduction** in data transfer and database load
 
 **Key Features:**
+
 - Lightweight query: Only fetches conversation IDs and last_read_at timestamps
 - Efficient counting: Counts unread messages directly without fetching full objects
 - Handles conversations with and without read timestamps separately
@@ -47,6 +49,7 @@ The application was making **10-20+ requests per minute** to `/api/messages` jus
 - Optimized polling (2 minutes, only as backup)
 
 **Key Features:**
+
 - Single Supabase real-time subscription (not multiple)
 - Debounced refetches prevent rapid-fire requests
 - Request deduplication via `isFetchingRef`
@@ -62,10 +65,12 @@ The application was making **10-20+ requests per minute** to `/api/messages` jus
 ### 4. Component Updates
 
 **Files Updated:**
+
 - `src/components/layout/Header.tsx` - Now uses context hook
 - `src/components/sidebar/SidebarNavItem.tsx` - Fixed bug, now uses context hook
 
 **Changes:**
+
 - Removed invalid parameter from `useMessagesUnread(30000)` call
 - Updated imports to use context hook instead of old hook
 
@@ -79,6 +84,7 @@ The application was making **10-20+ requests per minute** to `/api/messages` jus
 ## Performance Improvements
 
 ### Before
+
 - **API Calls:** 10-20+ requests/minute
 - **Database Queries:** 30-100+ queries/minute
 - **Data Transfer:** Full conversation objects (30+ objects, 100+ participants, 100+ profiles)
@@ -86,6 +92,7 @@ The application was making **10-20+ requests per minute** to `/api/messages` jus
 - **Polling:** Every 60 seconds per instance
 
 ### After
+
 - **API Calls:** 1-2 requests/minute (backup polling only)
 - **Database Queries:** 2-5 queries/minute
 - **Data Transfer:** Single number (unread count)
@@ -93,6 +100,7 @@ The application was making **10-20+ requests per minute** to `/api/messages` jus
 - **Polling:** Every 2 minutes (backup only, when real-time inactive)
 
 ### Improvement Metrics
+
 - **~80-90% reduction** in API calls
 - **~90% reduction** in database queries
 - **~95% reduction** in data transfer
@@ -102,16 +110,19 @@ The application was making **10-20+ requests per minute** to `/api/messages` jus
 ## Technical Details
 
 ### Debouncing Strategy
+
 - 500ms debounce on real-time subscription events
 - Prevents rapid-fire requests during message bursts
 - Only fetches if 500ms have passed since last fetch
 
 ### Request Deduplication
+
 - Uses `isFetchingRef` to prevent concurrent requests
 - If a request is in progress, subsequent calls are ignored
 - Prevents duplicate API calls from multiple components
 
 ### Polling Strategy
+
 - Primary: Real-time subscriptions (instant updates)
 - Backup: 2-minute polling (only if real-time hasn't updated recently)
 - Reduces unnecessary requests during idle periods
@@ -158,12 +169,14 @@ The API is identical, so it's a drop-in replacement.
 ## Files Changed
 
 ### New Files
+
 - `src/app/api/messages/unread-count/route.ts`
 - `src/contexts/MessagesUnreadContext.tsx`
 - `docs/analysis/MESSAGES_API_PERFORMANCE_ISSUE.md`
 - `docs/implementation/MESSAGES_API_OPTIMIZATION.md`
 
 ### Modified Files
+
 - `src/app/layout.tsx` - Added provider
 - `src/components/layout/Header.tsx` - Updated to use context
 - `src/components/sidebar/SidebarNavItem.tsx` - Fixed bug, updated to use context
@@ -173,5 +186,3 @@ The API is identical, so it's a drop-in replacement.
 
 ✅ **Implementation Complete**  
 ⏳ **Testing Pending**
-
-

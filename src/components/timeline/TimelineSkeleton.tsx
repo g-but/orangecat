@@ -15,7 +15,9 @@ export function TimelineSkeleton({ count = 3, compact = false }: TimelineSkeleto
           <div className={`p-4 ${compact ? 'p-3' : 'p-4'}`}>
             <div className="flex items-start space-x-3">
               {/* Avatar skeleton */}
-              <div className={`bg-gray-200 rounded-full flex-shrink-0 ${compact ? 'w-8 h-8' : 'w-10 h-10'}`} />
+              <div
+                className={`bg-gray-200 rounded-full flex-shrink-0 ${compact ? 'w-8 h-8' : 'w-10 h-10'}`}
+              />
 
               <div className="flex-1 min-w-0">
                 {/* Header skeleton */}
@@ -59,31 +61,3 @@ export function TimelineSkeletonCompact({ count = 3 }: { count?: number }) {
 export function TimelineSkeletonFull({ count = 3 }: { count?: number }) {
   return <TimelineSkeleton count={count} compact={false} />;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

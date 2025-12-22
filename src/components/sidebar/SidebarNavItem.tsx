@@ -22,7 +22,7 @@ import Link from 'next/link';
 import type { NavItem } from '@/hooks/useNavigation';
 import { navigationLabels } from '@/config/navigation';
 import { SIDEBAR_COLORS, SIDEBAR_SPACING } from '@/constants/sidebar';
-import { useMessagesUnread } from '@/contexts/MessagesUnreadContext';
+import { useUnreadCount } from '@/stores/messaging';
 
 interface SidebarNavItemProps {
   item: NavItem;
@@ -43,9 +43,9 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
   const [isHovered, setIsHovered] = useState(false);
   const showMessagesBadge = item.href === '/messages';
   // Always call hooks unconditionally to follow Rules of Hooks
-  const { count: unreadCount } = useMessagesUnread();
+  const unreadCount = useUnreadCount();
   const count = showMessagesBadge ? unreadCount : 0;
-  
+
   const linkClasses = [
     'group flex items-center py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative',
     SIDEBAR_SPACING.ITEM_HEIGHT,
@@ -74,9 +74,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
   // Text appears inline when expanded (hover or manual), smoothly transitions
   const textClasses = [
     'transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis',
-    isExpanded
-      ? 'block opacity-100 ml-3 flex-1 min-w-0'
-      : 'hidden lg:hidden', // Hidden when collapsed (desktop shows on sidebar hover, mobile shows tooltip)
+    isExpanded ? 'block opacity-100 ml-3 flex-1 min-w-0' : 'hidden lg:hidden', // Hidden when collapsed (desktop shows on sidebar hover, mobile shows tooltip)
   ].join(' ');
 
   return (
@@ -145,9 +143,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
         >
           {item.name}
           {/* Tooltip arrow pointing left */}
-          <div
-            className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-4 border-t-transparent border-b-4 border-b-transparent border-r-4 border-r-gray-900"
-          />
+          <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-4 border-t-transparent border-b-4 border-b-transparent border-r-4 border-r-gray-900" />
         </div>
       )}
     </div>

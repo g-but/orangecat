@@ -17,8 +17,12 @@ function setCurrentUser(id: string | null) {
 function classifyError(err: any): 'permanent' | 'transient' {
   const status = err?.response?.status ?? err?.status;
   if (typeof status === 'number') {
-    if ([400, 401, 403, 404].includes(status)) return 'permanent';
-    if (status === 429 || status >= 500) return 'transient';
+    if ([400, 401, 403, 404].includes(status)) {
+      return 'permanent';
+    }
+    if (status === 429 || status >= 500) {
+      return 'transient';
+    }
   }
   // Network or unknown errors treated as transient
   return 'transient';
@@ -107,17 +111,24 @@ async function processQueue() {
 
     // If items remain, schedule a retry with exponential backoff based on max attempts
     if (navigator.onLine && currentUserId) {
-      offlineQueueService.getQueueByUser(currentUserId).then(remain => {
-        if (remain.length > 0) {
-          const maxAttempts = remain.reduce((m, p) => Math.max(m, p.attempts || 0), 0);
-          const base = 2000 * Math.pow(2, Math.min(maxAttempts, 5));
-          const jitter = Math.floor(Math.random() * 1000);
-          const delay = Math.min(60000, base + jitter);
-          if (scheduledRetry) clearTimeout(scheduledRetry);
-          scheduledRetry = setTimeout(processQueue, delay);
-          logger.info(`Scheduled next sync attempt in ${delay}ms.`, 'SyncManager');
-        }
-      }).catch(() => {/* noop */});
+      offlineQueueService
+        .getQueueByUser(currentUserId)
+        .then(remain => {
+          if (remain.length > 0) {
+            const maxAttempts = remain.reduce((m, p) => Math.max(m, p.attempts || 0), 0);
+            const base = 2000 * Math.pow(2, Math.min(maxAttempts, 5));
+            const jitter = Math.floor(Math.random() * 1000);
+            const delay = Math.min(60000, base + jitter);
+            if (scheduledRetry) {
+              clearTimeout(scheduledRetry);
+            }
+            scheduledRetry = setTimeout(processQueue, delay);
+            logger.info(`Scheduled next sync attempt in ${delay}ms.`, 'SyncManager');
+          }
+        })
+        .catch(() => {
+          /* noop */
+        });
     }
   }
 }

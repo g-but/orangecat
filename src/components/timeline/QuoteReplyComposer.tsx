@@ -78,32 +78,32 @@ export function QuoteReplyComposer({
   }, [content, quotedText, isSubmitting, user, parentPost, onReply, onCancel]);
 
   // Handle keyboard shortcuts
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      handleSubmit();
-    }
-    if (e.key === 'Escape') {
-      onCancel?.();
-    }
-  }, [handleSubmit, onCancel]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleSubmit();
+      }
+      if (e.key === 'Escape') {
+        onCancel?.();
+      }
+    },
+    [handleSubmit, onCancel]
+  );
 
-  if (!isOpen || !user) return null;
+  if (!isOpen || !user) {
+    return null;
+  }
 
   return (
-    <div className={cn("border border-gray-200 rounded-lg bg-white", className)}>
+    <div className={cn('border border-gray-200 rounded-lg bg-white', className)}>
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <Quote className="w-4 h-4 text-gray-500" />
           <span className="text-sm font-medium text-gray-700">Quote Reply</span>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onCancel}
-          className="h-6 w-6 p-0"
-        >
+        <Button variant="ghost" size="sm" onClick={onCancel} className="h-6 w-6 p-0">
           <X className="w-4 h-4" />
         </Button>
       </div>
@@ -126,9 +126,7 @@ export function QuoteReplyComposer({
               <span className="text-gray-500 text-sm">·</span>
               <span className="text-gray-500 text-sm">{parentPost.timeAgo}</span>
             </div>
-            <div className="text-sm text-gray-900">
-              {parentPost.description}
-            </div>
+            <div className="text-sm text-gray-900">{parentPost.description}</div>
           </div>
         </div>
 
@@ -139,11 +137,7 @@ export function QuoteReplyComposer({
               Select text from the post above to quote, then click "Quote Selected Text"
             </p>
             <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={handleQuoteSelection}
-                className="text-xs"
-              >
+              <Button size="sm" onClick={handleQuoteSelection} className="text-xs">
                 Quote Selected Text
               </Button>
               <Button
@@ -159,9 +153,7 @@ export function QuoteReplyComposer({
         ) : (
           quotedText && (
             <div className="mt-3 p-2 bg-gray-100 border-l-4 border-gray-400 rounded-r">
-              <div className="text-xs text-gray-600 italic">
-                "{quotedText}"
-              </div>
+              <div className="text-xs text-gray-600 italic">"{quotedText}"</div>
             </div>
           )
         )}
@@ -181,7 +173,7 @@ export function QuoteReplyComposer({
           <div className="flex-1">
             <Textarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={e => setContent(e.target.value)}
               placeholder={`Reply to ${parentPost.actor.name}...`}
               className="min-h-[80px] text-[15px] border-none bg-transparent p-0 focus:ring-0 resize-none placeholder:text-gray-500"
               disabled={isSubmitting}
@@ -216,9 +208,7 @@ export function QuoteReplyComposer({
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">
-                  Ctrl+Enter to send
-                </span>
+                <span className="text-xs text-gray-500">Ctrl+Enter to send</span>
                 <Button
                   onClick={handleSubmit}
                   disabled={!content.trim() || isSubmitting}
@@ -252,30 +242,10 @@ export function QuoteReplyButton({ onClick, disabled, className }: QuoteReplyBut
       size="sm"
       onClick={onClick}
       disabled={disabled}
-      className={cn(
-        "text-gray-500 hover:text-blue-600 hover:bg-blue-50",
-        className
-      )}
+      className={cn('text-gray-500 hover:text-blue-600 hover:bg-blue-50', className)}
     >
       <MessageCircle className="w-4 h-4 mr-1" />
       Quote Reply
     </Button>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

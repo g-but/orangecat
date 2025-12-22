@@ -10,6 +10,9 @@ import MessageView from './MessageView';
 import { cn } from '@/lib/utils';
 import NewConversationModal from './NewConversationModal';
 import { useAuth } from '@/hooks/useAuth';
+import { useRealtimeManager } from '@/hooks/useRealtimeManager';
+import { useMessagingStore } from '@/stores/messaging';
+import { ConnectionStatusIndicator } from './ConnectionStatusIndicator';
 
 interface MessagePanelProps {
   isOpen: boolean;
@@ -30,11 +33,18 @@ export default function MessagePanel({
   const router = useRouter();
   const { user, hydrated, isLoading } = useAuth();
 
+  // Initialize real-time manager for connection status
+  useRealtimeManager();
+
+  // Use centralized messaging store
+  const { conversations, currentConversationId, setCurrentConversation, setConversations } =
+    useMessagingStore();
+
   // Track if auth is truly ready (hydrated + not loading + has checked user)
   const isAuthReady = hydrated && !isLoading;
 
-  // Don't set conversation ID until auth is ready to prevent "not found" errors
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
+  // Use centralized store for conversation selection
+  const selectedConversationId = currentConversationId;
   const [hasInitializedFromUrl, setHasInitializedFromUrl] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,26 +58,41 @@ export default function MessagePanel({
   const toggleConvSelect = (id: string) => {
     setSelectedConvIds(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
-    })
+    });
   };
 
   const clearConvSelection = () => setSelectedConvIds(new Set());
 
+  // Helper to set conversation using store
+  const setSelectedConversationId = (id: string | null) => {
+    setCurrentConversation(id);
+  };
+
   const bulkDeleteSelected = async () => {
     const convIds = Array.from(selectedConvIds);
-    if (convIds.length === 0) return;
+    if (convIds.length === 0) {
+      return;
+    }
     if (convIds.length >= 2) {
-      const ok = window.confirm(`Delete ${convIds.length} conversations? This removes them for you and leaves all participants.`);
-      if (!ok) return;
+      const ok = window.confirm(
+        `Delete ${convIds.length} conversations? This removes them for you and leaves all participants.`
+      );
+      if (!ok) {
+        return;
+      }
     }
     try {
       const res = await fetch('/api/messages/bulk-conversations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ ids: convIds })
+        body: JSON.stringify({ ids: convIds }),
       });
       if (!res.ok) {
         const txt = await res.text().catch(() => '');
@@ -87,7 +112,7 @@ export default function MessagePanel({
     } catch (e) {
       console.error('Bulk conversation leave error:', e);
     }
-  }
+  };
 
   // Initialize conversation ID from URL only after auth is ready
   // This prevents "conversation not found" errors during auth hydration
@@ -131,9 +156,7 @@ export default function MessagePanel({
       <div
         className={cn(
           'flex h-full bg-white shadow-lg items-center justify-center',
-          fullPage
-            ? 'w-full rounded-none'
-            : 'w-full max-w-5xl rounded-2xl border border-gray-200'
+          fullPage ? 'w-full rounded-none' : 'w-full max-w-5xl rounded-2xl border border-gray-200'
         )}
       >
         <div className="text-center p-10">
@@ -144,18 +167,12 @@ export default function MessagePanel({
     );
 
     if (fullPage) {
-      return (
-        <div className={cn('h-[calc(100vh-4rem)]', className)}>
-          {loadingContent}
-        </div>
-      );
+      return <div className={cn('h-[calc(100vh-4rem)]', className)}>{loadingContent}</div>;
     }
 
     return (
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-        <div className="w-full max-w-4xl h-[80vh] max-h-[700px]">
-          {loadingContent}
-        </div>
+        <div className="w-full max-w-4xl h-[80vh] max-h-[700px]">{loadingContent}</div>
       </div>
     );
   }
@@ -168,9 +185,7 @@ export default function MessagePanel({
         'flex-col md:flex-row',
         // Prevent horizontal overflow on mobile
         'overflow-hidden',
-        fullPage
-          ? 'w-full rounded-none'
-          : 'w-full max-w-5xl rounded-2xl border border-gray-200'
+        fullPage ? 'w-full rounded-none' : 'w-full max-w-5xl rounded-2xl border border-gray-200'
       )}
     >
       {/* Conversations Sidebar */}
@@ -245,7 +260,7 @@ export default function MessagePanel({
         {/* Filters + Search */}
         <div className="p-4 border-b border-gray-100 space-y-3 bg-white/80">
           <div className="flex items-center gap-2">
-            {(['all', 'requests'] as const).map((tab) => (
+            {(['all', 'requests'] as const).map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -266,7 +281,7 @@ export default function MessagePanel({
               type="text"
               placeholder="Search conversations"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={e => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all shadow-sm"
             />
           </div>
@@ -283,7 +298,7 @@ export default function MessagePanel({
             onToggleSelect={toggleConvSelect}
             onRequestSelectionMode={() => setConvSelectionMode(true)}
             refreshSignal={refreshSignal}
-            onSelectConversation={(conversationId) => {
+            onSelectConversation={conversationId => {
               if (convSelectionMode) {
                 toggleConvSelect(conversationId);
                 return;
@@ -303,7 +318,7 @@ export default function MessagePanel({
           'flex-1 flex flex-col bg-white transition-opacity duration-200 ease-in-out min-h-0',
           // Mobile: full width when conversation selected, hidden when no conversation
           // Desktop: always visible
-          selectedConversationId 
+          selectedConversationId
             ? 'flex w-full' // Show full width when conversation selected
             : 'hidden md:flex' // Hide on mobile when no conversation, show on desktop
         )}
@@ -312,32 +327,40 @@ export default function MessagePanel({
           <MessageView
             conversationId={selectedConversationId}
             onBack={(reason?: 'forbidden' | 'not_found' | 'unknown' | 'network') => {
-              setSelectedConversationId(null)
+              setSelectedConversationId(null);
               // Remove id from the URL when navigating back
-              router.push('/messages')
+              router.push('/messages');
               if (reason === 'forbidden' || reason === 'not_found') {
                 // Auto-open the New Conversation modal to help user start a valid chat
-                setShowNewModal(true)
+                setShowNewModal(true);
               }
             }}
           />
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
-            <div className="text-center p-10 max-w-md">
-              <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center">
-                <MessageSquare className="w-9 h-9 text-gray-400" />
+          <div className="flex flex-col h-full">
+            {/* Connection Status Indicator - Always visible */}
+            <div className="px-4 pt-2">
+              <ConnectionStatusIndicator />
+            </div>
+
+            {/* Empty State */}
+            <div className="flex-1 flex items-center justify-center text-gray-500 bg-gray-50">
+              <div className="text-center p-10 max-w-md">
+                <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center">
+                  <MessageSquare className="w-9 h-9 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a chat</h3>
+                <p className="text-sm text-gray-600 mb-5">
+                  Choose from your existing conversations or start a new one.
+                </p>
+                <Button
+                  onClick={() => setShowNewModal(true)}
+                  className="bg-orange-500 hover:bg-orange-600 text-white shadow"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  New chat
+                </Button>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">Select a chat</h3>
-              <p className="text-sm text-gray-600 mb-5">
-                Choose from your existing conversations or start a new one.
-              </p>
-              <Button
-                onClick={() => setShowNewModal(true)}
-                className="bg-orange-500 hover:bg-orange-600 text-white shadow"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                New chat
-              </Button>
             </div>
           </div>
         )}
@@ -347,14 +370,14 @@ export default function MessagePanel({
       <NewConversationModal
         isOpen={showNewModal}
         onClose={() => setShowNewModal(false)}
-        onCreated={(convId) => {
+        onCreated={convId => {
           // When a new conversation is created:
           // - select it in the UI
           // - refresh the list so it appears in the sidebar
           // - update the URL for deep-linking
           setSelectedConversationId(convId);
           setShowNewModal(false);
-          setRefreshSignal((s) => s + 1);
+          setRefreshSignal(s => s + 1);
           router.push(`/messages?id=${convId}`, { scroll: false });
         }}
       />
@@ -363,19 +386,13 @@ export default function MessagePanel({
 
   // Full page mode - no overlay
   if (fullPage) {
-    return (
-      <div className={cn('h-[calc(100vh-4rem)]', className)}>
-        {content}
-      </div>
-    );
+    return <div className={cn('h-[calc(100vh-4rem)]', className)}>{content}</div>;
   }
 
   // Modal mode
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="w-full max-w-4xl h-[80vh] max-h-[700px]">
-        {content}
-      </div>
+      <div className="w-full max-w-4xl h-[80vh] max-h-[700px]">{content}</div>
     </div>
   );
 }

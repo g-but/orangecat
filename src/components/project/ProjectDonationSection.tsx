@@ -175,7 +175,9 @@ export function ProjectDonationSection({
                 <Button
                   onClick={() => {
                     const donationSection = document.getElementById('bitcoin-donation-section');
-                    if (donationSection) donationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (donationSection) {
+                      donationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                   }}
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white"
                   aria-label="Scroll to donation addresses"
@@ -262,7 +264,7 @@ export function ProjectDonationSection({
               {[
                 { btc: 0.001, label: 'Small' },
                 { btc: 0.005, label: 'Medium' },
-                { btc: 0.01, label: 'Large' }
+                { btc: 0.01, label: 'Large' },
               ].map(({ btc, label }) => (
                 <button
                   key={btc}

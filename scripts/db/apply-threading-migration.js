@@ -63,17 +63,22 @@ async function applyMigration() {
 
       try {
         const { error } = await supabase.rpc('exec_sql', {
-          sql: statement + ';'
+          sql: statement + ';',
         });
 
         if (error) {
           // Try direct execution if rpc fails
-          const { error: directError } = await supabase.from('_supabase_migration_temp').select('*').limit(1);
+          const { error: directError } = await supabase
+            .from('_supabase_migration_temp')
+            .select('*')
+            .limit(1);
           if (directError) {
             console.log('   ℹ️  Trying direct SQL execution...');
             // For now, just log that we need manual execution
             console.log('   ⚠️  Please execute the migration manually in Supabase dashboard');
-            console.log('   📄 Migration file: supabase/migrations/20250127_add_threading_support.sql');
+            console.log(
+              '   📄 Migration file: supabase/migrations/20250127_add_threading_support.sql'
+            );
             break;
           }
         } else {
@@ -126,7 +131,6 @@ async function applyMigration() {
     console.log('2. Test quote reply functionality');
     console.log('3. Verify thread visualization works');
     console.log('4. Check thread navigation features');
-
   } catch (error) {
     console.error('❌ Migration failed:', error);
     console.log('\n🔧 Manual execution:');
@@ -138,20 +142,3 @@ async function applyMigration() {
 
 // Run the migration
 applyMigration();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

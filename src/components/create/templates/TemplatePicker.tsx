@@ -39,17 +39,26 @@ export function TemplatePicker<T extends GenericTemplate>({
   onSelectTemplate,
   className = '',
 }: TemplatePickerProps<T>) {
-  if (!templates || templates.length === 0) return null;
+  if (!templates || templates.length === 0) {
+    return null;
+  }
 
   return (
-    <div className={cn('bg-gradient-to-br from-orange-50/50 to-amber-50/30 border border-orange-100 rounded-2xl p-5 space-y-4', className)}>
+    <div
+      className={cn(
+        'bg-gradient-to-br from-orange-50/50 to-amber-50/30 border border-orange-100 rounded-2xl p-5 space-y-4',
+        className
+      )}
+    >
       <div className="flex items-center gap-3">
         <div className="h-8 w-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center">
           <Lightbulb className="w-4 h-4" />
         </div>
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-gray-900">Need inspiration?</h3>
-          <p className="text-xs text-gray-500">Quick-start with a template and customize from there.</p>
+          <p className="text-xs text-gray-500">
+            Quick-start with a template and customize from there.
+          </p>
         </div>
         <span className="text-xs text-orange-600/70 font-medium">{label}</span>
       </div>
@@ -76,19 +85,3 @@ export function TemplatePicker<T extends GenericTemplate>({
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

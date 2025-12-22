@@ -12,11 +12,19 @@ interface ShareModalProps {
   isSubmitting?: boolean;
 }
 
-export function ShareModal({ isOpen, onClose, onShare, defaultText = '', isSubmitting = false }: ShareModalProps) {
+export function ShareModal({
+  isOpen,
+  onClose,
+  onShare,
+  defaultText = '',
+  isSubmitting = false,
+}: ShareModalProps) {
   const [text, setText] = useState(defaultText);
 
   useEffect(() => {
-    if (isOpen) setText(defaultText);
+    if (isOpen) {
+      setText(defaultText);
+    }
   }, [isOpen, defaultText]);
 
   return (
@@ -28,8 +36,8 @@ export function ShareModal({ isOpen, onClose, onShare, defaultText = '', isSubmi
         <textarea
           id="share-text"
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => {
+          onChange={e => setText(e.target.value)}
+          onKeyDown={e => {
             if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
               e.preventDefault();
               onShare(text);
@@ -52,4 +60,3 @@ export function ShareModal({ isOpen, onClose, onShare, defaultText = '', isSubmi
     </BottomSheet>
   );
 }
-

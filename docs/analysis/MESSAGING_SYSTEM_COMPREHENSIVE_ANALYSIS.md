@@ -32,16 +32,19 @@ The system has core messaging functionality working but lacks several critical f
 #### Tables
 
 **`conversations`**
+
 - Stores conversation metadata
 - Fields: `id`, `conversation_type` (direct/group), `title`, `description`, `created_by`, `created_at`, `updated_at`, `last_message_at`
 - **Missing:** `last_message_preview`, `last_message_sender_id` (used in code but not in schema)
 
 **`messages`**
+
 - Stores individual messages
 - Fields: `id`, `conversation_id`, `sender_id`, `content`, `message_type`, `metadata`, `created_at`, `updated_at`
 - **Missing:** `is_deleted`, `edited_at` (used in code but not in schema)
 
 **`conversation_participants`**
+
 - Links users to conversations
 - Fields: `id`, `conversation_id`, `user_id`, `role`, `joined_at`
 - **Missing:** `is_active`, `last_read_at` (used extensively in code but not in schema)
@@ -69,6 +72,7 @@ The system has core messaging functionality working but lacks several critical f
 #### Routes
 
 **`GET /api/messages`** - List conversations
+
 - Fetches user's conversations with pagination
 - Uses `fetchUserConversations()` service function
 - **Issues:**
@@ -77,6 +81,7 @@ The system has core messaging functionality working but lacks several critical f
   - Returns all participants for each conversation (could be large)
 
 **`GET /api/messages/[conversationId]`** - Get messages in conversation
+
 - Paginated message fetching
 - Uses cursor-based pagination
 - **Issues:**
@@ -85,6 +90,7 @@ The system has core messaging functionality working but lacks several critical f
   - No batch optimization
 
 **`POST /api/messages/[conversationId]`** - Send message
+
 - Creates new message
 - Updates conversation metadata
 - **Issues:**
@@ -93,12 +99,14 @@ The system has core messaging functionality working but lacks several critical f
   - No message validation beyond basic checks
 
 **`POST /api/messages/[conversationId]/read`** - Mark as read
+
 - Updates `last_read_at` for participant
 - **Issues:**
   - Uses direct Supabase query (RLS may block)
   - No batch marking as read
 
 **`GET /api/messages/unread-count`** - Get unread count
+
 - Returns total unread messages
 - **Issues:**
   - No caching
@@ -117,6 +125,7 @@ The system has core messaging functionality working but lacks several critical f
 #### Components
 
 **`MessagePanel`** - Main container
+
 - Manages conversation list and message view
 - Handles routing between conversations
 - **Issues:**
@@ -124,6 +133,7 @@ The system has core messaging functionality working but lacks several critical f
   - No error boundary
 
 **`MessageView`** - Conversation view
+
 - Displays messages for a conversation
 - Handles real-time updates
 - **Issues:**
@@ -133,6 +143,7 @@ The system has core messaging functionality working but lacks several critical f
   - No message caching
 
 **`MessageComposer`** - Message input
+
 - Handles message creation
 - Optimistic UI updates
 - **Issues:**
@@ -141,6 +152,7 @@ The system has core messaging functionality working but lacks several critical f
   - No message validation on client
 
 **`ConversationList`** - Sidebar
+
 - Lists all conversations
 - Shows unread counts
 - **Issues:**
@@ -148,6 +160,7 @@ The system has core messaging functionality working but lacks several critical f
   - No search/filter
 
 **`NewConversationModal`** - Create conversation
+
 - Allows starting new conversations
 - **Issues:**
   - No validation
@@ -166,6 +179,7 @@ The system has core messaging functionality working but lacks several critical f
 #### Implementation
 
 **`useMessageSubscription` Hook**
+
 - Subscribes to Supabase Realtime for message updates
 - Handles INSERT, UPDATE events
 - **Issues:**
@@ -175,6 +189,7 @@ The system has core messaging functionality working but lacks several critical f
   - Test channel created but never cleaned up properly
 
 **`MessagesUnreadContext`**
+
 - Global unread count management
 - Real-time subscription for unread updates
 - **Issues:**
@@ -195,10 +210,12 @@ The system has core messaging functionality working but lacks several critical f
 #### Current Implementation
 
 **`message-queue.ts`** - Offline message queue
+
 - Stores unsent messages in IndexedDB
 - **Status:** ✅ Implemented
 
 **`message-sync-manager.ts`** - Sync manager
+
 - Processes queued messages when online
 - Retry logic with exponential backoff
 - **Status:** ✅ Implemented
@@ -330,31 +347,32 @@ The system has core messaging functionality working but lacks several critical f
 
 ### Features Comparison
 
-| Feature | Facebook Messenger | Our System | Status |
-|---------|-------------------|------------|--------|
-| **Text Messaging** | ✅ | ✅ | ✅ Working |
-| **Real-time Delivery** | ✅ | ✅ | ✅ Working |
-| **Read Receipts** | ✅ | ⚠️ | ⚠️ Partially (500 errors) |
-| **Message Status** | ✅ | ✅ | ✅ Working |
-| **Optimistic Updates** | ✅ | ✅ | ✅ Working |
-| **Offline Queue** | ✅ | ✅ | ✅ Implemented |
-| **Offline Viewing** | ✅ | ❌ | ❌ Missing |
-| **Typing Indicators** | ✅ | ❌ | ❌ Missing |
-| **Push Notifications** | ✅ | ❌ | ❌ Missing |
-| **Connection Status** | ✅ | ❌ | ❌ Missing |
-| **Message Search** | ✅ | ❌ | ❌ Missing |
-| **Message Caching** | ✅ | ❌ | ❌ Missing |
-| **Batch Operations** | ✅ | ❌ | ❌ Missing |
-| **Voice Messages** | ✅ | ❌ | ❌ Future |
-| **Video Messages** | ✅ | ❌ | ❌ Future |
-| **File Attachments** | ✅ | ⚠️ | ⚠️ Schema supports, UI missing |
-| **Message Reactions** | ✅ | ❌ | ❌ Missing |
-| **Message Editing** | ✅ | ⚠️ | ⚠️ Schema supports, UI missing |
-| **Message Deletion** | ✅ | ⚠️ | ⚠️ Schema supports, UI missing |
+| Feature                | Facebook Messenger | Our System | Status                         |
+| ---------------------- | ------------------ | ---------- | ------------------------------ |
+| **Text Messaging**     | ✅                 | ✅         | ✅ Working                     |
+| **Real-time Delivery** | ✅                 | ✅         | ✅ Working                     |
+| **Read Receipts**      | ✅                 | ⚠️         | ⚠️ Partially (500 errors)      |
+| **Message Status**     | ✅                 | ✅         | ✅ Working                     |
+| **Optimistic Updates** | ✅                 | ✅         | ✅ Working                     |
+| **Offline Queue**      | ✅                 | ✅         | ✅ Implemented                 |
+| **Offline Viewing**    | ✅                 | ❌         | ❌ Missing                     |
+| **Typing Indicators**  | ✅                 | ❌         | ❌ Missing                     |
+| **Push Notifications** | ✅                 | ❌         | ❌ Missing                     |
+| **Connection Status**  | ✅                 | ❌         | ❌ Missing                     |
+| **Message Search**     | ✅                 | ❌         | ❌ Missing                     |
+| **Message Caching**    | ✅                 | ❌         | ❌ Missing                     |
+| **Batch Operations**   | ✅                 | ❌         | ❌ Missing                     |
+| **Voice Messages**     | ✅                 | ❌         | ❌ Future                      |
+| **Video Messages**     | ✅                 | ❌         | ❌ Future                      |
+| **File Attachments**   | ✅                 | ⚠️         | ⚠️ Schema supports, UI missing |
+| **Message Reactions**  | ✅                 | ❌         | ❌ Missing                     |
+| **Message Editing**    | ✅                 | ⚠️         | ⚠️ Schema supports, UI missing |
+| **Message Deletion**   | ✅                 | ⚠️         | ⚠️ Schema supports, UI missing |
 
 ### Architecture Comparison
 
 **Facebook Messenger:**
+
 - Centralized state management (Redux/Flux)
 - Message cache in IndexedDB
 - Optimized real-time subscriptions
@@ -364,6 +382,7 @@ The system has core messaging functionality working but lacks several critical f
 - Error boundaries and recovery
 
 **Our System:**
+
 - Scattered state management
 - No message caching
 - Multiple subscriptions (no reuse)
@@ -382,32 +401,32 @@ The system has core messaging functionality working but lacks several critical f
 
 ```sql
 -- Add missing fields to conversations
-ALTER TABLE conversations 
+ALTER TABLE conversations
 ADD COLUMN IF NOT EXISTS last_message_preview text,
 ADD COLUMN IF NOT EXISTS last_message_sender_id uuid REFERENCES auth.users(id);
 
 -- Add missing fields to messages
-ALTER TABLE messages 
+ALTER TABLE messages
 ADD COLUMN IF NOT EXISTS is_deleted boolean DEFAULT false,
 ADD COLUMN IF NOT EXISTS edited_at timestamptz;
 
 -- Add missing fields to conversation_participants
-ALTER TABLE conversation_participants 
+ALTER TABLE conversation_participants
 ADD COLUMN IF NOT EXISTS is_active boolean DEFAULT true,
 ADD COLUMN IF NOT EXISTS last_read_at timestamptz;
 
 -- Add indexes for performance
-CREATE INDEX IF NOT EXISTS idx_messages_conversation_created 
+CREATE INDEX IF NOT EXISTS idx_messages_conversation_created
 ON messages(conversation_id, created_at DESC);
 
-CREATE INDEX IF NOT EXISTS idx_participants_conversation 
+CREATE INDEX IF NOT EXISTS idx_participants_conversation
 ON conversation_participants(conversation_id);
 
-CREATE INDEX IF NOT EXISTS idx_participants_user 
+CREATE INDEX IF NOT EXISTS idx_participants_user
 ON conversation_participants(user_id);
 
 -- Full-text search index
-CREATE INDEX IF NOT EXISTS idx_messages_content_search 
+CREATE INDEX IF NOT EXISTS idx_messages_content_search
 ON messages USING gin(to_tsvector('english', content));
 ```
 
@@ -428,7 +447,7 @@ interface MessageStore {
   messages: Map<string, Message[]>; // conversationId -> messages
   optimisticMessages: Map<string, Message>; // tempId -> message
   subscriptions: Map<string, RealtimeChannel>;
-  
+
   // Actions
   addMessage: (conversationId: string, message: Message) => void;
   replaceOptimistic: (tempId: string, realMessage: Message) => void;
@@ -444,6 +463,7 @@ export const useMessageStore = create<MessageStore>((set, get) => ({
 ```
 
 **Benefits:**
+
 - Single source of truth
 - Automatic deduplication
 - Easier testing
@@ -460,19 +480,20 @@ Create API routes for all database operations:
 export async function GET(request: NextRequest, { params }) {
   const { supabase, user } = await getServerUser();
   const { conversationId } = await params;
-  
+
   // Use server-side client with proper RLS
   const { data: participants } = await supabase
     .from('conversation_participants')
     .select('user_id, last_read_at')
     .eq('conversation_id', conversationId)
     .eq('is_active', true);
-  
+
   return NextResponse.json({ participants });
 }
 ```
 
 **Benefits:**
+
 - Proper RLS enforcement
 - No client-side queries
 - Better security
@@ -485,10 +506,10 @@ export async function GET(request: NextRequest, { params }) {
 // src/hooks/useConnectionStatus.ts
 export function useConnectionStatus() {
   const [status, setStatus] = useState<'connected' | 'disconnected' | 'reconnecting'>('connected');
-  
+
   useEffect(() => {
     const channel = supabase.channel('connection-status');
-    
+
     channel
       .on('presence', { event: 'sync' }, () => {
         setStatus('connected');
@@ -496,17 +517,17 @@ export function useConnectionStatus() {
       .on('presence', { event: 'leave' }, () => {
         setStatus('disconnected');
       })
-      .subscribe(async (status) => {
+      .subscribe(async status => {
         if (status === 'SUBSCRIBED') {
           await channel.track({ online_at: new Date().toISOString() });
         }
       });
-    
+
     return () => {
       supabase.removeChannel(channel);
     };
   }, []);
-  
+
   return status;
 }
 ```
@@ -520,7 +541,7 @@ export function useConnectionStatus() {
 export function useTypingIndicator(conversationId: string) {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const typingTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  
+
   const broadcastTyping = useCallback(
     debounce(() => {
       const channel = supabase.channel(`typing:${conversationId}`);
@@ -532,14 +553,14 @@ export function useTypingIndicator(conversationId: string) {
     }, 500),
     [conversationId]
   );
-  
+
   // Listen for typing events
   useEffect(() => {
     const channel = supabase.channel(`typing:${conversationId}`);
-    
+
     channel.on('broadcast', { event: 'typing' }, ({ payload }) => {
       setTypingUsers(prev => new Set(prev).add(payload.userId));
-      
+
       // Clear after 3 seconds
       const timeout = setTimeout(() => {
         setTypingUsers(prev => {
@@ -548,18 +569,18 @@ export function useTypingIndicator(conversationId: string) {
           return next;
         });
       }, 3000);
-      
+
       typingTimeoutRef.current.set(payload.userId, timeout);
     });
-    
+
     channel.subscribe();
-    
+
     return () => {
       typingTimeoutRef.current.forEach(clearTimeout);
       supabase.removeChannel(channel);
     };
   }, [conversationId]);
-  
+
   return { typingUsers, broadcastTyping };
 }
 ```
@@ -587,7 +608,7 @@ export async function cacheMessages(conversationId: string, messages: Message[])
 
 export async function getCachedMessages(conversationId: string): Promise<Message[] | null> {
   const db = await openDB<MessageCacheDB>('message-cache', 1);
-  return await db.get('messages', conversationId) || null;
+  return (await db.get('messages', conversationId)) || null;
 }
 ```
 
@@ -617,15 +638,15 @@ MessageView/
 // src/components/messaging/MessageErrorBoundary.tsx
 export class MessageErrorBoundary extends React.Component {
   state = { hasError: false, error: null };
-  
+
   static getDerivedStateFromError(error) {
     return { hasError: true, error };
   }
-  
+
   componentDidCatch(error, errorInfo) {
     logger.error('Message error:', error, errorInfo);
   }
-  
+
   render() {
     if (this.state.hasError) {
       return <MessageErrorFallback error={this.state.error} />;
@@ -670,10 +691,10 @@ export class MessageErrorBoundary extends React.Component {
 Our messaging system has a solid foundation but needs significant improvements to match Facebook Messenger's reliability and user experience. The critical issues (schema mismatch, RLS problems, connection status) must be fixed immediately. The high-priority features (caching, typing indicators, push notifications) should be implemented next. With these improvements, we can create a robust, production-ready messaging system.
 
 **Key Principles for Robustness:**
+
 1. **Single Source of Truth**: Centralized state management
 2. **Defensive Programming**: Error boundaries, validation, fallbacks
 3. **Offline-First**: Cache everything, queue operations
 4. **Real-Time Reliability**: Connection monitoring, reconnection logic
 5. **Performance**: Virtual scrolling, batching, caching
 6. **Security**: Proper RLS, rate limiting, validation
-

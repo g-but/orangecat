@@ -33,7 +33,7 @@ async function verifySetup() {
     services: 0,
     loans: 0,
     organizations: 0,
-    transactions: 0
+    transactions: 0,
   };
 
   try {
@@ -86,7 +86,9 @@ async function verifySetup() {
       results.services = services.length;
       console.log(`\n🔧 Active Services: ${results.services}`);
       services.slice(0, 3).forEach(s => {
-        const price = s.fixed_price_sats ? `${s.fixed_price_sats} sats` : `${s.hourly_rate_sats} sats/hr`;
+        const price = s.fixed_price_sats
+          ? `${s.fixed_price_sats} sats`
+          : `${s.hourly_rate_sats} sats/hr`;
         console.log(`   - "${s.title}" (${price})`);
       });
       if (services.length > 3) console.log(`   ... and ${services.length - 3} more`);
@@ -130,7 +132,6 @@ async function verifySetup() {
         console.log(`   - Total volume: ${totalAmount} sats`);
       }
     }
-
   } catch (error) {
     console.error('❌ Verification failed:', error.message);
     process.exit(1);
@@ -156,10 +157,12 @@ async function verifySetup() {
     products: 2,
     services: 2,
     loans: 1,
-    organizations: 1
+    organizations: 1,
   };
 
-  const readyForTesting = Object.entries(minRequirements).every(([type, min]) => results[type] >= min);
+  const readyForTesting = Object.entries(minRequirements).every(
+    ([type, min]) => results[type] >= min
+  );
 
   console.log('\n🏁 TESTING READINESS:');
 
@@ -197,14 +200,3 @@ verifySetup().catch(error => {
   console.error('💥 Verification error:', error);
   process.exit(1);
 });
-
-
-
-
-
-
-
-
-
-
-

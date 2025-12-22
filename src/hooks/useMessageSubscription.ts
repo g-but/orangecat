@@ -18,7 +18,7 @@ interface UseMessageSubscriptionOptions {
 /**
  * Unified hook for subscribing to message updates in a conversation.
  * Prevents duplicate subscriptions and manages cleanup automatically.
- * 
+ *
  * @param conversationId - The conversation ID to subscribe to
  * @param options - Configuration options
  * @returns Cleanup function (automatically called on unmount)
@@ -41,6 +41,8 @@ export function useMessageSubscription(
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isMountedRef = useRef(true);
   const attemptReconnectRef = useRef<(() => void) | null>(null);
+  const setupInProgressRef = useRef(false);
+  const hasSubscribedRef = useRef(false);
 
   // Update callbacks ref when they change
   useEffect(() => {
@@ -63,6 +65,20 @@ export function useMessageSubscription(
     if (!conversationId || !user?.id || !enabled || !isMountedRef.current) {
       return;
     }
+
+    // Prevent duplicate setup
+    if (setupInProgressRef.current) {
+      debugLog('[useMessageSubscription] setup already in progress, skipping');
+      return;
+    }
+
+    // If already subscribed to this conversation, skip
+    if (hasSubscribedRef.current && channelRef.current) {
+      debugLog('[useMessageSubscription] already subscribed, skipping');
+      return;
+    }
+
+    setupInProgressRef.current = true;
 
     // Clean up existing channel
     if (channelRef.current) {
@@ -97,7 +113,9 @@ export function useMessageSubscription(
       );
 
       reconnectTimeoutRef.current = setTimeout(() => {
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current) {
+          return;
+        }
         setupSubscription();
       }, delay);
     };
@@ -120,7 +138,7 @@ export function useMessageSubscription(
           table: 'messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        async (payload) => {
+        async payload => {
           debugLog('[useMessageSubscription] insert', {
             conversationId: payload.new.conversation_id,
             senderId: payload.new.sender_id,
@@ -136,7 +154,7 @@ export function useMessageSubscription(
               currentUserId: user.id,
               conversationId: payload.new.conversation_id,
             });
-            
+
             // Skip if this is our own message (handled optimistically)
             if (payload.new.sender_id === user.id) {
               debugLog('[useMessageSubscription] own message; onOwnMessage');
@@ -149,7 +167,7 @@ export function useMessageSubscription(
             // Fetch the full message with sender info
             // Try message_details first, fallback to messages + profiles join if view doesn't exist
             let newMessage: Message | null = null;
-            
+
             const { data: messageDetails, error: viewError } = await supabase
               .from('message_details')
               .select('*')
@@ -166,33 +184,40 @@ export function useMessageSubscription(
               // Fallback: fetch from messages table and join with profiles
               const { data: messageData, error: messageError } = await supabase
                 .from('messages')
-                .select(`
+                .select(
+                  `
                   *,
                   sender:profiles!messages_sender_id_fkey(id, username, name, avatar_url)
-                `)
+                `
+                )
                 .eq('id', payload.new.id)
                 .single();
 
               if (messageData && !messageError) {
                 newMessage = {
                   ...messageData,
-                  sender: messageData.sender ? {
-                    id: messageData.sender.id,
-                    username: messageData.sender.username || '',
-                    name: messageData.sender.name || '',
-                    avatar_url: messageData.sender.avatar_url || null,
-                  } : {
-                    id: payload.new.sender_id,
-                    username: '',
-                    name: '',
-                    avatar_url: null,
-                  },
+                  sender: messageData.sender
+                    ? {
+                        id: messageData.sender.id,
+                        username: messageData.sender.username || '',
+                        name: messageData.sender.name || '',
+                        avatar_url: messageData.sender.avatar_url || null,
+                      }
+                    : {
+                        id: payload.new.sender_id,
+                        username: '',
+                        name: '',
+                        avatar_url: null,
+                      },
                   is_read: false,
                   is_delivered: true,
                   status: 'delivered' as const,
                 } as Message;
               } else {
-                console.error('[useMessageSubscription] Failed to fetch message:', messageError || viewError);
+                console.error(
+                  '[useMessageSubscription] Failed to fetch message:',
+                  messageError || viewError
+                );
                 // Last resort: create message from payload
                 if (payload.new) {
                   newMessage = {
@@ -250,7 +275,9 @@ export function useMessageSubscription(
                 console.warn('[useMessageSubscription] ⚠️ onNewMessage callback not provided');
               }
             } else {
-              console.error('[useMessageSubscription] ❌ Failed to create message object from payload');
+              console.error(
+                '[useMessageSubscription] ❌ Failed to create message object from payload'
+              );
             }
           } catch (error) {
             console.error('[useMessageSubscription] Error processing real-time message:', error);
@@ -265,7 +292,7 @@ export function useMessageSubscription(
           table: 'messages',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        async (payload) => {
+        async payload => {
           const { onNewMessage } = callbacksRef.current;
           debugLog('[useMessageSubscription] update', payload.new.id);
           // Handle message updates (e.g., edited, deleted)
@@ -276,7 +303,7 @@ export function useMessageSubscription(
                 .select('*')
                 .eq('id', payload.new.id)
                 .single();
-              
+
               if (messageDetails) {
                 onNewMessage(messageDetails as Message);
               }
@@ -294,8 +321,11 @@ export function useMessageSubscription(
           table: 'conversation_participants',
           filter: `conversation_id=eq.${conversationId}`,
         },
-        async (payload) => {
-          debugLog('[useMessageSubscription] read receipt update', { conversationId, userId: payload.new?.user_id });
+        async payload => {
+          debugLog('[useMessageSubscription] read receipt update', {
+            conversationId,
+            userId: payload.new?.user_id,
+          });
 
           const { onReadReceiptUpdate } = callbacksRef.current;
           // When someone marks conversation as read, update read receipts for sender's messages
@@ -305,11 +335,14 @@ export function useMessageSubscription(
         }
       )
       .subscribe((status, err) => {
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current) {
+          return;
+        }
 
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           const error = err || new Error(`Subscription error: ${status}`);
           console.error(`[useMessageSubscription] channel error for ${conversationId}:`, error);
+          setupInProgressRef.current = false;
           if (onSubscriptionStatusChange) {
             onSubscriptionStatusChange(status, error);
           }
@@ -319,17 +352,25 @@ export function useMessageSubscription(
           }
         } else if (status === 'SUBSCRIBED') {
           reconnectAttemptsRef.current = 0; // Reset on successful subscription
+          setupInProgressRef.current = false;
+          hasSubscribedRef.current = true;
           debugLog(`[useMessageSubscription] ✅ Successfully subscribed to ${conversationId}`);
           if (onSubscriptionStatusChange) {
             onSubscriptionStatusChange(status);
           }
         } else if (status === 'CLOSED') {
           debugLog(`[useMessageSubscription] ⚠️ Channel closed for ${conversationId}`);
+          setupInProgressRef.current = false;
           if (onSubscriptionStatusChange) {
             onSubscriptionStatusChange(status);
           }
-          // Attempt to reconnect if not intentionally closed
-          if (isMountedRef.current && enabled && attemptReconnectRef.current) {
+          // Only attempt to reconnect if we were previously subscribed and not intentionally closed
+          if (
+            hasSubscribedRef.current &&
+            isMountedRef.current &&
+            enabled &&
+            attemptReconnectRef.current
+          ) {
             attemptReconnectRef.current();
           }
         } else {
@@ -354,6 +395,8 @@ export function useMessageSubscription(
         channelRef.current = null;
       }
       reconnectAttemptsRef.current = 0;
+      setupInProgressRef.current = false;
+      hasSubscribedRef.current = false;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
@@ -361,10 +404,15 @@ export function useMessageSubscription(
       return;
     }
 
-    setupSubscription();
+    // Only setup if not already subscribed
+    if (!hasSubscribedRef.current) {
+      setupSubscription();
+    }
 
     return () => {
       isMountedRef.current = false;
+      setupInProgressRef.current = false;
+      hasSubscribedRef.current = false;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
         reconnectTimeoutRef.current = null;
@@ -374,5 +422,5 @@ export function useMessageSubscription(
         channelRef.current = null;
       }
     };
-  }, [conversationId, user?.id, enabled, setupSubscription]);
+  }, [conversationId, user?.id, enabled]); // Removed setupSubscription from deps to prevent re-runs on callback changes
 }

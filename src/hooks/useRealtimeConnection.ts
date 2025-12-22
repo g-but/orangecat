@@ -2,10 +2,10 @@
 
 /**
  * Real-time Connection Status Hook
- * 
+ *
  * Monitors Supabase Realtime connection status and provides automatic reconnection.
  * This ensures messages appear in real-time like Facebook Messenger.
- * 
+ *
  * @module hooks/useRealtimeConnection
  */
 
@@ -61,6 +61,8 @@ export function useRealtimeConnection(
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isMountedRef = useRef(true);
   const attemptReconnectRef = useRef<(() => void) | null>(null);
+  const setupInProgressRef = useRef(false);
+  const hasSetupRef = useRef(false);
 
   /**
    * Calculate exponential backoff delay
@@ -76,7 +78,9 @@ export function useRealtimeConnection(
    */
   const updateStatus = useCallback(
     (newStatus: ConnectionStatus, err: Error | null = null) => {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        return;
+      }
 
       setStatus(newStatus);
       setError(err);
@@ -99,10 +103,54 @@ export function useRealtimeConnection(
   }, []);
 
   /**
+   * Start heartbeat to detect dead connections
+   */
+  const startHeartbeat = useCallback(() => {
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+    }
+
+    heartbeatIntervalRef.current = setInterval(() => {
+      if (!channelRef.current || !isMountedRef.current) {
+        return;
+      }
+
+      // Check if channel is still subscribed
+      const channelState = channelRef.current.state;
+      debugLog('[useRealtimeConnection] Heartbeat check - channel state:', channelState);
+
+      if (channelState !== 'joined' && channelState !== 'joining') {
+        debugLog('[useRealtimeConnection] Heartbeat detected dead connection, reconnecting...');
+        updateStatus('reconnecting');
+        reconnectAttemptsRef.current = 0;
+        if (attemptReconnectRef.current) {
+          attemptReconnectRef.current();
+        }
+      }
+    }, 30000); // Check every 30 seconds
+  }, [updateStatus]);
+
+  /**
    * Setup the connection monitoring channel
    */
   const setupConnection = useCallback(() => {
-    if (!enabled || !isMountedRef.current) return;
+    if (!enabled || !isMountedRef.current) {
+      return;
+    }
+
+    // Prevent duplicate setups - if already connected or setup in progress, skip
+    if (setupInProgressRef.current) {
+      debugLog('[useRealtimeConnection] Setup already in progress, skipping');
+      return;
+    }
+
+    // If channel is already joined, skip setup
+    if (channelRef.current?.state === 'joined') {
+      debugLog('[useRealtimeConnection] Channel already joined, skipping setup');
+      return;
+    }
+
+    setupInProgressRef.current = true;
 
     // Clean up existing channel
     if (channelRef.current) {
@@ -112,13 +160,19 @@ export function useRealtimeConnection(
 
     updateStatus('reconnecting');
 
-    // Set a timeout to detect if subscription never completes
+    // Set a timeout to detect if subscription never completes or is stuck in 'joining'
     const subscriptionTimeout = setTimeout(() => {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        return;
+      }
       const channelState = channelRef.current?.state;
-      if (channelState !== 'joined' && channelState !== 'joining') {
+      debugLog('[useRealtimeConnection] Subscription timeout check - channel state:', channelState);
+
+      // If channel is not joined and not actively joining, or stuck in joining for too long
+      if (channelState !== 'joined') {
         debugLog('[useRealtimeConnection] Subscription timeout - channel state:', channelState);
-        updateStatus('error', new Error('Subscription timeout - connection failed'));
+        setupInProgressRef.current = false;
+        updateStatus('error', new Error(`Subscription timeout - channel state: ${channelState}`));
         stopHeartbeat();
         if (attemptReconnectRef.current) {
           attemptReconnectRef.current();
@@ -134,7 +188,9 @@ export function useRealtimeConnection(
         },
       })
       .subscribe(async (subscribeStatus, err) => {
-        if (!isMountedRef.current) return;
+        if (!isMountedRef.current) {
+          return;
+        }
 
         // Clear timeout on any status change
         clearTimeout(subscriptionTimeout);
@@ -143,6 +199,8 @@ export function useRealtimeConnection(
 
         if (subscribeStatus === 'SUBSCRIBED') {
           reconnectAttemptsRef.current = 0;
+          setupInProgressRef.current = false;
+          hasSetupRef.current = true;
           updateStatus('connected');
           startHeartbeat();
 
@@ -159,6 +217,7 @@ export function useRealtimeConnection(
           }
         } else if (subscribeStatus === 'CHANNEL_ERROR' || subscribeStatus === 'TIMED_OUT') {
           debugLog('[useRealtimeConnection] Connection error:', err);
+          setupInProgressRef.current = false;
           updateStatus('error', err || new Error('Connection error'));
           stopHeartbeat();
           if (attemptReconnectRef.current) {
@@ -166,51 +225,30 @@ export function useRealtimeConnection(
           }
         } else if (subscribeStatus === 'CLOSED') {
           debugLog('[useRealtimeConnection] Connection closed');
+          setupInProgressRef.current = false;
           updateStatus('disconnected');
           stopHeartbeat();
-          if (attemptReconnectRef.current) {
+          // Only attempt reconnect if we're still mounted and intentionally connected before
+          if (hasSetupRef.current && isMountedRef.current && attemptReconnectRef.current) {
             attemptReconnectRef.current();
           }
         } else {
           // Handle other statuses (JOINING, etc.)
           debugLog('[useRealtimeConnection] Intermediate status:', subscribeStatus);
+          // If stuck in JOINING for too long, the timeout will handle it
         }
       });
 
     channelRef.current = channel;
-  }, [enabled, updateStatus, stopHeartbeat]);
-
-  /**
-   * Start heartbeat to detect dead connections
-   */
-  const startHeartbeat = useCallback(() => {
-    if (heartbeatIntervalRef.current) {
-      clearInterval(heartbeatIntervalRef.current);
-    }
-
-    heartbeatIntervalRef.current = setInterval(() => {
-      if (!channelRef.current || !isMountedRef.current) return;
-
-      // Check if channel is still subscribed
-      const channelState = channelRef.current.state;
-      debugLog('[useRealtimeConnection] Heartbeat check - channel state:', channelState);
-      
-      if (channelState !== 'joined' && channelState !== 'joining') {
-        debugLog('[useRealtimeConnection] Heartbeat detected dead connection, reconnecting...');
-        updateStatus('reconnecting');
-        reconnectAttemptsRef.current = 0;
-        if (attemptReconnectRef.current) {
-          attemptReconnectRef.current();
-        }
-      }
-    }, 30000); // Check every 30 seconds
-  }, [updateStatus]);
+  }, [enabled, updateStatus, stopHeartbeat, startHeartbeat]);
 
   /**
    * Attempt to reconnect
    */
   const attemptReconnect = useCallback(() => {
-    if (!enabled || !isMountedRef.current) return;
+    if (!enabled || !isMountedRef.current) {
+      return;
+    }
 
     if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
       debugLog('[useRealtimeConnection] Max reconnection attempts reached');
@@ -226,7 +264,9 @@ export function useRealtimeConnection(
     );
 
     reconnectTimeoutRef.current = setTimeout(() => {
-      if (!isMountedRef.current) return;
+      if (!isMountedRef.current) {
+        return;
+      }
       setupConnection();
     }, delay);
   }, [enabled, maxReconnectAttempts, getReconnectDelay, setupConnection, updateStatus]);
@@ -249,14 +289,19 @@ export function useRealtimeConnection(
 
   // Setup connection on mount
   useEffect(() => {
-    if (enabled) {
+    isMountedRef.current = true;
+
+    if (enabled && !hasSetupRef.current) {
       setupConnection();
     }
 
     return () => {
       isMountedRef.current = false;
+      setupInProgressRef.current = false;
+      hasSetupRef.current = false;
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
+        reconnectTimeoutRef.current = null;
       }
       stopHeartbeat();
       if (channelRef.current) {
@@ -264,11 +309,13 @@ export function useRealtimeConnection(
         channelRef.current = null;
       }
     };
-  }, [enabled, setupConnection, stopHeartbeat]);
+  }, [enabled, stopHeartbeat]); // Removed setupConnection from deps to prevent re-runs
 
   // Monitor browser online/offline events
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
 
     const handleOnline = () => {
       debugLog('[useRealtimeConnection] Browser came online');

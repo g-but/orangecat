@@ -13,3 +13,4 @@ ALTER PUBLICATION supabase_realtime ADD TABLE conversation_participants;
 -- Note: If the publication doesn't exist, it will be created automatically by Supabase
 -- If tables are already in the publication, this will fail gracefully with a notice
 
+

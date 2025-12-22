@@ -100,18 +100,3 @@ export function getZIndex(layer: keyof typeof Z_INDEX): number {
 export function getZIndexClass(layer: keyof typeof Z_INDEX_CLASSES): string {
   return Z_INDEX_CLASSES[layer];
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
