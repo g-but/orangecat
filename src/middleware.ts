@@ -22,7 +22,17 @@ const publicRoutes = [
 
 // Routes that should redirect to /auth if user is not logged in
 // Note: /profiles/ is public, /profile/ is protected (own profile)
-const protectedRoutes = ['/dashboard', '/profile/', '/settings', '/loans', '/circles', '/assets', '/timeline', '/messages', '/projects/create'];
+const protectedRoutes = [
+  '/dashboard',
+  '/profile/',
+  '/settings',
+  '/loans',
+  '/circles',
+  '/assets',
+  '/timeline',
+  '/messages',
+  '/projects/create',
+];
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
@@ -106,30 +116,27 @@ export async function middleware(request: NextRequest) {
       },
     });
 
+    // Check for auth tokens in cookies
+    // Note: Our Supabase browser client uses localStorage (not cookies) for session storage.
+    // This means the middleware cannot reliably check auth state server-side.
+    // We rely on client-side auth checks in protected pages instead.
+    // The middleware only validates if a cookie token IS present (e.g., from SSR auth flows).
     const tokenFromCookies =
       request.cookies.get('sb-access-token')?.value ||
       request.cookies.get('supabase-auth-token')?.value ||
       request.cookies.get('supabase.auth.token')?.value;
 
+    // If no cookie token, allow through and let client-side auth handle it
+    // This prevents infinite redirect loops when auth is stored in localStorage
     if (!tokenFromCookies) {
-      // In development we rely on client-side Supabase session (localStorage), so allow through
-      if (process.env.NODE_ENV !== 'development') {
-        const redirectUrl = new URL('/auth', request.url);
-        redirectUrl.searchParams.set('mode', 'login');
-        redirectUrl.searchParams.set('from', pathname);
-        return NextResponse.redirect(redirectUrl);
-      }
       return response;
     }
 
+    // If cookie token exists, validate it
     const { data, error } = await supabase.auth.getUser(tokenFromCookies);
     if (error || !data.user) {
-      if (process.env.NODE_ENV !== 'development') {
-        const redirectUrl = new URL('/auth', request.url);
-        redirectUrl.searchParams.set('mode', 'login');
-        redirectUrl.searchParams.set('from', pathname);
-        return NextResponse.redirect(redirectUrl);
-      }
+      // Token is invalid/expired, clear it by allowing through
+      // Client-side will handle the redirect to auth
       return response;
     }
   }

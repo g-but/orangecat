@@ -69,7 +69,9 @@
       "Bash(SERVICE_KEY=\"REDACTED_SERVICE_KEY\" curl -s \"https://ohkueislstxomdjavyhs.supabase.co/rest/v1/conversations?select=*&limit=1\" -H \"apikey: $SERVICE_KEY\" -H \"Authorization: Bearer $SERVICE_KEY\")",
       "Bash(export SERVICE_KEY:*)",
       "Bash(bash:*)",
-      "mcp__filesystem__write_file"
+      "mcp__filesystem__write_file",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
