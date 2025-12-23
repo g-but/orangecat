@@ -1,12 +1,12 @@
 import { createService } from '@/domain/commerce/service';
 import { userServiceSchema } from '@/lib/validation';
 
-// Mock the Supabase client
-jest.mock('@/lib/supabase/server', () => ({
-  createServerClient: jest.fn(),
+// Mock the Supabase admin client (createService uses createAdminClient, not createServerClient)
+jest.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: jest.fn(),
 }));
 
-import { createServerClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 const mockSupabase = {
   from: jest.fn().mockReturnThis(),
@@ -18,7 +18,7 @@ const mockSupabase = {
 describe('Service Creation', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (createServerClient as jest.Mock).mockResolvedValue(mockSupabase);
+    (createAdminClient as jest.Mock).mockReturnValue(mockSupabase);
   });
 
   describe('userServiceSchema validation', () => {
@@ -134,7 +134,7 @@ describe('Service Creation', () => {
 
       const result = await createService(mockUserId, mockServiceData);
 
-      expect(createServerClient).toHaveBeenCalled();
+      expect(createAdminClient).toHaveBeenCalled();
       expect(mockSupabase.from).toHaveBeenCalledWith('user_services');
       expect(mockSupabase.insert).toHaveBeenCalledWith({
         user_id: mockUserId,

@@ -71,7 +71,9 @@
       "Bash(bash:*)",
       "mcp__filesystem__write_file",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run test:unit:*)"
     ],
     "deny": [],
     "ask": []
