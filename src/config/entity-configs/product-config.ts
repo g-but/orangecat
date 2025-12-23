@@ -130,11 +130,12 @@ export const productConfig: EntityConfig<UserProductFormData> = {
   colorTheme: 'orange',
   backUrl: '/dashboard/store',
   apiEndpoint: '/api/products',
-  successUrl: '/dashboard/store/[id]',
+  successUrl: '/dashboard/store',
   pageTitle: 'Create Product',
   pageDescription: 'Add a new product to your personal marketplace',
   formTitle: 'Product Details',
-  formDescription: 'Fill in the information for your new product. You can always edit these details later.',
+  formDescription:
+    'Fill in the information for your new product. You can always edit these details later.',
   fieldGroups,
   validationSchema: userProductSchema,
   defaultValues,
@@ -142,4 +143,3 @@ export const productConfig: EntityConfig<UserProductFormData> = {
   defaultGuidance: productDefaultGuidance,
   templates: PRODUCT_TEMPLATES as unknown as ProductTemplate[],
 };
-
