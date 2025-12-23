@@ -55,7 +55,8 @@ const fieldGroups: FieldGroup[] = [
         name: 'description',
         label: 'Description',
         type: 'textarea',
-        placeholder: 'Describe your service in detail - what you offer, your experience, what clients can expect...',
+        placeholder:
+          'Describe your service in detail - what you offer, your experience, what clients can expect...',
         rows: 4,
         colSpan: 2,
       },
@@ -64,7 +65,7 @@ const fieldGroups: FieldGroup[] = [
         label: 'Category',
         type: 'select',
         required: true,
-        options: SERVICE_CATEGORIES.map((cat) => ({ value: cat, label: cat })),
+        options: SERVICE_CATEGORIES.map(cat => ({ value: cat, label: cat })),
         colSpan: 2,
       },
     ],
@@ -160,11 +161,12 @@ export const serviceConfig: EntityConfig<UserServiceFormData> = {
   colorTheme: 'tiffany',
   backUrl: '/dashboard/services',
   apiEndpoint: '/api/services',
-  successUrl: '/dashboard/services/[id]',
+  successUrl: '/dashboard/services',
   pageTitle: 'Create Service',
   pageDescription: 'Offer your expertise to the community',
   formTitle: 'Service Details',
-  formDescription: 'Fill in the information for your new service offering. You can always edit these details later.',
+  formDescription:
+    'Fill in the information for your new service offering. You can always edit these details later.',
   fieldGroups,
   validationSchema: userServiceSchema,
   defaultValues,
@@ -172,4 +174,3 @@ export const serviceConfig: EntityConfig<UserServiceFormData> = {
   defaultGuidance: serviceDefaultGuidance,
   templates: SERVICE_TEMPLATES as unknown as ServiceTemplate[],
 };
-
