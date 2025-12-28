@@ -8,6 +8,7 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import { SearchProfile } from '@/services/search';
+import { ROUTES } from '@/lib/routes';
 
 interface ProfileCardProps {
   profile: SearchProfile;
@@ -28,7 +29,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
     return (
       <Card className="p-4 hover:shadow-lg transition-shadow">
         <div className="flex items-center gap-4">
-          <Link href={`/profiles/${profile.username || profile.id}`}>
+          <Link href={ROUTES.PROFILES.VIEW(profile.username || profile.id)}>
             <div className="relative w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-tiffany-100 to-tiffany-200 flex-shrink-0">
               {profile.avatar_url ? (
                 <Image src={profile.avatar_url} alt={displayName} fill className="object-cover" />
@@ -42,7 +43,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Link href={`/profiles/${profile.username || profile.id}`}>
+              <Link href={ROUTES.PROFILES.VIEW(profile.username || profile.id)}>
                 <h3 className="font-semibold text-gray-900 hover:text-tiffany-600 transition-colors truncate">
                   {displayName}
                 </h3>
@@ -58,7 +59,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
           </div>
 
           <div className="flex-shrink-0">
-            <Link href={`/profiles/${profile.username || profile.id}`}>
+            <Link href={ROUTES.PROFILES.VIEW(profile.username || profile.id)}>
               <Button size="sm" variant="outline">
                 <ExternalLink className="w-3 h-3 mr-1" />
                 View Profile
@@ -74,7 +75,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
   return (
     <Card className="p-6 hover:shadow-lg transition-shadow">
       <div className="text-center">
-        <Link href={`/profile/${profile.username || profile.id}`}>
+        <Link href={ROUTES.PROFILES.VIEW(profile.username || profile.id)}>
           <div className="relative w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-tiffany-100 to-tiffany-200 mx-auto mb-4">
             {profile.avatar_url ? (
               <Image src={profile.avatar_url} alt={displayName} fill className="object-cover" />
@@ -85,7 +86,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
         </Link>
 
         <div className="flex items-center justify-center gap-2 mb-2">
-          <Link href={`/profiles/${profile.username || profile.id}`}>
+          <Link href={ROUTES.PROFILES.VIEW(profile.username || profile.id)}>
             <h3 className="font-semibold text-gray-900 hover:text-tiffany-600 transition-colors">
               {displayName}
             </h3>
@@ -97,7 +98,7 @@ export default function ProfileCard({ profile, viewMode = 'grid' }: ProfileCardP
 
         {profile.bio && <p className="text-sm text-gray-600 mb-4 line-clamp-3">{profile.bio}</p>}
 
-        <Link href={`/profile/${profile.username || profile.id}`}>
+        <Link href={ROUTES.PROFILES.VIEW(profile.username || profile.id)}>
           <Button size="sm" variant="outline" className="w-full">
             <ExternalLink className="w-3 h-3 mr-1" />
             View Profile
