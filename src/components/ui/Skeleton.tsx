@@ -259,3 +259,46 @@ export function ButtonSkeleton({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
 
   return <Skeleton className={cn(heights[size], 'w-24 rounded-lg')} />;
 }
+
+/**
+ * Profile Card Skeleton
+ * Matches the ProfileCard component layout for grid view
+ */
+export function ProfileCardSkeleton({ viewMode = 'grid' }: { viewMode?: 'grid' | 'list' }) {
+  if (viewMode === 'list') {
+    return (
+      <div className="flex items-center gap-4 p-4 rounded-xl border border-gray-200 bg-white">
+        <Skeleton className="w-12 h-12 rounded-full flex-shrink-0" />
+        <div className="flex-1 min-w-0 space-y-2">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-5 w-16 rounded-full" />
+          </div>
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-4 w-full" />
+        </div>
+        <Skeleton className="h-8 w-24 rounded-lg" />
+      </div>
+    );
+  }
+
+  // Grid view
+  return (
+    <div className="p-6 rounded-xl border border-gray-200 bg-white">
+      <div className="text-center">
+        <Skeleton className="w-20 h-20 rounded-full mx-auto mb-4" />
+        <div className="flex items-center justify-center gap-2 mb-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-5 w-16 rounded-full" />
+        </div>
+        <Skeleton className="h-4 w-24 mx-auto mb-3" />
+        <div className="space-y-2 mb-4">
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-5/6 mx-auto" />
+          <Skeleton className="h-4 w-4/6 mx-auto" />
+        </div>
+        <Skeleton className="h-9 w-full rounded-lg" />
+      </div>
+    </div>
+  );
+}
