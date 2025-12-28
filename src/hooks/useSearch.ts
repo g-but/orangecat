@@ -35,20 +35,6 @@ interface UseSearchSuggestionsResult {
   error: string | null
 }
 
-// Mock suggestions based on common search terms
-const mockSuggestions = {
-  'bitcoin': ['Bitcoin Lightning Network', 'Bitcoin Education', 'Bitcoin Mining Projects'],
-  'open': ['Open Source Projects', 'Open Education Initiative', 'Open Data Campaign'],
-  'education': ['Education Initiatives', 'Educational Technology', 'Education for All'],
-  'environment': ['Environmental Projects', 'Environmental Protection', 'Environmental Research'],
-  'health': ['Healthcare Projects', 'Mental Health Awareness', 'Public Health Initiative'],
-  'art': ['Art Projects', 'Digital Art', 'Community Art'],
-  'tech': ['Technology Projects', 'Tech Education', 'Tech for Good'],
-  'community': ['Community Building', 'Community Gardens', 'Community Centers'],
-  'research': ['Research Projects', 'Scientific Research', 'Academic Research'],
-  'music': ['Music Projects', 'Music Education', 'Community Music']
-}
-
 export interface UseSearchOptions {
   initialQuery?: string
   initialType?: SearchType
@@ -264,56 +250,35 @@ export function useSearchSuggestions(query: string, enabled: boolean = true): Us
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // Debounced search function
-  const debouncedSearch = debounce(async (searchQuery: string) => {
-    if (!searchQuery.trim() || !enabled) {
-      setSuggestions([])
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    setError(null)
-
-    try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 200))
-
-      // Find matching suggestions
-      const lowerQuery = searchQuery.toLowerCase()
-      const matchingSuggestions: string[] = []
-
-      // Look for exact matches in our mock data
-      Object.entries(mockSuggestions).forEach(([key, values]) => {
-        if (key.includes(lowerQuery) || lowerQuery.includes(key)) {
-          matchingSuggestions.push(...values)
-        }
-      })
-
-      // Add fuzzy matches for any text
-      if (matchingSuggestions.length < 3) {
-        const fuzzyMatches = [
-          `${searchQuery} Projects`,
-          `${searchQuery} Initiative`,
-          `${searchQuery} Campaign`
-        ]
-        matchingSuggestions.push(...fuzzyMatches)
+  // Stable debounced search function using useMemo
+  const debouncedSearch = useMemo(
+    () => debounce(async (searchQuery: string, isEnabled: boolean) => {
+      if (!searchQuery.trim() || !isEnabled) {
+        setSuggestions([])
+        setLoading(false)
+        return
       }
 
-      // Remove duplicates and limit to 5 suggestions
-      const uniqueSuggestions = [...new Set(matchingSuggestions)].slice(0, 5)
-      setSuggestions(uniqueSuggestions)
-    } catch (err) {
-      setError('Failed to fetch suggestions')
-      setSuggestions([])
-    } finally {
-      setLoading(false)
-    }
-  }, 300)
+      setLoading(true)
+      setError(null)
+
+      try {
+        // Use real database suggestions from search service
+        const realSuggestions = await getSearchSuggestions(searchQuery, 5)
+        setSuggestions(realSuggestions)
+      } catch (err) {
+        setError('Failed to fetch suggestions')
+        setSuggestions([])
+      } finally {
+        setLoading(false)
+      }
+    }, 300),
+    [] // Empty deps - debounce wrapper is stable
+  )
 
   useEffect(() => {
     if (enabled) {
-      debouncedSearch(query)
+      debouncedSearch(query, enabled)
     } else {
       setSuggestions([])
       setLoading(false)
@@ -322,7 +287,7 @@ export function useSearchSuggestions(query: string, enabled: boolean = true): Us
     return () => {
       debouncedSearch.cancel()
     }
-  }, [query, enabled])
+  }, [query, enabled, debouncedSearch])
 
   return { suggestions, loading, error }
 }

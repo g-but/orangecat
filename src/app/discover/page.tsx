@@ -5,35 +5,23 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search,
-  Filter,
   SlidersHorizontal,
-  X,
-  TrendingUp,
-  Grid3X3,
-  List,
   ArrowUpDown,
-  Bitcoin,
-  Heart,
-  Sparkles,
-  Zap,
-  Star,
   Target,
   Users,
-  MapPin,
   Loader2,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import ModernProjectCard from '@/components/ui/ModernProjectCard';
 import ProfileCard from '@/components/ui/ProfileCard';
-import Input from '@/components/ui/Input';
-import { categoryValues, simpleCategories } from '@/config/categories';
+import { ProjectCardSkeleton, ProfileCardSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearch } from '@/hooks/useSearch';
-import { SearchFundingPage, SearchProfile } from '@/services/search';
+import { SearchFundingPage, SearchProfile, SearchType, SortOption } from '@/services/search';
 import supabase from '@/lib/supabase/browser';
 import DiscoverTabs, { DiscoverTabType } from '@/components/discover/DiscoverTabs';
 import ResultsSection from '@/components/discover/ResultsSection';
+import DiscoverFilters, { StatusKey } from '@/components/discover/DiscoverFilters';
 
 type ViewMode = 'grid' | 'list';
 
@@ -48,13 +36,11 @@ export default function DiscoverPage() {
     .split(',')
     .map(s => s.trim())
     .filter(Boolean);
-  // Convert 'trending' to 'popular' (closest match) or use provided sort
-  const urlSort = searchParams.get('sort') || 'popular';
-  const initialSort = (urlSort === 'trending' ? 'popular' : urlSort) as
+  // Convert legacy sort values to current options
+  const urlSort = searchParams.get('sort') || 'recent';
+  const initialSort = (['recent', 'relevance'].includes(urlSort) ? urlSort : 'recent') as
     | 'relevance'
-    | 'recent'
-    | 'popular'
-    | 'funding';
+    | 'recent';
   const urlType = (searchParams.get('type') || 'all') as DiscoverTabType;
   const initialType = ['all', 'projects', 'profiles'].includes(urlType) ? urlType : 'all';
   const initialCountry = searchParams.get('country') || '';
@@ -98,7 +84,6 @@ export default function DiscoverPage() {
   const [activeTab, setActiveTab] = useState<DiscoverTabType>(initialType);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
   const [selectedStatuses, setSelectedStatuses] = useState<('active' | 'paused' | 'completed' | 'cancelled')[]>(['active', 'paused']); // Default: show active and paused
   const [country, setCountry] = useState(initialCountry);
@@ -111,10 +96,25 @@ export default function DiscoverPage() {
   const [totalProjectsCount, setTotalProjectsCount] = useState(0);
   const [totalProfilesCount, setTotalProfilesCount] = useState(0);
 
-  // Fetch total counts from database
+  // Fetch total counts from database with client-side caching
   useEffect(() => {
+    const CACHE_KEY = 'discover_counts';
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
     const fetchTotalCounts = async () => {
       try {
+        // Check cache first
+        const cached = localStorage.getItem(CACHE_KEY);
+        if (cached) {
+          const { projects, profiles, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < CACHE_DURATION) {
+            setTotalProjectsCount(projects);
+            setTotalProfilesCount(profiles);
+            return; // Use cached data
+          }
+        }
+
+        // Fetch fresh data
         const [projectsResult, profilesResult] = await Promise.all([
           supabase
             .from('projects')
@@ -125,12 +125,18 @@ export default function DiscoverPage() {
             .select('*', { count: 'exact', head: true }),
         ]);
 
-        if (projectsResult.count !== null && projectsResult.count !== undefined) {
-          setTotalProjectsCount(projectsResult.count);
-        }
-        if (profilesResult.count !== null && profilesResult.count !== undefined) {
-          setTotalProfilesCount(profilesResult.count);
-        }
+        const projectCount = projectsResult.count ?? 0;
+        const profileCount = profilesResult.count ?? 0;
+
+        setTotalProjectsCount(projectCount);
+        setTotalProfilesCount(profileCount);
+
+        // Cache the results
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          projects: projectCount,
+          profiles: profileCount,
+          timestamp: Date.now(),
+        }));
       } catch (error) {
         logger.error('Error fetching total counts', error, 'Discover');
       }
@@ -187,8 +193,8 @@ export default function DiscoverPage() {
       newSearchParams.delete('category');
     }
 
-    // Only set sort if it's not the default (popular)
-    if (sortBy !== 'popular') {
+    // Only set sort if it's not the default (recent)
+    if (sortBy !== 'recent') {
       newSearchParams.set('sort', sortBy);
     } else {
       newSearchParams.delete('sort');
@@ -264,12 +270,12 @@ export default function DiscoverPage() {
   }, []);
 
   const handleSortChange = (sort: string) => {
-    setSortBy(sort as any);
+    // Validate sort is a valid SortOption
+    const validSorts: SortOption[] = ['relevance', 'recent'];
+    if (validSorts.includes(sort as SortOption)) {
+      setSortBy(sort as SortOption);
+    }
     // URL update happens automatically via useEffect
-  };
-
-  const toggleTag = (tag: string) => {
-    setSelectedTags(prev => (prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]));
   };
 
   const handleToggleStatus = useCallback((status: 'active' | 'paused' | 'completed' | 'cancelled') => {
@@ -282,27 +288,21 @@ export default function DiscoverPage() {
   const handleTabChange = useCallback((tab: DiscoverTabType) => {
     setActiveTab(tab);
     // Convert tab to search type
-    const newSearchType = tab === 'all' ? 'all' : tab === 'profiles' ? 'profiles' : 'projects';
-    setSearchType(newSearchType as any);
+    const newSearchType: SearchType = tab === 'all' ? 'all' : tab === 'profiles' ? 'profiles' : 'projects';
+    setSearchType(newSearchType);
   }, [setSearchType]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategories([]);
-    setSelectedTags([]);
     setSelectedStatuses(['active', 'paused']); // Reset to default statuses
-    setSortBy('popular' as any);
+    setSortBy('recent');
     setCountry('');
     setCity('');
     setPostal('');
     setRadiusKm(0);
     router.push('/discover');
   };
-
-  // Get unique tags from all projects (tags don't exist in current schema)
-  const allTags = useMemo(() => {
-    return []; // No tags in current schema
-  }, []);
 
   const stats = useMemo(() => {
     // Use total counts from database, not filtered results
@@ -390,211 +390,31 @@ export default function DiscoverPage() {
             <div className="sticky top-20">
               <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-5">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Filters</h3>
-
-                {/* Search Bar */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Search className="h-4 w-4 text-gray-400" />
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder="Search projects..."
-                      value={searchTerm}
-                      onChange={e => handleSearch(e.target.value)}
-                      className="pl-10 pr-4 py-2 text-sm bg-white/80 border-gray-200/80 rounded-xl"
-                    />
-                    {loading && (
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                        <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Sort */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Sort by</label>
-                  <select
-                    value={sortBy}
-                    onChange={e => handleSortChange(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                  >
-                    <option value="popular">Popular</option>
-                    <option value="recent">Newest</option>
-                    <option value="funding">Most Funded</option>
-                    <option value="relevance">Relevance</option>
-                  </select>
-                </div>
-
-                {/* View Mode */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">View</label>
-                  <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/80 p-1 flex gap-1">
-                    <Button
-                      variant={viewMode === 'grid' ? 'primary' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('grid')}
-                      className="flex-1 h-8"
-                    >
-                      <Grid3X3 className="w-4 h-4 mr-1" />
-                      Grid
-                    </Button>
-                    <Button
-                      variant={viewMode === 'list' ? 'primary' : 'ghost'}
-                      size="sm"
-                      onClick={() => setViewMode('list')}
-                      className="flex-1 h-8"
-                    >
-                      <List className="w-4 h-4 mr-1" />
-                      List
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Project Status - Only show for projects */}
-                {activeTab !== 'profiles' && (
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Project Status</label>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { value: 'active' as const, label: 'Active', color: 'green' },
-                        { value: 'paused' as const, label: 'Paused', color: 'yellow' },
-                        { value: 'completed' as const, label: 'Completed', color: 'blue' },
-                        { value: 'cancelled' as const, label: 'Cancelled', color: 'gray' },
-                      ].map(status => (
-                        <button
-                          key={status.value}
-                          onClick={() => handleToggleStatus(status.value)}
-                          className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
-                            selectedStatuses.includes(status.value)
-                              ? `bg-${status.color}-100 border-${status.color}-300 text-${status.color}-700`
-                              : 'bg-white/80 border-gray-200 text-gray-700 hover:bg-gray-50'
-                          }`}
-                        >
-                          {status.label}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Draft projects are not shown in search results
-                    </p>
-                  </div>
-                )}
-
-                {/* Categories - Only show for projects */}
-                {activeTab !== 'profiles' && (
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Categories</label>
-                  <div className="flex flex-wrap gap-2">
-                    {[
-                      'technology',
-                      'education',
-                      'environment',
-                      'animals',
-                      'business',
-                      'community',
-                      'creative',
-                    ].map(cat => (
-                      <button
-                        key={cat}
-                        onClick={() => handleToggleCategory(cat)}
-                        className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
-                          selectedCategories.includes(cat)
-                            ? 'bg-orange-100 border-orange-300 text-orange-700'
-                            : 'bg-white/80 border-gray-200 text-gray-700 hover:bg-gray-50'
-                        }`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
-                  </div>
-                )}
-
-                {/* Geography */}
-                <div className="space-y-3 mb-6">
-                  <label className="block text-sm font-medium text-gray-700">Location</label>
-                  <input
-                    value={country}
-                    onChange={e => setCountry(e.target.value)}
-                    placeholder="Country"
-                    className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                  />
-                  <input
-                    value={city}
-                    onChange={e => setCity(e.target.value)}
-                    placeholder="City/Region"
-                    className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                  />
-                  <input
-                    value={postal}
-                    onChange={e => setPostal(e.target.value)}
-                    placeholder="Postal code"
-                    className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                  />
-                  <select
-                    value={radiusKm}
-                    onChange={e => {
-                      const v = Number(e.target.value);
-                      setRadiusKm(v);
-                    }}
-                    className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                  >
-                    <option value={0}>Anywhere</option>
-                    <option value={10}>Within 10 km</option>
-                    <option value={25}>Within 25 km</option>
-                    <option value={50}>Within 50 km</option>
-                    <option value={100}>Within 100 km</option>
-                  </select>
-                </div>
-
-                {/* Active filters summary */}
-                {(searchTerm ||
-                  selectedCategories.length > 0 ||
-                  country ||
-                  city ||
-                  postal ||
-                  radiusKm ||
-                  sortBy !== 'popular') && (
-                  <div className="mb-6 pb-6 border-b border-gray-200">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Active filters
-                    </label>
-                    <div className="flex flex-wrap gap-2">
-                      {searchTerm && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
-                          "{searchTerm}"
-                        </span>
-                      )}
-                      {selectedCategories.map(cat => (
-                        <span
-                          key={cat}
-                          className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700"
-                        >
-                          {cat}
-                        </span>
-                      ))}
-                      {(country || city || postal) && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
-                          {country || city || postal}
-                        </span>
-                      )}
-                      {sortBy !== 'popular' && (
-                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700">
-                          {sortBy}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-2">
-                  <Button onClick={clearFilters} variant="outline" size="sm" className="w-full">
-                    Clear all
-                  </Button>
-                </div>
+                <DiscoverFilters
+                  variant="desktop"
+                  searchTerm={searchTerm}
+                  onSearchChange={handleSearch}
+                  loading={loading}
+                  sortBy={sortBy}
+                  onSortChange={handleSortChange}
+                  viewMode={viewMode}
+                  onViewModeChange={setViewMode}
+                  selectedStatuses={selectedStatuses}
+                  onToggleStatus={handleToggleStatus}
+                  showStatusFilter={activeTab !== 'profiles'}
+                  selectedCategories={selectedCategories}
+                  onToggleCategory={handleToggleCategory}
+                  showCategoryFilter={activeTab !== 'profiles'}
+                  country={country}
+                  onCountryChange={setCountry}
+                  city={city}
+                  onCityChange={setCity}
+                  postal={postal}
+                  onPostalChange={setPostal}
+                  radiusKm={radiusKm}
+                  onRadiusChange={setRadiusKm}
+                  onClearFilters={clearFilters}
+                />
               </div>
             </div>
           </aside>
@@ -634,169 +454,31 @@ export default function DiscoverPage() {
                   className="lg:hidden mb-6 overflow-hidden"
                 >
                   <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-5">
-                    {/* Same filter content as sidebar, but for mobile */}
-                    {/* Search */}
-                    <div className="mb-6">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <Search className="h-4 w-4 text-gray-400" />
-                        </div>
-                        <Input
-                          type="text"
-                          placeholder="Search projects..."
-                          value={searchTerm}
-                          onChange={e => handleSearch(e.target.value)}
-                          className="pl-10 pr-4 py-2 text-sm bg-white/80 border-gray-200/80 rounded-xl"
-                        />
-                        {loading && (
-                          <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Sort & View */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Sort</label>
-                        <select
-                          value={sortBy}
-                          onChange={e => handleSortChange(e.target.value)}
-                          className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                        >
-                          <option value="popular">Popular</option>
-                          <option value="recent">Newest</option>
-                          <option value="funding">Most Funded</option>
-                          <option value="relevance">Relevance</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">View</label>
-                        <div className="bg-white/80 backdrop-blur-sm rounded-xl border border-gray-200/80 p-1 flex gap-1">
-                          <Button
-                            variant={viewMode === 'grid' ? 'primary' : 'ghost'}
-                            size="sm"
-                            onClick={() => setViewMode('grid')}
-                            className="flex-1 h-8"
-                          >
-                            <Grid3X3 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant={viewMode === 'list' ? 'primary' : 'ghost'}
-                            size="sm"
-                            onClick={() => setViewMode('list')}
-                            className="flex-1 h-8"
-                          >
-                            <List className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Project Status - Only show for projects */}
-                    {activeTab !== 'profiles' && (
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Project Status</label>
-                        <div className="flex flex-wrap gap-2">
-                          {[
-                            { value: 'active' as const, label: 'Active', color: 'green' },
-                            { value: 'paused' as const, label: 'Paused', color: 'yellow' },
-                            { value: 'completed' as const, label: 'Completed', color: 'blue' },
-                            { value: 'cancelled' as const, label: 'Cancelled', color: 'gray' },
-                          ].map(status => (
-                            <button
-                              key={status.value}
-                              onClick={() => handleToggleStatus(status.value)}
-                              className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
-                                selectedStatuses.includes(status.value)
-                                  ? `bg-${status.color}-100 border-${status.color}-300 text-${status.color}-700`
-                                  : 'bg-white/80 border-gray-200 text-gray-700 hover:bg-gray-50'
-                              }`}
-                            >
-                              {status.label}
-                            </button>
-                          ))}
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Draft projects are not shown in search results
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Categories - Only show for projects */}
-                    {activeTab !== 'profiles' && (
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Categories
-                        </label>
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          'technology',
-                          'education',
-                          'environment',
-                          'animals',
-                          'business',
-                          'community',
-                          'creative',
-                        ].map(cat => (
-                          <button
-                            key={cat}
-                            onClick={() => handleToggleCategory(cat)}
-                            className={`px-3 py-1 rounded-full text-sm font-medium border transition-colors ${
-                              selectedCategories.includes(cat)
-                                ? 'bg-orange-100 border-orange-300 text-orange-700'
-                                : 'bg-white/80 border-gray-200 text-gray-700 hover:bg-gray-50'
-                            }`}
-                          >
-                            {cat}
-                          </button>
-                        ))}
-                      </div>
-                      </div>
-                    )}
-
-                    {/* Geography */}
-                    <div className="space-y-3 mb-6">
-                      <label className="block text-sm font-medium text-gray-700">Location</label>
-                      <input
-                        value={country}
-                        onChange={e => setCountry(e.target.value)}
-                        placeholder="Country"
-                        className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                      />
-                      <input
-                        value={city}
-                        onChange={e => setCity(e.target.value)}
-                        placeholder="City/Region"
-                        className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                      />
-                      <input
-                        value={postal}
-                        onChange={e => setPostal(e.target.value)}
-                        placeholder="Postal code"
-                        className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                      />
-                      <select
-                        value={radiusKm}
-                        onChange={e => {
-                          const v = Number(e.target.value);
-                          setRadiusKm(v);
-                        }}
-                        className="w-full px-3 py-2 bg-white/80 border border-gray-200/80 rounded-xl text-sm"
-                      >
-                        <option value={0}>Anywhere</option>
-                        <option value={10}>Within 10 km</option>
-                        <option value={25}>Within 25 km</option>
-                        <option value={50}>Within 50 km</option>
-                        <option value={100}>Within 100 km</option>
-                      </select>
-                    </div>
-
-                    <Button onClick={clearFilters} variant="outline" size="sm" className="w-full">
-                      Clear all
-                    </Button>
+                    <DiscoverFilters
+                      variant="mobile"
+                      searchTerm={searchTerm}
+                      onSearchChange={handleSearch}
+                      loading={loading}
+                      sortBy={sortBy}
+                      onSortChange={handleSortChange}
+                      viewMode={viewMode}
+                      onViewModeChange={setViewMode}
+                      selectedStatuses={selectedStatuses}
+                      onToggleStatus={handleToggleStatus}
+                      showStatusFilter={activeTab !== 'profiles'}
+                      selectedCategories={selectedCategories}
+                      onToggleCategory={handleToggleCategory}
+                      showCategoryFilter={activeTab !== 'profiles'}
+                      country={country}
+                      onCountryChange={setCountry}
+                      city={city}
+                      onCityChange={setCity}
+                      postal={postal}
+                      onPostalChange={setPostal}
+                      radiusKm={radiusKm}
+                      onRadiusChange={setRadiusKm}
+                      onClearFilters={clearFilters}
+                    />
                   </div>
                 </motion.div>
               )}
@@ -807,6 +489,47 @@ export default function DiscoverPage() {
                 <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md mx-auto">
                   <p className="text-red-800 font-medium mb-2">Error loading projects</p>
                   <p className="text-red-600 text-sm">{searchError}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Loading State - Skeleton Grid */}
+            {loading && !searchError && (
+              <div className="space-y-8">
+                {/* Loading Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+                </div>
+
+                {/* Skeleton Grid */}
+                <div
+                  className={`grid gap-6 ${
+                    viewMode === 'grid'
+                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+                      : 'grid-cols-1'
+                  }`}
+                >
+                  {activeTab === 'profiles' ? (
+                    // Show profile skeletons
+                    Array.from({ length: 6 }).map((_, index) => (
+                      <ProfileCardSkeleton key={index} viewMode={viewMode} />
+                    ))
+                  ) : activeTab === 'projects' ? (
+                    // Show project skeletons
+                    Array.from({ length: 6 }).map((_, index) => (
+                      <ProjectCardSkeleton key={index} />
+                    ))
+                  ) : (
+                    // All tab - show mix of both
+                    <>
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <ProjectCardSkeleton key={`project-${index}`} />
+                      ))}
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <ProfileCardSkeleton key={`profile-${index}`} viewMode={viewMode} />
+                      ))}
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -822,7 +545,7 @@ export default function DiscoverPage() {
                 transition={{ duration: 0.5 }}
                 className="text-center py-16"
               >
-                {!searchTerm && selectedCategories.length === 0 && selectedTags.length === 0 ? (
+                {!searchTerm && selectedCategories.length === 0 ? (
                   // No filters - show full CTA
                   <div className="bg-gradient-to-r from-orange-50 via-tiffany-50 to-orange-50 rounded-2xl border border-orange-200 p-8 text-center max-w-2xl mx-auto">
                     <div className="w-16 h-16 bg-gradient-to-r from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
