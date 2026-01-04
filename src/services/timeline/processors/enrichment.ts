@@ -9,6 +9,7 @@
  */
 
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type {
   TimelineEvent,
   TimelineDisplayEvent,
@@ -37,7 +38,7 @@ export async function getActorInfo(actorId: string): Promise<{
   type: TimelineActorType;
 }> {
   const { data: profile } = await supabase
-    .from('profiles')
+    .from(DATABASE_TABLES.PROFILES)
     .select('id, display_name, username, avatar_url')
     .eq('id', actorId)
     .single();
@@ -73,7 +74,7 @@ export async function getSubjectInfo(
       };
     case 'profile':
       const { data: profile } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('display_name, username')
         .eq('id', id)
         .single();

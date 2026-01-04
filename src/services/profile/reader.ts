@@ -10,6 +10,7 @@ import supabase from '@/lib/supabase/browser'
 import { logger, logProfile } from '@/utils/logger'
 import { ProfileMapper } from './mapper'
 import type { ScalableProfile } from './types'
+import { DATABASE_TABLES } from '@/config/database-tables'
 
 // =====================================================================
 // 📖 PROFILE RETRIEVAL OPERATIONS
@@ -30,7 +31,7 @@ export class ProfileReader {
       logProfile('getProfile', { userId })
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .eq('id', userId)
         .single()
@@ -76,7 +77,7 @@ export class ProfileReader {
       } = options
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .order(orderBy, { ascending: orderDirection === 'asc' })
         .range(offset, offset + limit - 1)
@@ -108,7 +109,7 @@ export class ProfileReader {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .or(`username.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`)
         .order('created_at', { ascending: false })
@@ -133,7 +134,7 @@ export class ProfileReader {
   static async getAllProfiles(): Promise<ScalableProfile[]> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .order('created_at', { ascending: false })
 
@@ -164,7 +165,7 @@ export class ProfileReader {
       
       // Update view count
       await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .update({ 
           website: JSON.stringify({
             ...JSON.parse(profile.website || '{}'),
