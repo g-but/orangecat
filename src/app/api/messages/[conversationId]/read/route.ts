@@ -1,29 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import {
+  apiSuccess,
+  apiForbidden,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
+import type { Database } from '@/types/database';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
-export async function POST(
-  request: NextRequest,
+export const POST = withAuth(async (
+  req: AuthenticatedRequest,
   { params }: { params: Promise<{ conversationId: string }> }
-) {
+) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     const { conversationId } = await params;
+    const { user } = req;
 
     // Use admin client to bypass RLS for both verification and update
     const admin = createAdminClient();
 
     // Verify user is a participant
     const { data: participant, error: partError } = await admin
-      .from('conversation_participants')
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
       .select('*')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -31,32 +30,30 @@ export async function POST(
       .single();
 
     if (partError || !participant) {
-      return NextResponse.json(
-        { error: 'Not a participant in this conversation' },
-        { status: 403 }
-      );
+      return apiForbidden('Not a participant in this conversation');
     }
 
     // Mark conversation as read by updating last_read_at
     // Use admin client to bypass RLS
-    const updateData: { last_read_at: string } = {
+    const updateData: Database['public']['Tables']['conversation_participants']['Update'] = {
       last_read_at: new Date().toISOString(),
     };
-    const { error: readError } = await admin
-      .from('conversation_participants')
-      .update(updateData)
+    const updateQuery = admin
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+      .update(updateData as any)
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
       .eq('is_active', true);
+    const { error: readError } = await (updateQuery as any);
 
     if (readError) {
-      console.error('Error marking conversation as read:', readError);
-      return NextResponse.json({ error: 'Failed to mark conversation as read' }, { status: 500 });
+      logger.error('Error marking conversation as read', { error: readError, conversationId, userId: user.id }, 'Messages');
+      return handleApiError(readError);
     }
 
-    return NextResponse.json({ success: true });
+    return apiSuccess({ success: true });
   } catch (error) {
-    console.error('Mark read API error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Mark read API error', { error, conversationId: (await params).conversationId, userId: req.user.id }, 'Messages');
+    return handleApiError(error);
   }
-}
+});

@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -8,6 +9,7 @@ import { Profile } from '@/types/database';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface ProfilePeopleTabProps {
   profile: Profile;
@@ -48,7 +50,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
 
           // Fetch following
           const { data: followingData, error: followingError } = await supabase
-            .from('follows')
+            .from(DATABASE_TABLES.FOLLOWS)
             .select(
               `
               following_id,
@@ -72,7 +74,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
 
           // Fetch followers
           const { data: followersData, error: followersError } = await supabase
-            .from('follows')
+            .from(DATABASE_TABLES.FOLLOWS)
             .select(
               `
               follower_id,
@@ -122,7 +124,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
           }
         }
       } catch (error) {
-        console.error('Failed to fetch connections:', error);
+        logger.error('Failed to fetch connections:', error);
       } finally {
         setLoading(false);
       }
@@ -191,7 +193,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
           {currentList.map(person => {
             // Skip if no username or id
             if (!person.username || !person.id) {
-              console.warn('Person missing username or id:', person);
+              logger.warn('Person missing username or id:', person);
               return null;
             }
 

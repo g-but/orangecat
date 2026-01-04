@@ -1,7 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
 import type { Database } from '@/types/database';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 /**
  * GET /api/messages/unread-count
@@ -12,20 +14,12 @@ import type { Database } from '@/types/database';
  * Performance: ~90% faster than fetching all conversations
  *
  * Created: 2025-01-21
- * Last Modified: 2025-01-21
- * Last Modified Summary: Initial implementation for performance optimization
+ * Last Modified: 2025-01-28
+ * Last Modified Summary: Refactored to use withAuth and proper error handling
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized', count: 0 }, { status: 401 });
-    }
+    const { user } = req;
 
     const admin = createAdminClient();
 
@@ -35,13 +29,14 @@ export async function GET(request: NextRequest) {
 
     // Try optimized RPC function first
     try {
-      const { data: totalCount, error: rpcError } = await admin.rpc('get_total_unread_count', {
+      const rpcArgs: Database['public']['Functions']['get_total_unread_count']['Args'] = {
         p_user_id: user.id,
-      } as Database['public']['Functions']['get_total_unread_count']['Args']);
+      };
+      const { data: totalCount, error: rpcError } = await (admin.rpc('get_total_unread_count', rpcArgs as any) as any);
 
       if (!rpcError && typeof totalCount === 'number') {
         totalUnread = totalCount;
-        return NextResponse.json(
+        return apiSuccess(
           { count: totalUnread },
           {
             headers: {
@@ -51,17 +46,18 @@ export async function GET(request: NextRequest) {
         );
       } else {
         // Log the error for debugging
-        console.warn('RPC returned error or invalid data:', rpcError, 'data:', totalCount);
+        logger.warn('RPC returned error or invalid data', { rpcError, totalCount }, 'Messages');
         throw new Error('RPC function returned invalid data');
       }
     } catch (error) {
       // Fallback to optimized method - use single query instead of N+1
-      console.warn(
-        'Using fallback unread count method:',
-        error instanceof Error ? error.message : error
+      logger.debug(
+        'Using fallback unread count method',
+        { error: error instanceof Error ? error.message : String(error) },
+        'Messages'
       );
       const { data: participants } = await admin
-        .from('conversation_participants')
+        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
         .select('conversation_id, last_read_at')
         .eq('user_id', user.id)
         .eq('is_active', true);
@@ -81,7 +77,7 @@ export async function GET(request: NextRequest) {
 
         if (conversationsWithoutReadTime.length > 0) {
           const { count: unreadWithoutTime } = await admin
-            .from('messages')
+            .from(DATABASE_TABLES.MESSAGES)
             .select('id', { count: 'exact', head: true })
             .in('conversation_id', conversationsWithoutReadTime)
             .neq('sender_id', user.id)
@@ -99,7 +95,7 @@ export async function GET(request: NextRequest) {
           // This is still N queries but much faster than fetching all message data
           const countPromises = conversationsWithReadTime.map(async conv => {
             const { count } = await admin
-              .from('messages')
+              .from(DATABASE_TABLES.MESSAGES)
               .select('id', { count: 'exact', head: true })
               .eq('conversation_id', conv.id)
               .neq('sender_id', user.id)
@@ -115,7 +111,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json(
+    return apiSuccess(
       { count: totalUnread },
       {
         headers: {
@@ -124,7 +120,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    console.error('Unread count API error:', error);
-    return NextResponse.json({ count: 0 }, { status: 500 });
+    logger.error('Unread count API error', { error, userId: req.user.id }, 'Messages');
+    return handleApiError(error);
   }
-}
+});
