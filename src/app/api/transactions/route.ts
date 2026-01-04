@@ -12,6 +12,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 const TransactionSchema = z.object({
   projectId: z.string().min(1).max(64),
@@ -64,7 +65,7 @@ export const POST = compose(
       };
 
       const { data: created, error: txError } = await supabase
-        .from('transactions')
+        .from(DATABASE_TABLES.TRANSACTIONS)
         .insert([insertPayload])
         .select('id')
         .single();

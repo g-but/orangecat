@@ -11,6 +11,7 @@
 
 import { supabase } from './client'
 import { logger } from '@/utils/logger'
+import { DATABASE_TABLES } from '@/config/database-tables'
 
 // =====================================================================
 // 🎯 UNIFIED TYPES
@@ -62,7 +63,7 @@ export class ProfileService {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .eq('id', userId)
         .single()
@@ -106,7 +107,7 @@ export class ProfileService {
       }
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .update(updateData)
         .eq('id', userId)
         .select()
@@ -147,7 +148,7 @@ export class ProfileService {
       }
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .insert(newProfile)
         .select()
         .single()
@@ -177,7 +178,7 @@ export class ProfileService {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .eq('username', username.trim())
         .single()
@@ -210,7 +211,7 @@ export class ProfileService {
 
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
         .limit(limit)
@@ -239,7 +240,7 @@ export class DatabaseService {
   static async testConnection(): Promise<ServiceResponse<boolean>> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id')
         .limit(1)
 
@@ -262,7 +263,7 @@ export class DatabaseService {
     try {
       // Test expected columns exist
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id, username, name, bio, avatar_url, banner_url, website, bitcoin_address, lightning_address, created_at, updated_at')
         .limit(1)
 

@@ -9,6 +9,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/utils/logger';
 import type { Database } from '@/types/database';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
@@ -28,7 +29,7 @@ export class ProfileServerService {
   ): Promise<{ data: ProfileRow | null; error: Error | null }> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .eq('id', userId)
         .single();
@@ -58,7 +59,7 @@ export class ProfileServerService {
   ): Promise<boolean> {
     try {
       let query = supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id')
         .eq('username', username.trim());
 
@@ -88,7 +89,7 @@ export class ProfileServerService {
   ): Promise<{ data: ProfileRow | null; error: Error | null }> {
     try {
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .insert(profileData)
         .select()
         .single();
@@ -117,7 +118,7 @@ export class ProfileServerService {
     try {
       // Check if profile exists
       const { data: existing, error: checkError } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id')
         .eq('id', userId)
         .maybeSingle();

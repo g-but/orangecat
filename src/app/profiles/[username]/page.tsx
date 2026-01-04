@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { createServerClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import ProfilePageClient from '@/components/profile/ProfilePageClient';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -27,7 +28,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     if (user) {
       // Get username for current user
       const { data: userProfile } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('username')
         .eq('id', user.id)
         .single();
@@ -157,13 +158,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   // Fetch follower count
   const { count: followerCount } = await supabase
-    .from('follows')
+        .from(DATABASE_TABLES.FOLLOWS)
     .select('*', { count: 'exact', head: true })
     .eq('following_id', profile.id);
 
   // Fetch following count
   const { count: followingCount } = await supabase
-    .from('follows')
+        .from(DATABASE_TABLES.FOLLOWS)
     .select('*', { count: 'exact', head: true })
     .eq('follower_id', profile.id);
 

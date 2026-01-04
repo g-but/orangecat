@@ -11,6 +11,7 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { withApiRetry } from '@/utils/retry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type { TimelineVisibility } from '@/types/timeline';
 
 /**
@@ -483,7 +484,7 @@ export async function getEventComments(eventId: string, limit: number = 50, offs
       > = {};
       if (userIds.length > 0) {
         const { data: profiles, error: pErr } = await supabase
-          .from('profiles')
+          .from(DATABASE_TABLES.PROFILES)
           .select('id, display_name, username, avatar_url')
           .in('id', userIds as string[]);
         if (!pErr && profiles) {
@@ -552,7 +553,7 @@ export async function getCommentReplies(commentId: string, limit: number = 20): 
       > = {};
       if (userIds.length > 0) {
         const { data: profiles, error: pErr } = await supabase
-          .from('profiles')
+          .from(DATABASE_TABLES.PROFILES)
           .select('id, display_name, username, avatar_url')
           .in('id', userIds as string[]);
         if (!pErr && profiles) {

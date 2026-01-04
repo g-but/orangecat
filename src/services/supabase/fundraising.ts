@@ -1,5 +1,6 @@
 import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 export interface FundraisingStats {
   totalProjects: number;
@@ -48,7 +49,7 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
       // Only query transactions if we have valid project IDs
       if (projectFilters) {
         const { data: transactions, error: transactionsError } = await supabase
-          .from('transactions')
+          .from(DATABASE_TABLES.TRANSACTIONS)
           .select('amount_sats, from_entity_id, to_entity_id, from_entity_type')
           .eq('to_entity_type', 'project')
           .or(projectFilters)
@@ -116,7 +117,7 @@ export async function getUserFundraisingActivity(
     // Get recent transactions
     if (pageIds.length > 0) {
       const { data: transactions, error: transactionsError } = await supabase
-        .from('transactions')
+        .from(DATABASE_TABLES.TRANSACTIONS)
         .select(
           `
           *,

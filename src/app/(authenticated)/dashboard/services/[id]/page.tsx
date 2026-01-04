@@ -27,7 +27,7 @@ export default async function ServiceDetailPage({ params }: PageProps) {
       makeDetailFields={(service) => {
         const priceParts: string[] = [];
         if (service.hourly_rate_sats) {
-          priceParts.push(`${service.hourly_rate_sats.toLocaleString()} ${service.currency || 'CHF}/hour`);
+          priceParts.push(`${service.hourly_rate_sats.toLocaleString()} ${service.currency || 'CHF'}/hour`);
         }
         if (service.fixed_price_sats) {
           priceParts.push(`${service.fixed_price_sats.toLocaleString()} ${service.currency || 'CHF'}`);
