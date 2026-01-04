@@ -5,6 +5,7 @@ import {
   apiUnauthorized,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // GET /api/profiles - List profiles (basic fields)
 export async function GET(request: NextRequest) {
@@ -24,7 +25,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit;
 
     let query = supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select(
         `id, username, name, bio, avatar_url, bitcoin_address, lightning_address, created_at, updated_at`,
         { count: 'exact' }
