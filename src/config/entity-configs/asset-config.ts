@@ -1,8 +1,10 @@
 import { Briefcase } from 'lucide-react'
-import type { EntityConfig, FieldGroup } from '@/components/create/types'
+import type { FieldGroup } from '@/components/create/types'
 import { assetGuidanceContent, assetDefaultGuidance } from '@/lib/entity-guidance/asset-guidance'
 import { currencySelectOptions, DEFAULT_CURRENCY } from '@/config/currencies'
 import { assetSchema, type AssetFormData } from '@/lib/validation'
+import { ASSET_TEMPLATES, type AssetTemplate } from '@/components/create/templates'
+import { createEntityConfig } from './base-config-factory'
 
 const fieldGroups: FieldGroup[] = [
   {
@@ -56,14 +58,13 @@ const defaultValues: AssetFormData = {
   documents: [],
 }
 
-export const assetConfig: EntityConfig<AssetFormData> = {
-  type: 'asset',
+export const assetConfig = createEntityConfig<AssetFormData>({
+  entityType: 'asset',
   name: 'Asset',
   namePlural: 'Assets',
   icon: Briefcase,
   colorTheme: 'blue',
   backUrl: '/assets',
-  apiEndpoint: '/api/assets',
   successUrl: '/assets/[id]',
   pageTitle: 'Create Asset',
   pageDescription: 'List an asset you own. You can use it later as collateral for loans.',
@@ -74,11 +75,12 @@ export const assetConfig: EntityConfig<AssetFormData> = {
   defaultValues,
   guidanceContent: assetGuidanceContent,
   defaultGuidance: assetDefaultGuidance,
+  templates: ASSET_TEMPLATES as unknown as AssetTemplate[],
   infoBanner: {
     title: 'Important Disclaimer',
     content:
       'OrangeCat does not verify the accuracy of asset information. You are solely responsible for your listings and any agreements you enter.',
     variant: 'warning',
   },
-}
+})
 

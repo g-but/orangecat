@@ -13,8 +13,9 @@ import {
   productGuidanceContent,
   productDefaultGuidance,
 } from '@/lib/entity-guidance/product-guidance';
-import type { EntityConfig, FieldGroup } from '@/components/create/types';
+import type { FieldGroup } from '@/components/create/types';
 import { PRODUCT_TEMPLATES, type ProductTemplate } from '@/components/create/templates';
+import { createEntityConfig } from './base-config-factory';
 
 // ==================== FIELD GROUPS ====================
 
@@ -108,7 +109,7 @@ const defaultValues: UserProductFormData = {
   title: '',
   description: '',
   price_sats: 0,
-  currency: 'SATS',
+  currency: 'CHF', // Default to CHF - user can change in form
   product_type: 'physical',
   images: [],
   thumbnail_url: '',
@@ -122,14 +123,13 @@ const defaultValues: UserProductFormData = {
 
 // ==================== EXPORT CONFIG ====================
 
-export const productConfig: EntityConfig<UserProductFormData> = {
-  type: 'product',
+export const productConfig = createEntityConfig<UserProductFormData>({
+  entityType: 'product',
   name: 'Product',
   namePlural: 'Products',
   icon: Package,
   colorTheme: 'orange',
   backUrl: '/dashboard/store',
-  apiEndpoint: '/api/products',
   successUrl: '/dashboard/store',
   pageTitle: 'Create Product',
   pageDescription: 'Add a new product to your personal marketplace',
@@ -139,7 +139,7 @@ export const productConfig: EntityConfig<UserProductFormData> = {
   fieldGroups,
   validationSchema: userProductSchema,
   defaultValues,
-  guidanceContent: productGuidanceContent as any,
+  guidanceContent: productGuidanceContent,
   defaultGuidance: productDefaultGuidance,
   templates: PRODUCT_TEMPLATES as unknown as ProductTemplate[],
-};
+});

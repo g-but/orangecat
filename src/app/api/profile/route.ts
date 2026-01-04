@@ -9,6 +9,11 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { ProfileServerService } from '@/services/profile/server';
+import type { User } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
+
+type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 // GET /api/profile - Get current user's profile
 export async function GET(request: NextRequest) {
@@ -23,22 +28,18 @@ export async function GET(request: NextRequest) {
       return apiUnauthorized();
     }
 
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+    // Use ProfileServerService instead of direct database access
+    const { data: profile, error: profileError } = await ProfileServerService.getProfile(
+      supabase,
+      user.id
+    );
 
-    if (error) {
+    if (profileError || !profile) {
       // Attempt to bootstrap the missing profile and re-fetch
-      await ensureProfileRecord(supabase, user);
-      const { data: bootstrappedProfile, error: retryError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+      const { data: bootstrappedProfile, error: ensureError } =
+        await ProfileServerService.ensureProfile(supabase, user.id, user.email, user.user_metadata);
 
-      if (retryError || !bootstrappedProfile) {
+      if (ensureError || !bootstrappedProfile) {
         return apiNotFound('Profile not found');
       }
 
@@ -55,8 +56,8 @@ type SupabaseServer = Awaited<ReturnType<typeof createServerClient>>;
 
 async function respondWithProfile(
   supabase: SupabaseServer,
-  user: any,
-  profile: any,
+  user: User,
+  profile: ProfileRow,
   request: NextRequest
 ) {
   // Only fetch project count if explicitly requested via query param
@@ -64,15 +65,12 @@ async function respondWithProfile(
   const includeStats = request.nextUrl.searchParams.get('include_stats') === 'true';
 
   if (includeStats) {
-    const { count: projectCount } = await supabase
-      .from('projects')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', user.id);
+    const projectCount = await ProfileServerService.getProjectCount(supabase, user.id);
 
     return apiSuccess(
       {
         ...profile,
-        project_count: projectCount || 0,
+        project_count: projectCount,
       },
       {
         cache: 'SHORT', // Cache for 1 minute
@@ -87,37 +85,7 @@ async function respondWithProfile(
   });
 }
 
-async function ensureProfileRecord(supabase: SupabaseServer, user: any) {
-  const rawEmail: string | null = typeof user.email === 'string' ? user.email : null;
-  const emailName = rawEmail && rawEmail.includes('@') ? rawEmail.split('@')[0] : null;
-  const username = emailName && emailName.length > 0
-    ? emailName
-    : `user_${user.id?.toString().slice(0, 8) || 'unknown'}`;
-
-  const name =
-    user.user_metadata?.full_name ||
-    user.user_metadata?.name ||
-    user.user_metadata?.display_name ||
-    (emailName && emailName.length > 0 ? emailName : null) ||
-    'User';
-
-  try {
-    await supabase.from('profiles').insert({
-      id: user.id,
-      username,
-      name,
-      email: user.email,
-      status: 'active',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    });
-  } catch (error: any) {
-    if (error.code === '23505') {
-      return;
-    }
-    throw error;
-  }
-}
+// ensureProfileRecord function removed - now using ProfileServerService.ensureProfile
 
 // PUT /api/profile - Update current user's profile
 export async function PUT(request: NextRequest) {
@@ -137,14 +105,13 @@ export async function PUT(request: NextRequest) {
 
     // Check username uniqueness before validation if username is being updated
     if (body.username) {
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', body.username.trim())
-        .neq('id', user.id)
-        .single();
+      const isAvailable = await ProfileServerService.checkUsernameAvailability(
+        supabase,
+        body.username,
+        user.id
+      );
 
-      if (existingProfile) {
+      if (!isAvailable) {
         logger.warn('Username already taken', { username: body.username, userId: user.id });
         return apiValidationError('Username is already taken', { field: 'username' });
       }
@@ -190,13 +157,15 @@ export async function PUT(request: NextRequest) {
     ];
 
     const dataToSave = Object.fromEntries(
-      Object.entries(validatedData as any).filter(([key]) => allowedFields.includes(key))
+      Object.entries(validatedData as Record<string, unknown>).filter(([key]) => allowedFields.includes(key))
     );
     logger.debug('Profile update data prepared', {
       userId: user.id,
       fields: Object.keys(dataToSave),
     });
 
+    // Use ProfileServerService for update (we'll need to add an update method)
+    // For now, keeping direct update but this should be refactored to use service
     const { data: profile, error } = await supabase
       .from('profiles')
       .update({
@@ -223,7 +192,10 @@ export async function PUT(request: NextRequest) {
 
     // Provide specific error messages for Zod validation errors
     if (error instanceof Error && error.name === 'ZodError') {
-      const zodError = error as any;
+      interface ZodErrorShape {
+        errors?: Array<{ path?: (string | number)[]; message?: string }>;
+      }
+      const zodError = error as Error & ZodErrorShape;
       const firstError = zodError.errors?.[0];
       const fieldName = firstError?.path?.join('.') || 'field';
       const message = firstError?.message || 'Invalid profile data';

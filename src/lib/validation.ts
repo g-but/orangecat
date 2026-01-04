@@ -338,16 +338,56 @@ export const userCauseSchema = z.object({
   status: z.enum(['draft', 'active', 'completed', 'paused']).default('draft'),
 });
 
-export const userAIAssistantSchema = z.object({
-  assistant_name: z.string().max(50).default('My Cat'),
-  personality_prompt: z.string().max(1000).optional().nullable().or(z.literal('')),
-  training_data: z.any().optional().default({}),
-  status: z.enum(['coming_soon', 'training', 'active', 'paused']).default('coming_soon'),
-  is_enabled: z.boolean().default(false),
-  response_style: z.enum(['friendly', 'professional', 'casual']).default('friendly'),
-  allowed_topics: z.array(z.string()).optional().default([]),
-  blocked_topics: z.array(z.string()).optional().default([]),
+/**
+ * AI Assistant Schema
+ *
+ * Comprehensive schema for AI assistants that creators build and monetize.
+ * Supports multiple compute providers (API, self-hosted, community)
+ * and flexible pricing models (per-message, per-token, subscription).
+ */
+export const aiAssistantSchema = z.object({
+  // Basic Info
+  title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
+  description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  category: z.string().max(50).optional().nullable().or(z.literal('')),
+  tags: z.array(z.string()).optional().default([]),
+  avatar_url: z.string().url().optional().nullable().or(z.literal('')),
+
+  // AI Configuration (the "software")
+  system_prompt: z.string().min(10, 'System prompt must be at least 10 characters').max(10000, 'System prompt must be at most 10000 characters'),
+  welcome_message: z.string().max(500).optional().nullable().or(z.literal('')),
+  personality_traits: z.array(z.string()).optional().default([]),
+  knowledge_base_urls: z.array(z.string().url()).optional().default([]),
+
+  // Model Preferences
+  model_preference: z.string().max(50).default('any'),
+  max_tokens_per_response: z.number().int().positive().max(32000).default(1000),
+  temperature: z.number().min(0).max(2).default(0.7),
+
+  // Compute Configuration
+  compute_provider_type: z.enum(['api', 'self_hosted', 'community']).default('api'),
+  compute_provider_id: z.string().uuid().optional().nullable(),
+  api_provider: z.string().max(50).optional().nullable().or(z.literal('')),
+
+  // Pricing
+  pricing_model: z.enum(['per_message', 'per_token', 'subscription', 'free']).default('per_message'),
+  price_per_message_sats: z.number().int().min(0).default(0),
+  price_per_1k_tokens_sats: z.number().int().min(0).default(0),
+  subscription_price_sats: z.number().int().min(0).default(0),
+  free_messages_per_day: z.number().int().min(0).default(0),
+
+  // Visibility & Status
+  status: z.enum(['draft', 'active', 'paused', 'archived']).default('draft'),
+  is_public: z.boolean().default(false),
+  is_featured: z.boolean().default(false),
+
+  // Bitcoin Payment Info
+  lightning_address: z.string().optional().nullable().or(z.literal('')),
+  bitcoin_address: z.string().optional().nullable().or(z.literal('')),
 });
+
+// Legacy schema alias for backward compatibility
+export const userAIAssistantSchema = aiAssistantSchema;
 
 // Organization validation
 export const organizationSchema = z.object({
@@ -384,6 +424,9 @@ export const assetSchema = z.object({
 
 // Loan validation
 export const loanSchema = z.object({
+  // Loan type: new_request (seeking new loan) or existing_refinance (refinancing existing)
+  loan_type: z.enum(['new_request', 'existing_refinance']).default('new_request'),
+
   title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be at most 100 characters'),
   description: z.string().min(10, 'Description must be at least 10 characters').max(1000, 'Description must be at most 1000 characters'),
   loan_category_id: z.string().optional().nullable().or(z.literal('')),
@@ -393,7 +436,112 @@ export const loanSchema = z.object({
   bitcoin_address: z.string().optional().nullable().or(z.literal('')),
   lightning_address: z.string().optional().nullable().or(z.literal('')),
   fulfillment_type: z.enum(['manual', 'automatic']).default('manual'),
+  currency: z.string().optional().default('CHF'),
+
+  // Fields specific to existing loans (refinancing)
+  current_lender: z.string().max(100).optional().nullable().or(z.literal('')),
+  current_interest_rate: z.number().min(0).max(100).optional().nullable(),
+  monthly_payment: z.number().min(0).optional().nullable(),
+  desired_rate: z.number().min(0).max(100).optional().nullable(),
+  
+  // Collateral (array of collateral items)
+  collateral: z.array(z.any()).optional().default([]),
 });
+
+// Event validation
+export const eventSchema = z.object({
+  title: z.string().min(3, 'Title must be at least 3 characters').max(100, 'Title must be at most 100 characters'),
+  description: z.string().max(2000).optional().nullable().or(z.literal('')),
+  category: z.string().max(50).optional().nullable().or(z.literal('')),
+  event_type: z.enum(['meetup', 'conference', 'workshop', 'party', 'exhibition', 'festival', 'retreat', 'other']).default('meetup'),
+  tags: z.array(z.string()).optional().default([]),
+  
+  // Date & Time
+  start_date: z.string().or(z.date()).refine(
+    (val) => {
+      const date = typeof val === 'string' ? new Date(val) : val;
+      return !isNaN(date.getTime());
+    },
+    'Start date is required and must be valid'
+  ),
+  end_date: z.string().or(z.date()).optional().nullable().refine(
+    (val) => {
+      if (!val) return true;
+      const date = typeof val === 'string' ? new Date(val) : val;
+      return !isNaN(date.getTime());
+    },
+    'End date must be valid'
+  ),
+  timezone: z.string().default('UTC'),
+  is_all_day: z.boolean().default(false),
+  is_recurring: z.boolean().default(false),
+  recurrence_pattern: z.any().optional(), // JSON object for recurrence
+  
+  // Location
+  venue_name: z.string().max(200).optional().nullable().or(z.literal('')),
+  venue_address: z.string().max(500).optional().nullable().or(z.literal('')),
+  venue_city: z.string().max(100).optional().nullable().or(z.literal('')),
+  venue_country: z.string().max(100).optional().nullable().or(z.literal('')),
+  venue_postal_code: z.string().max(20).optional().nullable().or(z.literal('')),
+  latitude: z.number().min(-90).max(90).optional().nullable(),
+  longitude: z.number().min(-180).max(180).optional().nullable(),
+  is_online: z.boolean().default(false),
+  online_url: z.string().url().optional().nullable().or(z.literal('')),
+  asset_id: z.string().uuid().optional().nullable().or(z.literal('')),
+  
+  // Capacity & Attendance
+  max_attendees: z.number().int().positive().optional().nullable(),
+  requires_rsvp: z.boolean().default(true),
+  rsvp_deadline: z.string().or(z.date()).optional().nullable().refine(
+    (val) => {
+      if (!val) return true;
+      const date = typeof val === 'string' ? new Date(val) : val;
+      return !isNaN(date.getTime());
+    },
+    'RSVP deadline must be valid'
+  ),
+  
+  // Pricing & Funding
+  ticket_price_sats: z.number().positive().optional().nullable(),
+  currency: z.enum(['SATS', 'BTC']).default('SATS'),
+  is_free: z.boolean().default(false),
+  funding_goal_sats: z.number().positive().optional().nullable(),
+  bitcoin_address: z.string().optional().nullable().or(z.literal('')),
+  lightning_address: z.string().optional().nullable().or(z.literal('')),
+  
+  // Media
+  images: z.array(z.string().url()).optional().default([]),
+  thumbnail_url: z.string().url().optional().nullable().or(z.literal('')),
+  banner_url: z.string().url().optional().nullable().or(z.literal('')),
+  video_url: z.string().url().optional().nullable().or(z.literal('')),
+  
+  // Status
+  status: z.enum(['draft', 'published', 'open', 'full', 'ongoing', 'completed', 'cancelled']).default('draft'),
+}).refine(
+  (data) => {
+    // If not free, either ticket_price_sats or funding_goal_sats must be set
+    if (!data.is_free && !data.ticket_price_sats && !data.funding_goal_sats) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: 'Either ticket price or funding goal must be set for paid events',
+    path: ['ticket_price_sats'],
+  }
+).refine(
+  (data) => {
+    // If online, online_url should be provided
+    if (data.is_online && !data.online_url) {
+      return false;
+    }
+    return true;
+  },
+  {
+    message: 'Online URL is required for online events',
+    path: ['online_url'],
+  }
+);
 
 export type ProfileData = z.infer<typeof profileSchema>;
 export type ProjectData = z.infer<typeof projectSchema>;
@@ -402,7 +550,9 @@ export type UserProductFormData = z.infer<typeof userProductSchema>;
 export type UserServiceFormData = z.infer<typeof userServiceSchema>;
 export type UserCircleFormData = z.infer<typeof userCircleSchema>;
 export type UserCauseFormData = z.infer<typeof userCauseSchema>;
-export type UserAIAssistantFormData = z.infer<typeof userAIAssistantSchema>;
+export type AIAssistantFormData = z.infer<typeof aiAssistantSchema>;
+export type UserAIAssistantFormData = AIAssistantFormData; // Legacy alias
 export type OrganizationFormData = z.infer<typeof organizationSchema>;
 export type AssetFormData = z.infer<typeof assetSchema>;
 export type LoanFormData = z.infer<typeof loanSchema>;
+export type EventFormData = z.infer<typeof eventSchema>;

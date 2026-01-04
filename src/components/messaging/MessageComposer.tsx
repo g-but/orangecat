@@ -1,5 +1,7 @@
 'use client';
 
+import { logger } from '@/utils/logger';
+
 import React, { useState, useRef, useCallback } from 'react';
 import { Send, Paperclip, Smile } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -106,8 +108,8 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
           return;
         }
 
-        const errorData = await response.json().catch(() => ({} as any));
-        console.error('[MessageComposer] API error:', errorData);
+        const errorData = await response.json().catch(() => ({} as Record<string, unknown>));
+        logger.error('[MessageComposer] API error:', errorData);
         const desc = errorData.details || '';
         toast.error(errorData.error || 'Failed to send message', {
           description: typeof desc === 'string' ? desc : undefined,
@@ -115,7 +117,11 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
         onMessageFailed?.(tempId, errorData.error || desc);
       } else {
         // API returns { success: true, id: newId }
-        const data = await response.json().catch(() => null as any);
+        interface MessageResponse {
+          success?: boolean;
+          id?: string;
+        }
+        const data = await response.json().catch(() => null) as MessageResponse | null;
         debugLog('[MessageComposer] success id', data?.id);
 
         if (data?.id) {
@@ -134,14 +140,14 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
               debugLog('[MessageComposer] no full message returned from query');
             }
           } catch (err) {
-            console.error('[MessageComposer] Failed to fetch message immediately:', err);
+            logger.error('[MessageComposer] Failed to fetch message immediately:', err);
           }
         } else {
           debugLog('[MessageComposer] no message ID returned from API');
         }
       }
     } catch (err) {
-      console.error('[MessageComposer] Network error:', err);
+      logger.error('[MessageComposer] Network error:', err);
       if (await handleNetworkError(err, { conversationId, content: messageContent, messageType: MESSAGE_TYPES.TEXT, tempId }, user.id)) {
         setIsSending(false);
         return;

@@ -7,6 +7,7 @@
 
 import { useProjectStore, ProjectFormData } from '@/stores/projectStore';
 import { logger } from './logger';
+import type { CampaignFormData } from '@/types/campaign';
 
 interface LegacyLocalStorageDraft {
   formData: CampaignFormData;

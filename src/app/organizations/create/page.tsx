@@ -1,29 +1,17 @@
-'use client';
-
 /**
  * CREATE ORGANIZATION PAGE
  *
- * Uses the unified CreateEntityWorkflow component for consistent, maintainable code.
- * Follows DRY principles and modular architecture.
+ * Organizations are now unified as groups.
+ * Redirects to groups creation page.
  *
  * Created: 2025-12-06
- * Last Modified: 2025-01-XX
- * Last Modified Summary: Refactored to use CreateEntityWorkflow for modularity and DRY
+ * Last Modified: 2025-01-30
+ * Last Modified Summary: Redirect to groups (organizations are now groups)
  */
 
-import { EntityForm } from '@/components/create';
-import { organizationConfig } from '@/config/entity-configs';
-import OrganizationTemplates from '@/components/create/templates/OrganizationTemplates';
-import { useTemplateSelection } from '@/hooks/useTemplateSelection';
+import { redirect } from 'next/navigation';
 
 export default function CreateOrganizationPage() {
-  const { mergedConfig, handleSelectTemplate } = useTemplateSelection(organizationConfig);
-
-  return (
-    <div className="space-y-6">
-      <EntityForm config={mergedConfig} />
-      <OrganizationTemplates onSelectTemplate={handleSelectTemplate} />
-    </div>
-  );
+  redirect('/dashboard/groups/create');
 }
 

@@ -20,6 +20,18 @@
 - `make claim AGENT=model AREA="area" SUMMARY="summary" ETA="30m"` - Claim task
 - `bash scripts/smoke.sh` - Health checks (customize for Orange Cat)
 
+## 📚 AI Agent Guides
+
+**All AI agents working on this codebase should read the guides in `docs/guides/ai/`:**
+
+- **[COMMON.md](./ai/COMMON.md)** ⭐ **START HERE** - Single source of truth for all shared principles, commands, and workflows
+- **[README.md](./ai/README.md)** - Guide structure and how to update
+- **[claude.md](./ai/claude.md)** - Claude-specific workflows
+- **[cursor.md](./ai/cursor.md)** - Cursor-specific patterns
+- **[agents.md](./ai/agents.md)** - Universal agent reference
+
+**Key Principle:** All shared content is in `COMMON.md`. Agent-specific files only contain unique content.
+
 ## Orange Cat Project Overview
 Bitcoin-powered crowdfunding platform built for transparency and impact with native Bitcoin and Lightning Network support.
 

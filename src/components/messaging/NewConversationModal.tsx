@@ -1,5 +1,7 @@
 'use client';
 
+import { logger } from '@/utils/logger';
+
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Search, MessageSquare, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
@@ -81,7 +83,11 @@ export default function NewConversationModal({
           : [];
       setProfiles(arr);
     } catch (e) {
-      if ((e as any)?.name === 'AbortError') {
+      interface ErrorWithName {
+        name?: string;
+      }
+      const errorWithName = e as ErrorWithName;
+      if (errorWithName.name === 'AbortError') {
         return;
       }
       setError(e instanceof Error ? e.message : 'Failed to load people');
@@ -113,22 +119,26 @@ export default function NewConversationModal({
 
       const data = await res.json();
 
-      if (!res.ok || !data.conversationId) {
+      // Handle wrapped response format from apiSuccess
+      const conversationId = data.data?.conversationId || data.conversationId;
+
+      if (!res.ok || !conversationId) {
         const errorMessage =
           data.error || data.details || data.hint || 'Failed to create conversation';
-        console.error('Failed to create conversation:', {
+        logger.error('Failed to create conversation:', {
           status: res.status,
           error: data.error,
           details: data.details,
           code: data.code,
           hint: data.hint,
+          responseData: data,
         });
         throw new Error(errorMessage);
       }
       // Note: onCreated handler in parent already closes the modal via setShowNewModal(false)
-      onCreated(data.conversationId);
+      onCreated(conversationId);
     } catch (e) {
-      console.error('Error creating conversation:', e);
+      logger.error('Error creating conversation:', e);
       setError(e instanceof Error ? e.message : 'Failed to create conversation');
     } finally {
       setCreatingId(null);

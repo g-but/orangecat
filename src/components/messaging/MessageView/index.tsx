@@ -1,5 +1,7 @@
 'use client';
 
+import { logger } from '@/utils/logger';
+
 /**
  * Message View Component
  *
@@ -88,7 +90,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
       }
     },
     onNewMessage: async message => {
-      console.log('[MessageView] Received new message via real-time:', {
+      logger.info('[MessageView] Received new message via real-time:', {
         id: message.id,
         senderId: message.sender_id,
         currentUserId,
@@ -182,7 +184,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
         body: JSON.stringify({ content: updated.trim() }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}) as any);
+        const data = await res.json().catch(() => ({} as Record<string, unknown>));
         toast.error(data.error || 'Failed to edit message');
       } else {
         // Fetch updated message and apply
@@ -215,7 +217,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
         body: JSON.stringify({ conversationId, ids: [msg.id] }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}) as any);
+        const data = await res.json().catch(() => ({} as Record<string, unknown>));
         toast.error(data.error || 'Failed to delete message');
       } else {
         removeMessage(msg.id);

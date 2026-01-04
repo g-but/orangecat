@@ -128,18 +128,24 @@ export const useTimelineEvents = () => {
       }
     };
 
-    // Add event listeners
-    window.addEventListener('project-created' as any, handleProjectCreated);
-    window.addEventListener('donation-received' as any, handleDonationReceived);
-    window.addEventListener('profile-updated' as any, handleProfileUpdated);
-    window.addEventListener('user-followed' as any, handleUserFollowed);
+    // Custom event types for timeline events
+    // TypeScript doesn't know about custom events, so we cast to EventListener
+    const projectCreatedEvent = 'project-created';
+    const donationReceivedEvent = 'donation-received';
+    const profileUpdatedEvent = 'profile-updated';
+    const userFollowedEvent = 'user-followed';
+
+    window.addEventListener(projectCreatedEvent, handleProjectCreated as EventListener);
+    window.addEventListener(donationReceivedEvent, handleDonationReceived as EventListener);
+    window.addEventListener(profileUpdatedEvent, handleProfileUpdated as EventListener);
+    window.addEventListener(userFollowedEvent, handleUserFollowed as EventListener);
 
     // Cleanup
     return () => {
-      window.removeEventListener('project-created' as any, handleProjectCreated);
-      window.removeEventListener('donation-received' as any, handleDonationReceived);
-      window.removeEventListener('profile-updated' as any, handleProfileUpdated);
-      window.removeEventListener('user-followed' as any, handleUserFollowed);
+      window.removeEventListener(projectCreatedEvent, handleProjectCreated as EventListener);
+      window.removeEventListener(donationReceivedEvent, handleDonationReceived as EventListener);
+      window.removeEventListener(profileUpdatedEvent, handleProfileUpdated as EventListener);
+      window.removeEventListener(userFollowedEvent, handleUserFollowed as EventListener);
     };
   }, [user?.id, profile]);
 

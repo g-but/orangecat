@@ -6,9 +6,9 @@ const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeCat';
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: 'OrangeCat - Bitcoin Donations Made Simple',
-  description: 'Create your profile and start accepting Bitcoin donations today.',
-  keywords: ['bitcoin', 'donation', 'crypto', 'blockchain'],
-  authors: [{ name: `${siteName} Team` }],
+  description: 'Create your profile and start accepting Bitcoin donations today. A BitBaum company.',
+  keywords: ['bitcoin', 'donation', 'crypto', 'blockchain', 'bitbaum', 'crowdfunding'],
+  authors: [{ name: 'BitBaum AG' }, { name: 'OrangeCat Team' }],
   icons: {
     icon: [
       {

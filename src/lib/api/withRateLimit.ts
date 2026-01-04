@@ -4,6 +4,12 @@ import { apiRateLimited } from './standardResponse'
 
 type Mode = 'read' | 'write'
 
+interface ContextWithUser {
+  user?: {
+    id: string;
+  };
+}
+
 export function withRateLimit(mode: Mode = 'read'): Middleware<any> {
   return async (req, ctx, next) => {
     let result: RateLimitResult
@@ -11,7 +17,8 @@ export function withRateLimit(mode: Mode = 'read'): Middleware<any> {
       result = rateLimit(req)
     } else {
       // If a user is available in ctx, use their id; otherwise fall back to IP-based
-      const userId = (ctx as any)?.user?.id
+      const ctxWithUser = ctx as ContextWithUser | undefined;
+      const userId = ctxWithUser?.user?.id
       if (userId) {
         result = rateLimitWrite(userId)
       } else {

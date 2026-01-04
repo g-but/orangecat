@@ -22,6 +22,10 @@ import {
   Building,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { ProfileService } from '@/services/profile';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { onboardingEvents } from '@/lib/analytics';
 
 interface OnboardingStep {
   id: string;
@@ -39,41 +43,63 @@ interface OnboardingStep {
 export function OnboardingFlow() {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [completingOnboarding, setCompletingOnboarding] = useState(false);
   const router = useRouter();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // Track onboarding start when component mounts
+    onboardingEvents.started(user?.id);
+  }, [user?.id]);
 
   const steps: OnboardingStep[] = [
     {
       id: 'welcome',
       title: 'Welcome to OrangeCat! 🟠',
-      description: 'Your Bitcoin crowdfunding platform just got supercharged with new features!',
+      description: 'Your gateway to Bitcoin-powered crowdfunding and community lending',
       icon: Sparkles,
       content: (
         <div className="space-y-6">
           <div className="text-center">
             <div className="mb-6">
-              <Bitcoin className="h-16 w-16 text-orange-500 mx-auto mb-4" />
+              <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <span className="text-4xl">🐾</span>
+              </div>
               <h2 className="text-2xl font-bold mb-2">
-                Welcome to the Future of Bitcoin Crowdfunding
+                Welcome to OrangeCat
               </h2>
               <p className="text-muted-foreground">
-                OrangeCat has evolved from simple crowdfunding to a comprehensive financial
-                platform. Discover your new superpowers!
+                The decentralized platform where Bitcoin meets community. Fund projects, access
+                peer-to-peer lending, and build with like-minded creators.
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card className="border-orange-200 bg-orange-50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <DollarSign className="h-5 w-5 text-orange-600" />
-                  My Loans System
+                  <Bitcoin className="h-5 w-5 text-orange-600" />
+                  Bitcoin-First
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  List your loans for refinancing or browse community lending opportunities. Beat
-                  high-interest lenders with peer-to-peer offers!
+                  Fund and receive payments in Bitcoin. No intermediaries, no fees on donations.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200 bg-green-50">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  Peer-to-Peer Lending
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  List loans for refinancing or lend to community members. Better rates than banks.
                 </p>
               </CardContent>
             </Card>
@@ -81,308 +107,216 @@ export function OnboardingFlow() {
             <Card className="border-blue-200 bg-blue-50">
               <CardHeader className="pb-3">
                 <CardTitle className="text-lg flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-blue-600" />
-                  Social Timeline
+                  <Users className="h-5 w-5 text-blue-600" />
+                  Community-Driven
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Like, comment, share, and engage with posts. Build community around projects you
-                  care about with full social features.
+                  Social features, project discussions, and collective wisdom against scams.
                 </p>
               </CardContent>
             </Card>
           </div>
+
+          <Card className="bg-gradient-to-r from-orange-50 to-blue-50 border-orange-200">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-4">
+                <CheckCircle className="h-6 w-6 text-green-600 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium">Ready for your Bitcoin journey?</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Let's get you set up in just a few quick steps.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       ),
     },
     {
-      id: 'loans',
-      title: 'Discover My Loans',
-      description: 'Your personal peer-to-peer lending marketplace',
-      icon: DollarSign,
+      id: 'wallet-setup',
+      title: 'Add Your Bitcoin Address',
+      description: 'Paste your Bitcoin address to receive funds',
+      icon: Bitcoin,
       content: (
         <div className="space-y-6">
           <div className="text-center mb-6">
-            <Building className="h-12 w-12 text-orange-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Break Free from High-Interest Debt</h3>
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Bitcoin className="h-8 w-8 text-white" />
+            </div>
+            <h3 className="text-2xl font-bold mb-2">Add Your Bitcoin Address</h3>
             <p className="text-muted-foreground">
-              List your existing loans and receive competitive refinancing offers from the
-              community.
+              Paste your Bitcoin wallet address so supporters can send you Bitcoin directly. You keep full control of your funds.
             </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className="text-center p-4 border rounded-lg">
-              <div className="bg-orange-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                <Target className="h-6 w-6 text-orange-600" />
-              </div>
-              <h4 className="font-semibold mb-2">List Your Loans</h4>
-              <p className="text-sm text-muted-foreground">
-                Add your credit cards, student loans, personal loans, or any debt
-              </p>
-            </div>
-
-            <div className="text-center p-4 border rounded-lg">
-              <div className="bg-green-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                <TrendingUp className="h-6 w-6 text-green-600" />
-              </div>
-              <h4 className="font-semibold mb-2">Receive Offers</h4>
-              <p className="text-sm text-muted-foreground">
-                Get competitive refinancing offers from community lenders
-              </p>
-            </div>
-
-            <div className="text-center p-4 border rounded-lg">
-              <div className="bg-blue-100 rounded-full w-12 h-12 flex items-center justify-center mx-auto mb-3">
-                <DollarSign className="h-6 w-6 text-blue-600" />
-              </div>
-              <h4 className="font-semibold mb-2">Save Money</h4>
-              <p className="text-sm text-muted-foreground">
-                Lower interest rates, better terms, community-powered lending
-              </p>
-            </div>
           </div>
 
           <Card className="bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                <Sparkles className="h-6 w-6 text-orange-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold mb-2">What Makes My Loans Special?</h4>
-                  <ul className="text-sm space-y-1 text-muted-foreground">
-                    <li>
-                      • <strong>Peer-to-peer:</strong> Direct connection with lenders
+                  <h4 className="font-semibold mb-2">How It Works</h4>
+                  <ul className="text-sm space-y-2 text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-600 font-bold">1.</span>
+                      <span><strong>Get your address</strong> from your Bitcoin wallet (Muun, BlueWallet, Ledger, etc.)</span>
                     </li>
-                    <li>
-                      • <strong>Bitcoin-powered:</strong> Fast, low-fee transactions
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-600 font-bold">2.</span>
+                      <span><strong>Paste it</strong> in your OrangeCat wallet settings</span>
                     </li>
-                    <li>
-                      • <strong>Community-driven:</strong> Wisdom of crowds for better rates
-                    </li>
-                    <li>
-                      • <strong>Transparent:</strong> Full visibility into terms and conditions
-                    </li>
-                    <li>
-                      • <strong>Flexible:</strong> Refinance or payoff options
+                    <li className="flex items-start gap-2">
+                      <span className="text-orange-600 font-bold">3.</span>
+                      <span><strong>Receive Bitcoin</strong> directly when your projects get funded</span>
                     </li>
                   </ul>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </div>
-      ),
-      action: {
-        label: 'Explore My Loans',
-        href: '/loans',
-        primary: true,
-      },
-    },
-    {
-      id: 'social',
-      title: 'Social Timeline Features',
-      description: 'Engage with the community through likes, comments, and shares',
-      icon: Heart,
-      content: (
-        <div className="space-y-6">
-          <div className="text-center mb-6">
-            <Users className="h-12 w-12 text-blue-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Build Community Together</h3>
-            <p className="text-muted-foreground">
-              Every post now supports full social interaction. Like, comment, share, and engage!
-            </p>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Heart className="h-5 w-5 text-red-500" />
-                  Like & Dislike
-                </CardTitle>
-                <CardDescription>Show appreciation or flag potential issues</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Like posts you support and dislike those that might be suspicious. Help the
-                  community identify scams and celebrate great projects.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageCircle className="h-5 w-5 text-green-500" />
-                  Comments & Threads
-                </CardTitle>
-                <CardDescription>Discuss projects in detail</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Ask questions, share feedback, and build discussions around projects. Threaded
-                  replies keep conversations organized.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Share2 className="h-5 w-5 text-purple-500" />
-                  Share & Repost
-                </CardTitle>
-                <CardDescription>Spread the word about great projects</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  Share projects with your network. Add your own commentary to help others discover
-                  amazing Bitcoin projects.
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-orange-500" />
-                  Community Moderation
-                </CardTitle>
-                <CardDescription>Collective wisdom against scams</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-sm text-muted-foreground">
-                  High dislike counts help identify potential issues. Community-driven moderation
-                  keeps OrangeCat safe and trustworthy.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-            <CardContent className="p-6">
-              <div className="flex items-start gap-4">
-                <Users className="h-6 w-6 text-blue-600 mt-1 flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold mb-2">Why Social Features Matter</h4>
-                  <ul className="text-sm space-y-1 text-muted-foreground">
-                    <li>
-                      • <strong>Discovery:</strong> Find projects through shares and likes
-                    </li>
-                    <li>
-                      • <strong>Trust:</strong> Community feedback builds credibility
-                    </li>
-                    <li>
-                      • <strong>Engagement:</strong> Discussions drive project success
-                    </li>
-                    <li>
-                      • <strong>Safety:</strong> Collective moderation against scams
-                    </li>
-                    <li>
-                      • <strong>Network:</strong> Connect with like-minded Bitcoin enthusiasts
-                    </li>
-                  </ul>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="border-green-200 bg-green-50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <span className="font-medium">Self-Custody</span>
                 </div>
+                <p className="text-sm text-muted-foreground">
+                  Your Bitcoin goes directly to your wallet. We never hold your funds.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-blue-200 bg-blue-50">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium">No Fees</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Zero platform fees on donations. You keep 100% of what's sent.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <Users className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-blue-900">Don't have a Bitcoin wallet yet?</p>
+                <p className="text-xs text-blue-700 mt-1">
+                  No problem! You can skip this step and add your address later. We recommend <strong>Muun</strong> or <strong>BlueWallet</strong> for beginners.
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       ),
       action: {
-        label: 'Explore Timeline',
-        href: '/timeline',
+        label: 'Add My Bitcoin Address',
+        href: '/dashboard/wallets',
       },
     },
     {
-      id: 'dashboard',
-      title: 'Your Enhanced Dashboard',
-      description: 'Everything you need in one place',
+      id: 'get-started',
+      title: 'Ready to Start Your Journey?',
+      description: 'Choose your first action and begin building with OrangeCat',
       icon: TrendingUp,
       content: (
         <div className="space-y-6">
           <div className="text-center mb-6">
             <TrendingUp className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold mb-2">Your Command Center</h3>
+            <h3 className="text-xl font-semibold mb-2">You're All Set!</h3>
             <p className="text-muted-foreground">
-              Access all your projects, loans, and social activity from one unified dashboard.
+              Welcome to the OrangeCat community. Here's how to get started right away.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card className="border-orange-200 bg-orange-50 hover:border-orange-300 transition-colors cursor-pointer"
+                  onClick={() => router.push('/projects/create')}>
               <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Everything at your fingertips</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5 text-orange-600" />
+                  Create Your First Project
+                </CardTitle>
+                <CardDescription>Launch a Bitcoin crowdfunding campaign</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <DollarSign className="h-5 w-5 text-orange-500" />
-                  <div>
-                    <p className="font-medium">My Loans</p>
-                    <p className="text-sm text-muted-foreground">Manage your loan listings</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <Target className="h-5 w-5 text-blue-500" />
-                  <div>
-                    <p className="font-medium">Create Project</p>
-                    <p className="text-sm text-muted-foreground">
-                      Start a new crowdfunding campaign
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 border rounded-lg">
-                  <MessageCircle className="h-5 w-5 text-green-500" />
-                  <div>
-                    <p className="font-medium">Timeline</p>
-                    <p className="text-sm text-muted-foreground">See community activity</p>
-                  </div>
-                </div>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Share your idea with the community and start receiving Bitcoin donations. No fees, pure peer-to-peer funding.
+                </p>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="border-blue-200 bg-blue-50 hover:border-blue-300 transition-colors cursor-pointer"
+                  onClick={() => router.push('/discover')}>
               <CardHeader>
-                <CardTitle>Activity Overview</CardTitle>
-                <CardDescription>Track your engagement and progress</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  Explore Projects
+                </CardTitle>
+                <CardDescription>Discover what the community is building</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Projects Created</span>
-                  <Badge variant="secondary">0</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Loans Listed</span>
-                  <Badge variant="secondary">0</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Community Likes</span>
-                  <Badge variant="secondary">0</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Offers Received</span>
-                  <Badge variant="secondary">0</Badge>
-                </div>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Browse innovative Bitcoin projects, support creators you believe in, and learn from the community.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-green-200 bg-green-50 hover:border-green-300 transition-colors cursor-pointer"
+                  onClick={() => router.push('/loans')}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="h-5 w-5 text-green-600" />
+                  Check Out My Loans
+                </CardTitle>
+                <CardDescription>Explore peer-to-peer lending opportunities</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  See how community members are refinancing debt at better rates, or list your own loans.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="border-purple-200 bg-purple-50 hover:border-purple-300 transition-colors cursor-pointer"
+                  onClick={() => router.push('/timeline')}>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MessageCircle className="h-5 w-5 text-purple-600" />
+                  Join the Conversation
+                </CardTitle>
+                <CardDescription>Connect with the Bitcoin community</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Follow projects, engage in discussions, and build relationships with like-minded Bitcoin enthusiasts.
+                </p>
               </CardContent>
             </Card>
           </div>
 
-          <Card className="bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
+          <Card className="bg-gradient-to-r from-orange-50 to-blue-50 border-orange-200">
             <CardContent className="p-6">
               <div className="flex items-start gap-4">
-                <CheckCircle className="h-6 w-6 text-green-600 mt-1 flex-shrink-0" />
+                <Sparkles className="h-6 w-6 text-orange-600 mt-1 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold mb-2">Ready to Start Your Journey?</h4>
+                  <h4 className="font-semibold mb-2">Your OrangeCat Adventure Begins Now</h4>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Your OrangeCat dashboard is your gateway to Bitcoin crowdfunding, peer-to-peer
-                    lending, and community engagement. Everything you need to succeed is right here.
+                    You've joined a community of Bitcoin innovators, creators, and lenders. Every project funded,
+                    every loan refinanced, and every connection made strengthens our decentralized future.
                   </p>
-                  <div className="flex gap-2">
-                    <Badge>Projects</Badge>
-                    <Badge>Loans</Badge>
-                    <Badge>Social</Badge>
-                    <Badge>Analytics</Badge>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge>🎯 Bitcoin-Powered</Badge>
+                    <Badge>🤝 Community-Driven</Badge>
+                    <Badge>🔓 Self-Custody</Badge>
+                    <Badge>🚀 Innovation</Badge>
                   </div>
                 </div>
               </div>
@@ -390,11 +324,6 @@ export function OnboardingFlow() {
           </Card>
         </div>
       ),
-      action: {
-        label: 'Go to Dashboard',
-        href: '/dashboard',
-        primary: true,
-      },
     },
   ];
 
@@ -402,8 +331,12 @@ export function OnboardingFlow() {
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
+      // Track step completion
+      onboardingEvents.stepCompleted(currentStep, steps[currentStep].id, user?.id);
       setCompletedSteps(prev => new Set([...prev, currentStep]));
       setCurrentStep(currentStep + 1);
+      // Track viewing next step
+      onboardingEvents.stepViewed(currentStep + 1, steps[currentStep + 1].id, user?.id);
     }
   };
 
@@ -414,22 +347,49 @@ export function OnboardingFlow() {
   };
 
   const handleSkip = () => {
-    router.push('/dashboard');
+    onboardingEvents.skipped(currentStep, user?.id);
+    router.push('/dashboard?welcome=true');
   };
 
   const handleAction = (href: string) => {
+    onboardingEvents.stepCompleted(currentStep, steps[currentStep].id, user?.id);
     setCompletedSteps(prev => new Set([...prev, currentStep]));
     router.push(href);
   };
 
+  const handleCompleteOnboarding = async () => {
+    if (!user?.id) {
+      router.push('/dashboard?welcome=true');
+      return;
+    }
+
+    setCompletingOnboarding(true);
+    try {
+      await ProfileService.fallbackProfileUpdate(user.id, {
+        onboarding_completed: true
+      });
+      onboardingEvents.completed(user.id);
+      toast.success('Welcome to OrangeCat! Your journey begins now.');
+      router.push('/dashboard?welcome=true');
+    } catch (error) {
+      console.error('Failed to complete onboarding:', error);
+      // Still mark as completed in analytics - the user tried
+      onboardingEvents.completed(user.id);
+      toast.error('Something went wrong, but you can continue to your dashboard.');
+      router.push('/dashboard?welcome=true');
+    } finally {
+      setCompletingOnboarding(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome to OrangeCat 2.0</h1>
-          <p className="text-muted-foreground">
-            Discover all the amazing new features we've added just for you!
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome to OrangeCat</h1>
+          <p className="text-sm sm:text-base text-muted-foreground px-2">
+            Discover all the amazing features we've built for Bitcoin creators and lenders!
           </p>
         </div>
 
@@ -475,16 +435,22 @@ export function OnboardingFlow() {
         </AnimatePresence>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-4">
+          <Button
+            variant="outline"
+            onClick={handlePrevious}
+            disabled={currentStep === 0}
+            className="w-full sm:w-auto"
+          >
             Previous
           </Button>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             {steps[currentStep].action && (
               <Button
                 onClick={() => handleAction(steps[currentStep].action!.href)}
-                variant={steps[currentStep].action.primary ? 'default' : 'outline'}
+                variant={steps[currentStep].action.primary ? 'primary' : 'outline'}
+                className="w-full sm:w-auto"
               >
                 {steps[currentStep].action.label}
                 <ArrowRight className="h-4 w-4 ml-2" />
@@ -492,15 +458,19 @@ export function OnboardingFlow() {
             )}
 
             {currentStep < steps.length - 1 && (
-              <Button onClick={handleNext}>
+              <Button onClick={handleNext} className="w-full sm:w-auto">
                 Next
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             )}
 
             {currentStep === steps.length - 1 && (
-              <Button onClick={() => router.push('/dashboard')}>
-                Get Started
+              <Button
+                onClick={handleCompleteOnboarding}
+                disabled={completingOnboarding}
+                className="w-full sm:w-auto bg-orange-600 hover:bg-orange-700"
+              >
+                {completingOnboarding ? 'Setting up...' : 'Get Started'}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             )}

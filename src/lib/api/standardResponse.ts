@@ -68,7 +68,10 @@ export const CACHE_PRESETS = {
  */
 export function apiSuccess<T>(
   data: T,
-  options?: Omit<ApiSuccessResponse['metadata'], 'timestamp'> & {
+  options?: {
+    page?: number;
+    limit?: number;
+    total?: number;
     status?: number;
     headers?: HeadersInit;
     cache?: string | keyof typeof CACHE_PRESETS;
@@ -116,8 +119,14 @@ export function apiSuccessPaginated<T>(
  */
 export function apiCreated<T>(
   data: T,
-  metadata?: Omit<ApiSuccessResponse['metadata'], 'timestamp'>
+  options?: {
+    page?: number;
+    limit?: number;
+    total?: number;
+    headers?: HeadersInit | Record<string, string>;
+  }
 ): NextResponse<ApiSuccessResponse<T>> {
+  const { headers, ...metadata } = options || {};
   const response: ApiSuccessResponse<T> = {
     success: true,
     data,
@@ -127,7 +136,8 @@ export function apiCreated<T>(
     },
   };
 
-  return NextResponse.json(response, { status: 201 });
+  const responseHeaders = headers ? new Headers(headers as HeadersInit) : undefined;
+  return NextResponse.json(response, { status: 201, headers: responseHeaders });
 }
 
 /**

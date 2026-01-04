@@ -13,6 +13,7 @@ import {
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
+import { getTableName } from '@/config/entity-registry';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const { data: project, error } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select(
         'id, user_id, bitcoin_address, bitcoin_balance_btc, bitcoin_balance_updated_at, title'
       )
@@ -106,7 +107,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Update project balance
     const { error: updateError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .update({
         bitcoin_balance_btc: balance.balance_btc,
         bitcoin_balance_updated_at: balance.updated_at,

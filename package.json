@@ -48,6 +48,7 @@
     "test:e2e:profile-edit": "node tests/e2e/test-profile-edit.mjs",
     "test:e2e:simple": "node tests/e2e/test-app-simple.mjs",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:e2e:node && npm run test:e2e",
+    "create-entity": "node scripts/cli/create-entity.js",
     "deploy": "node scripts/deployment/deploy.js",
     "deploy:force": "node scripts/deployment/deploy.js --force",
     "deploy:staging": "node scripts/deployment/one-button-deploy.js staging",

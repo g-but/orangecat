@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/utils/logger';
 import { createServerClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
 
@@ -7,8 +8,8 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
     const allCookies = cookieStore.getAll();
 
-    console.log('=== TEST MESSAGING AUTH ===');
-    console.log(
+    logger.info('=== TEST MESSAGING AUTH ===');
+    logger.info(
       'All cookies:',
       allCookies.map(c => c.name)
     );
@@ -21,20 +22,20 @@ export async function GET(request: NextRequest) {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
-    console.log('Session:', { hasSession: !!session, error: sessionError?.message });
+    logger.info('Session:', { hasSession: !!session, error: sessionError?.message });
 
     // Try user
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
-    console.log('User:', { userId: user?.id, error: userError?.message });
+    logger.info('User:', { userId: user?.id, error: userError?.message });
 
     // Check request headers
     const cookieHeader = request.headers.get('cookie');
-    console.log('Cookie header present:', !!cookieHeader);
+    logger.info('Cookie header present:', !!cookieHeader);
     if (cookieHeader) {
-      console.log('Cookie header length:', cookieHeader.length);
+      logger.info('Cookie header length:', cookieHeader.length);
     }
 
     return NextResponse.json({
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
       cookieHeaderPresent: !!cookieHeader,
     });
   } catch (error) {
-    console.error('Test auth error:', error);
+    logger.error('Test auth error:', error);
     return NextResponse.json(
       {
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -56,3 +57,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+

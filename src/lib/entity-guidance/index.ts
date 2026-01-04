@@ -64,6 +64,13 @@ export {
   type ProjectFieldType,
 } from './project-guidance';
 
+// AI Assistant guidance
+export {
+  aiAssistantGuidanceContent,
+  aiAssistantDefaultGuidance,
+  type AIAssistantFieldType,
+} from './ai-assistant-guidance';
+
 // Re-export profile/wallet guidance from lib/ (these are used elsewhere)
 export {
   profileGuidanceContent,

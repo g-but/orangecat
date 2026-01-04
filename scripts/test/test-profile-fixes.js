@@ -158,3 +158,6 @@ async function testProfileFixes() {
 
 console.log('🚀 Starting Profile Fixes Test...');
 testProfileFixes();
+
+
+

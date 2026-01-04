@@ -1,7 +1,11 @@
+interface ErrorWithCode {
+  code?: string;
+}
+
 export function isTableNotFound(error: unknown): boolean {
   if (!error || typeof error !== 'object') {
     return false;
   }
-  const code = (error as any)?.code;
-  return code === '42P01';
+  const errorWithCode = error as ErrorWithCode;
+  return errorWithCode.code === '42P01';
 }

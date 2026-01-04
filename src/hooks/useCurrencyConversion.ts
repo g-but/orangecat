@@ -45,7 +45,7 @@ export function useCurrencyConversion() {
     // For real-time accuracy, the service auto-refreshes every minute
     try {
       // Get cached rates synchronously
-      const rates = (currencyConverter as any).rates;
+      const rates = currencyConverter.getCachedRates();
       if (!rates) {
         return 0;
       }
@@ -83,7 +83,7 @@ export function useCurrencyConversion() {
     }
 
     try {
-      const rates = (currencyConverter as any).rates;
+      const rates = currencyConverter.getCachedRates();
       if (!rates) {
         return 0;
       }

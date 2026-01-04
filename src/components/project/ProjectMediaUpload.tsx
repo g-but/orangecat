@@ -1,4 +1,5 @@
 /**
+import { logger } from '@/utils/logger';
  * ProjectMediaUpload Component
  *
  * Handles image uploads for projects using presigned upload flow.
@@ -78,7 +79,7 @@ export default function ProjectMediaUpload({
 
       setMedia(mediaWithUrls);
     } catch (err) {
-      console.error('Failed to load media:', err);
+      logger.error('Failed to load media:', err);
       toast.error('Failed to load images');
     } finally {
       setLoading(false);
@@ -201,7 +202,7 @@ export default function ProjectMediaUpload({
       const compressedSizeMB = (compressedFile.size / (1024 * 1024)).toFixed(2);
 
       if (compressedFile.size < file.size) {
-        console.log(
+        logger.info(
           `Image compressed: ${originalSizeMB}MB → ${compressedSizeMB}MB (${Math.round((1 - compressedFile.size / file.size) * 100)}% reduction)`
         );
       }
@@ -253,7 +254,7 @@ export default function ProjectMediaUpload({
       await loadMedia();
       onUploadComplete?.();
     } catch (err) {
-      console.error('Upload failed:', err);
+      logger.error('Upload failed:', err);
       toast.error(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploading(false);
@@ -277,7 +278,7 @@ export default function ProjectMediaUpload({
       await loadMedia();
       onUploadComplete?.();
     } catch (err) {
-      console.error('Delete failed:', err);
+      logger.error('Delete failed:', err);
       toast.error('Failed to delete image');
     }
   };

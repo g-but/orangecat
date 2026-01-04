@@ -1,104 +1,128 @@
 /**
- * ORGANIZATIONS API ROUTE
+ * Organizations API Route - Backward Compatibility Wrapper
  *
- * Handles organization CRUD operations.
+ * Uses unified groups API, filtering out circles.
+ * Maintains backward compatibility for existing clients.
  *
- * Created: 2025-12-16
- * Last Modified: 2025-12-16
- * Last Modified Summary: Initial implementation for unified EntityForm support
+ * Created: 2025-01-30
+ * Last Modified: 2025-01-30
+ * Last Modified Summary: Updated to use unified groups API
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { organizationSchema, type OrganizationFormData } from '@/lib/validation';
-import { createOrganization } from '@/domain/commerce/service';
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiValidationError,
-  apiInternalError,
-  handleApiError,
-  handleSupabaseError,
-  apiRateLimited,
-} from '@/lib/api/standardResponse';
-import { rateLimit, rateLimitWrite, createRateLimitResponse } from '@/lib/rate-limit';
+import groupsService from '@/services/groups';
+import { createGroupSchema } from '@/services/groups/validation';
 import { logger } from '@/utils/logger';
-import { withRequestId } from '@/lib/api/withRequestId';
-import { compose } from '@/lib/api/compose';
-import { withZodBody } from '@/lib/api/withZod';
+import type { CreateGroupInput } from '@/types/group';
 
-// GET /api/organizations - Get all organizations
+// GET /api/organizations - Get organizations (exclude circles)
 export async function GET(request: NextRequest) {
   try {
-    // Rate limiting check
-    const rateLimitResult = rateLimit(request);
-    if (!rateLimitResult.success) {
-      return createRateLimitResponse(rateLimitResult);
-    }
-
     const supabase = await createServerClient();
-    const { searchParams } = new URL(request.url);
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
-    const type = searchParams.get('type');
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-    let query = supabase
-      .from('organizations')
-      .select('*')
-      .eq('is_public', true)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
-
-    // Add optional filter
-    if (type) {
-      query = query.eq('type', type);
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: organizations, error } = await query;
+    const searchParams = request.nextUrl.searchParams;
+    const filter = searchParams.get('filter'); // 'my' for user's orgs
+    const pageSize = parseInt(searchParams.get('limit') || '20');
 
-    if (error) {
-      return apiInternalError('Failed to fetch organizations', { details: error.message });
+    if (filter === 'my' && user) {
+      // Get user's groups, filter out circles (userId obtained internally)
+      const result = await groupsService.getUserGroups({}, { page: 1, pageSize });
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || 'Failed to fetch organizations' },
+          { status: 500 }
+        );
+      }
+
+      // Filter out circles (label === 'circle')
+      const organizations = (result.groups || []).filter((g) => g.label !== 'circle');
+
+      return NextResponse.json({
+        organizations,
+        count: organizations.length,
+      });
+    } else {
+      // Get available groups (public), filter out circles
+      const result = await groupsService.getAvailableGroups(
+        { is_public: true },
+        { page: 1, pageSize }
+      );
+
+      if (!result.success) {
+        return NextResponse.json(
+          { error: result.error || 'Failed to fetch organizations' },
+          { status: 500 }
+        );
+      }
+
+      // Filter out circles (label === 'circle')
+      const organizations = (result.groups || []).filter((g) => g.label !== 'circle');
+
+      return NextResponse.json({
+        organizations,
+        count: organizations.length,
+      });
     }
-
-    return apiSuccess(organizations || [], {
-      headers: {
-        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
-      },
-    });
   } catch (error) {
-    return handleApiError(error);
+    logger.error('Error in GET /api/organizations', { error }, 'Organizations');
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
-// POST /api/organizations - Create new organization
-export const POST = compose(
-  withRequestId(),
-  withZodBody(organizationSchema)
-)(async (request: NextRequest, ctx) => {
+// POST /api/organizations - Create organization
+export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+
     if (authError || !user) {
-      return apiUnauthorized();
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const rl = rateLimitWrite(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      logger.warn('Organization creation rate limit exceeded', { userId: user.id });
-      return apiRateLimited(
-        'Too many organization creation requests. Please slow down.',
-        retryAfter
+    const body = await request.json();
+
+    // Validate and ensure type is NOT 'circle'
+    const validationResult = createGroupSchema.safeParse({
+      ...body,
+      type: body.type && body.type !== 'circle' ? body.type : 'organization',
+    });
+
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: validationResult.error.errors },
+        { status: 400 }
       );
     }
 
-    const organization = await createOrganization(user.id, ctx.body, supabase);
-    logger.info('Organization created successfully', { organizationId: organization.id });
-    return apiSuccess(organization, { status: 201 });
+    // Create group (organization)
+    const result = await groupsService.createGroup(validationResult.data as CreateGroupInput);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || 'Failed to create organization' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(
+      { organization: result.group },
+      { status: 201 }
+    );
   } catch (error) {
-    return handleApiError(error);
+    logger.error('Error in POST /api/organizations', { error }, 'Organizations');
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
-});
+}

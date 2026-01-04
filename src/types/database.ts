@@ -23,7 +23,8 @@ export interface Database {
           name: string | null;
           bio: string | null;
           email: string | null;
-          display_name: string | null;
+          // Note: display_name should be migrated to name - see migration 20250130000006
+          display_name?: string | null; // @deprecated - use 'name' instead
           // Location fields
           location: string | null;
           location_search: string | null;
@@ -95,7 +96,8 @@ export interface Database {
           name?: string | null;
           bio?: string | null;
           email?: string | null;
-          display_name?: string | null;
+          // Note: display_name should be migrated to name - see migration 20250130000006
+          display_name?: string | null; // @deprecated - use 'name' instead
           // Location fields
           location?: string | null;
           location_search?: string | null;
@@ -416,27 +418,357 @@ export interface Database {
         };
       };
 
-      circles: {
+      user_causes: {
         Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          cause_category: string;
+          goal_sats: number | null;
+          total_raised_sats: number;
+          currency: string;
+          bitcoin_address: string | null;
+          lightning_address: string | null;
+          distribution_rules: any;
+          beneficiaries: any[];
+          status: 'draft' | 'active' | 'completed' | 'paused';
+          created_at: string;
+          updated_at: string;
           [key: string]: any;
         };
         Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          cause_category: string;
+          goal_sats?: number | null;
+          total_raised_sats?: number;
+          currency?: string;
+          bitcoin_address?: string | null;
+          lightning_address?: string | null;
+          distribution_rules?: any;
+          beneficiaries?: any[];
+          status?: 'draft' | 'active' | 'completed' | 'paused';
+          created_at?: string;
+          updated_at?: string;
           [key: string]: any;
         };
         Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          cause_category?: string;
+          goal_sats?: number | null;
+          total_raised_sats?: number;
+          currency?: string;
+          bitcoin_address?: string | null;
+          lightning_address?: string | null;
+          distribution_rules?: any;
+          beneficiaries?: any[];
+          status?: 'draft' | 'active' | 'completed' | 'paused';
+          created_at?: string;
+          updated_at?: string;
           [key: string]: any;
+        };
+      };
+
+      circles: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          category: string;
+          visibility: 'public' | 'private' | 'hidden';
+          max_members: number | null;
+          member_approval: 'auto' | 'manual' | 'invite';
+          location_restricted: boolean;
+          location_radius_km: number | null;
+          bitcoin_address: string | null;
+          wallet_purpose: string | null;
+          contribution_required: boolean;
+          contribution_amount: number | null;
+          activity_level: 'casual' | 'regular' | 'intensive';
+          meeting_frequency: 'none' | 'weekly' | 'monthly' | 'quarterly';
+          enable_projects: boolean;
+          enable_events: boolean;
+          enable_discussions: boolean;
+          require_member_intro: boolean;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          category: string;
+          visibility?: 'public' | 'private' | 'hidden';
+          max_members?: number | null;
+          member_approval?: 'auto' | 'manual' | 'invite';
+          location_restricted?: boolean;
+          location_radius_km?: number | null;
+          bitcoin_address?: string | null;
+          wallet_purpose?: string | null;
+          contribution_required?: boolean;
+          contribution_amount?: number | null;
+          activity_level?: 'casual' | 'regular' | 'intensive';
+          meeting_frequency?: 'none' | 'weekly' | 'monthly' | 'quarterly';
+          enable_projects?: boolean;
+          enable_events?: boolean;
+          enable_discussions?: boolean;
+          require_member_intro?: boolean;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          category?: string;
+          visibility?: 'public' | 'private' | 'hidden';
+          max_members?: number | null;
+          member_approval?: 'auto' | 'manual' | 'invite';
+          location_restricted?: boolean;
+          location_radius_km?: number | null;
+          bitcoin_address?: string | null;
+          wallet_purpose?: string | null;
+          contribution_required?: boolean;
+          contribution_amount?: number | null;
+          activity_level?: 'casual' | 'regular' | 'intensive';
+          meeting_frequency?: 'none' | 'weekly' | 'monthly' | 'quarterly';
+          enable_projects?: boolean;
+          enable_events?: boolean;
+          enable_discussions?: boolean;
+          require_member_intro?: boolean;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      circle_members: {
+        Row: {
+          id: string;
+          circle_id: string;
+          user_id: string;
+          role: 'owner' | 'admin' | 'moderator' | 'member';
+          status: 'active' | 'pending' | 'suspended';
+          joined_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          circle_id: string;
+          user_id: string;
+          role?: 'owner' | 'admin' | 'moderator' | 'member';
+          status?: 'active' | 'pending' | 'suspended';
+          joined_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          circle_id?: string;
+          user_id?: string;
+          role?: 'owner' | 'admin' | 'moderator' | 'member';
+          status?: 'active' | 'pending' | 'suspended';
+          joined_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      circle_discussion_categories: {
+        Row: {
+          id: string;
+          circle_id: string;
+          name: string;
+          description: string | null;
+          is_default: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          circle_id: string;
+          name: string;
+          description?: string | null;
+          is_default?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          circle_id?: string;
+          name?: string;
+          description?: string | null;
+          is_default?: boolean;
+          created_at?: string;
         };
       };
 
       organizations: {
         Row: {
+          id: string;
+          name: string;
+          slug: string;
+          type: string;
+          governance_model: string | null;
+          treasury_address: string | null;
+          is_public: boolean;
+          transparency_score: number | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
           [key: string]: any;
         };
         Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          type?: string;
+          governance_model?: string | null;
+          treasury_address?: string | null;
+          is_public?: boolean;
+          transparency_score?: number | null;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
           [key: string]: any;
         };
         Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          type?: string;
+          governance_model?: string | null;
+          treasury_address?: string | null;
+          is_public?: boolean;
+          transparency_score?: number | null;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
           [key: string]: any;
+        };
+      };
+
+      ai_assistants: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          category: string | null;
+          tags: string[];
+          avatar_url: string | null;
+          system_prompt: string;
+          welcome_message: string | null;
+          personality_traits: string[] | null;
+          knowledge_base_urls: string[] | null;
+          model_preference: string;
+          max_tokens_per_response: number;
+          temperature: number;
+          compute_provider_type: 'api' | 'self_hosted' | 'community';
+          compute_provider_id: string | null;
+          api_provider: string | null;
+          pricing_model: 'per_message' | 'per_token' | 'subscription' | 'free';
+          price_per_message_sats: number;
+          price_per_1k_tokens_sats: number;
+          subscription_price_sats: number;
+          free_messages_per_day: number;
+          status: 'draft' | 'active' | 'paused' | 'archived';
+          is_public: boolean;
+          is_featured: boolean;
+          total_conversations: number;
+          total_messages: number;
+          total_tokens_used: number;
+          total_revenue_sats: number;
+          average_rating: number | null;
+          total_ratings: number;
+          lightning_address: string | null;
+          bitcoin_address: string | null;
+          created_at: string;
+          updated_at: string;
+          published_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          category?: string | null;
+          tags?: string[];
+          avatar_url?: string | null;
+          system_prompt: string;
+          welcome_message?: string | null;
+          personality_traits?: string[] | null;
+          knowledge_base_urls?: string[] | null;
+          model_preference?: string;
+          max_tokens_per_response?: number;
+          temperature?: number;
+          compute_provider_type?: 'api' | 'self_hosted' | 'community';
+          compute_provider_id?: string | null;
+          api_provider?: string | null;
+          pricing_model?: 'per_message' | 'per_token' | 'subscription' | 'free';
+          price_per_message_sats?: number;
+          price_per_1k_tokens_sats?: number;
+          subscription_price_sats?: number;
+          free_messages_per_day?: number;
+          status?: 'draft' | 'active' | 'paused' | 'archived';
+          is_public?: boolean;
+          is_featured?: boolean;
+          total_conversations?: number;
+          total_messages?: number;
+          total_tokens_used?: number;
+          total_revenue_sats?: number;
+          average_rating?: number | null;
+          total_ratings?: number;
+          lightning_address?: string | null;
+          bitcoin_address?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          published_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          category?: string | null;
+          tags?: string[];
+          avatar_url?: string | null;
+          system_prompt?: string;
+          welcome_message?: string | null;
+          personality_traits?: string[] | null;
+          knowledge_base_urls?: string[] | null;
+          model_preference?: string;
+          max_tokens_per_response?: number;
+          temperature?: number;
+          compute_provider_type?: 'api' | 'self_hosted' | 'community';
+          compute_provider_id?: string | null;
+          api_provider?: string | null;
+          pricing_model?: 'per_message' | 'per_token' | 'subscription' | 'free';
+          price_per_message_sats?: number;
+          price_per_1k_tokens_sats?: number;
+          subscription_price_sats?: number;
+          free_messages_per_day?: number;
+          status?: 'draft' | 'active' | 'paused' | 'archived';
+          is_public?: boolean;
+          is_featured?: boolean;
+          total_conversations?: number;
+          total_messages?: number;
+          total_tokens_used?: number;
+          total_revenue_sats?: number;
+          average_rating?: number | null;
+          total_ratings?: number;
+          lightning_address?: string | null;
+          bitcoin_address?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          published_at?: string | null;
         };
       };
     };
@@ -525,13 +857,55 @@ export type ProfileFormData = ProfileData;
 // Project view model used by dashboard and timeline components
 export type Project = AppProject;
 
-// Commerce entity types
-export type UserProduct = Database['public']['Tables']['user_products']['Row'];
-export type UserService = Database['public']['Tables']['user_services']['Row'];
-// UserCause type - using any for now since table may not be fully defined
-export type UserCause = Record<string, any>;
+// Commerce entity types - include required BaseEntity fields for type safety
+// The database uses [key: string]: any but we need id and title for entity list components
+export type UserProduct = Database['public']['Tables']['user_products']['Row'] & {
+  id: string;
+  title: string;
+  description?: string | null;
+  thumbnail_url?: string | null;
+  status?: string;
+  price_sats?: number;
+  currency?: string;
+  images?: string[];
+};
+
+export type UserService = Database['public']['Tables']['user_services']['Row'] & {
+  id: string;
+  title: string;
+  description?: string | null;
+  thumbnail_url?: string | null;
+  status?: string;
+  category?: string;
+  hourly_rate_sats?: number;
+  fixed_price_sats?: number;
+  service_location_type?: string;
+};
+
+export type UserCause = {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string | null;
+  thumbnail_url?: string | null;
+  cause_category: string;
+  goal_sats?: number | null;
+  total_raised_sats: number;
+  currency?: string;
+  bitcoin_address?: string | null;
+  lightning_address?: string | null;
+  distribution_rules?: any;
+  beneficiaries?: any[];
+  status: 'draft' | 'active' | 'completed' | 'paused';
+  created_at: string;
+  updated_at?: string;
+  [key: string]: any; // Allow additional properties
+};
 
 // Extended Profile type that includes email from database
 export type Profile = AppProfile & {
   email?: string | null;
 };
+
+// AI Assistant type for dashboard and entity components
+export type AIAssistant = Database['public']['Tables']['ai_assistants']['Row'];

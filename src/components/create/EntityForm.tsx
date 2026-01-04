@@ -32,7 +32,8 @@ import Button from '@/components/ui/Button';
 
 import { FormField } from './FormField';
 import { GuidancePanel } from './GuidancePanel';
-import type { EntityConfig, FormState } from './types';
+import { TemplatePicker } from './templates/TemplatePicker';
+import type { EntityConfig, FormState, EntityTemplate } from './types';
 
 // ==================== COMPONENT ====================
 
@@ -55,10 +56,21 @@ export function EntityForm<T extends Record<string, any>>({
 }: EntityFormProps<T>) {
   const { user, isLoading: authLoading, hydrated } = useAuth();
   const router = useRouter();
+  const userCurrency = useUserCurrency();
+
+  // Initialize form data with user's currency preference if currency field exists
+  const initialFormData = useMemo(() => {
+    const data = { ...config.defaultValues, ...initialValues } as T;
+    // If currency field exists and is not set, use user's preferred currency
+    if ('currency' in data && !data.currency && typeof data.currency === 'string') {
+      (data as any).currency = userCurrency;
+    }
+    return data;
+  }, [config.defaultValues, initialValues, userCurrency]);
 
   // Form state
   const [formState, setFormState] = useState<FormState<T>>({
-    data: { ...config.defaultValues, ...initialValues } as T,
+    data: initialFormData,
     errors: {},
     isSubmitting: false,
     isDirty: false,
@@ -117,8 +129,8 @@ export function EntityForm<T extends Record<string, any>>({
   const handleFieldChange = useCallback((field: keyof T, value: any) => {
     const updatedData = { ...formState.data, [field]: value };
 
-    // Auto-generate slug from name for organizations
-    if (field === 'name' && config.entityType === 'organization') {
+    // Auto-generate slug from name for groups
+    if (field === 'name' && config.entityType === 'group') {
       const slug = value
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
@@ -141,6 +153,21 @@ export function EntityForm<T extends Record<string, any>>({
   const handleFieldFocus = useCallback((field: string) => {
     setFormState(prev => ({ ...prev, activeField: field }));
   }, []);
+
+  // Template selection handler - fills form with template data
+  const handleTemplateSelect = useCallback((template: EntityTemplate<T>) => {
+    const templateData: Partial<T> = {
+      ...initialFormData,
+      ...template.defaults,
+    };
+    setFormState(prev => ({
+      ...prev,
+      data: { ...prev.data, ...templateData } as T,
+      isDirty: true,
+    }));
+    // Scroll to top to show filled form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [config.defaultValues]);
 
   // Submit handler
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
@@ -230,7 +257,21 @@ export function EntityForm<T extends Record<string, any>>({
     }
     const { field: condField, value: condValue } = field.showWhen;
     const currentValue = formState.data[condField as keyof T];
-    
+
+    if (Array.isArray(condValue)) {
+      return condValue.includes(currentValue as string);
+    }
+    return currentValue === condValue;
+  }, [formState.data]);
+
+  // Check visibility conditions for field groups
+  const isGroupVisible = useCallback((group: { conditionalOn?: { field: string; value: string | string[] } }) => {
+    if (!group.conditionalOn) {
+      return true;
+    }
+    const { field: condField, value: condValue } = group.conditionalOn;
+    const currentValue = formState.data[condField as keyof T];
+
     if (Array.isArray(condValue)) {
       return condValue.includes(currentValue as string);
     }
@@ -249,7 +290,7 @@ export function EntityForm<T extends Record<string, any>>({
   const Icon = config.icon;
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${theme.bg} via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-8`}>
+    <div className={`min-h-screen bg-gradient-to-br ${theme.bg} via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8`}>
       {/* Header */}
       <div className="mb-6">
         <Link
@@ -282,40 +323,64 @@ export function EntityForm<T extends Record<string, any>>({
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Render Field Groups */}
-                {config.fieldGroups.map((group) => (
-                  <div key={group.id} className="space-y-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{group.title}</h3>
-                      {group.description && (
-                        <p className="text-sm text-gray-600 mt-1">{group.description}</p>
+                {config.fieldGroups.map((group) => {
+                  // Skip hidden groups based on conditionalOn
+                  if (!isGroupVisible(group)) {
+                    return null;
+                  }
+
+                  // Render custom component if provided
+                  if (group.customComponent) {
+                    const CustomComponent = group.customComponent;
+                    return (
+                      <div key={group.id} className="space-y-4">
+                        <CustomComponent
+                          formData={formState.data}
+                          onFieldChange={handleFieldChange}
+                          disabled={formState.isSubmitting}
+                        />
+                      </div>
+                    );
+                  }
+
+                  // Render standard fields
+                  return (
+                    <div key={group.id} className="space-y-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900">{group.title}</h3>
+                        {group.description && (
+                          <p className="text-sm text-gray-600 mt-1">{group.description}</p>
+                        )}
+                      </div>
+
+                      {group.fields && group.fields.length > 0 && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {group.fields.map((field) => {
+                            if (!isFieldVisible(field)) {
+                              return null;
+                            }
+
+                            return (
+                              <div
+                                key={field.name}
+                                className={field.colSpan === 2 ? 'md:col-span-2' : ''}
+                              >
+                                <FormField
+                                  config={field}
+                                  value={formState.data[field.name as keyof T]}
+                                  error={formState.errors[field.name]}
+                                  onChange={(value) => handleFieldChange(field.name as keyof T, value)}
+                                  onFocus={() => handleFieldFocus(field.name)}
+                                  disabled={formState.isSubmitting}
+                                />
+                              </div>
+                            );
+                          })}
+                        </div>
                       )}
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {group.fields.map((field) => {
-                        if (!isFieldVisible(field)) {
-                          return null;
-                        }
-
-                        return (
-                          <div
-                            key={field.name}
-                            className={field.colSpan === 2 ? 'md:col-span-2' : ''}
-                          >
-                            <FormField
-                              config={field}
-                              value={formState.data[field.name as keyof T]}
-                              error={formState.errors[field.name]}
-                              onChange={(value) => handleFieldChange(field.name as keyof T, value)}
-                              onFocus={() => handleFieldFocus(field.name)}
-                              disabled={formState.isSubmitting}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 {/* Info Banner */}
                 {config.infoBanner && (
@@ -351,6 +416,17 @@ export function EntityForm<T extends Record<string, any>>({
                 {formState.errors.general && (
                   <div className="bg-red-50 border border-red-200 rounded-md p-4">
                     <p className="text-red-600 text-sm">{formState.errors.general}</p>
+                  </div>
+                )}
+
+                {/* Template Examples - Show at bottom of form after all fields */}
+                {config.templates && config.templates.length > 0 && mode === 'create' && (
+                  <div className="mt-8 pt-8 border-t border-gray-200">
+                    <TemplatePicker
+                      label={config.namePlural}
+                      templates={config.templates as EntityTemplate<T>[]}
+                      onSelectTemplate={handleTemplateSelect}
+                    />
                   </div>
                 )}
 

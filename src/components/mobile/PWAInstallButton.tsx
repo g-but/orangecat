@@ -51,7 +51,11 @@ export function PWAInstallButton({
       }
       
       // Check for iOS Safari standalone
-      if ((navigator as any).standalone === true) {
+      interface NavigatorStandalone extends Navigator {
+        standalone?: boolean;
+      }
+      const nav = navigator as NavigatorStandalone;
+      if (nav.standalone === true) {
         setIsInstalled(true)
         return
       }
@@ -295,7 +299,11 @@ export function useIOSSafari() {
     const userAgent = navigator.userAgent
     const isIOS = /iPad|iPhone|iPod/.test(userAgent)
     const isSafari = /Safari/.test(userAgent) && !/Chrome|CriOS|OPiOS|FxiOS/.test(userAgent)
-    const isStandalone = (navigator as any).standalone === true
+    interface NavigatorStandalone extends Navigator {
+      standalone?: boolean;
+    }
+    const nav = navigator as NavigatorStandalone;
+    const isStandalone = nav.standalone === true;
     
     setIsIOSSafari(isIOS && isSafari && !isStandalone)
   }, [])

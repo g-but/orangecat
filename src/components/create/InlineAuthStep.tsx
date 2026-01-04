@@ -32,6 +32,7 @@ import { Input } from '@/components/ui/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import supabase from '@/lib/supabase/browser';
+import type { FundingPageFormData } from '@/types/funding';
 
 // Login schema
 const loginSchema = z.object({
@@ -69,7 +70,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 interface InlineAuthStepProps {
   onSuccess: (userId: string) => Promise<void>;
-  projectData: any;
+  projectData: Partial<FundingPageFormData> & { title: string; goal_amount: number; category: string };
   onBack: () => void;
 }
 
@@ -117,9 +118,10 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
         });
         await onSuccess(authData.user.id);
       }
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Please check your credentials and try again';
       toast.error('Login failed', {
-        description: error.message || 'Please check your credentials and try again',
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);
@@ -130,14 +132,11 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
   const handleRegister = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      // Check if username is available
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('username', data.username)
-        .single();
+      // Check if username is available using ProfileWriter service
+      const { ProfileWriter } = await import('@/services/profile');
+      const isAvailable = await ProfileWriter.checkUsernameUniqueness(data.username, '');
 
-      if (existingUser) {
+      if (!isAvailable) {
         toast.error('Username taken', {
           description: 'Please choose a different username',
         });
@@ -161,16 +160,16 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
       }
 
       if (authData.user) {
-        // Create profile
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: authData.user.id,
+        // Create profile using ProfileWriter service
+        const { ProfileWriter } = await import('@/services/profile');
+        const result = await ProfileWriter.createProfile(authData.user.id, {
           username: data.username,
           email: data.email,
           name: data.username,
         });
 
-        if (profileError) {
-          throw profileError;
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to create profile');
         }
 
         toast.success('Account created! 🎉', {
@@ -178,9 +177,10 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
         });
         await onSuccess(authData.user.id);
       }
-    } catch (error: any) {
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Please try again';
       toast.error('Registration failed', {
-        description: error.message || 'Please try again',
+        description: errorMessage,
       });
     } finally {
       setIsLoading(false);

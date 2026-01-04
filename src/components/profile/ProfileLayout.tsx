@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
@@ -97,7 +98,7 @@ export default function ProfileLayout({
           setIsFollowing(following);
         }
       } catch (error) {
-        console.error('Failed to check follow status:', error);
+        logger.error('Failed to check follow status:', error);
       }
     };
 

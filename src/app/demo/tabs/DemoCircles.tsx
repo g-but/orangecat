@@ -156,3 +156,6 @@ function CircleDetails({ circle }: CircleDetailsProps) {
     </div>
   );
 }
+
+
+

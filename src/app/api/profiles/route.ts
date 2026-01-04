@@ -38,12 +38,13 @@ export async function GET(request: NextRequest) {
       query = query.or(`username.ilike.%${escapedSearch}%,name.ilike.%${escapedSearch}%`);
     }
 
-    const { data = [], error, count } = await query;
+    const { data, error, count } = await query;
     if (error) {
       throw error;
     }
 
-    return apiSuccessPaginated(data, page, limit, count ?? data.length);
+    const profiles = data || [];
+    return apiSuccessPaginated(profiles, page, limit, count ?? profiles.length);
   } catch (error) {
     return handleApiError(error);
   }

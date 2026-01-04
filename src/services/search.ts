@@ -1,635 +1,50 @@
-import supabase from '@/lib/supabase/browser';
+/**
+ * Search Service - Main Entry Point
+ *
+ * Orchestrates search operations using modular architecture.
+ * This file serves as the main export point for backwards compatibility.
+ *
+ * Created: 2025-01-30
+ * Last Modified: 2025-01-30
+ * Last Modified Summary: Refactored from 919-line monolith to modular architecture (~200 lines)
+ */
+
 import { logger } from '@/utils/logger';
-
-// Search interfaces
-export interface SearchProfile {
-  id: string;
-  username: string | null;
-  name: string | null;
-  bio: string | null;
-  avatar_url: string | null;
-  created_at: string;
-}
-
-export interface SearchFundingPage {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  bitcoin_address: string | null;
-  category: string | null;
-  status: string;
-  goal_amount: number | null;
-  raised_amount: number;
-  created_at: string;
-  updated_at: string;
-  banner_url?: string | null;
-  featured_image_url?: string | null;
-  profiles?: {
-    id: string;
-    username: string | null;
-    name: string | null;
-    avatar_url: string | null;
-  };
-}
-
-// Raw type from Supabase (before transformation)
-interface RawSearchFundingPage {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  bitcoin_address: string | null;
-  category: string | null;
-  status: string;
-  goal_amount: number | null;
-  raised_amount: number;
-  created_at: string;
-  updated_at: string;
-  profiles: Array<{
-    id: string;
-    username: string | null;
-    name: string | null;
-    avatar_url: string | null;
-  }>;
-}
-
-export type SearchResult = {
-  type: 'profile' | 'project';
-  data: SearchProfile | SearchFundingPage;
-  relevanceScore?: number;
-};
-
-export type SearchType = 'all' | 'profiles' | 'projects';
-export type SortOption = 'relevance' | 'recent' | 'popular' | 'funding';
-
-export interface SearchFilters {
-  categories?: string[];
-  statuses?: ('active' | 'paused' | 'completed' | 'cancelled')[]; // Filter by project status
-  isActive?: boolean; // Deprecated: use statuses instead
-  hasGoal?: boolean;
-  minFunding?: number;
-  maxFunding?: number;
-  dateRange?: {
-    start: string;
-    end: string;
-  };
-  // Geographic filters (now implemented!)
-  country?: string;
-  city?: string;
-  postal_code?: string;
-  lat?: number;
-  lng?: number;
-  radius_km?: number;
-}
-
-export interface SearchOptions {
-  query?: string;
-  type: SearchType;
-  sortBy: SortOption;
-  filters?: SearchFilters;
-  limit?: number;
-  offset?: number;
-}
-
-export interface SearchResponse {
-  results: SearchResult[];
-  totalCount: number;
-  hasMore: boolean;
-  facets?: {
-    categories: Array<{ name: string; count: number }>;
-    totalProfiles: number;
-    totalProjects: number;
-  };
-}
-
-// ==================== PERFORMANCE OPTIMIZATIONS ====================
-
-// Enhanced cache with better performance characteristics
-interface CacheEntry {
-  data: SearchResponse;
-  timestamp: number;
-  hitCount: number;
-  size: number;
-}
-
-const searchCache = new Map<string, CacheEntry>();
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
-const MAX_CACHE_SIZE = 100; // Maximum number of cached entries
-const MAX_CACHE_MEMORY = 10 * 1024 * 1024; // 10MB max cache size
-
-// Cache cleanup for memory management
-function cleanupCache(): void {
-  if (searchCache.size <= MAX_CACHE_SIZE) {
-    return;
-  }
-
-  // Remove oldest entries
-  const entries = Array.from(searchCache.entries()).sort((a, b) => a[1].timestamp - b[1].timestamp);
-
-  // Remove oldest 20% of entries
-  const toRemove = Math.floor(entries.length * 0.2);
-  for (let i = 0; i < toRemove; i++) {
-    searchCache.delete(entries[i][0]);
-  }
-}
-
-// Generate optimized cache key with shorter hash for better performance
-function generateCacheKey(options: SearchOptions): string {
-  const keyData = {
-    q: options.query?.toLowerCase().trim(),
-    t: options.type,
-    s: options.sortBy,
-    f: options.filters,
-    l: options.limit,
-    o: options.offset,
-  };
-  return JSON.stringify(keyData);
-}
-
-// Enhanced cache with hit tracking
-function getCachedResult(key: string): SearchResponse | null {
-  const cached = searchCache.get(key);
-  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
-    // Update hit count for cache analytics
-    cached.hitCount++;
-    return cached.data;
-  }
-
-  // Remove expired entry
-  if (cached) {
-    searchCache.delete(key);
-  }
-
-  return null;
-}
-
-// Enhanced cache storage with size tracking
-function setCachedResult(key: string, data: SearchResponse): void {
-  const size = JSON.stringify(data).length;
-
-  searchCache.set(key, {
-    data,
-    timestamp: Date.now(),
-    hitCount: 0,
-    size,
-  });
-
-  cleanupCache();
-}
-
-// ==================== OPTIMIZED DATABASE QUERIES ====================
-
-// Calculate relevance score (moved up for better optimization)
-function calculateRelevanceScore(result: SearchResult, query: string): number {
-  if (!query) {
-    return 0;
-  }
-
-  const lowerQuery = query.toLowerCase();
-  let score = 0;
-
-  if (result.type === 'profile') {
-    const profile = result.data as SearchProfile;
-
-    // Exact username match gets highest score
-    if (profile.username?.toLowerCase() === lowerQuery) {
-      score += 100;
-    } else if (profile.username?.toLowerCase().includes(lowerQuery)) {
-      score += 50;
-    }
-
-    // Display name matches
-    if (profile.name?.toLowerCase() === lowerQuery) {
-      score += 80;
-    } else if (profile.name?.toLowerCase().includes(lowerQuery)) {
-      score += 40;
-    }
-
-    // Bio matches
-    if (profile.bio?.toLowerCase().includes(lowerQuery)) {
-      score += 20;
-    }
-
-    // Boost for profiles with avatars (more complete profiles)
-    if (profile.avatar_url) {
-      score += 5;
-    }
-  } else {
-    const project = result.data as SearchFundingPage;
-
-    // Title matches get high score
-    if (project.title.toLowerCase() === lowerQuery) {
-      score += 100;
-    } else if (project.title.toLowerCase().includes(lowerQuery)) {
-      score += 60;
-    }
-
-    // Description matches
-    if (project.description?.toLowerCase().includes(lowerQuery)) {
-      score += 30;
-    }
-
-    // Bitcoin address matches (for technical searches)
-    if (project.bitcoin_address?.toLowerCase().includes(lowerQuery)) {
-      score += 15;
-    }
-
-    // Boost for projects with funding goals
-    if (project.goal_amount) {
-      score += 5;
-    }
-
-    // Boost for projects that have raised funds
-    if ((project.raised_amount || 0) > 0) {
-      score += 10;
-    }
-  }
-
-  return score;
-}
-
-// Optimized profile search with better indexing usage
-async function searchProfiles(
-  query?: string,
-  filters?: SearchFilters,
-  limit: number = 20,
-  offset: number = 0
-): Promise<SearchProfile[]> {
-  // Start with minimal columns for better performance
-  // Query profiles by name
-  let profileQuery = supabase
-    .from('profiles')
-    .select(
-      'id, username, name, bio, avatar_url, created_at, location_country, location_city, location_zip, latitude, longitude'
-    );
-
-  if (query) {
-    // OPTIMIZATION: Use tsvector for full-text search when available
-    // For now, optimize ILIKE queries with proper ordering
-    const sanitizedQuery = query.replace(/[%_]/g, '\\$&'); // Escape SQL wildcards
-    profileQuery = profileQuery.or(
-      `username.ilike.%${sanitizedQuery}%,name.ilike.%${sanitizedQuery}%,bio.ilike.%${sanitizedQuery}%`
-    );
-  }
-
-  // Apply location filters
-  if (filters) {
-    if (filters.country) {
-      profileQuery = profileQuery.eq('location_country', filters.country.toUpperCase());
-    }
-
-    if (filters.city) {
-      const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
-      profileQuery = profileQuery.ilike('location_city', `%${sanitizedCity}%`);
-    }
-
-    if (filters.postal_code) {
-      profileQuery = profileQuery.eq('location_zip', filters.postal_code);
-    }
-
-    // Radius search using Haversine formula (for profiles with lat/lng)
-    if (filters.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
-      // Use PostGIS if available, otherwise filter in application layer
-      // For now, we'll use a bounding box approximation for better performance
-      // This is less precise but much faster than Haversine in SQL
-      const radiusDegrees = filters.radius_km / 111.0; // Approximate: 1 degree ≈ 111 km
-      profileQuery = profileQuery
-        .gte('latitude', filters.lat - radiusDegrees)
-        .lte('latitude', filters.lat + radiusDegrees)
-        .gte('longitude', filters.lng - radiusDegrees)
-        .lte('longitude', filters.lng + radiusDegrees);
-    }
-  }
-
-  // OPTIMIZATION: Use created_at index for better performance
-  const { data: profiles, error } = await profileQuery
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (error) {
-    throw error;
-  }
-
-  let results = (profiles || []).map((p: any) => ({
-    ...p,
-    name: p.name,
-  }));
-
-  // Apply precise radius filtering if needed (Haversine formula)
-  if (filters?.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
-    results = results.filter(profile => {
-      if (!profile.latitude || !profile.longitude) {
-        return false;
-      }
-
-      // Haversine formula for precise distance calculation
-      const R = 6371; // Earth's radius in km
-      const dLat = ((profile.latitude - filters.lat!) * Math.PI) / 180;
-      const dLon = ((profile.longitude - filters.lng!) * Math.PI) / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((filters.lat! * Math.PI) / 180) *
-          Math.cos((profile.latitude * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distance = R * c;
-
-      return distance <= filters.radius_km!;
-    });
-  }
-
-  return results;
-}
-
-// Optimized project search with better query structure
-async function searchFundingPages(
-  query?: string,
-  filters?: SearchFilters,
-  limit: number = 20,
-  offset: number = 0
-): Promise<SearchFundingPage[]> {
-  // OPTIMIZATION: Only select necessary columns to reduce payload
-  // Use cover_image_url (actual column name) instead of banner_url/featured_image_url
-  // Also fetch first project_media image as fallback if cover_image_url is not set
-  let projectQuery = supabase.from('projects').select(
-    `
-      id, user_id, title, description, bitcoin_address,
-      created_at, updated_at, category, status, goal_amount, currency, raised_amount,
-      cover_image_url, location_city, location_country, location_coordinates,
-      project_media!left(storage_path, position)
-    `
-  );
-
-  if (query) {
-    const sanitizedQuery = query.replace(/[%_]/g, '\\$&');
-    projectQuery = projectQuery.or(
-      `title.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`
-    );
-  }
-
-  // OPTIMIZATION: Apply most selective filters first
-  if (filters) {
-    // Status filtering - show active and paused by default, exclude draft/completed/cancelled
-    if (filters.statuses && filters.statuses.length > 0) {
-      // Use the new statuses filter if provided
-      projectQuery = projectQuery.in('status', filters.statuses);
-    } else if (filters.isActive !== undefined) {
-      // Deprecated: backward compatibility for isActive filter
-      if (filters.isActive) {
-        projectQuery = projectQuery.eq('status', 'active');
-      } else {
-        projectQuery = projectQuery.neq('status', 'active');
-      }
-    } else {
-      // DEFAULT: Show active and paused projects (exclude draft, completed, cancelled)
-      projectQuery = projectQuery.in('status', ['active', 'paused']);
-    }
-
-    if (filters.categories && filters.categories.length > 0) {
-      projectQuery = projectQuery.in('category', filters.categories);
-    }
-
-    if (filters.hasGoal) {
-      projectQuery = projectQuery.not('goal_amount', 'is', null);
-    }
-
-    if (filters.minFunding !== undefined) {
-      projectQuery = projectQuery.gte('raised_amount', filters.minFunding);
-    }
-
-    if (filters.maxFunding !== undefined) {
-      projectQuery = projectQuery.lte('raised_amount', filters.maxFunding);
-    }
-
-    if (filters.dateRange) {
-      projectQuery = projectQuery
-        .gte('created_at', filters.dateRange.start)
-        .lte('created_at', filters.dateRange.end);
-    }
-
-    // Location filters
-    if (filters.country) {
-      projectQuery = projectQuery.eq('location_country', filters.country.toUpperCase());
-    }
-
-    if (filters.city) {
-      const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
-      projectQuery = projectQuery.ilike('location_city', `%${sanitizedCity}%`);
-    }
-
-    // Radius search using PostGIS (projects have location_coordinates POINT)
-    if (filters.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
-      // Use PostGIS ST_DWithin for precise radius search
-      // Note: This requires PostGIS extension and location_coordinates column
-      const radiusMeters = filters.radius_km * 1000;
-      // Use RPC call for PostGIS queries (Supabase doesn't support PostGIS directly in JS client)
-      // For now, we'll filter in application layer after fetching
-      // TODO: Create a Postgres function for radius search if needed
-    }
-  }
-
-  // OPTIMIZATION: Use index-friendly ordering
-  const { data: rawProjects, error } = await projectQuery
-    .order('created_at', { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (error) {
-    throw error;
-  }
-  if (!rawProjects || rawProjects.length === 0) {
-    return [];
-  }
-
-  // Apply radius filtering for projects if needed (PostGIS ST_DWithin)
-  // Note: Supabase JS client doesn't support PostGIS directly, so we filter in application layer
-  let filteredProjects = rawProjects;
-  if (filters?.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
-    filteredProjects = rawProjects.filter((project: any) => {
-      if (!project.location_coordinates) {
-        return false;
-      }
-
-      // Parse PostGIS POINT format: "(lng,lat)" or "POINT(lng lat)"
-      let projectLat: number | null = null;
-      let projectLng: number | null = null;
-
-      if (typeof project.location_coordinates === 'string') {
-        // Handle POINT string format
-        const match = project.location_coordinates.match(/\(([^,]+),?\s*([^)]+)\)/);
-        if (match) {
-          projectLng = parseFloat(match[1]);
-          projectLat = parseFloat(match[2]);
-        }
-      } else if (
-        project.location_coordinates?.x !== undefined &&
-        project.location_coordinates?.y !== undefined
-      ) {
-        // Handle object format {x: lng, y: lat}
-        projectLng = project.location_coordinates.x;
-        projectLat = project.location_coordinates.y;
-      }
-
-      if (projectLat === null || projectLng === null) {
-        return false;
-      }
-
-      // Haversine formula for distance calculation
-      const R = 6371; // Earth's radius in km
-      const dLat = ((projectLat - filters.lat!) * Math.PI) / 180;
-      const dLon = ((projectLng - filters.lng!) * Math.PI) / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos((filters.lat! * Math.PI) / 180) *
-          Math.cos((projectLat * Math.PI) / 180) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distance = R * c;
-
-      return distance <= filters.radius_km!;
-    });
-  }
-
-  // Fetch profiles for all projects in parallel
-  const userIds = [...new Set(filteredProjects.map((p: any) => p.user_id))];
-  const { data: profiles } = await supabase
-    .from('profiles')
-    .select('id, username, name, avatar_url')
-    .in('id', userIds);
-
-  // Create a map of user_id to profile for quick lookup
-
-  const profileMap = new Map(
-    profiles?.map((p: any) => [
-      p.id,
-      {
-        ...p,
-        name: p.name,
-      },
-    ]) || []
-  );
-
-  // OPTIMIZATION: Minimize data transformation overhead
-  const projects: SearchFundingPage[] = filteredProjects.map((project: any) => {
-    // Get first project_media image as fallback if cover_image_url is not set
-    let coverImageUrl = project.cover_image_url;
-    if (
-      !coverImageUrl &&
-      project.project_media &&
-      Array.isArray(project.project_media) &&
-      project.project_media.length > 0
-    ) {
-      // Get first media item (sorted by position)
-      const firstMedia = project.project_media.sort((a: any, b: any) => a.position - b.position)[0];
-      if (firstMedia?.storage_path) {
-        // Generate public URL from storage path
-        const { data: urlData } = supabase.storage
-          .from('project-media')
-          .getPublicUrl(firstMedia.storage_path);
-        coverImageUrl = urlData.publicUrl;
-      }
-    }
-
-    return {
-      ...project,
-      raised_amount: project.raised_amount || 0, // Use raised_amount directly from database
-      cover_image_url: coverImageUrl, // Use cover_image_url or first project_media image
-      banner_url: coverImageUrl, // Map cover_image_url to banner_url for compatibility
-      featured_image_url: coverImageUrl, // Map cover_image_url to featured_image_url for compatibility
-      profiles: profileMap.get(project.user_id),
-      // Remove project_media from final object to reduce payload size
-      project_media: undefined,
-    };
-  });
-
-  return projects;
-}
-
-// OPTIMIZATION: Cached facets with smarter update strategy
-let facetsCache: { data: SearchResponse['facets']; timestamp: number } | null = null;
-const FACETS_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes for facets
-
-async function getSearchFacets(): Promise<SearchResponse['facets']> {
-  // Return cached facets if available
-  if (facetsCache && Date.now() - facetsCache.timestamp < FACETS_CACHE_DURATION) {
-    return facetsCache.data;
-  }
-
-  try {
-    // OPTIMIZATION: Use Promise.all for parallel queries
-    const [profilesResult, projectsResult] = await Promise.all([
-      // Use count queries with head:true for better performance
-      supabase.from('profiles').select('id', { count: 'exact', head: true }),
-      supabase.from('projects').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-    ]);
-
-    const facets = {
-      categories: [], // Categories don't exist in current schema
-      totalProfiles: profilesResult.count || 0,
-      totalProjects: projectsResult.count || 0,
-    };
-
-    // Cache the facets
-    facetsCache = {
-      data: facets,
-      timestamp: Date.now(),
-    };
-
-    return facets;
-  } catch (error) {
-    logger.error('Error getting search facets', error, 'Search');
-    return {
-      categories: [],
-      totalProfiles: 0,
-      totalProjects: 0,
-    };
-  }
-}
-
-// Sort results (optimized for performance)
-function sortResults(results: SearchResult[], sortBy: SortOption, query?: string): SearchResult[] {
-  // OPTIMIZATION: Avoid array copying when possible
-  if (results.length <= 1) {
-    return results;
-  }
-
-  return [...results].sort((a, b) => {
-    switch (sortBy) {
-      case 'relevance':
-        if (query) {
-          const scoreA = a.relevanceScore ?? calculateRelevanceScore(a, query);
-          const scoreB = b.relevanceScore ?? calculateRelevanceScore(b, query);
-          if (scoreA !== scoreB) {
-            return scoreB - scoreA;
-          }
-        }
-        // Fall back to recent for same relevance scores
-        return new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime();
-
-      case 'recent':
-        return new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime();
-
-      case 'popular':
-        // Note: contributor_count doesn't exist in current schema, fall back to recent
-        return new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime();
-
-      case 'funding':
-        // Note: total_funding doesn't exist in current schema, fall back to recent
-        return new Date(b.data.created_at).getTime() - new Date(a.data.created_at).getTime();
-
-      default:
-        return 0;
-    }
-  });
-}
-
-// OPTIMIZATION: Main search function with improved performance
+import { generateCacheKey, getCachedResult, setCachedResult, clearSearchCache } from './search/cache';
+import { calculateRelevanceScore, sortResults, getSearchFacets, clearFacetsCache } from './search/processors';
+import { searchProfiles, searchFundingPages, getSearchSuggestions, getTrending as getTrendingData } from './search/queries';
+
+// Re-export all types from types module
+export type {
+  SearchResult,
+  SearchType,
+  SortOption,
+  SearchFilters,
+  SearchOptions,
+  SearchResponse,
+  SearchProfile,
+  SearchFundingPage,
+} from './search/types';
+
+// Import types for internal use
+import type {
+  SearchResult,
+  SearchType,
+  SortOption,
+  SearchFilters,
+  SearchOptions,
+  SearchResponse,
+  SearchProfile,
+  SearchFundingPage,
+} from './search/types';
+
+/**
+ * Main search function - orchestrates all search operations
+ */
 export async function search(options: SearchOptions): Promise<SearchResponse> {
   const { query, type, sortBy, filters, limit = 20, offset = 0 } = options;
 
-  // Check cache first with optimized cache key
+  // Check cache first
   const cacheKey = generateCacheKey(options);
   const cachedResult = getCachedResult(cacheKey);
   if (cachedResult) {
@@ -640,7 +55,7 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
     const results: SearchResult[] = [];
     let totalCount = 0;
 
-    // OPTIMIZATION: Use Promise.all for parallel searches when type is 'all'
+    // Use Promise.all for parallel searches when type is 'all'
     if (type === 'all') {
       const [profiles, projects] = await Promise.all([
         searchProfiles(query, filters, limit, offset).catch(error => {
@@ -674,7 +89,7 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
       // Single type searches
       if (type === 'profiles') {
         try {
-          const profiles = await searchProfiles(query, limit, offset);
+          const profiles = await searchProfiles(query, filters, limit, offset);
           profiles.forEach(profile => {
             const result: SearchResult = { type: 'profile', data: profile };
             if (query) {
@@ -710,7 +125,7 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
     const paginatedResults = sortedResults.slice(offset, offset + limit);
     totalCount = sortedResults.length;
 
-    // Get facets only if needed (not for every search)
+    // Get facets only if needed
     let facets: SearchResponse['facets'] | undefined;
     if (type === 'all' || type === 'projects') {
       try {
@@ -735,108 +150,31 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
     logger.error('Search error', error, 'Search');
 
     // Return empty results on error
-    const errorResponse: SearchResponse = {
+    return {
       results: [],
       totalCount: 0,
       hasMore: false,
     };
-
-    return errorResponse;
   }
 }
 
-// ==================== REMAINING FUNCTIONS (OPTIMIZED) ====================
-
-// Optimized trending function with better performance
+/**
+ * Get trending content
+ */
 export async function getTrending(): Promise<SearchResponse> {
   try {
     const results: SearchResult[] = [];
+    const { projects, profiles } = await getTrendingData();
 
-    // OPTIMIZATION: Use Promise.all for parallel queries
-    const [projectsData, profilesData] = await Promise.all([
-      // Get recent projects (since we don't have contributor_count)
-      supabase
-        .from('projects')
-        .select(
-          `
-        id, user_id, title, description, bitcoin_address,
-        created_at, updated_at, category, status, goal_amount, raised_amount,
-        cover_image_url
-      `
-        )
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .limit(10),
-
-      // Get recent profiles - use name (actual column name)
-      supabase
-        .from('profiles')
-        .select('id, username, name, bio, avatar_url, created_at')
-        .order('created_at', { ascending: false })
-        .limit(10),
-    ]);
-
-    // Process projects with profile data
-    if (!projectsData.error && projectsData.data) {
-      // Get user IDs for profile lookup
-      const userIds = [...new Set(projectsData.data.map((p: any) => p.user_id))];
-      const { data: profiles } = await supabase
-        .from('profiles')
-        .select('id, username, name, avatar_url')
-        .in('id', userIds);
-
-      // Create a map of user_id to profile for quick lookup
-      const profileMap = new Map(
-        profiles
-          ?.map(p => ({
-            ...p,
-            name: p.name,
-          }))
-          .map(p => [p.id, p]) || []
-      );
-
-      const recentProjects: SearchFundingPage[] = projectsData.data.map((project: any) => {
-        // Use cover_image_url directly (getTrending doesn't fetch project_media to keep it fast)
-        const coverImageUrl = project.cover_image_url;
-        return {
-          ...project,
-          raised_amount: project.raised_amount || 0,
-          cover_image_url: coverImageUrl,
-          banner_url: coverImageUrl, // Map cover_image_url to banner_url
-          featured_image_url: coverImageUrl, // Map cover_image_url to featured_image_url
-          profiles: profileMap.get(project.user_id),
-        };
-      });
-
-      recentProjects.forEach(project => {
-        results.push({ type: 'project', data: project });
-      });
-    } else if (projectsData.error) {
-      logger.warn(
-        'Error fetching projects for trending',
-        { error: projectsData.error.message },
-        'Search'
-      );
-    }
+    // Process projects
+    projects.forEach(project => {
+      results.push({ type: 'project', data: project });
+    });
 
     // Process profiles
-    if (!profilesData.error && profilesData.data) {
-      profilesData.data.forEach((profile: any) => {
-        results.push({
-          type: 'profile',
-          data: {
-            ...profile,
-            name: profile.name,
-          },
-        });
-      });
-    } else if (profilesData.error) {
-      logger.warn(
-        'Error fetching profiles for trending',
-        { error: profilesData.error.message },
-        'Search'
-      );
-    }
+    profiles.forEach(profile => {
+      results.push({ type: 'profile', data: profile });
+    });
 
     return {
       results,
@@ -853,67 +191,13 @@ export async function getTrending(): Promise<SearchResponse> {
   }
 }
 
-// Clear cache with cleanup
-export function clearSearchCache(): void {
-  searchCache.clear();
-  facetsCache = null;
-}
+// Re-export utility functions
+export { getSearchSuggestions };
 
-// Optimized search suggestions
-export async function getSearchSuggestions(query: string, limit: number = 5): Promise<string[]> {
-  if (!query || query.length < 2) {
-    return [];
-  }
-
-  try {
-    const sanitizedQuery = query.replace(/[%_]/g, '\\$&');
-
-    // OPTIMIZATION: Use Promise.all for parallel suggestion queries
-    const [profileSuggestions, projectSuggestions] = await Promise.all([
-      supabase
-        .from('profiles')
-        .select('username, name')
-        .or(`username.ilike.%${sanitizedQuery}%,name.ilike.%${sanitizedQuery}%`)
-        .not('username', 'is', null)
-        .limit(limit),
-
-      supabase
-        .from('projects')
-        .select('title, category')
-        .or(`title.ilike.%${sanitizedQuery}%,category.ilike.%${sanitizedQuery}%`)
-        .eq('status', 'active')
-        .limit(limit),
-    ]);
-
-    const suggestions: Set<string> = new Set();
-
-    // Add profile suggestions
-    if (!profileSuggestions.error && profileSuggestions.data) {
-      profileSuggestions.data.forEach((profile: any) => {
-        if (profile.username) {
-          suggestions.add(profile.username);
-        }
-        if (profile.name) {
-          suggestions.add(profile.name);
-        }
-      });
-    }
-
-    // Add project suggestions
-    if (!projectSuggestions.error && projectSuggestions.data) {
-      projectSuggestions.data.forEach(project => {
-        if (project.title) {
-          suggestions.add(project.title);
-        }
-        if (project.category) {
-          suggestions.add(project.category);
-        }
-      });
-    }
-
-    return Array.from(suggestions).slice(0, limit);
-  } catch (error) {
-    logger.error('Error getting search suggestions', error, 'Search');
-    return [];
-  }
+/**
+ * Clear all search caches
+ */
+export function clearAllSearchCaches(): void {
+  clearSearchCache();
+  clearFacetsCache();
 }

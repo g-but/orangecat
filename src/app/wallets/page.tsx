@@ -1,120 +1,53 @@
-'use client'
+'use client';
 
-import Link from 'next/link'
-import Card from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import { toast } from 'sonner'
+import Link from 'next/link';
+import Button from '@/components/ui/Button';
+import WalletRecommendationCards from '@/components/wallets/WalletRecommendationCards';
 
-type Provider = {
-  id: string
-  name: string
-  tagline: string
-  type: 'mobile' | 'browser' | 'hardware' | 'lightning'
-  beginnerFriendly: boolean
-  website: string
-  guides?: { title: string; url: string }[]
-}
-
-const PROVIDERS: Provider[] = [
-  {
-    id: 'phoenix',
-    name: 'Phoenix Wallet',
-    tagline: 'Simple mobile wallet with Lightning built-in',
-    type: 'mobile',
-    beginnerFriendly: true,
-    website: 'https://phoenix.acinq.co',
-    guides: [{ title: 'Getting started', url: 'https://phoenix.acinq.co/faq' }]
-  },
-  {
-    id: 'blink',
-    name: 'Blink',
-    tagline: 'Beginner-friendly Lightning wallet',
-    type: 'mobile',
-    beginnerFriendly: true,
-    website: 'https://www.blink.sv/',
-  },
-  {
-    id: 'mutiny',
-    name: 'Mutiny',
-    tagline: 'Browser wallet with Lightning support',
-    type: 'browser',
-    beginnerFriendly: true,
-    website: 'https://mutinywallet.com/',
-  },
-  {
-    id: 'sparrow',
-    name: 'Sparrow',
-    tagline: 'Advanced on-chain wallet (desktop)',
-    type: 'browser',
-    beginnerFriendly: false,
-    website: 'https://sparrowwallet.com/',
-  }
-]
-
+/**
+ * Wallets Page
+ *
+ * Public page helping users find and get a Bitcoin wallet.
+ * Features the new WalletRecommendationCards component with filtering.
+ */
 export default function WalletsPage() {
-  const copy = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      toast.success('Copied to clipboard')
-    } catch {}
-  }
-
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
       <div className="text-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Get a Bitcoin Wallet</h1>
-        <p className="text-gray-600 mt-2">No wallet yet? Start here. Pick a beginner-friendly option and you'll be ready in minutes.</p>
+        <p className="text-gray-600 mt-2">
+          No wallet yet? Start here. Pick a beginner-friendly option and you'll be ready in minutes.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {PROVIDERS.map((p) => (
-          <Card key={p.id} className="p-6 border border-gray-100 shadow-sm">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">{p.name}</h3>
-                <p className="text-sm text-gray-600 mt-1">{p.tagline}</p>
-                <div className="mt-2 text-xs text-gray-500">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded bg-gray-100 mr-2">{p.type}</span>
-                  {p.beginnerFriendly && <span className="inline-flex items-center px-2 py-0.5 rounded bg-green-100 text-green-700">Beginner</span>}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <a href={p.website} target="_blank" rel="noopener noreferrer">
-                  <Button>Visit</Button>
-                </a>
-              </div>
-            </div>
-            {p.guides && p.guides.length > 0 && (
-              <div className="mt-4 space-y-2">
-                <div className="text-sm font-medium text-gray-800">Helpful guides</div>
-                <ul className="list-disc ml-5 text-sm text-gray-600">
-                  {p.guides.map((g) => (
-                    <li key={g.url}>
-                      <a className="text-orange-600 hover:text-orange-700" href={g.url} target="_blank" rel="noopener noreferrer">{g.title}</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </Card>
-        ))}
-      </div>
+      {/* Wallet Recommendation Cards with Filtering */}
+      <WalletRecommendationCards />
 
-      <div className="mt-10 p-4 rounded-lg bg-orange-50 border border-orange-200">
+      {/* Educational Section */}
+      <div className="mt-10 p-6 rounded-lg bg-orange-50 border border-orange-200">
         <h4 className="font-semibold text-gray-900 mb-2">What is a wallet?</h4>
-        <p className="text-sm text-gray-700 mb-3">A Bitcoin wallet lets you receive donations. It gives you a Bitcoin address (looks like bc1...) and often a Lightning address (looks like email). You control it. We don't keep your funds.</p>
+        <p className="text-sm text-gray-700 mb-3">
+          A Bitcoin wallet lets you receive donations. It gives you a Bitcoin address (looks like
+          bc1...) and often a Lightning address (looks like email). You control it. We don't keep
+          your funds.
+        </p>
         <div className="text-sm text-gray-700">
-          <div className="mb-1">• On-chain address: starts with bc1, slower, best for larger amounts.</div>
-          <div className="mb-1">• Lightning address: looks like email, instant and low-fee, great for small donations.</div>
+          <div className="mb-1">
+            • On-chain address: starts with bc1, slower, best for larger amounts.
+          </div>
+          <div className="mb-1">
+            • Lightning address: looks like email, instant and low-fee, great for small donations.
+          </div>
         </div>
       </div>
 
+      {/* CTA */}
       <div className="mt-6 text-center">
         <Link href="/create">
           <Button>Done — Create my project</Button>
         </Link>
       </div>
     </div>
-  )
+  );
 }
 
