@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { Database } from '@/types/database';
+import {
+  apiSuccess,
+  apiInternalError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
-export async function GET(_req: NextRequest) {
+export const GET = withAuth(async (_req: AuthenticatedRequest) => {
   try {
+    const { user } = _req;
     const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // The JS client cannot express the EXISTS/count logic easily; perform a two-step approach:
     // list user conversations, then filter client-side for a single-participant DM.
@@ -46,33 +46,17 @@ export async function GET(_req: NextRequest) {
     if (!conversationId) {
       // Create new conversation
       // Ensure profile exists to satisfy FK on conversations.created_by
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
+      const { ProfileServerService } = await import('@/services/profile/server');
+      const profileResult = await ProfileServerService.ensureProfile(
+        supabase, 
+        user.id, 
+        user.email || '', 
+        user.user_metadata || {}
+      );
 
-      if (!existingProfile) {
-        const safeEmail = typeof user.email === 'string' ? user.email : null;
-        const emailName = safeEmail && safeEmail.includes('@') ? safeEmail.split('@')[0] : null;
-        const safeUsername =
-          emailName && emailName.length > 0 ? emailName : `user_${String(user.id).slice(0, 8)}`;
-        const safeName =
-          (user.user_metadata?.full_name as string | undefined) ||
-          (user.user_metadata?.name as string | undefined) ||
-          (emailName && emailName.length > 0 ? emailName : 'Anonymous User');
-        const { error: profileErr } = await supabase
-          .from('profiles')
-          .insert({ id: user.id, username: safeUsername, name: safeName });
-        if (profileErr) {
-          return NextResponse.json(
-            {
-              error: 'Failed to create user profile',
-              details: (profileErr as any)?.message || (profileErr as any)?.code,
-            },
-            { status: 500 }
-          );
-        }
+      if (profileResult.error || !profileResult.data) {
+        logger.error('Failed to ensure user profile', { error: profileResult.error, userId: user.id }, 'Messages');
+        return apiInternalError('Failed to create user profile');
       }
 
       const createWithServer = async () => {
@@ -81,7 +65,7 @@ export async function GET(_req: NextRequest) {
           is_group: false,
         };
         const { data: convIns, error: convErr } = await supabase
-          .from('conversations')
+          .from(DATABASE_TABLES.CONVERSATIONS)
           .insert(conversationInsert)
           .select('id')
           .single();
@@ -96,11 +80,13 @@ export async function GET(_req: NextRequest) {
             role: 'member',
           };
         const { error: partErr } = await supabase
-          .from('conversation_participants')
+          .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
           .insert(participantInsert);
         if (partErr) {
           // Roll back conversation if participant insert fails
-          await supabase.from('conversations').delete().eq('id', conversationId);
+          // Use admin client for deletion to bypass RLS
+          const admin = createAdminClient();
+          await admin.from(DATABASE_TABLES.CONVERSATIONS).delete().eq('id', conversationId);
           throw partErr;
         }
       };
@@ -116,63 +102,44 @@ export async function GET(_req: NextRequest) {
               created_by: user.id,
               is_group: false,
             };
-            const { data: convIns, error: convErr } = await admin
-              .from('conversations')
-              .insert(conversationInsert)
+            const { data: convIns, error: convErr } = await (admin
+              .from(DATABASE_TABLES.CONVERSATIONS)
+              .insert(conversationInsert as any)
               .select('id')
-              .single();
-            if (convErr || !convIns) {
-              return NextResponse.json(
-                {
-                  error: 'Failed to create conversation (admin)',
-                  details: (convErr as any)?.message || (convErr as any)?.code,
-                },
-                { status: 500 }
-              );
+              .single() as any);
+            if (convErr || !convIns || !convIns.id) {
+              logger.error('Failed to create conversation (admin)', { error: convErr, userId: user.id }, 'Messages');
+              return apiInternalError('Failed to create conversation');
             }
-            conversationId = convIns.id as string;
-            const participantInsert: Database['public']['Tables']['conversation_participants']['Insert'] =
-              {
-                conversation_id: conversationId,
-                user_id: user.id,
-                role: 'member',
-              };
-            const { error: partErr } = await admin
-              .from('conversation_participants')
-              .insert(participantInsert);
+            const newConversationId = convIns.id as string;
+            conversationId = newConversationId;
+            const participantInsert: Database['public']['Tables']['conversation_participants']['Insert'] = {
+              conversation_id: newConversationId,
+              user_id: user.id,
+              role: 'member',
+            };
+            const { error: partErr } = await (admin
+              .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+              .insert(participantInsert as any) as any);
             if (partErr) {
-              await admin.from('conversations').delete().eq('id', conversationId);
-              return NextResponse.json(
-                {
-                  error: 'Failed to add participant (admin)',
-                  details: (partErr as any)?.message || (partErr as any)?.code,
-                },
-                { status: 500 }
-              );
+              await (admin.from(DATABASE_TABLES.CONVERSATIONS).delete().eq('id', newConversationId) as any);
+              logger.error('Failed to add participant (admin)', { error: partErr, userId: user.id }, 'Messages');
+              return apiInternalError('Failed to add participant');
             }
           } catch (e2) {
-            return NextResponse.json(
-              {
-                error: 'Self conversation creation failed',
-                details: (e as any)?.message || (e as any)?.code,
-              },
-              { status: 500 }
-            );
+            logger.error('Self conversation creation failed (admin fallback)', { error: e, userId: user.id }, 'Messages');
+            return apiInternalError('Self conversation creation failed');
           }
         } else {
-          return NextResponse.json(
-            {
-              error: 'Failed to create conversation',
-              details: (e as any)?.message || (e as any)?.code,
-            },
-            { status: 500 }
-          );
+          logger.error('Failed to create conversation', { error: e, userId: user.id }, 'Messages');
+          return apiInternalError('Failed to create conversation');
         }
       }
     }
 
-    return NextResponse.json({ success: true, conversationId });
+    return apiSuccess({ conversationId });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Self conversation GET error', { error, userId: _req.user.id }, 'Messages');
+    return handleApiError(error);
   }
-}
+});

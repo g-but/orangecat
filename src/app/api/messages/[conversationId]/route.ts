@@ -7,10 +7,11 @@
  * @module api/messages/[conversationId]
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextRequest } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import {
   fetchMessages as svcFetchMessages,
   sendMessage as svcSendMessage,
@@ -21,8 +22,18 @@ import {
   PAGINATION,
   VALIDATION,
   MESSAGE_TYPES,
-  PARTICIPANT_ROLES,
 } from '@/features/messaging/lib';
+import {
+  apiSuccess,
+  apiCreated,
+  apiNotFound,
+  apiForbidden,
+  apiValidationError,
+  apiRateLimited,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
+import type { Database } from '@/types/database';
 
 // Schema for sending a message
 const sendMessageSchema = z.object({
@@ -36,13 +47,14 @@ const sendMessageSchema = z.object({
 /**
  * GET - Fetch messages for a conversation with cursor-based pagination
  */
-export async function GET(
-  request: NextRequest,
+export const GET = withAuth(async (
+  req: AuthenticatedRequest,
   { params }: { params: Promise<{ conversationId: string }> }
-) {
+) => {
+  const { conversationId } = await params;
   try {
-    const { conversationId } = await params;
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = new URL(req.url);
+    const { user } = req;
 
     // Parse pagination params
     const cursor = searchParams.get('cursor');
@@ -53,23 +65,12 @@ export async function GET(
       PAGINATION.MESSAGES_MAX
     );
 
-    // Authenticate user
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
     // Use admin client for participant check to bypass RLS
     const admin = createAdminClient();
 
     // Verify user is a participant
     const { data: participant, error: partError } = await admin
-      .from('conversation_participants')
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
       .select('user_id, last_read_at, is_active')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -78,15 +79,15 @@ export async function GET(
 
     if (partError || !participant) {
       const { data: convExists } = await admin
-        .from('conversations')
+        .from(DATABASE_TABLES.CONVERSATIONS)
         .select('id')
         .eq('id', conversationId)
         .maybeSingle();
 
       if (!convExists) {
-        return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+        return apiNotFound('Conversation not found');
       }
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      return apiForbidden('Access denied');
     }
 
     // Fetch messages using service
@@ -99,18 +100,18 @@ export async function GET(
 
     // Get conversation info
     const { data: conv, error: convError } = await admin
-      .from('conversations')
+      .from(DATABASE_TABLES.CONVERSATIONS)
       .select('*')
       .eq('id', conversationId)
       .single();
 
     if (convError || !conv) {
-      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 });
+      return apiNotFound('Conversation not found');
     }
 
     // Fetch participants
     const { data: participants } = await admin
-      .from('conversation_participants')
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
       .select(
         `
         user_id,
@@ -140,7 +141,7 @@ export async function GET(
     let unreadCount = 0;
     if (userParticipant?.last_read_at) {
       const { count } = await admin
-        .from('messages')
+        .from(DATABASE_TABLES.MESSAGES)
         .select('*', { count: 'exact', head: true })
         .eq('conversation_id', conversationId)
         .neq('sender_id', user.id)
@@ -149,9 +150,9 @@ export async function GET(
       unreadCount = count || 0;
     }
 
-    return NextResponse.json({
+    return apiSuccess({
       conversation: {
-        ...conv,
+        ...(conv as Record<string, unknown>),
         participants: formattedParticipants,
         unread_count: unreadCount,
       },
@@ -159,54 +160,48 @@ export async function GET(
       pagination,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[api/messages/[id]] GET error:', message);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Messages GET error', { error, conversationId, userId: req.user.id }, 'Messages');
+    return handleApiError(error);
   }
-}
+});
 
 /**
  * POST - Send a new message to the conversation
  */
-export async function POST(
-  request: NextRequest,
+export const POST = withAuth(async (
+  req: AuthenticatedRequest,
   { params }: { params: Promise<{ conversationId: string }> }
-) {
+) => {
+  const { conversationId } = await params;
   try {
-    const { conversationId } = await params;
-
-    // Authenticate user
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user } = req;
 
     // Rate limiting
     const rateLimitResult = enforceRateLimit('MESSAGE_SEND', user.id);
     if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded. Please slow down.' },
-        { status: 429, headers: getRateLimitHeaders(rateLimitResult) }
-      );
+      const retryAfter = rateLimitResult.retryAfterMs
+        ? Math.ceil(rateLimitResult.retryAfterMs / 1000)
+        : undefined;
+      const response = apiRateLimited('Rate limit exceeded. Please slow down.', retryAfter);
+      // Add rate limit headers
+      const headers = getRateLimitHeaders(rateLimitResult);
+      Object.entries(headers).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      return response;
     }
 
     // Parse and validate body
-    const body = await request.json();
+    const body = await req.json();
     const validation = sendMessageSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json(
-        {
-          error: 'Invalid request data',
-          details: validation.error.issues,
-        },
-        { status: 400 }
-      );
+      return apiValidationError('Invalid request data', {
+        fields: validation.error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
+      });
     }
 
     const { content, messageType, metadata } = validation.data;
@@ -216,7 +211,7 @@ export async function POST(
 
     // Check membership (with auto-reactivation for soft-deleted participants)
     const { data: participantMaybe, error: partError } = await admin
-      .from('conversation_participants')
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
       .select('user_id, is_active')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -224,19 +219,21 @@ export async function POST(
 
     if (partError || !participantMaybe) {
       // Not a participant - cannot send
-      return NextResponse.json(
-        { error: 'Not a participant in this conversation' },
-        { status: 403 }
-      );
+      return apiForbidden('Not a participant in this conversation');
     }
 
     // Reactivate if soft-deleted
-    if ((participantMaybe as any).is_active === false) {
-      await admin
-        .from('conversation_participants')
-        .update({ is_active: true, last_read_at: new Date().toISOString() })
+    if (participantMaybe && typeof participantMaybe === 'object' && 'is_active' in participantMaybe && (participantMaybe as { is_active?: boolean }).is_active === false) {
+      const updateData: Database['public']['Tables']['conversation_participants']['Update'] = {
+        is_active: true,
+        last_read_at: new Date().toISOString(),
+      };
+      const updateQuery = admin
+        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+        .update(updateData as any)
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id);
+      await (updateQuery as any);
     }
 
     // Send message
@@ -248,13 +245,14 @@ export async function POST(
       metadata || null
     );
 
-    return NextResponse.json(
-      { success: true, id: newId },
-      { headers: getRateLimitHeaders(rateLimitResult) }
+    return apiCreated(
+      { id: newId },
+      {
+        headers: getRateLimitHeaders(rateLimitResult),
+      }
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[api/messages/[id]] POST error:', message);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Messages POST error', { error, conversationId, userId: req.user.id }, 'Messages');
+    return handleApiError(error);
   }
-}
+});

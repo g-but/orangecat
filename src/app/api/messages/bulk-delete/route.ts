@@ -1,49 +1,69 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth'
 import { createServerClient } from '@/lib/supabase/server'
+import {
+  apiSuccess,
+  apiValidationError,
+  apiForbidden,
+  handleApiError,
+} from '@/lib/api/standardResponse'
+import { logger } from '@/utils/logger'
+import { z } from 'zod'
+import { DATABASE_TABLES } from '@/config/database-tables'
 
-export async function POST(req: NextRequest) {
+const bulkDeleteSchema = z.object({
+  conversationId: z.string().min(1),
+  ids: z.array(z.string().min(1)).min(1),
+})
+
+export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
+    const { user } = req
     const supabase = await createServerClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const body = await req.json().catch(() => ({}))
+    const validation = bulkDeleteSchema.safeParse(body)
+
+    if (!validation.success) {
+      return apiValidationError('Invalid request', {
+        fields: validation.error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
+      })
     }
 
-    const body = await req.json().catch(() => ({})) as { conversationId?: string, ids?: string[] }
-    const conversationId = body.conversationId
-    const ids = Array.isArray(body.ids) ? body.ids.filter(Boolean) : []
-    if (!conversationId || ids.length === 0) {
-      return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
-    }
+    const { conversationId, ids } = validation.data
 
     // Verify user is participant
     const { data: participant } = await supabase
-      .from('conversation_participants')
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
       .select('user_id')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
       .eq('is_active', true)
       .maybeSingle()
     if (!participant) {
-      return NextResponse.json({ error: 'Access denied' }, { status: 403 })
+      return apiForbidden('Access denied')
     }
 
     // Soft delete messages (only messages sent by current user)
     // PURE RLS: relies on 'Message senders can update their messages' policy
     const { error: updErr, data } = await supabase
-      .from('messages')
-      .update({ is_deleted: true } as any)
+      .from(DATABASE_TABLES.MESSAGES)
+      .update({ is_deleted: true } as { is_deleted: boolean })
       .in('id', ids)
       .eq('conversation_id', conversationId)
       .eq('sender_id', user.id)
       .select('id')
 
     if (updErr) {
-      return NextResponse.json({ error: 'Failed to delete messages', details: (updErr as any)?.message || (updErr as any)?.code }, { status: 500 })
+      logger.error('Failed to delete messages', { error: updErr, conversationId, userId: user.id, messageIds: ids }, 'Messages')
+      return handleApiError(updErr)
     }
 
-    return NextResponse.json({ success: true, deleted: data?.length || 0 })
+    return apiSuccess({ deleted: data?.length || 0 })
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    logger.error('Bulk delete messages error', { error, userId: req.user.id }, 'Messages')
+    return handleApiError(error)
   }
-}
+})

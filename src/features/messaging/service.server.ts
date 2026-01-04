@@ -1,7 +1,9 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { Conversation, Message, Pagination } from './types';
+import { logger } from '@/utils/logger';
+import type { Conversation, Message, Pagination, Participant } from './types';
 import type { Database } from '@/types/database';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 type MessagesInsert = Database['public']['Tables']['messages']['Insert'];
 type ConversationsInsert = Database['public']['Tables']['conversations']['Insert'];
@@ -10,6 +12,10 @@ type ConversationParticipantsInsert =
   Database['public']['Tables']['conversation_participants']['Insert'];
 type ConversationParticipantsUpdate =
   Database['public']['Tables']['conversation_participants']['Update'];
+type ConversationParticipantsRow =
+  Database['public']['Tables']['conversation_participants']['Row'];
+type ConversationsRow = Database['public']['Tables']['conversations']['Row'];
+type ProfilesRow = Database['public']['Tables']['profiles']['Row'];
 type ProfilesInsert = Database['public']['Tables']['profiles']['Insert'];
 
 export async function getServerUser() {
@@ -28,32 +34,33 @@ export async function ensureMessagingFunctions() {
   const admin = createAdminClient();
 
   try {
-    console.log('Ensuring messaging functions exist...');
+    logger.info('Ensuring messaging functions exist...');
 
     // Try to create the send_message function directly
     // This will fail gracefully if it already exists
     try {
-      await admin.rpc('send_message', {
+      const testArgs: Database['public']['Functions']['send_message']['Args'] = {
         p_conversation_id: '00000000-0000-0000-0000-000000000000',
         p_sender_id: '00000000-0000-0000-0000-000000000000',
         p_content: 'test',
-      } as Database['public']['Functions']['send_message']['Args']);
-      console.log('send_message function exists');
+      };
+      await admin.rpc('send_message', testArgs);
+      logger.info('send_message function exists');
     } catch (testError: any) {
       if (testError.message && testError.message.includes('function send_message')) {
-        console.log('send_message function does not exist, this is expected');
+        logger.info('send_message function does not exist, this is expected');
       } else {
-        console.log('send_message function exists (error was expected participant check)');
+        logger.info('send_message function exists (error was expected participant check)');
       }
     }
 
     // If we get here, try to create the function using raw SQL
-    console.log('Attempting to create send_message function...');
+    logger.info('Attempting to create send_message function...');
 
     // This is a fallback - in a real deployment, this would be done via migrations
     // For now, let's implement the message sending logic directly in the API
   } catch (error) {
-    console.error('Error ensuring messaging functions:', error);
+    logger.error('Error ensuring messaging functions:', error);
     // Don't throw - we'll handle this in the API
   }
 }
@@ -63,47 +70,47 @@ export async function fetchUserConversations(
   limit: number = 30
 ): Promise<Conversation[]> {
   try {
-    console.log('fetchUserConversations: Starting, limit=', limit);
+    logger.info('fetchUserConversations: Starting, limit=', limit);
     let user;
     try {
       const { supabase: _, user: u } = await getServerUser();
       user = u;
     } catch (authError) {
-      console.error('fetchUserConversations: Auth error:', authError);
+      logger.error('fetchUserConversations: Auth error:', authError);
       return [];
     }
 
     if (!user) {
-      console.error('fetchUserConversations: No user found');
+      logger.error('fetchUserConversations: No user found');
       return [];
     }
-    console.log('fetchUserConversations: User found', user.id);
+    logger.info('fetchUserConversations: User found', user.id);
 
     // Use admin client to bypass RLS issues, then filter by user
     let admin;
     try {
       admin = createAdminClient();
-      console.log('fetchUserConversations: Admin client created');
+      logger.info('fetchUserConversations: Admin client created');
     } catch (adminError) {
-      console.error('fetchUserConversations: Error creating admin client:', adminError);
+      logger.error('fetchUserConversations: Error creating admin client:', adminError);
       return [];
     }
 
     // Skip RPC function due to potential database schema issues
     // Use manual method directly
-    console.log('Using manual conversation fetching method (RPC disabled)');
+    logger.info('Using manual conversation fetching method (RPC disabled)');
 
     // Fallback: build conversations manually using admin client
     // Simplified query - just get conversation IDs first
     const { data: participations, error: partError } = await admin
-      .from('conversation_participants')
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
       .select('conversation_id')
       .eq('user_id', user.id)
       .eq('is_active', true)
       .limit(100); // Prevent huge queries
 
     if (partError) {
-      console.error('Error fetching participations:', partError);
+      logger.error('Error fetching participations:', partError);
       return [];
     }
 
@@ -111,7 +118,9 @@ export async function fetchUserConversations(
       return [];
     }
 
-    const conversationIds = (participations as any[]).map(p => p.conversation_id).filter(Boolean);
+    const conversationIds = (participations as ConversationParticipantsRow[])
+      .map(p => p.conversation_id)
+      .filter(Boolean);
 
     if (conversationIds.length === 0) {
       return [];
@@ -119,7 +128,7 @@ export async function fetchUserConversations(
 
     // Get conversations with minimal fields first
     const { data: conversations, error: convError } = await admin
-      .from('conversations')
+      .from(DATABASE_TABLES.CONVERSATIONS)
       .select(
         'id, title, is_group, created_at, updated_at, last_message_at, last_message_preview, last_message_sender_id, created_by'
       )
@@ -128,7 +137,7 @@ export async function fetchUserConversations(
       .limit(limit);
 
     if (convError) {
-      console.error('Error fetching conversations:', convError);
+      logger.error('Error fetching conversations:', convError);
       return [];
     }
 
@@ -138,14 +147,14 @@ export async function fetchUserConversations(
 
     // Fetch participants separately - simplified query without profile join for now
     const { data: allParticipants, error: participantsError } = await admin
-      .from('conversation_participants')
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
       .select('conversation_id, user_id, role, joined_at, last_read_at, is_active')
       .in('conversation_id', conversationIds);
 
     if (participantsError) {
-      console.error('Error fetching participants:', participantsError);
+      logger.error('Error fetching participants:', participantsError);
       // Return conversations without participants rather than failing
-      return (conversations as any[]).map(c => ({
+      return (conversations as ConversationsRow[]).map(c => ({
         ...c,
         participants: [],
         unread_count: 0,
@@ -154,40 +163,44 @@ export async function fetchUserConversations(
 
     // Get user profiles separately to avoid complex joins
     const userIds = [
-      ...new Set((allParticipants || []).map((p: any) => p.user_id).filter(Boolean)),
+      ...new Set(
+        (allParticipants || []).map((p: ConversationParticipantsRow) => p.user_id).filter(Boolean)
+      ),
     ];
-    let profilesMap = new Map();
+    let profilesMap = new Map<string, ProfilesRow>();
     if (userIds.length > 0) {
       const { data: profiles } = await admin
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id, username, name, avatar_url')
         .in('id', userIds);
-      profilesMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      profilesMap = new Map(
+        (profiles || []).map((p: ProfilesRow) => [p.id, p])
+      );
     }
 
     // Group participants by conversation
-    const participantsByConv = new Map<string, any[]>();
-    for (const p of (allParticipants || []) as any[]) {
+    const participantsByConv = new Map<string, Participant[]>();
+    for (const p of (allParticipants || []) as ConversationParticipantsRow[]) {
       if (!p || !p.conversation_id) {
         continue;
       }
-      const profile = profilesMap.get(p.user_id) || {};
+      const profile = profilesMap.get(p.user_id);
       const list = participantsByConv.get(p.conversation_id) || [];
       list.push({
         user_id: p.user_id,
-        username: profile.username || '',
-        name: profile.name || '',
-        avatar_url: profile.avatar_url || null,
+        username: profile?.username || '',
+        name: profile?.name || '',
+        avatar_url: profile?.avatar_url || null,
         role: p.role,
         joined_at: p.joined_at,
-        last_read_at: p.last_read_at,
+        last_read_at: p.last_read_at || '',
         is_active: p.is_active,
       });
       participantsByConv.set(p.conversation_id, list);
     }
 
     // Build full conversation objects with all required fields
-    return (conversations as any[]).map(c => ({
+    return (conversations as ConversationsRow[]).map(c => ({
       ...c,
       participants: participantsByConv.get(c.id) || [],
       unread_count: 0, // Could calculate but keeping simple for now
@@ -196,7 +209,7 @@ export async function fetchUserConversations(
       last_message_at: c.last_message_at || null,
     })) as Conversation[];
   } catch (error) {
-    console.error('Error in fetchUserConversations:', error);
+    logger.error('Error in fetchUserConversations:', error);
     // Return empty array on any error to prevent breaking the UI
     return [];
   }
@@ -213,7 +226,7 @@ export async function fetchConversationSummary(conversationId: string): Promise<
 
   // Membership check
   const { data: participant } = await admin
-    .from('conversation_participants')
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .select('user_id')
     .eq('conversation_id', conversationId)
     .eq('user_id', user.id)
@@ -224,7 +237,7 @@ export async function fetchConversationSummary(conversationId: string): Promise<
   }
 
   const { data: conv } = await admin
-    .from('conversations')
+    .from(DATABASE_TABLES.CONVERSATIONS)
     .select('*')
     .eq('id', conversationId)
     .single();
@@ -233,7 +246,7 @@ export async function fetchConversationSummary(conversationId: string): Promise<
   }
 
   const { data: participants } = await admin
-    .from('conversation_participants')
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .select(
       `
       user_id,
@@ -263,7 +276,7 @@ export async function fetchConversationSummary(conversationId: string): Promise<
   }));
 
   return {
-    ...(conv as any),
+    ...(conv as ConversationsRow),
     participants: formattedParticipants,
     unread_count: 0,
   } as Conversation;
@@ -285,7 +298,7 @@ export async function fetchMessages(
 
   // Verify membership
   const { data: participant } = await admin
-    .from('conversation_participants')
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .select('user_id')
     .eq('conversation_id', conversationId)
     .eq('user_id', user.id)
@@ -297,7 +310,7 @@ export async function fetchMessages(
 
   // Fetch messages with sender info using admin client
   let query = admin
-    .from('messages')
+    .from(DATABASE_TABLES.MESSAGES)
     .select(
       `
       id,
@@ -330,7 +343,7 @@ export async function fetchMessages(
 
   // Get all participants' last_read_at for read receipt calculation
   const { data: allParticipants } = await admin
-    .from('conversation_participants')
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .select('user_id, last_read_at')
     .eq('conversation_id', conversationId)
     .eq('is_active', true);
@@ -435,7 +448,7 @@ export async function sendMessage(
 
     // First verify the sender is a participant
     const { data: participant, error: partError } = await admin
-      .from('conversation_participants')
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
       .select('*')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -456,14 +469,14 @@ export async function sendMessage(
       message_type: type,
       metadata: metadata || {},
     };
-    const { data: message, error: insertError } = await admin
-      .from('messages')
-      .insert(messageData)
+    const { data: message, error: insertError } = await (admin
+      .from(DATABASE_TABLES.MESSAGES)
+      .insert(messageData as any)
       .select('id')
-      .single();
+      .single() as any);
 
     if (insertError || !message) {
-      console.error('Error inserting message:', insertError);
+      logger.error('Error inserting message:', insertError);
       throw Object.assign(new Error('Failed to send message'), { status: 500 });
     }
 
@@ -475,12 +488,12 @@ export async function sendMessage(
       updated_at: new Date().toISOString(),
     };
     const { error: updateError } = await admin
-      .from('conversations')
+      .from(DATABASE_TABLES.CONVERSATIONS)
       .update(conversationUpdate)
       .eq('id', conversationId);
 
     if (updateError) {
-      console.warn('Failed to update conversation metadata:', updateError);
+      logger.warn('Failed to update conversation metadata:', updateError);
       // Don't fail the message send for this
     }
 
@@ -488,21 +501,22 @@ export async function sendMessage(
     const participantUpdate: ConversationParticipantsUpdate = {
       last_read_at: new Date().toISOString(),
     };
-    const { error: readError } = await admin
-      .from('conversation_participants')
-      .update(participantUpdate)
+    const updateQuery = admin
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+      .update(participantUpdate as any)
       .eq('conversation_id', conversationId)
       .eq('user_id', senderId);
+    const { error: readError } = await (updateQuery as any);
 
     if (readError) {
-      console.warn('Failed to update sender read time:', readError);
+      logger.warn('Failed to update sender read time:', readError);
       // Don't fail the message send for this
     }
 
-    console.log('Message sent successfully:', message.id);
+    logger.info('Message sent successfully:', message.id);
     return message.id;
   } catch (error) {
-    console.error('Error sending message:', error);
+    logger.error('Error sending message:', error);
     throw error;
   }
 }
@@ -519,7 +533,7 @@ export async function markConversationRead(conversationId: string) {
     last_read_at: new Date().toISOString(),
   };
   await admin
-    .from('conversation_participants')
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .update(participantUpdate)
     .eq('conversation_id', conversationId)
     .eq('user_id', user.id);
@@ -542,7 +556,7 @@ export async function openConversation(
   const admin = createAdminClient();
   const ensureProfile = async (id: string) => {
     const { data: existing, error: checkError } = await admin
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id')
       .eq('id', id)
       .maybeSingle();
@@ -557,7 +571,8 @@ export async function openConversation(
         username: `user_${id.slice(0, 8)}`,
         name: 'User',
       };
-      const { error: insertError } = await admin.from('profiles').insert(profileData);
+      const insertQuery = admin.from(DATABASE_TABLES.PROFILES).insert(profileData as any);
+      const { error: insertError } = await (insertQuery as any);
       if (insertError) {
         throw insertError;
       }
@@ -571,26 +586,26 @@ export async function openConversation(
       created_by: user.id,
       is_group: false,
     };
-    const { data: convIns, error: convErr } = await admin
-      .from('conversations')
-      .insert(convData)
+    const { data: convIns, error: convErr } = await (admin
+      .from(DATABASE_TABLES.CONVERSATIONS)
+      .insert(convData as any)
       .select('id')
-      .single();
-    if (convErr || !convIns) {
+      .single() as any);
+    if (convErr || !convIns || !convIns.id) {
       throw Object.assign(new Error('Failed to create conversation'), { status: 500 });
     }
-    const convId = (convIns as any).id as string;
+    const convId = convIns.id as string;
     const participantData: ConversationParticipantsInsert = {
       conversation_id: convId,
       user_id: user.id,
       role: 'member',
       is_active: true,
     };
-    const { error: partErr } = await admin
-      .from('conversation_participants')
-      .insert(participantData);
+    const { error: partErr } = await (admin
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+      .insert(participantData as any) as any);
     if (partErr) {
-      await admin.from('conversations').delete().eq('id', convId);
+      await (admin.from(DATABASE_TABLES.CONVERSATIONS).delete().eq('id', convId) as any);
       throw Object.assign(new Error('Failed to add participant'), { status: 500 });
     }
     return convId;
@@ -607,20 +622,22 @@ export async function openConversation(
       created_by: user.id,
       is_group: false,
     };
-    const { data: convIns, error: convErr } = await admin
-      .from('conversations')
-      .insert(convData)
+    const insertQuery = admin
+      .from(DATABASE_TABLES.CONVERSATIONS)
+      .insert(convData as any)
       .select('id')
       .single();
-    if (convErr || !convIns) {
+    const { data: convIns, error: convErr } = await (insertQuery as any);
+    if (convErr || !convIns || !convIns.id) {
       throw Object.assign(new Error('Failed to create conversation'), { status: 500 });
     }
-    const newId = (convIns as any).id as string;
+    const newId = convIns.id as string;
     const participantsData: ConversationParticipantsInsert[] = [
       { conversation_id: newId, user_id: user.id, role: 'member', is_active: true },
       { conversation_id: newId, user_id: otherId, role: 'member', is_active: true },
     ];
-    const { error: pErr } = await admin.from('conversation_participants').insert(participantsData);
+    const insertParticipantsQuery = admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS).insert(participantsData as any);
+    const { error: pErr } = await (insertParticipantsQuery as any);
     if (pErr) {
       throw Object.assign(new Error('Failed to add participants'), { status: 500 });
     }
@@ -647,22 +664,22 @@ export async function openConversation(
     is_group: true,
     title: title || null,
   };
-  const { data: convIns, error: cErr } = await admin
-    .from('conversations')
-    .insert(groupConvData)
+  const { data: convIns, error: cErr } = await (admin
+    .from(DATABASE_TABLES.CONVERSATIONS)
+    .insert(groupConvData as any)
     .select('id')
-    .single();
-  if (cErr || !convIns) {
+    .single() as any);
+  if (cErr || !convIns || !convIns.id) {
     throw Object.assign(new Error('Failed to create conversation'), { status: 500 });
   }
-  const gid = (convIns as any).id as string;
+  const gid = convIns.id as string;
   const rows: ConversationParticipantsInsert[] = [user.id, ...participantIds].map(pid => ({
     conversation_id: gid,
     user_id: pid,
     role: pid === user.id ? 'admin' : 'member',
     is_active: true,
   }));
-  const { error: pErr } = await admin.from('conversation_participants').insert(rows);
+  const { error: pErr } = await (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS).insert(rows as any) as any);
   if (pErr) {
     throw Object.assign(new Error('Failed to add participants'), { status: 500 });
   }

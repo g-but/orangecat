@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       error: followsError,
       count,
     } = await supabase
-      .from('follows')
+      .from(DATABASE_TABLES.FOLLOWS)
       .select('following_id, created_at', { count: 'exact' })
       .eq('follower_id', id)
       .order('created_at', { ascending: false })
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (followingIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id, username, name, avatar_url, bio, bitcoin_address, lightning_address')
         .in('id', followingIds);
 
