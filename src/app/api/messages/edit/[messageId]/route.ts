@@ -9,65 +9,70 @@
  * Last Modified Summary: Moved to /edit/[messageId] to avoid route conflict
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
+import {
+  apiSuccess,
+  apiNotFound,
+  apiForbidden,
+  apiValidationError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
 import { z } from 'zod';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Schema for editing a message
 const editMessageSchema = z.object({
   content: z.string().min(1).max(1000),
 });
 
-export async function PATCH(
-  request: NextRequest,
+export const PATCH = withAuth(async (
+  req: AuthenticatedRequest,
   { params }: { params: Promise<{ messageId: string }> }
-) {
+) => {
   try {
     const { messageId } = await params;
-
-    // Authenticate user
+    const { user } = req;
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Parse and validate request body
-    const body = await request.json();
+    const body = await req.json();
     const validation = editMessageSchema.safeParse(body);
 
     if (!validation.success) {
-      return NextResponse.json({
-        error: 'Invalid request data',
-        details: validation.error.issues
-      }, { status: 400 });
+      return apiValidationError('Invalid request data', {
+        fields: validation.error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
+      });
     }
 
     const { content } = validation.data;
 
     // Verify user is the sender of this message
     const { data: message, error: messageError } = await supabase
-      .from('messages')
+      .from(DATABASE_TABLES.MESSAGES)
       .select('id, sender_id, conversation_id, is_deleted')
       .eq('id', messageId)
       .single();
 
     if (messageError || !message) {
-      return NextResponse.json({ error: 'Message not found' }, { status: 404 });
+      return apiNotFound('Message not found');
     }
 
     if (message.is_deleted) {
-      return NextResponse.json({ error: 'Cannot edit deleted message' }, { status: 400 });
+      return apiValidationError('Cannot edit deleted message');
     }
 
     if (message.sender_id !== user.id) {
-      return NextResponse.json({ error: 'You can only edit your own messages' }, { status: 403 });
+      return apiForbidden('You can only edit your own messages');
     }
 
     // Update message content and set edited_at
     const { data: updatedMessage, error: updateError } = await supabase
-      .from('messages')
+      .from(DATABASE_TABLES.MESSAGES)
       .update({
         content,
         edited_at: new Date().toISOString(),
@@ -79,17 +84,15 @@ export async function PATCH(
       .single();
 
     if (updateError || !updatedMessage) {
-      return NextResponse.json({ error: 'Failed to update message' }, { status: 500 });
+      logger.error('Failed to update message', { error: updateError, messageId, userId: user.id }, 'Messages');
+      return handleApiError(updateError || new Error('Update returned no data'));
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: updatedMessage 
-    });
+    return apiSuccess({ message: updatedMessage });
   } catch (error) {
-    console.error('Error editing message:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Error editing message', { error, messageId: (await params).messageId, userId: req.user.id }, 'Messages');
+    return handleApiError(error);
   }
-}
+});
 
 

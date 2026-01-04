@@ -13,6 +13,7 @@ import {
 import { rateLimitSocial } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 async function handleFollow(request: AuthenticatedRequest) {
   try {
@@ -42,7 +43,7 @@ async function handleFollow(request: AuthenticatedRequest) {
 
     // Check if target user exists
     const { data: targetUser, error: userError } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id')
       .eq('id', following_id)
       .single();
@@ -53,7 +54,7 @@ async function handleFollow(request: AuthenticatedRequest) {
 
     // Check if already following
     const { data: existingFollow } = await supabase
-      .from('follows')
+      .from(DATABASE_TABLES.FOLLOWS)
       .select('id')
       .eq('follower_id', user.id)
       .eq('following_id', following_id)
@@ -64,7 +65,7 @@ async function handleFollow(request: AuthenticatedRequest) {
     }
 
     // Create follow relationship
-    const { error: followError } = await supabase.from('follows').insert({
+    const { error: followError } = await supabase.from(DATABASE_TABLES.FOLLOWS).insert({
       follower_id: user.id,
       following_id: following_id,
     });
