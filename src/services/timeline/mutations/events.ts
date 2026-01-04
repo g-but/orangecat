@@ -11,6 +11,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type {
   TimelineEventResponse,
   CreateTimelineEventRequest,
@@ -364,7 +365,7 @@ export async function createTransactionEvent(
 ): Promise<TimelineEventResponse> {
   // Get transaction and project details
   const { data: transaction } = await supabase
-    .from('transactions')
+    .from(DATABASE_TABLES.TRANSACTIONS)
     .select('*')
     .eq('id', transactionId)
     .single();
@@ -376,7 +377,7 @@ export async function createTransactionEvent(
     .single();
 
   const { data: donor } = await supabase
-    .from('profiles')
+    .from(DATABASE_TABLES.PROFILES)
     .select('username, display_name')
     .eq('id', donorId)
     .single();

@@ -11,6 +11,7 @@ import { logger, logProfile } from '@/utils/logger'
 import { ProfileMapper } from './mapper'
 import { ProfileReader } from './reader'
 import type { ScalableProfile, ScalableProfileFormData, ProfileAnalytics, ProfileServiceResponse } from './types'
+import { DATABASE_TABLES } from '@/config/database-tables'
 
 // =====================================================================
 // ✏️ PROFILE WRITE OPERATIONS
@@ -31,7 +32,7 @@ export class ProfileWriter {
 
     try {
       const { data } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id')
         .eq('username', username.trim())
         .neq('id', currentUserId)
@@ -82,7 +83,7 @@ export class ProfileWriter {
 
       // Update in database
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .update(updateData)
         .eq('id', userId)
         .select('*')
@@ -150,7 +151,7 @@ export class ProfileWriter {
       insertData.id = userId; // Ensure ID is set
 
       const { data, error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .insert(insertData)
         .select('*')
         .single()
@@ -205,7 +206,7 @@ export class ProfileWriter {
       const updateData = ProfileMapper.mapProfileToDatabase(updatedProfile);
 
       const { error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .update(updateData)
         .eq('id', userId)
 
@@ -245,7 +246,7 @@ export class ProfileWriter {
       logProfile('deleteProfile', { userId })
 
       const { error } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .delete()
         .eq('id', userId)
 

@@ -12,6 +12,7 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { PUBLIC_SEARCH_STATUSES } from '@/lib/projectStatus';
+import { DATABASE_TABLES } from '@/config/database-tables';
 import type { SearchProfile, SearchFundingPage, SearchFilters } from './types';
 
 /**
@@ -25,7 +26,7 @@ export async function searchProfiles(
 ): Promise<SearchProfile[]> {
   // Start with minimal columns for better performance
   let profileQuery = supabase
-    .from('profiles')
+    .from(DATABASE_TABLES.PROFILES)
     .select(
       'id, username, name, bio, avatar_url, created_at, location_country, location_city, location_zip, latitude, longitude'
     );
@@ -253,7 +254,7 @@ export async function searchFundingPages(
         // Fetch profiles for projects
         const userIds = [...new Set(results.map((p: any) => p.user_id))];
         const { data: profiles } = await supabase
-          .from('profiles')
+          .from(DATABASE_TABLES.PROFILES)
           .select('id, username, name, avatar_url')
           .in('id', userIds);
 
@@ -337,7 +338,7 @@ export async function searchFundingPages(
         // Fetch profiles for projects
         const userIds = [...new Set(results.map((p: any) => p.user_id))];
         const { data: profiles } = await supabase
-          .from('profiles')
+          .from(DATABASE_TABLES.PROFILES)
           .select('id, username, name, avatar_url')
           .in('id', userIds);
 
@@ -440,7 +441,7 @@ export async function searchFundingPages(
   // Fetch profiles for all projects in parallel
   const userIds = [...new Set(filteredProjects.map((p: any) => p.user_id))];
   const { data: profiles } = await supabase
-    .from('profiles')
+    .from(DATABASE_TABLES.PROFILES)
     .select('id, username, name, avatar_url')
     .in('id', userIds);
 
@@ -489,7 +490,7 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
     // Use Promise.all for parallel suggestion queries
     const [profileSuggestions, projectSuggestions] = await Promise.all([
       supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('username, name')
         .or(`username.ilike.%${sanitizedQuery}%,name.ilike.%${sanitizedQuery}%`)
         .not('username', 'is', null)
@@ -559,7 +560,7 @@ export async function getTrending(): Promise<{
         .limit(10),
 
       supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id, username, name, bio, avatar_url, created_at')
         .order('created_at', { ascending: false })
         .limit(10),
@@ -570,7 +571,7 @@ export async function getTrending(): Promise<{
     if (!projectsData.error && projectsData.data) {
       const userIds = [...new Set(projectsData.data.map((p: any) => p.user_id))];
       const { data: profiles } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id, username, name, avatar_url')
         .in('id', userIds);
 

@@ -20,6 +20,7 @@ import { loanConfig } from '@/config/entity-configs';
 import { LoanTemplates } from '@/components/create/templates';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 import type { LoanFormData } from '@/lib/validation';
 
 export default function CreateLoanPage() {
@@ -42,7 +43,7 @@ export default function CreateLoanPage() {
             }
           }
         } catch (error) {
-          console.error('Failed to fetch loan:', error);
+          logger.error('Failed to fetch loan:', error);
         } finally {
           setLoading(false);
         }

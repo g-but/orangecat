@@ -11,6 +11,7 @@
 
 import { supabase } from '../core/client'
 import { logger, logProfile } from '@/utils/logger'
+import { DATABASE_TABLES } from '@/config/database-tables'
 import type { 
   Profile,
   ProfileUpdateData,
@@ -38,7 +39,7 @@ export async function getProfile(userId: string): Promise<ProfileResponse> {
     logProfile('Fetching profile', { userId })
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('*')
       .eq('id', userId)
       .single()
@@ -110,7 +111,7 @@ export async function updateProfile(
     }
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .update(updateData)
       .eq('id', userId)
       .select()
@@ -197,7 +198,7 @@ export async function createProfile(
     }
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .insert(newProfile)
       .select()
       .single()
@@ -257,7 +258,7 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
     logProfile('Checking username availability', { username })
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id')
       .eq('username', username)
       .single()
@@ -308,7 +309,7 @@ export async function getProfileByUsername(username: string): Promise<ProfileRes
     logProfile('Fetching profile by username', { username })
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('*')
       .eq('username', username)
       .single()
@@ -369,7 +370,7 @@ export async function searchProfiles(
     logProfile('Searching profiles', { query, limit })
     
     const { data, error } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('*')
       .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
       .limit(limit)
