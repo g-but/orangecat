@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -177,7 +178,7 @@ export default function ProfileWizard({
       const data = form.getValues();
       await onSave(data as ProfileFormData);
     } catch (error) {
-      console.error('Save failed:', error);
+      logger.error('Save failed:', error);
     } finally {
       setIsSaving(false);
     }

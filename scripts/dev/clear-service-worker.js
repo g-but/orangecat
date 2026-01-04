@@ -36,3 +36,6 @@ console.log('```');
 console.log('');
 console.log('✅ The service worker is now disabled in development mode.');
 console.log('   Changes should appear immediately after a hard refresh.');
+
+
+

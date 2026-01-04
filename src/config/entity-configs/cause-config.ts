@@ -13,7 +13,9 @@ import {
   causeGuidanceContent,
   causeDefaultGuidance,
 } from '@/lib/entity-guidance/cause-guidance';
-import type { EntityConfig, FieldGroup } from '@/components/create/types';
+import type { FieldGroup } from '@/components/create/types';
+import { CAUSE_TEMPLATES, type CauseTemplate } from '@/components/create/templates';
+import { createEntityConfig } from './base-config-factory';
 
 // ==================== CONSTANTS ====================
 
@@ -116,7 +118,7 @@ const defaultValues: UserCauseFormData = {
   description: '',
   cause_category: '',
   goal_sats: null,
-  currency: 'SATS',
+  currency: 'CHF', // Default to CHF - user can change in form
   bitcoin_address: '',
   lightning_address: '',
   beneficiaries: [],
@@ -125,14 +127,13 @@ const defaultValues: UserCauseFormData = {
 
 // ==================== EXPORT CONFIG ====================
 
-export const causeConfig: EntityConfig<UserCauseFormData> = {
-  type: 'cause',
+export const causeConfig = createEntityConfig<UserCauseFormData>({
+  entityType: 'cause',
   name: 'Cause',
   namePlural: 'Causes',
   icon: Heart,
   colorTheme: 'rose',
   backUrl: '/dashboard/causes',
-  apiEndpoint: '/api/causes',
   successUrl: '/dashboard/causes/[id]',
   pageTitle: 'Create Cause',
   pageDescription: 'Start a charitable fundraising campaign',
@@ -141,12 +142,13 @@ export const causeConfig: EntityConfig<UserCauseFormData> = {
   fieldGroups,
   validationSchema: userCauseSchema,
   defaultValues,
-  guidanceContent: causeGuidanceContent as any,
+  guidanceContent: causeGuidanceContent,
   defaultGuidance: causeDefaultGuidance,
+  templates: CAUSE_TEMPLATES as unknown as CauseTemplate[],
   infoBanner: {
     title: 'Transparency Commitment',
     content: 'By creating this cause, you commit to using all donated funds for the stated purpose and providing updates to your donors about how their contributions are being used.',
     variant: 'warning',
   },
-};
+});
 

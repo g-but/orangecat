@@ -27,6 +27,7 @@ import AuthRecovery from '@/components/AuthRecovery';
 import { useAuth, useRedirectIfAuthenticated } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { resetPassword } from '@/services/supabase/auth';
+import { registrationEvents, trackEvent } from '@/lib/analytics';
 
 // Normalize unknown error values to a user-friendly string
 function getReadableError(
@@ -67,7 +68,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<'login' | 'register' | 'forgot'>('login');
 
   useEffect(() => {
-    const modeParam = searchParams.get('mode');
+    const modeParam = searchParams?.get('mode');
     if (modeParam === 'login' || modeParam === 'register') {
       setMode(modeParam);
     }
@@ -87,17 +88,6 @@ export default function AuthPage() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [hydrationTimedOut, setHydrationTimedOut] = useState(false);
-
-  // Safety timeout: if hydration takes too long, show the form anyway
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!hydrated) {
-        setHydrationTimedOut(true);
-      }
-    }, 3000); // 3 second timeout
-    return () => clearTimeout(timer);
-  }, [hydrated]);
   const [localLoading, setLocalLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -129,7 +119,7 @@ export default function AuthPage() {
   useEffect(() => {
     // If we have a session after hydration, redirect immediately
     if (session?.user && hydrated) {
-      const redirectUrl = searchParams.get('from') || '/dashboard';
+      const redirectUrl = searchParams?.get('from') || '/dashboard';
       router.replace(redirectUrl); // Use replace to avoid back button issues
     }
   }, [session, hydrated, router, searchParams]);
@@ -179,6 +169,8 @@ export default function AuthPage() {
       }
 
       if (mode === 'register' && result.data && !result.data.session) {
+        registrationEvents.success({ email: formData.email });
+        registrationEvents.emailSent({ email: formData.email });
         setSuccess(
           'Registration successful! Please check your email to verify your account before signing in.'
         );
@@ -186,6 +178,7 @@ export default function AuthPage() {
         setMode('login');
       } else if (result.data && result.data.user) {
         // Successful login - redirect will happen automatically via useRedirectIfAuthenticated
+        trackEvent('login_success', { userId: result.data.user.id });
         setSuccess('Login successful! Redirecting...');
       }
     } catch (error) {
@@ -227,10 +220,29 @@ export default function AuthPage() {
     setRetryCount(prev => prev + 1);
     setError(null);
     setSuccess(null);
+    // Create a synthetic form event for retry
+    const syntheticEvent = {
+      preventDefault: () => {},
+      stopPropagation: () => {},
+      currentTarget: document.createElement('form'),
+      target: document.createElement('form'),
+      nativeEvent: new Event('submit'),
+      bubbles: true,
+      cancelable: true,
+      defaultPrevented: false,
+      eventPhase: 0,
+      isTrusted: false,
+      timeStamp: Date.now(),
+      type: 'submit',
+      isDefaultPrevented: () => false,
+      isPropagationStopped: () => false,
+      persist: () => {},
+    } as unknown as React.FormEvent<HTMLFormElement>;
+
     if (mode === 'forgot') {
-      handleForgotPassword(new Event('submit') as any);
+      handleForgotPassword(syntheticEvent);
     } else {
-      handleSubmit(new Event('submit') as any);
+      handleSubmit(syntheticEvent);
     }
   };
 

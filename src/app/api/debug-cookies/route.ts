@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/utils/logger';;
 import { cookies } from 'next/headers';
 
 export async function GET(request: NextRequest) {
@@ -6,8 +7,8 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
     const allCookies = cookieStore.getAll();
 
-    console.log('=== COOKIE DEBUG ===');
-    console.log(
+    logger.info('=== COOKIE DEBUG ===');
+    logger.info(
       'All cookies:',
       allCookies.map(c => ({ name: c.name, value: c.value.substring(0, 50) + '...' }))
     );
@@ -17,7 +18,7 @@ export async function GET(request: NextRequest) {
       cookie => cookie.name.includes('supabase') || cookie.name.includes('sb-')
     );
 
-    console.log(
+    logger.info(
       'Supabase cookies:',
       supabaseCookies.map(c => ({ name: c.name, hasValue: !!c.value }))
     );
@@ -28,7 +29,10 @@ export async function GET(request: NextRequest) {
       cookieNames: allCookies.map(c => c.name),
     });
   } catch (error) {
-    console.error('Cookie debug error:', error);
+    logger.error('Cookie debug error:', error);
     return NextResponse.json({ error: 'Debug failed' }, { status: 500 });
   }
 }
+
+
+

@@ -11,7 +11,7 @@ import type { UserCircleFormData } from '@/lib/validation';
 import { transformCircleTemplate } from '../utils/templateTransformers';
 
 interface CircleTemplatesProps {
-  onSelectTemplate: (template: Partial<UserCircleFormData> | null) => void;
+  onSelectTemplate: (template: Partial<UserCircleFormData>) => void;
 }
 
 const CIRCLE_TEMPLATES: CircleTemplate[] = [
@@ -237,7 +237,7 @@ export function CircleTemplates({ onSelectTemplate }: CircleTemplatesProps) {
           Create a custom circle with all the advanced features you want.
         </p>
         <Button
-          onClick={() => onSelectTemplate(null)}
+          onClick={() => onSelectTemplate({})}
           variant="outline"
           className="border-purple-300 text-purple-700 hover:bg-purple-50"
         >

@@ -1,213 +1,40 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+/**
+ * Asset CRUD API Routes
+ *
+ * Uses generic entity handler from lib/api/entityCrudHandler.ts
+ * Entity metadata comes from entity-registry (Single Source of Truth)
+ *
+ * Note: Assets use 'owner_id' instead of 'user_id' for ownership
+ * and table name 'assets' instead of 'user_assets'
+ *
+ * Before refactoring: 214 lines
+ * After refactoring: ~45 lines (79% reduction)
+ */
+
 import { assetSchema } from '@/lib/validation';
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiNotFound,
-  apiValidationError,
-  apiInternalError,
-  handleApiError,
-  handleSupabaseError,
-} from '@/lib/api/standardResponse';
-import { rateLimit, rateLimitWrite, createRateLimitResponse } from '@/lib/rate-limit';
-import { logger } from '@/utils/logger';
-import { apiRateLimited } from '@/lib/api/standardResponse';
+import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
+import { createUpdatePayloadBuilder } from '@/lib/api/buildUpdatePayload';
 
-interface PageProps {
-  params: Promise<{ id: string }>
-}
+// Build update payload from validated asset data
+const buildAssetUpdatePayload = createUpdatePayloadBuilder([
+  { from: 'title' },
+  { from: 'type' },
+  { from: 'description' },
+  { from: 'location' },
+  { from: 'estimated_value' },
+  { from: 'currency' },
+  { from: 'documents', default: null },
+]);
 
-export async function GET(request: NextRequest, { params }: PageProps) {
-  try {
-    const rateLimitResult = rateLimit(request);
-    if (!rateLimitResult.success) {
-      return createRateLimitResponse(rateLimitResult);
-    }
+// Create handlers using generic factory
+const { GET, PUT, DELETE } = createEntityCrudHandlers({
+  entityType: 'asset',
+  schema: assetSchema,
+  buildUpdatePayload: buildAssetUpdatePayload,
+  ownershipField: 'owner_id', // Assets use owner_id instead of user_id
+  tableName: 'assets', // Override registry's 'user_assets' with actual table name
+  requireAuthForGet: true, // Assets require auth to view
+  requireActiveStatus: false, // Assets don't filter by status='active'
+});
 
-    const supabase = await createServerClient();
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth?.user;
-    if (!user) {
-      return apiUnauthorized();
-    }
-
-    const { id } = await params;
-
-    const { data, error } = await supabase
-      .from('assets')
-      .select('id, title, type, status, estimated_value, currency, created_at, verification_status, description, location, documents')
-      .eq('id', id)
-      .eq('owner_id', user.id)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return apiNotFound('Asset not found');
-      }
-      return apiInternalError('Failed to fetch asset', { details: error.message });
-    }
-
-    return apiSuccess(data);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-export async function PUT(request: NextRequest, { params }: PageProps) {
-  try {
-    const supabase = await createServerClient();
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth?.user;
-    if (!user) {
-      return apiUnauthorized();
-    }
-
-    const { id } = await params;
-
-    // Check if asset exists and belongs to user
-    const { data: existingAsset, error: fetchError } = await supabase
-      .from('assets')
-      .select('owner_id')
-      .eq('id', id)
-      .single();
-
-    if (fetchError || !existingAsset) {
-      return apiNotFound('Asset not found');
-    }
-
-    if (existingAsset.owner_id !== user.id) {
-      return apiUnauthorized('You can only update your own assets');
-    }
-
-    // Rate limiting check
-    const rateLimitResult = rateLimitWrite(user.id);
-    if (!rateLimitResult.success) {
-      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many update requests. Please slow down.', retryAfter);
-    }
-
-    const body = await request.json();
-    const validatedData = assetSchema.parse(body);
-
-    const updatePayload = {
-      title: validatedData.title,
-      type: validatedData.type,
-      description: validatedData.description,
-      location: validatedData.location,
-      estimated_value: validatedData.estimated_value,
-      currency: validatedData.currency,
-      documents: validatedData.documents ?? null,
-      updated_at: new Date().toISOString(),
-    };
-
-    const { data, error } = await supabase
-      .from('assets')
-      .update(updatePayload)
-      .eq('id', id)
-      .select('id, title, type, status, estimated_value, currency, created_at, verification_status, description, location, documents')
-      .single();
-
-    if (error) {
-      logger.error('Asset update failed', {
-        userId: user.id,
-        assetId: id,
-        error: error.message,
-        code: error.code,
-      });
-      return handleSupabaseError(error);
-    }
-
-    logger.info('Asset updated successfully', { userId: user.id, assetId: id });
-    return apiSuccess(data);
-  } catch (error) {
-    if (error instanceof Error && error.name === 'ZodError') {
-      const zodError = error as any;
-      return apiValidationError('Invalid asset data', {
-        details: zodError.errors || zodError.message,
-      });
-    }
-    return handleApiError(error);
-  }
-}
-
-export async function DELETE(request: NextRequest, { params }: PageProps) {
-  try {
-    const supabase = await createServerClient();
-    const { data: auth } = await supabase.auth.getUser();
-    const user = auth?.user;
-    if (!user) {
-      return apiUnauthorized();
-    }
-
-    const { id } = await params;
-
-    // Check if asset exists and belongs to user
-    const { data: existingAsset, error: fetchError } = await supabase
-      .from('assets')
-      .select('owner_id, title')
-      .eq('id', id)
-      .single();
-
-    if (fetchError || !existingAsset) {
-      return apiNotFound('Asset not found');
-    }
-
-    if (existingAsset.owner_id !== user.id) {
-      return apiUnauthorized('You can only delete your own assets');
-    }
-
-    const { error } = await supabase
-      .from('assets')
-      .delete()
-      .eq('id', id);
-
-    if (error) {
-      logger.error('Asset deletion failed', {
-        userId: user.id,
-        assetId: id,
-        error: error.message,
-        code: error.code,
-      });
-      return handleSupabaseError(error);
-    }
-
-    logger.info('Asset deleted successfully', { userId: user.id, assetId: id });
-    return apiSuccess({ message: 'Asset deleted successfully' });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export { GET, PUT, DELETE };

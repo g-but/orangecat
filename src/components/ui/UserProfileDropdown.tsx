@@ -182,7 +182,7 @@ export default function UserProfileDropdown({
 
   // Debug logging (remove in production)
   if (process.env.NODE_ENV === 'development') {
-    // REMOVED: console.log statement for security
+    // REMOVED: logger.info statement for security
   }
 
   // Simple variant rendering

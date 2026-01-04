@@ -392,6 +392,57 @@ export function onAuthStateChange(callback: (event: string, session: any) => voi
   return subscription
 }
 
+// ==================== EMAIL CONFIRMATION ====================
+
+/**
+ * Resend email confirmation for the current user
+ * @returns Promise with error status
+ *
+ * @example
+ * ```typescript
+ * const { error } = await resendConfirmationEmail();
+ * if (!error) {
+ *   console.log('Confirmation email resent');
+ * }
+ * ```
+ */
+export async function resendConfirmationEmail(): Promise<{ error: AuthError | null }> {
+  try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError || !user?.email) {
+      logAuth('Cannot resend confirmation - no user email', { error: userError?.message })
+      return { error: { message: 'No user email found', name: 'ResendError' } as AuthError }
+    }
+
+    logAuth('Attempting to resend confirmation email', { email: user.email })
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.orangecat.ch'
+
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: user.email,
+      options: {
+        emailRedirectTo: `${siteUrl}/auth/callback`
+      }
+    })
+
+    if (error) {
+      logAuth('Resend confirmation failed', { email: user.email, error: error.message })
+      return { error: error as AuthError }
+    }
+
+    logAuth('Confirmation email resent successfully', { email: user.email })
+    return { error: null }
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    logger.error('Unexpected error resending confirmation', {
+      error: errorMessage
+    })
+    return { error: { message: errorMessage, name: 'ResendError' } as AuthError }
+  }
+}
+
 // ==================== UTILITY FUNCTIONS ====================
 
 /**
@@ -454,6 +505,7 @@ export default {
   onAuthStateChange,
   isAuthenticated,
   getCurrentUserId,
+  resendConfirmationEmail,
   isAuthError
 }
 

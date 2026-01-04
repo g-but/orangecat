@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
+import { logger } from '@/utils/logger'
 
 // This is a server-side API route that handles sign out
 export async function POST(request: Request) {
@@ -51,6 +52,7 @@ export async function POST(request: Request) {
     return response
 
   } catch (error) {
+    logger.error('Unexpected error during sign out', { error }, 'Auth')
     return NextResponse.json(
       { error: 'Failed to sign out' },
       { status: 500 }

@@ -75,7 +75,7 @@ export default function TimelineView({
   const [error, setError] = useState<string | null>(null);
 
   // Handle optimistic event updates
-  const handleOptimisticEvent = useCallback((event: any) => {
+  const handleOptimisticEvent = useCallback((event: TimelineDisplayEvent) => {
     // Add optimistic event to the beginning of the list
     setOptimisticEvents(prev => [event, ...prev]);
     onOptimisticEvent?.(event);

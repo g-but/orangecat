@@ -64,7 +64,7 @@ export default function ProfileWalletsTab({ profile, isOwnProfile }: ProfileWall
       isOwnProfile={isOwnProfile}
       legacyBitcoinAddress={profile.bitcoin_address}
       legacyLightningAddress={profile.lightning_address}
-      legacyBalance={(profile as any).bitcoin_balance}
+      legacyBalance={profile.bitcoin_balance ?? undefined}
     />
   );
 }

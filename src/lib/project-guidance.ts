@@ -62,3 +62,6 @@ export const projectDefaultContent: DefaultContent = {
   ],
   hint: '💡 Click on any field to get specific guidance',
 };
+
+
+

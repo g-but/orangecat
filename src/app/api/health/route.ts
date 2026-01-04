@@ -1,26 +1,43 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { compose } from '@/lib/api/compose';
+import { withRequestId } from '@/lib/api/withRequestId';
+import { withRateLimit } from '@/lib/api/withRateLimit';
+import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
+import { ProfileServerService } from '@/services/profile/server';
 
 // GET /api/health - Health check endpoint
-export async function GET(request: NextRequest) {
+export const GET = compose(
+  withRequestId(),
+  withRateLimit('read')
+)(async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
 
     // Test database connection
+    // Note: Direct query is acceptable here as this is a health check endpoint
+    // that needs to verify database connectivity
     const { error } = await supabase.from('profiles').select('id').limit(1);
 
     if (error) {
-      return Response.json(
+      logger.warn('Health check: Database connection failed', { error: error.message }, 'Health');
+      return apiSuccess(
         {
           status: 'unhealthy',
           error: 'Database connection failed',
           timestamp: new Date().toISOString(),
         },
-        { status: 503 }
+        {
+          status: 503,
+          headers: {
+            'Cache-Control': 'public, s-maxage=10, stale-while-revalidate=30',
+          },
+        }
       );
     }
 
-    return Response.json(
+    return apiSuccess(
       {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -37,13 +54,7 @@ export async function GET(request: NextRequest) {
       }
     );
   } catch (error) {
-    return Response.json(
-      {
-        status: 'unhealthy',
-        error: 'Health check failed',
-        timestamp: new Date().toISOString(),
-      },
-      { status: 503 }
-    );
+    logger.error('Health check failed', { error }, 'Health');
+    return handleApiError(error);
   }
-}
+});

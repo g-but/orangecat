@@ -236,8 +236,15 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
             table: 'user_presence',
           },
           async payload => {
-            const changedUserId = (payload.new as any)?.user_id || (payload.old as any)?.user_id;
-            if (userIds.includes(changedUserId)) {
+            interface PresenceRow {
+              user_id: string;
+              status: string;
+              last_seen_at?: string;
+            }
+            const newRow = payload.new as PresenceRow | null;
+            const oldRow = payload.old as PresenceRow | null;
+            const changedUserId = newRow?.user_id || oldRow?.user_id;
+            if (changedUserId && userIds.includes(changedUserId)) {
               // Refetch all presence data
               const updated = await getPresence(userIds);
               callback(updated);

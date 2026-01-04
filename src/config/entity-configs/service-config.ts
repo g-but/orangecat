@@ -13,8 +13,9 @@ import {
   serviceGuidanceContent,
   serviceDefaultGuidance,
 } from '@/lib/entity-guidance/service-guidance';
-import type { EntityConfig, FieldGroup } from '@/components/create/types';
+import type { FieldGroup } from '@/components/create/types';
 import { SERVICE_TEMPLATES, type ServiceTemplate } from '@/components/create/templates';
+import { createEntityConfig } from './base-config-factory';
 
 // ==================== CONSTANTS ====================
 
@@ -142,7 +143,7 @@ const defaultValues: UserServiceFormData = {
   category: '',
   hourly_rate_sats: null,
   fixed_price_sats: null,
-  currency: 'SATS',
+  currency: 'CHF', // Default to CHF - user can change in form
   duration_minutes: null,
   service_location_type: 'remote',
   service_area: '',
@@ -153,14 +154,13 @@ const defaultValues: UserServiceFormData = {
 
 // ==================== EXPORT CONFIG ====================
 
-export const serviceConfig: EntityConfig<UserServiceFormData> = {
-  type: 'service',
+export const serviceConfig = createEntityConfig<UserServiceFormData>({
+  entityType: 'service',
   name: 'Service',
   namePlural: 'Services',
   icon: Briefcase,
   colorTheme: 'tiffany',
   backUrl: '/dashboard/services',
-  apiEndpoint: '/api/services',
   successUrl: '/dashboard/services',
   pageTitle: 'Create Service',
   pageDescription: 'Offer your expertise to the community',
@@ -170,7 +170,7 @@ export const serviceConfig: EntityConfig<UserServiceFormData> = {
   fieldGroups,
   validationSchema: userServiceSchema,
   defaultValues,
-  guidanceContent: serviceGuidanceContent as any,
+  guidanceContent: serviceGuidanceContent,
   defaultGuidance: serviceDefaultGuidance,
   templates: SERVICE_TEMPLATES as unknown as ServiceTemplate[],
-};
+});

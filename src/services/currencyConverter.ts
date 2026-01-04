@@ -99,6 +99,14 @@ class CurrencyConverterService {
   }
 
   /**
+   * Get cached rates synchronously (returns null if not cached)
+   * Use this for synchronous conversions when rates are pre-fetched
+   */
+  getCachedRates(): ExchangeRates | null {
+    return this.rates;
+  }
+
+  /**
    * Convert any currency to BTC
    */
   async toBTC(amount: number, fromCurrency: CurrencyCode): Promise<number> {

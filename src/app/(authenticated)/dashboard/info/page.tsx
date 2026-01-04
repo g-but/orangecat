@@ -190,11 +190,11 @@ export default function DashboardInfoPage() {
                       {profile.username && (
                         <p className="text-gray-600 text-sm sm:text-base">@{profile.username}</p>
                       )}
-                      {!isLocationHidden((profile as any).location_context) && (
+                      {!isLocationHidden(profile.location_context || '') && (
                         <div className="flex items-center justify-center sm:justify-start gap-2 mt-2 text-gray-600">
                           <MapPin className="w-4 h-4 flex-shrink-0" />
                           <span className="text-sm">
-                            {getLocationGroupLabel((profile as any).location_context) ||
+                            {getLocationGroupLabel(profile.location_context || '') ||
                               profile.location_search}
                           </span>
                         </div>
@@ -246,13 +246,13 @@ export default function DashboardInfoPage() {
                     </div>
                   </div>
 
-                  {!isLocationHidden((profile as any).location_context) ? (
+                  {!isLocationHidden(profile.location_context || '') ? (
                     <div className="flex items-start gap-3">
                       <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                       <div className="flex-1">
                         <div className="text-sm text-gray-500">Location</div>
                         <div className="font-medium text-gray-900">
-                          {getLocationGroupLabel((profile as any).location_context) ||
+                          {getLocationGroupLabel(profile.location_context || '') ||
                             profile.location_search ||
                             profile.location ||
                             'Not set'}

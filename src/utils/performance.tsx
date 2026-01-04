@@ -29,7 +29,7 @@ export function createLazyComponent<T = any>(
   return function LazyWrapper(props: T) {
     return (
       <Suspense fallback={fallback ? React.createElement(fallback) : <div>Loading...</div>}>
-        <LazyComponent {...(props as any)} />
+        <LazyComponent {...props} />
       </Suspense>
     )
   }
@@ -470,10 +470,19 @@ export function usePerformanceCache<T>(
 export function isSlowConnection(): boolean {
   if (typeof navigator === 'undefined') {return false}
   
-  const connection = (navigator as any).connection
+  // NetworkInformation API is not in standard TypeScript types but exists in modern browsers
+  const connection = (navigator as Navigator & { connection?: NetworkInformation }).connection
   if (!connection) {return false}
   
   return connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g'
+}
+
+// Type definition for NetworkInformation API
+interface NetworkInformation {
+  effectiveType: 'slow-2g' | '2g' | '3g' | '4g';
+  downlink: number;
+  rtt: number;
+  saveData: boolean;
 }
 
 /**
@@ -482,8 +491,9 @@ export function isSlowConnection(): boolean {
 export function isLowEndDevice(): boolean {
   if (typeof navigator === 'undefined') {return false}
   
-  const memory = (navigator as any).deviceMemory
-  return memory && memory < 4 // Less than 4GB RAM
+  // DeviceMemory API is not in standard TypeScript types but exists in some browsers
+  const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
+  return memory !== undefined && memory < 4 // Less than 4GB RAM
 }
 
 /**

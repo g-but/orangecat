@@ -13,6 +13,7 @@ import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { useProjectStore } from '@/stores/projectStore';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -21,69 +22,18 @@ import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
-import { Rocket, X, Loader2, ExternalLink, Pause, Play, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Rocket, X, Loader2, ExternalLink } from 'lucide-react';
 import {
   ProjectTemplates,
   type ProjectTemplate,
-} from '@/components/create/templates/ProjectTemplates';
+} from '@/components/create/templates';
 import type { ProjectFieldType } from '@/lib/project-guidance';
 import { satoshisToBitcoin, bitcoinToSatoshis } from '@/utils/currency';
 import ProjectMediaUpload from '@/components/project/ProjectMediaUpload';
-
-interface ProjectFormData {
-  title: string;
-  description: string;
-  goalAmount: string;
-  goalCurrency: 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS';
-  fundingPurpose: string;
-  bitcoinAddress: string;
-  websiteUrl: string;
-  selectedCategories: string[];
-}
-
-interface FormErrors {
-  title?: string;
-  description?: string;
-  goalAmount?: string;
-  bitcoinAddress?: string;
-  websiteUrl?: string;
-}
-
-const AVAILABLE_CATEGORIES = [
-  'education',
-  'health',
-  'technology',
-  'community',
-  'charity',
-  'business',
-  'creative',
-  'environment',
-  'humanitarian',
-  'research',
-];
-
-const getCompletionPercentage = (formData: ProjectFormData): number => {
-  const fields = [
-    { value: formData.title.trim(), weight: 30 },
-    { value: formData.description.trim(), weight: 40 },
-    { value: formData.goalAmount.trim(), weight: 10 },
-    { value: formData.bitcoinAddress.trim(), weight: 15 },
-    { value: formData.selectedCategories.length > 0, weight: 5 },
-  ];
-  const completedWeight = fields.reduce((sum, field) => sum + (field.value ? field.weight : 0), 0);
-  return Math.min(completedWeight, 100);
-};
-
-interface ProjectWizardProps {
-  projectId?: string;
-  initialData?: Partial<ProjectFormData>;
-  onSave?: () => void;
-  onCancel?: () => void;
-  onFieldFocus?: (field: ProjectFieldType) => void;
-  onProgressChange?: (percentage: number) => void;
-  onGoalAmountChange?: (amount: number | undefined) => void;
-  onGoalCurrencyChange?: (currency: 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS') => void;
-}
+import ProjectStatusManager from './ProjectStatusManager';
+import type { ProjectFormData, FormErrors, ProjectWizardProps, ProjectStatus } from './types';
+import { AVAILABLE_CATEGORIES, getCompletionPercentage } from './constants';
+import { validateField, validateForm as validateFormUtil } from './validation';
 
 export function ProjectWizard({
   projectId,
@@ -112,7 +62,9 @@ export function ProjectWizard({
     title: initialData?.title || '',
     description: initialData?.description || '',
     goalAmount: initialData?.goalAmount || '',
-    goalCurrency: (initialData?.goalCurrency as any) || 'CHF',
+    goalCurrency: (initialData?.goalCurrency && ['CHF', 'USD', 'EUR', 'BTC', 'SATS'].includes(initialData.goalCurrency)) 
+      ? initialData.goalCurrency 
+      : 'CHF',
     fundingPurpose: initialData?.fundingPurpose || '',
     bitcoinAddress: initialData?.bitcoinAddress || '',
     websiteUrl: initialData?.websiteUrl || '',
@@ -122,9 +74,7 @@ export function ProjectWizard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [touched, setTouched] = useState<Set<string>>(new Set());
-  const [projectStatus, setProjectStatus] = useState<
-    'draft' | 'active' | 'paused' | 'completed' | 'cancelled'
-  >('draft');
+  const [projectStatus, setProjectStatus] = useState<ProjectStatus>('draft');
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   // Notify parent of progress changes
@@ -149,94 +99,7 @@ export function ProjectWizard({
     }
   }, [formData.goalCurrency, onGoalCurrencyChange]);
 
-  const validateField = (field: keyof FormErrors, value: string): string | undefined => {
-    switch (field) {
-      case 'title':
-        if (!value.trim()) {
-          return 'Project title is required';
-        }
-        if (value.length < 3) {
-          return 'Title must be at least 3 characters';
-        }
-        if (value.length > 100) {
-          return 'Title must be less than 100 characters';
-        }
-        break;
-      case 'description':
-        if (!value.trim()) {
-          return 'Project description is required';
-        }
-        if (value.length > 2000) {
-          return 'Description must be less than 2000 characters';
-        }
-        break;
-      case 'goalAmount':
-        if (value && (isNaN(Number(value)) || Number(value) <= 0)) {
-          return 'Goal amount must be a positive number';
-        }
-        break;
-      case 'bitcoinAddress':
-        if (value && !/^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/.test(value)) {
-          return 'Please enter a valid Bitcoin address';
-        }
-        break;
-      case 'websiteUrl':
-        if (value && value.trim()) {
-          // Auto-add https:// if no protocol provided
-          let urlToValidate = value.trim();
-          if (!urlToValidate.match(/^https?:\/\//i)) {
-            urlToValidate = `https://${urlToValidate}`;
-          }
-
-          try {
-            const url = new URL(urlToValidate);
-            if (!['http:', 'https:'].includes(url.protocol)) {
-              return 'Website must be a valid HTTP or HTTPS URL';
-            }
-            // Check if domain looks reasonable (has at least one dot)
-            if (!url.hostname.includes('.')) {
-              return 'Please enter a valid domain (e.g., example.com)';
-            }
-          } catch {
-            return 'Please enter a valid website URL (e.g., example.com or https://example.com)';
-          }
-        }
-        break;
-    }
-    return undefined;
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
-    let isValid = true;
-
-    const titleError = validateField('title', formData.title);
-    if (titleError) {
-      newErrors.title = titleError;
-      isValid = false;
-    }
-
-    const descError = validateField('description', formData.description);
-    if (descError) {
-      newErrors.description = descError;
-      isValid = false;
-    }
-
-    const amountError = validateField('goalAmount', formData.goalAmount);
-    if (amountError) {
-      newErrors.goalAmount = amountError;
-      isValid = false;
-    }
-
-    const addressError = validateField('bitcoinAddress', formData.bitcoinAddress);
-    if (addressError) {
-      newErrors.bitcoinAddress = addressError;
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
-  };
+  // Validation uses extracted utility functions
 
   useEffect(() => {
     // Only load localStorage drafts when creating NEW projects (not editing)
@@ -379,7 +242,9 @@ export function ProjectWizard({
       toast.error('Please sign in to create a project');
       return;
     }
-    if (!validateForm()) {
+    const validation = validateFormUtil(formData);
+    if (!validation.isValid) {
+      setErrors(validation.errors);
       toast.error('Please fix the errors');
       return;
     }
@@ -490,79 +355,7 @@ export function ProjectWizard({
     }
   };
 
-  // Get available status actions based on current status
-  const getStatusActions = () => {
-    switch (projectStatus) {
-      case 'draft':
-        return [
-          {
-            label: 'Publish Project',
-            status: 'active' as const,
-            icon: Rocket,
-            variant: 'primary' as const,
-          },
-        ];
-      case 'active':
-        return [
-          {
-            label: 'Pause Donations',
-            status: 'paused' as const,
-            icon: Pause,
-            variant: 'outline' as const,
-          },
-          {
-            label: 'Unpublish',
-            status: 'draft' as const,
-            icon: EyeOff,
-            variant: 'outline' as const,
-          },
-          {
-            label: 'Mark as Completed',
-            status: 'completed' as const,
-            icon: CheckCircle2,
-            variant: 'outline' as const,
-          },
-        ];
-      case 'paused':
-        return [
-          {
-            label: 'Resume Donations',
-            status: 'active' as const,
-            icon: Play,
-            variant: 'primary' as const,
-          },
-          {
-            label: 'Unpublish',
-            status: 'draft' as const,
-            icon: EyeOff,
-            variant: 'outline' as const,
-          },
-        ];
-      case 'completed':
-      case 'cancelled':
-        return [
-          {
-            label: 'Unpublish',
-            status: 'draft' as const,
-            icon: EyeOff,
-            variant: 'outline' as const,
-          },
-        ];
-      default:
-        return [];
-    }
-  };
-
-  const getStatusBadge = (status: typeof projectStatus) => {
-    const badges = {
-      draft: { label: 'Draft', className: 'bg-slate-100 text-slate-700 border-slate-200' },
-      active: { label: 'Active', className: 'bg-green-100 text-green-700 border-green-200' },
-      paused: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700 border-yellow-200' },
-      completed: { label: 'Completed', className: 'bg-blue-100 text-blue-700 border-blue-200' },
-      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700 border-red-200' },
-    };
-    return badges[status];
-  };
+  // Status management extracted to ProjectStatusManager component
 
   if (loadingProject) {
     return (
@@ -576,40 +369,12 @@ export function ProjectWizard({
     <div className="space-y-6">
       {/* Project Status Controls - Only show in edit mode */}
       {isEditMode && editProjectId && (
-        <Card className="p-6 bg-gradient-to-r from-orange-50/50 to-tiffany-50/50 border-orange-200">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">Current Status:</span>
-              <span
-                className={`px-3 py-1.5 rounded-full text-sm font-medium border ${getStatusBadge(projectStatus).className}`}
-              >
-                {getStatusBadge(projectStatus).label}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              {getStatusActions().map(action => {
-                const Icon = action.icon;
-                return (
-                  <Button
-                    key={action.status}
-                    variant={action.variant}
-                    size="sm"
-                    onClick={() => handleStatusChange(action.status)}
-                    disabled={isUpdatingStatus}
-                    className="flex items-center gap-2"
-                  >
-                    {isUpdatingStatus ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Icon className="w-4 h-4" />
-                    )}
-                    {action.label}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-        </Card>
+        <ProjectStatusManager
+          projectId={editProjectId}
+          currentStatus={projectStatus}
+          isUpdating={isUpdatingStatus}
+          onStatusChange={handleStatusChange}
+        />
       )}
 
       <Card className="p-6">
@@ -673,7 +438,10 @@ export function ProjectWizard({
               <select
                 value={formData.goalCurrency}
                 onChange={e => {
-                  updateFormData({ goalCurrency: e.target.value as any });
+                  const value = e.target.value;
+                  if (['CHF', 'USD', 'EUR', 'BTC', 'SATS'].includes(value)) {
+                    updateFormData({ goalCurrency: value as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS' });
+                  }
                   handleFieldFocus('currency');
                 }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"

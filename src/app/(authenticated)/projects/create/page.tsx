@@ -1,28 +1,15 @@
-'use client';
-
 /**
- * CREATE PROJECT PAGE
+ * Legacy Project Create Page - Redirects to new path
  *
- * Uses the unified EntityForm component with useTemplateSelection hook.
- * Templates appear at the bottom to help users who need inspiration.
+ * Preserves backward compatibility by redirecting to the new dashboard path.
  *
  * Created: 2025-12-03
- * Last Modified: 2025-12-16
- * Last Modified Summary: Refactored to use standard unified pattern
+ * Last Modified: 2025-12-31
+ * Last Modified Summary: Converted to redirect to /dashboard/projects/create
  */
 
-import { EntityForm } from '@/components/create';
-import { projectConfig } from '@/config/entity-configs';
-import { ProjectTemplates } from '@/components/create/templates';
-import { useTemplateSelection } from '@/hooks/useTemplateSelection';
+import { redirect } from 'next/navigation';
 
-export default function CreateProjectPage() {
-  const { mergedConfig, handleSelectTemplate } = useTemplateSelection(projectConfig);
-
-  return (
-    <div className="space-y-6">
-      <EntityForm config={mergedConfig} />
-      <ProjectTemplates onSelectTemplate={handleSelectTemplate} />
-    </div>
-  );
+export default function LegacyCreateProjectPage() {
+  redirect('/dashboard/projects/create');
 }

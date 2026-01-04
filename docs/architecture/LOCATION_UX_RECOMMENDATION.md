@@ -207,3 +207,6 @@ Placeholder: "Type your city or address..."
 **Alternative considered:** Self-hosted GeoNames
 
 - **Rejected** because: Less precise, requires maintenance, not worth the $1.70/month savings
+
+
+

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { footerNavigation } from '@/config/navigation';
 import { shouldShowFooter } from '@/config/routes';
 import Logo from './Logo';
+import BitBaumLogo from './BitBaumLogo';
 import { usePathname } from 'next/navigation';
 import { ArrowUp } from 'lucide-react';
 
@@ -37,13 +38,20 @@ const Footer = React.memo(function Footer() {
 
       <div className="max-w-7xl mx-auto py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand Section */}
           <div className="sm:col-span-2 lg:col-span-1 space-y-6">
             <div className="space-y-4">
-              <Logo className="mb-2" />
+              <div className="flex items-center space-x-4 mb-2">
+                <Logo />
+                <div className="text-gray-400 text-sm">by</div>
+                <BitBaumLogo showText={false} className="opacity-80 hover:opacity-100 transition-opacity" />
+              </div>
               <p className="text-slate-600 text-base leading-relaxed max-w-xs">
                 Making Bitcoin donations simple and accessible for everyone.
+              </p>
+              <p className="text-slate-500 text-sm">
+                A <Link href="/company/about" className="text-orange-600 hover:text-orange-700 underline">BitBaum</Link> company
               </p>
             </div>
 
@@ -85,6 +93,43 @@ const Footer = React.memo(function Footer() {
                       {item.name}
                     </span>
                   </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Company Links */}
+          <div className="space-y-6">
+            <h3 className="text-sm font-bold text-gray-900 tracking-wider uppercase relative">
+              <span className="bg-gradient-to-r from-orange-500 to-tiffany-500 bg-clip-text text-transparent">
+                Company
+              </span>
+              <div className="absolute bottom-0 left-0 w-8 h-0.5 bg-gradient-to-r from-orange-500 to-tiffany-500 rounded-full"></div>
+            </h3>
+            <ul className="space-y-3">
+              {footerNavigation.company.map(item => (
+                <li key={item.name}>
+                  {item.external ? (
+                    <a
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center text-base text-slate-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
+                    >
+                      <span className="group-hover:translate-x-1 transition-transform duration-300">
+                        {item.name}
+                      </span>
+                    </a>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className="group flex items-center text-base text-slate-600 hover:text-orange-600 transition-all duration-300 py-2 px-2 rounded-lg hover:bg-gradient-to-r hover:from-orange-50 hover:to-tiffany-50 hover:shadow-sm min-h-[44px]"
+                    >
+                      <span className="group-hover:translate-x-1 transition-transform duration-300">
+                        {item.name}
+                      </span>
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -139,9 +184,10 @@ const Footer = React.memo(function Footer() {
         {/* Bottom Section */}
         <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gradient-to-r from-orange-200/50 to-tiffany-200/50">
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-            <p className="text-sm text-slate-500 text-center sm:text-left">
-              &copy; 2025 OrangeCat. All rights reserved.
-            </p>
+            <div className="text-sm text-slate-500 text-center sm:text-left">
+              <p>&copy; 2025 BitBaum AG. All rights reserved.</p>
+              <p className="mt-1">OrangeCat is a product of <Link href="/company/about" className="text-orange-600 hover:text-orange-700 underline">BitBaum</Link>.</p>
+            </div>
 
             {/* Additional Links */}
             <div className="flex items-center space-x-6 text-sm">

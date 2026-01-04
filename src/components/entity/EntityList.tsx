@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import EntityCard, { EntityCardProps } from './EntityCard';
+import { EntityCard, EntityCardProps } from './EntityCard';
 import { Skeleton } from '@/components/ui/Skeleton';
 import EmptyState from '@/components/ui/EmptyState';
 
@@ -45,6 +45,13 @@ export interface EntityListProps<T extends EntityItem> {
     desktop?: number;
   };
   skeletonCount?: number;
+  // Bulk selection support
+  selectedIds?: Set<string>;
+  onToggleSelect?: (id: string) => void;
+  showSelection?: boolean;
+  // Individual item actions
+  onDeleteItem?: (id: string) => Promise<void>;
+  deletingIds?: Set<string>;
 }
 
 const defaultEmptyState = {
@@ -65,6 +72,11 @@ export default function EntityList<T extends EntityItem>({
     desktop: 3,
   },
   skeletonCount = 6,
+  selectedIds,
+  onToggleSelect,
+  showSelection = false,
+  onDeleteItem,
+  deletingIds,
 }: EntityListProps<T>) {
   // Grid classes - using explicit Tailwind classes
   // Note: Tailwind requires full class names, so we map the numbers to actual classes
@@ -116,16 +128,40 @@ export default function EntityList<T extends EntityItem>({
     <div className={gridClasses}>
       {items.map((item) => {
         const cardProps = makeCardProps(item);
+        const isSelected = selectedIds?.has(item.id) || false;
+        const isDeleting = deletingIds?.has(item.id) || false;
+
+        // Normalize title - some entities use 'name' instead of 'title'
+        const title = item.title || (item as any).name || 'Untitled';
+        const description = item.description || (item as any).bio || null;
+
         return (
-          <EntityCard
-            key={item.id}
-            id={item.id}
-            title={item.title}
-            description={item.description}
-            thumbnailUrl={item.thumbnail_url}
-            href={makeHref(item)}
-            {...cardProps}
-          />
+          <div key={item.id} className="relative">
+            <EntityCard
+              id={item.id}
+              title={title}
+              description={description}
+              thumbnailUrl={item.thumbnail_url ?? undefined}
+              href={makeHref(item)}
+              className={isSelected ? 'ring-2 ring-orange-500 border-orange-500' : undefined}
+              onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
+              isDeleting={isDeleting}
+              {...cardProps}
+            />
+            {/* Selection checkbox - positioned to avoid badge overlap */}
+            {showSelection && onToggleSelect && (
+              <div className="absolute top-3 left-3 z-30">
+                <input
+                  type="checkbox"
+                  checked={isSelected}
+                  onChange={() => onToggleSelect(item.id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-5 w-5 rounded border-gray-300 bg-white shadow-lg text-orange-600 focus:ring-orange-500 cursor-pointer"
+                  aria-label={`Select ${title}`}
+                />
+              </div>
+            )}
+          </div>
         );
       })}
     </div>

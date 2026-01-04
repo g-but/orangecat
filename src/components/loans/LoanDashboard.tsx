@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -56,7 +57,7 @@ export default function LoanDashboard() {
       }
 
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      logger.error('Failed to load dashboard data:', error);
       toast.error('Failed to load loans data');
     } finally {
       setLoading(false);
@@ -94,21 +95,7 @@ export default function LoanDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Action Bar */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold">Loan Management</h2>
-          <p className="text-muted-foreground">
-            List your loans for refinancing or browse community lending opportunities
-          </p>
-        </div>
-        <Button onClick={() => setCreateDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Loan
-        </Button>
-      </div>
-
-      {/* Main Content */}
+      {/* Main Content - Header handled by EntityListShell */}
       <Tabs defaultValue="my-loans" className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="my-loans" className="gap-2">

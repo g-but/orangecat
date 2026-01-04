@@ -6,39 +6,59 @@
     "auditLog": "/home/g/dev/orangecat/logs/.988a9e615c70cb8f387540c142c015feefe8a176-audit.json",
     "files": [
         {
-            "date": 1765896771788,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-16.log",
-            "hash": "50c9078f900f5fcb7010b963123fadca76a391a695c02e1f7c1081b1b43895ae"
-        },
-        {
-            "date": 1765956938482,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-17.log",
-            "hash": "a6ef39649b1698aa0cb2fc736b9057c2494c1415f22120c01ca253fd9d5fe4ce"
-        },
-        {
-            "date": 1766019323481,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-18.log",
-            "hash": "ce3345c93f19ef92401d02dcb267c73c7fdaf8303fc7f5b87d9e785674be13c1"
-        },
-        {
-            "date": 1766102412253,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-19.log",
-            "hash": "c55f176437a1fe0748ad15573566cf433be5c4159347d4575be8ff4e0cab6577"
-        },
-        {
-            "date": 1766242146305,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-20.log",
-            "hash": "3d734a347557802f6cb2cc5cad1c1e56648bdab68b8ddfa3921634b1a0670e92"
-        },
-        {
-            "date": 1766312119901,
-            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-21.log",
-            "hash": "54702dc22ade204ece1e6f8b69d2ebccd071952f74bab04abe96a1f51d503e97"
-        },
-        {
             "date": 1766384902747,
             "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-22.log",
             "hash": "662b4654b366647bb043a23f1124c5e34f2edb67dece8d60450024cc18249733"
+        },
+        {
+            "date": 1766539085119,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-24.log",
+            "hash": "7da6e3b030500436912f5ccd1ed0c3c12c39252a5a75f52efbba4373259a6cab"
+        },
+        {
+            "date": 1766667108208,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-25.log",
+            "hash": "8fac164446dac0d8c17a36abf847bcd607fcde6ce2e053989ef16839de78f8db"
+        },
+        {
+            "date": 1766705164958,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-26.log",
+            "hash": "1bb8f93d0fa5daa0868d9a76355134f55a7242054ce3a852f1df5ecb304cbc49"
+        },
+        {
+            "date": 1766932515880,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-28.log",
+            "hash": "dd08d401fdfacd4296706a2b33eae6b282749f8a0e065e5d6f23c4bcd75487d8"
+        },
+        {
+            "date": 1766999772491,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-29.log",
+            "hash": "51647cedced59314b3a76a508f3c28bd4d4ede02b3bf618ea4ad3ff55013de8e"
+        },
+        {
+            "date": 1767107078293,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-30.log",
+            "hash": "753f6c1a3359ba1db217101e56fc2b8e9bc59dec54ecdd6845bdff9e4b87fb64"
+        },
+        {
+            "date": 1767182620790,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2025-12-31.log",
+            "hash": "df6a9f19b10ba1adf755291d199739ed2c97a782d20657804ffe9413944f9d73"
+        },
+        {
+            "date": 1767267593186,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2026-01-01.log",
+            "hash": "ee5f05226defca6e04269bf394501e9e9adc788e852e9bf6cdfd4325929d1a26"
+        },
+        {
+            "date": 1767443741928,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2026-01-03.log",
+            "hash": "7476fc64e56181da6d05f74ce5c466911be2db7666748c46932b75dc90846e57"
+        },
+        {
+            "date": 1767522206899,
+            "name": "/home/g/dev/orangecat/logs/mcp-puppeteer-2026-01-04.log",
+            "hash": "8a0c10fef3bcbbd534dc8ef32a05e53656bd2f4e6a49293788d61f2e1c02853d"
         }
     ],
     "hashType": "sha256"

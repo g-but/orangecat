@@ -11,6 +11,7 @@ import {
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
+import { getTableName } from '@/config/entity-registry';
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const { data: project } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('user_id')
       .eq('id', projectId)
       .single();

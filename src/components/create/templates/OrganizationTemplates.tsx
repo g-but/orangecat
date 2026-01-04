@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Building2, Network, Users, Briefcase, Heart, TrendingUp, Shield, Zap } from 'lucide-react';
 import type { OrganizationFormData } from '@/lib/validation';
-import { transformOrganizationTemplate } from '../utils/templateTransformers';
+// transformOrganizationTemplate is now handled by CreateEntityWorkflow
 
-interface OrganizationTemplate {
+export interface OrganizationTemplate {
   id: string;
   name: string;
   description: string;
@@ -20,11 +20,11 @@ interface OrganizationTemplate {
   useCase: string;
 }
 
-interface OrganizationTemplatesProps {
-  onSelectTemplate: (template: Partial<OrganizationFormData> | null) => void;
+export interface OrganizationTemplatesProps {
+  onSelectTemplate: (template: Partial<OrganizationFormData>) => void;
 }
 
-const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
+export const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
   {
     id: 'dao',
     name: 'Decentralized Autonomous Organization',
@@ -160,7 +160,11 @@ export default function OrganizationTemplates({ onSelectTemplate }: Organization
 
   const handleSelect = (template: OrganizationTemplate) => {
     setSelectedId(template.id);
-    onSelectTemplate(transformOrganizationTemplate(template));
+    // Pass the template data directly - CreateEntityWorkflow handles transformation
+    onSelectTemplate({
+      type: template.type,
+      ...template.suggestedSettings
+    });
   };
 
   return (

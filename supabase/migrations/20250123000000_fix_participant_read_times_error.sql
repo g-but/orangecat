@@ -111,3 +111,6 @@ $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 COMMENT ON FUNCTION public.get_total_unread_count(uuid) IS 'Calculates total unread message count for a user across all conversations';
 
 SELECT '✅ Fixed participant read times database error' as status;
+
+
+

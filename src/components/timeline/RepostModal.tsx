@@ -11,6 +11,16 @@ import { formatDistanceToNow } from 'date-fns';
 
 const QUOTE_MAX_LENGTH = 280;
 
+// Type for repost metadata
+interface RepostMetadata {
+  original_actor_name?: string;
+  original_actor_username?: string;
+  original_actor_id?: string;
+  original_actor_avatar?: string;
+  original_description?: string;
+  [key: string]: unknown;
+}
+
 interface RepostModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -45,21 +55,22 @@ export function RepostModal({
       .trim();
 
   // Prefer original author info when available
+  const metadata = event.metadata as RepostMetadata | undefined;
   const originalAuthor = {
-    name: (event.metadata as any)?.original_actor_name || event.actor.name || 'User',
+    name: metadata?.original_actor_name || event.actor.name || 'User',
     username:
-      (event.metadata as any)?.original_actor_username ||
+      metadata?.original_actor_username ||
       event.actor.username ||
-      (event.metadata as any)?.original_actor_id ||
+      metadata?.original_actor_id ||
       '',
-    id: (event.metadata as any)?.original_actor_id || event.actor.id,
-    avatar: (event.metadata as any)?.original_actor_avatar || event.actor.avatar || null,
+    id: metadata?.original_actor_id || event.actor.id,
+    avatar: metadata?.original_actor_avatar || event.actor.avatar || null,
   };
 
   // Extract original body, stripping legacy separators
   const originalBody = (() => {
-    if ((event.metadata as any)?.original_description) {
-      return cleanText((event.metadata as any)?.original_description);
+    if (metadata?.original_description) {
+      return cleanText(metadata.original_description);
     }
     if (event.description?.includes('\n\n---\n\n')) {
       const [maybeQuote, maybeOriginal] = event.description.split('\n\n---\n\n');

@@ -60,13 +60,7 @@ export const serviceEntityConfig: EntityConfig<UserService> = {
       ) : undefined,
       showEditButton: true,
       editHref: `/dashboard/services/create?edit=${service.id}`,
-      actions: (
-        <Link href={`/dashboard/services/create?edit=${service.id}`}>
-          <Button size="sm" variant="outline">
-            Edit
-          </Button>
-        </Link>
-      ),
+      // Removed duplicate actions button - edit icon overlay is sufficient
     };
   },
   

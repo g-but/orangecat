@@ -1,5 +1,7 @@
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { categories } from '@/config/categories';
 import Link from 'next/link';
 import { Palette, Code, GraduationCap, Building2, Heart, ArrowRight } from 'lucide-react';

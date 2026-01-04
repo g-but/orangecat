@@ -15,12 +15,17 @@ import { useAuth } from './useAuth';
  * Last Modified Summary: Initial creation of reusable entity list hook
  */
 
-export interface UseEntityListOptions {
+export interface UseEntityListOptions<T = any> {
   apiEndpoint: string;
   userId?: string;
   limit?: number;
   enabled?: boolean;
   queryParams?: Record<string, string | number>;
+  /**
+   * Optional transform function to convert API response to expected format.
+   * Useful when API returns data in a different structure.
+   */
+  transformResponse?: (data: any) => { items: T[]; total: number };
 }
 
 export interface UseEntityListResult<T> {
@@ -35,10 +40,10 @@ export interface UseEntityListResult<T> {
 }
 
 export function useEntityList<T extends { id: string }>(
-  options: UseEntityListOptions
+  options: UseEntityListOptions<T>
 ): UseEntityListResult<T> {
   const { user } = useAuth();
-  const { apiEndpoint, userId, limit = 12, enabled = true, queryParams = {} } = options;
+  const { apiEndpoint, userId, limit = 12, enabled = true, queryParams = {}, transformResponse } = options;
 
   const [items, setItems] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,8 +82,16 @@ export function useEntityList<T extends { id: string }>(
       }
 
       const data = await response.json();
-      setItems(data.data || []);
-      setTotal(data.metadata?.total || 0);
+
+      // Use custom transformer if provided, otherwise use default structure
+      if (transformResponse) {
+        const transformed = transformResponse(data);
+        setItems(transformed.items);
+        setTotal(transformed.total);
+      } else {
+        setItems(data.data || []);
+        setTotal(data.metadata?.total || 0);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load items');
       setItems([]);
@@ -92,12 +105,15 @@ export function useEntityList<T extends { id: string }>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, page, limit, enabled, apiEndpoint, offset]);
 
+  // Memoize items to prevent unnecessary re-renders
+  const memoizedItems = useMemo(() => items, [items]);
+
   const refresh = async () => {
     await loadItems();
   };
 
   return {
-    items,
+    items: memoizedItems,
     loading,
     error,
     page,

@@ -17,7 +17,7 @@
 /**
  * Lazy loader for large data files with chunking support
  */
-export class LazyDataLoader<T = any> {
+export class LazyDataLoader<T = unknown> {
   private cache = new Map<string, T>();
   private loadingPromises = new Map<string, Promise<T>>();
 
@@ -39,11 +39,11 @@ export class LazyDataLoader<T = any> {
     }
 
     const loadingPromise = loader();
-    this.loadingPromises.set(cacheKey, loadingPromise as Promise<any>);
+    this.loadingPromises.set(cacheKey, loadingPromise as Promise<T>);
 
     try {
       const data = await loadingPromise;
-      this.setCache(cacheKey, data as any);
+      this.setCache(cacheKey, data);
       this.loadingPromises.delete(cacheKey);
       return data;
     } catch (error) {
@@ -52,7 +52,7 @@ export class LazyDataLoader<T = any> {
     }
   }
 
-  private setCache<TData extends any>(key: string, data: TData): void {
+  private setCache(key: string, data: T): void {
     // Remove oldest entry if cache is full
     if (this.cache.size >= this.maxCacheSize) {
       const firstKey = this.cache.keys().next().value;
@@ -60,7 +60,7 @@ export class LazyDataLoader<T = any> {
         this.cache.delete(firstKey);
       }
     }
-    this.cache.set(key, data as any);
+    this.cache.set(key, data);
   }
 
   clearCache(): void {

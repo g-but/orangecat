@@ -1,10 +1,14 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { Database } from '@/types/database';
+import type { Database, UserProduct, UserService, UserCause } from '@/types/database';
 import { logger } from '@/utils/logger';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { getTableName } from '@/config/entity-registry';
 
-type Table = 'user_products' | 'user_services';
+// Table type - using entity registry table names
+// These are the actual table names from the database
+// Accept string to allow dynamic table names from entity registry
+type Table = string;
 type SupabaseInstance = SupabaseClient<Database>;
 
 interface ListParams {
@@ -62,12 +66,29 @@ export async function listEntitiesPage(
   // base query for count (head=true)
   let countQuery = supabase.from(table).select('*', { count: 'exact', head: true });
 
+  // Circles table doesn't have a 'status' column like commerce tables
+  const isCirclesTable = table === 'circles';
+
   if (userId && includeOwnDrafts) {
     itemsQuery = itemsQuery.eq('user_id', userId);
     countQuery = countQuery.eq('user_id', userId);
+  } else if (isCirclesTable) {
+    // For circles, filter by visibility and created_by for user filtering
+    itemsQuery = itemsQuery.eq('visibility', 'public');
+    countQuery = countQuery.eq('visibility', 'public');
+    if (userId) {
+      itemsQuery = itemsQuery.eq('created_by', userId);
+      countQuery = countQuery.eq('created_by', userId);
+    }
+    if (category) {
+      itemsQuery = itemsQuery.eq('category', category);
+      countQuery = countQuery.eq('category', category);
+    }
   } else {
+    // For commerce tables (user_products, user_services, user_causes)
     itemsQuery = itemsQuery.eq('status', 'active');
     countQuery = countQuery.eq('status', 'active');
+    
     if (userId) {
       itemsQuery = itemsQuery.eq('user_id', userId);
       countQuery = countQuery.eq('user_id', userId);
@@ -89,7 +110,17 @@ export async function listEntitiesPage(
     throw countError;
   }
 
-  return { items: items || [], total: count || 0, limit, offset };
+  // Filter out example/test data after fetching
+  // TODO: Add is_example field to database and filter at query level
+  const exampleTitles = ["Assassin's Creed", "Example Service", "Test Service", "Sample Service"];
+  const filteredItems = (items || []).filter(item => {
+    const title = item.title || item.name || '';
+    return !exampleTitles.some(exampleTitle => 
+      title.toLowerCase().includes(exampleTitle.toLowerCase())
+    );
+  });
+
+  return { items: filteredItems, total: filteredItems.length, limit, offset };
 }
 
 interface CreateProductInput {
@@ -126,7 +157,7 @@ export async function createProduct(
   userId: string,
   input: CreateProductInput,
   _client?: SupabaseInstance
-) {
+): Promise<UserProduct> {
   // Always write to DB unless explicitly overridden with PRODUCTS_WRITE_MODE=mock
   const mode = process.env.PRODUCTS_WRITE_MODE || 'db';
   if (mode === 'mock') {
@@ -151,19 +182,19 @@ export async function createProduct(
     description: input.description ?? null,
     price_sats: input.price_sats,
   };
-  const { data, error } = await adminClient.from('user_products').insert(payload).select().single();
+  const { data, error } = await adminClient.from(getTableName('product')).insert(payload).select().single();
   if (error) {
     logger.error('Product creation failed', { error, userId });
     throw error;
   }
-  return data;
+  return data as unknown as UserProduct;
 }
 
 export async function createService(
   userId: string,
   input: CreateServiceInput,
   _client?: SupabaseInstance
-) {
+): Promise<UserService> {
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
 
@@ -184,72 +215,59 @@ export async function createService(
     status: 'draft' as const,
   };
 
-  const { data, error } = await adminClient.from('user_services').insert(payload).select().single();
+  const { data, error } = await adminClient.from(getTableName('service')).insert(payload).select().single();
   if (error) {
     logger.error('Service creation failed', { error, userId });
     throw error;
   }
-  return data;
+  return data as unknown as UserService;
 }
 
-interface CreateCircleInput {
-  name: string;
+interface CreateCauseInput {
+  title: string;
   description?: string | null;
-  category: string;
-  visibility?: 'public' | 'private' | 'hidden';
-  max_members?: number | null;
-  member_approval?: 'auto' | 'manual' | 'invite';
-  location_restricted?: boolean;
-  location_radius_km?: number | null;
+  cause_category: string;
+  goal_sats?: number | null;
+  currency?: 'SATS' | 'BTC';
   bitcoin_address?: string | null;
-  wallet_purpose?: string | null;
-  contribution_required?: boolean;
-  contribution_amount?: number | null;
-  activity_level?: 'casual' | 'regular' | 'intensive';
-  meeting_frequency?: 'none' | 'weekly' | 'monthly' | 'quarterly';
-  enable_projects?: boolean;
-  enable_events?: boolean;
-  enable_discussions?: boolean;
-  require_member_intro?: boolean;
+  lightning_address?: string | null;
+  distribution_rules?: any;
+  beneficiaries?: any[];
 }
 
-export async function createCircle(
+export async function createCause(
   userId: string,
-  input: CreateCircleInput,
+  input: CreateCauseInput,
   _client?: SupabaseInstance
-) {
+): Promise<UserCause> {
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
+
   const payload = {
-    name: input.name,
+    user_id: userId,
+    title: input.title,
     description: input.description ?? null,
-    category: input.category,
-    visibility: input.visibility ?? 'private',
-    max_members: input.max_members ?? null,
-    member_approval: input.member_approval ?? 'manual',
-    location_restricted: input.location_restricted ?? false,
-    location_radius_km: input.location_radius_km ?? null,
+    cause_category: input.cause_category,
+    goal_sats: input.goal_sats ?? null,
+    currency: input.currency ?? 'SATS',
     bitcoin_address: input.bitcoin_address ?? null,
-    wallet_purpose: input.wallet_purpose ?? null,
-    contribution_required: input.contribution_required ?? false,
-    contribution_amount: input.contribution_amount ?? null,
-    activity_level: input.activity_level ?? 'regular',
-    meeting_frequency: input.meeting_frequency ?? 'none',
-    enable_projects: input.enable_projects ?? false,
-    enable_events: input.enable_events ?? true,
-    enable_discussions: input.enable_discussions ?? true,
-    require_member_intro: input.require_member_intro ?? false,
-    created_by: userId,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
+    lightning_address: input.lightning_address ?? null,
+    distribution_rules: input.distribution_rules,
+    beneficiaries: input.beneficiaries ?? [],
+    status: 'draft' as const,
+    total_raised_sats: 0,
   };
-  const { data, error } = await adminClient.from('circles').insert(payload).select().single();
+
+  const { data, error } = await adminClient.from(getTableName('cause')).insert(payload).select().single();
   if (error) {
-    logger.error('Circle creation failed', { error, userId });
+    logger.error('Cause creation failed', { error, userId });
     throw error;
   }
-  return data;
+  return data as unknown as UserCause;
 }
+
+// createCircle function removed - use groups service instead
+// Circles are now unified as groups (type='circle') in the organizations table
 
 interface CreateOrganizationInput {
   name: string;
@@ -316,7 +334,7 @@ export async function createOrganization(
     application_process: { questions: [] },
     founded_at: new Date().toISOString(),
   };
-  const { data, error } = await adminClient.from('organizations').insert(payload).select().single();
+  const { data, error } = await adminClient.from('groups').insert(payload).select().single();
   if (error) {
     logger.error('Organization creation failed', { error, userId });
     throw error;

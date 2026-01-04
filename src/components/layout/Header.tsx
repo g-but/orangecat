@@ -43,6 +43,7 @@ import { cn } from '@/lib/utils';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { useUnreadCount } from '@/stores/messaging';
 import { useMessagingService } from '@/hooks/useMessagingService';
+import { EmailConfirmationBanner } from './EmailConfirmationBanner';
 
 interface HeaderProps {
   /** Whether to show the sidebar toggle button (authenticated routes) */
@@ -164,39 +165,38 @@ export function Header({
           paddingTop: 'env(safe-area-inset-top, 0px)',
         }}
       >
-        <div className="mx-auto max-w-7xl h-16 px-2 sm:px-3 md:px-4 lg:px-6 flex items-center justify-between w-full overflow-x-hidden">
-          {/* Left Section: Logo + Navigation */}
-          <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3 lg:space-x-4 min-w-0 flex-shrink">
-            {/* Sidebar Toggle (authenticated routes only) */}
-            {showSidebarToggle && onToggleSidebar && (
+        {/* Mobile-First Header: Optimized for small screens */}
+        <div className="mx-auto max-w-7xl h-14 sm:h-16 px-3 sm:px-4 md:px-6 flex items-center justify-between w-full gap-2 sm:gap-3">
+          {/* Left Section: Menu + Logo (Mobile-First) */}
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            {/* Sidebar/Menu Toggle - Always first, proper touch target */}
+            {showSidebarToggle && onToggleSidebar ? (
               <button
                 onClick={onToggleSidebar}
-                className="lg:hidden p-1.5 sm:p-2 flex-shrink-0 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                className="lg:hidden flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
                 aria-label="Toggle sidebar"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
-            )}
-
-            {/* Mobile Menu Toggle (public routes only) */}
-            {!isAuthRoute && (
+            ) : !isAuthRoute ? (
               <button
                 ref={mobileMenuButtonRef}
                 onClick={() => mobileMenu.open()}
-                className="lg:hidden p-1.5 sm:p-2 flex-shrink-0 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                className="lg:hidden flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
                 aria-label="Open navigation menu"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
               </button>
-            )}
+            ) : null}
 
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <Logo />
+            {/* Logo - Icon only on mobile, text on larger screens */}
+            <div className="flex-shrink-0 min-w-0">
+              <Logo showText={false} size="sm" className="sm:hidden" />
+              <Logo showText={true} size="md" className="hidden sm:block" />
             </div>
 
             {/* Desktop Navigation Links */}
-            <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
+            <div className="hidden lg:flex items-center gap-1 xl:gap-2 ml-2">
               {navigation.map(item => (
                 <Link
                   key={item.name}
@@ -214,75 +214,85 @@ export function Header({
             </div>
           </div>
 
-          {/* Center Section: Search */}
+          {/* Center Section: Search (Desktop only) */}
           {showSearch && (
             <div className="hidden md:flex flex-1 max-w-md mx-4 lg:mx-8">
               <EnhancedSearchBar />
             </div>
           )}
 
-          {/* Right Section: Actions */}
-          <div className="flex items-center space-x-1 sm:space-x-2">
-            {/* Mobile Search Button */}
+          {/* Right Section: Actions (Mobile-Optimized) */}
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            {/* Mobile Search Button - Hidden on desktop */}
             {showSearch && (
               <button
                 onClick={() => setShowMobileSearch(true)}
-                className="md:hidden p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                className="md:hidden flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
                 aria-label="Search"
               >
                 <Search className="w-5 h-5" />
               </button>
             )}
 
-            {/* Create Button (authenticated only) */}
+            {/* Create Button (authenticated only) - Icon only on mobile */}
             {isAuthRoute && (
               <div className="hidden sm:block">
                 <HeaderCreateButton />
               </div>
             )}
 
-            {/* Messages Button (authenticated only) */}
+            {/* Messages Button (authenticated only) - Show on mobile but can be hidden if too crowded */}
             {isAuthRoute && (
               <button
                 onClick={() => router.push('/messages')}
-                className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+                className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative"
                 aria-label={`Messages ${unreadMessages > 0 ? `(${unreadMessages} unread)` : ''}`}
               >
                 <MessageSquare className="w-5 h-5" />
                 {unreadMessages > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                  <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 min-w-[16px] flex items-center justify-center font-semibold leading-none">
                     {unreadMessages > 9 ? '9+' : unreadMessages}
                   </span>
                 )}
               </button>
             )}
 
-            {/* Notifications */}
+            {/* Notifications - Always visible but can be smaller on mobile */}
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-50 rounded-xl transition-colors"
+              className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative"
               aria-label="Notifications"
             >
               <Bell className="w-5 h-5" />
-              {/* Notification dot - simplified for now */}
             </button>
 
             {/* User Menu or Auth Buttons */}
             {user ? (
-              <UserProfileDropdown
-                user={user}
-                profile={profile}
-                onSignOut={signOut}
-                navigationItems={userMenuItems}
-              />
+              <div className="flex-shrink-0">
+                <UserProfileDropdown
+                  user={user}
+                  profile={profile}
+                  onSignOut={signOut}
+                  navigationItems={userMenuItems}
+                />
+              </div>
             ) : (
-              <div className="hidden sm:flex items-center space-x-2">
+              <div className="hidden sm:flex items-center gap-2">
                 <AuthButtons items={authNavigationItems} />
               </div>
             )}
           </div>
         </div>
       </header>
+
+      {/* Email Confirmation Banner - Modular component */}
+      {user && (
+        <EmailConfirmationBanner
+          emailConfirmedAt={user.email_confirmed_at}
+          userId={user.id}
+          className="fixed top-14 sm:top-16 left-0 right-0 z-40"
+        />
+      )}
 
       {/* Mobile Search Modal */}
       {showMobileSearch && <MobileSearchModal onClose={() => setShowMobileSearch(false)} />}

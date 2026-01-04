@@ -27,3 +27,6 @@ export const currencySelectOptions = CURRENCY_CODES.map(code => ({
 export function isSupportedCurrency(value: string | null | undefined): value is CurrencyCode {
   return !!value && (CURRENCY_CODES as readonly string[]).includes(value.toUpperCase());
 }
+
+
+

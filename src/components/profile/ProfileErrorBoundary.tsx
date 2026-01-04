@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import React, { Component, ReactNode } from 'react';
 import { AlertCircle } from 'lucide-react';
@@ -33,7 +34,7 @@ export default class ProfileErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to error reporting service
-    console.error('Profile section error:', error, errorInfo);
+    logger.error('Profile section error:', error, errorInfo);
   }
 
   handleReset = () => {

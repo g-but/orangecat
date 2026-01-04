@@ -222,12 +222,18 @@ async function testBundleOptimization(): Promise<PerformanceTestResult[]> {
   // Test 1: Memory Usage
   try {
     const startTime = performance.now()
-    const initialMemory = (performance as any).memory?.usedJSHeapSize || 0
+    interface PerformanceMemory {
+      usedJSHeapSize: number;
+      totalJSHeapSize: number;
+      jsHeapSizeLimit: number;
+    }
+    const performanceWithMemory = performance as Performance & { memory?: PerformanceMemory };
+    const initialMemory = performanceWithMemory.memory?.usedJSHeapSize || 0
     
     // Load large data with lazy loading
     await loadInitiatives()
     
-    const afterLoadMemory = (performance as any).memory?.usedJSHeapSize || 0
+    const afterLoadMemory = performanceWithMemory.memory?.usedJSHeapSize || 0
     const memoryIncrease = afterLoadMemory - initialMemory
     
     results.push({

@@ -19,7 +19,8 @@
 
 'use client';
 
-import { Lightbulb } from 'lucide-react';
+import { useState } from 'react';
+import { Lightbulb, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { EntityTemplate } from '../types';
 
@@ -39,9 +40,15 @@ export function TemplatePicker<T extends GenericTemplate>({
   onSelectTemplate,
   className = '',
 }: TemplatePickerProps<T>) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (!templates || templates.length === 0) {
     return null;
   }
+
+  // Show first template by default, rest when expanded
+  const visibleTemplates = isExpanded ? templates : templates.slice(0, 1);
+  const hasMore = templates.length > 1;
 
   return (
     <div
@@ -62,8 +69,8 @@ export function TemplatePicker<T extends GenericTemplate>({
         </div>
         <span className="text-xs text-orange-600/70 font-medium">{label}</span>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {templates.map(template => (
+      <div className="space-y-3">
+        {visibleTemplates.map(template => (
           <button
             key={template.id}
             onClick={() => onSelectTemplate(template)}
@@ -81,7 +88,29 @@ export function TemplatePicker<T extends GenericTemplate>({
             </div>
           </button>
         ))}
+        {hasMore && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="w-full flex items-center justify-center gap-2 text-sm text-orange-600 hover:text-orange-700 font-medium py-2 transition-colors"
+            type="button"
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="w-4 h-4" />
+                Show less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4" />
+                Show {templates.length - 1} more {templates.length === 2 ? 'template' : 'templates'}
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );
 }
+
+
+

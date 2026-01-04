@@ -1,5 +1,7 @@
 'use client';
 
+import { logger } from '@/utils/logger';
+
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import type { Conversation } from './types';
 import supabase from '@/lib/supabase/browser';
@@ -7,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useMessagingStore } from '@/stores/messaging';
 import { API_ROUTES, CHANNELS, TIMING, debugLog } from './lib/constants';
+import { useRealtimeSubscription } from './hooks/useRealtimeSubscription';
 
 export function useConversations(searchQuery: string, selectedConversationId?: string | null) {
   const { user, hydrated, isLoading: authLoading, isAuthenticated } = useAuth();
@@ -36,7 +39,6 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
   const [refreshing, setRefreshing] = useState(false);
   const [lastFetch, setLastFetch] = useState<number>(0);
   const hasInitialFetch = useRef(false);
-  const realtimeSetup = useRef(false);
   const lastSessionSync = useRef<number>(0);
 
   const refresh = useCallback(async () => {
@@ -97,7 +99,7 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
               debugLog('[useConversations] no session available for sync');
             }
           } catch (syncError) {
-            console.error('[useConversations] Failed to sync session:', syncError);
+            logger.error('[useConversations] Failed to sync session:', syncError);
           }
         } else {
           debugLog('[useConversations] skipping session sync (throttled)');
@@ -118,14 +120,19 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
         setConversations([]);
         return;
       }
-      const data = await res.json().catch(() => ({ conversations: [] }));
-      debugLog('[useConversations] data', {
-        count: Array.isArray(data.conversations) ? data.conversations.length : 0,
+      const responseData = await res.json().catch(() => ({ success: false, data: { conversations: [] } }));
+      debugLog('[useConversations] responseData', {
+        success: responseData.success,
+        hasData: !!responseData.data,
+        count: Array.isArray(responseData.data?.conversations) ? responseData.data.conversations.length : 
+               Array.isArray(responseData.conversations) ? responseData.conversations.length : 0,
       });
 
-      // Ensure we have a valid conversations array, even if the API returns an error
+      // Handle both response formats: apiSuccess format { success: true, data: { conversations: [...] } }
+      // and legacy format { conversations: [...] }
       const conversations = (
-        Array.isArray(data?.conversations) ? data.conversations : []
+        Array.isArray(responseData.data?.conversations) ? responseData.data.conversations :
+        Array.isArray(responseData.conversations) ? responseData.conversations : []
       ) as Conversation[];
       const uniqueConversations = Array.from(
         new Map(conversations.map((c: Conversation) => [c.id, c])).values()
@@ -134,7 +141,7 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
       setConversations(uniqueConversations);
       setLastFetch(Date.now());
     } catch (e) {
-      console.error('[useConversations] Network error:', e);
+      logger.error('[useConversations] Network error:', e);
       setError('Network error');
       // Clear conversations on network error
       setConversations([]);
@@ -172,7 +179,9 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
         if (!res.ok) {
           return;
         }
-        const data = await res.json().catch(() => ({}));
+        const responseData = await res.json().catch(() => ({ success: false }));
+        // Handle both response formats: apiSuccess format { success: true, data: {...} } and legacy format
+        const data = responseData.success === true ? responseData.data : responseData;
         if (data?.conversation) {
           const safeConversations = Array.isArray(conversations) ? conversations : [];
           setConversations([data.conversation as Conversation, ...safeConversations]);
@@ -184,47 +193,44 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
     ensureSelected();
   }, [selectedConversationId]);
 
-  // Realtime: debounce refresh calls to avoid bursts
-  useEffect(() => {
-    if (!isAuthReady || !user) {
-      debugLog('[useConversations] skip realtime (auth not ready)');
-      return;
-    }
-
-    // Prevent multiple realtime setups
-    if (realtimeSetup.current) {
-      debugLog('[useConversations] realtime already setup, skipping');
-      return;
-    }
-    realtimeSetup.current = true;
-
-    let timeout: any = null;
-    const reqRefresh = () => {
+  // Realtime: use unified subscription hook
+  useRealtimeSubscription({
+    channelName: CHANNELS.CONVERSATIONS_LIST,
+    table: 'conversations',
+    events: ['*'],
+    onEvent: useCallback(() => {
       const now = Date.now();
       const elapsed = now - lastFetch;
-      if (elapsed < TIMING.REFRESH_DEBOUNCE_MS || refreshing) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => refresh(), Math.max(0, TIMING.REFRESH_DEBOUNCE_MS - elapsed));
-      } else {
+      if (elapsed >= TIMING.REFRESH_DEBOUNCE_MS && !refreshing) {
         refresh();
       }
-    };
-    const channel = supabase
-      .channel(CHANNELS.CONVERSATIONS_LIST)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'conversations' }, reqRefresh)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, reqRefresh)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'conversation_participants' },
-        reqRefresh
-      )
-      .subscribe();
-    return () => {
-      clearTimeout(timeout);
-      supabase.removeChannel(channel);
-      realtimeSetup.current = false;
-    };
-  }, [refresh, lastFetch, refreshing, isAuthReady, user]);
+    }, [refresh, lastFetch, refreshing]),
+    enabled: isAuthReady && !!user,
+  });
+
+  useRealtimeSubscription({
+    channelName: `${CHANNELS.CONVERSATIONS_LIST}-messages`,
+    table: 'messages',
+    events: ['INSERT'],
+    onEvent: useCallback(() => {
+      if (!refreshing) {
+        refresh();
+      }
+    }, [refresh, refreshing]),
+    enabled: isAuthReady && !!user,
+  });
+
+  useRealtimeSubscription({
+    channelName: `${CHANNELS.CONVERSATIONS_LIST}-participants`,
+    table: 'conversation_participants',
+    events: ['UPDATE'],
+    onEvent: useCallback(() => {
+      if (!refreshing) {
+        refresh();
+      }
+    }, [refresh, refreshing]),
+    enabled: isAuthReady && !!user,
+  });
 
   // Client filtering
   const filtered = useMemo(() => {
