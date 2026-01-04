@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import supabase from '@/lib/supabase/browser';
 import type { Message } from '@/features/messaging/types';
 import { CHANNELS, debugLog, TIMING } from '@/features/messaging/lib/constants';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface UseMessageSubscriptionOptions {
   onNewMessage?: (message: Message) => void;
@@ -183,7 +184,7 @@ export function useMessageSubscription(
             } else {
               // Fallback: fetch from messages table and join with profiles
               const { data: messageData, error: messageError } = await supabase
-                .from('messages')
+                .from(DATABASE_TABLES.MESSAGES)
                 .select(
                   `
                   *,

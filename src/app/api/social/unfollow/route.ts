@@ -11,6 +11,7 @@ import {
 import { rateLimitSocial } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 async function handleUnfollow(request: AuthenticatedRequest) {
   try {
@@ -35,7 +36,7 @@ async function handleUnfollow(request: AuthenticatedRequest) {
 
     // Delete follow relationship
     const { error } = await supabase
-      .from('follows')
+      .from(DATABASE_TABLES.FOLLOWS)
       .delete()
       .eq('follower_id', user.id)
       .eq('following_id', following_id);

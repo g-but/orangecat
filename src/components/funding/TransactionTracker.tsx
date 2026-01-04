@@ -5,6 +5,7 @@ import { createBrowserClient } from '@supabase/ssr';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import Card from '@/components/ui/Card';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface TransactionTrackerProps {
   fundingPageId: string;
@@ -33,7 +34,7 @@ export default function TransactionTracker({
       setError(null);
 
       const { data, error } = await supabase
-        .from('transactions')
+        .from(DATABASE_TABLES.TRANSACTIONS)
         .select('*')
         .eq('to_entity_id', fundingPageId)
         .eq('to_entity_type', 'project')

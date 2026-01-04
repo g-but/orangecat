@@ -10,6 +10,7 @@
 import { createAdminClient } from '@/lib/supabase/admin';
 import { PARTICIPANT_ROLES } from './constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // =============================================================================
 // TYPES
@@ -51,7 +52,7 @@ export async function getUserConversationIds(
   userId: string
 ): Promise<string[]> {
   const { data, error } = await admin
-    .from('conversation_participants')
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .select('conversation_id')
     .eq('user_id', userId)
     .eq('is_active', true);
@@ -71,7 +72,7 @@ export async function getConversationParticipants(
   conversationId: string
 ): Promise<ParticipantInfo[]> {
   const { data, error } = await admin
-    .from('conversation_participants')
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .select('conversation_id, user_id, role, is_active')
     .eq('conversation_id', conversationId)
     .eq('is_active', true);
@@ -80,10 +81,17 @@ export async function getConversationParticipants(
     return [];
   }
 
-  return (data as any[]).map((p) => ({
-    conversationId: p.conversation_id as string,
-    userId: p.user_id as string,
-    role: p.role as string,
+  interface ParticipantRow {
+    conversation_id: string;
+    user_id: string;
+    role: string;
+    is_active: boolean;
+  }
+
+  return (data as ParticipantRow[]).map((p) => ({
+    conversationId: p.conversation_id,
+    userId: p.user_id,
+    role: p.role,
     isActive: Boolean(p.is_active),
   }));
 }
@@ -97,7 +105,7 @@ export async function isUserParticipant(
   userId: string
 ): Promise<boolean> {
   const { data } = await admin
-    .from('conversation_participants')
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .select('user_id')
     .eq('conversation_id', conversationId)
     .eq('user_id', userId)
@@ -128,7 +136,7 @@ export async function findExistingDirectConversation(
 
   // Get non-group conversations
   const { data: conversations } = await admin
-    .from('conversations')
+    .from(DATABASE_TABLES.CONVERSATIONS)
     .select('id')
     .in('id', userConversationIds)
     .eq('is_group', false);
@@ -167,7 +175,7 @@ export async function findExistingSelfConversation(
 
   // Get non-group conversations
   const { data: conversations } = await admin
-    .from('conversations')
+    .from(DATABASE_TABLES.CONVERSATIONS)
     .select('id')
     .in('id', userConversationIds)
     .eq('is_group', false);
@@ -206,7 +214,7 @@ export async function createConversation(
 ): Promise<string> {
   // Create conversation
   const { data: newConv, error: convError } = await admin
-    .from('conversations')
+    .from(DATABASE_TABLES.CONVERSATIONS)
     .insert({
       created_by: creatorId,
       is_group: options.isGroup,
@@ -230,12 +238,12 @@ export async function createConversation(
   }));
 
   const { error: participantError } = await admin
-    .from('conversation_participants')
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
     .insert(participantRows);
 
   if (participantError) {
     // Rollback: delete the conversation
-    await admin.from('conversations').delete().eq('id', conversationId);
+    await admin.from(DATABASE_TABLES.CONVERSATIONS).delete().eq('id', conversationId);
     throw new Error(`Failed to add participants: ${participantError.message}`);
   }
 
