@@ -410,9 +410,9 @@ export function PostCard({
           isReposting={isReposting}
           currentUser={{
             id: user?.id,
-            name: (user as any)?.user_metadata?.name || user?.email || 'You',
-            username: (user as any)?.user_metadata?.preferred_username || '',
-            avatar: (user as any)?.user_metadata?.avatar_url || null,
+            name: (user?.user_metadata as { name?: string } | undefined)?.name || user?.email || 'You',
+            username: (user?.user_metadata as { preferred_username?: string } | undefined)?.preferred_username || '',
+            avatar: (user?.user_metadata as { avatar_url?: string | null } | undefined)?.avatar_url || null,
           }}
         />
       </article>

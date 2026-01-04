@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -57,7 +58,7 @@ export function WalletManager({
 
   // Validate required props after hooks
   if (!entityType) {
-    console.error('WalletManager: entityType is required');
+    logger.error('WalletManager: entityType is required');
     return (
       <div className="p-4 text-red-600 bg-red-50 rounded-lg border border-red-200">
         Error: Entity type not configured properly
@@ -66,7 +67,7 @@ export function WalletManager({
   }
 
   if (!entityId) {
-    console.error('WalletManager: entityId is required');
+    logger.error('WalletManager: entityId is required');
     return (
       <div className="p-4 text-red-600 bg-red-50 rounded-lg border border-red-200">
         Error: Entity ID not configured properly

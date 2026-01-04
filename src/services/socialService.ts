@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * SOCIAL COLLABORATION SERVICES - UPDATED FOR PROPER DATABASE IMPLEMENTATION
  * 
@@ -6,12 +5,13 @@
  * storing data as JSON in profiles.website
  * 
  * Created: 2025-01-08
- * Last Modified: 2025-01-08
- * Last Modified Summary: Updated to use proper database services
+ * Last Modified: 2026-01-03
+ * Last Modified Summary: Removed @ts-nocheck and fixed type safety
  */
 
 import { supabase } from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
+import type { SearchResult, SearchFilters, EmptyStateContent, ScalableProfile, Organization } from '@/types/social'
 
 // Import proper database services
 import { OrganizationService } from './organizations/index'
@@ -60,15 +60,10 @@ export { BitcoinCollaborationService } from './bitcoin/collaborations'
 // =====================================================================
 
 export class SearchService {
-  static async universalSearch(filters: {
-    query?: string
-    type?: 'people' | 'organizations' | 'projects'
-    limit?: number
-    offset?: number
-  }): Promise<any[]> {
+  static async universalSearch(filters: SearchFilters): Promise<SearchResult[]> {
     try {
       const { query, type, limit = 20, offset = 0 } = filters
-      const results: any[] = []
+      const results: SearchResult[] = []
 
       // Search people using proper database service
       if (!type || type === 'people') {
@@ -79,19 +74,18 @@ export class SearchService {
         })
         
         people.forEach(person => {
-          results.push({
-            id: person.id,
+          const result: SearchResult = {
             type: 'person',
-            title: person.name || person.username,
+            id: person.id,
+            title: person.name || person.username || '',
             description: person.bio || '',
-            image: person.avatar_url,
-            url: `/people/${person.id}`,
-            metadata: {
-              username: person.username,
-              location: person.location,
-              verification_status: person.verification_status
-            }
-          })
+            image_url: person.avatar_url || undefined,
+            verification_status: person.verification_status || undefined,
+            location: person.location || undefined,
+            created_at: person.created_at || new Date().toISOString(),
+            data: person as ScalableProfile,
+          }
+          results.push(result)
         })
       }
 
@@ -104,20 +98,18 @@ export class SearchService {
         })
         
         organizations.forEach(org => {
-          results.push({
-            id: org.id,
+          const result: SearchResult = {
             type: 'organization',
+            id: org.id,
             title: org.name,
             description: org.description || '',
-            image: org.logo_url,
-            url: `/organizations/${org.id}`,
-            metadata: {
-              type: org.type,
-              member_count: org.member_count,
-              location: org.location,
-              total_raised: org.total_raised
-            }
-          })
+            image_url: org.logo_url || undefined,
+            member_count: org.member_count,
+            location: org.location || undefined,
+            created_at: org.created_at || new Date().toISOString(),
+            data: org as Organization,
+          }
+          results.push(result)
         })
       }
 
@@ -125,7 +117,7 @@ export class SearchService {
 
       return results.slice(0, limit)
     } catch (error) {
-      logger.error('Error in universal search:', error, 'Social')
+      logger.error('Error in universal search', { error }, 'Social')
       return []
     }
   }
@@ -141,7 +133,7 @@ export class SocialAnalyticsService {
       // Use proper database service for analytics
       return await PeopleService.getUserAnalytics(userId)
     } catch (error) {
-      logger.error('Error getting user analytics:', error, 'Social')
+      logger.error('Error getting user analytics', { error, userId }, 'Social')
       return {
         total_connections: 0,
         pending_requests: 0,
@@ -163,8 +155,8 @@ export class SocialAnalyticsService {
 // =====================================================================
 
 export class EmptyStateService {
-  static getEmptyStateContent(section: 'people' | 'organizations' | 'projects'): any {
-    const baseContent = {
+  static getEmptyStateContent(section: 'people' | 'organizations' | 'projects'): EmptyStateContent {
+    const baseContent: Record<'people' | 'organizations' | 'projects', EmptyStateContent> = {
       people: {
         title: 'No Connections Yet',
         description: "You haven't connected with anyone yet. Start building your network!",
@@ -216,6 +208,32 @@ export class EmptyStateService {
           'Environmental initiatives',
           'Creative communities'
         ]
+      },
+      projects: {
+        title: 'No Projects Yet',
+        description: "You haven't created or joined any projects yet. Start building something amazing!",
+        primaryAction: {
+          label: 'Create Project',
+          action: '/projects/create'
+        },
+        secondaryAction: {
+          label: 'Browse Projects',
+          action: '/projects'
+        },
+        benefits: [
+          'Crowdfund your ideas',
+          'Collaborate with others',
+          'Track progress and milestones',
+          'Receive Bitcoin payments',
+          'Build your portfolio'
+        ],
+        examples: [
+          'Creative projects',
+          'Community initiatives',
+          'Open source software',
+          'Educational content',
+          'Social impact campaigns'
+        ]
       }
     };
 
@@ -259,4 +277,4 @@ export const socialService = {
 // For unit-tests – expose concrete implementations
 // Already exported above or as classes within this file
 export { SearchService };
-export { SocialAnalyticsService }; 
+export { SocialAnalyticsService };

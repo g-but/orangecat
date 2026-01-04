@@ -98,8 +98,15 @@ function useMemoryMonitor() {
 
   useEffect(() => {
     const updateMemoryInfo = () => {
-      if ('memory' in performance) {
-        const memory = (performance as any).memory
+      // TypeScript doesn't include memory in Performance interface, but Chrome DevTools exposes it
+      interface PerformanceMemory {
+        usedJSHeapSize: number;
+        totalJSHeapSize: number;
+        jsHeapSizeLimit: number;
+      }
+      const performanceWithMemory = performance as Performance & { memory?: PerformanceMemory };
+      if (performanceWithMemory.memory) {
+        const memory = performanceWithMemory.memory;
         const used = memory.usedJSHeapSize / 1024 / 1024 // MB
         const total = memory.totalJSHeapSize / 1024 / 1024 // MB
         const percentage = (used / total) * 100
@@ -325,7 +332,14 @@ export const PerformanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
   // Add performance monitoring to window for debugging
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      (window as any).__performanceMonitor = {
+      interface WindowWithPerformanceMonitor extends Window {
+        __performanceMonitor?: {
+          getStats: () => ReturnType<typeof performanceMonitor.getStats>;
+          trackAPI: ReturnType<typeof useAPIPerformance>['trackAPI'];
+          clearMetrics?: () => void;
+        };
+      }
+      (window as WindowWithPerformanceMonitor).__performanceMonitor = {
         getStats: () => performanceMonitor.getStats(''),
         trackAPI,
         clearMetrics: () => {

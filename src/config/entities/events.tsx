@@ -1,0 +1,143 @@
+/**
+ * Event Entity Configuration
+ *
+ * Created: 2025-01-30
+ * Last Modified: 2025-01-30
+ * Last Modified Summary: Initial creation of event entity configuration
+ */
+
+import { EntityConfig } from '@/types/entity';
+import Link from 'next/link';
+import Button from '@/components/ui/Button';
+
+// Event type from database - matches events table schema
+export interface Event {
+  id: string;
+  user_id: string;
+  organization_id?: string | null;
+  title: string;
+  description?: string | null;
+  category?: string | null;
+  event_type: string;
+  tags?: string[] | null;
+  start_date: string;
+  end_date?: string | null;
+  timezone?: string | null;
+  is_all_day?: boolean | null;
+  is_recurring?: boolean | null;
+  recurrence_pattern?: any | null;
+  venue_name?: string | null;
+  venue_address?: string | null;
+  venue_city?: string | null;
+  venue_country?: string | null;
+  venue_postal_code?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  is_online?: boolean | null;
+  online_url?: string | null;
+  asset_id?: string | null;
+  max_attendees?: number | null;
+  current_attendees?: number | null;
+  requires_rsvp?: boolean | null;
+  rsvp_deadline?: string | null;
+  ticket_price_sats?: number | null;
+  currency?: string | null;
+  is_free?: boolean | null;
+  funding_goal_sats?: number | null;
+  bitcoin_address?: string | null;
+  lightning_address?: string | null;
+  images?: string[] | null;
+  thumbnail_url?: string | null;
+  banner_url?: string | null;
+  video_url?: string | null;
+  status: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export const eventEntityConfig: EntityConfig<Event> = {
+  name: 'Event',
+  namePlural: 'Events',
+  colorTheme: 'blue',
+
+  listPath: '/dashboard/events',
+  detailPath: (id) => `/dashboard/events/${id}`,
+  createPath: '/dashboard/events/create',
+  editPath: (id) => `/dashboard/events/create?edit=${id}`,
+
+  apiEndpoint: '/api/events',
+
+  makeHref: (event) => `/dashboard/events/${event.id}`,
+
+  makeCardProps: (event) => {
+    // Build price label
+    const priceLabel = event.is_free
+      ? 'Free'
+      : event.ticket_price_sats
+      ? `${event.ticket_price_sats} ${event.currency || 'SATS'}`
+      : undefined;
+
+    // Build metadata (category, location, date)
+    const metadataParts: string[] = [];
+    if (event.category) {
+      metadataParts.push(event.category);
+    }
+    if (event.venue_city) {
+      metadataParts.push(event.venue_city);
+    } else if (event.is_online) {
+      metadataParts.push('Online');
+    }
+    if (event.start_date) {
+      try {
+        const date = new Date(event.start_date);
+        metadataParts.push(date.toLocaleDateString());
+      } catch (e) {
+        // Ignore date parsing errors
+      }
+    }
+
+    return {
+      priceLabel,
+      badge: event.status === 'published' ? 'Published' :
+             event.status === 'open' ? 'Open' :
+             event.status === 'full' ? 'Full' :
+             event.status === 'ongoing' ? 'Ongoing' :
+             event.status === 'completed' ? 'Completed' :
+             event.status === 'draft' ? 'Draft' : undefined,
+      badgeVariant: event.status === 'published' ? 'success' :
+                    event.status === 'open' ? 'success' :
+                    event.status === 'full' ? 'warning' :
+                    event.status === 'ongoing' ? 'success' :
+                    event.status === 'completed' ? 'default' :
+                    event.status === 'draft' ? 'default' : 'default',
+      metadata: metadataParts.length > 0 ? (
+        <div className="flex flex-wrap gap-2 text-xs text-gray-500">
+          {metadataParts.map((part, idx) => (
+            <span key={idx}>{part}</span>
+          ))}
+        </div>
+      ) : undefined,
+      showEditButton: true,
+      editHref: `/dashboard/events/create?edit=${event.id}`,
+      // Removed duplicate actions button - edit icon overlay is sufficient
+    };
+  },
+
+  emptyState: {
+    title: 'No events yet',
+    description: 'Organize your first in-person gathering or meetup with Bitcoin-powered ticketing.',
+    action: (
+      <Link href="/dashboard/events/create">
+        <Button className="bg-gradient-to-r from-blue-600 to-blue-700">
+          Create Event
+        </Button>
+      </Link>
+    ),
+  },
+
+  gridCols: {
+    mobile: 1,
+    tablet: 2,
+    desktop: 3,
+  },
+};

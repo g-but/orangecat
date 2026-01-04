@@ -68,9 +68,10 @@ export function PostHeader({
       }
     : event.actor;
 
-  // Handle both camelCase and snake_case from DB/enrichment
-  const timestamp = event.eventTimestamp || event.createdAt || (event as any).created_at;
-  const updatedTimestamp = event.updatedAt || (event as any).updated_at;
+  // TimelineDisplayEvent extends TimelineEvent which has eventTimestamp, createdAt, updatedAt
+  // Use eventTimestamp as primary, fallback to createdAt for backward compatibility
+  const timestamp = event.eventTimestamp || event.createdAt;
+  const updatedTimestamp = event.updatedAt;
   const isEdited = updatedTimestamp && updatedTimestamp !== timestamp;
 
   return (
@@ -175,3 +176,4 @@ export function PostHeader({
 }
 
 export default PostHeader;
+

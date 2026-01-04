@@ -1,0 +1,1 @@
+../docs/guides/ai/COMMON.md

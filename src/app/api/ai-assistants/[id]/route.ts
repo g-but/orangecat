@@ -1,187 +1,61 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { userAIAssistantSchema, type UserAIAssistantFormData } from '@/lib/validation';
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiNotFound,
-  apiValidationError,
-  apiInternalError,
-  handleApiError,
-  handleSupabaseError,
-} from '@/lib/api/standardResponse';
-import { rateLimit, rateLimitWrite, createRateLimitResponse } from '@/lib/rate-limit';
-import { logger } from '@/utils/logger';
-import { apiRateLimited } from '@/lib/api/standardResponse';
+/**
+ * AI Assistant CRUD API Routes
+ *
+ * Uses generic entity handler from lib/api/entityCrudHandler.ts
+ * Entity metadata comes from entity-registry (Single Source of Truth)
+ *
+ * AI Assistants are autonomous AI services that creators build and monetize.
+ * They support multiple compute providers (API, self-hosted, community)
+ * and flexible pricing models (per-message, per-token, subscription).
+ */
 
-// GET /api/ai-assistants/[id] - Get specific AI assistant
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+import { aiAssistantSchema } from '@/lib/validation';
+import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
+import { createUpdatePayloadBuilder } from '@/lib/api/buildUpdatePayload';
 
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+// Build update payload from validated AI assistant data
+const buildAIAssistantUpdatePayload = createUpdatePayloadBuilder([
+  // Basic Info
+  { from: 'title' },
+  { from: 'description' },
+  { from: 'category' },
+  { from: 'tags', default: [] },
+  { from: 'avatar_url' },
+  // AI Configuration
+  { from: 'system_prompt' },
+  { from: 'welcome_message' },
+  { from: 'personality_traits', default: [] },
+  { from: 'knowledge_base_urls', default: [] },
+  // Model Preferences
+  { from: 'model_preference', default: 'any' },
+  { from: 'max_tokens_per_response', default: 1000 },
+  { from: 'temperature', default: 0.7 },
+  // Compute Configuration
+  { from: 'compute_provider_type', default: 'api' },
+  { from: 'compute_provider_id' },
+  { from: 'api_provider' },
+  // Pricing
+  { from: 'pricing_model', default: 'per_message' },
+  { from: 'price_per_message_sats', default: 0 },
+  { from: 'price_per_1k_tokens_sats', default: 0 },
+  { from: 'subscription_price_sats', default: 0 },
+  { from: 'free_messages_per_day', default: 0 },
+  // Visibility & Status
+  { from: 'status', default: 'draft' },
+  { from: 'is_public', default: false },
+  { from: 'is_featured', default: false },
+  // Bitcoin Payment Info
+  { from: 'lightning_address' },
+  { from: 'bitcoin_address' },
+]);
 
-    // Rate limiting check
-    const rateLimitResult = rateLimit(request);
-    if (!rateLimitResult.success) {
-      return createRateLimitResponse(rateLimitResult);
-    }
+// Create handlers using generic factory
+const { GET, PUT, DELETE } = createEntityCrudHandlers({
+  entityType: 'ai_assistant',
+  schema: aiAssistantSchema,
+  buildUpdatePayload: buildAIAssistantUpdatePayload,
+  requireActiveStatus: false, // Allow viewing draft assistants by owner
+});
 
-    const assistantId = params.id;
+export { GET, PUT, DELETE };
 
-    const { data: assistant, error } = await supabase
-      .from('user_ai_assistants')
-      .select('*')
-      .eq('id', assistantId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return apiNotFound('AI assistant not found');
-      }
-      return apiInternalError('Failed to fetch AI assistant', { details: error.message });
-    }
-
-    return apiSuccess(assistant);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-// PUT /api/ai-assistants/[id] - Update AI assistant
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
-    const assistantId = params.id;
-
-    // Check if assistant exists and belongs to user
-    const { data: existingAssistant, error: fetchError } = await supabase
-      .from('user_ai_assistants')
-      .select('user_id')
-      .eq('id', assistantId)
-      .single();
-
-    if (fetchError || !existingAssistant) {
-      return apiNotFound('AI assistant not found');
-    }
-
-    if (existingAssistant.user_id !== user.id) {
-      return apiUnauthorized('You can only update your own AI assistants');
-    }
-
-    // Rate limiting check
-    const rateLimitResult = rateLimitWrite(user.id);
-    if (!rateLimitResult.success) {
-      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many update requests. Please slow down.', retryAfter);
-    }
-
-    const body = await request.json();
-    const validatedData = userAIAssistantSchema.parse(body);
-
-    const updatePayload = {
-      assistant_name: validatedData.assistant_name ?? 'My Cat',
-      personality_prompt: validatedData.personality_prompt,
-      training_data: validatedData.training_data ?? {},
-      status: validatedData.status ?? 'coming_soon',
-      is_enabled: validatedData.is_enabled ?? false,
-      response_style: validatedData.response_style ?? 'friendly',
-      allowed_topics: validatedData.allowed_topics ?? [],
-      blocked_topics: validatedData.blocked_topics ?? [],
-      updated_at: new Date().toISOString(),
-    };
-
-    const { data: assistant, error } = await supabase
-      .from('user_ai_assistants')
-      .update(updatePayload)
-      .eq('id', assistantId)
-      .select('*')
-      .single();
-
-    if (error) {
-      logger.error('AI assistant update failed', {
-        userId: user.id,
-        assistantId,
-        error: error.message,
-        code: error.code,
-      });
-      return handleSupabaseError(error);
-    }
-
-    logger.info('AI assistant updated successfully', { userId: user.id, assistantId });
-    return apiSuccess(assistant);
-  } catch (error) {
-    if (error instanceof Error && error.name === 'ZodError') {
-      const zodError = error as any;
-      return apiValidationError('Invalid AI assistant data', {
-        details: zodError.errors || zodError.message,
-      });
-    }
-    return handleApiError(error);
-  }
-}
-
-// DELETE /api/ai-assistants/[id] - Delete AI assistant
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
-  try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
-    const assistantId = params.id;
-
-    // Check if assistant exists and belongs to user
-    const { data: existingAssistant, error: fetchError } = await supabase
-      .from('user_ai_assistants')
-      .select('user_id, assistant_name')
-      .eq('id', assistantId)
-      .single();
-
-    if (fetchError || !existingAssistant) {
-      return apiNotFound('AI assistant not found');
-    }
-
-    if (existingAssistant.user_id !== user.id) {
-      return apiUnauthorized('You can only delete your own AI assistants');
-    }
-
-    const { error } = await supabase.from('user_ai_assistants').delete().eq('id', assistantId);
-
-    if (error) {
-      logger.error('AI assistant deletion failed', {
-        userId: user.id,
-        assistantId,
-        error: error.message,
-        code: error.code,
-      });
-      return handleSupabaseError(error);
-    }
-
-    logger.info('AI assistant deleted successfully', { userId: user.id, assistantId });
-    return apiSuccess({ message: 'AI assistant deleted successfully' });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}

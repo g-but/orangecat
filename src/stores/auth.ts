@@ -302,12 +302,13 @@ export const useAuthStore = create<AuthState>()(
       }),
       skipHydration: false,
       // Migration function to clear stale profile data
-      migrate: (persistedState: Partial<AuthState> & Record<string, unknown>, version: number) => {
+      migrate: (persistedState: unknown, version: number) => {
         // Clear any persisted profile to prevent stale data
-        if (persistedState && persistedState.profile) {
-          persistedState.profile = null;
+        const state = persistedState as Partial<AuthState> & Record<string, unknown>;
+        if (state && state.profile) {
+          state.profile = null;
         }
-        return persistedState;
+        return state as unknown;
       },
     }
   )

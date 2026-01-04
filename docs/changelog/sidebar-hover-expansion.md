@@ -169,3 +169,6 @@ Updated the sidebar to expand on hover, showing text labels while keeping icons-
 - [ ] Add keyboard shortcut to toggle sidebar
 - [ ] Consider adding a "pin expanded" option
 - [ ] Add animation for text label appearance
+
+
+

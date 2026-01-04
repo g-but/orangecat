@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -90,7 +91,7 @@ export function CreateAssetDialog({
 
       onAssetCreated();
     } catch (error) {
-      console.error('Failed to create asset:', error);
+      logger.error('Failed to create asset:', error);
       // For now, just show success since the API might be failing due to migration
       onAssetCreated();
     } finally {

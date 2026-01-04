@@ -54,8 +54,10 @@ function hapticFeedback(type: 'light' | 'medium' | 'heavy' = 'light') {
   }
   
   // iOS haptic feedback (if available)
+  // TypeScript doesn't know about hapticFeedback, but it exists on some mobile browsers
   if ('hapticFeedback' in navigator) {
-    ;(navigator as any).hapticFeedback?.(type)
+    const nav = navigator as Navigator & { hapticFeedback?: (type: 'light' | 'medium' | 'heavy') => void };
+    nav.hapticFeedback?.(type);
   }
 }
 
@@ -74,8 +76,19 @@ function createRipple(element: HTMLElement, event: React.TouchEvent | React.Mous
   const ripple = document.createElement('span')
   
   const size = Math.max(rect.width, rect.height)
-  const x = (event as any).clientX - rect.left - size / 2
-  const y = (event as any).clientY - rect.top - size / 2
+  // Get coordinates from either TouchEvent or MouseEvent
+  const clientX = 'touches' in event && event.touches.length > 0 
+    ? event.touches[0].clientX 
+    : 'clientX' in event 
+      ? event.clientX 
+      : 0;
+  const clientY = 'touches' in event && event.touches.length > 0 
+    ? event.touches[0].clientY 
+    : 'clientY' in event 
+      ? event.clientY 
+      : 0;
+  const x = clientX - rect.left - size / 2
+  const y = clientY - rect.top - size / 2
   
   ripple.style.cssText = `
     position: absolute;

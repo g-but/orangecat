@@ -4,24 +4,19 @@ import { logger } from '@/utils/logger';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  SlidersHorizontal,
-  ArrowUpDown,
-  Target,
-  Users,
-  Loader2,
-} from 'lucide-react';
+import { SlidersHorizontal } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import ModernProjectCard from '@/components/ui/ModernProjectCard';
-import ProfileCard from '@/components/ui/ProfileCard';
-import { ProjectCardSkeleton, ProfileCardSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/hooks/useAuth';
 import { useSearch } from '@/hooks/useSearch';
 import { SearchFundingPage, SearchProfile, SearchType, SortOption } from '@/services/search';
+import { PUBLIC_SEARCH_STATUSES } from '@/lib/projectStatus';
 import supabase from '@/lib/supabase/browser';
 import DiscoverTabs, { DiscoverTabType } from '@/components/discover/DiscoverTabs';
-import ResultsSection from '@/components/discover/ResultsSection';
 import DiscoverFilters, { StatusKey } from '@/components/discover/DiscoverFilters';
+import DiscoverHero from '@/components/discover/DiscoverHero';
+import DiscoverEmptyState from '@/components/discover/DiscoverEmptyState';
+import DiscoverResults from '@/components/discover/DiscoverResults';
+import type { Loan } from '@/types/loans';
 
 type ViewMode = 'grid' | 'list';
 
@@ -31,22 +26,22 @@ export default function DiscoverPage() {
   const { user } = useAuth();
 
   // Initialize state from URL params
-  const initialSearchTerm = searchParams.get('search') || '';
-  const initialCategories = (searchParams.get('category') || '')
+  const initialSearchTerm = searchParams?.get('search') || '';
+  const initialCategories = (searchParams?.get('category') || '')
     .split(',')
     .map(s => s.trim())
     .filter(Boolean);
   // Convert legacy sort values to current options
-  const urlSort = searchParams.get('sort') || 'recent';
+  const urlSort = searchParams?.get('sort') || 'recent';
   const initialSort = (['recent', 'relevance'].includes(urlSort) ? urlSort : 'recent') as
     | 'relevance'
     | 'recent';
-  const urlType = (searchParams.get('type') || 'all') as DiscoverTabType;
-  const initialType = ['all', 'projects', 'profiles'].includes(urlType) ? urlType : 'all';
-  const initialCountry = searchParams.get('country') || '';
-  const initialCity = searchParams.get('city') || '';
-  const initialPostal = searchParams.get('postal') || '';
-  const initialRadiusKm = Number(searchParams.get('radius_km') || 0);
+  const urlType = (searchParams?.get('type') || 'all') as DiscoverTabType;
+  const initialType = ['all', 'projects', 'profiles', 'loans'].includes(urlType) ? urlType : 'all';
+  const initialCountry = searchParams?.get('country') || '';
+  const initialCity = searchParams?.get('city') || '';
+  const initialPostal = searchParams?.get('postal') || '';
+  const initialRadiusKm = Number(searchParams?.get('radius_km') || 0);
 
   // Use the optimized useSearch hook with pagination and debouncing
   const {
@@ -70,7 +65,7 @@ export default function DiscoverPage() {
     initialSort: initialSort,
     initialFilters: {
       categories: initialCategories.length > 0 ? initialCategories : undefined,
-      statuses: ['active', 'paused'], // Default status filter
+      statuses: PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[], // Default status filter
       country: initialCountry || undefined,
       city: initialCity || undefined,
       postal_code: initialPostal || undefined,
@@ -85,7 +80,9 @@ export default function DiscoverPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
-  const [selectedStatuses, setSelectedStatuses] = useState<('active' | 'paused' | 'completed' | 'cancelled')[]>(['active', 'paused']); // Default: show active and paused
+  const [selectedStatuses, setSelectedStatuses] = useState<('active' | 'paused' | 'completed' | 'cancelled')[]>(
+    PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[]
+  ); // Default: show active and paused
   const [country, setCountry] = useState(initialCountry);
   const [city, setCity] = useState(initialCity);
   const [postal, setPostal] = useState(initialPostal);
@@ -95,6 +92,11 @@ export default function DiscoverPage() {
   // Total counts from database (for stats display)
   const [totalProjectsCount, setTotalProjectsCount] = useState(0);
   const [totalProfilesCount, setTotalProfilesCount] = useState(0);
+  const [totalLoansCount, setTotalLoansCount] = useState(0);
+
+  // Loans data (fetched separately since useSearch doesn't support loans yet)
+  const [loans, setLoans] = useState<Loan[]>([]);
+  const [loansLoading, setLoansLoading] = useState(false);
 
   // Fetch total counts from database with client-side caching
   useEffect(() => {
@@ -106,16 +108,17 @@ export default function DiscoverPage() {
         // Check cache first
         const cached = localStorage.getItem(CACHE_KEY);
         if (cached) {
-          const { projects, profiles, timestamp } = JSON.parse(cached);
+          const { projects, profiles, loans: loansCount, timestamp } = JSON.parse(cached);
           if (Date.now() - timestamp < CACHE_DURATION) {
             setTotalProjectsCount(projects);
             setTotalProfilesCount(profiles);
+            setTotalLoansCount(loansCount || 0);
             return; // Use cached data
           }
         }
 
         // Fetch fresh data
-        const [projectsResult, profilesResult] = await Promise.all([
+        const [projectsResult, profilesResult, loansResult] = await Promise.all([
           supabase
             .from('projects')
             .select('*', { count: 'exact', head: true })
@@ -123,18 +126,26 @@ export default function DiscoverPage() {
           supabase
             .from('profiles')
             .select('*', { count: 'exact', head: true }),
+          supabase
+            .from('loans')
+            .select('*', { count: 'exact', head: true })
+            .eq('is_public', true)
+            .eq('status', 'active'),
         ]);
 
         const projectCount = projectsResult.count ?? 0;
         const profileCount = profilesResult.count ?? 0;
+        const loanCount = loansResult.count ?? 0;
 
         setTotalProjectsCount(projectCount);
         setTotalProfilesCount(profileCount);
+        setTotalLoansCount(loanCount);
 
         // Cache the results
         localStorage.setItem(CACHE_KEY, JSON.stringify({
           projects: projectCount,
           profiles: profileCount,
+          loans: loanCount,
           timestamp: Date.now(),
         }));
       } catch (error) {
@@ -157,6 +168,49 @@ export default function DiscoverPage() {
       .filter(result => result.type === 'profile')
       .map(result => result.data as SearchProfile);
   }, [searchResults]);
+
+  // Fetch loans when needed (for 'all' or 'loans' tab)
+  useEffect(() => {
+    const fetchLoans = async () => {
+      // Only fetch loans when on 'all' or 'loans' tab
+      if (activeTab !== 'all' && activeTab !== 'loans') {
+        setLoans([]);
+        return;
+      }
+
+      setLoansLoading(true);
+      try {
+        let query = supabase
+          .from('loans')
+          .select('*')
+          .eq('is_public', true)
+          .eq('status', 'active')
+          .order('created_at', { ascending: false })
+          .limit(activeTab === 'loans' ? 50 : 12);
+
+        // Apply search term filter if present
+        if (searchTerm) {
+          query = query.or(`title.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+          logger.error('Error fetching loans', error, 'Discover');
+          setLoans([]);
+        } else {
+          setLoans(data || []);
+        }
+      } catch (error) {
+        logger.error('Error fetching loans', error, 'Discover');
+        setLoans([]);
+      } finally {
+        setLoansLoading(false);
+      }
+    };
+
+    fetchLoans();
+  }, [activeTab, searchTerm]);
 
   // Update search filters when local filter state changes
   useEffect(() => {
@@ -225,7 +279,8 @@ export default function DiscoverPage() {
     }
 
     const newUrl = `/discover?${newSearchParams.toString()}`;
-    if (newUrl !== `/discover?${searchParams.toString()}`) {
+    const currentUrl = searchParams ? `/discover?${searchParams.toString()}` : '/discover';
+    if (newUrl !== currentUrl) {
       router.replace(newUrl, { scroll: false });
     }
   }, [
@@ -295,7 +350,7 @@ export default function DiscoverPage() {
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategories([]);
-    setSelectedStatuses(['active', 'paused']); // Reset to default statuses
+    setSelectedStatuses(PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[]); // Reset to default statuses
     setSortBy('recent');
     setCountry('');
     setCity('');
@@ -317,64 +372,12 @@ export default function DiscoverPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/50 via-white to-tiffany-50/30">
-      {/* Hero Section - Compact */}
-      <motion.div
-        className="relative overflow-hidden bg-gradient-to-br from-bitcoinOrange/5 via-tiffany-50/80 to-orange-50/60 border-b border-gray-100/50"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-      >
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-          <motion.div
-            className="text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <motion.h1
-              className="text-fluid-3xl font-extrabold tracking-tight text-gray-900 mb-4"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            >
-              <span className="block">Discover Projects</span>
-              <span className="block bg-gradient-to-r from-tiffany-600 via-bitcoinOrange to-orange-500 bg-clip-text text-transparent">
-                You Care About
-              </span>
-            </motion.h1>
-
-            <motion.p
-              className="mt-4 max-w-2xl mx-auto text-fluid-lg text-gray-600"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.7 }}
-            >
-              Support creative projects, community initiatives, and bold ideas—using Bitcoin.
-            </motion.p>
-
-            {/* Stats - Compact */}
-            <motion.div
-              className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.9 }}
-            >
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-white/80 shadow-card">
-                <div className="text-fluid-xl font-bold text-gray-900">{stats.totalProjects}</div>
-                <div className="text-sm text-gray-600 mt-1">Active Projects</div>
-              </div>
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-white/80 shadow-card">
-                <div className="text-fluid-xl font-bold text-tiffany-600">{stats.totalProfiles}</div>
-                <div className="text-sm text-gray-600 mt-1">People</div>
-              </div>
-              <div className="bg-white/80 backdrop-blur-md rounded-xl p-4 border border-white/80 shadow-card">
-                <div className="text-fluid-xl font-bold text-bitcoinOrange">0 BTC</div>
-                <div className="text-sm text-gray-600 mt-1">Funds Raised</div>
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </motion.div>
+      {/* Hero Section */}
+      <DiscoverHero
+        totalProjects={stats.totalProjects}
+        totalProfiles={stats.totalProfiles}
+        totalFunding={stats.totalFunding}
+      />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -427,7 +430,8 @@ export default function DiscoverPage() {
               onTabChange={handleTabChange}
               projectCount={projects.length}
               profileCount={profiles.length}
-              loading={loading}
+              loanCount={loans.length}
+              loading={loading || loansLoading}
             />
 
             <div className="bg-white/70 backdrop-blur-sm rounded-b-2xl border border-gray-200/60 border-t-0 p-6">
@@ -493,329 +497,38 @@ export default function DiscoverPage() {
               </div>
             )}
 
-            {/* Loading State - Skeleton Grid */}
-            {loading && !searchError && (
-              <div className="space-y-8">
-                {/* Loading Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-                </div>
-
-                {/* Skeleton Grid */}
-                <div
-                  className={`grid gap-6 ${
-                    viewMode === 'grid'
-                      ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                      : 'grid-cols-1'
-                  }`}
-                >
-                  {activeTab === 'profiles' ? (
-                    // Show profile skeletons
-                    Array.from({ length: 6 }).map((_, index) => (
-                      <ProfileCardSkeleton key={index} viewMode={viewMode} />
-                    ))
-                  ) : activeTab === 'projects' ? (
-                    // Show project skeletons
-                    Array.from({ length: 6 }).map((_, index) => (
-                      <ProjectCardSkeleton key={index} />
-                    ))
-                  ) : (
-                    // All tab - show mix of both
-                    <>
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <ProjectCardSkeleton key={`project-${index}`} />
-                      ))}
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <ProfileCardSkeleton key={`profile-${index}`} viewMode={viewMode} />
-                      ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Empty State - Consolidated */}
-            {!loading && !searchError && 
+            {/* Empty State */}
+            {!loading && !loansLoading && !searchError &&
              ((activeTab === 'projects' && projects.length === 0) ||
               (activeTab === 'profiles' && profiles.length === 0) ||
-              (activeTab === 'all' && projects.length === 0 && profiles.length === 0)) ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-                className="text-center py-16"
-              >
-                {!searchTerm && selectedCategories.length === 0 ? (
-                  // No filters - show full CTA
-                  <div className="bg-gradient-to-r from-orange-50 via-tiffany-50 to-orange-50 rounded-2xl border border-orange-200 p-8 text-center max-w-2xl mx-auto">
-                    <div className="w-16 h-16 bg-gradient-to-r from-orange-100 to-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      {activeTab === 'profiles' ? (
-                        <Users className="w-8 h-8 text-orange-600" />
-                      ) : (
-                        <Target className="w-8 h-8 text-orange-600" />
-                      )}
-                    </div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                      {activeTab === 'profiles' 
-                        ? 'No People Found' 
-                        : 'Be the First to Launch'}
-                    </h3>
-                    <p className="text-lg text-gray-600 mb-6 leading-relaxed">
-                      {activeTab === 'profiles' 
-                        ? 'No profiles match your search criteria. Try adjusting your filters or browse all people.'
-                        : 'No projects here yet—which means you could be the first! Whether you\'re funding a creative project, community initiative, or passion project, this is your chance to lead the way.'}
-                    </p>
+              (activeTab === 'loans' && loans.length === 0) ||
+              (activeTab === 'all' && projects.length === 0 && profiles.length === 0 && loans.length === 0)) && (
+              <DiscoverEmptyState
+                activeTab={activeTab}
+                hasFilters={!!(searchTerm || selectedCategories.length > 0)}
+                onClearFilters={clearFilters}
+              />
+            )}
 
-                    {activeTab !== 'profiles' && (
-                      <>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                          <div className="p-4 bg-white/60 rounded-lg">
-                            <div className="text-2xl font-bold text-orange-600 mb-1">1</div>
-                            <div className="text-sm font-medium">Create</div>
-                            <div className="text-xs text-gray-600">Set up your project page</div>
-                          </div>
-                          <div className="p-4 bg-white/60 rounded-lg">
-                            <div className="text-2xl font-bold text-tiffany-600 mb-1">2</div>
-                            <div className="text-sm font-medium">Share</div>
-                            <div className="text-xs text-gray-600">Tell your story and set a goal</div>
-                          </div>
-                          <div className="p-4 bg-white/60 rounded-lg">
-                            <div className="text-2xl font-bold text-green-600 mb-1">3</div>
-                            <div className="text-sm font-medium">Receive</div>
-                            <div className="text-xs text-gray-600">Accept Bitcoin donations</div>
-                          </div>
-                        </div>
-
-                        <Button
-                          href="/projects/create"
-                          size="lg"
-                          className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 mb-4"
-                        >
-                          Launch Your Project
-                        </Button>
-
-                        <p className="text-sm text-gray-500">
-                          Already have an account?{' '}
-                          <a href="/auth" className="text-orange-600 hover:underline font-medium">
-                            Sign in
-                          </a>{' '}
-                          to get started.
-                        </p>
-                      </>
-                    )}
-                  </div>
-                ) : (
-                  // Has filters - show filtered empty state
-                  <div className="max-w-md mx-auto">
-                    {activeTab === 'profiles' ? (
-                      <Users className="w-16 h-16 text-orange-300 mx-auto mb-4" />
-                    ) : (
-                      <Target className="w-16 h-16 text-orange-300 mx-auto mb-4" />
-                    )}
-                    <h3 className="text-xl font-semibold text-gray-900 mb-2">No matches found</h3>
-                    <p className="text-gray-600 mb-8">
-                      {activeTab === 'profiles' 
-                        ? 'Try different filters or browse all people to discover someone new.'
-                        : 'Try different filters or browse all projects to discover something new.'}
-                    </p>
-                    <div className="space-y-3">
-                      <Button onClick={clearFilters} variant="outline" className="px-6 py-2">
-                        Clear Filters
-                      </Button>
-                      {activeTab !== 'profiles' && (
-                        <Button
-                          href="/projects/create"
-                          className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
-                        >
-                          Or launch your own project →
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            ) : (
-              <>
-                {/* Results Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {totalResults > 0 ? (
-                      <>
-                        {totalResults} result{totalResults !== 1 ? 's' : ''} found
-                        {(projects.length + profiles.length) < totalResults && (
-                          <span className="text-gray-500 text-lg font-normal ml-2">
-                            (showing {projects.length + profiles.length})
-                          </span>
-                        )}
-                      </>
-                    ) : (
-                      'No results found'
-                    )}
-                  </h2>
-                </div>
-
-                {/* Tab-Specific Content */}
-                {activeTab === 'all' ? (
-                  // ALL TAB: Separated sections for projects and profiles
-                  <div className="space-y-8">
-                    {/* Projects Section */}
-                    {projects.length > 0 && (
-                      <ResultsSection
-                        title="Projects"
-                        count={projects.length}
-                        icon={<Target className="w-5 h-5" />}
-                        onViewAll={() => handleTabChange('projects')}
-                        showViewAll={profiles.length > 0}
-                        viewAllLabel="View All Projects"
-                      >
-                        <div
-                          className={`grid gap-6 ${
-                            viewMode === 'grid'
-                              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                              : 'grid-cols-1'
-                          }`}
-                        >
-                          {projects.slice(0, 6).map((project, index) => (
-                            <motion.div
-                              key={project.id}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.4, delay: index * 0.05 }}
-                            >
-                              <ModernProjectCard project={project} viewMode={viewMode} />
-                            </motion.div>
-                          ))}
-                        </div>
-                      </ResultsSection>
-                    )}
-
-                    {/* People Section */}
-                    {profiles.length > 0 && (
-                      <ResultsSection
-                        title="People"
-                        count={profiles.length}
-                        icon={<Users className="w-5 h-5" />}
-                        onViewAll={() => handleTabChange('profiles')}
-                        showViewAll={projects.length > 0}
-                        viewAllLabel="View All People"
-                      >
-                        <div
-                          className={`grid gap-6 ${
-                            viewMode === 'grid'
-                              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                              : 'grid-cols-1'
-                          }`}
-                        >
-                          {profiles.slice(0, 6).map((profile, index) => (
-                            <motion.div
-                              key={profile.id}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.4, delay: index * 0.05 }}
-                            >
-                              <ProfileCard profile={profile} viewMode={viewMode} />
-                            </motion.div>
-                          ))}
-                        </div>
-                      </ResultsSection>
-                    )}
-                  </div>
-                ) : activeTab === 'projects' ? (
-                  // PROJECTS TAB: Only projects
-                  <>
-                    <div
-                      className={`grid gap-6 ${
-                        viewMode === 'grid'
-                          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                          : 'grid-cols-1'
-                      }`}
-                    >
-                      {projects.map((project, index) => (
-                        <motion.div
-                          key={project.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: index * 0.05 }}
-                        >
-                          <ModernProjectCard project={project} viewMode={viewMode} />
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Load More for Projects */}
-                    {hasMore && (
-                      <div className="mt-8 flex justify-center">
-                        <Button
-                          onClick={handleLoadMore}
-                          disabled={isLoadingMore}
-                          variant="outline"
-                          size="lg"
-                          className="min-w-[200px]"
-                        >
-                          {isLoadingMore ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Loading...
-                            </>
-                          ) : (
-                            <>
-                              Load More Projects
-                              <ArrowUpDown className="w-4 h-4 ml-2" />
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  // PEOPLE TAB: Only profiles
-                  <>
-                    <div
-                      className={`grid gap-6 ${
-                        viewMode === 'grid'
-                          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-                          : 'grid-cols-1'
-                      }`}
-                    >
-                      {profiles.map((profile, index) => (
-                        <motion.div
-                          key={profile.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4, delay: index * 0.05 }}
-                        >
-                          <ProfileCard profile={profile} viewMode={viewMode} />
-                        </motion.div>
-                      ))}
-                    </div>
-
-                    {/* Load More for People */}
-                    {hasMore && (
-                      <div className="mt-8 flex justify-center">
-                        <Button
-                          onClick={handleLoadMore}
-                          disabled={isLoadingMore}
-                          variant="outline"
-                          size="lg"
-                          className="min-w-[200px]"
-                        >
-                          {isLoadingMore ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Loading...
-                            </>
-                          ) : (
-                            <>
-                              Load More People
-                              <ArrowUpDown className="w-4 h-4 ml-2" />
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </>
+            {/* Results */}
+            {!loading && !loansLoading && !searchError &&
+             !((activeTab === 'projects' && projects.length === 0) ||
+               (activeTab === 'profiles' && profiles.length === 0) ||
+               (activeTab === 'loans' && loans.length === 0) ||
+               (activeTab === 'all' && projects.length === 0 && profiles.length === 0 && loans.length === 0)) && (
+              <DiscoverResults
+                activeTab={activeTab}
+                viewMode={viewMode}
+                projects={projects}
+                profiles={profiles}
+                loans={loans}
+                totalResults={totalResults + loans.length}
+                loading={loading || loansLoading}
+                hasMore={hasMore}
+                isLoadingMore={isLoadingMore}
+                onLoadMore={handleLoadMore}
+                onTabChange={handleTabChange}
+              />
             )}
             </div>
           </div>

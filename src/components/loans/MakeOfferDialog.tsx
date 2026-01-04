@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -110,7 +111,7 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
         toast.error(result.error || 'Failed to submit offer');
       }
     } catch (error) {
-      console.error('Failed to submit offer:', error);
+      logger.error('Failed to submit offer:', error);
       toast.error('Failed to submit offer');
     } finally {
       setLoading(false);

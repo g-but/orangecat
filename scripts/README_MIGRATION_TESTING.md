@@ -4,7 +4,9 @@
 
 Comprehensive testing environment for Supabase migrations with isolated databases, data integrity validation, and performance analysis.
 
-## 🚀 Quick Start
+> Important: OrangeCat uses remote-only Supabase. Do not run `supabase start` or any local DB. This document describes a legacy local testing approach and is kept for historical context only.
+
+## 🚀 Quick Start (Legacy)
 
 ### 1. Setup Testing Environment
 
@@ -12,13 +14,13 @@ Comprehensive testing environment for Supabase migrations with isolated database
 node scripts/migration-testing-env.js setup
 ```
 
-### 2. Start Supabase Local
+### 2. Start Supabase Local (do not use in OrangeCat)
 
 ```bash
 npx supabase start
 ```
 
-### 3. Test a Migration
+### 3. Test a Migration (legacy flow)
 
 ```bash
 node scripts/migration-testing-env.js supabase/migrations/20251113000001_timeline_social_features.sql
@@ -336,3 +338,5 @@ npm run test:e2e -- --migration=20251113000001_timeline_social_features.sql
 ---
 
 **Remember:** Test migrations thoroughly to prevent production disasters! 🛡️
+
+

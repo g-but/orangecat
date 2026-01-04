@@ -11,36 +11,40 @@
  * @module api/messages/open
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   openOrCreateConversation,
-  RATE_LIMIT_CONFIGS,
   enforceRateLimit,
   getRateLimitHeaders,
   VALIDATION,
 } from '@/features/messaging/lib';
+import {
+  apiSuccess,
+  apiValidationError,
+  apiRateLimited,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
 
-export async function POST(req: NextRequest) {
+export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    // Authenticate user
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user } = req;
 
     // Rate limiting
     const rateLimitResult = enforceRateLimit('CONVERSATION_CREATE', user.id);
     if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { error: 'Rate limit exceeded. Please wait before creating more conversations.' },
-        { status: 429, headers: getRateLimitHeaders(rateLimitResult) }
+      const retryAfter = rateLimitResult.retryAfterMs
+        ? Math.ceil(rateLimitResult.retryAfterMs / 1000)
+        : undefined;
+      const response = apiRateLimited(
+        'Rate limit exceeded. Please wait before creating more conversations.',
+        retryAfter
       );
+      const headers = getRateLimitHeaders(rateLimitResult);
+      Object.entries(headers).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+      return response;
     }
 
     // Parse request body
@@ -50,18 +54,12 @@ export async function POST(req: NextRequest) {
 
     // Validate participant count
     if (rawParticipantIds.length > VALIDATION.MAX_PARTICIPANTS) {
-      return NextResponse.json(
-        { error: `Maximum ${VALIDATION.MAX_PARTICIPANTS} participants allowed` },
-        { status: 400 }
-      );
+      return apiValidationError(`Maximum ${VALIDATION.MAX_PARTICIPANTS} participants allowed`);
     }
 
     // Validate title length
     if (title && title.length > VALIDATION.TITLE_MAX_LENGTH) {
-      return NextResponse.json(
-        { error: `Title must be less than ${VALIDATION.TITLE_MAX_LENGTH} characters` },
-        { status: 400 }
-      );
+      return apiValidationError(`Title must be less than ${VALIDATION.TITLE_MAX_LENGTH} characters`);
     }
 
     // Filter to valid string IDs
@@ -72,17 +70,20 @@ export async function POST(req: NextRequest) {
     // Open or create conversation
     const result = await openOrCreateConversation(user.id, validParticipantIds, title);
 
-    return NextResponse.json(
-      {
-        success: true,
-        conversationId: result.conversationId,
-        isExisting: result.isExisting,
-      },
-      { headers: getRateLimitHeaders(rateLimitResult) }
-    );
+    const response = apiSuccess({
+      conversationId: result.conversationId,
+      isExisting: result.isExisting,
+    });
+    
+    // Add rate limit headers
+    const headers = getRateLimitHeaders(rateLimitResult);
+    Object.entries(headers).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    
+    return response;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error('[api/messages/open] Error:', message);
-    return NextResponse.json({ error: 'Internal server error', details: message }, { status: 500 });
+    logger.error('Open conversation error', { error, userId: req.user.id }, 'Messages');
+    return handleApiError(error);
   }
-}
+});

@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/utils/logger';
 import { createServerClient } from '@/lib/supabase/server';
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('=== DEBUG AUTH GET ===');
-    console.log('Request headers:', Object.fromEntries(request.headers.entries()));
+    logger.info('=== DEBUG AUTH GET ===');
+    logger.info('Request headers:', Object.fromEntries(request.headers.entries()));
 
     const supabase = await createServerClient();
-    console.log('Supabase client created');
+    logger.info('Supabase client created');
 
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    console.log('User:', user);
-    console.log('Auth error:', authError);
+    logger.info('User:', user);
+    logger.info('Auth error:', authError);
 
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
-    console.log('Session:', session);
-    console.log('Session error:', sessionError);
+    logger.info('Session:', session);
+    logger.info('Session error:', sessionError);
 
     return NextResponse.json({
       user: user ? { id: user.id, email: user.email } : null,
@@ -31,32 +32,32 @@ export async function GET(request: NextRequest) {
       hasUser: !!user,
     });
   } catch (error) {
-    console.error('Debug auth error:', error);
+    logger.error('Debug auth error:', error);
     return NextResponse.json({ error: 'Debug failed' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== DEBUG AUTH POST ===');
-    console.log('Request headers:', Object.fromEntries(request.headers.entries()));
+    logger.info('=== DEBUG AUTH POST ===');
+    logger.info('Request headers:', Object.fromEntries(request.headers.entries()));
 
     const supabase = await createServerClient();
-    console.log('Supabase client created');
+    logger.info('Supabase client created');
 
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    console.log('User:', user);
-    console.log('Auth error:', authError);
+    logger.info('User:', user);
+    logger.info('Auth error:', authError);
 
     const {
       data: { session },
       error: sessionError,
     } = await supabase.auth.getSession();
-    console.log('Session:', session);
-    console.log('Session error:', sessionError);
+    logger.info('Session:', session);
+    logger.info('Session error:', sessionError);
 
     return NextResponse.json({
       user: user ? { id: user.id, email: user.email } : null,
@@ -66,7 +67,9 @@ export async function POST(request: NextRequest) {
       hasUser: !!user,
     });
   } catch (error) {
-    console.error('Debug auth error:', error);
+    logger.error('Debug auth error:', error);
     return NextResponse.json({ error: 'Debug failed' }, { status: 500 });
   }
 }
+
+

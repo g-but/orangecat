@@ -94,3 +94,6 @@ There are some TypeScript errors related to Supabase type inference that don't a
 ```bash
 npx supabase gen types typescript --project-id ohkueislstxomdjavyhs > src/types/database.ts
 ```
+
+
+

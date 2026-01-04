@@ -4,6 +4,7 @@ import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
+import { getTableName } from '@/config/entity-registry';
 
 export async function GET(
   request: NextRequest,
@@ -28,7 +29,7 @@ export async function GET(
     // Get user's projects (simplified MVP - no organizations)
     // Exclude draft projects from public profiles - drafts should only show in dashboards
     const { data: projects, error: projectsError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select(
         `
         id,

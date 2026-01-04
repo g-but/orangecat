@@ -25,7 +25,7 @@ export const ROUTE_CONTEXTS = {
     '/loans',
     '/messages',
     '/timeline',
-    '/circles',
+    '/groups',
     '/funding',
     '/post',
     '/project',
@@ -203,3 +203,7 @@ export function isPublicRoute(pathname: string): boolean {
   const context = getRouteContext(pathname);
   return context === 'public' || context === 'universal' || context === 'auth';
 }
+
+
+
+

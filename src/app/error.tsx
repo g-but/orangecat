@@ -1,5 +1,7 @@
 'use client';
 
+import { logger } from '@/utils/logger';
+
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -16,7 +18,7 @@ export default function Error({
 
   useEffect(() => {
     // Log the error to console for debugging
-    console.error('Application error:', error);
+    logger.error('Application error:', error);
   }, [error]);
 
   // Check if it's an authentication error

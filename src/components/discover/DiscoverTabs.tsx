@@ -1,15 +1,16 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Target, Users, Grid3X3 } from 'lucide-react';
+import { Target, Users, Grid3X3, DollarSign } from 'lucide-react';
 
-export type DiscoverTabType = 'all' | 'projects' | 'profiles';
+export type DiscoverTabType = 'all' | 'projects' | 'profiles' | 'loans';
 
 interface DiscoverTabsProps {
   activeTab: DiscoverTabType;
   onTabChange: (tab: DiscoverTabType) => void;
   projectCount: number;
   profileCount: number;
+  loanCount?: number;
   loading?: boolean;
 }
 
@@ -17,7 +18,7 @@ interface TabConfig {
   id: DiscoverTabType;
   label: string;
   icon: React.ReactNode;
-  getCount: (projectCount: number, profileCount: number) => number;
+  getCount: (projectCount: number, profileCount: number, loanCount: number) => number;
 }
 
 const tabs: TabConfig[] = [
@@ -25,7 +26,7 @@ const tabs: TabConfig[] = [
     id: 'all',
     label: 'All',
     icon: <Grid3X3 className="w-4 h-4" />,
-    getCount: (p, pr) => p + pr,
+    getCount: (p, pr, l) => p + pr + l,
   },
   {
     id: 'projects',
@@ -39,6 +40,12 @@ const tabs: TabConfig[] = [
     icon: <Users className="w-4 h-4" />,
     getCount: (_, pr) => pr,
   },
+  {
+    id: 'loans',
+    label: 'Loans',
+    icon: <DollarSign className="w-4 h-4" />,
+    getCount: (_, __, l) => l,
+  },
 ];
 
 export default function DiscoverTabs({
@@ -46,6 +53,7 @@ export default function DiscoverTabs({
   onTabChange,
   projectCount,
   profileCount,
+  loanCount = 0,
   loading = false,
 }: DiscoverTabsProps) {
   return (
@@ -53,7 +61,7 @@ export default function DiscoverTabs({
       <nav className="-mb-px flex space-x-8 px-6 pt-4" aria-label="Tabs">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
-          const count = tab.getCount(projectCount, profileCount);
+          const count = tab.getCount(projectCount, profileCount, loanCount);
 
           return (
             <button

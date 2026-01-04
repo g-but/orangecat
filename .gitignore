@@ -13,6 +13,7 @@
 *.lcov
 test-results/
 test-screenshots/
+browser-screenshots/
 playwright-report/
 playwright/.cache/
 .playwright-mcp/
@@ -61,6 +62,9 @@ lerna-debug.log*
 .idea/
 .vscode/
 .claude/
+.cursor/
+.agents/
+# Note: .ai-guides/ moved to docs/guides/ai/ for better visibility
 *.swp
 *.swo
 *~

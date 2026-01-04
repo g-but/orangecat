@@ -1,6 +1,17 @@
 import { NextRequest } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
+import { z } from 'zod';
+import { compose } from '@/lib/api/compose';
+import { withRequestId } from '@/lib/api/withRequestId';
+import { withRateLimit } from '@/lib/api/withRateLimit';
+import { withZodBody } from '@/lib/api/withZod';
+import {
+  apiSuccess,
+  apiValidationError,
+  apiRateLimited,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
 
 // Initialize Gemini AI with API key
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -8,28 +19,20 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 // Use the cheapest model: Gemini 2.0 Flash-Lite
 const MODEL_NAME = 'gemini-2.0-flash-lite';
 
+// Validation schema
+const chatRequestSchema = z.object({
+  message: z.string().min(1, 'Message is required').max(10000, 'Message too long (max 10,000 characters)'),
+  systemPrompt: z.string().max(5000).optional(),
+});
+
 // POST /api/chat - Send a message to the LLM and get response
-export async function POST(request: NextRequest) {
-  // Rate limiting: Use existing rate limiter with custom key for stricter LLM limits
-  // Note: In production, consider creating a dedicated rate limiter for expensive operations
-  const rateLimitResult = rateLimit(request);
-  if (!rateLimitResult.success) {
-    return createRateLimitResponse(rateLimitResult);
-  }
-
+export const POST = compose(
+  withRequestId(),
+  withRateLimit('read'), // LLM calls are expensive, use read rate limit
+  withZodBody(chatRequestSchema)
+)(async (request: NextRequest, ctx) => {
   try {
-    // Parse the request body
-    const body = await request.json();
-    const { message, systemPrompt } = body;
-
-    // Validate input
-    if (!message || typeof message !== 'string') {
-      return Response.json({ error: 'Message is required and must be a string' }, { status: 400 });
-    }
-
-    if (message.length > 10000) {
-      return Response.json({ error: 'Message too long (max 10,000 characters)' }, { status: 400 });
-    }
+    const { message, systemPrompt } = ctx.body;
 
     // Get the model
     const model = genAI.getGenerativeModel({
@@ -57,41 +60,44 @@ export async function POST(request: NextRequest) {
 
     // Check if response was blocked
     if (!text || text.trim().length === 0) {
-      return Response.json({ error: 'No response generated' }, { status: 500 });
+      logger.error('Chat API: No response generated', {}, 'Chat');
+      return handleApiError(new Error('No response generated'));
     }
 
     // Return the response
-    return Response.json({
+    return apiSuccess({
       message: text.trim(),
       model: MODEL_NAME,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error('Chat API error:', error);
+    logger.error('Chat API error', { error }, 'Chat');
 
     // Handle specific Gemini API errors
     if (error instanceof Error) {
       if (error.message.includes('API_KEY_INVALID')) {
-        return Response.json({ error: 'Invalid API key' }, { status: 401 });
+        return handleApiError(new Error('Invalid API key'));
       }
 
       if (error.message.includes('QUOTA_EXCEEDED')) {
-        return Response.json({ error: 'API quota exceeded' }, { status: 429 });
+        return apiRateLimited('API quota exceeded');
       }
 
       if (error.message.includes('SAFETY')) {
-        return Response.json({ error: 'Content blocked by safety filters' }, { status: 400 });
+        return apiValidationError('Content blocked by safety filters');
       }
     }
 
-    // Generic error
-    return Response.json({ error: 'Failed to generate response' }, { status: 500 });
+    return handleApiError(error);
   }
-}
+});
 
 // GET /api/chat - Health check for the chat endpoint
-export async function GET() {
-  return Response.json({
+export const GET = compose(
+  withRequestId(),
+  withRateLimit('read')
+)(async () => {
+  return apiSuccess({
     status: 'healthy',
     model: MODEL_NAME,
     provider: 'Google Gemini',
@@ -101,4 +107,5 @@ export async function GET() {
     },
     timestamp: new Date().toISOString(),
   });
-}
+});
+

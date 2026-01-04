@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
-import { apiSuccess, apiNotFound, apiInternalError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiNotFound, apiInternalError, handleApiError } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
@@ -29,7 +28,7 @@ async function handleToggleFavorite(
 
     // Verify project exists
     const { data: project, error: projectError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('id, user_id, title')
       .eq('id', projectId)
       .single();
@@ -127,10 +126,10 @@ async function handleToggleFavorite(
       });
     }
 
-    return NextResponse.json({ error: 'Method not allowed' }, { status: 405 });
+    return apiInternalError('Method not allowed');
   } catch (error) {
-    logger.error('Unexpected error in favorite toggle', { error });
-    return apiInternalError('Internal server error');
+    logger.error('Unexpected error in favorite toggle', { error, userId: request.user.id }, 'Projects');
+    return handleApiError(error);
   }
 }
 
@@ -172,8 +171,8 @@ async function handleGetFavoriteStatus(
 
     return apiSuccess({ isFavorited: !!favorite });
   } catch (error) {
-    logger.error('Unexpected error checking favorite status', { error });
-    return apiInternalError('Internal server error');
+    logger.error('Unexpected error checking favorite status', { error, userId: request.user.id }, 'Projects');
+    return handleApiError(error);
   }
 }
 

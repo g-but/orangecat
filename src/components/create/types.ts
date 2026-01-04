@@ -16,9 +16,9 @@
  * Last Modified Summary: Added unified template types and improved documentation
  */
 
-import { ReactNode } from 'react';
+import { ReactNode, ComponentType } from 'react';
 import { LucideIcon } from 'lucide-react';
-import { ZodSchema } from 'zod';
+import { ZodType, ZodTypeDef } from 'zod';
 
 // ==================== FIELD TYPES ====================
 
@@ -29,6 +29,7 @@ export type FieldInputType =
   | 'select'
   | 'radio'
   | 'checkbox'
+  | 'boolean'
   | 'date'
   | 'url'
   | 'email'
@@ -62,6 +63,8 @@ export interface FieldConfig {
   min?: number;
   /** Max value for number fields */
   max?: number;
+  /** Step value for number fields */
+  step?: number;
   /** Number of rows for textarea */
   rows?: number;
   /** Conditional visibility based on other fields */
@@ -69,6 +72,13 @@ export interface FieldConfig {
     field: string;
     value: string | string[] | boolean;
   };
+  /** Field depends on another field's value */
+  dependsOn?: string | {
+    field: string;
+    value?: string | string[] | boolean;
+  };
+  /** Default value for the field */
+  defaultValue?: unknown;
   /** Field grouping */
   group?: string;
   /** Column span (1 or 2 for grid layout) */
@@ -83,7 +93,18 @@ export interface FieldGroup {
   /** Group description */
   description?: string;
   /** Fields in this group */
-  fields: FieldConfig[];
+  fields?: FieldConfig[];
+  /** Custom component to render instead of fields (for complex components like collateral) */
+  customComponent?: ComponentType<{
+    formData: Record<string, any>;
+    onFieldChange: (field: string, value: any) => void;
+    disabled?: boolean;
+  }>;
+  /** Conditional display based on another field's value */
+  conditionalOn?: {
+    field: string;
+    value: string | string[];
+  };
 }
 
 // ==================== GUIDANCE TYPES ====================
@@ -119,7 +140,7 @@ export interface DefaultGuidance {
 
 export interface EntityConfig<T extends Record<string, any> = Record<string, any>> {
   /** Entity type identifier */
-  type: 'product' | 'service' | 'cause' | 'loan' | 'circle' | 'project' | 'asset' | 'organization';
+  type: 'product' | 'service' | 'cause' | 'loan' | 'circle' | 'project' | 'asset' | 'organization' | 'ai_assistant' | 'event';
   /** Display name (singular) */
   name: string;
   /** Display name (plural) */
@@ -144,8 +165,8 @@ export interface EntityConfig<T extends Record<string, any> = Record<string, any
   formDescription: string;
   /** Field groups */
   fieldGroups: FieldGroup[];
-  /** Zod validation schema */
-  validationSchema: ZodSchema<T>;
+  /** Zod validation schema - uses ZodType for flexibility with defaults/transforms */
+  validationSchema: ZodType<T, ZodTypeDef, unknown>;
   /** Default form values */
   defaultValues: T;
   /** Field-specific guidance content */
@@ -158,6 +179,12 @@ export interface EntityConfig<T extends Record<string, any> = Record<string, any
     content: string;
     variant: 'info' | 'warning' | 'success';
   };
+  /** Optional templates for quick-start */
+  templates?: EntityTemplate<T>[] | unknown[];
+  /** Optional success message after creation */
+  successMessage?: string;
+  /** Optional delay before redirecting after success (ms) */
+  successRedirectDelay?: number;
 }
 
 // ==================== FORM STATE ====================

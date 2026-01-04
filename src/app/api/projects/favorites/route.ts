@@ -3,6 +3,7 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { getTableName } from '@/config/entity-registry';
 
 /**
  * Get user's favorited projects
@@ -35,7 +36,7 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     // Get full project data for favorited projects
     const projectIds = favorites.map(f => f.project_id);
     const { data: projects, error: projectsError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select(
         `
         id,

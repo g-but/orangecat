@@ -223,8 +223,8 @@ export default async function PublicProfilePage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
       />
       <ProfilePageClient
-        profile={profile as any}
-        projects={(projects || []) as any}
+        profile={profile}
+        projects={projects || []}
         stats={{
           projectCount,
           totalRaised,

@@ -1,5 +1,45 @@
-let promClient: any = null
-let registry: any = null
+// Type definitions for prom-client (dynamically imported)
+interface PromClient {
+  Registry: new () => Registry;
+  Counter: new (config: CounterConfig) => Counter;
+  Histogram: new (config: HistogramConfig) => Histogram;
+  collectDefaultMetrics: (options: { register: Registry }) => void;
+}
+
+interface Registry {
+  registerMetric(metric: Counter | Histogram): void;
+}
+
+interface Counter {
+  inc(labels: Record<string, string>, value?: number): void;
+}
+
+interface Histogram {
+  observe(labels: Record<string, string>, value: number): void;
+}
+
+interface CounterConfig {
+  name: string;
+  help: string;
+  labelNames: string[];
+}
+
+interface HistogramConfig {
+  name: string;
+  help: string;
+  labelNames: string[];
+  buckets: number[];
+}
+
+interface MetricsStore {
+  prom: PromClient;
+  registry: Registry;
+  httpRequestsTotal: Counter;
+  httpRequestDuration: Histogram;
+}
+
+let promClient: PromClient | null = null
+let registry: Registry | null = null
 let initialized = false
 
 // Lazily initialize prom-client and default metrics
@@ -12,8 +52,8 @@ export async function getMetricsRegistry() {
   try {
     // Dynamic import via variable to avoid static resolution at build time
     const moduleName = 'prom-client'
-    // @ts-ignore - dynamic spec prevents bundler static resolution
-    promClient = await import(moduleName)
+    // Type assertion needed because dynamic import with variable doesn't preserve types
+    promClient = await import(moduleName) as unknown as PromClient
     registry = new promClient.Registry()
     promClient.collectDefaultMetrics({ register: registry })
 
@@ -33,8 +73,9 @@ export async function getMetricsRegistry() {
     registry.registerMetric(httpRequestsTotal)
     registry.registerMetric(httpRequestDuration)
 
-    // Export for use
-    (globalThis as any).__oc_metrics = { prom: promClient, registry, httpRequestsTotal, httpRequestDuration }
+    // Export for use - extend globalThis with our metrics store type
+    const metricsStore: MetricsStore = { prom: promClient, registry, httpRequestsTotal, httpRequestDuration }
+    ;(globalThis as typeof globalThis & { __oc_metrics?: MetricsStore }).__oc_metrics = metricsStore
     initialized = true
     return { prom: promClient, registry }
   } catch (e) {
@@ -45,8 +86,9 @@ export async function getMetricsRegistry() {
 }
 
 export async function recordHttpMetrics(params: { method: string; route: string; status: number; durationMs: number }) {
-  if (!(globalThis as any).__oc_metrics) {return}
-  const { httpRequestsTotal, httpRequestDuration } = (globalThis as any).__oc_metrics
+  const metricsStore = (globalThis as typeof globalThis & { __oc_metrics?: MetricsStore }).__oc_metrics
+  if (!metricsStore) {return}
+  const { httpRequestsTotal, httpRequestDuration } = metricsStore
   const labels = { method: params.method, route: params.route, status: String(params.status) }
   try {
     httpRequestsTotal.inc(labels, 1)

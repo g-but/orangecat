@@ -194,3 +194,6 @@ interface MessageBubbleProps {
 - `src/components/messaging/MessagePanel.tsx`
 - `src/app/api/messages/[messageId]/route.ts`
 - `src/components/messaging/index.ts`
+
+
+

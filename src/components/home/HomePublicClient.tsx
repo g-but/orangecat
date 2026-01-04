@@ -3,7 +3,6 @@
 import dynamic from 'next/dynamic';
 import { Suspense } from 'react';
 import HeroSection from '@/components/home/sections/HeroSection';
-import ExperimentalBanner from '@/components/ui/ExperimentalBanner';
 
 // Lazy load non-critical sections
 // Hero loads immediately for good FCP, rest loads as user scrolls
@@ -38,9 +37,6 @@ const TrustSection = dynamic(() => import('@/components/home/sections/TrustSecti
 export default function HomePublicClient() {
   return (
     <div className="min-h-screen">
-      {/* Experimental Version Notice */}
-      <ExperimentalBanner storageType="local" />
-
       {/* Hero Section - Above the fold, loads immediately */}
       <HeroSection />
 

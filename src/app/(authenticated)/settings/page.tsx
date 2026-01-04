@@ -4,23 +4,25 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { createBrowserClient } from '@supabase/ssr'
-import { PasswordFormData } from '@/types/database'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import Loading from '@/components/Loading'
 import { toast } from 'sonner'
-import { 
-  Eye, 
-  EyeOff, 
-  Trash2, 
-  AlertTriangle, 
-  Mail, 
-  Lock, 
+import {
+  Eye,
+  EyeOff,
+  Trash2,
+  AlertTriangle,
+  Mail,
+  Lock,
   ArrowLeft
 } from 'lucide-react'
 
-interface SettingsFormData extends PasswordFormData {
+interface SettingsFormData {
   email: string;
+  currentPassword: string;
+  newPassword: string;
+  confirmPassword: string;
 }
 
 export default function SettingsPage() {

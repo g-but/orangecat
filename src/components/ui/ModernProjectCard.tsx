@@ -13,8 +13,15 @@ import { useAuth } from '@/hooks/useAuth';
 import { getUniqueCategories } from '@/utils/project';
 import { ROUTES } from '@/lib/routes';
 
+// Extended project type that includes all possible fields
+interface ExtendedProject extends SearchFundingPage {
+  currency?: string;
+  tags?: string[] | null;
+  cover_image_url?: string | null;
+}
+
 interface ModernProjectCardProps {
-  project: SearchFundingPage;
+  project: ExtendedProject;
   viewMode?: 'grid' | 'list';
   className?: string;
 }
@@ -89,7 +96,7 @@ export default function ModernProjectCard({
   const goalAmount = project.goal_amount ?? 0;
   const currentAmount = project.raised_amount ?? 0;
   // Get currency from project, default to CHF if not set (more likely for new projects)
-  const projectCurrency = (project as any).currency || project.currency || 'CHF';
+  const projectCurrency = project.currency || 'CHF';
   const showProgress = goalAmount > 0;
   const progressPercentage = showProgress ? Math.min((currentAmount / goalAmount) * 100, 100) : 0;
 
@@ -106,10 +113,10 @@ export default function ModernProjectCard({
     () =>
       getUniqueCategories(
         project.category,
-        (project as any).tags,
+        project.tags || null,
         { limit: 10 } // Allow more categories for display
       ),
-    [project.category, (project as any).tags]
+    [project.category, project.tags]
   );
 
   const ownerName = useMemo(() => {
@@ -208,18 +215,18 @@ export default function ModernProjectCard({
   // Image fallback chain: project image → creator avatar → gradient placeholder
   const getProjectImageUrl = () => {
     // Check cover_image_url first (the actual database column)
-    const coverImage = (project as any).cover_image_url;
+    const coverImage = project.cover_image_url;
     if (coverImage && typeof coverImage === 'string' && coverImage.trim() !== '') {
       return coverImage;
     }
 
     // Then check mapped fields (banner_url/featured_image_url are mapped from cover_image_url for compatibility)
-    const bannerUrl = (project as any).banner_url;
+    const bannerUrl = project.banner_url;
     if (bannerUrl && typeof bannerUrl === 'string' && bannerUrl.trim() !== '') {
       return bannerUrl;
     }
 
-    const featuredImageUrl = (project as any).featured_image_url;
+    const featuredImageUrl = project.featured_image_url;
     if (featuredImageUrl && typeof featuredImageUrl === 'string' && featuredImageUrl.trim() !== '') {
       return featuredImageUrl;
     }
@@ -235,9 +242,9 @@ export default function ModernProjectCard({
 
   const projectImageUrl = getProjectImageUrl();
   // Check if we're using creator avatar as fallback (no project image but have creator avatar)
-  const coverImage = (project as any).cover_image_url;
-  const bannerUrl = (project as any).banner_url;
-  const featuredImageUrl = (project as any).featured_image_url;
+  const coverImage = project.cover_image_url;
+  const bannerUrl = project.banner_url;
+  const featuredImageUrl = project.featured_image_url;
   const hasProjectImage = 
     (coverImage && typeof coverImage === 'string' && coverImage.trim() !== '') ||
     (bannerUrl && typeof bannerUrl === 'string' && bannerUrl.trim() !== '') ||

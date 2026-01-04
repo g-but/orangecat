@@ -15,6 +15,9 @@ const ProjectSummaryRail = dynamic(() => import('@/components/project/ProjectSum
 const ProjectHeader = dynamic(() => import('@/components/project/ProjectHeader'));
 const ProjectContent = dynamic(() => import('@/components/project/ProjectContent'));
 const ProjectTimeline = dynamic(() => import('@/components/project/ProjectTimeline'));
+const ProjectSupportButton = dynamic(() => import('@/components/projects/ProjectSupportButton').then(m => ({ default: m.ProjectSupportButton })));
+const WallOfSupport = dynamic(() => import('@/components/projects/WallOfSupport').then(m => ({ default: m.WallOfSupport })));
+const SupportStats = dynamic(() => import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats })));
 
 interface Project {
   id: string;
@@ -33,6 +36,11 @@ interface Project {
   raised_amount: number | null;
   created_at: string;
   updated_at: string;
+  // Extended fields that may be present
+  bitcoin_balance_btc?: number | null;
+  bitcoin_balance_updated_at?: string | null;
+  supporters_count?: number | null;
+  last_donation_at?: string | null;
   profiles?: {
     username: string | null;
     name: string | null;
@@ -169,10 +177,10 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
                 goal_amount: project.goal_amount,
                 currency: project.currency,
                 bitcoin_address: project.bitcoin_address,
-                bitcoin_balance_btc: (project as any).bitcoin_balance_btc || 0,
-                bitcoin_balance_updated_at: (project as any).bitcoin_balance_updated_at || null,
-                supporters_count: (project as any).supporters_count || 0,
-                last_donation_at: (project as any).last_donation_at || null,
+                bitcoin_balance_btc: project.bitcoin_balance_btc || 0,
+                bitcoin_balance_updated_at: project.bitcoin_balance_updated_at || null,
+                supporters_count: project.supporters_count || 0,
+                last_donation_at: project.last_donation_at || null,
                 user_id: project.user_id,
               }}
               isOwner={isOwner}

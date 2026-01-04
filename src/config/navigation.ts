@@ -4,12 +4,18 @@
  * Single source of truth for all navigation items across the application
  * Combines header, sidebar, footer, and mobile navigation
  *
+ * Entity-based navigation is generated from entity registry (single source of truth).
+ * Manual sections for non-entity navigation (Home, Explore, Learn).
+ *
+ * Progressive disclosure: Only most-used sections expanded by default to reduce clutter.
+ *
  * Created: 2025-01-07
- * Last Modified: 2025-12-12
- * Last Modified Summary: Unified navigation.ts and navigationConfig.ts into single comprehensive config
+ * Last Modified: 2025-01-30
+ * Last Modified Summary: Integrated navigation generator from entity registry, applied progressive disclosure
  */
 
 import { ComponentType, SVGProps } from 'react';
+import { generateEntityNavigation } from './navigation-generator';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import {
   Home,
@@ -43,6 +49,7 @@ export interface NavigationItem {
   icon?: ComponentType<SVGProps<SVGSVGElement>>;
   description?: string;
   children?: NavigationItem[]; // For dropdown menus
+  external?: boolean; // For external links that open in new tab
 }
 
 export interface NavSection {
@@ -50,6 +57,7 @@ export interface NavSection {
   title: string;
   priority: number;
   defaultExpanded?: boolean;
+  collapsible?: boolean; // Whether section can be collapsed/expanded
   requiresAuth?: boolean;
   items: NavigationItem[];
 }
@@ -98,21 +106,19 @@ export function shouldShowNavigationItem(item: NavigationItem, user: SupabaseUse
 /**
  * Sidebar navigation sections for authenticated users
  *
- * Simplified to 7 unified sections (one verb per section):
- * 1. Home - Your unified dashboard (activity, timeline, profile)
- * 2. Sell - Products and services for Bitcoin
- * 3. Raise - All fundraising (projects, causes)
- * 4. Network - Trust networks and P2P finance (circles, loans, people)
- * 5. Wallet - Your Bitcoin wallets
- * 6. Explore - Public discovery (discover, community feed)
- * 7. Learn - Documentation and resources (about, blog, docs)
+ * Uses navigation generator for entity-based sections (single source of truth).
+ * Manual sections for non-entity navigation (Home, Explore, Learn).
+ *
+ * Progressive disclosure: Only most-used sections expanded by default.
  */
-export const sidebarSections: NavSection[] = [
+// Manual sections (non-entity navigation)
+const manualSections: NavSection[] = [
   {
     id: 'home',
     title: 'Home',
     priority: 1,
-    defaultExpanded: true,
+    defaultExpanded: true, // Most used - always expanded
+    collapsible: true,
     requiresAuth: true,
     items: [
       {
@@ -145,110 +151,31 @@ export const sidebarSections: NavSection[] = [
       },
     ],
   },
-  {
-    id: 'sell',
-    title: 'Sell',
-    priority: 2,
-    defaultExpanded: true,
+];
+
+// Generate entity-based navigation sections
+const entitySections = generateEntityNavigation();
+
+// Add "People" to Network section (not an entity type)
+const networkSection = entitySections.find(s => s.id === 'network');
+if (networkSection) {
+  networkSection.items.push({
+    name: 'People',
+    href: '/dashboard/people',
+    icon: Users,
+    description: 'Your connections',
     requiresAuth: true,
-    items: [
-      {
-        name: 'Products',
-        href: '/dashboard/store',
-        icon: Package,
-        description: 'Physical and digital goods',
-        requiresAuth: true,
-      },
-      {
-        name: 'Services',
-        href: '/dashboard/services',
-        icon: Briefcase,
-        description: 'Skills and expertise',
-        requiresAuth: true,
-      },
-    ],
-  },
-  {
-    id: 'raise',
-    title: 'Raise',
-    priority: 3,
-    defaultExpanded: true,
-    requiresAuth: true,
-    items: [
-      {
-        name: 'Projects',
-        href: '/dashboard/projects',
-        icon: Rocket,
-        description: 'Crowdfunding campaigns',
-        requiresAuth: true,
-      },
-      {
-        name: 'Causes',
-        href: '/dashboard/causes',
-        icon: Heart,
-        description: 'Charitable fundraising',
-        requiresAuth: true,
-      },
-    ],
-  },
-  {
-    id: 'network',
-    title: 'Network',
-    priority: 4,
-    defaultExpanded: true,
-    requiresAuth: true,
-    items: [
-      {
-        name: 'Organizations',
-        href: '/organizations',
-        icon: Building,
-        description: 'Teams, circles & governance',
-        requiresAuth: true,
-      },
-      {
-        name: 'People',
-        href: '/dashboard/people',
-        icon: Users,
-        description: 'Your connections',
-        requiresAuth: true,
-      },
-    ],
-  },
-  {
-    id: 'manage',
-    title: 'Manage',
-    priority: 5,
-    defaultExpanded: true,
-    requiresAuth: true,
-    items: [
-      {
-        name: 'Wallets',
-        href: '/dashboard/wallets',
-        icon: Wallet,
-        description: 'Bitcoin wallets and balances',
-        requiresAuth: true,
-      },
-      {
-        name: 'Assets',
-        href: '/assets',
-        icon: Briefcase,
-        description: 'List assets and manage collateral',
-        requiresAuth: true,
-      },
-      {
-        name: 'Loans',
-        href: '/loans',
-        icon: Banknote,
-        description: 'Peer-to-peer lending marketplace',
-        requiresAuth: true,
-      },
-    ],
-  },
+  });
+}
+
+// Public sections (Explore, Learn)
+const publicSections: NavSection[] = [
   {
     id: 'explore',
     title: 'Explore',
     priority: 6,
-    defaultExpanded: true,
+    defaultExpanded: false, // Collapsed - progressive disclosure
+    collapsible: true,
     requiresAuth: false,
     items: [
       {
@@ -279,7 +206,8 @@ export const sidebarSections: NavSection[] = [
     id: 'learn',
     title: 'Learn',
     priority: 7,
-    defaultExpanded: false,
+    defaultExpanded: false, // Collapsed - progressive disclosure
+    collapsible: true,
     requiresAuth: false,
     items: [
       {
@@ -321,6 +249,13 @@ export const sidebarSections: NavSection[] = [
   },
 ];
 
+// Merge all sections: manual + entity-generated + public
+export const sidebarSections: NavSection[] = [
+  ...manualSections,
+  ...entitySections,
+  ...publicSections,
+].sort((a, b) => a.priority - b.priority);
+
 /**
  * Bottom navigation items for account management
  *
@@ -354,9 +289,10 @@ export const footerNavigation = {
     { name: 'Status', href: '/status' },
   ],
   company: [
-    { name: 'About', href: '/about' },
+    { name: 'About BitBaum', href: '/company/about' },
+    { name: 'About OrangeCat', href: '/about' },
+    { name: 'Careers', href: '/company/careers' },
     { name: 'Blog', href: '/blog' },
-    { name: 'Careers', href: '/careers' },
     { name: 'Contact', href: '/contact' },
   ],
   legal: [
@@ -383,12 +319,12 @@ export const footerNavigation = {
  */
 export const userMenuItems = [
   { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
-  { name: 'Organizations', href: '/organizations', requiresAuth: true, description: 'Manage Organizations' },
-  { name: 'Assets', href: '/assets', requiresAuth: true, description: 'My Valuable Assets' },
-  { name: 'Loans', href: '/loans', requiresAuth: true, description: 'Peer-to-Peer Lending' },
+  { name: 'Groups', href: '/dashboard/groups', requiresAuth: true, description: 'Manage Groups' },
+  { name: 'Assets', href: '/dashboard/assets', requiresAuth: true, description: 'My Valuable Assets' },
+  { name: 'Loans', href: '/dashboard/loans', requiresAuth: true, description: 'Peer-to-Peer Lending' },
   { name: 'Sell', href: '/dashboard/store', requiresAuth: true, description: 'Products & Services' },
   { name: 'Raise', href: '/dashboard/projects', requiresAuth: true, description: 'Projects & Causes' },
-  { name: 'Network', href: '/organizations', requiresAuth: true, description: 'Organizations, Circles & People' },
+  { name: 'Network', href: '/dashboard/groups', requiresAuth: true, description: 'Groups, Events & People' },
   { name: 'Wallet', href: '/dashboard/wallets', requiresAuth: true },
   { name: 'Settings', href: '/settings', requiresAuth: true },
 ];

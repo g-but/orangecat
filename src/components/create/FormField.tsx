@@ -26,6 +26,7 @@ export function FormField({
   onFocus,
   disabled = false,
 }: FormFieldProps) {
+  const userCurrency = useUserCurrency();
   const {
     name,
     label,
@@ -85,6 +86,7 @@ export function FormField({
             placeholder={placeholder}
             disabled={disabled}
             defaultCurrency="CHF"
+            userCurrency={userCurrency}
             showBreakdown={true}
             allowCurrencySwitch={true}
             minSats={min}

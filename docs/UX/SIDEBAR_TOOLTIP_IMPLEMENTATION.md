@@ -149,3 +149,6 @@ const sidebarWidth = navigationState.isSidebarOpen
 - `src/hooks/useSidebarHover.ts` (deprecated for hover expansion)
 - `src/constants/sidebar.ts`
 - `src/app/globals.css`
+
+
+

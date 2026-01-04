@@ -56,3 +56,6 @@ test.describe('Debug Timeline', () => {
     console.log('Page HTML preview:', html.substring(0, 2000) + '...');
   });
 });
+
+
+

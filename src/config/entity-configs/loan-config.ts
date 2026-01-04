@@ -14,11 +14,33 @@ import {
   loanGuidanceContent,
   loanDefaultGuidance,
 } from '@/lib/entity-guidance/loan-guidance';
-import type { EntityConfig, FieldGroup } from '@/components/create/types';
+import type { FieldGroup } from '@/components/create/types';
+import { LOAN_TEMPLATES, type LoanTemplate } from '@/components/create/templates';
+import { createEntityConfig } from './base-config-factory';
+import { LoanCollateralField } from '@/components/create/collateral/LoanCollateralField';
 
 // ==================== FIELD GROUPS ====================
 
 const fieldGroups: FieldGroup[] = [
+  {
+    id: 'loan_type',
+    title: 'What type of loan?',
+    description: 'Choose whether you\'re requesting a new loan or refinancing an existing one',
+    fields: [
+      {
+        name: 'loan_type',
+        label: 'Loan Type',
+        type: 'select',
+        required: true,
+        options: [
+          { value: 'new_request', label: 'Request New Loan', description: 'I need funding and want to find lenders' },
+          { value: 'existing_refinance', label: 'Refinance Existing Loan', description: 'I have an existing loan and want better terms' },
+        ],
+        hint: 'Select the type of loan listing you want to create',
+        colSpan: 2,
+      },
+    ],
+  },
   {
     id: 'basic',
     title: 'Loan Details',
@@ -41,6 +63,48 @@ const fieldGroups: FieldGroup[] = [
         required: true,
         colSpan: 2,
         hint: 'Be specific about what you need the loan for and your repayment plan.',
+      },
+    ],
+  },
+  {
+    id: 'existing_loan_details',
+    title: 'Current Loan Details',
+    description: 'Information about your existing loan you want to refinance',
+    conditionalOn: { field: 'loan_type', value: 'existing_refinance' },
+    fields: [
+      {
+        name: 'current_lender',
+        label: 'Current Lender',
+        type: 'text',
+        placeholder: 'e.g., Bank of America, Credit Union, Private Lender',
+        hint: 'Who currently holds your loan',
+      },
+      {
+        name: 'current_interest_rate',
+        label: 'Current Interest Rate (%)',
+        type: 'number',
+        placeholder: '8.5',
+        min: 0,
+        max: 100,
+        step: 0.1,
+        hint: 'Your current annual interest rate',
+      },
+      {
+        name: 'monthly_payment',
+        label: 'Monthly Payment',
+        type: 'currency',
+        placeholder: '500',
+        hint: 'Your current monthly payment amount',
+      },
+      {
+        name: 'desired_rate',
+        label: 'Desired Interest Rate (%)',
+        type: 'number',
+        placeholder: '5.0',
+        min: 0,
+        max: 100,
+        step: 0.1,
+        hint: 'The interest rate you\'d like to refinance to',
       },
     ],
   },
@@ -99,6 +163,12 @@ const fieldGroups: FieldGroup[] = [
     ],
   },
   {
+    id: 'collateral',
+    title: 'Collateral',
+    description: 'Add assets or wallets as collateral to potentially improve loan terms',
+    customComponent: LoanCollateralField,
+  },
+  {
     id: 'additional',
     title: 'Additional Information',
     description: 'Optional details to help lenders understand your loan',
@@ -134,33 +204,22 @@ const fieldGroups: FieldGroup[] = [
 
 // ==================== CONFIGURATION ====================
 
-export const loanConfig: EntityConfig<LoanFormData> = {
-  // Entity metadata
-  type: 'loan',
+export const loanConfig = createEntityConfig<LoanFormData>({
+  entityType: 'loan',
   name: 'Loan',
   namePlural: 'Loans',
-
-  // Icons
   icon: DollarSign,
   colorTheme: 'blue',
-
-  // Navigation
-  backUrl: '/loans',
-  successUrl: '/loans/[id]',
-
-  // API configuration
-  apiEndpoint: '/api/loans',
-
-  // UI configuration
+  backUrl: '/dashboard/loans',
+  successUrl: '/dashboard/loans/[id]',
   pageTitle: 'Create Loan Listing',
   pageDescription: 'List your loan needs and connect with peer-to-peer lenders.',
   formTitle: 'Loan Details',
   formDescription: 'Set the loan amount, interest rate, and repayment terms',
-
-  // Form configuration
   fieldGroups,
   validationSchema: loanSchema,
   defaultValues: {
+    loan_type: 'new_request',
     title: '',
     description: '',
     original_amount: 0,
@@ -170,9 +229,16 @@ export const loanConfig: EntityConfig<LoanFormData> = {
     lightning_address: '',
     loan_category_id: '',
     fulfillment_type: 'manual',
+    currency: 'CHF',
+    // Fields for existing loan refinancing
+    current_lender: '',
+    current_interest_rate: undefined,
+    monthly_payment: undefined,
+    desired_rate: undefined,
+    // Collateral
+    collateral: [],
   },
-
-  // Guidance
   guidanceContent: loanGuidanceContent,
   defaultGuidance: loanDefaultGuidance,
-};
+  templates: LOAN_TEMPLATES as unknown as LoanTemplate[],
+});

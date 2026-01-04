@@ -14,7 +14,9 @@ import {
   projectGuidanceContent,
   projectDefaultGuidance,
 } from '@/lib/entity-guidance/project-guidance';
-import type { EntityConfig, FieldGroup } from '@/components/create/types';
+import type { FieldGroup } from '@/components/create/types';
+import { PROJECT_TEMPLATES, type ProjectTemplate } from '@/components/create/templates';
+import { createEntityConfig } from './base-config-factory';
 
 // ==================== FIELD GROUPS ====================
 
@@ -144,37 +146,25 @@ const fieldGroups: FieldGroup[] = [
 
 // ==================== CONFIGURATION ====================
 
-export const projectConfig: EntityConfig<ProjectData> = {
-  // Entity metadata
-  type: 'project',
+export const projectConfig = createEntityConfig<ProjectData>({
+  entityType: 'project',
   name: 'Project',
   namePlural: 'Projects',
-
-  // Icons
   icon: Rocket,
   colorTheme: 'orange',
-
-  // Navigation
-  backUrl: '/projects',
+  backUrl: '/dashboard/projects',
   successUrl: '/projects/[id]',
-
-  // API configuration
-  apiEndpoint: '/api/projects',
-
-  // UI configuration
   pageTitle: 'Create Project',
   pageDescription: 'Start a crowdfunding campaign for your Bitcoin-powered project.',
   formTitle: 'Project Information',
   formDescription: 'Tell your story and set funding goals',
-
-  // Form configuration
   fieldGroups,
   validationSchema: projectSchema,
   defaultValues: {
     title: '',
     description: '',
     goal_amount: undefined,
-    currency: 'SATS',
+    currency: 'CHF', // Default to CHF - user can change in form
     funding_purpose: '',
     bitcoin_address: '',
     lightning_address: '',
@@ -184,12 +174,10 @@ export const projectConfig: EntityConfig<ProjectData> = {
     start_date: '',
     target_completion: '',
   },
-
-  // Guidance
   guidanceContent: projectGuidanceContent,
   defaultGuidance: projectDefaultGuidance,
-
-  // Success messaging
+  templates: PROJECT_TEMPLATES as unknown as ProjectTemplate[],
   successMessage: 'Project created successfully!',
   successRedirectDelay: 2000,
-};
+});
+

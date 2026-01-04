@@ -1,6 +1,14 @@
 /** @type {import('next').NextConfig} */
 
 const path = require('path');
+const withMDX = require('@next/mdx')({
+  extension: /\.mdx?$/,
+  options: {
+    remarkPlugins: [],
+    rehypePlugins: [],
+    // Remove providerImportSource to avoid client component issues
+  },
+});
 
 let withBundleAnalyzer = config => config;
 try {
@@ -14,6 +22,9 @@ try {
 const nextConfig = {
   // Fix workspace root detection to prevent watching entire home directory
   outputFileTracingRoot: __dirname,
+
+  // Support MDX files
+  pageExtensions: ['js', 'jsx', 'ts', 'tsx', 'md', 'mdx'],
 
   // Externalize Supabase packages for server-side rendering
   // Note: 'standalone' output is REMOVED - it's incompatible with Vercel
@@ -164,41 +175,38 @@ const nextConfig = {
     const { dev, isServer, webpack } = options;
 
     // Prevent watching parent directories to avoid EMFILE errors
-    // Use glob patterns to ignore files outside project scope
-    config.watchOptions = {
-      ...config.watchOptions,
-      ignored: [
-        // Ignore common build/cache directories
-        '**/node_modules/**',
-        '**/.git/**',
-        '**/.next/**',
-        '**/mcp-servers/**',
-        '**/test-results/**',
-        '**/logs/**',
-        '**/.playwright-mcp/**',
-        '**/*.log',
-        '**/*.tmp',
-        '**/*.cache',
-        '**/__pycache__/**',
-        '**/coverage/**',
-        '**/dist/**',
-        '**/build/**',
-        '**/migration-testing/**',
-        '**/cypress/**',
-        '**/playwright-report/**',
-        '**/test-results/**',
-        // Ignore parent directories (prevents EMFILE errors)
-        '../**',
-        '../../**',
-        '../../../**',
-        '../../../../**',
-        // Ignore hidden files and directories
-        '**/.*/**',
-      ],
-      followSymlinks: false,
-      aggregateTimeout: 500, // Increased for stability
-      poll: false, // Use native file watching (faster and more efficient)
-    };
+    // Use polling mode for better reliability with large projects
+    if (dev) {
+      config.watchOptions = {
+        ...config.watchOptions,
+        ignored: [
+          // Ignore common build/cache directories
+          '**/node_modules/**',
+          '**/.git/**',
+          '**/.next/**',
+          '**/mcp-servers/**',
+          '**/test-results/**',
+          '**/logs/**',
+          '**/.playwright-mcp/**',
+          '**/*.log',
+          '**/*.tmp',
+          '**/*.cache',
+          '**/__pycache__/**',
+          '**/coverage/**',
+          '**/dist/**',
+          '**/build/**',
+          '**/migration-testing/**',
+          '**/cypress/**',
+          '**/playwright-report/**',
+        ],
+        followSymlinks: false,
+        aggregateTimeout: 500,
+        // Use polling to avoid EMFILE errors - more reliable for large projects
+        // Polling checks files periodically instead of watching all file descriptors
+        // This prevents "too many open files" errors on Linux systems
+        poll: 1000, // Poll every 1 second (1000ms)
+      };
+    }
 
     // Note: Manual webpack externals REMOVED - they cause build issues on Vercel
     // Supabase packages are handled via serverExternalPackages config instead
@@ -242,7 +250,7 @@ const nextConfig = {
   },
 };
 
-module.exports = withBundleAnalyzer(nextConfig);
+module.exports = withBundleAnalyzer(withMDX(nextConfig));
 
 // Performance monitoring
 if (process.env.NODE_ENV === 'production') {

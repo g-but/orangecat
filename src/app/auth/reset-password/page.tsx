@@ -27,7 +27,7 @@ export default function ResetPasswordPage() {
     const url = typeof window !== 'undefined' ? new URL(window.location.href) : null
     const hashParams = new URLSearchParams(url?.hash.startsWith('#') ? url.hash.substring(1) : '')
 
-    const qp = searchParams
+    const qp = searchParams || new URLSearchParams()
     const accessToken = qp.get('access_token') || hashParams.get('access_token')
     const refreshToken = qp.get('refresh_token') || hashParams.get('refresh_token')
     const type = qp.get('type') || hashParams.get('type')

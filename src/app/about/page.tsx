@@ -1,137 +1,164 @@
-'use client';
+import React from 'react';
+import Link from 'next/link';
+import { Metadata } from 'next';
+import { Building, Users, Heart, Zap, TreePine } from 'lucide-react';
+import BitBaumLogo from '@/components/layout/BitBaumLogo';
 
-import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
-import { Bitcoin, Zap, Shield, Globe, Code, Eye, GitBranch, Lock } from 'lucide-react';
+export const metadata: Metadata = {
+  title: 'About OrangeCat - A BitBaum Company',
+  description: 'Learn about OrangeCat, the Bitcoin-native crowdfunding platform, and our parent company BitBaum.',
+};
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen pt-20">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold mb-4">About OrangeCat</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Empowering creators, organizations, and communities worldwide with Bitcoin funding
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-tiffany-50">
+      {/* Hero Section */}
+      <div className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl md:text-6xl">
+              About <span className="text-tiffany-600">OrangeCat</span>
+            </h1>
+            <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
+              Making Bitcoin donations simple and accessible for everyone. A BitBaum company.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Corporate Structure */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Corporate Structure</h2>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            Like TikTok and ByteDance, OrangeCat is our consumer-facing product while BitBaum serves as our corporate parent company.
           </p>
         </div>
 
-        <div className="max-w-6xl mx-auto">
-          {/* Mission Section */}
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold mb-6">Our Mission: Simplifying Bitcoin Funding</h2>
-            <Card className="p-8">
-              <h3 className="text-xl font-semibold text-gray-700 mb-3">The Problem We Solve</h3>
-              <p className="text-lg text-gray-600 mb-4">
-                Traditional funding platforms can be restrictive, involve intermediaries, and may not readily support Bitcoin. This creates barriers for creators and innovators seeking direct, peer-to-peer support through cryptocurrency.
-              </p>
-              <h3 className="text-xl font-semibold text-gray-700 mb-3">Our Solution</h3>
-              <p className="text-lg text-gray-600 mb-4">
-                OrangeCat provides a dedicated platform that directly connects creators, innovators, organizations, and communities with supporters worldwide through Bitcoin payments. Whether you're running a local cat shelter, organizing an art exhibition, planning a community event, or launching any project, we facilitate direct Bitcoin funding without unnecessary intermediaries.
-              </p>
-              <h3 className="text-xl font-semibold text-gray-700 mb-3">Who Benefits?</h3>
-               <ul className="list-disc list-inside text-lg text-gray-600 space-y-1">
-                <li><span className="font-semibold">Any Creator or Organization:</span> Access direct funding in Bitcoin for your projects, causes, and communities - from nonprofits to creative ventures.</li>
-                <li><span className="font-semibold">Global Supporters:</span> Discover and fund projects you believe in using the power of Bitcoin payments.</li>
-                <li><span className="font-semibold">The Open Source Community:</span> We champion transparency and collaborative development for everyone's benefit.</li>
-              </ul>
-            </Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          {/* BitBaum */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="flex justify-center mb-6">
+              <BitBaumLogo className="scale-150" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">BitBaum AG</h3>
+            <p className="text-gray-600 mb-6">
+              Our corporate parent company, focused on building the future of Bitcoin commerce through innovative products and services.
+            </p>
+            <div className="flex justify-center space-x-4 mb-6">
+              <div className="flex items-center text-sm text-gray-500">
+                <Building className="w-4 h-4 mr-2" />
+                Corporate
+              </div>
+              <div className="flex items-center text-sm text-gray-500">
+                <TreePine className="w-4 h-4 mr-2" />
+                Tree Metaphor
+              </div>
+            </div>
+            <Link
+              href="https://bitbaum.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-colors"
+            >
+              Visit BitBaum
+            </Link>
           </div>
 
-          {/* Values Section */}
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold mb-6">Our Principles</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card className="p-6">
-                <Bitcoin className="w-8 h-8 text-tiffany-500 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Bitcoin-First</h3>
-                <p className="text-gray-600">
-                  We&apos;re committed to Bitcoin for funding, emphasizing self-custody and no platform fees.
-                </p>
-              </Card>
-              <Card className="p-6">
-                <Code className="w-8 h-8 text-tiffany-500 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Open Source</h3>
-                <p className="text-gray-600">
-                  Our platform is built on open-source principles, fostering community collaboration and transparency.
-                </p>
-              </Card>
-              <Card className="p-6">
-                <Eye className="w-8 h-8 text-tiffany-500 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Transparency</h3>
-                <p className="text-gray-600">
-                  We operate with openness, ensuring our processes and development are clear and accessible.
-                </p>
-              </Card>
-              <Card className="p-6">
-                <GitBranch className="w-8 h-8 text-tiffany-500 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Decentralization</h3>
-                <p className="text-gray-600">
-                  We believe in empowering individuals and reducing reliance on central points of control.
-                </p>
-              </Card>
-              <Card className="p-6">
-                <Lock className="w-8 h-8 text-tiffany-500 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Privacy-Conscious</h3>
-                <p className="text-gray-600">
-                  We respect user privacy and aim to collect only necessary information to operate the platform effectively.
-                </p>
-              </Card>
-              <Card className="p-6">
-                <Zap className="w-8 h-8 text-tiffany-500 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Innovation</h3>
-                <p className="text-gray-600">
-                  We continuously improve our platform to make Bitcoin funding more accessible and user-friendly.
-                </p>
-              </Card>
-              <Card className="p-6">
-                <Shield className="w-8 h-8 text-tiffany-500 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Trust & Security</h3>
-                <p className="text-gray-600">
-                  We prioritize the security of our platform and the trust of our community.
-                </p>
-              </Card>
-              <Card className="p-6">
-                <Globe className="w-8 h-8 text-tiffany-500 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">Global Community</h3>
-                <p className="text-gray-600">
-                  We foster a worldwide community of Bitcoin supporters and creators
-                </p>
-              </Card>
+          {/* OrangeCat */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="flex justify-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center">
+                <span className="text-2xl">🐱</span>
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">OrangeCat</h3>
+            <p className="text-gray-600 mb-6">
+              Our flagship product - the friendly, approachable Bitcoin crowdfunding platform that users interact with every day.
+            </p>
+            <div className="flex justify-center space-x-4 mb-6">
+              <div className="flex items-center text-sm text-gray-500">
+                <Heart className="w-4 h-4 mr-2" />
+                Consumer Product
+              </div>
+              <div className="flex items-center text-sm text-gray-500">
+                <Zap className="w-4 h-4 mr-2" />
+                Bitcoin Native
+              </div>
+            </div>
+            <Link
+              href="/"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-orange-600 bg-orange-50 hover:bg-orange-100 transition-colors"
+            >
+              Use OrangeCat
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* Mission & Values */}
+      <div className="bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Growing Bitcoin communities through transparent, threaded conversations and commerce.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TreePine className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Grow Together</h3>
+              <p className="text-gray-600">
+                Build interconnected communities where ideas branch and flourish like trees.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-8 h-8 text-tiffany-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Bitcoin Native</h3>
+              <p className="text-gray-600">
+                Every transaction is transparent, borderless, and powered by Bitcoin's network.
+              </p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Heart className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Community First</h3>
+              <p className="text-gray-600">
+                Empower creators, supporters, and communities to thrive together.
+              </p>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* Team Section */}
-          <div className="mb-16">
-            <h2 className="text-2xl font-bold mb-6">Our Team</h2>
-            <Card className="p-8">
-              <p className="text-lg text-gray-600 mb-4">
-                OrangeCat is built by a diverse team of developers, designers, and innovators who are passionate about making Bitcoin funding accessible to everyone, regardless of their background or cause.
-              </p>
-              <p className="text-lg text-gray-600">
-                We're committed to building the best platform for Bitcoin-powered funding and supporting the growth of communities, organizations, and creative projects worldwide. Our team believes in the power of direct, peer-to-peer support through Bitcoin.
-              </p>
-            </Card>
-          </div>
-
-          {/* Call to Action Section */}
-          <div>
-            <h2 className="text-2xl font-bold mb-6 text-center">Ready to Dive In?</h2>
-            <Card className="p-8">
-              <p className="text-lg text-gray-600 mb-8 text-center">
-                Whether you're looking to fund your next project, support your local community, or discover innovative initiatives worldwide, OrangeCat is your gateway.
-              </p>
-              <div className="flex flex-col sm:flex-row justify-center items-center gap-6">
-                <Button href="/profile" variant="primary" size="lg" className="w-full sm:w-auto">
-                  Create Your Profile
-                </Button>
-                <Button href="/discover" variant="outline" size="lg" className="w-full sm:w-auto">
-                  Discover Projects
-                </Button>
-              </div>
-            </Card>
+      {/* CTA Section */}
+      <div className="bg-gradient-to-r from-orange-500 to-tiffany-500">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Join Our Growing Community
+            </h2>
+            <p className="text-xl text-orange-100 mb-8">
+              Start accepting Bitcoin donations today with OrangeCat.
+            </p>
+            <Link
+              href="/auth?mode=register"
+              className="inline-flex items-center px-8 py-4 border border-transparent text-lg font-medium rounded-md text-orange-600 bg-white hover:bg-gray-50 transition-colors"
+            >
+              Get Started Free
+            </Link>
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}

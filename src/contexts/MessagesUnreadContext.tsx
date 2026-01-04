@@ -14,6 +14,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
+import { useRealtimeSubscription } from '@/features/messaging/hooks/useRealtimeSubscription';
 
 interface MessagesUnreadContextType {
   count: number;
@@ -45,7 +46,6 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
   const { user } = useAuth();
   const [count, setCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const isFetchingRef = useRef<boolean>(false);
   const lastFetchRef = useRef<number>(0);
 
@@ -137,78 +137,58 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
     fetchUnread();
   }, [fetchUnread]);
 
-  // Real-time subscription - single instance for entire app
-  useEffect(() => {
-    if (!user?.id) {
-      // Clean up on logout
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
+  // Real-time subscription - use unified hook
+  // Subscribe to new messages (only from others)
+  useRealtimeSubscription({
+    channelName: 'unread-messages-global-singleton-messages',
+    table: 'messages',
+    events: ['INSERT'],
+    onEvent: useCallback(
+      ({ new: newRecord }) => {
+        // Only update if message is from someone else
+        if (newRecord?.sender_id && newRecord.sender_id !== user?.id && debouncedFetchRef.current) {
+          debouncedFetchRef.current();
+        }
+      },
+      [user?.id]
+    ),
+    enabled: !!user?.id,
+    debounceMs: 500,
+  });
+
+  // Subscribe to conversation participants updates (marking as read)
+  useRealtimeSubscription({
+    channelName: 'unread-messages-global-singleton-participants-update',
+    table: 'conversation_participants',
+    events: ['UPDATE'],
+    onEvent: useCallback(
+      ({ new: newRecord }) => {
+        // Only refresh if last_read_at changed (marking as read)
+        if (newRecord?.last_read_at && debouncedFetchRef.current) {
+          console.log('[MessagesUnreadContext] Conversation marked as read, refreshing count');
+          debouncedFetchRef.current();
+        }
+      },
+      []
+    ),
+    enabled: !!user?.id,
+    debounceMs: 500,
+  });
+
+  // Subscribe to new conversation participants
+  useRealtimeSubscription({
+    channelName: 'unread-messages-global-singleton-participants-insert',
+    table: 'conversation_participants',
+    events: ['INSERT'],
+    onEvent: useCallback(() => {
+      // Refresh when new participant added
+      if (debouncedFetchRef.current) {
+        debouncedFetchRef.current();
       }
-      return;
-    }
-
-    // Clean up existing channel
-    if (channelRef.current) {
-      supabase.removeChannel(channelRef.current);
-    }
-
-    const channel = supabase
-      .channel('unread-messages-global-singleton')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-        },
-        payload => {
-          // Only update if message is from someone else
-          if (payload.new.sender_id !== user.id && debouncedFetchRef.current) {
-            debouncedFetchRef.current();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversation_participants',
-        },
-        payload => {
-          // Only refresh if last_read_at changed (marking as read)
-          if (payload.new?.last_read_at && debouncedFetchRef.current) {
-            console.log('[MessagesUnreadContext] Conversation marked as read, refreshing count');
-            debouncedFetchRef.current();
-          }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'conversation_participants',
-        },
-        () => {
-          // Refresh when new participant added
-          if (debouncedFetchRef.current) {
-            debouncedFetchRef.current();
-          }
-        }
-      )
-      .subscribe();
-
-    channelRef.current = channel;
-
-    return () => {
-      if (channelRef.current) {
-        supabase.removeChannel(channelRef.current);
-        channelRef.current = null;
-      }
-    };
-  }, [user?.id, fetchUnread]);
+    }, []),
+    enabled: !!user?.id,
+    debounceMs: 500,
+  });
 
   // Periodic refresh as backup (only if real-time fails)
   // Reduced to 30 seconds for better responsiveness

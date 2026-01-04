@@ -248,7 +248,9 @@ export function usePostInteractions({
             original_actor_username: event.actor.username,
             original_actor_avatar: event.actor.avatar,
             original_description:
-              (event.metadata as any)?.original_description || event.description || '',
+              (event.metadata && typeof event.metadata === 'object' && 'original_description' in event.metadata && typeof event.metadata.original_description === 'string')
+                ? event.metadata.original_description
+                : event.description || '',
             quote_text: quoteText.trim(),
           },
           parentEventId: event.id,
@@ -308,3 +310,4 @@ export function usePostInteractions({
     handleQuoteRepost,
   };
 }
+

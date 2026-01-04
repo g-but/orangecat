@@ -6,6 +6,7 @@ import {
   apiNotFound,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { getTableName } from '@/config/entity-registry';
 
 /**
  * GET /api/profile/[identifier] - Get profile by username or email
@@ -118,7 +119,7 @@ export async function GET(
 
     // Calculate project count
     const { count: projectCount } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId || profile.id)
       .neq('status', 'draft'); // Exclude drafts from public view

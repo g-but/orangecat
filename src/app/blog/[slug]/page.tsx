@@ -4,7 +4,6 @@ import { notFound } from 'next/navigation';
 export const dynamic = 'force-dynamic';
 import { Calendar, Clock, ArrowLeft, Users, Tag } from 'lucide-react';
 import Link from 'next/link';
-import { MDXRemote } from 'next-mdx-remote/rsc';
 import { getBlogPost, getBlogPostSlugs } from '@/lib/blog';
 import Button from '@/components/ui/Button';
 import { ComponentProps } from 'react';
@@ -157,6 +156,9 @@ export default async function BlogPost({ params }: PageProps) {
     notFound();
   }
 
+  // Dynamically import the MDX content as a React component
+  const MDXContent = (await import(`../../../../content/blog/${slug}.mdx`)).default;
+
   return (
     <div className="min-h-screen pt-20">
       <div className="container mx-auto px-4">
@@ -220,16 +222,7 @@ export default async function BlogPost({ params }: PageProps) {
 
           {/* Article Content */}
           <article className="prose prose-lg max-w-none">
-            <MDXRemote
-              source={post.content}
-              components={mdxComponents}
-              options={{
-                mdxOptions: {
-                  remarkPlugins: [],
-                  rehypePlugins: [],
-                },
-              }}
-            />
+            <MDXContent components={mdxComponents} />
           </article>
 
           {/* Share and Navigation */}

@@ -36,13 +36,7 @@ export const productEntityConfig: EntityConfig<UserProduct> = {
       badgeVariant: product.status === 'published' ? 'success' : product.status === 'draft' ? 'default' : 'default',
       showEditButton: true,
       editHref: `/dashboard/store/create?edit=${product.id}`,
-      actions: (
-        <Link href={`/dashboard/store/create?edit=${product.id}`}>
-          <Button size="sm" variant="outline">
-            Edit
-          </Button>
-        </Link>
-      ),
+      // Removed duplicate actions button - edit icon overlay is sufficient
     };
   },
   

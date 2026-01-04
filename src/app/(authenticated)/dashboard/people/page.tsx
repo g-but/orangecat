@@ -68,26 +68,39 @@ export default function PeoplePage() {
           // Transform API response to Connection format
           // API returns: { data: { data: [...], pagination: {...} } }
           // Be tolerant to either { data: [...] } or { data: { data: [...] } }
+          interface FollowingResponseItem {
+            following_id?: string;
+            created_at: string;
+            profiles?: Profile;
+            id?: string;
+            username?: string;
+            name?: string;
+            display_name?: string;
+            avatar_url?: string;
+            bio?: string;
+            bitcoin_address?: string;
+            lightning_address?: string;
+          }
           const followingArray = Array.isArray(followingData.data)
-            ? (followingData.data as any[])
+            ? (followingData.data as FollowingResponseItem[])
             : followingData.data?.data || [];
           const transformed = (followingArray || [])
-            .map((item: any) => {
+            .map((item: FollowingResponseItem) => {
               // Handle both nested profiles object and direct profile data
-              const profileData = item.profiles || (item.following_id ? null : item);
+              const profileData = item.profiles || (item.following_id ? null : (item as Profile));
               if (!profileData) {
                 logger.warn('Missing profile data in following response', { item }, 'PeoplePage');
                 return null;
               }
               return {
                 profile: {
-                  id: profileData.id || item.following_id,
-                  username: profileData.username,
-                  name: profileData.name || profileData.display_name || null,
-                  avatar_url: profileData.avatar_url,
-                  bio: profileData.bio,
-                  bitcoin_address: profileData.bitcoin_address,
-                  lightning_address: profileData.lightning_address,
+                  id: (profileData as Profile).id || item.following_id || '',
+                  username: (profileData as Profile).username,
+                  name: (profileData as Profile).name || (profileData as any).display_name || null,
+                  avatar_url: (profileData as Profile).avatar_url,
+                  bio: (profileData as Profile).bio,
+                  bitcoin_address: (profileData as Profile).bitcoin_address,
+                  lightning_address: (profileData as Profile).lightning_address,
                 },
                 created_at: item.created_at,
               };
@@ -102,26 +115,39 @@ export default function PeoplePage() {
         if (followersData.success) {
           // Transform API response to Connection format
           // API returns: { data: { data: [...], pagination: {...} } }
+          interface FollowersResponseItem {
+            follower_id?: string;
+            created_at: string;
+            profiles?: Profile;
+            id?: string;
+            username?: string;
+            name?: string;
+            display_name?: string;
+            avatar_url?: string;
+            bio?: string;
+            bitcoin_address?: string;
+            lightning_address?: string;
+          }
           const followersArray = Array.isArray(followersData.data)
-            ? (followersData.data as any[])
+            ? (followersData.data as FollowersResponseItem[])
             : followersData.data?.data || [];
           const transformed = (followersArray || [])
-            .map((item: any) => {
+            .map((item: FollowersResponseItem) => {
               // Handle both nested profiles object and direct profile data
-              const profileData = item.profiles || (item.follower_id ? null : item);
+              const profileData = item.profiles || (item.follower_id ? null : (item as Profile));
               if (!profileData) {
                 logger.warn('Missing profile data in followers response', { item }, 'PeoplePage');
                 return null;
               }
               return {
                 profile: {
-                  id: profileData.id || item.follower_id,
-                  username: profileData.username,
-                  name: profileData.name || profileData.display_name || null,
-                  avatar_url: profileData.avatar_url,
-                  bio: profileData.bio,
-                  bitcoin_address: profileData.bitcoin_address,
-                  lightning_address: profileData.lightning_address,
+                  id: (profileData as Profile).id || item.follower_id || '',
+                  username: (profileData as Profile).username,
+                  name: (profileData as Profile).name || (profileData as any).display_name || null,
+                  avatar_url: (profileData as Profile).avatar_url,
+                  bio: (profileData as Profile).bio,
+                  bitcoin_address: (profileData as Profile).bitcoin_address,
+                  lightning_address: (profileData as Profile).lightning_address,
                 },
                 created_at: item.created_at,
               };

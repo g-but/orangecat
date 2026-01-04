@@ -15,6 +15,15 @@
 - [ ] I have followed the project's coding standards
 - [ ] I have added necessary environment variables to the deployment configuration
 
+## Type Safety Checklist
+- [ ] No new `as any` casts (unless absolutely necessary with explanation)
+- [ ] No `@ts-ignore` or `@ts-expect-error` (unless justified with description)
+- [ ] All new functions have proper return types
+- [ ] All parameters are properly typed
+- [ ] Database queries use generated types from `@/types/database`
+- [ ] New code passes `tsc --project tsconfig.strict.json --noEmit`
+- [ ] Type guards used instead of `as any` for runtime validation
+
 ## Screenshots (if applicable)
 <!-- Add screenshots to help explain your changes -->
 

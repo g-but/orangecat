@@ -1,10 +1,15 @@
 import { logger } from '@/utils/logger';
-import { createClient } from '@supabase/supabase-js';
-import { NextRequest, NextResponse } from 'next/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
+import {
+  apiSuccess,
+  apiValidationError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { z } from 'zod';
 
-interface AnalysisRequest {
-  description: string;
-}
+const analysisRequestSchema = z.object({
+  description: z.string().min(1).max(5000),
+});
 
 interface AnalysisResponse {
   isPersonal: boolean;
@@ -188,20 +193,31 @@ function analyzeDescription(description: string): AnalysisResponse {
   };
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withOptionalAuth(async (req) => {
   try {
-    const body: AnalysisRequest = await request.json();
-    const { description } = body;
+    const body = await req.json();
+    const validation = analysisRequestSchema.safeParse(body);
+
+    if (!validation.success) {
+      return apiValidationError('Invalid request data', {
+        fields: validation.error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
+      });
+    }
+
+    const { description } = validation.data;
 
     if (!description || description.trim().length === 0) {
-      return NextResponse.json({ error: 'Description is required' }, { status: 400 });
+      return apiValidationError('Description is required');
     }
 
     const analysis = analyzeDescription(description);
 
-    return NextResponse.json(analysis, { status: 200 });
+    return apiSuccess(analysis);
   } catch (error) {
-    logger.error('Error analyzing description:', error);
-    return NextResponse.json({ error: 'Failed to analyze description' }, { status: 500 });
+    logger.error('Error analyzing description', { error }, 'Onboarding');
+    return handleApiError(error);
   }
-}
+});
