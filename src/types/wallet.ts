@@ -416,7 +416,8 @@ export function validateWalletFormData(data: WalletFormData): ValidationResult {
   }
 
   // Validate category icon (whitelist for security)
-  if (data.category_icon && !ALLOWED_CATEGORY_ICONS.includes(data.category_icon as any)) {
+  // Type guard to check if string is in the allowed icons array
+  if (data.category_icon && !(ALLOWED_CATEGORY_ICONS as readonly string[]).includes(data.category_icon)) {
     return { valid: false, error: 'Invalid category icon' };
   }
 
@@ -449,7 +450,7 @@ export function sanitizeWalletInput(data: WalletFormData): WalletFormData {
     label: data.label.trim().slice(0, MAX_LABEL_LENGTH),
     description: data.description?.trim().slice(0, MAX_DESCRIPTION_LENGTH) || undefined,
     address_or_xpub: data.address_or_xpub.trim(),
-    category_icon: ALLOWED_CATEGORY_ICONS.includes(data.category_icon as any)
+    category_icon: (ALLOWED_CATEGORY_ICONS as readonly string[]).includes(data.category_icon || '')
       ? data.category_icon
       : WALLET_CATEGORIES[data.category].icon,
     goal_amount:

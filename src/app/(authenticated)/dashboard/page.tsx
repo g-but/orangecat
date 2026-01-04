@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
 import { timelineService } from '@/services/timeline';
@@ -13,12 +13,12 @@ import Loading from '@/components/Loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
-import { BarChart3, Star, Eye, Users, Target, Wallet, Plus, MessageCircle, Share2, Copy } from 'lucide-react';
+import { BarChart3, Star, Eye, Users, Target, Wallet, Plus, MessageCircle, Share2, Copy, Sparkles, X } from 'lucide-react';
 import ProfileShare from '@/components/sharing/ProfileShare';
 import { toast } from 'sonner';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PROFILE_CATEGORIES } from '@/types/profile';
-import { DashboardProjectCard } from '@/components/dashboard/DashboardProjectCard';
+import { ProjectCard } from '@/components/entity/variants/ProjectCard';
 import TasksSection from '@/components/dashboard/TasksSection';
 
 const DashboardSidebar = dynamic(
@@ -56,12 +56,14 @@ export default function DashboardPage() {
   const { projects, drafts, loadProjects, getStats } = useProjectStore();
   const { dispatchProjectCreated } = useTimelineEvents(); // Enable automatic timeline event creation
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [localLoading, setLocalLoading] = useState(true);
   const [hasRedirected, setHasRedirected] = useState(false);
   const [timelineFeed, setTimelineFeed] = useState<TimelineFeedResponse | null>(null);
   const [timelineLoading, setTimelineLoading] = useState(false);
   const [timelineError, setTimelineError] = useState<string | null>(null);
   const [showShare, setShowShare] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
 
   useEffect(() => {
     if (hydrated) {
@@ -85,6 +87,31 @@ export default function DashboardPage() {
       loadTimelineFeed(user.id);
     }
   }, [user?.id, hydrated]);
+
+  // Check if user just completed onboarding or confirmed email
+  useEffect(() => {
+    if (profile && hydrated && !localLoading) {
+      const isWelcome = searchParams?.get('welcome') === 'true';
+      const isEmailConfirmed = searchParams?.get('confirmed') === 'true';
+      const welcomeKey = `orangecat-welcome-shown-${user?.id}`;
+      const hasSeenWelcome = localStorage.getItem(welcomeKey);
+      const onboardingComplete = (profile as { onboarding_completed?: boolean }).onboarding_completed;
+
+      // Show welcome for new users OR email confirmation
+      if (isWelcome || isEmailConfirmed || (onboardingComplete && !hasSeenWelcome)) {
+        setShowWelcome(true);
+        // Use localStorage so it persists across sessions but only shows once per user
+        localStorage.setItem(welcomeKey, 'true');
+
+        // Show special toast for email confirmation
+        if (isEmailConfirmed) {
+          toast.success('Email confirmed! Welcome to OrangeCat 🎉', {
+            duration: 5000,
+          });
+        }
+      }
+    }
+  }, [profile, hydrated, localLoading, searchParams, user?.id]);
 
   // Reload projects when returning to dashboard (e.g., after creating a project)
   useEffect(() => {
@@ -196,60 +223,79 @@ export default function DashboardPage() {
     return Boolean(feed?.events?.length || feed?.items?.length || feed?.data?.length);
   }, [timelineFeed]);
 
+  // PRIORITIZED guided suggestions - most important actions first
   const guidedSuggestions = useMemo(() => {
     const suggestions: {
       title: string;
       description: string;
       href: string;
       icon: React.ReactNode;
+      priority: number; // Lower = higher priority
+      reason: string;
     }[] = [];
 
+    // Priority 1: Bitcoin address is critical for receiving funds
     if (!hasBitcoinAddress) {
       suggestions.push({
-        title: 'Add a Bitcoin wallet',
-        description: 'Enable receiving funds and payouts.',
+        title: 'Add your Bitcoin address',
+        description: 'Required to receive funds from supporters.',
         href: '/dashboard/wallets',
         icon: <Wallet className="w-4 h-4 text-orange-600" />,
+        priority: 1,
+        reason: 'unlock-payments',
       });
     }
 
+    // Priority 2: First project is the main value prop
+    if (safeProjects.length === 0) {
+      suggestions.push({
+        title: 'Create your first project',
+        description: 'Launch a Bitcoin crowdfunding campaign in minutes.',
+        href: '/projects/create',
+        icon: <Plus className="w-4 h-4 text-blue-600" />,
+        priority: 2,
+        reason: 'core-feature',
+      });
+    }
+
+    // Priority 3: Complete drafts (they're already started)
     if (hasAnyDraft) {
       suggestions.push({
         title: 'Finish your draft',
         description: `Complete ${totalDrafts} pending project${totalDrafts > 1 ? 's' : ''}.`,
         href: '/projects/create',
         icon: <Target className="w-4 h-4 text-emerald-600" />,
+        priority: 3,
+        reason: 'continue-work',
       });
     }
 
-    if (safeProjects.length === 0) {
-      suggestions.push({
-        title: 'Create your first project',
-        description: 'Launch a campaign in minutes.',
-        href: '/projects/create',
-        icon: <Plus className="w-4 h-4 text-blue-600" />,
-      });
-    }
-
+    // Priority 4: Engage with community
     if (!hasTimelineActivity) {
       suggestions.push({
         title: 'Post an update',
-        description: 'Share a quick update to engage supporters.',
+        description: 'Share with the community and build your audience.',
         href: '/timeline',
         icon: <MessageCircle className="w-4 h-4 text-indigo-600" />,
+        priority: 4,
+        reason: 'community',
       });
     }
 
-    if (suggestions.length === 0) {
+    // Priority 5: Explore what others are doing
+    if (safeProjects.length > 0 && hasBitcoinAddress) {
       suggestions.push({
-        title: 'View dashboard',
-        description: 'Check activity across projects and wallets.',
-        href: '/dashboard',
-        icon: <BarChart3 className="w-4 h-4 text-purple-600" />,
+        title: 'Discover projects',
+        description: 'See what others are building and get inspired.',
+        href: '/discover',
+        icon: <Eye className="w-4 h-4 text-purple-600" />,
+        priority: 5,
+        reason: 'explore',
       });
     }
 
-    return suggestions.slice(0, 4);
+    // Sort by priority and return top 4
+    return suggestions.sort((a, b) => a.priority - b.priority).slice(0, 4);
   }, [
     hasAnyDraft,
     hasBitcoinAddress,
@@ -352,6 +398,63 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Welcome Message for New Users */}
+      {showWelcome && (
+        <div className="mb-6">
+          <div className="relative rounded-xl border border-green-200 bg-gradient-to-r from-green-50 to-emerald-50 p-4 sm:p-6 shadow-sm">
+            <button
+              onClick={() => setShowWelcome(false)}
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 text-green-600 hover:text-green-800 transition-colors"
+            >
+              <X className="h-4 w-4 sm:h-5 sm:w-5" />
+            </button>
+            <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
+              <div className="p-2 sm:p-3 bg-green-100 rounded-xl flex-shrink-0">
+                <Sparkles className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold text-green-900 mb-2">
+                  🎉 Welcome to OrangeCat, {profile?.name || profile?.username || 'Creator'}!
+                </h3>
+                <p className="text-green-800 mb-3 sm:mb-4 text-sm sm:text-base">
+                  Your Bitcoin crowdfunding journey starts now. Here's what you can do to get started:
+                </p>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                  <Link href="/projects/create">
+                    <div className="p-2 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer">
+                      <Target className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 mb-1 sm:mb-2" />
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">Create Project</p>
+                      <p className="text-xs text-gray-600 hidden sm:block">Launch your first campaign</p>
+                    </div>
+                  </Link>
+                  <Link href="/dashboard/wallets">
+                    <div className="p-2 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer">
+                      <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mb-1 sm:mb-2" />
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">Add Wallet</p>
+                      <p className="text-xs text-gray-600 hidden sm:block">Connect Bitcoin wallet</p>
+                    </div>
+                  </Link>
+                  <Link href="/discover">
+                    <div className="p-2 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer">
+                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 mb-1 sm:mb-2" />
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">Explore</p>
+                      <p className="text-xs text-gray-600 hidden sm:block">Discover projects</p>
+                    </div>
+                  </Link>
+                  <Link href="/timeline">
+                    <div className="p-2 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer">
+                      <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 mb-1 sm:mb-2" />
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">Join Community</p>
+                      <p className="text-xs text-gray-600 hidden sm:block">Connect & engage</p>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Invite / Share CTA */}
       <div className="mb-6">
@@ -519,7 +622,20 @@ export default function DashboardPage() {
             <CardContent className="p-4 sm:p-6">
               <div className="grid gap-4">
                 {safeProjects.slice(0, 3).map(project => (
-                  <DashboardProjectCard key={project.id} project={project} />
+                  <ProjectCard 
+                    key={project.id}
+                    id={project.id}
+                    title={project.title}
+                    href={`/projects/${project.id}`}
+                    project={{
+                      ...project,
+                      id: project.id,
+                      title: project.title,
+                      raised_amount: project.total_funding || 0,
+                      goal_amount: project.goal_amount || 0,
+                      status: project.isDraft ? 'draft' : project.isPaused ? 'paused' : project.isActive ? 'active' : 'draft',
+                    } as any}
+                  />
                 ))}
               </div>
             </CardContent>

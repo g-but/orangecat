@@ -1,28 +1,15 @@
-'use client';
-
 /**
- * CREATE ASSET PAGE
+ * Legacy Asset Create Page - Redirects to new path
  *
- * Uses the unified EntityForm component with useTemplateSelection hook.
- * Templates appear at the bottom to help users who need inspiration.
+ * Preserves backward compatibility by redirecting to the new dashboard path.
  *
  * Created: 2025-12-03
- * Last Modified: 2025-12-16
- * Last Modified Summary: Moved templates to bottom of form
+ * Last Modified: 2025-12-31
+ * Last Modified Summary: Converted to redirect to /dashboard/assets/create
  */
 
-import { EntityForm } from '@/components/create';
-import { assetConfig } from '@/config/entity-configs';
-import { AssetTemplates } from '@/components/create/templates';
-import { useTemplateSelection } from '@/hooks/useTemplateSelection';
+import { redirect } from 'next/navigation';
 
-export default function CreateAssetPage() {
-  const { mergedConfig, handleSelectTemplate } = useTemplateSelection(assetConfig);
-
-  return (
-    <div className="space-y-6">
-      <EntityForm config={mergedConfig} />
-      <AssetTemplates onSelectTemplate={handleSelectTemplate} />
-    </div>
-  );
+export default function LegacyCreateAssetPage() {
+  redirect('/dashboard/assets/create');
 }

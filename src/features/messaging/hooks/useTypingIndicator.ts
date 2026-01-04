@@ -13,6 +13,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
 import { debugLog } from '../lib/constants';
+import type { Database } from '@/types/database';
+
+// Type for typing_indicators table row
+type TypingIndicatorRow = Database['public']['Tables']['typing_indicators']['Row'];
 
 interface TypingUser {
   userId: string;
@@ -194,44 +198,48 @@ export function useTypingIndicator(
 
           if (payload.eventType === 'DELETE') {
             // Remove from typing users
-            setTypingUsers(prev => prev.filter(u => u.userId !== (payload.old as any).user_id));
-          } else if (payload.new && (payload.new as any).user_id !== user.id) {
-            // Add or update typing user
-            const typingUserId = (payload.new as any).user_id;
-            const expiresAt = new Date((payload.new as any).expires_at);
+            const oldRow = payload.old as TypingIndicatorRow;
+            setTypingUsers(prev => prev.filter(u => u.userId !== oldRow.user_id));
+          } else if (payload.new) {
+            const newRow = payload.new as TypingIndicatorRow;
+            if (newRow.user_id !== user.id) {
+              // Add or update typing user
+              const typingUserId = newRow.user_id;
+              const expiresAt = new Date(newRow.expires_at);
 
-            // Check if expired
-            if (expiresAt < new Date()) {
-              setTypingUsers(prev => prev.filter(u => u.userId !== typingUserId));
-              return;
-            }
-
-            // Fetch profile if needed
-            const { data: profile } = await supabase
-              .from('profiles')
-              .select('username, name')
-              .eq('id', typingUserId)
-              .single();
-
-            setTypingUsers(prev => {
-              const existing = prev.find(u => u.userId === typingUserId);
-              if (existing) {
-                return prev.map(u =>
-                  u.userId === typingUserId
-                    ? { ...u, startedAt: new Date((payload.new as any).started_at) }
-                    : u
-                );
+              // Check if expired
+              if (expiresAt < new Date()) {
+                setTypingUsers(prev => prev.filter(u => u.userId !== typingUserId));
+                return;
               }
-              return [
-                ...prev,
-                {
-                  userId: typingUserId,
-                  username: profile?.username || '',
-                  name: profile?.name || '',
-                  startedAt: new Date((payload.new as any).started_at),
-                },
-              ];
-            });
+
+              // Fetch profile if needed
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username, name')
+                .eq('id', typingUserId)
+                .single();
+
+              setTypingUsers(prev => {
+                const existing = prev.find(u => u.userId === typingUserId);
+                if (existing) {
+                  return prev.map(u =>
+                    u.userId === typingUserId
+                      ? { ...u, startedAt: new Date(newRow.started_at) }
+                      : u
+                  );
+                }
+                return [
+                  ...prev,
+                  {
+                    userId: typingUserId,
+                    username: profile?.username || '',
+                    name: profile?.name || '',
+                    startedAt: new Date(newRow.started_at),
+                  },
+                ];
+              });
+            }
           }
         }
       )

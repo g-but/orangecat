@@ -7,6 +7,10 @@ import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { Bitcoin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import dynamic from 'next/dynamic';
+
+const ProjectSupportButton = dynamic(() => import('@/components/projects/ProjectSupportButton').then(m => ({ default: m.ProjectSupportButton })));
+const SupportStats = dynamic(() => import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats })));
 
 interface Props {
   project: {
@@ -25,7 +29,7 @@ interface Props {
 }
 
 export default function ProjectSummaryRail({ project, isOwner }: Props) {
-  const goalCurrency = (project as any).goal_currency || project.currency || 'CHF';
+  const goalCurrency = project.goal_currency || project.currency || 'CHF';
   const [amountRaised, setAmountRaised] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -144,28 +148,17 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
         </Button>
       )}
 
-      {/* Quick Action - Scroll to Support Section */}
-      {project.bitcoin_address && (
-        <Button
-          onClick={() => {
-            // Scroll to Support this Project section in main content
-            const supportSection = document.getElementById('support-heading');
-            if (supportSection) {
-              supportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            } else {
-              // Fallback: scroll to donation section
-              const bitcoinSection = document.getElementById('bitcoin-donation-section');
-              if (bitcoinSection) {
-                bitcoinSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }
-            }
-          }}
-          className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-        >
-          <Bitcoin className="w-4 h-4 mr-2" aria-hidden="true" />
-          Support this Project
-        </Button>
-      )}
+      {/* Support Button */}
+      <ProjectSupportButton
+        projectId={project.id}
+        variant="default"
+        size="md"
+        showStats={false}
+        className="w-full"
+      />
+
+      {/* Support Stats */}
+      <SupportStats projectId={project.id} />
     </aside>
   );
 }

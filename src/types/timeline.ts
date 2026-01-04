@@ -387,6 +387,16 @@ export interface TimelineFeedResponse {
 }
 
 /**
+ * Response for thread posts endpoint
+ */
+export interface ThreadPostsResponse {
+  success: boolean;
+  posts?: TimelineDisplayEvent[];
+  total?: number;
+  error?: string;
+}
+
+/**
  * API request to create timeline event
  */
 export interface CreateTimelineEventRequest {
@@ -416,7 +426,7 @@ export interface CreateTimelineEventRequest {
  */
 export interface TimelineEventResponse {
   success: boolean;
-  event?: TimelineEvent;
+  event?: TimelineEvent | TimelineDisplayEvent;
   error?: string;
   metadata?: Record<string, any>;
 }
@@ -442,13 +452,14 @@ export interface TimelineEventTypeConfig {
 
 /**
  * Registry of all event type configurations
+ * Note: This is a partial implementation - full config should be in timeline service
  */
-export const TIMELINE_EVENT_CONFIGS: Record<TimelineEventType, TimelineEventTypeConfig> = {
+export const TIMELINE_EVENT_CONFIGS: Partial<Record<TimelineEventType, TimelineEventTypeConfig>> = {
   // Project events would be defined here
   project_created: {
     label: 'Project Created',
     description: 'A new crowdfunding project was launched',
-    icon: null as any, // Will be imported from lucide-react
+    icon: {} as LucideIcon, // Placeholder - actual icon should be imported from lucide-react
     color: 'blue',
     category: 'project',
     requiresSubject: true,
@@ -458,8 +469,8 @@ export const TIMELINE_EVENT_CONFIGS: Record<TimelineEventType, TimelineEventType
     defaultVisibility: 'public',
     canBeFeatured: true,
   },
-  // ... other event configurations
-} as any;
+  // ... other event configurations would be added here
+};
 
 // ==================== UTILITY TYPES ====================
 

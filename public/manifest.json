@@ -1,7 +1,7 @@
 {
   "name": "OrangeCat - Bitcoin Crowdfunding Platform",
   "short_name": "OrangeCat",
-  "description": "The premier Bitcoin-native crowdfunding platform for funding your ideas and projects",
+  "description": "The premier Bitcoin-native crowdfunding platform for funding your ideas and projects. A BitBaum company.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

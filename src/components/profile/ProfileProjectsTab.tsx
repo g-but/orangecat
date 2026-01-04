@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -21,7 +22,7 @@ interface ProfileProjectsTabProps {
  * Reuses project display logic for DRY principle.
  */
 export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfileProjectsTabProps) {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<ProjectListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
           setProjects(result.data.data);
         }
       } catch (error) {
-        console.error('Failed to fetch projects:', error);
+        logger.error('Failed to fetch projects:', error);
       } finally {
         setLoading(false);
       }
@@ -154,9 +155,9 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
               <div className="flex flex-col sm:flex-row">
                 {/* Thumbnail */}
                 <div className="relative w-full sm:w-32 h-48 sm:h-auto flex-shrink-0 bg-gradient-to-br from-orange-100 to-amber-100">
-                  {(project as any).thumbnail_url ? (
+                  {project.thumbnail_url ? (
                     <Image
-                      src={(project as any).thumbnail_url}
+                      src={project.thumbnail_url}
                       alt={project.title}
                       fill
                       className="object-cover group-hover:scale-105 transition-transform duration-300"
@@ -214,7 +215,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
                         <span className="text-gray-500">
                           <CurrencyDisplay
                             amount={currentAmount}
-                            currency={project.currency || 'SATS'}
+                            currency={project.currency || 'CHF'}
                             size="sm"
                           />
                         </span>
@@ -222,7 +223,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
                           of{' '}
                           <CurrencyDisplay
                             amount={goalAmount}
-                            currency={project.currency || 'SATS'}
+                            currency={project.currency || 'CHF'}
                             size="sm"
                           />
                         </span>
@@ -238,7 +239,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
                           ) : raisedAmount > 0 ? (
                             <CurrencyDisplay
                               amount={raisedAmount}
-                              currency={project.currency || 'SATS'}
+                              currency={project.currency || 'CHF'}
                               size="sm"
                             />
                           ) : (

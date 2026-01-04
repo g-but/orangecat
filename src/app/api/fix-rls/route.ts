@@ -1,10 +1,11 @@
 import { NextRequest } from 'next/server';
+import { logger } from '@/utils/logger';
 import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiError } from '@/lib/api/standardResponse';
 
 export const POST = async (request: NextRequest) => {
   try {
-    console.log('🔧 Applying RLS policy fixes via API route...');
+    logger.info('🔧 Applying RLS policy fixes via API route...');
     
     const supabase = await createServerClient();
     
@@ -59,12 +60,12 @@ export const POST = async (request: NextRequest) => {
       "CREATE POLICY \"Users can update their own loans\" ON loans FOR UPDATE USING (auth.uid() = user_id)"
     ];
     
-    console.log(`📊 Executing ${sqlStatements.length} policy fixes...`);
+    logger.info(`📊 Executing ${sqlStatements.length} policy fixes...`);
     
     const results = [];
     for (let i = 0; i < sqlStatements.length; i++) {
       const sql = sqlStatements[i];
-      console.log(`🔄 Executing: ${sql.substring(0, 60)}...`);
+      logger.info(`🔄 Executing: ${sql.substring(0, 60)}...`);
       
       try {
         // Execute raw SQL using the service client
@@ -91,7 +92,7 @@ export const POST = async (request: NextRequest) => {
     }
     
     // Test service creation after "fixes"
-    console.log('🧪 Testing service creation...');
+    logger.info('🧪 Testing service creation...');
     
     const testService = {
       title: 'Test Car Repair Service API',
@@ -111,10 +112,10 @@ export const POST = async (request: NextRequest) => {
       .single();
     
     if (serviceError) {
-      console.error('❌ Service creation test failed:', serviceError.message);
+      logger.error('❌ Service creation test failed:', serviceError.message);
       results.push({ test: 'service_creation', status: 'failed', error: serviceError.message });
     } else {
-      console.log('✅ Service creation test successful:', serviceData.title);
+      logger.info('✅ Service creation test successful:', serviceData.title);
       results.push({ test: 'service_creation', status: 'success', data: serviceData });
     }
     
@@ -124,7 +125,7 @@ export const POST = async (request: NextRequest) => {
     });
     
   } catch (error) {
-    console.error('❌ RLS fix failed:', error);
+    logger.error('❌ RLS fix failed:', error);
     return apiError('Failed to apply RLS fixes: ' + error.message, 500);
   }
 };

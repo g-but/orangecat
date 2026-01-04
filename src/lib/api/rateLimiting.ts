@@ -284,7 +284,13 @@ export function withRateLimit<T extends any[]>(
                'unknown'
 
     // Get user ID if available (from authenticated request)
-    const userId = (request as any).user?.id || undefined
+    interface RequestWithUser {
+      user?: {
+        id: string;
+      };
+    }
+    const requestWithUser = request as RequestWithUser;
+    const userId = requestWithUser.user?.id || undefined
 
     const identifiers = { userId, ip, correlationId }
 

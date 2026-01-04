@@ -1,25 +1,38 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { timelineService } from '@/services/timeline';
+import {
+  apiSuccess,
+  apiValidationError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
+import { z } from 'zod';
 
-export async function POST(request: NextRequest) {
+const interactionSchema = z.object({
+  action: z.enum(['like', 'share', 'comment']),
+  eventId: z.string().min(1),
+  content: z.string().max(2000).optional(),
+  parentCommentId: z.string().uuid().optional(),
+  shareText: z.string().max(500).optional(),
+  visibility: z.enum(['public', 'private', 'followers']).optional(),
+});
+
+export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user } = req;
+    const body = await req.json();
+    const validation = interactionSchema.safeParse(body);
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!validation.success) {
+      return apiValidationError('Invalid request data', {
+        fields: validation.error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
+      });
     }
 
-    const body = await request.json();
-    const { action, eventId, content, parentCommentId } = body;
-
-    if (!action || !eventId) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-    }
+    const { action, eventId, content, parentCommentId, shareText, visibility } = validation.data;
 
     let result;
 
@@ -29,51 +42,42 @@ export async function POST(request: NextRequest) {
         break;
 
       case 'share':
-        result = await timelineService.shareEvent(eventId, body.shareText, body.visibility);
+        result = await timelineService.shareEvent(eventId, shareText, visibility);
         break;
 
       case 'comment':
         if (!content?.trim()) {
-          return NextResponse.json({ error: 'Comment content is required' }, { status: 400 });
+          return apiValidationError('Comment content is required');
         }
         result = await timelineService.addComment(eventId, content.trim(), parentCommentId);
         break;
 
       default:
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+        return apiValidationError('Invalid action');
     }
 
     if (result.success) {
-      return NextResponse.json(result);
+      return apiSuccess(result);
     } else {
-      return NextResponse.json({ error: result.error || 'Action failed' }, { status: 400 });
+      return apiValidationError(result.error || 'Action failed');
     }
   } catch (error) {
-    console.error('Timeline interaction error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Timeline interaction error', { error, userId: req.user.id }, 'Timeline');
+    return handleApiError(error);
   }
-}
+});
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { searchParams } = new URL(request.url);
+    const { user } = req;
+    const { searchParams } = new URL(req.url);
     const action = searchParams.get('action');
     const eventId = searchParams.get('eventId');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const offset = parseInt(searchParams.get('offset') || '0');
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50', 10) || 50, 100);
+    const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
 
     if (!action || !eventId) {
-      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+      return apiValidationError('Missing required parameters: action and eventId');
     }
 
     let result;
@@ -84,12 +88,12 @@ export async function GET(request: NextRequest) {
         break;
 
       default:
-        return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+        return apiValidationError('Invalid action');
     }
 
-    return NextResponse.json(result);
+    return apiSuccess(result);
   } catch (error) {
-    console.error('Timeline get interaction error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Timeline GET interaction error', { error, userId: req.user.id }, 'Timeline');
+    return handleApiError(error);
   }
-}
+});

@@ -28,6 +28,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { validateOneOfIds, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
+import { getTableName } from '@/config/entity-registry';
 
 type SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
 
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest) {
       }
     } else if (body.project_id) {
       const { data: project } = await supabase
-        .from('projects')
+        .from(getTableName('project'))
         .select('user_id')
         .eq('id', body.project_id)
         .single();

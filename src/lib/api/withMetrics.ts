@@ -9,8 +9,10 @@ export function withMetrics(route: string, handler: (req: Request) => Promise<Re
       return res
     } finally {
       const duration = Date.now() - start
-      const method = (req as any).method || 'GET'
-      const status = (res as any)?.status || 200
+      // Request method is available on Request object
+      const method = req.method || 'GET'
+      // Response status is available on Response object
+      const status = res?.status || 200
       // Initialize registry if needed
       await getMetricsRegistry().catch(() => {})
       await recordHttpMetrics({ method, route, status, durationMs: duration })

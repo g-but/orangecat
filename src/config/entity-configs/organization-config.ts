@@ -15,6 +15,7 @@ import {
   organizationDefaultGuidance,
 } from '@/lib/entity-guidance/organization-guidance';
 import type { EntityConfig, FieldGroup } from '@/components/create/types';
+import { ORGANIZATION_TEMPLATES, type OrganizationTemplate } from '@/components/create/templates';
 
 // ==================== FIELD GROUPS ====================
 
@@ -194,6 +195,9 @@ export const organizationConfig: EntityConfig<OrganizationFormData> = {
   // Guidance
   guidanceContent: organizationGuidanceContent,
   defaultGuidance: organizationDefaultGuidance,
+
+  // Templates
+  templates: ORGANIZATION_TEMPLATES as unknown as OrganizationTemplate[],
 
   // Success messaging
   successMessage: 'Organization created successfully!',

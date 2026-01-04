@@ -1,21 +1,16 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { userProductSchema } from '@/domain/products/schema';
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiInternalError,
-  handleApiError,
-} from '@/lib/api/standardResponse';
-import { logger } from '@/utils/logger';
+import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
 import { compose } from '@/lib/api/compose';
-import { withZodBody } from '@/lib/api/withZod';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { createProduct, listEntitiesPage } from '@/domain/commerce/service';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
-import { rateLimitWrite } from '@/lib/rate-limit';
-import { apiRateLimited } from '@/lib/api/standardResponse';
+import { getCacheControl, calculatePage } from '@/lib/api/helpers';
+import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
+import { getTableName } from '@/config/entity-registry';
+import { logger } from '@/utils/logger';
 
 // GET /api/products - Get all active products
 export const GET = compose(
@@ -30,10 +25,20 @@ export const GET = compose(
     // Show drafts if requesting own user
     const {
       data: { user },
+      error: authError,
     } = await supabase.auth.getUser();
     const includeOwnDrafts = Boolean(userId && user && userId === user.id);
 
-    const { items, total } = await listEntitiesPage('user_products', {
+    // Debug logging
+    logger.info('Products GET request', {
+      userId,
+      authUserId: user?.id,
+      authError: authError?.message,
+      includeOwnDrafts,
+      userIdMatch: userId === user?.id,
+    });
+
+    const { items, total } = await listEntitiesPage(getTableName('product'), {
       limit,
       offset,
       category,
@@ -42,12 +47,10 @@ export const GET = compose(
     });
 
     // Use private cache for user-specific queries, public for general listings
-    const cacheControl = userId
-      ? 'private, no-cache, no-store, must-revalidate'
-      : 'public, s-maxage=60, stale-while-revalidate=300';
+    const cacheControl = getCacheControl(Boolean(userId));
 
     return apiSuccess(items, {
-      page: Math.floor(offset / limit) + 1,
+      page: calculatePage(offset, limit),
       limit,
       total,
       headers: {
@@ -60,32 +63,10 @@ export const GET = compose(
 });
 
 // POST /api/products - Create new product
-export const POST = compose(
-  withRequestId(),
-  withZodBody(userProductSchema)
-)(async (request: NextRequest, ctx) => {
-  try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
-    // Write rate limit per user
-    const rl = rateLimitWrite(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      logger.warn('Product creation rate limit exceeded', { userId: user.id });
-      return apiRateLimited('Too many product creation requests. Please slow down.', retryAfter);
-    }
-
-    const product = await createProduct(user.id, ctx.body, supabase);
-    logger.info('Product created successfully', { productId: product.id });
-    return apiSuccess(product, { status: 201 });
-  } catch (error) {
-    return handleApiError(error);
-  }
+export const POST = createEntityPostHandler({
+  entityType: 'product',
+  schema: userProductSchema,
+  createEntity: async (userId, data, supabase) => {
+    return await createProduct(userId, data as { title: string; price_sats: number; [key: string]: unknown }, supabase);
+  },
 });

@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState, useEffect, useRef } from 'react';
 import { Input } from './Input';
@@ -103,7 +104,7 @@ export function LocationInput({
         };
       }
     } catch (error) {
-      console.error('Zip code lookup error:', error);
+      logger.error('Zip code lookup error:', error);
     }
 
     return null;
@@ -181,7 +182,7 @@ export function LocationInput({
           setShowSuggestions(true);
         }
       } catch (error) {
-        console.error('Nominatim search error:', error);
+        logger.error('Nominatim search error:', error);
         setSuggestions([]);
       } finally {
         setIsLoading(false);
@@ -253,7 +254,7 @@ export function LocationInput({
         });
       }
     } catch (error) {
-      console.error('Location details error:', error);
+      logger.error('Location details error:', error);
       onChange({
         country: '',
         city: suggestion.mainText,

@@ -1,8 +1,10 @@
 'use client';
+import { logger } from '@/utils/logger';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { Profile as DatabaseProfile, ProfileFormData } from '@/types/database';
+import { Profile } from '@/types/profile';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import {
   User,
@@ -75,7 +77,7 @@ export default function ProfileInfoTab({
       } catch (error) {
         // Error is already handled by onSave (toast shown)
         // Stay in edit mode so user can try again
-        console.error('Failed to save profile:', error);
+        logger.error('Failed to save profile:', error);
       }
     }
   };
@@ -90,7 +92,7 @@ export default function ProfileInfoTab({
     return (
       <div className="space-y-6">
         <ModernProfileEditor
-          profile={profile as any}
+          profile={profile as Profile}
           userId={userId}
           userEmail={userEmail}
           onSave={handleSave}
@@ -195,15 +197,15 @@ export default function ProfileInfoTab({
               </div>
 
               {/* Location - Respect privacy/group */}
-              {!isLocationHidden((profile as any).location_context) ? (
+              {!isLocationHidden(profile.location_context || '') ? (
                 <div className="flex items-start gap-3">
                   <MapPin className="w-5 h-5 text-gray-400 mt-0.5" />
                   <div className="flex-1">
                     <div className="text-sm text-gray-500">Location</div>
                     {profile.location_search || profile.location ||
-                    getLocationGroupLabel((profile as any).location_context) ? (
+                    getLocationGroupLabel(profile.location_context || '') ? (
                       <div className="font-medium text-gray-900">
-                        {getLocationGroupLabel((profile as any).location_context) ||
+                        {getLocationGroupLabel(profile.location_context || '') ||
                           profile.location_search ||
                           profile.location}
                       </div>

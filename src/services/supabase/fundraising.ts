@@ -128,15 +128,22 @@ export async function getUserFundraisingActivity(
         .order('created_at', { ascending: false })
         .limit(limit);
 
+      interface TransactionWithProject {
+        created_at: string;
+        amount: number;
+        projects: {
+          title: string;
+        };
+      }
       if (!transactionsError && transactions) {
-        transactions.forEach(transaction => {
+        (transactions as TransactionWithProject[]).forEach(transaction => {
           const timeDiff = Date.now() - new Date(transaction.created_at).getTime();
           const timeAgo = formatTimeAgo(timeDiff);
 
           activities.push({
             type: 'donation',
             title: 'New donation received',
-            context: (transaction as any).projects.title,
+            context: transaction.projects?.title || 'Unknown project',
             time: timeAgo,
             amount: transaction.amount,
             currency: 'SATS',

@@ -138,3 +138,6 @@ export { notifySuccess, notifyFailure, notifyProgress };
 if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
+
+
+

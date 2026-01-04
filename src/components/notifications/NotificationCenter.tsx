@@ -222,7 +222,10 @@ export default function NotificationCenter({
             ].map(tab => (
               <button
                 key={tab.key}
-                onClick={() => setFilter(tab.key as any)}
+                onClick={() => {
+                  const filterValue: 'all' | 'unread' | 'payments' | 'projects' | 'messages' = tab.key as 'all' | 'unread' | 'payments' | 'projects' | 'messages';
+                  setFilter(filterValue);
+                }}
                 className={`flex-1 px-3 py-1.5 text-sm rounded-md transition-colors ${
                   filter === tab.key
                     ? 'bg-white text-gray-900 shadow-sm'

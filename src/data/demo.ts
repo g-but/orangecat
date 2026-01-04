@@ -9,7 +9,7 @@
  * Last Modified Summary: Initial creation with comprehensive demo data
  */
 
-import type { Circle, CircleWallet, CircleActivity, CircleRole } from '@/types/circles';
+import type { Group, GroupMember, GroupRole } from '@/services/groups/types';
 import type { Loan, LoanOffer, LoanStatus, LoanOfferStatus } from '@/types/loans';
 
 // ==================== USER DATA ====================
@@ -54,7 +54,7 @@ export interface DemoCircle {
   projects: number;
   category: string;
   isPublic: boolean;
-  userRole: CircleRole;
+  userRole: GroupRole;
   recentActivity: string;
   wallets: DemoCircleWallet[];
 }
@@ -70,7 +70,7 @@ export const DEMO_CIRCLES: DemoCircle[] = [
     projects: 12,
     category: 'Community',
     isPublic: true,
-    userRole: 'admin',
+    userRole: 'admin' as GroupRole,
     recentActivity: 'Sarah launched a new wallet project',
     wallets: [
       { name: 'Development Fund', balance: 850000, purpose: 'Project funding' },
@@ -88,7 +88,7 @@ export const DEMO_CIRCLES: DemoCircle[] = [
     projects: 5,
     category: 'Business',
     isPublic: true,
-    userRole: 'member',
+    userRole: 'member' as GroupRole,
     recentActivity: 'New solar panel project funded',
     wallets: [
       { name: 'Main Fund', balance: 1200000, purpose: 'Project investments' },
@@ -105,7 +105,7 @@ export const DEMO_CIRCLES: DemoCircle[] = [
     projects: 2,
     category: 'Family',
     isPublic: false,
-    userRole: 'owner',
+    userRole: 'founder' as GroupRole,
     recentActivity: 'Monthly dividend distributed',
     wallets: [
       { name: 'Investment Portfolio', balance: 350000, purpose: 'Long-term investments' },
@@ -346,9 +346,9 @@ export const DEMO_STEPS: DemoStep[] = [
     highlight: 'dashboard',
   },
   {
-    title: 'Community Circles',
+    title: 'Community Groups',
     content: 'Join groups with shared wallets, governance, and collective funding power.',
-    highlight: 'circles',
+    highlight: 'groups',
   },
   {
     title: 'Peer-to-Peer Lending',
@@ -397,14 +397,13 @@ export function formatUSD(sats: number): string {
 /**
  * Get role badge color class
  */
-export function getRoleBadgeColor(role: CircleRole): string {
+export function getRoleBadgeColor(role: GroupRole): string {
   switch (role) {
-    case 'owner':
+    case 'founder':
       return 'bg-purple-100 text-purple-800';
     case 'admin':
       return 'bg-blue-100 text-blue-800';
-    case 'moderator':
-      return 'bg-yellow-100 text-yellow-800';
+    case 'member':
     default:
       return 'bg-green-100 text-green-800';
   }

@@ -6,9 +6,16 @@
  * Created: 2025-11-17
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
+import {
+  apiSuccess,
+  apiNotFound,
+  apiValidationError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { getTableName } from '@/config/entity-registry';
 
 interface RouteParams {
   params: Promise<{
@@ -22,31 +29,31 @@ interface RouteParams {
  * Fetches recent updates for a project (updates, donations, milestones)
  * Public endpoint - no authentication required for viewing
  */
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
   try {
     const { id: projectId } = await params;
 
     if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
+      return apiValidationError('Project ID is required');
     }
 
     const supabase = await createServerClient();
 
     // Fetch project to ensure it exists and is viewable
     const { data: project, error: projectError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('id, status')
       .eq('id', projectId)
       .single();
 
     if (projectError || !project) {
       logger.warn('Project not found for updates', { projectId }, 'ProjectUpdatesAPI');
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+      return apiNotFound('Project not found');
     }
 
     // Only show updates for active or completed projects (privacy)
     if (!['active', 'completed'].includes(project.status)) {
-      return NextResponse.json({ updates: [] }, { status: 200 });
+      return apiSuccess({ updates: [], count: 0 });
     }
 
     // Fetch recent updates (limit to 10 most recent)
@@ -63,18 +70,15 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         { projectId, error: updatesError },
         'ProjectUpdatesAPI'
       );
-      return NextResponse.json({ error: 'Failed to fetch updates' }, { status: 500 });
+      return handleApiError(updatesError);
     }
 
-    return NextResponse.json(
-      {
-        updates: updates || [],
-        count: updates?.length || 0,
-      },
-      { status: 200 }
-    );
+    return apiSuccess({
+      updates: updates || [],
+      count: updates?.length || 0,
+    });
   } catch (error) {
-    logger.error('Unexpected error in project updates API', { error }, 'ProjectUpdatesAPI');
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    logger.error('Unexpected error in project updates API', { error, projectId: (await params).id }, 'ProjectUpdatesAPI');
+    return handleApiError(error);
   }
-}
+});

@@ -297,6 +297,12 @@ export interface CircleActivitiesQuery {
   sort_order?: 'asc' | 'desc';
 }
 
+export interface Pagination {
+  hasMore: boolean;
+  nextCursor: string | null;
+  count: number;
+}
+
 export interface CirclesPagination extends Pagination {
   query?: CirclesQuery;
 }
@@ -465,3 +471,6 @@ export interface UseCreateCircleOptions {
 export interface UseUpdateCircleOptions extends UseCreateCircleOptions {
   circleId: string;
 }
+
+
+

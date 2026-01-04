@@ -221,12 +221,15 @@ export default function WalletRecommendation() {
                           name="experience"
                           value={option.value}
                           checked={preferences.experience === option.value}
-                          onChange={e =>
-                            setPreferences(prev => ({
-                              ...prev,
-                              experience: e.target.value as any,
-                            }))
-                          }
+                          onChange={e => {
+                            const value = e.target.value;
+                            if (value === 'beginner' || value === 'intermediate' || value === 'advanced') {
+                              setPreferences(prev => ({
+                                ...prev,
+                                experience: value,
+                              }));
+                            }
+                          }}
                           className="mr-3"
                         />
                         <div>
@@ -255,12 +258,15 @@ export default function WalletRecommendation() {
                           name="privacy"
                           value={option.value}
                           checked={preferences.privacy === option.value}
-                          onChange={e =>
-                            setPreferences(prev => ({
-                              ...prev,
-                              privacy: e.target.value as any,
-                            }))
-                          }
+                          onChange={e => {
+                            const value = e.target.value;
+                            if (value === 'low' || value === 'medium' || value === 'high') {
+                              setPreferences(prev => ({
+                                ...prev,
+                                privacy: value,
+                              }));
+                            }
+                          }}
                           className="mr-3"
                         />
                         <div>
@@ -292,12 +298,15 @@ export default function WalletRecommendation() {
                           name="custody"
                           value={option.value}
                           checked={preferences.custody === option.value}
-                          onChange={e =>
-                            setPreferences(prev => ({
-                              ...prev,
-                              custody: e.target.value as any,
-                            }))
-                          }
+                          onChange={e => {
+                            const value = e.target.value;
+                            if (value === 'custodial' || value === 'self-custody') {
+                              setPreferences(prev => ({
+                                ...prev,
+                                custody: value,
+                              }));
+                            }
+                          }}
                           className="mr-3"
                         />
                         <div>
@@ -326,12 +335,15 @@ export default function WalletRecommendation() {
                           name="device"
                           value={option.value}
                           checked={preferences.device === option.value}
-                          onChange={e =>
-                            setPreferences(prev => ({
-                              ...prev,
-                              device: e.target.value as any,
-                            }))
-                          }
+                          onChange={e => {
+                            const value = e.target.value;
+                            if (value === 'mobile' || value === 'desktop' || value === 'both') {
+                              setPreferences(prev => ({
+                                ...prev,
+                                device: value,
+                              }));
+                            }
+                          }}
                           className="mr-3"
                         />
                         <div>

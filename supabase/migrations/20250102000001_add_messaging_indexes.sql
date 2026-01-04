@@ -58,3 +58,6 @@ COMMENT ON INDEX idx_messages_sender_conversation IS 'Optimizes sender-based mes
 COMMENT ON INDEX idx_messages_content_search IS 'Full-text search for message content';
 
 
+
+
+

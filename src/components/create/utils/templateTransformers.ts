@@ -5,23 +5,8 @@
  * Ensures DRY principle and consistent data transformation across entity types.
  */
 
-import type { UserCircleFormData } from '@/lib/validation';
-import type { OrganizationFormData } from '@/lib/validation';
-
-/**
- * Circle template structure (matches CIRCLE_TEMPLATES in circle-config.ts)
- */
-interface CircleTemplate {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  icon: string;
-  color: string;
-  suggestedSettings: Partial<UserCircleFormData>;
-  benefits?: string[];
-  useCase?: string;
-}
+import type { UserCircleFormData, OrganizationFormData } from '@/lib/validation';
+import type { CircleTemplate } from '@/config/entity-configs/circle-config';
 
 /**
  * Transform circle template to form data

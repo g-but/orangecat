@@ -270,7 +270,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
               <div className="flex-shrink-0">
                 {profile?.avatar_url || user?.user_metadata?.avatar_url ? (
                   <img
-                    src={(profile as any)?.avatar_url || user?.user_metadata?.avatar_url}
+                    src={profile?.avatar_url || user?.user_metadata?.avatar_url || ''}
                     alt={user?.user_metadata?.name || 'User avatar'}
                     className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
                     onError={e => {

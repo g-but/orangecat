@@ -200,3 +200,6 @@ verifySetup().catch(error => {
   console.error('💥 Verification error:', error);
   process.exit(1);
 });
+
+
+

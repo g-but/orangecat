@@ -27,7 +27,7 @@ const protectedRoutes = [
   '/profile/',
   '/settings',
   '/loans',
-  '/circles',
+  '/groups',
   '/assets',
   '/timeline',
   '/messages',

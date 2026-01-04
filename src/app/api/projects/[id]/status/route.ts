@@ -10,6 +10,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
+import { getTableName } from '@/config/entity-registry';
 
 // Valid status values
 const VALID_STATUSES = ['draft', 'active', 'paused', 'completed', 'cancelled'] as const;
@@ -59,7 +60,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Fetch current project
     const { data: existingProject, error: fetchError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('id, user_id, status')
       .eq('id', id)
       .single();
@@ -86,7 +87,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Update status
     const { data: project, error: updateError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .update({
         status: normalizedStatus,
         updated_at: new Date().toISOString(),

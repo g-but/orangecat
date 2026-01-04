@@ -1,15 +1,21 @@
 import { logger } from '@/utils/logger';
 import { createServerClient } from '@/lib/supabase/server';
-import { NextRequest, NextResponse } from 'next/server';
+import { withOptionalAuth } from '@/lib/api/withAuth';
+import {
+  apiSuccess,
+  apiNotFound,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { getTableName } from '@/config/entity-registry';
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ id: string }> }) => {
   try {
+    const { id: projectId } = await params;
     const supabase = await createServerClient();
-    const { id: projectId } = params;
 
     // Get project details
     const { data: project, error: projectError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select(
         `
         id,
@@ -29,7 +35,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       .single();
 
     if (projectError || !project) {
-      return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
+      return apiNotFound('Campaign not found');
     }
 
     // Get transaction/donation count (if transactions table exists)
@@ -60,7 +66,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     // Get project category and related projects
     const { data: relatedProjects, error: relatedError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('id, title, raised_amount')
       .eq('category', project.category || '')
       .neq('id', projectId)
@@ -68,43 +74,37 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 
     const categoryRank = relatedProjects?.length || 0;
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: {
-          projectId: project.id,
-          title: project.title,
-          fundingMetrics: {
-            goalAmount: project.goal_amount,
-            raisedAmount: project.raised_amount,
-            progressPercent: Math.round(progressPercent * 100) / 100,
-            remaining: Math.max(0, project.goal_amount - project.raised_amount),
-            donorCount,
-            averageDonation: donorCount > 0 ? Math.round(project.raised_amount / donorCount) : 0,
-          },
-          timeMetrics: {
-            createdAt: project.created_at,
-            daysActive: daysSinceCreation,
-            daysRemaining,
-            endDate: endDate.toISOString(),
-            daysPercentElapsed: Math.min((daysSinceCreation / 30) * 100, 100),
-          },
-          performanceMetrics: {
-            dailyFundingRate: Math.round(dailyFundingRate),
-            projectedTotal: Math.round(project.raised_amount + dailyFundingRate * daysRemaining),
-            willReachGoal:
-              project.raised_amount + dailyFundingRate * daysRemaining >= project.goal_amount,
-            category: project.category || 'uncategorized',
-            categoryRank,
-          },
-          status: project.status,
-          visibility: 'public', // MVP: all projects are public
-        },
+    return apiSuccess({
+      projectId: project.id,
+      title: project.title,
+      fundingMetrics: {
+        goalAmount: project.goal_amount,
+        raisedAmount: project.raised_amount,
+        progressPercent: Math.round(progressPercent * 100) / 100,
+        remaining: Math.max(0, project.goal_amount - project.raised_amount),
+        donorCount,
+        averageDonation: donorCount > 0 ? Math.round(project.raised_amount / donorCount) : 0,
       },
-      { status: 200 }
-    );
+      timeMetrics: {
+        createdAt: project.created_at,
+        daysActive: daysSinceCreation,
+        daysRemaining,
+        endDate: endDate.toISOString(),
+        daysPercentElapsed: Math.min((daysSinceCreation / 30) * 100, 100),
+      },
+      performanceMetrics: {
+        dailyFundingRate: Math.round(dailyFundingRate),
+        projectedTotal: Math.round(project.raised_amount + dailyFundingRate * daysRemaining),
+        willReachGoal:
+          project.raised_amount + dailyFundingRate * daysRemaining >= project.goal_amount,
+        category: project.category || 'uncategorized',
+        categoryRank,
+      },
+      status: project.status,
+      visibility: 'public', // MVP: all projects are public
+    });
   } catch (error) {
-    logger.error('Error fetching project stats:', error);
-    return NextResponse.json({ error: 'Failed to fetch project stats' }, { status: 500 });
+    logger.error('Error fetching project stats', { error, projectId: (await params).id }, 'Projects');
+    return handleApiError(error);
   }
-}
+});

@@ -16,6 +16,25 @@ import {
 import type { EntityConfig, FieldGroup } from '@/components/create/types';
 import { userCircleSchema, type UserCircleFormData } from '@/lib/validation';
 
+// ==================== TYPES ====================
+
+export interface CircleTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  icon: string;
+  color?: string;
+  suggestedSettings: Partial<UserCircleFormData> & {
+    visibility?: string;
+    member_approval?: string;
+    wallet_purpose?: string;
+    max_members?: number;
+  };
+  benefits?: string[];
+  useCase?: string;
+}
+
 // ==================== ADVANCED CONSTANTS ====================
 
 const CIRCLE_CATEGORIES = [
@@ -373,22 +392,22 @@ const defaultValues: CircleFormData = {
 // ==================== EXPORT CONFIG ====================
 
 export const circleConfig: EntityConfig<CircleFormData> = {
-  type: 'circle',
-  name: 'Circle',
-  namePlural: 'Circles',
+  type: 'group',
+  name: 'Group',
+  namePlural: 'Groups',
   icon: Users,
   colorTheme: 'purple',
-  backUrl: '/circles',
-  apiEndpoint: '/api/circles',
-  successUrl: '/circles/[id]',
-  pageTitle: 'Create Circle',
-  pageDescription: 'Start a new circle for your family, friends, or community',
-  formTitle: 'Circle Details',
-  formDescription: 'Set up your circle with advanced features for better collaboration.',
+  backUrl: '/groups',
+  apiEndpoint: '/api/groups',
+  successUrl: '/groups/[slug]',
+  pageTitle: 'Create Group',
+  pageDescription: 'Start a new group for your family, friends, or community',
+  formTitle: 'Group Details',
+  formDescription: 'Set up your group with advanced features for better collaboration.',
   fieldGroups,
   validationSchema: circleSchema,
   defaultValues,
-  guidanceContent: circleGuidanceContent as any,
+  guidanceContent: circleGuidanceContent,
   defaultGuidance: circleDefaultGuidance,
   templates: CIRCLE_TEMPLATES,
 };

@@ -1,30 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { timelineService } from '@/services/timeline';
+import {
+  apiSuccess,
+  apiValidationError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
+import { z } from 'zod';
 
-export async function POST(request: NextRequest) {
+const quoteReplySchema = z.object({
+  parentPostId: z.string().min(1),
+  content: z.string().min(1).max(2000),
+  quotedContent: z.string().max(2000).optional(),
+  visibility: z.enum(['public', 'private', 'followers']).optional().default('public'),
+});
+
+export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user } = req;
+    const body = await req.json();
+    const validation = quoteReplySchema.safeParse(body);
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!validation.success) {
+      return apiValidationError('Invalid request data', {
+        fields: validation.error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
+      });
     }
 
-    const body = await request.json();
-    const { parentPostId, content, quotedContent, visibility = 'public' } = body;
-
-    if (!parentPostId || !content?.trim()) {
-      return NextResponse.json(
-        {
-          error: 'Missing required fields: parentPostId and content are required',
-        },
-        { status: 400 }
-      );
-    }
+    const { parentPostId, content, quotedContent, visibility } = validation.data;
 
     // Create quote reply using the service
     const result = await timelineService.createQuoteReply(
@@ -40,26 +46,17 @@ export async function POST(request: NextRequest) {
       const enrichedResult = await timelineService.getEventById(result.event.id);
 
       if (enrichedResult.success && enrichedResult.event) {
-        return NextResponse.json({
-          success: true,
-          event: enrichedResult.event,
-        });
+        return apiSuccess({ event: enrichedResult.event });
       }
     }
 
-    return NextResponse.json(
-      {
-        error: result.error || 'Failed to create quote reply',
-      },
-      { status: 400 }
-    );
+    return apiValidationError(result.error || 'Failed to create quote reply');
   } catch (error) {
-    console.error('Quote reply creation error:', error);
-    return NextResponse.json(
-      {
-        error: 'Internal server error',
-      },
-      { status: 500 }
-    );
+    logger.error('Quote reply creation error', { error, userId: req.user.id }, 'Timeline');
+    return handleApiError(error);
   }
-}
+});
+
+
+
+
