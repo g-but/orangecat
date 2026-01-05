@@ -77,7 +77,7 @@ const fieldGroups: FieldGroup[] = [
     description: 'Set at least one pricing option (hourly or fixed price)',
     fields: [
       {
-        name: 'hourly_rate_sats',
+        name: 'hourly_rate',
         label: 'Hourly Rate',
         type: 'currency',
         placeholder: '50.00',
@@ -85,7 +85,7 @@ const fieldGroups: FieldGroup[] = [
         hint: 'Your rate per hour. Enter in your preferred currency.',
       },
       {
-        name: 'fixed_price_sats',
+        name: 'fixed_price',
         label: 'Fixed Price',
         type: 'currency',
         placeholder: '500.00',
@@ -141,9 +141,9 @@ const defaultValues: UserServiceFormData = {
   title: '',
   description: '',
   category: '',
-  hourly_rate_sats: null,
-  fixed_price_sats: null,
-  currency: 'CHF', // Default to CHF - user can change in form
+  hourly_rate: null,
+  fixed_price: null,
+  currency: undefined, // Will be set from user's profile preference in EntityForm
   duration_minutes: null,
   service_location_type: 'remote',
   service_area: '',

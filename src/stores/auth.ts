@@ -5,7 +5,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { User, Session } from '@supabase/supabase-js';
 import type { Profile } from '@/types/database';
-import { supabase } from '@/lib/supabase/browser';
+import { signIn as authSignIn, signUp as authSignUp, signOut as authSignOut } from '@/services/supabase/auth';
 
 interface AuthState {
   // data
@@ -148,11 +148,12 @@ export const useAuthStore = create<AuthState>()(
       signOut: async () => {
         set({ isLoading: true, authError: null });
         try {
-          const { error } = await supabase.auth.signOut();
+          // Use centralized auth service instead of direct Supabase call
+          const { error } = await authSignOut();
 
           if (error) {
             set({ authError: error.message, isLoading: false });
-            return { error };
+            return { error: new Error(error.message) };
           }
 
           get().clear();
@@ -174,20 +175,19 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, authError: null, error: null });
 
         try {
-          const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
+          // Use centralized auth service instead of direct Supabase call
+          // This provides timeout handling, error handling, and logging
+          const result = await authSignIn({ email, password });
 
-          if (error) {
-            set({ authError: error.message, isLoading: false });
-            return { data: null, error };
+          if (result.error) {
+            set({ authError: result.error.message, isLoading: false });
+            return { data: null, error: new Error(result.error.message) };
           }
 
-          if (data?.user && data?.session) {
+          if (result.data?.user && result.data?.session) {
             set({
-              user: data.user,
-              session: data.session,
+              user: result.data.user,
+              session: result.data.session,
               isLoading: false,
               authError: null,
               error: null,
@@ -196,7 +196,7 @@ export const useAuthStore = create<AuthState>()(
             // Don't fetch profile here - AuthProvider will handle it via onAuthStateChange
             // This prevents duplicate profile fetches during login
 
-            return { data, error: null };
+            return { data: result.data, error: null };
           } else {
             set({ authError: 'No user data received', isLoading: false });
             return { data: null, error: new Error('No user data received') };
@@ -217,21 +217,20 @@ export const useAuthStore = create<AuthState>()(
         set({ isLoading: true, authError: null, error: null });
 
         try {
-          const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-          });
+          // Use centralized auth service instead of direct Supabase call
+          // This provides timeout handling, error handling, and logging
+          const result = await authSignUp({ email, password });
 
-          if (error) {
-            set({ authError: error.message, isLoading: false });
-            return { data: null, error };
+          if (result.error) {
+            set({ authError: result.error.message, isLoading: false });
+            return { data: null, error: new Error(result.error.message) };
           }
 
           // Handle successful sign up - check if we have a session
-          if (data?.user && data?.session) {
+          if (result.data?.user && result.data?.session) {
             set({
-              user: data.user,
-              session: data.session,
+              user: result.data.user,
+              session: result.data.session,
               isLoading: false,
               authError: null,
               error: null,
@@ -240,11 +239,11 @@ export const useAuthStore = create<AuthState>()(
             // Fetch profile after successful auth
             await get().fetchProfile();
 
-            return { data, error: null };
+            return { data: result.data, error: null };
           } else {
             // Sign up successful but no immediate session (email confirmation required)
             set({ isLoading: false, authError: null, error: null });
-            return { data, error: null };
+            return { data: result.data, error: null };
           }
         } catch (e) {
           const errMsg = e instanceof Error ? e.message : 'Sign up failed';

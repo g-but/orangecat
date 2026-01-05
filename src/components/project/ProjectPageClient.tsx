@@ -7,6 +7,7 @@ import { ArrowLeft, Bitcoin } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { ROUTES } from '@/lib/routes';
 import { useState, useEffect } from 'react';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 const MissingWalletBanner = dynamic(() => import('@/components/project/MissingWalletBanner'));
 const CampaignShare = dynamic(() => import('@/components/sharing/CampaignShare'));
@@ -260,7 +261,7 @@ function formatCurrency(amount: number | null, currency: string): string {
   try {
     return new Intl.NumberFormat(undefined, {
       style: 'currency',
-      currency: currency || 'CHF',
+      currency: currency || PLATFORM_DEFAULT_CURRENCY,
     }).format(amount);
   } catch {
     return `${amount.toFixed(2)} ${currency}`;

@@ -425,8 +425,9 @@ export interface Database {
           title: string;
           description: string | null;
           cause_category: string;
-          goal_sats: number | null;
-          total_raised_sats: number;
+          goal_amount: number | null;
+          total_raised: number;
+          total_distributed: number | null;
           currency: string;
           bitcoin_address: string | null;
           lightning_address: string | null;
@@ -443,8 +444,9 @@ export interface Database {
           title: string;
           description?: string | null;
           cause_category: string;
-          goal_sats?: number | null;
-          total_raised_sats?: number;
+          goal_amount?: number | null;
+          total_raised?: number;
+          total_distributed?: number | null;
           currency?: string;
           bitcoin_address?: string | null;
           lightning_address?: string | null;
@@ -461,8 +463,9 @@ export interface Database {
           title?: string;
           description?: string | null;
           cause_category?: string;
-          goal_sats?: number | null;
-          total_raised_sats?: number;
+          goal_amount?: number | null;
+          total_raised?: number;
+          total_distributed?: number | null;
           currency?: string;
           bitcoin_address?: string | null;
           lightning_address?: string | null;
@@ -675,9 +678,9 @@ export interface Database {
           compute_provider_id: string | null;
           api_provider: string | null;
           pricing_model: 'per_message' | 'per_token' | 'subscription' | 'free';
-          price_per_message_sats: number;
-          price_per_1k_tokens_sats: number;
-          subscription_price_sats: number;
+          price_per_message: number;
+          price_per_1k_tokens: number;
+          subscription_price: number;
           free_messages_per_day: number;
           status: 'draft' | 'active' | 'paused' | 'archived';
           is_public: boolean;
@@ -685,7 +688,7 @@ export interface Database {
           total_conversations: number;
           total_messages: number;
           total_tokens_used: number;
-          total_revenue_sats: number;
+          total_revenue: number;
           average_rating: number | null;
           total_ratings: number;
           lightning_address: string | null;
@@ -713,9 +716,9 @@ export interface Database {
           compute_provider_id?: string | null;
           api_provider?: string | null;
           pricing_model?: 'per_message' | 'per_token' | 'subscription' | 'free';
-          price_per_message_sats?: number;
-          price_per_1k_tokens_sats?: number;
-          subscription_price_sats?: number;
+          price_per_message?: number;
+          price_per_1k_tokens?: number;
+          subscription_price?: number;
           free_messages_per_day?: number;
           status?: 'draft' | 'active' | 'paused' | 'archived';
           is_public?: boolean;
@@ -723,7 +726,7 @@ export interface Database {
           total_conversations?: number;
           total_messages?: number;
           total_tokens_used?: number;
-          total_revenue_sats?: number;
+          total_revenue?: number;
           average_rating?: number | null;
           total_ratings?: number;
           lightning_address?: string | null;
@@ -751,9 +754,9 @@ export interface Database {
           compute_provider_id?: string | null;
           api_provider?: string | null;
           pricing_model?: 'per_message' | 'per_token' | 'subscription' | 'free';
-          price_per_message_sats?: number;
-          price_per_1k_tokens_sats?: number;
-          subscription_price_sats?: number;
+          price_per_message?: number;
+          price_per_1k_tokens?: number;
+          subscription_price?: number;
           free_messages_per_day?: number;
           status?: 'draft' | 'active' | 'paused' | 'archived';
           is_public?: boolean;
@@ -865,7 +868,7 @@ export type UserProduct = Database['public']['Tables']['user_products']['Row'] &
   description?: string | null;
   thumbnail_url?: string | null;
   status?: string;
-  price_sats?: number;
+  price?: number;
   currency?: string;
   images?: string[];
 };
@@ -877,8 +880,8 @@ export type UserService = Database['public']['Tables']['user_services']['Row'] &
   thumbnail_url?: string | null;
   status?: string;
   category?: string;
-  hourly_rate_sats?: number;
-  fixed_price_sats?: number;
+  hourly_rate?: number;
+  fixed_price?: number;
   service_location_type?: string;
 };
 
@@ -889,8 +892,9 @@ export type UserCause = {
   description?: string | null;
   thumbnail_url?: string | null;
   cause_category: string;
-  goal_sats?: number | null;
-  total_raised_sats: number;
+  goal_amount?: number | null;
+  total_raised: number;
+  total_distributed?: number | null;
   currency?: string;
   bitcoin_address?: string | null;
   lightning_address?: string | null;

@@ -217,8 +217,8 @@ export default function ProjectsDashboardPage() {
             </TabsList>
 
             {/* Search and Filter */}
-            <div className="flex items-center gap-3">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              <div className="relative flex-1 sm:flex-initial">
                 <Search
                   className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
                   aria-hidden="true"
@@ -228,7 +228,7 @@ export default function ProjectsDashboardPage() {
                   placeholder="Search projects..."
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-10 pr-10 w-48 sm:w-64"
+                  className="pl-10 pr-10 w-full sm:w-48 md:w-64"
                   aria-label="Search projects"
                 />
                 {searchQuery && (
@@ -246,7 +246,7 @@ export default function ProjectsDashboardPage() {
                 <select
                   value={statusFilter}
                   onChange={e => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent w-full sm:w-auto min-w-[140px]"
                   aria-label="Filter by status"
                 >
                   <option value="all">All Status</option>

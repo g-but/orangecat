@@ -14,6 +14,7 @@ import { ExternalLink } from 'lucide-react';
 import { getUniqueCategories } from '@/utils/project';
 import { ProjectDonationSection } from './ProjectDonationSection';
 import { ProjectUpdatesTimeline } from './ProjectUpdatesTimeline';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 interface ProjectContentProps {
   project: {
@@ -109,14 +110,14 @@ export default function ProjectContent({ project }: ProjectContentProps) {
                 <div className="text-2xl font-bold text-bitcoinOrange">
                   <CurrencyDisplay
                     amount={project.raised_amount || 0}
-                    currency={(project.currency || 'CHF') as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'}
+                    currency={(project.currency || PLATFORM_DEFAULT_CURRENCY) as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'}
                   />
                 </div>
                 <div className="text-sm text-gray-500">
                   of{' '}
                   <CurrencyDisplay
                     amount={project.goal_amount}
-                    currency={(project.currency || 'CHF') as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'}
+                    currency={(project.currency || PLATFORM_DEFAULT_CURRENCY) as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS'}
                   />
                 </div>
               </div>

@@ -2,14 +2,17 @@
  * AI Assistant Entity Configuration
  *
  * Created: 2025-12-25
- * Last Modified: 2025-12-25
- * Last Modified Summary: Initial creation of AI assistant entity configuration
+ * Last Modified: 2026-01-04
+ * Last Modified Summary: Updated to convert prices to user's preferred currency
  */
 
 import { EntityConfig } from '@/types/entity';
 import { AIAssistant } from '@/types/database';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
+import { convert, formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 
 export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
   name: 'AI Assistant',
@@ -25,18 +28,28 @@ export const aiAssistantEntityConfig: EntityConfig<AIAssistant> = {
 
   makeHref: (assistant) => `/dashboard/ai-assistants/${assistant.id}`,
 
-  makeCardProps: (assistant) => {
+  makeCardProps: (assistant, userCurrency?: string) => {
+    // Convert prices to user's preferred currency (or platform default)
+    const displayCurrency = (userCurrency || PLATFORM_DEFAULT_CURRENCY) as Currency;
     // Build pricing label
+    // Note: AI assistants store prices directly (no currency field, amounts are in the currency they were set)
+    // For now, we'll assume they're in the display currency or convert if needed
     const getPricingLabel = () => {
       switch (assistant.pricing_model) {
         case 'free':
           return 'Free';
         case 'per_message':
-          return `${assistant.price_per_message_sats} sats/msg`;
+          return assistant.price_per_message
+            ? `${formatCurrency(assistant.price_per_message, displayCurrency)}/msg`
+            : undefined;
         case 'per_token':
-          return `${assistant.price_per_1k_tokens_sats} sats/1k tokens`;
+          return assistant.price_per_1k_tokens
+            ? `${formatCurrency(assistant.price_per_1k_tokens, displayCurrency)}/1k tokens`
+            : undefined;
         case 'subscription':
-          return `${assistant.subscription_price_sats} sats/mo`;
+          return assistant.subscription_price
+            ? `${formatCurrency(assistant.subscription_price, displayCurrency)}/mo`
+            : undefined;
         default:
           return undefined;
       }

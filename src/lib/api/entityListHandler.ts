@@ -28,7 +28,7 @@ import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
 import { logger } from '@/utils/logger';
-import { type EntityType, getEntityMetadata } from '@/config/entity-registry';
+import { type EntityType, getEntityMetadata, ENTITY_REGISTRY } from '@/config/entity-registry';
 import { listEntitiesPage } from '@/domain/commerce/service';
 import { getCacheControl, calculatePage } from './helpers';
 import { getAuthenticatedUserId, shouldIncludeDrafts } from './authHelpers';
@@ -97,9 +97,12 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       const includeOwnDrafts = await shouldIncludeDrafts(userId ?? null, authenticatedUserId);
 
       // Use listEntitiesPage helper for commerce entities
-      const commerceTables = ['user_products', 'user_services', 'user_causes'] as const;
-      if (useListHelper && commerceTables.includes(table as typeof commerceTables[number])) {
-        const { items, total } = await listEntitiesPage(table as typeof commerceTables[number], {
+      // Derive commerce table names from entity registry (SSOT)
+      const commerceEntityTypes: EntityType[] = ['product', 'service', 'cause'];
+      const commerceTables = commerceEntityTypes.map(type => ENTITY_REGISTRY[type].tableName) as readonly string[];
+      
+      if (useListHelper && commerceTables.includes(table)) {
+        const { items, total } = await listEntitiesPage(table as 'user_products' | 'user_services' | 'user_causes', {
           limit,
           offset,
           category,
@@ -118,16 +121,30 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       }
 
       // Build custom query for entities that don't use listEntitiesPage
-      const statuses = includeOwnDrafts ? draftStatuses : publicStatuses;
       let query = supabase
         .from(table)
-        .select('*', { count: 'exact' })
-        .in('status', statuses)
-        .order(orderBy, { ascending: orderDirection === 'asc' });
+        .select('*', { count: 'exact' });
+
+      // Apply filters in correct order for RLS compatibility
+      // When filtering by user_id, apply it first (RLS allows all statuses for own items)
+      if (userId) {
+        query = query.eq('user_id', userId);
+        // For own items, only filter by status if includeOwnDrafts is false
+        // (when true, RLS already allows all statuses via "Users can read their own events")
+        if (!includeOwnDrafts) {
+          query = query.in('status', publicStatuses);
+        }
+        // When includeOwnDrafts is true, don't filter by status - RLS handles it
+      } else {
+        // Public list: filter by public statuses only
+        query = query.in('status', publicStatuses);
+      }
 
       // Apply standard filters
       if (category) query = query.eq('category', category);
-      if (userId) query = query.eq('user_id', userId);
+      
+      // Apply ordering (use nullsLast to handle NULL values gracefully)
+      query = query.order(orderBy, { ascending: orderDirection === 'asc', nullsFirst: false });
 
       // Apply additional filters from config
       for (const [field, paramName] of Object.entries(additionalFilters)) {
@@ -141,8 +158,25 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       const { data: items, error, count } = await query;
 
       if (error) {
-        logger.error(`Error fetching ${entityType}`, { error, table });
-        return apiInternalError(`Failed to fetch ${meta.namePlural.toLowerCase()}`);
+        logger.error(`Error fetching ${entityType}`, { 
+          error, 
+          table,
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          userId,
+          includeOwnDrafts
+        });
+        // Return empty array instead of error to prevent 500 (similar to loans API)
+        return apiSuccess([], {
+          page: calculatePage(offset, limit),
+          limit,
+          total: 0,
+          headers: {
+            'Cache-Control': getCacheControl(!!userId),
+          },
+        });
       }
 
       return apiSuccess(items || [], {

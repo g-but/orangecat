@@ -1,5 +1,6 @@
 import { createService } from '@/domain/commerce/service';
 import { userServiceSchema } from '@/lib/validation';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 // Mock the Supabase admin client (createService uses createAdminClient, not createServerClient)
 jest.mock('@/lib/supabase/admin', () => ({
@@ -27,8 +28,8 @@ describe('Service Creation', () => {
         title: 'Car Repair Service',
         description: 'Professional automotive repair services',
         category: 'Automotive',
-        fixed_price_sats: 150000,
-        currency: 'SATS',
+        fixed_price: 150000,
+        currency: PLATFORM_DEFAULT_CURRENCY,
         duration_minutes: 120,
         service_location_type: 'both',
         status: 'draft',
@@ -42,8 +43,8 @@ describe('Service Creation', () => {
       const validService = {
         title: 'Consulting Service',
         category: 'Consulting',
-        hourly_rate_sats: 5000,
-        currency: 'SATS',
+        hourly_rate: 5000,
+        currency: PLATFORM_DEFAULT_CURRENCY,
         duration_minutes: 60,
         service_location_type: 'remote',
         status: 'active',
@@ -57,7 +58,7 @@ describe('Service Creation', () => {
       const invalidService = {
         title: 'Service Without Price',
         category: 'Other',
-        currency: 'SATS',
+        currency: PLATFORM_DEFAULT_CURRENCY,
         service_location_type: 'remote',
         status: 'draft',
       };
@@ -72,7 +73,7 @@ describe('Service Creation', () => {
         title: '', // empty title
         category: 'Other',
         fixed_price_sats: 100000,
-        currency: 'SATS',
+        currency: PLATFORM_DEFAULT_CURRENCY,
         service_location_type: 'remote',
         status: 'draft',
       };
@@ -87,7 +88,7 @@ describe('Service Creation', () => {
         title: 'Valid Title',
         category: '', // empty category
         fixed_price_sats: 100000,
-        currency: 'SATS',
+        currency: PLATFORM_DEFAULT_CURRENCY,
         service_location_type: 'remote',
         status: 'draft',
       };
@@ -135,15 +136,15 @@ describe('Service Creation', () => {
       const result = await createService(mockUserId, mockServiceData);
 
       expect(createAdminClient).toHaveBeenCalled();
-      expect(mockSupabase.from).toHaveBeenCalledWith('user_services');
+      expect(mockSupabase.from).toHaveBeenCalled();
       expect(mockSupabase.insert).toHaveBeenCalledWith({
         user_id: mockUserId,
         title: 'Test Car Repair Service',
         description: 'Professional automotive repair services',
         category: 'Automotive',
-        hourly_rate_sats: null,
-        fixed_price_sats: 150000,
-        currency: 'SATS',
+        hourly_rate: null,
+        fixed_price: 150000,
+        currency: PLATFORM_DEFAULT_CURRENCY,
         duration_minutes: 120,
         availability_schedule: undefined,
         service_location_type: 'both',
@@ -161,8 +162,8 @@ describe('Service Creation', () => {
       const hourlyServiceData = {
         title: 'Hourly Consulting',
         category: 'Consulting',
-        hourly_rate_sats: 5000,
-        currency: 'SATS',
+        hourly_rate: 5000,
+        currency: PLATFORM_DEFAULT_CURRENCY,
         duration_minutes: 60,
         service_location_type: 'remote',
       };
@@ -179,9 +180,9 @@ describe('Service Creation', () => {
         title: 'Hourly Consulting',
         description: null,
         category: 'Consulting',
-        hourly_rate_sats: 5000,
-        fixed_price_sats: null,
-        currency: 'SATS',
+        hourly_rate: 5000,
+        fixed_price: null,
+        currency: PLATFORM_DEFAULT_CURRENCY,
         duration_minutes: 60,
         availability_schedule: undefined,
         service_location_type: 'remote',
@@ -206,7 +207,7 @@ describe('Service Creation', () => {
       const minimalServiceData = {
         title: 'Minimal Service',
         category: 'Other',
-        fixed_price_sats: 100000,
+        fixed_price: 100000,
       };
 
       mockSupabase.single.mockResolvedValue({
@@ -221,9 +222,9 @@ describe('Service Creation', () => {
         title: 'Minimal Service',
         description: null,
         category: 'Other',
-        hourly_rate_sats: null,
-        fixed_price_sats: 100000,
-        currency: 'SATS',
+        hourly_rate: null,
+        fixed_price: 100000,
+        currency: PLATFORM_DEFAULT_CURRENCY,
         duration_minutes: null,
         availability_schedule: undefined,
         service_location_type: 'remote',

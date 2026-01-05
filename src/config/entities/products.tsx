@@ -2,14 +2,17 @@
  * Product Entity Configuration
  * 
  * Created: 2025-01-27
- * Last Modified: 2025-01-27
- * Last Modified Summary: Initial creation of product entity configuration
+ * Last Modified: 2026-01-04
+ * Last Modified Summary: Updated to convert prices to user's preferred currency
  */
 
 import { EntityConfig } from '@/types/entity';
 import { UserProduct } from '@/types/database';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
+import { convert, formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 
 export const productEntityConfig: EntityConfig<UserProduct> = {
   name: 'Product',
@@ -25,9 +28,19 @@ export const productEntityConfig: EntityConfig<UserProduct> = {
   
   makeHref: (product) => `/dashboard/store/${product.id}`,
   
-  makeCardProps: (product) => {
-    const priceLabel = product.price_sats 
-      ? `${product.price_sats} ${product.currency || 'sats'}` 
+  makeCardProps: (product, userCurrency?: string) => {
+    // Display price in user's preferred currency (or product's currency)
+    const displayCurrency = (userCurrency || product.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
+    const priceLabel = product.price && product.currency
+      ? (() => {
+          // If product currency matches display currency, use directly
+          if (product.currency === displayCurrency) {
+            return formatCurrency(product.price, displayCurrency);
+          }
+          // Otherwise convert from product's currency to display currency
+          const converted = convert(product.price, product.currency as Currency, displayCurrency);
+          return formatCurrency(converted, displayCurrency);
+        })()
       : undefined;
 
     return {

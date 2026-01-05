@@ -26,6 +26,7 @@ import { ZodError } from 'zod';
 import { toast } from 'sonner';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useUserCurrency } from '@/hooks/useUserCurrency';
 import Loading from '@/components/Loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -61,9 +62,14 @@ export function EntityForm<T extends Record<string, any>>({
   // Initialize form data with user's currency preference if currency field exists
   const initialFormData = useMemo(() => {
     const data = { ...config.defaultValues, ...initialValues } as T;
-    // If currency field exists and is not set, use user's preferred currency
-    if ('currency' in data && !data.currency && typeof data.currency === 'string') {
-      (data as any).currency = userCurrency;
+    // Always use user's preferred currency as default if currency field exists
+    // Only override if initialValues explicitly provides a currency (e.g., when editing)
+    if ('currency' in data) {
+      // If no currency is explicitly provided in initialValues, use user's preference
+      if (!initialValues?.currency && (data.currency === undefined || data.currency === null || data.currency === '')) {
+        (data as any).currency = userCurrency;
+      }
+      // If initialValues has currency, keep it (for edit mode)
     }
     return data;
   }, [config.defaultValues, initialValues, userCurrency]);
@@ -173,11 +179,24 @@ export function EntityForm<T extends Record<string, any>>({
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('EntityForm: handleSubmit called for', config.name);
+    console.log('EntityForm: form data before validation:', formState.data);
+    console.log('EntityForm: default values:', config.defaultValues);
+
     try {
       setFormState(prev => ({ ...prev, isSubmitting: true, errors: {} }));
 
+      // Merge form data with defaults to ensure all required fields are present
+      const dataToValidate = { ...config.defaultValues, ...formState.data };
+      console.log('EntityForm: merged data for validation:', dataToValidate);
+      console.log('EntityForm: start_date in merged data:', dataToValidate.start_date);
+      console.log('EntityForm: start_date type:', typeof dataToValidate.start_date);
+
       // Validate with Zod
-      const validatedData = config.validationSchema.parse(formState.data);
+      const validatedData = config.validationSchema.parse(dataToValidate);
+      console.log('EntityForm: validation passed, validated data:', validatedData);
+      console.log('EntityForm: start_date in validated data:', validatedData.start_date);
+      console.log('EntityForm: data being sent to API:', JSON.stringify(validatedData, null, 2));
 
       // API call
       const url = mode === 'edit' && entityId
@@ -192,8 +211,36 @@ export function EntityForm<T extends Record<string, any>>({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to ${mode} ${config.name.toLowerCase()}`);
+        let errorMessage = `Failed to ${mode} ${config.name.toLowerCase()}`;
+        try {
+          // Clone response to read it multiple times if needed
+          const responseClone = response.clone();
+          const errorData = await responseClone.json();
+          console.error('EntityForm: Full API error response:', JSON.stringify(errorData, null, 2));
+          // Check for different error response formats
+          if (errorData.error?.message) {
+            errorMessage = errorData.error.message;
+          } else if (errorData.error?.code) {
+            errorMessage = `${errorData.error.code}: ${errorData.error.message || 'Unknown error'}`;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          } else if (typeof errorData === 'string') {
+            errorMessage = errorData;
+          } else if (errorData.error) {
+            errorMessage = JSON.stringify(errorData.error);
+          }
+        } catch (e) {
+          // If response isn't JSON, get text
+          try {
+            const responseClone = response.clone();
+            const text = await responseClone.text();
+            console.error('EntityForm: API error (non-JSON):', text);
+            errorMessage = text || errorMessage;
+          } catch (textError) {
+            console.error('EntityForm: Could not read error response:', textError);
+          }
+        }
+        throw new Error(errorMessage);
       }
 
       const result = await response.json();
@@ -372,6 +419,16 @@ export function EntityForm<T extends Record<string, any>>({
                                   onChange={(value) => handleFieldChange(field.name as keyof T, value)}
                                   onFocus={() => handleFieldFocus(field.name)}
                                   disabled={formState.isSubmitting}
+                                  currency={
+                                    field.type === 'currency' && 'currency' in formState.data
+                                      ? (formState.data.currency as string)
+                                      : undefined
+                                  }
+                                  onCurrencyChange={
+                                    field.type === 'currency' && 'currency' in formState.data
+                                      ? (currency) => handleFieldChange('currency' as keyof T, currency)
+                                      : undefined
+                                  }
                                 />
                               </div>
                             );

@@ -93,12 +93,12 @@ export default function DashboardWalletsPage() {
         {/* Page Header */}
         <WalletsPageHeader isDesktop={isDesktop} />
 
-        <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-12">
+        <div className="grid grid-cols-1 gap-6 md:gap-6 lg:gap-8 lg:grid-cols-12">
           {/* Desktop: Guidance Sidebar */}
           <WalletsGuidanceSidebar focusedField={focusedField} />
 
           {/* Main Content - Wallet Manager */}
-          <div className="lg:col-span-7 lg:order-1">
+          <div className="lg:col-span-7 lg:order-1 order-1">
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 sm:p-6">
               <WalletManager
                 wallets={walletsState}

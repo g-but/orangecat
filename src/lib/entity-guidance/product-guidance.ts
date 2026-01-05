@@ -28,7 +28,7 @@ export type ProductFieldType =
   | 'description'
   | 'category'
   | 'product_type'
-  | 'price_sats'
+  | 'price'
   | 'currency'
   | 'inventory_count'
   | 'fulfillment_type'
@@ -100,9 +100,9 @@ export const productGuidanceContent: Record<NonNullable<ProductFieldType>, Guida
       'Service: Consulting, design work',
     ],
   },
-  price_sats: {
+  price: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-orange-600' }),
-    title: 'Price in Satoshis',
+    title: 'Price',
     description: 'Set your price in satoshis (sats). 1 Bitcoin = 100,000,000 sats.',
     tips: [
       'Research similar products to price competitively',

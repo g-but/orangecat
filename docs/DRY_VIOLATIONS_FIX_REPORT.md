@@ -63,17 +63,18 @@ Both components were competing for the same screen space.
 
 ### 3. Duplicate Profile Services
 
-**Status:** Documented, not fixed (requires larger refactoring)
+**Status:** ⚠️ **NEEDS VERIFICATION** (as of 2026-01-30)
 
 Multiple profile service implementations exist:
 
-- `src/services/profile/index.ts` (modular, recommended)
-- `src/services/supabase/profiles/index.ts` (474 lines)
-- `src/services/supabase/core/consolidated.ts` (ProfileService class)
+- `src/services/profile/index.ts` (modular, recommended) ✅ **PRIMARY CLIENT-SIDE**
+- `src/services/profile/server.ts` (ProfileServerService) ✅ **PRIMARY SERVER-SIDE**
+- `src/services/supabase/profiles/index.ts` (may be unused - needs verification)
+- `src/services/supabase/core/consolidated.ts` (may be unused - needs verification)
 
-**Impact:** Data inconsistency risks, maintenance burden
+**Impact:** Potential confusion if unused duplicates exist
 
-**Recommendation:** Consolidate into single service (see `docs/archive/2024/development/PROFILE_SERVICE_CONSOLIDATION.md`)
+**Recommendation:** Verify actual usage. Client/server separation may be intentional. See `docs/development/FRESH_AUDIT_SUMMARY_2026-01-30.md` for current status.
 
 ---
 

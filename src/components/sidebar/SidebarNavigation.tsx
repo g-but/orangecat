@@ -59,13 +59,13 @@ export function SidebarNavigation({
                 {section.collapsible && (
                   <button
                     onClick={() => toggleSection(section.id)}
-                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    className="p-2 sm:p-2 hover:bg-gray-100 active:bg-gray-200 rounded transition-colors min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0 flex items-center justify-center touch-manipulation"
                     aria-label={`${navigationLabels.SECTION_TOGGLE} ${section.title}`}
                   >
                     {isCollapsed ? (
-                      <ChevronRight className="w-3 h-3 text-gray-400" />
+                      <ChevronRight className="w-4 h-4 sm:w-3 sm:h-3 text-gray-400" />
                     ) : (
-                      <ChevronDown className="w-3 h-3 text-gray-400" />
+                      <ChevronDown className="w-4 h-4 sm:w-3 sm:h-3 text-gray-400" />
                     )}
                   </button>
                 )}

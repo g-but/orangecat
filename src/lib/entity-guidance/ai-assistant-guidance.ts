@@ -32,9 +32,9 @@ export type AIAssistantFieldType =
   | 'max_tokens_per_response'
   | 'compute_provider_type'
   | 'pricing_model'
-  | 'price_per_message_sats'
-  | 'price_per_1k_tokens_sats'
-  | 'subscription_price_sats'
+  | 'price_per_message'
+  | 'price_per_1k_tokens'
+  | 'subscription_price'
   | 'free_messages_per_day'
   | 'lightning_address'
   | 'bitcoin_address'
@@ -178,10 +178,10 @@ export const aiAssistantGuidanceContent: Record<NonNullable<AIAssistantFieldType
       '10,000 sats/month subscription',
     ],
   },
-  price_per_message_sats: {
+  price_per_message: {
     icon: React.createElement(Zap, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Price per Message',
-    description: 'How many sats to charge for each message sent.',
+    description: 'How much to charge for each message sent. Enter in your preferred currency.',
     tips: [
       'Start low to attract users (1-10 sats)',
       'Increase as your AI proves value',
@@ -189,20 +189,20 @@ export const aiAssistantGuidanceContent: Record<NonNullable<AIAssistantFieldType
       'Free messages can help conversion',
     ],
   },
-  price_per_1k_tokens_sats: {
+  price_per_1k_tokens: {
     icon: React.createElement(Zap, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Price per 1K Tokens',
-    description: 'Token-based pricing for pay-as-you-go usage.',
+    description: 'Token-based pricing for pay-as-you-go usage. Enter in your preferred currency.',
     tips: [
       'Tokens = words + punctuation (~750 tokens = 500 words)',
       'Typical range: 1-10 sats per 1K tokens',
       'Users pay based on actual usage',
     ],
   },
-  subscription_price_sats: {
+  subscription_price: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Subscription Price',
-    description: 'Monthly subscription price for unlimited access.',
+    description: 'Monthly subscription price for unlimited access. Enter in your preferred currency.',
     tips: [
       'Provides predictable income',
       'Users get unlimited messages',
