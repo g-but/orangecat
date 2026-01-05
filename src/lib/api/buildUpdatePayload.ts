@@ -5,9 +5,11 @@
  * Provides utilities for building update payloads with defaults and field mapping.
  *
  * Created: 2025-12-27
- * Last Modified: 2025-12-27
- * Last Modified Summary: Generic utility to consolidate buildUpdatePayload functions
+ * Last Modified: 2026-01-04
+ * Last Modified Summary: Added empty string normalization and common transforms
  */
+
+import { entityTransforms } from './normalizeEntityData';
 
 /**
  * Field mapping configuration for building update payloads
@@ -35,8 +37,8 @@ export interface FieldMapping {
  * ```typescript
  * const payload = buildUpdatePayload(data, [
  *   { from: 'title' },
- *   { from: 'price_sats' },
- *   { from: 'currency', default: 'SATS' },
+ *   { from: 'price' },
+ *   { from: 'currency', default: 'CHF' },
  *   { from: 'product_type', default: 'physical' },
  *   { from: 'images', default: [] },
  * ]);
@@ -58,8 +60,15 @@ export function buildUpdatePayload(
     const sourceValue = data[mapping.from];
     const targetKey = mapping.to ?? mapping.from;
 
+    // Normalize empty strings to null for optional fields (unless transform handles it)
+    // This prevents database constraint violations for UUID, URL, and other fields
+    let normalizedValue = sourceValue;
+    if (typeof sourceValue === 'string' && sourceValue === '' && !mapping.transform) {
+      normalizedValue = null;
+    }
+
     // Skip if undefined/null and not including undefined
-    if (!options?.includeUndefined && (sourceValue === undefined || sourceValue === null)) {
+    if (!options?.includeUndefined && (normalizedValue === undefined || normalizedValue === null)) {
       // Use default if provided
       if (mapping.default !== undefined) {
         payload[targetKey] = mapping.default;
@@ -68,9 +77,9 @@ export function buildUpdatePayload(
     }
 
     // Use value, default, or undefined
-    let value = sourceValue !== undefined && sourceValue !== null ? sourceValue : mapping.default;
+    let value = normalizedValue !== undefined && normalizedValue !== null ? normalizedValue : mapping.default;
 
-    // Apply transform if provided
+    // Apply transform if provided (transforms can override empty string handling)
     if (value !== undefined && mapping.transform) {
       value = mapping.transform(value);
     }
@@ -99,8 +108,9 @@ export function buildUpdatePayload(
  * ```typescript
  * const buildProductUpdatePayload = createUpdatePayloadBuilder([
  *   { from: 'title' },
- *   { from: 'price_sats' },
- *   { from: 'currency', default: 'SATS' },
+ *   { from: 'price' },
+ *   { from: 'currency', default: 'CHF' },
+ *   { from: 'thumbnail_url', transform: entityTransforms.normalizeURL },
  * ]);
  * ```
  */
@@ -109,6 +119,45 @@ export function createUpdatePayloadBuilder(mappings: FieldMapping[]) {
     return buildUpdatePayload(data, mappings, options);
   };
 }
+
+/**
+ * Common field mappings with transforms for reuse across entities
+ */
+export const commonFieldMappings = {
+  /** URL fields that should normalize empty strings to null */
+  urlField: (fieldName: string): FieldMapping => ({
+    from: fieldName,
+    transform: entityTransforms.normalizeURL,
+  }),
+
+  /** UUID fields that should normalize empty strings to null */
+  uuidField: (fieldName: string): FieldMapping => ({
+    from: fieldName,
+    transform: entityTransforms.normalizeUUID,
+  }),
+
+  /** Array fields that should normalize null to empty array */
+  arrayField: (fieldName: string, defaultValue: unknown[] = []): FieldMapping => ({
+    from: fieldName,
+    default: defaultValue,
+    transform: entityTransforms.nullToEmptyArray,
+  }),
+
+  /** Date fields that should be normalized to ISO strings */
+  dateField: (fieldName: string): FieldMapping => ({
+    from: fieldName,
+    transform: entityTransforms.normalizeDate,
+  }),
+
+  /** Optional string fields that should normalize empty strings to null */
+  optionalStringField: (fieldName: string): FieldMapping => ({
+    from: fieldName,
+    transform: entityTransforms.emptyStringToNull,
+  }),
+};
+
+// Re-export transforms for convenience
+export { entityTransforms };
 
 
 

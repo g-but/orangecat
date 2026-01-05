@@ -8,6 +8,7 @@ import { logger } from '@/utils/logger';
 import { Bitcoin } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import dynamic from 'next/dynamic';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 const ProjectSupportButton = dynamic(() => import('@/components/projects/ProjectSupportButton').then(m => ({ default: m.ProjectSupportButton })));
 const SupportStats = dynamic(() => import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats })));
@@ -29,7 +30,7 @@ interface Props {
 }
 
 export default function ProjectSummaryRail({ project, isOwner }: Props) {
-  const goalCurrency = project.goal_currency || project.currency || 'CHF';
+  const goalCurrency = project.goal_currency || project.currency || PLATFORM_DEFAULT_CURRENCY;
   const [amountRaised, setAmountRaised] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
 

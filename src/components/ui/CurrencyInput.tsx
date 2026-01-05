@@ -4,11 +4,12 @@
  * CURRENCY INPUT COMPONENT
  *
  * Allows users to input amounts in their preferred currency.
- * Shows live conversion to BTC/sats and other currencies.
+ * Amounts are stored in the currency specified, NOT in satoshis.
+ * Conversion to satoshis happens ONLY when sending Bitcoin transactions.
  *
  * Created: 2025-12-04
- * Last Modified: 2025-12-04
- * Last Modified Summary: Initial currency input with multi-currency display
+ * Last Modified: 2026-01-05
+ * Last Modified Summary: Refactored to store amounts in user currency, not satoshis
  */
 
 import { useState, useEffect, useMemo } from 'react';
@@ -22,18 +23,22 @@ import {
   FIAT_CURRENCIES,
 } from '@/types/settings';
 import {
-  convertToSats,
-  convertFromSats,
+  convert,
   formatCurrency,
-  getCurrencyBreakdown,
   parseAmount,
 } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { getGoalExplanation, isBitcoinNativeCurrency } from '@/utils/currency-helpers';
 
 interface CurrencyInputProps {
-  /** Value in satoshis (always stored as sats) */
+  /** Value in the specified currency (NOT satoshis) */
   value: number | null;
-  /** Callback when value changes (returns sats) */
-  onChange: (sats: number | null) => void;
+  /** Current currency for the value */
+  currency: Currency;
+  /** Callback when value changes (returns amount in current currency) */
+  onChange: (amount: number | null) => void;
+  /** Callback when currency changes */
+  onCurrencyChange?: (currency: Currency) => void;
   /** Default input currency */
   defaultCurrency?: Currency;
   /** User's preferred display currency */
@@ -56,34 +61,45 @@ interface CurrencyInputProps {
   onFocus?: () => void;
   /** Callback when input loses focus */
   onBlur?: () => void;
-  /** Minimum amount in sats */
-  minSats?: number;
-  /** Maximum amount in sats */
-  maxSats?: number;
+  /** Minimum amount in current currency */
+  min?: number;
+  /** Maximum amount in current currency */
+  max?: number;
   /** ID for accessibility */
   id?: string;
 }
 
 export function CurrencyInput({
   value,
+  currency: propCurrency,
   onChange,
-  defaultCurrency = 'CHF',
+  onCurrencyChange,
+  defaultCurrency = PLATFORM_DEFAULT_CURRENCY,
   userCurrency,
   label,
   placeholder,
   error,
   hint,
   disabled = false,
-  showBreakdown = true,
+  showBreakdown = false, // Don't show breakdown by default (no sats!)
   allowCurrencySwitch = true,
   onFocus,
   onBlur,
-  minSats,
-  maxSats,
+  min,
+  max,
   id,
 }: CurrencyInputProps) {
-  // Use user's currency preference or default
-  const [inputCurrency, setInputCurrency] = useState<Currency>(userCurrency || defaultCurrency);
+  // Use prop currency or user preference or default
+  const [inputCurrency, setInputCurrency] = useState<Currency>(
+    propCurrency || userCurrency || defaultCurrency
+  );
+
+  // Sync with prop currency changes
+  useEffect(() => {
+    if (propCurrency) {
+      setInputCurrency(propCurrency);
+    }
+  }, [propCurrency]);
 
   // Local input value (in display currency)
   const [localValue, setLocalValue] = useState<string>('');
@@ -99,27 +115,21 @@ export function CurrencyInput({
 
     // Only auto-format if user is not actively editing
     if (!isUserEditing) {
-      const displayValue = convertFromSats(value, inputCurrency);
-
-      // Format based on currency type
-      if (inputCurrency === 'SATS') {
-        setLocalValue(displayValue.toLocaleString('en-US', { maximumFractionDigits: 0 }));
-      } else if (inputCurrency === 'BTC') {
-        setLocalValue(displayValue.toFixed(8).replace(/\.?0+$/, ''));
+      // Value is already in the input currency, just format it
+      let formatted: string;
+      
+      if (inputCurrency === 'BTC') {
+        formatted = value.toFixed(8).replace(/\.?0+$/, '');
+      } else if (inputCurrency === 'SATS') {
+        formatted = Math.round(value).toLocaleString('en-US', { maximumFractionDigits: 0 });
       } else {
         // For fiat currencies, format with 2 decimals
-        setLocalValue(displayValue.toFixed(2));
+        formatted = value.toFixed(2);
       }
+      
+      setLocalValue(formatted);
     }
   }, [value, inputCurrency, isUserEditing]);
-
-  // Currency breakdown for display
-  const breakdown = useMemo(() => {
-    if (!value || value === 0) {
-      return null;
-    }
-    return getCurrencyBreakdown(value);
-  }, [value]);
 
   // Handle input change
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,39 +143,65 @@ export function CurrencyInput({
       return;
     }
 
-    const sats = convertToSats(parsed, inputCurrency);
-
-    // Apply min/max constraints
-    let constrainedSats = sats;
-    if (minSats !== undefined && sats < minSats) {
-      constrainedSats = minSats;
+    // Apply min/max constraints in current currency
+    let constrainedAmount = parsed;
+    if (min !== undefined && parsed < min) {
+      constrainedAmount = min;
     }
-    if (maxSats !== undefined && sats > maxSats) {
-      constrainedSats = maxSats;
+    if (max !== undefined && parsed > max) {
+      constrainedAmount = max;
     }
 
-    onChange(constrainedSats);
+    // If currency changed, convert the value
+    if (value !== null && value !== undefined && inputCurrency !== propCurrency) {
+      const converted = convert(value, propCurrency, inputCurrency);
+      onChange(converted);
+    } else {
+      onChange(constrainedAmount);
+    }
   };
 
   // Handle currency switch
   const handleCurrencyChange = (newCurrency: Currency) => {
-    setInputCurrency(newCurrency);
-
-    // Recalculate local value in new currency
+    // Convert value to new currency if we have a value
     if (value !== null && value !== undefined) {
-      const displayValue = convertFromSats(value, newCurrency);
-
-      if (newCurrency === 'SATS') {
-        setLocalValue(displayValue.toLocaleString('en-US', { maximumFractionDigits: 0 }));
-      } else if (newCurrency === 'BTC') {
-        setLocalValue(displayValue.toFixed(8).replace(/\.?0+$/, ''));
-      } else {
-        setLocalValue(displayValue.toFixed(2));
-      }
+      const converted = convert(value, inputCurrency, newCurrency);
+      onChange(converted);
+    }
+    
+    setInputCurrency(newCurrency);
+    
+    // Notify parent component of currency change
+    if (onCurrencyChange) {
+      onCurrencyChange(newCurrency);
     }
   };
 
   const currencyInfo = CURRENCY_INFO[inputCurrency];
+
+  // Calculate breakdown only if showBreakdown is true AND user prefers SATS
+  const breakdown = useMemo(() => {
+    if (!showBreakdown || !value || value === 0) {
+      return null;
+    }
+    
+    // Only show breakdown if user explicitly wants it
+    // Convert to other currencies for display
+    const otherCurrencies: Record<string, number> = {};
+    FIAT_CURRENCIES.forEach(curr => {
+      if (curr !== inputCurrency) {
+        otherCurrencies[curr] = convert(value, inputCurrency, curr);
+      }
+    });
+    
+    // Convert to BTC for display
+    const btcValue = inputCurrency === 'BTC' ? value : convert(value, inputCurrency, 'BTC');
+    
+    return {
+      btc: btcValue,
+      other: otherCurrencies,
+    };
+  }, [value, inputCurrency, showBreakdown]);
 
   return (
     <div className="space-y-2">
@@ -190,7 +226,7 @@ export function CurrencyInput({
               setIsUserEditing(false);
               onBlur?.();
             }}
-            placeholder={placeholder || `0${currencyInfo.decimals > 0 ? '.00' : ''}`}
+            placeholder={placeholder || (inputCurrency === 'SATS' ? '0' : '0.00')}
             disabled={disabled}
             className={`rounded-r-none ${error ? 'border-red-500' : ''}`}
           />
@@ -219,41 +255,57 @@ export function CurrencyInput({
       {/* Hint or error */}
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
+      
+      {/* Currency-specific info hint */}
+      {!error && !hint && value && value > 0 && (
+        <div className="text-xs text-gray-500 mt-1">
+          <span className="flex items-center gap-1">
+            <Info className="w-3 h-3" />
+            <span>{getGoalExplanation(inputCurrency)}</span>
+          </span>
+        </div>
+      )}
 
-      {/* Currency breakdown */}
+      {/* Currency breakdown - only show if explicitly requested */}
       {showBreakdown && breakdown && value && value > 0 && (
         <div className="mt-3 p-3 rounded-lg bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100">
           <div className="flex items-center gap-2 mb-2">
             <ArrowLeftRight className="w-4 h-4 text-orange-600" />
-            <span className="text-xs font-semibold text-gray-900">Equivalent to</span>
+            <span className="text-xs font-semibold text-gray-900">Equivalent in other currencies</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
             {/* BTC */}
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600 flex items-center gap-1">
-                <Bitcoin className="w-3 h-3" />
-                BTC
-              </span>
-              <span className="font-mono font-semibold">
-                {breakdown.btc.toFixed(8).replace(/\.?0+$/, '')}
-              </span>
-            </div>
+            {inputCurrency !== 'BTC' && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600 flex items-center gap-1">
+                  <Bitcoin className="w-3 h-3" />
+                  BTC
+                </span>
+                <span className="font-mono font-semibold">
+                  {breakdown.btc.toFixed(8).replace(/\.?0+$/, '')}
+                </span>
+              </div>
+            )}
 
-            {/* Sats */}
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Sats</span>
-              <span className="font-mono font-semibold">{breakdown.sats.toLocaleString()}</span>
-            </div>
+            {/* SATS - Show for Bitcoin-native convenience */}
+            {inputCurrency !== 'SATS' && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">SATS</span>
+                <span className="font-mono font-medium text-gray-700">
+                  {Math.round(breakdown.btc * 100000000).toLocaleString('en-US')}
+                </span>
+              </div>
+            )}
 
-            {/* Fiat currencies (show only non-selected ones) */}
-            {FIAT_CURRENCIES.filter(c => c !== inputCurrency)
-              .slice(0, 2)
-              .map(curr => (
+            {/* Other fiat currencies */}
+            {Object.entries(breakdown.other)
+              .slice(0, inputCurrency === 'BTC' || inputCurrency === 'SATS' ? 3 : 2)
+              .map(([curr, amount]) => (
                 <div key={curr} className="flex justify-between items-center">
                   <span className="text-gray-600">{curr}</span>
                   <span className="font-mono font-medium text-gray-700">
-                    {formatCurrency(breakdown.fiat[curr], curr, { showSymbol: true })}
+                    {formatCurrency(amount, curr as Currency, { showSymbol: false })}
                   </span>
                 </div>
               ))}
@@ -262,7 +314,8 @@ export function CurrencyInput({
           <div className="mt-2 pt-2 border-t border-orange-100 flex items-start gap-1">
             <Info className="w-3 h-3 text-orange-500 mt-0.5 flex-shrink-0" />
             <p className="text-[10px] text-gray-600">
-              All transactions settle in Bitcoin. Fiat values are estimates.
+              All transactions settle in Bitcoin. Amounts shown are estimates based on current exchange rates.
+              {isBitcoinNativeCurrency(inputCurrency) && ' SATS shown for Bitcoin-native convenience.'}
             </p>
           </div>
         </div>
@@ -273,29 +326,21 @@ export function CurrencyInput({
 
 // Simple display-only currency component
 interface CurrencyDisplayProps {
-  sats: number;
-  currency?: Currency;
+  amount: number;
+  currency: Currency;
   showBreakdown?: boolean;
   className?: string;
 }
 
 export function CurrencyDisplay({
-  sats,
-  currency = 'CHF',
+  amount,
+  currency,
   showBreakdown = false,
   className = '',
 }: CurrencyDisplayProps) {
-  const displayValue = convertFromSats(sats, currency);
-  const breakdown = showBreakdown ? getCurrencyBreakdown(sats) : null;
-
   return (
     <div className={className}>
-      <span className="font-semibold">{formatCurrency(displayValue, currency)}</span>
-      {breakdown && (
-        <span className="text-sm text-gray-500 ml-2">
-          ({formatCurrency(breakdown.sats, 'SATS', { compact: true })})
-        </span>
-      )}
+      <span className="font-semibold">{formatCurrency(amount, currency)}</span>
     </div>
   );
 }

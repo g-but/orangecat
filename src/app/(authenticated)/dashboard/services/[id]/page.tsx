@@ -1,6 +1,9 @@
 import EntityDetailPage from '@/components/entity/EntityDetailPage';
 import { serviceEntityConfig } from '@/config/entities/services';
 import type { UserService } from '@/types/database';
+import { convert, formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,13 +27,21 @@ export default async function ServiceDetailPage({ params }: PageProps) {
       entityId={id}
       requireAuth={true}
       redirectPath="/auth?mode=login&from=/dashboard/services"
-      makeDetailFields={(service) => {
+      makeDetailFields={(service, userCurrency) => {
+        // Display prices in user's preferred currency (or service's currency)
+        const displayCurrency = (userCurrency || service.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
         const priceParts: string[] = [];
-        if (service.hourly_rate_sats) {
-          priceParts.push(`${service.hourly_rate_sats.toLocaleString()} ${service.currency || 'CHF'}/hour`);
+        if (service.hourly_rate && service.currency) {
+          const hourlyRate = service.currency === displayCurrency
+            ? service.hourly_rate
+            : convert(service.hourly_rate, service.currency as Currency, displayCurrency);
+          priceParts.push(`${formatCurrency(hourlyRate, displayCurrency)}/hour`);
         }
-        if (service.fixed_price_sats) {
-          priceParts.push(`${service.fixed_price_sats.toLocaleString()} ${service.currency || 'CHF'}`);
+        if (service.fixed_price && service.currency) {
+          const fixedPrice = service.currency === displayCurrency
+            ? service.fixed_price
+            : convert(service.fixed_price, service.currency as Currency, displayCurrency);
+          priceParts.push(formatCurrency(fixedPrice, displayCurrency));
         }
         const priceLabel = priceParts.length > 0 ? priceParts.join(' or ') : 'Contact for pricing';
 

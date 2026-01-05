@@ -107,7 +107,7 @@ export const projectSchema = z.object({
   title: z.string().min(1).max(100),
   description: z.string().min(1).max(2000),
   goal_amount: z.number().int().positive().optional().nullable(),
-  currency: z.enum(['CHF', 'USD', 'EUR', 'BTC', 'SATS']).optional().nullable().default('SATS'),
+  currency: z.enum(CURRENCY_CODES).optional().nullable(),
   funding_purpose: z.string().max(500).optional().nullable(),
   bitcoin_address: z
     .string()
@@ -259,8 +259,8 @@ export function normalizeProfileData(data: unknown): ProfileData {
 export const userProductSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
   description: z.string().max(1000).optional().nullable().or(z.literal('')),
-  price_sats: z.number().positive('Price must be positive'),
-  currency: z.enum(['SATS', 'BTC']).default('SATS'),
+  price: z.number().positive('Price must be positive'),
+  currency: z.enum(CURRENCY_CODES).optional(),
   product_type: z.enum(['physical', 'digital', 'service']).default('physical'),
   images: z.array(z.string().url()).optional().default([]),
   thumbnail_url: z.string().url().optional().nullable().or(z.literal('')),
@@ -307,9 +307,9 @@ export const userServiceSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
   description: z.string().max(1000).optional().nullable().or(z.literal('')),
   category: z.string().min(1, 'Category is required').max(50),
-  hourly_rate_sats: z.number().positive().optional().nullable(),
-  fixed_price_sats: z.number().positive().optional().nullable(),
-  currency: z.enum(['SATS', 'BTC']).default('SATS'),
+  hourly_rate: z.number().positive().optional().nullable(),
+  fixed_price: z.number().positive().optional().nullable(),
+  currency: z.enum(CURRENCY_CODES).optional(),
   duration_minutes: z.number().positive().optional().nullable(),
   availability_schedule: z.any().optional(), // JSON object for complex scheduling
   service_location_type: z.enum(['remote', 'onsite', 'both']).default('remote'),
@@ -318,10 +318,10 @@ export const userServiceSchema = z.object({
   portfolio_links: z.array(z.string().url()).optional().default([]),
   status: z.enum(['draft', 'active', 'paused', 'unavailable']).default('draft'),
 }).refine(
-  data => data.hourly_rate_sats || data.fixed_price_sats,
+  data => data.hourly_rate || data.fixed_price,
   {
     message: "At least one pricing method (hourly or fixed) is required",
-    path: ["hourly_rate_sats"], // This will show the error on hourly_rate_sats field
+    path: ["hourly_rate"], // This will show the error on hourly_rate field
   }
 );
 
@@ -329,8 +329,8 @@ export const userCauseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
   description: z.string().max(1000).optional().nullable().or(z.literal('')),
   cause_category: z.string().min(1, 'Category is required').max(50),
-  goal_sats: z.number().positive().optional().nullable(),
-  currency: z.enum(['SATS', 'BTC']).default('SATS'),
+  goal_amount: z.number().positive().optional().nullable(),
+  currency: z.enum(CURRENCY_CODES).optional(),
   bitcoin_address: z.string().optional().nullable().or(z.literal('')),
   lightning_address: z.string().optional().nullable().or(z.literal('')),
   distribution_rules: z.any().optional(), // JSON object for distribution rules
@@ -371,9 +371,9 @@ export const aiAssistantSchema = z.object({
 
   // Pricing
   pricing_model: z.enum(['per_message', 'per_token', 'subscription', 'free']).default('per_message'),
-  price_per_message_sats: z.number().int().min(0).default(0),
-  price_per_1k_tokens_sats: z.number().int().min(0).default(0),
-  subscription_price_sats: z.number().int().min(0).default(0),
+  price_per_message: z.number().min(0).default(0),
+  price_per_1k_tokens: z.number().min(0).default(0),
+  subscription_price: z.number().min(0).default(0),
   free_messages_per_day: z.number().int().min(0).default(0),
 
   // Visibility & Status
@@ -418,7 +418,7 @@ export const assetSchema = z.object({
   description: z.string().max(2000).optional().nullable().or(z.literal('')),
   location: z.string().max(200).optional().nullable().or(z.literal('')),
   estimated_value: z.number().positive().optional().nullable(),
-  currency: z.enum(CURRENCY_CODES).default(DEFAULT_CURRENCY),
+  currency: z.enum(CURRENCY_CODES).optional(),
   documents: z.array(z.string().url()).optional().nullable().default([]),
 });
 
@@ -436,7 +436,7 @@ export const loanSchema = z.object({
   bitcoin_address: z.string().optional().nullable().or(z.literal('')),
   lightning_address: z.string().optional().nullable().or(z.literal('')),
   fulfillment_type: z.enum(['manual', 'automatic']).default('manual'),
-  currency: z.string().optional().default('CHF'),
+  currency: z.string().optional(),
 
   // Fields specific to existing loans (refinancing)
   current_lender: z.string().max(100).optional().nullable().or(z.literal('')),
@@ -502,10 +502,11 @@ export const eventSchema = z.object({
   ),
   
   // Pricing & Funding
-  ticket_price_sats: z.number().positive().optional().nullable(),
-  currency: z.enum(['SATS', 'BTC']).default('SATS'),
+  // Amounts stored in user's currency (not satoshis)
+  ticket_price: z.number().positive().optional().nullable(),
+  currency: z.enum(CURRENCY_CODES).optional(),
   is_free: z.boolean().default(false),
-  funding_goal_sats: z.number().positive().optional().nullable(),
+  funding_goal: z.number().positive().optional().nullable(),
   bitcoin_address: z.string().optional().nullable().or(z.literal('')),
   lightning_address: z.string().optional().nullable().or(z.literal('')),
   
@@ -519,15 +520,15 @@ export const eventSchema = z.object({
   status: z.enum(['draft', 'published', 'open', 'full', 'ongoing', 'completed', 'cancelled']).default('draft'),
 }).refine(
   (data) => {
-    // If not free, either ticket_price_sats or funding_goal_sats must be set
-    if (!data.is_free && !data.ticket_price_sats && !data.funding_goal_sats) {
+    // If not free, either ticket_price or funding_goal must be set
+    if (!data.is_free && !data.ticket_price && !data.funding_goal) {
       return false;
     }
     return true;
   },
   {
     message: 'Either ticket price or funding goal must be set for paid events',
-    path: ['ticket_price_sats'],
+    path: ['ticket_price'],
   }
 ).refine(
   (data) => {

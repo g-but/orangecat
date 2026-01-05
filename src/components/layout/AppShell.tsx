@@ -87,8 +87,8 @@ export function AppShell({ children }: AppShellProps) {
           className={`flex-1 transition-all duration-300 ${
             shouldShowSidebar
               ? navigationState.isSidebarOpen
-                ? 'ml-64'
-                : 'ml-16'
+                ? 'lg:ml-64'
+                : 'lg:ml-16'
               : 'ml-0'
           }`}
         >

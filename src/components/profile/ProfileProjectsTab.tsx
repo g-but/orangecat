@@ -9,6 +9,7 @@ import { Profile } from '@/types/database';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/lib/routes';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 interface ProfileProjectsTabProps {
   profile: Profile;
@@ -215,7 +216,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
                         <span className="text-gray-500">
                           <CurrencyDisplay
                             amount={currentAmount}
-                            currency={project.currency || 'CHF'}
+                            currency={project.currency || PLATFORM_DEFAULT_CURRENCY}
                             size="sm"
                           />
                         </span>
@@ -223,7 +224,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
                           of{' '}
                           <CurrencyDisplay
                             amount={goalAmount}
-                            currency={project.currency || 'CHF'}
+                            currency={project.currency || PLATFORM_DEFAULT_CURRENCY}
                             size="sm"
                           />
                         </span>
@@ -239,7 +240,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
                           ) : raisedAmount > 0 ? (
                             <CurrencyDisplay
                               amount={raisedAmount}
-                              currency={project.currency || 'CHF'}
+                              currency={project.currency || PLATFORM_DEFAULT_CURRENCY}
                               size="sm"
                             />
                           ) : (

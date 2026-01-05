@@ -37,7 +37,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Supporting students from underserved communities to access quality education. Funds will be used for tuition, books, and educational materials.',
       cause_category: 'Education',
-      goal_sats: 5000000,
+      goal_amount: 5000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -52,7 +52,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Raising funds for urgent medical treatment, surgery, or ongoing healthcare needs. All funds go directly to medical expenses.',
       cause_category: 'Healthcare',
-      goal_sats: 10000000,
+      goal_amount: 10000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -67,7 +67,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Supporting local environmental initiatives: reforestation, wildlife protection, clean water access, or climate action projects.',
       cause_category: 'Environment',
-      goal_sats: 3000000,
+      goal_amount: 3000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -82,7 +82,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Providing immediate aid to communities affected by natural disasters: food, shelter, medical supplies, and rebuilding efforts.',
       cause_category: 'Disaster Relief',
-      goal_sats: 20000000,
+      goal_amount: 20000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -97,7 +97,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Helping families and individuals facing financial hardship: food assistance, housing support, job training, and essential supplies.',
       cause_category: 'Poverty Relief',
-      goal_sats: 5000000,
+      goal_amount: 5000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -112,7 +112,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Supporting animal rescue, shelter operations, veterinary care, and spay/neuter programs for stray and abandoned animals.',
       cause_category: 'Animal Welfare',
-      goal_sats: 2500000,
+      goal_amount: 2500000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -127,7 +127,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Supporting local artists, cultural events, heritage preservation, and community arts programs that enrich our communities.',
       cause_category: 'Arts & Culture',
-      goal_sats: 2000000,
+      goal_amount: 2000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -142,7 +142,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Supporting local community projects: infrastructure improvements, community centers, public spaces, and neighborhood initiatives.',
       cause_category: 'Community Development',
-      goal_sats: 10000000,
+      goal_amount: 10000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -157,7 +157,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Supporting programs for children and youth: after-school activities, mentorship, educational resources, and safe spaces for development.',
       cause_category: 'Children & Youth',
-      goal_sats: 4000000,
+      goal_amount: 4000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -172,7 +172,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Providing technology access to underserved communities: computers, internet access, digital literacy training, and tech education.',
       cause_category: 'Technology Access',
-      goal_sats: 6000000,
+      goal_amount: 6000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -187,7 +187,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Supporting mental health services: counseling, therapy access, support groups, crisis intervention, and mental health awareness programs.',
       cause_category: 'Mental Health',
-      goal_sats: 5000000,
+      goal_amount: 5000000,
       currency: 'SATS',
       status: 'draft',
     },
@@ -202,7 +202,7 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
       description:
         'Supporting veterans: housing assistance, job training, mental health services, medical care, and transition support programs.',
       cause_category: 'Veterans Support',
-      goal_sats: 8000000,
+      goal_amount: 8000000,
       currency: 'SATS',
       status: 'draft',
     },

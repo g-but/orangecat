@@ -11,6 +11,7 @@ import { Loan } from '@/types/loans';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { DollarSign } from 'lucide-react';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 export const loanEntityConfig: EntityConfig<Loan> = {
   name: 'Loan',
@@ -29,7 +30,7 @@ export const loanEntityConfig: EntityConfig<Loan> = {
   makeCardProps: (loan) => {
     // Build remaining balance label
     const balanceLabel = loan.remaining_balance
-      ? `${loan.remaining_balance.toLocaleString()} ${loan.currency || 'USD'} remaining`
+      ? `${loan.remaining_balance.toLocaleString()} ${loan.currency || PLATFORM_DEFAULT_CURRENCY} remaining`
       : undefined;
 
     // Build metadata parts

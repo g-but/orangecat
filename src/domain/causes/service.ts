@@ -6,8 +6,8 @@ export interface CreateCauseInput {
   title: string;
   description?: string | null;
   cause_category: string;
-  goal_sats?: number | null;
-  currency?: 'SATS' | 'BTC';
+  goal_amount?: number | null;
+  currency?: 'SATS' | 'BTC' | 'USD' | 'EUR' | 'CHF';
   bitcoin_address?: string | null;
   lightning_address?: string | null;
   distribution_rules?: any;
@@ -25,7 +25,7 @@ export async function createCause(userId: string, input: CreateCauseInput) {
     title: input.title,
     description: input.description ?? null,
     cause_category: input.cause_category,
-    goal_sats: input.goal_sats ?? null,
+    goal_amount: input.goal_amount ?? null,
     currency: input.currency ?? 'CHF', // Platform default
     bitcoin_address: input.bitcoin_address ?? null,
     lightning_address: input.lightning_address ?? null,

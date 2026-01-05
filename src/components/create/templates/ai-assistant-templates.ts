@@ -38,7 +38,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a helpful writing assistant. Help users improve their writing with constructive feedback, suggestions, and edits. Be encouraging and supportive.',
       pricing_model: 'per_message',
-      price_per_message_sats: 1000,
+      price_per_message: 1000,
       model_preference: 'gpt-4',
       temperature: 0.7,
       status: 'draft',
@@ -152,7 +152,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a thorough research assistant. Gather accurate information, analyze data objectively, and present findings clearly.',
       pricing_model: 'per_token',
-      price_per_1k_tokens_sats: 100,
+      price_per_1k_tokens: 100,
       model_preference: 'gpt-4',
       temperature: 0.3,
       status: 'draft',

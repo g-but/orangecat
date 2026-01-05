@@ -1,6 +1,7 @@
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { isTableNotFound } from '@/lib/db/errors';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 interface CreateLoanInput {
   loan_type?: 'new_request' | 'existing_refinance';
@@ -77,7 +78,7 @@ export async function createLoan(
     bitcoin_address: normalizeToNull(loanInput.bitcoin_address),
     lightning_address: normalizeToNull(loanInput.lightning_address),
     fulfillment_type: loanInput.fulfillment_type || 'manual',
-    currency: loanInput.currency || 'CHF',
+    currency: loanInput.currency || PLATFORM_DEFAULT_CURRENCY,
     // Refinancing fields
     current_lender: normalizeToNull(loanInput.current_lender),
     current_interest_rate: normalizeToNull(loanInput.current_interest_rate),

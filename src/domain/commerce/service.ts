@@ -126,8 +126,8 @@ export async function listEntitiesPage(
 interface CreateProductInput {
   title: string;
   description?: string | null;
-  price_sats: number;
-  currency?: 'SATS' | 'BTC';
+  price: number;
+  currency?: 'SATS' | 'BTC' | 'USD' | 'EUR' | 'CHF';
   product_type?: 'physical' | 'digital' | 'service';
   images?: string[];
   thumbnail_url?: string | null;
@@ -142,9 +142,9 @@ interface CreateServiceInput {
   title: string;
   description?: string | null;
   category: string;
-  hourly_rate_sats?: number | null;
-  fixed_price_sats?: number | null;
-  currency?: 'SATS' | 'BTC';
+  hourly_rate?: number | null;
+  fixed_price?: number | null;
+  currency?: 'SATS' | 'BTC' | 'USD' | 'EUR' | 'CHF';
   duration_minutes?: number | null;
   availability_schedule?: any;
   service_location_type?: 'remote' | 'onsite' | 'both';
@@ -180,7 +180,7 @@ export async function createProduct(
     is_featured: input.is_featured ?? false,
     title: input.title,
     description: input.description ?? null,
-    price_sats: input.price_sats,
+    price: input.price,
   };
   const { data, error } = await adminClient.from(getTableName('product')).insert(payload).select().single();
   if (error) {
@@ -203,9 +203,9 @@ export async function createService(
     title: input.title,
     description: input.description ?? null,
     category: input.category,
-    hourly_rate_sats: input.hourly_rate_sats ?? null,
-    fixed_price_sats: input.fixed_price_sats ?? null,
-    currency: input.currency ?? 'SATS',
+    hourly_rate: input.hourly_rate ?? null,
+    fixed_price: input.fixed_price ?? null,
+    currency: input.currency ?? 'CHF',
     duration_minutes: input.duration_minutes ?? null,
     availability_schedule: input.availability_schedule,
     service_location_type: input.service_location_type ?? 'remote',
@@ -227,8 +227,8 @@ interface CreateCauseInput {
   title: string;
   description?: string | null;
   cause_category: string;
-  goal_sats?: number | null;
-  currency?: 'SATS' | 'BTC';
+  goal_amount?: number | null;
+  currency?: 'SATS' | 'BTC' | 'USD' | 'EUR' | 'CHF';
   bitcoin_address?: string | null;
   lightning_address?: string | null;
   distribution_rules?: any;
@@ -248,14 +248,14 @@ export async function createCause(
     title: input.title,
     description: input.description ?? null,
     cause_category: input.cause_category,
-    goal_sats: input.goal_sats ?? null,
-    currency: input.currency ?? 'SATS',
+    goal_amount: input.goal_amount ?? null,
+    currency: input.currency ?? 'CHF',
     bitcoin_address: input.bitcoin_address ?? null,
     lightning_address: input.lightning_address ?? null,
     distribution_rules: input.distribution_rules,
     beneficiaries: input.beneficiaries ?? [],
     status: 'draft' as const,
-    total_raised_sats: 0,
+    total_raised: 0,
   };
 
   const { data, error } = await adminClient.from(getTableName('cause')).insert(payload).select().single();
@@ -334,7 +334,7 @@ export async function createOrganization(
     application_process: { questions: [] },
     founded_at: new Date().toISOString(),
   };
-  const { data, error } = await adminClient.from('groups').insert(payload).select().single();
+  const { data, error } = await adminClient.from(getTableName('group')).insert(payload).select().single();
   if (error) {
     logger.error('Organization creation failed', { error, userId });
     throw error;

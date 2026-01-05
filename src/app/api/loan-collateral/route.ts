@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { withSecurity, apiRateLimiter } from '@/utils/security'
 import { createServerClient } from '@/lib/supabase/server'
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies'
 
 const CollateralSchema = z.object({
   loan_id: z.string().min(1),
@@ -48,7 +49,7 @@ const postHandler = withSecurity<CollateralInput>(
         asset_id: data.asset_id,
         owner_id: user.id,
         pledged_value: data.pledged_value ?? null,
-        currency: data.currency || 'USD',
+        currency: data.currency || PLATFORM_DEFAULT_CURRENCY,
         status: 'pending',
       })
       .select('id')

@@ -3,6 +3,7 @@ import { useAuthStore } from '@/stores/auth';
 import { useRouter, usePathname } from 'next/navigation';
 import { useEffect, useState, useRef } from 'react';
 import { logger } from '@/utils/logger';
+import { isAuthenticatedRoute, getRouteContext } from '@/config/routes';
 
 // Throttle function to prevent excessive logging - increased delays
 function useThrottledLog(logFn: () => void, delay: number = 10000) {
@@ -109,25 +110,14 @@ export function useRedirectIfAuthenticated() {
     const isAuthenticated = !!user;
 
     // Don't redirect authenticated users away from valid authenticated pages
-    const authenticatedPaths = [
-      '/dashboard',
-      '/profile',
-      '/settings',
-      '/organizations',
-      '/projects/create',
-      '/projects/create',
-      '/organizations/create',
-      '/discover',
-      '/people',
-      '/projects',
-      '/fundraising',
-      '/onboarding',
-    ];
+    // Use centralized route detection instead of hardcoded paths
     if (
       isAuthenticated &&
       pathname &&
       pathname !== '/' &&
-      !authenticatedPaths.some(path => pathname.startsWith(path))
+      !isAuthenticatedRoute(pathname) &&
+      getRouteContext(pathname) !== 'public' &&
+      getRouteContext(pathname) !== 'universal'
     ) {
       router.push('/dashboard');
     }

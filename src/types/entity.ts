@@ -42,7 +42,7 @@ export interface EntityConfig<T extends BaseEntity = BaseEntity> {
   apiEndpoint: string;
 
   // Card configuration
-  makeCardProps: (item: T) => Omit<EntityCardProps, 'id' | 'title' | 'description' | 'thumbnailUrl' | 'href'>;
+  makeCardProps: (item: T, userCurrency?: string) => Omit<EntityCardProps, 'id' | 'title' | 'description' | 'thumbnailUrl' | 'href'>;
   makeHref: (item: T) => string;
 
   // Empty state

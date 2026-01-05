@@ -38,8 +38,8 @@ export type EventFieldType =
   | 'online_url'
   | 'max_attendees'
   | 'requires_rsvp'
-  | 'ticket_price_sats'
-  | 'funding_goal_sats'
+  | 'ticket_price'
+  | 'funding_goal'
   | 'bitcoin_address'
   | 'asset_id'
   | null;
@@ -243,37 +243,41 @@ export const eventGuidanceContent: Record<NonNullable<EventFieldType>, GuidanceC
       'No - For open, drop-in events',
     ],
   },
-  ticket_price_sats: {
+  ticket_price: {
     icon: React.createElement(Ticket, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Ticket Price',
     description:
-      'How much does it cost to attend? Set to 0 or mark as free for free events.',
+      'How much does it cost to attend? Set to 0 or mark as free for free events. Enter in your preferred currency.',
     tips: [
       'Research similar events for pricing',
       'Consider covering costs (venue, food, etc.)',
       'Can be free if sponsored or community-funded',
-      'Accept Bitcoin payments directly',
+      'All transactions settle in Bitcoin',
+      'Enter amount in your preferred currency (USD, CHF, EUR, BTC, or SATS)',
     ],
     examples: [
-      '50,000 sats - Small meetup',
-      '200,000 sats - Workshop with materials',
+      '$50 - Small meetup',
+      '$200 - Workshop with materials',
       'Free - Community event',
     ],
   },
-  funding_goal_sats: {
+  funding_goal: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Funding Goal',
     description:
-      'Optional: Set a funding goal to cover event costs (venue rental, catering, etc.).',
+      'Optional: Set a funding goal to cover event costs (venue rental, catering, etc.). System monitors your Bitcoin address and notifies you when goal is reached.',
     tips: [
       'Useful for covering upfront costs',
       'Can be separate from ticket sales',
       'Allows community support',
       'Transparent cost breakdown',
+      'Fiat goals (USD/CHF/EUR) can be reached via donations OR Bitcoin price appreciation',
+      'BTC/SATS goals can only be reached via donations',
+      'Enter amount in your preferred currency',
     ],
     examples: [
-      '1,000,000 sats - Venue rental + catering',
-      '500,000 sats - Materials and supplies',
+      '$10,000 - Venue rental + catering',
+      '$5,000 - Materials and supplies',
     ],
   },
   bitcoin_address: {

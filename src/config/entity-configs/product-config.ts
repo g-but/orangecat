@@ -65,7 +65,7 @@ const fieldGroups: FieldGroup[] = [
     description: 'Set your product price (enter in your preferred currency)',
     fields: [
       {
-        name: 'price_sats',
+        name: 'price',
         label: 'Price',
         type: 'currency',
         placeholder: '50.00',
@@ -73,6 +73,19 @@ const fieldGroups: FieldGroup[] = [
         min: 1,
         hint: 'Enter in your preferred currency. All payments are in Bitcoin.',
         colSpan: 2,
+      },
+      {
+        name: 'currency',
+        label: 'Default Currency',
+        type: 'select',
+        options: [
+          { value: 'CHF', label: 'Swiss Franc (CHF)' },
+          { value: 'USD', label: 'US Dollar (USD)' },
+          { value: 'EUR', label: 'Euro (EUR)' },
+          { value: 'BTC', label: 'Bitcoin (BTC)' },
+          { value: 'SATS', label: 'Satoshis (SATS)' },
+        ],
+        hint: 'Your preferred currency for displaying prices. All transactions settle in Bitcoin.',
       },
     ],
   },
@@ -108,8 +121,8 @@ const fieldGroups: FieldGroup[] = [
 const defaultValues: UserProductFormData = {
   title: '',
   description: '',
-  price_sats: 0,
-  currency: 'CHF', // Default to CHF - user can change in form
+  price: 0,
+  currency: undefined, // Will be set from user's profile preference in EntityForm
   product_type: 'physical',
   images: [],
   thumbnail_url: '',

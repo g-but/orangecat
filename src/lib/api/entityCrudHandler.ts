@@ -442,7 +442,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
  *   schema: userProductSchema,
  *   buildUpdatePayload: (data) => ({
  *     title: data.title,
- *     price_sats: data.price_sats,
+ *     price: data.price,
  *     // ... entity-specific fields
  *   }),
  * });

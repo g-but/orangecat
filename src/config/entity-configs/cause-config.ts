@@ -77,7 +77,7 @@ const fieldGroups: FieldGroup[] = [
     description: 'Set your target amount (optional for open-ended fundraising)',
     fields: [
       {
-        name: 'goal_sats',
+        name: 'goal_amount',
         label: 'Goal Amount',
         type: 'currency',
         placeholder: '10000.00',
@@ -117,8 +117,8 @@ const defaultValues: UserCauseFormData = {
   title: '',
   description: '',
   cause_category: '',
-  goal_sats: null,
-  currency: 'CHF', // Default to CHF - user can change in form
+  goal_amount: null,
+  currency: undefined, // Will be set from user's profile preference in EntityForm
   bitcoin_address: '',
   lightning_address: '',
   beneficiaries: [],

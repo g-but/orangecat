@@ -98,15 +98,16 @@ export const POST = async (request: NextRequest) => {
       title: 'Test Car Repair Service API',
       description: 'Professional automotive repair services via API test',
       category: 'Other',
-      fixed_price_sats: 50000,
+      fixed_price: 50000,
       currency: 'SATS',
       duration_minutes: 60,
       service_location_type: 'both',
       status: 'draft'
     };
     
+    const { getTableName } = await import('@/config/entity-registry');
     const { data: serviceData, error: serviceError } = await supabase
-      .from('user_services')
+      .from(getTableName('service'))
       .insert(testService)
       .select()
       .single();

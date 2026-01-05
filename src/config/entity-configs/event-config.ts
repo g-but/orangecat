@@ -255,12 +255,12 @@ const fieldGroups: FieldGroup[] = [
         colSpan: 2,
       },
       {
-        name: 'ticket_price_sats',
+        name: 'ticket_price',
         label: 'Ticket Price',
         type: 'currency',
         placeholder: '50.00',
         min: 1,
-        hint: 'Price per ticket. Enter in your preferred currency.',
+        hint: 'Price per ticket. Enter in your preferred currency. All transactions settle in Bitcoin. Tip: Use BTC or SATS for Bitcoin-native pricing (no price conversion).',
         showWhen: {
           field: 'is_free',
           value: false,
@@ -268,12 +268,12 @@ const fieldGroups: FieldGroup[] = [
         colSpan: 2,
       },
       {
-        name: 'funding_goal_sats',
+        name: 'funding_goal',
         label: 'Funding Goal (Optional)',
         type: 'currency',
         placeholder: '10000.00',
         min: 1,
-        hint: 'Optional: Set a funding goal to cover event costs (venue rental, catering, etc.)',
+        hint: 'Optional: Set a funding goal to cover event costs. System monitors your Bitcoin address and notifies you when goal is reached. Note: Fiat goals (USD/CHF/EUR) can be reached via donations OR Bitcoin price appreciation. BTC/SATS goals can only be reached via donations.',
         colSpan: 2,
       },
       {
@@ -323,10 +323,10 @@ const defaultValues: EventFormData = {
   max_attendees: null,
   requires_rsvp: true,
   rsvp_deadline: null,
-  ticket_price_sats: null,
-  currency: 'CHF', // Default to CHF - user can change in form
+  ticket_price: null,
+  currency: undefined, // Will be set from user's profile preference in EntityForm
   is_free: true,
-  funding_goal_sats: null,
+  funding_goal: null,
   bitcoin_address: '',
   lightning_address: '',
   images: [],

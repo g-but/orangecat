@@ -41,14 +41,14 @@ export const POST = async (request: NextRequest) => {
       title: 'Debug Service Creation Test',
       description: 'Testing service creation from debug endpoint',
       category: 'Other',
-      fixed_price_sats: 1000,
+      fixed_price: 1000,
       currency: 'SATS',
       status: 'draft'
     };
 
     try {
       const { data, error } = await supabase
-        .from('user_services')
+        .from(tableName)
         .insert(testService)
         .select()
         .single();

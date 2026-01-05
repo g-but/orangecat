@@ -1,47 +1,13 @@
 /**
- * Route Constants
+ * @deprecated This file is deprecated. Use @/config/routes.ts instead.
+ * 
+ * This file re-exports from the unified route configuration for backward compatibility.
+ * All route constants have been consolidated into src/config/routes.ts
  *
- * Centralized route definitions to ensure consistency across the application.
- * Always use these constants instead of hardcoded strings.
+ * Created: Unknown
+ * Last Modified: 2026-01-30
+ * Last Modified Summary: Deprecated - now re-exports from unified routes.ts
  */
 
-export const ROUTES = {
-  // Public routes
-  HOME: '/',
-  AUTH: '/auth',
-  DISCOVER: '/discover',
-  STUDY_BITCOIN: '/study-bitcoin',
-
-  // Project routes
-  PROJECTS: {
-    LIST: '/projects',
-    CREATE: '/projects/create',
-    VIEW: (id: string) => `/projects/${id}`,
-    EDIT: (id: string) => `/projects/create?edit=${id}`, // Reuse create page with edit param
-  },
-
-  // Dashboard routes
-  DASHBOARD: {
-    HOME: '/dashboard',
-    PROJECTS: '/dashboard/projects',
-    ANALYTICS: '/dashboard/analytics',
-  },
-
-  // Profile routes (authenticated - own profile)
-  PROFILE: {
-    VIEW: (username: string) => `/profile/${username}`,
-    SETTINGS: '/profile/settings',
-  },
-
-  // Public profile routes (shareable)
-  PROFILES: {
-    VIEW: (username: string) => `/profiles/${username}`,
-  },
-} as const;
-
-/**
- * Legacy routes that redirect to new routes
- */
-export const LEGACY_ROUTES = {
-  CREATE: '/create', // Redirects to /projects/create
-} as const;
+// Re-export from unified route configuration
+export { ROUTES, LEGACY_ROUTES } from '@/config/routes';

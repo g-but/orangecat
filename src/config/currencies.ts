@@ -1,12 +1,35 @@
 /**
- * Central currency source of truth for frontend + backend.
- * Keep this list in sync with DB CHECK constraints and service validators.
+ * SINGLE SOURCE OF TRUTH FOR CURRENCY
+ * 
+ * This file is the ONLY place where currency codes are defined.
+ * All database constraints, validation schemas, and UI components MUST use these values.
+ * 
+ * IMPORTANT:
+ * - All transactions are stored and settled in BTC (satoshis)
+ * - Currency is ONLY for display and input purposes
+ * - Users can set their preferred currency in settings (stored in profiles.currency)
+ * - Default currency is CHF (Swiss-focused platform)
+ * - When a user changes their currency preference, that becomes their default
+ * 
+ * Database migrations MUST reference these values - do NOT hardcode currency lists.
+ * 
+ * Created: 2025-01-03
+ * Last Modified: 2026-01-05
+ * Last Modified Summary: Established as SSOT with clear documentation about BTC-only transactions
  */
 
 export const CURRENCY_CODES = ['USD', 'EUR', 'CHF', 'BTC', 'SATS'] as const;
 export type CurrencyCode = (typeof CURRENCY_CODES)[number];
 
-export const DEFAULT_CURRENCY: CurrencyCode = 'USD';
+/** 
+ * Platform default currency (Swiss-focused)
+ * Used when user hasn't set a preference yet.
+ * Users can change this in their settings.
+ */
+export const PLATFORM_DEFAULT_CURRENCY: CurrencyCode = 'CHF';
+
+/** Legacy default - kept for backward compatibility, prefer PLATFORM_DEFAULT_CURRENCY */
+export const DEFAULT_CURRENCY: CurrencyCode = PLATFORM_DEFAULT_CURRENCY;
 
 export const CURRENCY_METADATA: Record<
   CurrencyCode,

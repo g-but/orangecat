@@ -78,13 +78,17 @@ export function Sidebar({
 
   // Sidebar width logic:
   // - If manually opened: w-64 (full expanded)
-  // - If hovered (and not manually opened): w-52 (show text labels)
-  // - Otherwise: w-16 (icons only)
-  const sidebarWidth = navigationState.isSidebarOpen 
-    ? SIDEBAR_WIDTHS.EXPANDED  // w-64 when manually opened
-    : isHovered
-      ? SIDEBAR_WIDTHS.HOVER_EXPANDED  // w-52 on hover (desktop only)
-      : SIDEBAR_WIDTHS.COLLAPSED; // w-16 when collapsed (default)
+  // - If hovered (and not manually opened): w-52 (show text labels) - DESKTOP ONLY
+  // - Otherwise: w-16 (icons only) - DESKTOP ONLY
+  // - MOBILE: Always w-64 (full expanded) when visible
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+  const sidebarWidth = isMobile && navigationState.isSidebarOpen
+    ? SIDEBAR_WIDTHS.EXPANDED  // Mobile: always full width when open
+    : navigationState.isSidebarOpen 
+      ? SIDEBAR_WIDTHS.EXPANDED  // Desktop: w-64 when manually opened
+      : isHovered
+        ? SIDEBAR_WIDTHS.HOVER_EXPANDED  // Desktop: w-52 on hover
+        : SIDEBAR_WIDTHS.COLLAPSED; // Desktop: w-16 when collapsed (default)
 
   // Mobile: sidebar slides in/out based on isSidebarOpen
   // Desktop: sidebar is always visible
@@ -92,9 +96,12 @@ export function Sidebar({
     ? 'translate-x-0' // Mobile: visible when opened
     : '-translate-x-full lg:translate-x-0'; // Mobile: hidden | Desktop: visible
 
-  // isExpanded is true when manually opened OR when hovered (on desktop)
-  // This controls whether text labels are shown
-  const isExpanded = navigationState.isSidebarOpen || (isHovered && typeof window !== 'undefined' && window.innerWidth >= 1024);
+  // isExpanded controls whether text labels are shown
+  // - Mobile: Always expanded when sidebar is visible (never icon-only)
+  // - Desktop: Expanded when manually opened OR when hovered
+  const isExpanded = isMobile && navigationState.isSidebarOpen
+    ? true  // Mobile: always show labels when sidebar is open
+    : navigationState.isSidebarOpen || (isHovered && !isMobile); // Desktop: manual open or hover
 
   return (
     <aside

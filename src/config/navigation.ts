@@ -40,6 +40,7 @@ import {
   Info,
   HelpCircle,
   Shield,
+  Search,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -141,6 +142,13 @@ const manualSections: NavSection[] = [
         icon: MessageSquare,
         description: 'Private conversations',
         requiresAuth: true,
+      },
+      {
+        name: 'Search',
+        href: '/discover',
+        icon: Search,
+        description: 'Find projects, people, and more',
+        requiresAuth: false, // Search is available to all
       },
       {
         name: 'Profile',

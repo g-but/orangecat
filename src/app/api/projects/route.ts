@@ -17,7 +17,9 @@ export const GET = compose(
 )(async (request: NextRequest) => {
   try {
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
-    const { items, total } = await listProjectsPage(limit, offset);
+    const url = new URL(request.url);
+    const userId = url.searchParams.get('user_id');
+    const { items, total } = await listProjectsPage(limit, offset, userId || undefined);
     return apiSuccess(items, {
       page: calculatePage(offset, limit),
       limit,

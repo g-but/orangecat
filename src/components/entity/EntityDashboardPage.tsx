@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserCurrency } from '@/hooks/useUserCurrency';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
@@ -53,6 +54,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
   limit = 12,
 }: EntityDashboardPageProps<T>) {
   const { user, isLoading: authLoading, hydrated } = useAuth();
+  const userCurrency = useUserCurrency();
   const router = useRouter();
   const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -210,7 +212,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
               items={memoizedItems}
               isLoading={loading}
               makeHref={config.makeHref}
-              makeCardProps={config.makeCardProps}
+              makeCardProps={(item) => config.makeCardProps(item, userCurrency)}
               emptyState={config.emptyState}
               gridCols={config.gridCols}
               selectedIds={showSelection ? selectedIds : undefined}

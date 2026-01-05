@@ -82,14 +82,28 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
         : new Set<string>();
 
       // Initialize collapsed sections based on defaults and saved state
+      // On mobile, expand more sections by default for better discoverability
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
       const initialCollapsed = new Set<string>();
       sections.forEach(section => {
         if (section.collapsible) {
           if (collapsedFromStorage.has(section.id)) {
             initialCollapsed.add(section.id);
-          } else if (!section.defaultExpanded && !collapsedFromStorage.size) {
+          } else if (!collapsedFromStorage.size) {
             // Only use defaults if no saved state exists
-            initialCollapsed.add(section.id);
+            // On mobile: expand first 2-3 sections (priority 1-3) for better discoverability
+            // On desktop: use defaultExpanded setting
+            if (isMobile) {
+              // Mobile: expand sections with priority <= 3 (Home, Sell, Raise typically)
+              if (section.priority > 3) {
+                initialCollapsed.add(section.id);
+              }
+            } else {
+              // Desktop: use defaultExpanded setting
+              if (!section.defaultExpanded) {
+                initialCollapsed.add(section.id);
+              }
+            }
           }
         }
       });
@@ -102,10 +116,22 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
     } catch (error) {
       logger.warn('Failed to load navigation state from localStorage', { error }, 'useNavigation');
       // Fall back to defaults
+      // On mobile, expand more sections by default for better discoverability
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
       const defaultCollapsed = new Set<string>();
       sections.forEach(section => {
-        if (section.collapsible && !section.defaultExpanded) {
-          defaultCollapsed.add(section.id);
+        if (section.collapsible) {
+          if (isMobile) {
+            // Mobile: expand sections with priority <= 3
+            if (section.priority > 3) {
+              defaultCollapsed.add(section.id);
+            }
+          } else {
+            // Desktop: use defaultExpanded setting
+            if (!section.defaultExpanded) {
+              defaultCollapsed.add(section.id);
+            }
+          }
         }
       });
       setNavigationState(prev => ({
@@ -312,10 +338,22 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
       logger.warn('Failed to reset navigation state', { error }, 'useNavigation');
     }
 
+    // On mobile, expand more sections by default for better discoverability
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
     const defaultCollapsed = new Set<string>();
     sections.forEach(section => {
-      if (section.collapsible && !section.defaultExpanded) {
-        defaultCollapsed.add(section.id);
+      if (section.collapsible) {
+        if (isMobile) {
+          // Mobile: expand sections with priority <= 3
+          if (section.priority > 3) {
+            defaultCollapsed.add(section.id);
+          }
+        } else {
+          // Desktop: use defaultExpanded setting
+          if (!section.defaultExpanded) {
+            defaultCollapsed.add(section.id);
+          }
+        }
       }
     });
 
