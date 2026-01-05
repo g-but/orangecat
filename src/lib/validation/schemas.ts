@@ -13,8 +13,8 @@ import {
   isValidUsername,
   isValidBio,
   isValidEmail,
-  isValidPassword,
 } from '@/utils/validation';
+import { isValidPassword } from '@/lib/validation/password';
 
 // Base validation result interface
 export interface ValidationResult {

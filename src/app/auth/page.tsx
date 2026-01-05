@@ -140,8 +140,13 @@ export default function AuthPage() {
         throw new Error('Passwords do not match');
       }
 
-      if (mode === 'register' && formData.password.length < 6) {
-        throw new Error('Password must be at least 6 characters long');
+      // Use centralized password validation instead of hardcoded check
+      if (mode === 'register') {
+        const { validatePasswordStrength } = await import('@/lib/validation/password');
+        const passwordValidation = validatePasswordStrength(formData.password);
+        if (!passwordValidation.valid) {
+          throw new Error(passwordValidation.errors[0] || 'Password does not meet requirements');
+        }
       }
 
       const result =

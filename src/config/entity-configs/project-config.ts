@@ -164,7 +164,7 @@ export const projectConfig = createEntityConfig<ProjectData>({
     title: '',
     description: '',
     goal_amount: undefined,
-    currency: 'CHF', // Default to CHF - user can change in form
+    currency: undefined, // Will be set from user's profile preference in EntityForm
     funding_purpose: '',
     bitcoin_address: '',
     lightning_address: '',

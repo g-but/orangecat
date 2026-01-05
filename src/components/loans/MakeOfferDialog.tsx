@@ -34,6 +34,9 @@ import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Target, DollarSign, Percent, Calendar } from 'lucide-react';
+import { formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY, CURRENCY_CODES } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 import loansService from '@/services/loans';
 import { Loan, CreateLoanOfferRequest } from '@/types/loans';
 import { toast } from 'sonner';
@@ -80,11 +83,10 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
 
   const watchOfferType = form.watch('offer_type');
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency === 'EUR' ? 'EUR' : 'USD',
-    }).format(amount);
+  const formatLoanCurrency = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
+    // Validate currency and fallback to platform default
+    const validCurrency = (CURRENCY_CODES.includes(currency as Currency) ? currency : PLATFORM_DEFAULT_CURRENCY) as Currency;
+    return formatCurrency(amount, validCurrency);
   };
 
   const onSubmit = async (data: OfferFormData) => {
@@ -149,7 +151,7 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
               <div>
                 <p className="text-sm text-muted-foreground">Remaining Balance</p>
                 <p className="text-lg font-semibold text-red-600">
-                  {formatCurrency(loan.remaining_balance, loan.currency)}
+                  {formatLoanCurrency(loan.remaining_balance, loan.currency)}
                 </p>
               </div>
               <div>

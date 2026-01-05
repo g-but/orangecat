@@ -28,7 +28,7 @@ export type CauseFieldType =
   | 'title'
   | 'description'
   | 'cause_category'
-  | 'goal_sats'
+  | 'goal_amount'
   | 'currency'
   | 'bitcoin_address'
   | 'lightning_address'
@@ -91,10 +91,10 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
       'Poverty Relief - Basic needs, housing',
     ],
   },
-  goal_sats: {
+  goal_amount: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Fundraising Goal',
-    description: 'Set a realistic fundraising goal. Leave empty for open-ended fundraising.',
+    description: 'Set a realistic fundraising goal in your preferred currency. Leave empty for open-ended fundraising. System monitors your Bitcoin address and notifies you when goal is reached.',
     tips: [
       'Calculate actual costs needed',
       'Include all expenses and buffer',

@@ -5,50 +5,52 @@
  * Entity metadata comes from entity-registry (Single Source of Truth)
  *
  * Created: 2025-01-28
- * Last Modified: 2025-01-28
- * Last Modified Summary: Initial creation using generic CRUD handler pattern
+ * Last Modified: 2026-01-05
+ * Last Modified Summary: Removed currency default to prevent overwriting existing values
  */
 
 import { eventSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder } from '@/lib/api/buildUpdatePayload';
+import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated event data
 const buildEventUpdatePayload = createUpdatePayloadBuilder([
   { from: 'title' },
-  { from: 'description' },
-  { from: 'category' },
+  { from: 'description', transform: entityTransforms.emptyStringToNull },
+  { from: 'category', transform: entityTransforms.emptyStringToNull },
   { from: 'event_type' },
-  { from: 'tags', default: [] },
-  { from: 'start_date' },
-  { from: 'end_date' },
+  commonFieldMappings.arrayField('tags', []),
+  commonFieldMappings.dateField('start_date'),
+  commonFieldMappings.dateField('end_date'),
   { from: 'timezone', default: 'UTC' },
   { from: 'is_all_day', default: false },
   { from: 'is_recurring', default: false },
   { from: 'recurrence_pattern' },
-  { from: 'venue_name' },
-  { from: 'venue_address' },
-  { from: 'venue_city' },
-  { from: 'venue_country' },
-  { from: 'venue_postal_code' },
+  { from: 'venue_name', transform: entityTransforms.emptyStringToNull },
+  { from: 'venue_address', transform: entityTransforms.emptyStringToNull },
+  { from: 'venue_city', transform: entityTransforms.emptyStringToNull },
+  { from: 'venue_country', transform: entityTransforms.emptyStringToNull },
+  { from: 'venue_postal_code', transform: entityTransforms.emptyStringToNull },
   { from: 'latitude' },
   { from: 'longitude' },
   { from: 'is_online', default: false },
-  { from: 'online_url' },
-  { from: 'asset_id' },
+  commonFieldMappings.urlField('online_url'),
+  commonFieldMappings.uuidField('asset_id'),
   { from: 'max_attendees' },
   { from: 'requires_rsvp', default: true },
-  { from: 'rsvp_deadline' },
-  { from: 'ticket_price_sats' },
-  { from: 'currency', default: 'CHF' }, // Platform default - user can override in form
+  commonFieldMappings.dateField('rsvp_deadline'),
+  // Amounts stored in user's currency (not satoshis)
+  { from: 'ticket_price' },
+  // Currency: only include if explicitly provided (don't override existing value)
+  { from: 'currency' },
   { from: 'is_free', default: false },
-  { from: 'funding_goal_sats' },
-  { from: 'bitcoin_address' },
-  { from: 'lightning_address' },
-  { from: 'images', default: [] },
-  { from: 'thumbnail_url' },
-  { from: 'banner_url' },
-  { from: 'video_url' },
+  { from: 'funding_goal' },
+  { from: 'bitcoin_address', transform: entityTransforms.emptyStringToNull },
+  { from: 'lightning_address', transform: entityTransforms.emptyStringToNull },
+  commonFieldMappings.arrayField('images', []),
+  commonFieldMappings.urlField('thumbnail_url'),
+  commonFieldMappings.urlField('banner_url'),
+  commonFieldMappings.urlField('video_url'),
   { from: 'status', default: 'draft' },
 ]);
 

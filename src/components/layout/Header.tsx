@@ -173,7 +173,7 @@ export function Header({
             {showSidebarToggle && onToggleSidebar ? (
               <button
                 onClick={onToggleSidebar}
-                className="lg:hidden flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+                className="lg:hidden flex-shrink-0 w-11 h-11 sm:w-10 sm:h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
                 aria-label="Toggle sidebar"
               >
                 <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -182,7 +182,7 @@ export function Header({
               <button
                 ref={mobileMenuButtonRef}
                 onClick={() => mobileMenu.open()}
-                className="lg:hidden flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+                className="lg:hidden flex-shrink-0 w-11 h-11 sm:w-10 sm:h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
                 aria-label="Open navigation menu"
               >
                 <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
@@ -223,14 +223,14 @@ export function Header({
 
           {/* Right Section: Actions (Mobile-Optimized) */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            {/* Mobile Search Button - Hidden on desktop */}
+            {/* Mobile Search Button - Hidden on desktop, more prominent */}
             {showSearch && (
               <button
                 onClick={() => setShowMobileSearch(true)}
-                className="md:hidden flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
-                aria-label="Search"
+                className="md:hidden flex-shrink-0 w-11 h-11 flex items-center justify-center text-gray-700 hover:text-gray-900 hover:bg-orange-50 active:bg-orange-100 border border-gray-200 hover:border-orange-300 rounded-lg transition-all touch-manipulation min-w-[44px] min-h-[44px] shadow-sm"
+                aria-label="Search projects, people, organizations"
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-5 h-5" strokeWidth={2} />
               </button>
             )}
 
@@ -245,7 +245,7 @@ export function Header({
             {isAuthRoute && (
               <button
                 onClick={() => router.push('/messages')}
-                className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative"
+                className="flex-shrink-0 w-11 h-11 sm:w-10 sm:h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
                 aria-label={`Messages ${unreadMessages > 0 ? `(${unreadMessages} unread)` : ''}`}
               >
                 <MessageSquare className="w-5 h-5" />
@@ -260,7 +260,7 @@ export function Header({
             {/* Notifications - Always visible but can be smaller on mobile */}
             <button
               onClick={() => setShowNotifications(!showNotifications)}
-              className="flex-shrink-0 w-10 h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative"
+              className="flex-shrink-0 w-11 h-11 sm:w-10 sm:h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
               aria-label="Notifications"
             >
               <Bell className="w-5 h-5" />

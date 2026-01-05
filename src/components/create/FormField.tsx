@@ -14,6 +14,7 @@
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
+import { useUserCurrency } from '@/hooks/useUserCurrency';
 import type { FieldConfig, FormFieldProps } from './types';
 
 // ==================== COMPONENT ====================
@@ -25,6 +26,8 @@ export function FormField({
   onChange,
   onFocus,
   disabled = false,
+  onCurrencyChange,
+  currency,
 }: FormFieldProps) {
   const userCurrency = useUserCurrency();
   const {
@@ -77,20 +80,24 @@ export function FormField({
         );
 
       case 'currency':
+        // Use currency from form state, or fall back to user's preference
+        const currentCurrency = (currency || userCurrency) as Currency;
         return (
           <CurrencyInput
             id={name}
             value={value || null}
+            currency={currentCurrency}
             onChange={onChange}
+            onCurrencyChange={onCurrencyChange}
             onFocus={onFocus}
             placeholder={placeholder}
             disabled={disabled}
-            defaultCurrency="CHF"
+            defaultCurrency={userCurrency}
             userCurrency={userCurrency}
-            showBreakdown={true}
+            showBreakdown={false} // Don't show breakdown by default (no sats!)
             allowCurrencySwitch={true}
-            minSats={min}
-            maxSats={max}
+            min={min}
+            max={max}
           />
         );
 

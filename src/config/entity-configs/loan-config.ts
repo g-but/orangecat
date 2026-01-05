@@ -229,7 +229,7 @@ export const loanConfig = createEntityConfig<LoanFormData>({
     lightning_address: '',
     loan_category_id: '',
     fulfillment_type: 'manual',
-    currency: 'CHF',
+    currency: undefined, // Will be set from user's profile preference in EntityForm
     // Fields for existing loan refinancing
     current_lender: '',
     current_interest_rate: undefined,

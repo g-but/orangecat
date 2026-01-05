@@ -13,17 +13,19 @@
 
 import { assetSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder } from '@/lib/api/buildUpdatePayload';
+import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated asset data
 const buildAssetUpdatePayload = createUpdatePayloadBuilder([
   { from: 'title' },
   { from: 'type' },
-  { from: 'description' },
-  { from: 'location' },
+  { from: 'description', transform: entityTransforms.emptyStringToNull },
+  { from: 'location', transform: entityTransforms.emptyStringToNull },
   { from: 'estimated_value' },
+  // Currency: only include if explicitly provided (don't override existing value)
+  // Currency is for display/input only - all transactions are in BTC
   { from: 'currency' },
-  { from: 'documents', default: null },
+  commonFieldMappings.arrayField('documents', []), // Normalize null to empty array
 ]);
 
 // Create handlers using generic factory

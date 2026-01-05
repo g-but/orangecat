@@ -5,6 +5,7 @@ import { apiForbidden, apiNotFound } from '@/lib/api/standardResponse';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
+import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Post-process GET: Fetch profile and add to response
@@ -92,10 +93,23 @@ async function postProcessProjectDelete(
   );
 }
 
-// Build update payload from validated data
-function buildProjectUpdatePayload(data: Record<string, unknown>): Record<string, unknown> {
-  return data;
-}
+// Build update payload from validated project data
+const buildProjectUpdatePayload = createUpdatePayloadBuilder([
+  { from: 'title' },
+  { from: 'description', transform: entityTransforms.emptyStringToNull },
+  { from: 'goal_amount' },
+  // Currency: only include if explicitly provided (don't override existing value)
+  // Currency is for display/input only - all transactions are in BTC
+  { from: 'currency' },
+  { from: 'funding_purpose', transform: entityTransforms.emptyStringToNull },
+  { from: 'bitcoin_address', transform: entityTransforms.emptyStringToNull },
+  { from: 'lightning_address', transform: entityTransforms.emptyStringToNull },
+  commonFieldMappings.urlField('website_url'),
+  { from: 'category', transform: entityTransforms.emptyStringToNull },
+  commonFieldMappings.arrayField('tags', []),
+  commonFieldMappings.dateField('start_date'), // Normalize date fields
+  commonFieldMappings.dateField('target_completion'),
+]);
 
 // Create handlers using generic CRUD factory
 const { GET, PUT, DELETE } = createEntityCrudHandlers({

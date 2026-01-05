@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useBottomNavScroll } from '@/hooks/useHeaderScroll';
 import { useComposer } from '@/contexts/ComposerContext';
 import { cn } from '@/lib/utils';
+import { isAuthenticatedRoute, getRouteContext, ROUTE_CONTEXTS, ROUTES } from '@/config/routes';
 
 const MobileBottomNav = React.memo(function MobileBottomNav() {
   const pathname = usePathname();
@@ -20,93 +21,94 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
     return null;
   }
 
-  // Don't show on auth pages or specific routes
-  if (
-    !pathname ||
-    pathname.startsWith('/auth') ||
-    pathname.startsWith('/settings') ||
-    pathname.startsWith('/assets') ||
-    pathname.startsWith('/events') ||
-    pathname.startsWith('/organizations') ||
-    pathname.startsWith('/funding')
-  ) {
+  // Don't render if no pathname
+  if (!pathname) {
+    return null;
+  }
+
+  // Don't show on auth pages or specific routes that shouldn't have bottom nav
+  const routeContext = getRouteContext(pathname);
+  const hiddenRoutes = [
+    ...ROUTE_CONTEXTS.auth,
+    '/settings',
+    '/assets',
+    '/events',
+    '/organizations',
+    '/funding',
+  ];
+  
+  if (hiddenRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`))) {
     return null;
   }
 
   // Context-aware navigation based on current route
-  // Use pathname as primary indicator to prevent menu switching during login
-  // Only check user if pathname is ambiguous (e.g., home page)
-  const isAuthenticatedRoute =
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/timeline') ||
-    pathname.startsWith('/community') ||
-    pathname.startsWith('/profile') ||
-    pathname.startsWith('/profiles') ||
-    pathname.startsWith('/people') ||
-    (pathname.startsWith('/projects') && pathname !== '/projects/create') ||
-    (user && pathname === '/');
+  // Use centralized route detection instead of hardcoded pathname checks
+  const isAuthRoute = isAuthenticatedRoute(pathname) || routeContext === 'contextual';
+  // For home page, check user state to determine if showing authenticated nav
+  const isAuthenticatedRouteContext = isAuthRoute || (user && pathname === ROUTES.HOME);
 
-  const navItems = isAuthenticatedRoute
+  // Use centralized route constants instead of hardcoded strings
+  const navItems = isAuthenticatedRouteContext
     ? [
         {
           icon: Home,
           label: 'Dashboard',
-          href: '/dashboard',
-          active: pathname === '/dashboard',
+          href: ROUTES.DASHBOARD.HOME,
+          active: pathname === ROUTES.DASHBOARD.HOME || pathname.startsWith(`${ROUTES.DASHBOARD.HOME}/`),
         },
         {
           icon: BookOpen,
           label: 'Timeline',
-          href: '/timeline',
-          active: pathname?.startsWith('/timeline'),
+          href: ROUTES.TIMELINE,
+          active: pathname?.startsWith(ROUTES.TIMELINE),
         },
         {
           icon: Plus,
           label: 'Post',
-          href: '/timeline?compose=true',
+          href: `${ROUTES.TIMELINE}?compose=true`,
           active: false,
           primary: true,
         },
         {
           icon: Rocket,
           label: 'Projects',
-          href: '/dashboard/projects',
+          href: ROUTES.DASHBOARD.PROJECTS,
           active:
-            pathname?.startsWith('/dashboard/projects') ||
-            (pathname?.startsWith('/projects') && pathname !== '/projects/create'),
+            pathname?.startsWith(ROUTES.DASHBOARD.PROJECTS) ||
+            (pathname?.startsWith(ROUTES.PROJECTS.LIST) && pathname !== ROUTES.PROJECTS.CREATE),
         },
         {
           icon: User,
           label: 'Profile',
-          href: '/profile',
-          active: pathname?.startsWith('/profile'),
+          href: ROUTES.PROFILE.EDIT,
+          active: pathname?.startsWith('/profile') || pathname?.startsWith('/profiles'),
         },
       ]
     : [
         {
           icon: Home,
           label: 'Home',
-          href: user ? '/dashboard' : '/',
-          active: user ? pathname === '/dashboard' : pathname === '/',
+          href: user ? ROUTES.DASHBOARD.HOME : ROUTES.HOME,
+          active: user ? pathname === ROUTES.DASHBOARD.HOME : pathname === ROUTES.HOME,
         },
         {
           icon: Compass,
           label: 'Discover',
-          href: '/discover',
-          active: pathname === '/discover',
+          href: ROUTES.DISCOVER,
+          active: pathname === ROUTES.DISCOVER,
         },
         {
           icon: Plus,
           label: 'Create',
-          href: '/projects/create',
-          active: pathname?.startsWith('/projects/create'),
+          href: ROUTES.PROJECTS.CREATE,
+          active: pathname?.startsWith(ROUTES.PROJECTS.CREATE),
           primary: true,
         },
         {
           icon: User,
           label: 'Profile',
-          href: user ? '/profile' : '/auth',
-          active: pathname?.startsWith('/profile'),
+          href: user ? ROUTES.PROFILE.EDIT : ROUTES.AUTH,
+          active: pathname?.startsWith('/profile') || pathname?.startsWith('/profiles'),
         },
       ];
 
@@ -118,7 +120,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
         shouldBeTransparent
           ? 'bg-white/20 backdrop-blur-sm border-transparent'
           : 'bg-white/95 backdrop-blur-md',
-        isAuthenticatedRoute ? 'border-orange-200/50 shadow-lg' : 'border-gray-200/50'
+        isAuthenticatedRouteContext ? 'border-orange-200/50 shadow-lg' : 'border-gray-200/50'
       )}
       style={{
         zIndex: 50,
@@ -158,7 +160,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
                 if (item.primary && item.href.includes('compose=true')) {
                   openComposer();
                   // Also navigate to timeline in background (for URL consistency)
-                  router.push('/timeline?compose=true');
+                  router.push(`${ROUTES.TIMELINE}?compose=true`);
                 } else {
                   router.push(item.href);
                 }
@@ -169,7 +171,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
                 'touch-manipulation select-none',
                 '-webkit-tap-highlight-color-transparent',
                 'active:scale-95 active:bg-gray-100',
-                isActive && (isAuthenticatedRoute ? 'text-orange-600' : 'text-tiffany-600'),
+                isActive && (isAuthenticatedRouteContext ? 'text-orange-600' : 'text-tiffany-600'),
                 !isActive && 'text-gray-500',
                 item.primary && 'relative',
                 shouldBeSmall ? 'min-h-[48px] gap-0.5' : 'min-h-[56px] gap-1'
@@ -183,7 +185,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
                   className={cn(
                     'absolute flex items-center justify-center rounded-full shadow-lg',
                     'transition-all duration-300 hover:scale-105 active:scale-95',
-                    isAuthenticatedRoute
+                    isAuthenticatedRouteContext
                       ? 'bg-gradient-to-r from-orange-500 to-orange-600'
                       : 'bg-gradient-to-r from-tiffany-500 to-tiffany-600'
                   )}

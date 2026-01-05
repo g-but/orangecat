@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { useProjectStore } from '@/stores/projectStore';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -142,7 +143,7 @@ export function ProjectWizard({
 
       // Only convert from satoshis if currency is BTC or SATS
       // CHF/USD/EUR are stored as-is in the database
-      const currency = project.currency || 'SATS';
+      const currency = project.currency || PLATFORM_DEFAULT_CURRENCY;
       const isBitcoinCurrency = currency === 'BTC' || currency === 'SATS';
       const goalAmount = project.goal_amount
         ? isBitcoinCurrency
@@ -277,7 +278,7 @@ export function ProjectWizard({
           title: formData.title.trim(),
           description: formData.description.trim(),
           goal_amount: goalAmount,
-          currency: formData.goalCurrency || 'SATS',
+          currency: formData.goalCurrency || PLATFORM_DEFAULT_CURRENCY,
           funding_purpose: formData.fundingPurpose.trim() || null,
           bitcoin_address: formData.bitcoinAddress.trim() || null,
           website_url: websiteUrl,

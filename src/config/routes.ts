@@ -5,8 +5,8 @@
  * Eliminates scattered route detection throughout the codebase
  *
  * Created: 2025-12-12
- * Last Modified: 2025-12-12
- * Last Modified Summary: Created unified route configuration to centralize all route detection logic
+ * Last Modified: 2026-01-30
+ * Last Modified Summary: Consolidated all route definitions from headerRoutes.ts and lib/routes.ts into this single source of truth
  */
 
 /**
@@ -203,6 +203,83 @@ export function isPublicRoute(pathname: string): boolean {
   const context = getRouteContext(pathname);
   return context === 'public' || context === 'universal' || context === 'auth';
 }
+
+/**
+ * Route Constants
+ *
+ * Centralized route definitions for programmatic route generation.
+ * Use these constants instead of hardcoded strings throughout the application.
+ */
+export const ROUTES = {
+  // Public routes
+  HOME: '/',
+  AUTH: '/auth',
+  DISCOVER: '/discover',
+  STUDY_BITCOIN: '/study-bitcoin',
+  COMMUNITY: '/community',
+  ABOUT: '/about',
+  BLOG: '/blog',
+  DOCS: '/docs',
+  FAQ: '/faq',
+  PRIVACY: '/privacy',
+  TERMS: '/terms',
+
+  // Project routes
+  PROJECTS: {
+    LIST: '/projects',
+    CREATE: '/projects/create',
+    VIEW: (id: string) => `/projects/${id}`,
+    EDIT: (id: string) => `/projects/create?edit=${id}`, // Reuse create page with edit param
+  },
+
+  // Dashboard routes
+  DASHBOARD: {
+    HOME: '/dashboard',
+    PROJECTS: '/dashboard/projects',
+    ANALYTICS: '/dashboard/analytics',
+    INFO: '/dashboard/info',
+    PEOPLE: '/dashboard/people',
+    WALLETS: '/dashboard/wallets',
+    GROUPS: '/dashboard/groups',
+    ASSETS: '/dashboard/assets',
+    LOANS: '/dashboard/loans',
+    ORGANIZATIONS: '/dashboard/organizations',
+    EVENTS: '/dashboard/events',
+    STORE: '/dashboard/store',
+    SERVICES: '/dashboard/services',
+    CAUSES: '/dashboard/causes',
+  },
+
+  // Profile routes (authenticated - own profile)
+  PROFILE: {
+    VIEW: (username: string) => `/profile/${username}`,
+    SETTINGS: '/profile/settings',
+    EDIT: '/dashboard/info',
+  },
+
+  // Public profile routes (shareable)
+  PROFILES: {
+    VIEW: (username: string) => `/profiles/${username}`,
+    ME: '/profiles/me',
+  },
+
+  // Timeline routes
+  TIMELINE: '/timeline',
+
+  // Messages routes
+  MESSAGES: '/messages',
+  MESSAGE_CONVERSATION: (conversationId: string) => `/messages/${conversationId}`,
+
+  // Settings routes
+  SETTINGS: '/settings',
+} as const;
+
+/**
+ * Legacy routes that redirect to new routes
+ */
+export const LEGACY_ROUTES = {
+  CREATE: '/create', // Redirects to /projects/create
+} as const;
 
 
 

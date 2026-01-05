@@ -245,24 +245,15 @@ export function isValidBio(bio: string): boolean {
 }
 
 /**
- * Validate password strength
- * @param password - Password to validate
- * @returns boolean indicating if password is valid
+ * @deprecated Use isValidPassword() from @/lib/validation/password instead.
+ * 
+ * This function is deprecated in favor of centralized password validation.
+ * Re-exported for backward compatibility.
+ *
+ * Last Modified: 2026-01-30
+ * Last Modified Summary: Deprecated - re-exports from centralized password validation
  */
-export function isValidPassword(password: string): boolean {
-  if (!password || typeof password !== 'string') {
-    return false;
-  }
-
-  // At least 8 characters, with uppercase, lowercase, number, and special character
-  const hasMinLength = password.length >= 8;
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasLowercase = /[a-z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
-
-  return hasMinLength && hasUppercase && hasLowercase && hasNumber && hasSpecial;
-}
+export { isValidPassword } from '@/lib/validation/password';
 
 /**
  * Type guard for AuthError

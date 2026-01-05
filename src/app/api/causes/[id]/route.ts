@@ -1,51 +1,37 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { handleApiError, apiSuccess, apiUnauthorized } from '@/lib/api/standardResponse';
-import { updateCause, deleteCause } from '@/domain/causes/service';
+/**
+ * Cause CRUD API Routes
+ *
+ * Uses generic entity handler from lib/api/entityCrudHandler.ts
+ * Entity metadata comes from entity-registry (Single Source of Truth)
+ *
+ * Refactored: 2026-01-04 to use generic CRUD handlers for consistency
+ */
 
-// PUT /api/causes/[id] - Update cause
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const supabase = await createServerClient();
+import { userCauseSchema } from '@/lib/validation';
+import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
+import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
 
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return apiUnauthorized('Unauthorized');
-    }
+// Build update payload from validated cause data
+const buildCauseUpdatePayload = createUpdatePayloadBuilder([
+  { from: 'title' },
+  { from: 'description', transform: entityTransforms.emptyStringToNull },
+  { from: 'cause_category' },
+  { from: 'goal_amount' },
+  // Currency: only include if explicitly provided (don't override existing value)
+  // Currency is for display/input only - all transactions are in BTC
+  { from: 'currency' },
+  { from: 'bitcoin_address', transform: entityTransforms.emptyStringToNull },
+  { from: 'lightning_address', transform: entityTransforms.emptyStringToNull },
+  { from: 'distribution_rules' },
+  commonFieldMappings.arrayField('beneficiaries', []),
+  { from: 'status', default: 'draft' },
+]);
 
-    const body = await request.json();
-    const updatedCause = await updateCause(id, user.id, body);
+// Create handlers using generic factory
+const { GET, PUT, DELETE } = createEntityCrudHandlers({
+  entityType: 'cause',
+  schema: userCauseSchema,
+  buildUpdatePayload: buildCauseUpdatePayload,
+});
 
-    return apiSuccess(updatedCause);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
-
-// DELETE /api/causes/[id] - Delete cause
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
-    const supabase = await createServerClient();
-
-    // Get current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    if (userError || !user) {
-      return apiUnauthorized('Unauthorized');
-    }
-
-    await deleteCause(id, user.id);
-
-    return apiSuccess({ success: true });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+export { GET, PUT, DELETE };

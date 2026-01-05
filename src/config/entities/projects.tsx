@@ -7,13 +7,16 @@
  * - Consistency: Same structure as products, services, loans
  *
  * Created: 2025-12-31
- * Last Modified: 2025-12-31
- * Last Modified Summary: Initial creation of project entity configuration
+ * Last Modified: 2026-01-04
+ * Last Modified Summary: Updated to convert prices to user's preferred currency
  */
 
 import { EntityConfig } from '@/types/entity';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
+import { convert, formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 
 // Project type for EntityList usage
 export interface ProjectListItem {
@@ -47,17 +50,42 @@ export const projectEntityConfig: EntityConfig<ProjectListItem> = {
 
   makeHref: (project) => `/projects/${project.id}`,
 
-  makeCardProps: (project) => {
+  makeCardProps: (project, userCurrency?: string) => {
+    // Display amounts in user's preferred currency (or project's currency)
+    const displayCurrency = (userCurrency || project.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
+    
     // Format funding progress
-    const fundingLabel = project.goal_amount
-      ? `${(project.current_amount || project.total_funding || 0).toLocaleString()} / ${project.goal_amount.toLocaleString()} ${project.currency || 'SATS'}`
-      : project.total_funding
-        ? `${project.total_funding.toLocaleString()} ${project.currency || 'SATS'}`
+    const fundingLabel = project.goal_amount && project.currency
+      ? (() => {
+          const current = project.current_amount || project.total_funding || 0;
+          const goal = project.goal_amount;
+          
+          // Convert both to display currency if needed
+          const currentInDisplay = project.currency === displayCurrency
+            ? current
+            : convert(current, project.currency as Currency, displayCurrency);
+          const goalInDisplay = project.currency === displayCurrency
+            ? goal
+            : convert(goal, project.currency as Currency, displayCurrency);
+          
+          return `${formatCurrency(currentInDisplay, displayCurrency)} / ${formatCurrency(goalInDisplay, displayCurrency)}`;
+        })()
+      : project.total_funding && project.currency
+        ? (() => {
+            const total = project.currency === displayCurrency
+              ? project.total_funding
+              : convert(project.total_funding, project.currency as Currency, displayCurrency);
+            return formatCurrency(total, displayCurrency);
+          })()
         : undefined;
 
-    // Calculate progress percentage
-    const progress = project.goal_amount && project.goal_amount > 0
-      ? Math.round(((project.current_amount || project.total_funding || 0) / project.goal_amount) * 100)
+    // Calculate progress percentage (both amounts must be in same currency)
+    const progress = project.goal_amount && project.goal_amount > 0 && project.currency
+      ? (() => {
+          const current = project.current_amount || project.total_funding || 0;
+          // Both amounts are in project.currency, so direct comparison
+          return Math.round((current / project.goal_amount) * 100);
+        })()
       : 0;
 
     // Build metadata parts

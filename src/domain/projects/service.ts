@@ -1,17 +1,22 @@
 import { createServerClient } from '@/lib/supabase/server';
 
-export async function listProjectsPage(limit: number, offset: number) {
+export async function listProjectsPage(limit: number, offset: number, userId?: string) {
   const supabase = await createServerClient();
-  const { data, error } = await supabase
+  
+  // Build base query
+  let query = supabase
     .from('projects')
-    .select(
-      `
-      *,
-      profiles!inner(id, username, name, avatar_url, email)
-    `,
-      { count: 'exact' }
-    )
-    .eq('status', 'active')
+    .select('*', { count: 'exact' });
+
+  // If filtering by user_id, return all statuses (including drafts)
+  // Otherwise, only return active projects
+  if (userId) {
+    query = query.eq('user_id', userId);
+  } else {
+    query = query.eq('status', 'active');
+  }
+
+  const { data, error } = await query
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -19,19 +24,43 @@ export async function listProjectsPage(limit: number, offset: number) {
     throw error;
   }
 
+  // Fetch profiles separately for better error handling
+  const userIds = [...new Set((data || []).map((p: any) => p.user_id).filter(Boolean))];
+  const profilesMap = new Map();
+  
+  if (userIds.length > 0) {
+    const { data: profiles, error: profilesError } = await supabase
+      .from('profiles')
+      .select('id, username, name, avatar_url, email')
+      .in('id', userIds);
+    
+    if (!profilesError && profiles) {
+      profiles.forEach((profile: any) => {
+        profilesMap.set(profile.id, profile);
+      });
+    }
+  }
+
   const items = (data || []).map((project: any) => ({
     ...project,
     raised_amount: project.raised_amount ?? 0,
-    profiles: Array.isArray(project.profiles) ? project.profiles[0] : project.profiles,
+    profiles: project.user_id ? profilesMap.get(project.user_id) || null : null,
   }));
 
   // Supabase count is returned in header when using the select count:'exact'
   // However, the JS client returns it as part of the response if head is true; we issue range so count may be omitted
   // To ensure total, run a lightweight count query
-  const { count } = await supabase
+  let countQuery = supabase
     .from('projects')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'active');
+    .select('*', { count: 'exact', head: true });
+
+  if (userId) {
+    countQuery = countQuery.eq('user_id', userId);
+  } else {
+    countQuery = countQuery.eq('status', 'active');
+  }
+
+  const { count } = await countQuery;
 
   return { items, total: count || 0 };
 }

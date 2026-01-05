@@ -90,11 +90,10 @@ export function LoanOffersDialog({
     }
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency === 'EUR' ? 'EUR' : 'USD',
-    }).format(amount);
+  const formatLoanCurrency = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
+    // Validate currency and fallback to platform default
+    const validCurrency = (CURRENCY_CODES.includes(currency as Currency) ? currency : PLATFORM_DEFAULT_CURRENCY) as Currency;
+    return formatLoanCurrency(amount, validCurrency);
   };
 
   const getStatusColor = (status: string) => {
@@ -147,7 +146,7 @@ export function LoanOffersDialog({
                         )}
                       </div>
                       <div className="text-lg font-semibold">
-                        {formatCurrency(offer.offer_amount, loan.currency)}
+                        {formatLoanCurrency(offer.offer_amount, loan.currency)}
                       </div>
                       {offer.interest_rate && (
                         <div className="text-sm text-muted-foreground">

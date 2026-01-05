@@ -2,14 +2,17 @@
  * Cause Entity Configuration
  *
  * Created: 2025-12-25
- * Last Modified: 2025-12-25
- * Last Modified Summary: Initial creation of cause entity configuration
+ * Last Modified: 2026-01-04
+ * Last Modified Summary: Updated to convert prices to user's preferred currency
  */
 
 import { EntityConfig } from '@/types/entity';
 import { UserCause } from '@/types/database';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
+import { convert, formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 
 export const causeEntityConfig: EntityConfig<UserCause> = {
   name: 'Cause',
@@ -25,10 +28,17 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
 
   makeHref: (cause) => `/dashboard/causes/${cause.id}`,
 
-  makeCardProps: (cause) => {
+  makeCardProps: (cause, userCurrency?: string) => {
+    // Display goal in user's preferred currency (or cause's currency)
+    const displayCurrency = (userCurrency || cause.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
     // Build goal label
-    const goalLabel = cause.goal_sats
-      ? `Goal: ${cause.goal_sats.toLocaleString()} ${cause.currency || 'sats'}`
+    const goalLabel = cause.goal_amount && cause.currency
+      ? (() => {
+          const goalAmount = cause.currency === displayCurrency
+            ? cause.goal_amount
+            : convert(cause.goal_amount, cause.currency as Currency, displayCurrency);
+          return `Goal: ${formatCurrency(goalAmount, displayCurrency)}`;
+        })()
       : undefined;
 
     // Build progress info
@@ -36,8 +46,15 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
     if (cause.cause_category) {
       progressParts.push(cause.cause_category);
     }
-    if (cause.total_raised_sats !== undefined && cause.goal_sats) {
-      const percentage = Math.round((cause.total_raised_sats / cause.goal_sats) * 100);
+    if (cause.total_raised !== undefined && cause.goal_amount && cause.currency) {
+      // Convert both to same currency for percentage calculation
+      const raisedInGoalCurrency = cause.currency === displayCurrency
+        ? cause.total_raised
+        : convert(cause.total_raised, cause.currency as Currency, displayCurrency);
+      const goalInGoalCurrency = cause.currency === displayCurrency
+        ? cause.goal_amount
+        : convert(cause.goal_amount, cause.currency as Currency, displayCurrency);
+      const percentage = Math.round((raisedInGoalCurrency / goalInGoalCurrency) * 100);
       progressParts.push(`${percentage}% funded`);
     }
 
