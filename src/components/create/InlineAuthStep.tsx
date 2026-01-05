@@ -31,7 +31,8 @@ import {
 import { Input } from '@/components/ui/Input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import supabase from '@/lib/supabase/browser';
+import { signIn as authSignIn, signUp as authSignUp } from '@/services/supabase/auth';
+import { passwordSchema } from '@/lib/validation/password';
 import type { FundingPageFormData } from '@/types/funding';
 
 // Login schema
@@ -40,7 +41,7 @@ const loginSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-// Registration schema
+// Registration schema - uses centralized password validation
 const registerSchema = z
   .object({
     email: z.string().email('Please enter a valid email'),
@@ -52,12 +53,7 @@ const registerSchema = z
         /^[a-zA-Z0-9_-]+$/,
         'Username can only contain letters, numbers, hyphens, and underscores'
       ),
-    password: z
-      .string()
-      .min(8, 'Password must be at least 8 characters')
-      .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
-      .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
-      .regex(/[0-9]/, 'Password must contain at least one number'),
+    password: passwordSchema, // Use centralized password schema
     confirmPassword: z.string(),
   })
   .refine(data => data.password === data.confirmPassword, {
@@ -99,24 +95,26 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
     },
   });
 
-  // Handle login
+  // Handle login - uses centralized auth service
   const handleLogin = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
+      // Use centralized auth service instead of direct Supabase call
+      // This provides timeout handling, error handling, and logging
+      const result = await authSignIn({
         email: data.email,
         password: data.password,
       });
 
-      if (error) {
-        throw error;
+      if (result.error) {
+        throw new Error(result.error.message);
       }
 
-      if (authData.user) {
+      if (result.data?.user) {
         toast.success('Welcome back! 🎉', {
           description: 'Publishing your project...',
         });
-        await onSuccess(authData.user.id);
+        await onSuccess(result.data.user.id);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Please check your credentials and try again';
@@ -144,20 +142,18 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
         return;
       }
 
-      // Register user
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+      // Register user - uses centralized auth service
+      const result = await authSignUp({
         email: data.email,
         password: data.password,
-        options: {
-          data: {
-            username: data.username,
-          },
-        },
+        // Note: username metadata should be handled via profile creation, not auth metadata
       });
 
-      if (signUpError) {
-        throw signUpError;
+      if (result.error) {
+        throw new Error(result.error.message);
       }
+
+      const authData = result.data;
 
       if (authData.user) {
         // Create profile using ProfileWriter service

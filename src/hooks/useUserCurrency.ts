@@ -2,22 +2,22 @@
  * USER CURRENCY HOOK
  *
  * Provides the user's preferred currency from their profile/settings.
- * Falls back to DEFAULT_CURRENCY ('USD') if not set.
+ * Falls back to PLATFORM_DEFAULT_CURRENCY ('CHF') if not set.
  *
  * Created: 2025-01-03
- * Last Modified: 2025-01-03
- * Last Modified Summary: Initial implementation for user currency preference
+ * Last Modified: 2026-01-04
+ * Last Modified Summary: Updated comment to reflect actual fallback to CHF
  */
 
 'use client';
 
 import { useAuthStore } from '@/stores/auth';
-import { DEFAULT_CURRENCY, type CurrencyCode, isSupportedCurrency } from '@/config/currencies';
+import { PLATFORM_DEFAULT_CURRENCY, type CurrencyCode, isSupportedCurrency } from '@/config/currencies';
 import type { Currency } from '@/types/settings';
 
 /**
  * Returns the user's preferred display currency.
- * Falls back to DEFAULT_CURRENCY ('USD') if not set or invalid.
+ * Falls back to PLATFORM_DEFAULT_CURRENCY ('CHF') if not set or invalid.
  */
 export function useUserCurrency(): Currency {
   const profile = useAuthStore((state) => state.profile);
@@ -31,16 +31,16 @@ export function useUserCurrency(): Currency {
   }
 
   // Default to CHF as the platform is Swiss-focused
-  return 'CHF';
+  return PLATFORM_DEFAULT_CURRENCY;
 }
 
 /**
  * Get the default currency for entity creation forms.
  * This is used when initializing form values.
- * Returns 'CHF' as the platform default (Swiss-focused).
+ * Returns PLATFORM_DEFAULT_CURRENCY ('CHF') as the platform default (Swiss-focused).
  */
 export function getDefaultFormCurrency(): Currency {
-  return 'CHF';
+  return PLATFORM_DEFAULT_CURRENCY;
 }
 
 /**

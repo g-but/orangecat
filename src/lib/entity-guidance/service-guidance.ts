@@ -28,8 +28,8 @@ export type ServiceFieldType =
   | 'title'
   | 'description'
   | 'category'
-  | 'hourly_rate_sats'
-  | 'fixed_price_sats'
+  | 'hourly_rate'
+  | 'fixed_price'
   | 'duration_minutes'
   | 'service_location_type'
   | 'service_area'
@@ -91,25 +91,25 @@ export const serviceGuidanceContent: Record<NonNullable<ServiceFieldType>, Guida
       'Teaching - Courses, tutoring, coaching',
     ],
   },
-  hourly_rate_sats: {
+  hourly_rate: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-tiffany-600' }),
     title: 'Hourly Rate',
     description:
-      'Set your hourly rate in satoshis. This is ideal for ongoing work or consultations.',
+      'Set your hourly rate in your preferred currency. This is ideal for ongoing work or consultations.',
     tips: [
       'Research market rates for your skill level',
       'Factor in your experience and expertise',
       'Consider your location and cost of living',
       'You can also set a fixed price for projects',
-      '50,000 sats ≈ $50/hour at ~$100k BTC',
+      'Enter amount in your preferred currency (USD, CHF, EUR, BTC, or SATS)',
     ],
     examples: [
-      '50,000 sats/hour - Entry level',
-      '150,000 sats/hour - Experienced',
-      '300,000 sats/hour - Expert/specialized',
+      '$50/hour - Entry level',
+      '$150/hour - Experienced',
+      '$300/hour - Expert/specialized',
     ],
   },
-  fixed_price_sats: {
+  fixed_price: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-tiffany-600' }),
     title: 'Fixed Price',
     description:
@@ -120,11 +120,12 @@ export const serviceGuidanceContent: Record<NonNullable<ServiceFieldType>, Guida
       'Consider revisions and client communication',
       'Good for packages or defined scopes',
       'Can be used alongside hourly rate',
+      'Enter amount in your preferred currency',
     ],
     examples: [
-      '500,000 sats - Basic website',
-      '2,000,000 sats - Full brand identity',
-      '100,000 sats - 1-hour consultation',
+      '$500 - Basic website',
+      '$2,000 - Full brand identity',
+      '$100 - 1-hour consultation',
     ],
   },
   duration_minutes: {

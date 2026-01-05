@@ -12,8 +12,8 @@
  * - Easy to add new entity types
  *
  * Created: 2025-01-28
- * Last Modified: 2025-01-28
- * Last Modified Summary: Initial creation of generic entity POST handler
+ * Last Modified: 2026-01-05
+ * Last Modified Summary: Support async transformData with supabase parameter for user preference access
  */
 
 import { NextRequest } from 'next/server';
@@ -43,7 +43,11 @@ export interface EntityPostHandlerConfig {
   /** Override table name (uses registry tableName if not specified) */
   tableName?: string;
   /** Function to transform validated data before insertion */
-  transformData?: (data: Record<string, unknown>, userId: string) => Record<string, unknown>;
+  transformData?: (
+    data: Record<string, unknown>, 
+    userId: string,
+    supabase: ReturnType<typeof createServerClient>
+  ) => Record<string, unknown> | Promise<Record<string, unknown>>;
   /** Custom creation function (if entity has special creation logic) */
   createEntity?: (
     userId: string,
@@ -120,11 +124,29 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
       }
 
       // Default creation: transform data and insert
-      const transformedData = transformData 
-        ? transformData(ctx.body, user.id) 
-        : { ...ctx.body, user_id: user.id };
+      let transformedData;
+      try {
+        transformedData = transformData 
+          ? await Promise.resolve(transformData(ctx.body, user.id, supabase))
+          : { ...ctx.body, user_id: user.id };
+      } catch (transformError: any) {
+        logger.error(`Error transforming data for ${entityType}`, {
+          error: transformError,
+          body: ctx.body,
+          userId: user.id
+        });
+        return apiInternalError(`Failed to process ${meta.name.toLowerCase()}: ${transformError?.message || String(transformError)}`);
+      }
       
       const entityData = { ...transformedData, ...defaultFields };
+
+      // Log the data being inserted for debugging
+      logger.info(`Inserting ${entityType}`, { 
+        table, 
+        userId: user.id,
+        dataKeys: Object.keys(entityData),
+        entityDataSample: JSON.stringify(entityData, null, 2).substring(0, 500)
+      });
 
       const { data: entity, error } = await supabase
         .from(table)
@@ -133,8 +155,66 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
         .single();
 
       if (error) {
-        logger.error(`Error creating ${entityType}`, { error, userId: user.id, table });
-        return apiInternalError(`Failed to create ${meta.name.toLowerCase()}`);
+        // Log full error object structure
+        console.error('Supabase error object:', {
+          error,
+          type: typeof error,
+          constructor: error?.constructor?.name,
+          keys: Object.keys(error || {}),
+          stringified: JSON.stringify(error, null, 2),
+          errorString: String(error)
+        });
+        
+        const errorDetails = {
+          error, 
+          userId: user.id, 
+          table,
+          code: error?.code,
+          message: error?.message,
+          details: error?.details,
+          hint: error?.hint,
+          entityData: JSON.stringify(entityData, null, 2),
+          // Also log the raw error object
+          rawError: JSON.stringify(error, Object.getOwnPropertyNames(error || {}), 2)
+        };
+        logger.error(`Error creating ${entityType}`, errorDetails);
+        // Return more detailed error message
+        // Try to extract error message from various possible properties
+        let errorMsg = 'Unknown error';
+        if (error?.message) {
+          errorMsg = error.message;
+        } else if (error?.details) {
+          errorMsg = error.details;
+        } else if (error?.hint) {
+          errorMsg = error.hint;
+        } else if (error?.code) {
+          errorMsg = `Database error code: ${error.code}`;
+        } else if (typeof error === 'object') {
+          // Try to stringify the error object to see its structure
+          try {
+            // Try with all own properties
+            const errorStr = JSON.stringify(error, Object.getOwnPropertyNames(error), 2);
+            if (errorStr !== '{}') {
+              errorMsg = `Database error: ${errorStr.substring(0, 200)}`;
+            } else {
+              // Try to access common Supabase error properties directly
+              const errorCode = (error as any)?.code;
+              const errorMessage = (error as any)?.message;
+              const errorDetails = (error as any)?.details;
+              const errorHint = (error as any)?.hint;
+              if (errorCode || errorMessage || errorDetails || errorHint) {
+                errorMsg = `Database error: code=${errorCode || 'N/A'}, message=${errorMessage || 'N/A'}, details=${errorDetails || 'N/A'}, hint=${errorHint || 'N/A'}`;
+              } else {
+                errorMsg = `Database error: ${error?.toString?.() || String(error)}`;
+              }
+            }
+          } catch (e) {
+            errorMsg = `Database error: ${String(error)}`;
+          }
+        } else {
+          errorMsg = String(error);
+        }
+        return apiInternalError(`Failed to create ${meta.name.toLowerCase()}: ${errorMsg}`);
       }
 
       logger.info(`${meta.name} created successfully`, { [`${entityType}Id`]: entity.id });

@@ -24,6 +24,9 @@ import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { getTableName } from '@/config/entity-registry';
 import type { EntityConfig, BaseEntity } from '@/types/entity';
+import { PLATFORM_DEFAULT_CURRENCY, isSupportedCurrency } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
+import { COLUMNS } from '@/config/database-columns';
 
 interface DetailField {
   label: string;
@@ -36,7 +39,7 @@ interface EntityDetailPageProps<T extends BaseEntity> {
   userId?: string; // If provided, only show entities owned by this user
   requireAuth?: boolean; // If true, redirect to auth if not logged in
   redirectPath?: string; // Where to redirect if auth required but not logged in
-  makeDetailFields?: (entity: T) => {
+  makeDetailFields?: (entity: T, userCurrency?: string) => {
     left?: DetailField[];
     right?: DetailField[];
   };
@@ -167,6 +170,20 @@ export default async function EntityDetailPage<T extends BaseEntity>({
     redirect(redirectPath || '/auth?mode=login');
   }
 
+  // Get user's currency preference from profile
+  let userCurrency: Currency = PLATFORM_DEFAULT_CURRENCY;
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select(COLUMNS.profiles.CURRENCY)
+      .eq(COLUMNS.profiles.ID, user.id)
+      .single();
+    
+    if (profile?.currency && isSupportedCurrency(profile.currency)) {
+      userCurrency = profile.currency as Currency;
+    }
+  }
+
   // Map entity config name to EntityType for getTableName
   const entityTypeMap: Record<string, string> = {
     'product': 'product',
@@ -204,7 +221,7 @@ export default async function EntityDetailPage<T extends BaseEntity>({
 
   // Generate detail fields
   const fields = makeDetailFields
-    ? makeDetailFields(entity as T)
+    ? makeDetailFields(entity as T, userCurrency)
     : makeDefaultDetailFields(entity as T);
 
   // Header actions

@@ -18,6 +18,9 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { formatLoanCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY, CURRENCY_CODES } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 import { useState } from 'react';
 import { LoanOffersDialog } from './LoanOffersDialog';
 import { toast } from 'sonner';
@@ -50,17 +53,10 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
     }
   };
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    if (currency === 'BTC') {
-      return `${(amount / 100000000).toFixed(8)} BTC`;
-    }
-    if (currency === 'SATS') {
-      return `${amount.toLocaleString()} SATS`;
-    }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency === 'EUR' ? 'EUR' : 'USD',
-    }).format(amount);
+  const formatLoanCurrency = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
+    // Validate currency and fallback to platform default
+    const validCurrency = (CURRENCY_CODES.includes(currency as Currency) ? currency : PLATFORM_DEFAULT_CURRENCY) as Currency;
+    return formatLoanCurrency(amount, validCurrency);
   };
 
   const calculateProgress = (original: number, remaining: number) => {
@@ -164,13 +160,13 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Remaining Balance</p>
                   <p className="text-lg font-semibold text-red-600">
-                    {formatCurrency(loan.remaining_balance, loan.currency)}
+                    {formatLoanCurrency(loan.remaining_balance, loan.currency)}
                   </p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Original Amount</p>
                   <p className="text-lg font-semibold">
-                    {formatCurrency(loan.original_amount, loan.currency)}
+                    {formatLoanCurrency(loan.original_amount, loan.currency)}
                   </p>
                 </div>
                 <div className="space-y-1">
@@ -190,7 +186,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
                   <p className="text-sm text-muted-foreground">Monthly Payment</p>
                   <p className="text-lg font-semibold">
                     {loan.monthly_payment
-                      ? formatCurrency(loan.monthly_payment, loan.currency)
+                      ? formatLoanCurrency(loan.monthly_payment, loan.currency)
                       : 'N/A'}
                   </p>
                 </div>
@@ -234,7 +230,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
                     <div className="flex items-center gap-2 text-sm">
                       <Target className="h-3 w-3 text-muted-foreground" />
                       <span className="text-muted-foreground">Min offer:</span>
-                      <span>{formatCurrency(loan.minimum_offer_amount, loan.currency)}</span>
+                      <span>{formatLoanCurrency(loan.minimum_offer_amount, loan.currency)}</span>
                     </div>
                   )}
                   <div className="flex items-center gap-2 text-sm">

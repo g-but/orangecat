@@ -2,14 +2,17 @@
  * Service Entity Configuration
  * 
  * Created: 2025-01-27
- * Last Modified: 2025-01-27
- * Last Modified Summary: Initial creation of service entity configuration
+ * Last Modified: 2026-01-04
+ * Last Modified Summary: Updated to convert prices to user's preferred currency
  */
 
 import { EntityConfig } from '@/types/entity';
 import { UserService } from '@/types/database';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
+import { convert, formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 
 export const serviceEntityConfig: EntityConfig<UserService> = {
   name: 'Service',
@@ -25,14 +28,21 @@ export const serviceEntityConfig: EntityConfig<UserService> = {
   
   makeHref: (service) => `/dashboard/services/${service.id}`,
   
-  makeCardProps: (service) => {
-    // Build price label
+  makeCardProps: (service, userCurrency?: string) => {
+    // Display prices in user's preferred currency (or service's currency)
+    const displayCurrency = (userCurrency || service.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
     const priceParts: string[] = [];
-    if (service.hourly_rate_sats) {
-      priceParts.push(`${service.hourly_rate_sats} sats/hour`);
+    if (service.hourly_rate && service.currency) {
+      const hourlyRate = service.currency === displayCurrency
+        ? service.hourly_rate
+        : convert(service.hourly_rate, service.currency as Currency, displayCurrency);
+      priceParts.push(`${formatCurrency(hourlyRate, displayCurrency)}/hour`);
     }
-    if (service.fixed_price_sats) {
-      priceParts.push(`${service.fixed_price_sats} sats`);
+    if (service.fixed_price && service.currency) {
+      const fixedPrice = service.currency === displayCurrency
+        ? service.fixed_price
+        : convert(service.fixed_price, service.currency as Currency, displayCurrency);
+      priceParts.push(formatCurrency(fixedPrice, displayCurrency));
     }
     const priceLabel = priceParts.length > 0 ? priceParts.join(' or ') : undefined;
 

@@ -73,8 +73,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
 
   // Text appears inline when expanded (hover or manual), smoothly transitions
   const textClasses = [
-    'transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis',
-    isExpanded ? 'block opacity-100 ml-3 flex-1 min-w-0' : 'hidden lg:hidden', // Hidden when collapsed (desktop shows on sidebar hover, mobile shows tooltip)
+    'transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis block',
   ].join(' ');
 
   return (
@@ -96,7 +95,17 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
           <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-sky-500"></span>
         )}
 
-        <span className={textClasses}>{item.name}</span>
+        {isExpanded && (
+          <div className="flex-1 min-w-0 ml-3">
+            <span className={textClasses}>{item.name}</span>
+            {/* Description - shown when expanded, especially helpful on mobile */}
+            {item.description && (
+              <span className="block text-xs text-gray-500 mt-0.5 leading-tight line-clamp-1">
+                {item.description}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Active indicator */}
         {isActive && (

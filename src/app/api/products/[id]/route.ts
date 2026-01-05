@@ -10,21 +10,24 @@
 
 import { userProductSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder } from '@/lib/api/buildUpdatePayload';
+import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated product data
 const buildProductUpdatePayload = createUpdatePayloadBuilder([
   { from: 'title' },
-  { from: 'description' },
-  { from: 'price_sats' },
-  { from: 'currency', default: 'CHF' }, // Platform default - user can override in form
+  { from: 'description', transform: entityTransforms.emptyStringToNull },
+  { from: 'price' },
+  // Currency: only include if explicitly provided (don't override existing value)
+  // Currency is for display/input only - all transactions are in BTC
+  { from: 'currency' },
   { from: 'product_type', default: 'physical' },
-  { from: 'images', default: [] },
-  { from: 'thumbnail_url' },
+  commonFieldMappings.arrayField('images', []),
+  commonFieldMappings.urlField('thumbnail_url'),
   { from: 'inventory_count', default: -1 },
   { from: 'fulfillment_type', default: 'manual' },
-  { from: 'category' },
-  { from: 'tags', default: [] },
+  { from: 'category', transform: entityTransforms.emptyStringToNull },
+  commonFieldMappings.arrayField('tags', []),
+  { from: 'status', default: 'draft' }, // Ensure status is preserved
   { from: 'is_featured', default: false },
 ]);
 

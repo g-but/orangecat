@@ -15,6 +15,7 @@ jest.mock('@/lib/api/standardResponse', () => ({
   apiUnauthorized: jest.fn(),
   apiInternalError: jest.fn(),
   apiRateLimited: jest.fn(),
+  apiValidationError: jest.fn(),
   handleApiError: jest.fn()
 }))
 
@@ -61,14 +62,14 @@ describe('Services API - POST', () => {
     const mockServiceData = {
       title: 'Test Service',
       category: 'Consulting',
-      fixed_price_sats: 100000
+      fixed_price: 100000
     }
     // The middleware processes the body and adds defaults
     const processedServiceData = {
       title: 'Test Service',
       category: 'Consulting',
-      fixed_price_sats: 100000,
-      currency: 'SATS',
+      fixed_price: 100000,
+      currency: 'CHF',
       service_location_type: 'remote',
       images: [],
       portfolio_links: [],
@@ -150,8 +151,8 @@ describe('Services API - POST', () => {
     const processedData = {
       title: 'Test',
       category: 'Other',
-      fixed_price_sats: 1000,
-      currency: 'SATS',
+      fixed_price: 1000,
+      currency: 'CHF',
       service_location_type: 'remote',
       images: [],
       portfolio_links: [],

@@ -17,6 +17,7 @@ import Button from '@/components/ui/Button';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { CheckSquare, Square, Trash2 } from 'lucide-react';
 import { useCurrencyConversion } from '@/hooks/useCurrencyConversion';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 interface ProjectTileProps {
   project: Project;
@@ -33,7 +34,7 @@ export function ProjectTile({
   onDelete,
   isDeleting = false,
 }: ProjectTileProps) {
-  const currency = project.currency || 'CHF';
+  const currency = project.currency || PLATFORM_DEFAULT_CURRENCY;
   const { convertToBTC } = useCurrencyConversion();
 
   // Convert to BTC equivalent for display

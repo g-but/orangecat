@@ -33,7 +33,7 @@ export const assetEntityConfig: EntityConfig<Asset> = {
   makeCardProps: (asset) => {
     // Build value label
     const valueLabel = asset.estimated_value
-      ? `${asset.estimated_value.toLocaleString()} ${asset.currency || 'USD'}`
+      ? `${asset.estimated_value.toLocaleString()} ${asset.currency || PLATFORM_DEFAULT_CURRENCY}`
       : undefined;
 
     // Format asset type for display

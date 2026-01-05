@@ -10,22 +10,25 @@
 
 import { userServiceSchema } from '@/lib/validation';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder } from '@/lib/api/buildUpdatePayload';
+import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
 
 // Build update payload from validated service data
 const buildServiceUpdatePayload = createUpdatePayloadBuilder([
   { from: 'title' },
-  { from: 'description' },
+  { from: 'description', transform: entityTransforms.emptyStringToNull },
   { from: 'category' },
-  { from: 'hourly_rate_sats' },
-  { from: 'fixed_price_sats' },
-  { from: 'currency', default: 'CHF' }, // Platform default - user can override in form
+  { from: 'hourly_rate' },
+  { from: 'fixed_price' },
+  // Currency: only include if explicitly provided (don't override existing value)
+  // Currency is for display/input only - all transactions are in BTC
+  { from: 'currency' },
   { from: 'duration_minutes' },
   { from: 'availability_schedule' },
   { from: 'service_location_type', default: 'remote' },
-  { from: 'service_area' },
-  { from: 'images', default: [] },
-  { from: 'portfolio_links', default: [] },
+  { from: 'service_area', transform: entityTransforms.emptyStringToNull },
+  commonFieldMappings.arrayField('images', []),
+  commonFieldMappings.arrayField('portfolio_links', []),
+  { from: 'status', default: 'draft' }, // Ensure status is preserved
 ]);
 
 // Create handlers using generic factory

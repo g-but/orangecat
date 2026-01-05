@@ -5,7 +5,7 @@ import { AlertCircle, RefreshCw, Mail, Key, CheckCircle } from 'lucide-react'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import { useAuth } from '@/hooks/useAuth'
-import supabase from '@/lib/supabase/browser'
+import { signOut as authSignOut, resetPassword } from '@/services/supabase/auth'
 
 interface AuthRecoveryProps {
   error: string
@@ -45,8 +45,8 @@ export default function AuthRecovery({ error, email, onRetry, onClearError }: Au
         })
       }
 
-      // Sign out from Supabase
-      await supabase.auth.signOut()
+      // Sign out using centralized auth service
+      await authSignOut()
 
       setRecoveryStep('success')
       setRecoveryMessage('Authentication state cleared successfully! Please try logging in again.')
@@ -74,9 +74,8 @@ export default function AuthRecovery({ error, email, onRetry, onClearError }: Au
     setRecoveryMessage('Sending password reset email...')
 
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`
-      })
+      // Use centralized auth service instead of direct Supabase call
+      const { error } = await resetPassword({ email })
 
       if (error) {
         setRecoveryMessage(`Failed to send reset email: ${error.message}`)

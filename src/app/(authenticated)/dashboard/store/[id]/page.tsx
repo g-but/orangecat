@@ -1,6 +1,9 @@
 import EntityDetailPage from '@/components/entity/EntityDetailPage';
 import { productEntityConfig } from '@/config/entities/products';
 import type { UserProduct } from '@/types/database';
+import { convert, formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -24,10 +27,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
       entityId={id}
       requireAuth={true}
       redirectPath="/auth?mode=login&from=/dashboard/store"
-      makeDetailFields={(product) => {
+      makeDetailFields={(product, userCurrency) => {
+        // Display price in user's preferred currency (or product's currency)
+        const displayCurrency = (userCurrency || product.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
+        const priceValue = product.price && product.currency
+          ? (() => {
+              const price = product.currency === displayCurrency
+                ? product.price
+                : convert(product.price, product.currency as Currency, displayCurrency);
+              return formatCurrency(price, displayCurrency);
+            })()
+          : 'Not set';
+        
         const left = [
           { label: 'Status', value: product.status || 'draft' },
-          { label: 'Price', value: product.price_sats ? `${product.price_sats.toLocaleString()} ${product.currency || 'CHF'}` : 'Not set' },
+          { label: 'Price', value: priceValue },
           { label: 'Type', value: product.product_type || '—' },
           { label: 'Inventory', value: product.inventory_count === -1 ? 'Unlimited' : String(product.inventory_count || 0) },
           { label: 'Fulfillment', value: product.fulfillment_type || '—' },

@@ -2,13 +2,16 @@
  * Event Entity Configuration
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Initial creation of event entity configuration
+ * Last Modified: 2026-01-04
+ * Last Modified Summary: Updated to convert prices to user's preferred currency
  */
 
 import { EntityConfig } from '@/types/entity';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
+import { convert, formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 
 // Event type from database - matches events table schema
 export interface Event {
@@ -40,10 +43,10 @@ export interface Event {
   current_attendees?: number | null;
   requires_rsvp?: boolean | null;
   rsvp_deadline?: string | null;
-  ticket_price_sats?: number | null;
+  ticket_price?: number | null;
   currency?: string | null;
   is_free?: boolean | null;
-  funding_goal_sats?: number | null;
+  funding_goal?: number | null;
   bitcoin_address?: string | null;
   lightning_address?: string | null;
   images?: string[] | null;
@@ -69,12 +72,21 @@ export const eventEntityConfig: EntityConfig<Event> = {
 
   makeHref: (event) => `/dashboard/events/${event.id}`,
 
-  makeCardProps: (event) => {
-    // Build price label
+  makeCardProps: (event, userCurrency?: string) => {
+    // Display price in user's preferred currency (or event's currency)
+    const displayCurrency = (userCurrency || event.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
     const priceLabel = event.is_free
       ? 'Free'
-      : event.ticket_price_sats
-      ? `${event.ticket_price_sats} ${event.currency || 'SATS'}`
+      : event.ticket_price && event.currency
+      ? (() => {
+          // If event currency matches display currency, use directly
+          if (event.currency === displayCurrency) {
+            return formatCurrency(event.ticket_price, displayCurrency);
+          }
+          // Otherwise convert from event's currency to display currency
+          const converted = convert(event.ticket_price, event.currency as Currency, displayCurrency);
+          return formatCurrency(converted, displayCurrency);
+        })()
       : undefined;
 
     // Build metadata (category, location, date)

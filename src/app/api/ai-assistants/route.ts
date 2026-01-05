@@ -22,6 +22,7 @@ import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
 import { rateLimitWrite } from '@/lib/rate-limit';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
+import { getTableName } from '@/config/entity-registry';
 
 // GET /api/ai-assistants - List AI assistants
 export const GET = compose(
@@ -39,14 +40,15 @@ export const GET = compose(
     const includeOwnDrafts = Boolean(userId && user && userId === user.id);
 
     // Build query
+    const tableName = getTableName('ai_assistant');
     let itemsQuery = supabase
-      .from('ai_assistants')
+      .from(tableName)
       .select('*')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     let countQuery = supabase
-      .from('ai_assistants')
+      .from(tableName)
       .select('*', { count: 'exact', head: true });
 
     if (userId && includeOwnDrafts) {
@@ -113,8 +115,9 @@ export const POST = compose(
     const validatedData = ctx.body;
 
     // Create the AI assistant
+    const tableName = getTableName('ai_assistant');
     const { data: assistant, error } = await supabase
-      .from('ai_assistants')
+      .from(tableName)
       .insert({
         user_id: user.id,
         title: validatedData.title,
@@ -133,9 +136,9 @@ export const POST = compose(
         compute_provider_id: validatedData.compute_provider_id,
         api_provider: validatedData.api_provider,
         pricing_model: validatedData.pricing_model || 'per_message',
-        price_per_message_sats: validatedData.price_per_message_sats || 0,
-        price_per_1k_tokens_sats: validatedData.price_per_1k_tokens_sats || 0,
-        subscription_price_sats: validatedData.subscription_price_sats || 0,
+        price_per_message: validatedData.price_per_message || 0,
+        price_per_1k_tokens: validatedData.price_per_1k_tokens || 0,
+        subscription_price: validatedData.subscription_price || 0,
         free_messages_per_day: validatedData.free_messages_per_day || 0,
         status: 'draft', // Always start as draft
         is_public: false, // Start as private

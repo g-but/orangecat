@@ -168,7 +168,7 @@ export default function DashboardPage() {
     () =>
       safeProjects.reduce(
         (acc, project) => {
-          const currency = project.currency || 'CHF';
+          const currency = project.currency || PLATFORM_DEFAULT_CURRENCY;
           acc[currency] = (acc[currency] || 0) + (project.total_funding || 0);
           return acc;
         },
@@ -420,33 +420,33 @@ export default function DashboardPage() {
                 <p className="text-green-800 mb-3 sm:mb-4 text-sm sm:text-base">
                   Your Bitcoin crowdfunding journey starts now. Here's what you can do to get started:
                 </p>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3">
                   <Link href="/projects/create">
-                    <div className="p-2 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer">
-                      <Target className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 mb-1 sm:mb-2" />
-                      <p className="text-xs sm:text-sm font-medium text-gray-900">Create Project</p>
-                      <p className="text-xs text-gray-600 hidden sm:block">Launch your first campaign</p>
+                    <div className="p-3 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer min-h-[80px] sm:min-h-0">
+                      <Target className="h-5 w-5 sm:h-5 sm:w-5 text-orange-600 mb-2 sm:mb-2" />
+                      <p className="text-sm sm:text-sm font-medium text-gray-900">Create Project</p>
+                      <p className="text-xs text-gray-600 hidden sm:block mt-1">Launch your first campaign</p>
                     </div>
                   </Link>
                   <Link href="/dashboard/wallets">
-                    <div className="p-2 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer">
-                      <Wallet className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 mb-1 sm:mb-2" />
-                      <p className="text-xs sm:text-sm font-medium text-gray-900">Add Wallet</p>
-                      <p className="text-xs text-gray-600 hidden sm:block">Connect Bitcoin wallet</p>
+                    <div className="p-3 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer min-h-[80px] sm:min-h-0">
+                      <Wallet className="h-5 w-5 sm:h-5 sm:w-5 text-blue-600 mb-2 sm:mb-2" />
+                      <p className="text-sm sm:text-sm font-medium text-gray-900">Add Wallet</p>
+                      <p className="text-xs text-gray-600 hidden sm:block mt-1">Connect Bitcoin wallet</p>
                     </div>
                   </Link>
                   <Link href="/discover">
-                    <div className="p-2 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer">
-                      <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600 mb-1 sm:mb-2" />
-                      <p className="text-xs sm:text-sm font-medium text-gray-900">Explore</p>
-                      <p className="text-xs text-gray-600 hidden sm:block">Discover projects</p>
+                    <div className="p-3 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer min-h-[80px] sm:min-h-0">
+                      <Eye className="h-5 w-5 sm:h-5 sm:w-5 text-purple-600 mb-2 sm:mb-2" />
+                      <p className="text-sm sm:text-sm font-medium text-gray-900">Explore</p>
+                      <p className="text-xs text-gray-600 hidden sm:block mt-1">Discover projects</p>
                     </div>
                   </Link>
                   <Link href="/timeline">
-                    <div className="p-2 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer">
-                      <MessageCircle className="h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 mb-1 sm:mb-2" />
-                      <p className="text-xs sm:text-sm font-medium text-gray-900">Join Community</p>
-                      <p className="text-xs text-gray-600 hidden sm:block">Connect & engage</p>
+                    <div className="p-3 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer min-h-[80px] sm:min-h-0">
+                      <MessageCircle className="h-5 w-5 sm:h-5 sm:w-5 text-indigo-600 mb-2 sm:mb-2" />
+                      <p className="text-sm sm:text-sm font-medium text-gray-900">Join Community</p>
+                      <p className="text-xs text-gray-600 hidden sm:block mt-1">Connect & engage</p>
                     </div>
                   </Link>
                 </div>
@@ -459,20 +459,27 @@ export default function DashboardPage() {
       {/* Invite / Share CTA */}
       <div className="mb-6">
         <div className="rounded-xl border border-orange-200 bg-gradient-to-r from-orange-50 to-teal-50 p-4 sm:p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <h3 className="font-semibold text-gray-900">Invite friends to OrangeCat</h3>
-              <p className="text-sm text-gray-600">Share your profile link and start building your network</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Invite friends to OrangeCat</h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">Share your profile link and start building your network</p>
             </div>
-            <div className="flex items-center gap-2 relative">
-              <Link href="/dashboard/people">
-                <Button variant="outline">
-                  <Users className="w-4 h-4 mr-2" /> Discover People
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 relative">
+              <Link href="/dashboard/people" className="w-full sm:w-auto">
+                <Button variant="outline" className="w-full sm:w-auto">
+                  <Users className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Discover People</span>
+                  <span className="sm:hidden">Discover</span>
                 </Button>
               </Link>
-              <div className="flex items-center gap-2 relative">
-                <Button onClick={() => setShowShare(!showShare)} className="bg-orange-600 hover:bg-orange-700 text-white">
-                  <Share2 className="w-4 h-4 mr-2" /> Share My Profile
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 relative w-full sm:w-auto">
+                <Button 
+                  onClick={() => setShowShare(!showShare)} 
+                  className="bg-orange-600 hover:bg-orange-700 text-white w-full sm:w-auto"
+                >
+                  <Share2 className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Share My Profile</span>
+                  <span className="sm:hidden">Share</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -483,11 +490,14 @@ export default function DashboardPage() {
                       .then(() => toast.success('Invite link copied'))
                       .catch(() => toast.error('Failed to copy link'));
                   }}
+                  className="w-full sm:w-auto"
                 >
-                  <Copy className="w-4 h-4 mr-2" /> Copy Link
+                  <Copy className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Copy Link</span>
+                  <span className="sm:hidden">Copy</span>
                 </Button>
                 {showShare && (
-                  <div className="absolute right-0 mt-2 z-50">
+                  <div className="absolute right-0 top-full mt-2 sm:mt-2 z-50 w-full sm:w-auto">
                     <ProfileShare
                       username={profile?.username || user!.id}
                       profileName={profile?.name || profile?.username || 'My Profile'}
@@ -503,8 +513,8 @@ export default function DashboardPage() {
       </div>
 
       {/* GUIDED JOURNEY SECTION */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
-        <Card className="xl:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle>Your OrangeCat journey</CardTitle>
             <CardDescription>Stay on track with clear next steps.</CardDescription>
@@ -542,25 +552,27 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        <div className="xl:col-span-1">
+        <div className="lg:col-span-1">
           <TasksSection />
         </div>
       </div>
 
       {/* MOBILE-FIRST RESPONSIVE LAYOUT */}
       <div className="space-y-6">
-        {/* MOBILE: Rich Sidebar Experience */}
-        <MobileDashboardSidebar
-          stats={{
-            totalProjects,
-            totalDrafts,
-            totalRaised,
-            totalSupporters,
-            primaryCurrency,
-          }}
-          profileCompletion={profileCompletion}
-          profile={profile}
-        />
+        {/* MOBILE: Rich Sidebar Experience - Hidden on desktop */}
+        <div className="block lg:hidden">
+          <MobileDashboardSidebar
+            stats={{
+              totalProjects,
+              totalDrafts,
+              totalRaised,
+              totalSupporters,
+              primaryCurrency,
+            }}
+            profileCompletion={profileCompletion}
+            profile={profile}
+          />
+        </div>
 
         {/* DESKTOP: 2-COLUMN LAYOUT */}
         <div className="hidden lg:grid lg:grid-cols-12 gap-6">

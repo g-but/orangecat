@@ -221,6 +221,10 @@ export interface FormFieldProps {
   error?: string;
   onChange: (value: any) => void;
   onFocus: () => void;
+  /** Optional callback when currency changes (for currency input fields) */
+  onCurrencyChange?: (currency: string) => void;
+  /** Current currency value (for currency input fields) */
+  currency?: string;
   disabled?: boolean;
 }
 

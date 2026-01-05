@@ -9,6 +9,9 @@ import { Progress } from '@/components/ui/progress';
 import { DollarSign, Percent, Target, TrendingUp, User, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { MakeOfferDialog } from './MakeOfferDialog';
+import { formatLoanCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY, CURRENCY_CODES } from '@/config/currencies';
+import type { Currency } from '@/types/settings';
 
 interface AvailableLoansProps {
   loans: Loan[];
@@ -19,17 +22,10 @@ export function AvailableLoans({ loans, onOfferMade }: AvailableLoansProps) {
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [offerDialogOpen, setOfferDialogOpen] = useState(false);
 
-  const formatCurrency = (amount: number, currency: string = 'USD') => {
-    if (currency === 'BTC') {
-      return `${(amount / 100000000).toFixed(8)} BTC`;
-    }
-    if (currency === 'SATS') {
-      return `${amount.toLocaleString()} SATS`;
-    }
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency === 'EUR' ? 'EUR' : 'USD',
-    }).format(amount);
+  const formatLoanCurrency = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
+    // Validate currency and fallback to platform default
+    const validCurrency = (CURRENCY_CODES.includes(currency as Currency) ? currency : PLATFORM_DEFAULT_CURRENCY) as Currency;
+    return formatLoanCurrency(amount, validCurrency);
   };
 
   const calculateProgress = (original: number, remaining: number) => {
@@ -85,13 +81,13 @@ export function AvailableLoans({ loans, onOfferMade }: AvailableLoansProps) {
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-muted-foreground">Remaining</span>
                     <span className="font-semibold text-red-600">
-                      {formatCurrency(loan.remaining_balance, loan.currency)}
+                      {formatLoanCurrency(loan.remaining_balance, loan.currency)}
                     </span>
                   </div>
                   <Progress value={progress} className="h-1.5" />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>{progress.toFixed(0)}% paid</span>
-                    <span>{formatCurrency(loan.original_amount, loan.currency)} total</span>
+                    <span>{formatLoanCurrency(loan.original_amount, loan.currency)} total</span>
                   </div>
                 </div>
 
@@ -111,7 +107,7 @@ export function AvailableLoans({ loans, onOfferMade }: AvailableLoansProps) {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Monthly</span>
                     <span className="font-medium">
-                      {formatCurrency(loan.monthly_payment, loan.currency)}
+                      {formatLoanCurrency(loan.monthly_payment, loan.currency)}
                     </span>
                   </div>
                 )}
