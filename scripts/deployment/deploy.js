@@ -149,10 +149,45 @@ async function triggerGitHubWorkflow() {
 }
 
 /**
- * Monitor deployment progress
+ * Get latest deployment URL from Vercel
+ */
+function getLatestDeploymentUrl() {
+  try {
+    const output = execSync('vercel ls', { encoding: 'utf8', stdio: 'pipe' });
+    const lines = output.split('\n');
+
+    // Find the first deployment line (Queued, Building, Ready, or Error)
+    // Format: "  Age     Deployment                                           Status         Environment     Duration     Username"
+    // Then: "  33s     https://orangecat-xxx.vercel.app     ● Queued       Production      ?            g-but"
+    for (const line of lines) {
+      // Match lines with status indicators and URLs
+      if (line.match(/●\s+(Queued|Building|Ready|Error|Queued)/)) {
+        // Extract URL from the line - it's typically after the age/time column
+        const urlMatch = line.match(/https:\/\/[^\s]+/);
+        if (urlMatch) {
+          return urlMatch[0];
+        }
+      }
+    }
+
+    // Fallback: try to get any URL from output
+    const urlMatch = output.match(/https:\/\/[^\s]+/);
+    if (urlMatch) {
+      return urlMatch[0];
+    }
+
+    return null;
+  } catch (error) {
+    console.log(colors.warning(`⚠️ Could not get deployment URL: ${error.message}`));
+    return null;
+  }
+}
+
+/**
+ * Monitor deployment progress using Vercel CLI
  */
 async function monitorDeployment() {
-  console.log(colors.info('\n📊 PHASE 4: Monitoring Deployment\n'));
+  console.log(colors.info('\n📊 PHASE 4: Monitoring Deployment with Vercel CLI\n'));
 
   console.log(colors.info('🔗 Deployment URLs:'));
   console.log(colors.dim(`   GitHub Actions: https://github.com/g-but/orangecat/actions`));
@@ -163,48 +198,79 @@ async function monitorDeployment() {
   console.log(colors.info('⏳ Waiting for deployment to begin...'));
   await new Promise(resolve => setTimeout(resolve, 30000)); // 30 seconds
 
-  // Monitor GitHub Actions status
-  console.log(colors.info('🔍 Monitoring GitHub Actions status...'));
+  // Get latest deployment URL
+  console.log(colors.info('🔍 Finding latest deployment...'));
+  let deploymentUrl = getLatestDeploymentUrl();
 
-  let attempts = 0;
-  const maxAttempts = 60; // 10 minutes
-
-  while (attempts < maxAttempts) {
-    try {
-      // Check if workflow is running/completed
-      const workflowStatus = execSync(
-        'gh run list --workflow=one-button-deploy.yml --limit=1 --json=status,conclusion',
-        {
-          encoding: 'utf8',
-        }
-      );
-
-      const status = JSON.parse(workflowStatus)[0];
-
-      if (status.status === 'completed') {
-        if (status.conclusion === 'success') {
-          console.log(colors.success('✅ GitHub Actions completed successfully'));
-          break;
-        } else {
-          throw new Error(`GitHub Actions failed with conclusion: ${status.conclusion}`);
-        }
-      } else if (status.status === 'in_progress') {
-        console.log(
-          colors.info(`⏳ GitHub Actions in progress... (${attempts + 1}/${maxAttempts})`)
-        );
-      }
-
-      await new Promise(resolve => setTimeout(resolve, 10000)); // 10 seconds
-      attempts++;
-    } catch (error) {
-      console.log(colors.warning(`⚠️ Could not check workflow status: ${error.message}`));
+  if (!deploymentUrl) {
+    // Try a few more times
+    for (let i = 0; i < 5; i++) {
       await new Promise(resolve => setTimeout(resolve, 10000));
-      attempts++;
+      deploymentUrl = getLatestDeploymentUrl();
+      if (deploymentUrl) break;
     }
   }
 
-  if (attempts >= maxAttempts) {
-    throw new Error('Deployment monitoring timeout');
+  if (!deploymentUrl) {
+    console.log(colors.warning('⚠️ Could not find deployment URL. Monitoring via Vercel API...'));
+    // Fallback to vercel-monitor script
+    try {
+      execCommand('node scripts/deployment/vercel-monitor.js', 'Monitoring via Vercel API');
+      return;
+    } catch (error) {
+      throw new Error('Failed to monitor deployment. Check Vercel dashboard manually.');
+    }
+  }
+
+  console.log(colors.success(`✅ Found deployment: ${deploymentUrl}`));
+  console.log(colors.info('🔍 Monitoring deployment status...'));
+
+  // Use vercel inspect with --wait to monitor until completion
+  try {
+    console.log(colors.info('⏳ Waiting for deployment to complete (timeout: 10 minutes)...'));
+
+    execCommand(`vercel inspect "${deploymentUrl}" --wait --timeout 10m`, 'Monitoring deployment', {
+      stdio: 'inherit',
+    });
+
+    console.log(colors.success('✅ Deployment completed successfully'));
+  } catch (error) {
+    // Check if deployment actually failed or just timeout
+    try {
+      const status = execSync(`vercel inspect "${deploymentUrl}"`, {
+        encoding: 'utf8',
+        stdio: 'pipe',
+      });
+
+      if (
+        status.includes('READY') ||
+        status.includes('Ready') ||
+        status.includes('readyState: "READY"')
+      ) {
+        console.log(colors.success('✅ Deployment is ready'));
+      } else if (
+        status.includes('ERROR') ||
+        status.includes('Error') ||
+        status.includes('readyState: "ERROR"')
+      ) {
+        console.log(colors.error(`❌ Deployment failed. View logs with:`));
+        console.log(colors.dim(`   vercel inspect "${deploymentUrl}" --logs`));
+        throw new Error(`Deployment failed. Check logs: vercel inspect "${deploymentUrl}" --logs`);
+      } else {
+        console.log(colors.warning(`⚠️ Deployment monitoring timeout. Check status:`));
+        console.log(colors.dim(`   vercel inspect "${deploymentUrl}"`));
+        throw new Error(
+          `Deployment monitoring timeout. Check status: vercel inspect "${deploymentUrl}"`
+        );
+      }
+    } catch (inspectError) {
+      // If we can't inspect, provide helpful error message
+      console.log(colors.error(`❌ Could not verify deployment status: ${inspectError.message}`));
+      console.log(colors.info(`💡 Check deployment manually:`));
+      console.log(colors.dim(`   vercel ls`));
+      console.log(colors.dim(`   vercel inspect "${deploymentUrl}"`));
+      throw error;
+    }
   }
 }
 
@@ -378,6 +444,3 @@ process.on('unhandledRejection', error => {
 if (import.meta.url === `file://${process.argv[1]}`) {
   main();
 }
-
-
-

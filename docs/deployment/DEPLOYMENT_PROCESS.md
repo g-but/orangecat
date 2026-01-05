@@ -111,8 +111,10 @@ The manual deployment script performs:
 
 - Node.js 20+
 - GitHub CLI (`gh`) installed and authenticated
-- Vercel CLI installed
+- **Vercel CLI** installed and authenticated (`vercel login`)
 - Playwright browsers installed (for verification)
+
+**Critical**: Vercel CLI is required for deployment monitoring. The deployment script uses `vercel inspect --wait` to monitor deployments in real-time.
 
 ### Authentication
 
@@ -280,7 +282,32 @@ npm run deploy:staging  # Deploy to staging environment
 npm run deploy:status   # Check deployment status
 npm run deploy:logs     # View deployment logs
 npm run deploy:rollback # Rollback to previous version
+npm run deploy:monitor  # Monitor latest deployment with Vercel CLI
 ```
+
+### Manual Vercel CLI Monitoring
+
+The deployment script automatically uses Vercel CLI for monitoring, but you can also monitor manually:
+
+```bash
+# List all deployments
+vercel ls
+
+# Monitor a specific deployment (waits until complete)
+vercel inspect <deployment-url> --wait --timeout 10m
+
+# View build logs for a deployment
+vercel inspect <deployment-url> --logs
+
+# Get deployment details
+vercel inspect <deployment-url>
+```
+
+**Note**: The deployment script (`npm run deploy`) automatically:
+
+1. Finds the latest deployment URL using `vercel ls`
+2. Monitors it using `vercel inspect <url> --wait --timeout 10m`
+3. Reports success/failure based on deployment state
 
 ---
 
@@ -323,10 +350,20 @@ After deployment, the system automatically:
 
 ### Real-time Tracking
 
-During deployment, monitor progress at:
+During deployment, the deployment script automatically monitors progress using **Vercel CLI**:
 
-- **GitHub Actions**: `https://github.com/your-org/orangecat/actions`
-- **Vercel Dashboard**: `https://vercel.com/your-org/orangecat`
+```bash
+# The deployment script automatically runs:
+vercel inspect <deployment-url> --wait --timeout 10m
+```
+
+You can also monitor manually:
+
+- **Vercel CLI**: `vercel ls` - List all deployments
+- **Vercel CLI**: `vercel inspect <url> --wait` - Monitor specific deployment
+- **Vercel CLI**: `vercel inspect <url> --logs` - View build logs
+- **GitHub Actions**: `https://github.com/g-but/orangecat/actions`
+- **Vercel Dashboard**: `https://vercel.com/dashboard`
 - **Production Site**: `https://www.orangecat.ch`
 
 ### Notification Channels
@@ -749,6 +786,3 @@ A successful deployment:
 ---
 
 **Remember**: If you find any other deployment documentation or scripts, they are outdated. This document and `npm run deploy` are the only ways to deploy OrangeCat.
-
-
-
