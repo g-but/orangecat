@@ -105,10 +105,10 @@ describe('Service Creation', () => {
       title: 'Test Car Repair Service',
       description: 'Professional automotive repair services',
       category: 'Automotive',
-      fixed_price_sats: 150000,
-      currency: 'SATS',
+      fixed_price: 150000,
+      currency: 'SATS' as const,
       duration_minutes: 120,
-      service_location_type: 'both',
+      service_location_type: 'both' as const,
       images: ['https://example.com/image1.jpg'],
       portfolio_links: ['https://example.com/portfolio'],
     };
@@ -119,7 +119,7 @@ describe('Service Creation', () => {
       title: 'Test Car Repair Service',
       description: 'Professional automotive repair services',
       category: 'Automotive',
-      fixed_price_sats: 150000,
+      fixed_price: 150000,
       currency: 'SATS',
       duration_minutes: 120,
       service_location_type: 'both',
@@ -144,7 +144,7 @@ describe('Service Creation', () => {
         category: 'Automotive',
         hourly_rate: null,
         fixed_price: 150000,
-        currency: PLATFORM_DEFAULT_CURRENCY,
+        currency: 'SATS',
         duration_minutes: 120,
         availability_schedule: undefined,
         service_location_type: 'both',
@@ -237,6 +237,3 @@ describe('Service Creation', () => {
     });
   });
 });
-
-
-
