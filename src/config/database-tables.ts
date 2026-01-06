@@ -19,6 +19,12 @@ export const DATABASE_TABLES = {
   // Social
   PROFILES: 'profiles',
   FOLLOWS: 'follows',
+  USER_FOLLOWS: 'user_follows',
+  ACTORS: 'actors',
+
+  // User Stats & Presence
+  USER_STATS: 'user_stats',
+  USER_PRESENCE: 'user_presence',
 
   // Projects
   PROJECT_FAVORITES: 'project_favorites',
@@ -36,11 +42,43 @@ export const DATABASE_TABLES = {
   WALLETS: 'wallets',
   TRANSACTIONS: 'transactions',
 
-  // Other
-  CHANNEL_WAITLIST: 'channel_waitlist',
+  // Timeline
   TIMELINE_EVENTS: 'timeline_events',
   TIMELINE_EVENT_STATS: 'timeline_event_stats',
+  TIMELINE_COMMENTS: 'timeline_comments',
+  TIMELINE_LIKES: 'timeline_likes',
+  TIMELINE_DISLIKES: 'timeline_dislikes',
+  ENRICHED_TIMELINE_EVENTS: 'enriched_timeline_events',
+  COMMUNITY_TIMELINE: 'community_timeline_no_duplicates',
+
+  // System
+  AUDIT_LOGS: 'audit_logs',
+  CHANNEL_WAITLIST: 'channel_waitlist',
+  DRAFT_EVENTS: 'draft_events',
+  TYPING_INDICATORS: 'typing_indicators',
+  TRANSPARENCY_SCORES: 'transparency_scores',
+
+  // AI Assistants
+  AI_CONVERSATIONS: 'ai_conversations',
+  AI_MESSAGES: 'ai_messages',
+  AI_ASSISTANT_RATINGS: 'ai_assistant_ratings',
+  AI_USER_CREDITS: 'ai_user_credits',
+  AI_CREDIT_TRANSACTIONS: 'ai_credit_transactions',
+
+  // Bookings
+  BOOKINGS: 'bookings',
+  AVAILABILITY_SLOTS: 'availability_slots',
+  ASSET_AVAILABILITY: 'asset_availability',
+
+  // Entity Tables (for direct access when not using entity-registry)
+  USER_ASSETS: 'user_assets',
+  USER_PRODUCTS: 'user_products',
+  USER_SERVICES: 'user_services',
+  USER_PROJECTS: 'user_projects',
+  USER_CAUSES: 'user_causes',
+  USER_LOANS: 'user_loans',
+  AI_ASSISTANTS: 'ai_assistants',
 } as const;
 
 // Type for table names
-export type DatabaseTableName = typeof DATABASE_TABLES[keyof typeof DATABASE_TABLES];
+export type DatabaseTableName = (typeof DATABASE_TABLES)[keyof typeof DATABASE_TABLES];
