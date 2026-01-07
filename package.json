@@ -195,7 +195,7 @@
     "prettier": "^3.6.2",
     "puppeteer-core": "^24.32.0",
     "react-router-dom": "^7.6.3",
-    "shadcn": "^3.4.2",
+    "shadcn": "^3.6.3",
     "supabase": "^2.58.5",
     "ts-jest": "^29.1.1",
     "webpack-bundle-analyzer": "^4.10.2",
