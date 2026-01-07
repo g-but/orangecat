@@ -9,7 +9,7 @@ echo ""
 
 # Apply migration using Supabase CLI
 echo "📝 Pushing migration to database..."
-npx supabase db push --db-url "postgresql://postgres.ohkueislstxomdjavyhs:REDACTED_SERVICE_KEY@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
+npx supabase db push --db-url "postgresql://postgres.ohkueislstxomdjavyhs:${SUPABASE_SERVICE_ROLE_KEY}@aws-0-us-west-1.pooler.supabase.com:6543/postgres"
 
 echo ""
 echo "✨ Migration complete!"

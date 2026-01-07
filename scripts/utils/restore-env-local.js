@@ -19,7 +19,7 @@ const requiredVars = {
   NEXT_PUBLIC_SITE_NAME: 'OrangeCat',
   NEXT_PUBLIC_SUPABASE_URL: 'https://ohkueislstxomdjavyhs.supabase.co',
   NEXT_PUBLIC_SUPABASE_ANON_KEY:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oa3VlaXNsc3R4b21kamF2eWhzIiwicm9sZSI6MjA2MDEyMzk1MH0.Qc6ahUbs_5BCa4csEYsBtyxNUDYb4h3Y4K_16N1DNaY',
+    'REPLACE_WITH_ENV_VAR',
   NEXT_PUBLIC_BITCOIN_ADDRESS: 'bc1qtkxw47wqlld9t0w7sujycl4mrmc90phypjygf6',
   NEXT_PUBLIC_LIGHTNING_ADDRESS: 'orangecat@getalby.com',
 };

@@ -46,7 +46,7 @@ class OAuthSetup {
 
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://ohkueislstxomdjavyhs.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=REDACTED_ANON_KEY
+NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 
 # Site Configuration
 NEXT_PUBLIC_SITE_URL=https://www.orangecat.ch

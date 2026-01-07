@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVICE_KEY="REDACTED_SERVICE_KEY"
+SERVICE_KEY="${SUPABASE_SERVICE_ROLE_KEY}"
 BASE_URL="https://ohkueislstxomdjavyhs.supabase.co"
 
 # Check realtime config via the Supabase REST API

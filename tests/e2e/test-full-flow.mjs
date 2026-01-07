@@ -110,8 +110,8 @@ async function testFullFlow() {
     const dbTestUrl = 'https://ohkueislstxomdjavyhs.supabase.co/rest/v1/profiles?select=count&limit=1';
     const dbResponse = await page.request.get(dbTestUrl, {
       headers: {
-        'apikey': 'REDACTED_ANON_KEY',
-        'Authorization': 'Bearer REDACTED_ANON_KEY'
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}'
       }
     });
 

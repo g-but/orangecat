@@ -31,8 +31,8 @@ async function testProfileSave() {
     // First, let's verify the schema consistency
     const profileResponse = await page.request.get('https://ohkueislstxomdjavyhs.supabase.co/rest/v1/profiles?select=*&limit=1', {
       headers: {
-        'apikey': 'REDACTED_ANON_KEY',
-        'Authorization': 'Bearer REDACTED_ANON_KEY'
+        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+        'Authorization': 'Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}'
       }
     });
 
