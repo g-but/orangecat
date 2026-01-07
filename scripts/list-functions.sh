@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVICE_KEY="REDACTED_SERVICE_KEY"
+SERVICE_KEY="${SUPABASE_SERVICE_ROLE_KEY}"
 BASE_URL="https://ohkueislstxomdjavyhs.supabase.co"
 
 echo "=== Listing all messaging-related functions ==="

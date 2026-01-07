@@ -6,7 +6,7 @@ const path = require('path');
 
 const supabaseUrl = 'https://ohkueislstxomdjavyhs.supabase.co';
 const supabaseServiceKey =
-  'REDACTED_SERVICE_KEY';
+  process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 

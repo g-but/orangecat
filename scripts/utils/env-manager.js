@@ -192,7 +192,7 @@ class EnvManager {
 
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://ohkueislstxomdjavyhs.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oa3VlaXNsc3R4b21kamF2eWhzIiwicm9sZSI6MjA2MDEyMzk1MH0.Qc6ahUbs_5BCa4csEYsBtyxNUDYb4h3Y4K_16N1DNaY
+NEXT_PUBLIC_SUPABASE_ANON_KEY=REPLACE_WITH_ENV_VAR
 
 # Site Configuration
 NEXT_PUBLIC_SITE_URL=http://localhost:3000

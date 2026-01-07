@@ -27,7 +27,7 @@ const OPTIONAL_REQUIRED_ONE_OF = [
 
 const PLACEHOLDER_PATTERNS = [
   'https://placeholder.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0',
+  'REPLACE_WITH_ENV_VAR',
 ];
 
 function fail(message) {

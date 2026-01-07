@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SERVICE_KEY="REDACTED_SERVICE_KEY"
+SERVICE_KEY="${SUPABASE_SERVICE_ROLE_KEY}"
 BASE_URL="https://ohkueislstxomdjavyhs.supabase.co"
 
 CONV_ID="2ef0fe8f-79ba-497e-8fe2-b66a9e4759a3"

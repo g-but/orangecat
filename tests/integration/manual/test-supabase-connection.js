@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Get environment variables
 const SUPABASE_URL = 'https://ohkueislstxomdjavyhs.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oa3VlaXNsc3R4b21kamF2eWhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ1NDc5NTAsImV4cCI6MjA2MDEyMzk1MH0.Qc6ahUbs_5BCa4csEYsBttyxNUDYb4h3Y4K_16N1DNaY';
+const SUPABASE_ANON_KEY = 'REPLACE_WITH_ENV_VAR';
 
 async function testSupabaseConnection() {
   console.log('🔍 Testing Supabase Connection...');
