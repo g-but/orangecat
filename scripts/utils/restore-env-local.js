@@ -17,9 +17,8 @@ const requiredVars = {
   NODE_ENV: 'development',
   NEXT_PUBLIC_SITE_URL: 'http://localhost:3000',
   NEXT_PUBLIC_SITE_NAME: 'OrangeCat',
-  NEXT_PUBLIC_SUPABASE_URL: 'https://ohkueislstxomdjavyhs.supabase.co',
-  NEXT_PUBLIC_SUPABASE_ANON_KEY:
-    'REPLACE_WITH_ENV_VAR',
+  NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
   NEXT_PUBLIC_BITCOIN_ADDRESS: 'bc1qtkxw47wqlld9t0w7sujycl4mrmc90phypjygf6',
   NEXT_PUBLIC_LIGHTNING_ADDRESS: 'orangecat@getalby.com',
 };
