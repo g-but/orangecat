@@ -194,7 +194,7 @@ export async function updateMember(
     // Build update payload
     const payload: Record<string, unknown> = {};
 
-    if (input.role !== undefined) payload.role = input.role;
+    if (input.role !== undefined) {payload.role = input.role;}
     if (input.permission_overrides !== undefined) {
       payload.permission_overrides = input.permission_overrides;
     }

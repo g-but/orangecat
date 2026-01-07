@@ -19,6 +19,7 @@ import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 interface ProjectContentProps {
   project: {
     id: string;
+    title?: string;
     description: string;
     funding_purpose: string | null;
     website_url: string | null;
@@ -29,6 +30,7 @@ interface ProjectContentProps {
     currency: string;
     bitcoin_address: string | null;
     lightning_address: string | null;
+    user_id?: string;
     isOwner?: boolean;
   };
 }
@@ -144,6 +146,7 @@ export default function ProjectContent({ project }: ProjectContentProps) {
         {/* Donation Section */}
         <ProjectDonationSection
           projectId={project.id}
+          ownerId={project.user_id}
           projectTitle={project.title || 'Project'}
           bitcoinAddress={project.bitcoin_address}
           lightningAddress={project.lightning_address}

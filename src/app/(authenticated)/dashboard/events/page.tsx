@@ -56,13 +56,13 @@ export default function EventsDashboardPage() {
   }, [user, hydrated, isLoading, router]);
 
   const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0) {return;}
 
     const confirmed = window.confirm(
       `Are you sure you want to delete ${selectedIds.size} event${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.`
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {return;}
 
     setIsDeleting(true);
     try {

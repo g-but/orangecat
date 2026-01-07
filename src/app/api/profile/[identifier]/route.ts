@@ -7,6 +7,7 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 /**
  * GET /api/profile/[identifier] - Get profile by username or email
@@ -35,7 +36,7 @@ export async function GET(
     if (isEmail) {
       // Try to find profile by email field first (if it exists in profiles table)
       const { data: profileByEmail, error: emailError } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .eq('email', trimmedIdentifier)
         .single();
@@ -76,7 +77,7 @@ export async function GET(
             // Now fetch the profile by user ID
             if (userId) {
               const { data: profileById, error: profileError } = await supabase
-                .from('profiles')
+                .from(DATABASE_TABLES.PROFILES)
                 .select('*')
                 .eq('id', userId)
                 .single();
@@ -101,7 +102,7 @@ export async function GET(
     } else {
       // Look up by username
       const { data: profileByUsername, error: usernameError } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .eq('username', trimmedIdentifier)
         .single();

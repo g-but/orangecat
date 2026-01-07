@@ -10,6 +10,8 @@
 import { NextResponse } from 'next/server';
 import { isValidUUID, isValidBitcoinAddress } from '@/utils/validation';
 import { apiBadRequest, apiUnauthorized } from '@/lib/api/standardResponse';
+import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
 import type { User } from '@supabase/supabase-js';
 
 /**
@@ -197,7 +199,7 @@ export async function validateEntityOwnership(
   if (entityType === 'profile') {
     // For profiles, check if profile.id matches userId
     const { data, error } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id')
       .eq('id', entityId)
       .eq('id', userId)
@@ -207,7 +209,7 @@ export async function validateEntityOwnership(
   } else {
     // For projects, check if project.creator_id matches userId
     const { data, error } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('creator_id')
       .eq('id', entityId)
       .single();

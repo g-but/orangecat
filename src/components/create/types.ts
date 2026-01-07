@@ -140,7 +140,7 @@ export interface DefaultGuidance {
 
 export interface EntityConfig<T extends Record<string, any> = Record<string, any>> {
   /** Entity type identifier */
-  type: 'product' | 'service' | 'cause' | 'loan' | 'circle' | 'project' | 'asset' | 'organization' | 'ai_assistant' | 'event';
+  type: 'product' | 'service' | 'cause' | 'loan' | 'circle' | 'project' | 'asset' | 'organization' | 'ai_assistant' | 'event' | 'group' | 'wishlist' | 'research_entity';
   /** Display name (singular) */
   name: string;
   /** Display name (plural) */

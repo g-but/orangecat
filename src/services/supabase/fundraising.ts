@@ -1,6 +1,7 @@
 import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
 
 export interface FundraisingStats {
   totalProjects: number;
@@ -26,7 +27,7 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
     // Use centralized supabase client
     // Get user's projects (both as creator and through organizations)
     const { data: ownedProjects, error: ownedError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('*')
       .eq('user_id', userId);
 
@@ -103,7 +104,7 @@ export async function getUserFundraisingActivity(
 
     // Get user's funding pages
     const { data: pages, error: pagesError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -181,7 +182,7 @@ export async function getUserProjects(userId: string): Promise<any[]> {
   try {
     // Get user's projects (both as creator and through organizations)
     const { data: ownedProjects, error: ownedError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -205,7 +206,7 @@ export async function getProject(projectId: string): Promise<any | null> {
   try {
     // Use centralized supabase client
     const { data, error } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('*')
       .eq('id', projectId)
       .single();
@@ -232,7 +233,7 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
     // Use centralized supabase client
     // Get all funding pages
     const { data: pages, error: pagesError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('*')
       .eq('is_public', true);
 
@@ -287,7 +288,7 @@ export async function getRecentDonationsCount(userId: string): Promise<number> {
 
     // Get user's funding pages
     const { data: pages, error: pagesError } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select('id')
       .eq('user_id', userId);
 

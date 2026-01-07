@@ -10,6 +10,7 @@
 import { create } from 'zustand';
 import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
+import { getTableName } from '@/config/entity-registry';
 
 // Use existing FundingPage type from funding.ts
 import type { FundingPage } from '@/types/funding';
@@ -69,7 +70,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
 
     try {
       const { data, error } = await supabase
-        .from('projects')
+        .from(getTableName('project'))
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });

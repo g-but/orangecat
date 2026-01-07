@@ -5,6 +5,7 @@ import { timelineService } from '@/services/timeline';
 import { logger } from '@/utils/logger';
 import { useAuth } from '@/hooks/useAuth';
 import { TimelineVisibility } from '@/types/timeline';
+import { getTableName } from '@/config/entity-registry';
 
 export interface PostComposerOptions {
   subjectType?: 'profile' | 'project';
@@ -212,7 +213,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     setLoadingProjects(true);
     try {
       const { data, error } = await supabase
-        .from('projects')
+        .from(getTableName('project'))
         .select(`
           id, 
           title, 

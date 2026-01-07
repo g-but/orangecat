@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -34,10 +34,11 @@ import {
 } from 'lucide-react';
 import { ReactionPicker } from './ReactionPicker';
 import type { SupportProjectRequest, ReactionEmoji } from '@/services/projects/support/types';
-import { SUPPORT_TYPE_DESCRIPTIONS, REACTION_EMOJIS } from '@/services/projects/support/constants';
+import { SUPPORT_TYPE_DESCRIPTIONS } from '@/services/projects/support/constants';
 import projectSupportService from '@/services/projects/support';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
+import { useAuth } from '@/hooks/useAuth';
 
 interface SupportModalProps {
   open: boolean;
@@ -47,6 +48,7 @@ interface SupportModalProps {
 }
 
 export function SupportModal({ open, onOpenChange, projectId, onSuccess }: SupportModalProps) {
+  const { user, profile } = useAuth();
   const [activeTab, setActiveTab] = useState<string>('reaction');
   const [loading, setLoading] = useState(false);
 
@@ -54,13 +56,24 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
   const [amountSats, setAmountSats] = useState('');
   const [transactionHash, setTransactionHash] = useState('');
 
-  // Signature/Message fields
-  const [displayName, setDisplayName] = useState('');
+  // Signature/Message fields - pre-fill with logged-in user's info
+  const defaultDisplayName = profile?.name || profile?.username || user?.email?.split('@')[0] || '';
+  const [displayName, setDisplayName] = useState(defaultDisplayName);
   const [message, setMessage] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
 
   // Reaction field
   const [selectedReaction, setSelectedReaction] = useState<ReactionEmoji | null>(null);
+
+  // Pre-fill display name when user/profile loads or modal opens
+  useEffect(() => {
+    if (open && !isAnonymous) {
+      const name = profile?.name || profile?.username || user?.email?.split('@')[0] || '';
+      if (name && !displayName) {
+        setDisplayName(name);
+      }
+    }
+  }, [open, user, profile, isAnonymous, displayName]);
 
   const handleSubmit = async () => {
     try {
@@ -141,16 +154,19 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
   };
 
   const handleClose = () => {
-    // Reset form
+    // Reset form - keep user's display name as default for next time
     setActiveTab('reaction');
     setAmountSats('');
     setTransactionHash('');
-    setDisplayName('');
+    setDisplayName(defaultDisplayName);  // Reset to logged-in user's name, not empty
     setMessage('');
     setIsAnonymous(false);
     setSelectedReaction(null);
     onOpenChange(false);
   };
+
+  // Check if user is logged in
+  const isLoggedIn = !!user;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -205,20 +221,62 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
 
           {/* Signature Tab */}
           <TabsContent value="signature" className="space-y-4">
-            <div>
-              <Label htmlFor="signature-name">Your Name *</Label>
-              <Input
-                id="signature-name"
-                placeholder="Enter your name"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
+            {/* Anonymous toggle - move to top for better UX */}
+            <div className="flex items-center justify-between rounded-lg border p-4 bg-gray-50">
+              <div className="space-y-0.5">
+                <Label>Sign Anonymously</Label>
+                <p className="text-xs text-gray-500">
+                  {isAnonymous ? 'Your name will be hidden' : 'Your name will appear on the Wall of Support'}
+                </p>
+              </div>
+              <Switch
+                checked={isAnonymous}
+                onCheckedChange={(checked) => {
+                  setIsAnonymous(checked);
+                  // When turning off anonymous, restore default name if empty
+                  if (!checked && !displayName) {
+                    setDisplayName(defaultDisplayName);
+                  }
+                }}
                 disabled={loading}
-                className="mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                This will appear on the Wall of Support
-              </p>
             </div>
+
+            {/* Name field - only show when not anonymous */}
+            {!isAnonymous && (
+              <div>
+                <Label htmlFor="signature-name">Your Name *</Label>
+                {isLoggedIn && defaultDisplayName ? (
+                  <>
+                    <Input
+                      id="signature-name"
+                      placeholder="Enter your name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      disabled={loading}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Pre-filled from your profile. You can change it if you prefer.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Input
+                      id="signature-name"
+                      placeholder="Enter your name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      disabled={loading}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      This will appear on the Wall of Support
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
 
             <div>
               <Label htmlFor="signature-message">Optional Message</Label>
@@ -230,18 +288,6 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
                 disabled={loading}
                 rows={3}
                 className="mt-1"
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <Label>Anonymous</Label>
-                <p className="text-xs text-gray-500">Hide your identity</p>
-              </div>
-              <Switch
-                checked={isAnonymous}
-                onCheckedChange={setIsAnonymous}
-                disabled={loading}
               />
             </div>
           </TabsContent>
@@ -264,29 +310,56 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
               </p>
             </div>
 
-            <div>
-              <Label htmlFor="message-name">Your Name (Optional)</Label>
-              <Input
-                id="message-name"
-                placeholder="Your name (optional)"
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                disabled={loading}
-                className="mt-1"
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border p-4">
+            {/* Anonymous toggle */}
+            <div className="flex items-center justify-between rounded-lg border p-4 bg-gray-50">
               <div className="space-y-0.5">
-                <Label>Anonymous</Label>
-                <p className="text-xs text-gray-500">Hide your identity</p>
+                <Label>Send Anonymously</Label>
+                <p className="text-xs text-gray-500">
+                  {isAnonymous ? 'Your identity will be hidden' : 'Your name will be shown with the message'}
+                </p>
               </div>
               <Switch
                 checked={isAnonymous}
-                onCheckedChange={setIsAnonymous}
+                onCheckedChange={(checked) => {
+                  setIsAnonymous(checked);
+                  if (!checked && !displayName) {
+                    setDisplayName(defaultDisplayName);
+                  }
+                }}
                 disabled={loading}
               />
             </div>
+
+            {/* Name field - only show when not anonymous */}
+            {!isAnonymous && (
+              <div>
+                <Label htmlFor="message-name">Your Name</Label>
+                {isLoggedIn && defaultDisplayName ? (
+                  <>
+                    <Input
+                      id="message-name"
+                      placeholder="Your name"
+                      value={displayName}
+                      onChange={(e) => setDisplayName(e.target.value)}
+                      disabled={loading}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Pre-filled from your profile
+                    </p>
+                  </>
+                ) : (
+                  <Input
+                    id="message-name"
+                    placeholder="Your name (optional)"
+                    value={displayName}
+                    onChange={(e) => setDisplayName(e.target.value)}
+                    disabled={loading}
+                    className="mt-1"
+                  />
+                )}
+              </div>
+            )}
           </TabsContent>
 
           {/* Bitcoin Donation Tab */}

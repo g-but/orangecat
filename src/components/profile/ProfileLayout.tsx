@@ -18,6 +18,7 @@ import ProfileProjectsTab from '@/components/profile/ProfileProjectsTab';
 import ProfilePeopleTab from '@/components/profile/ProfilePeopleTab';
 import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
 import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
+import ProfileEntityTab from '@/components/profile/ProfileEntityTab';
 import {
   Bitcoin,
   Zap,
@@ -31,6 +32,13 @@ import {
   ExternalLink,
   Info,
   Wallet,
+  Package,
+  Briefcase,
+  Heart,
+  Calendar,
+  Coins,
+  Building,
+  Bot,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -55,6 +63,14 @@ interface ProfileLayoutProps {
     followerCount?: number;
     followingCount?: number;
     walletCount?: number;
+    // Entity counts for profile tabs
+    productCount?: number;
+    serviceCount?: number;
+    causeCount?: number;
+    eventCount?: number;
+    loanCount?: number;
+    assetCount?: number;
+    aiAssistantCount?: number;
   };
   mode?: 'view' | 'edit';
   onSave?: (data: ProfileFormData) => Promise<void>;
@@ -223,6 +239,55 @@ export default function ProfileLayout({
       content: <ProfileProjectsTab profile={profile} isOwnProfile={isOwnProfile} />,
     },
     {
+      id: 'products',
+      label: 'Products',
+      icon: <Package className="w-4 h-4" />,
+      badge: stats?.productCount,
+      content: <ProfileEntityTab profile={profile} entityType="product" isOwnProfile={isOwnProfile} />,
+    },
+    {
+      id: 'services',
+      label: 'Services',
+      icon: <Briefcase className="w-4 h-4" />,
+      badge: stats?.serviceCount,
+      content: <ProfileEntityTab profile={profile} entityType="service" isOwnProfile={isOwnProfile} />,
+    },
+    {
+      id: 'causes',
+      label: 'Causes',
+      icon: <Heart className="w-4 h-4" />,
+      badge: stats?.causeCount,
+      content: <ProfileEntityTab profile={profile} entityType="cause" isOwnProfile={isOwnProfile} />,
+    },
+    {
+      id: 'events',
+      label: 'Events',
+      icon: <Calendar className="w-4 h-4" />,
+      badge: stats?.eventCount,
+      content: <ProfileEntityTab profile={profile} entityType="event" isOwnProfile={isOwnProfile} />,
+    },
+    {
+      id: 'loans',
+      label: 'Loans',
+      icon: <Coins className="w-4 h-4" />,
+      badge: stats?.loanCount,
+      content: <ProfileEntityTab profile={profile} entityType="loan" isOwnProfile={isOwnProfile} />,
+    },
+    {
+      id: 'assets',
+      label: 'Assets',
+      icon: <Building className="w-4 h-4" />,
+      badge: stats?.assetCount,
+      content: <ProfileEntityTab profile={profile} entityType="asset" isOwnProfile={isOwnProfile} />,
+    },
+    {
+      id: 'ai-assistants',
+      label: 'AI Assistants',
+      icon: <Bot className="w-4 h-4" />,
+      badge: stats?.aiAssistantCount,
+      content: <ProfileEntityTab profile={profile} entityType="ai_assistant" isOwnProfile={isOwnProfile} />,
+    },
+    {
       id: 'people',
       label: 'People',
       icon: <Users className="w-4 h-4" />,
@@ -246,6 +311,20 @@ export default function ProfileLayout({
     switch (tab.id) {
       case 'projects':
         return (stats?.projectCount || 0) > 0;
+      case 'products':
+        return (stats?.productCount || 0) > 0;
+      case 'services':
+        return (stats?.serviceCount || 0) > 0;
+      case 'causes':
+        return (stats?.causeCount || 0) > 0;
+      case 'events':
+        return (stats?.eventCount || 0) > 0;
+      case 'loans':
+        return (stats?.loanCount || 0) > 0;
+      case 'assets':
+        return (stats?.assetCount || 0) > 0;
+      case 'ai-assistants':
+        return (stats?.aiAssistantCount || 0) > 0;
       case 'people':
         return (stats?.followerCount || 0) + (stats?.followingCount || 0) > 0;
       case 'wallets':

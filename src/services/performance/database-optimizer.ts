@@ -14,6 +14,8 @@
  */
 
 import supabase from '@/lib/supabase/browser';
+import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
 
 // ==================== QUERY CACHE SYSTEM ====================
 
@@ -346,7 +348,7 @@ export const dbOptimizer = new DatabaseOptimizer();
 export const ProfileQueries = {
   async getProfile(userId: string) {
     return dbOptimizer.optimizedQuery(`profile:${userId}`, async () => {
-      return await supabase.from('profiles').select('*').eq('id', userId).single();
+      return await supabase.from(DATABASE_TABLES.PROFILES).select('*').eq('id', userId).single();
     });
   },
 
@@ -354,7 +356,7 @@ export const ProfileQueries = {
     return dbOptimizer.optimizedQuery(
       `profile:username:${username}`,
       async () => {
-        return await supabase.from('profiles').select('*').eq('username', username).single();
+        return await supabase.from(DATABASE_TABLES.PROFILES).select('*').eq('username', username).single();
       },
       { ttl: 10 * 60 * 1000 } // 10 minutes
     );
@@ -365,7 +367,7 @@ export const ProfileQueries = {
       `profiles:search:${query}`,
       async () => {
         return await supabase
-          .from('profiles')
+          .from(DATABASE_TABLES.PROFILES)
           .select('id, username, name, avatar_url')
           .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
           .limit(20);
@@ -382,7 +384,7 @@ export const FundingQueries = {
   async getUserFundingPages(userId: string) {
     return dbOptimizer.optimizedQuery(`funding:user:${userId}`, async () => {
       return await supabase
-        .from('projects')
+        .from(getTableName('project'))
         .select(
           `
             *,

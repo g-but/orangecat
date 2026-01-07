@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { withSecurity, apiRateLimiter } from '@/utils/security'
 import { createServerClient } from '@/lib/supabase/server'
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies'
+import { getTableName } from '@/config/entity-registry'
 
 const CollateralSchema = z.object({
   loan_id: z.string().min(1),
@@ -24,7 +25,7 @@ const postHandler = withSecurity<CollateralInput>(
 
     // Verify ownership of loan and asset
     const { data: loan, error: loanErr } = await supabase
-      .from('loans')
+      .from(getTableName('loan'))
       .select('id, user_id')
       .eq('id', data.loan_id)
       .single()
@@ -33,7 +34,7 @@ const postHandler = withSecurity<CollateralInput>(
     }
 
     const { data: asset, error: assetErr } = await supabase
-      .from('assets')
+      .from(getTableName('asset'))
       .select('id, owner_id')
       .eq('id', data.asset_id)
       .single()

@@ -200,6 +200,20 @@ const fieldGroups: FieldGroup[] = [
       },
     ],
   },
+  {
+    id: 'visibility',
+    title: 'Profile Visibility',
+    description: 'Control where this loan appears',
+    fields: [
+      {
+        name: 'show_on_profile',
+        label: 'Show on Public Profile',
+        type: 'checkbox',
+        hint: 'When enabled, this loan will appear on your public profile page',
+        colSpan: 2,
+      },
+    ],
+  },
 ];
 
 // ==================== CONFIGURATION ====================
@@ -237,6 +251,8 @@ export const loanConfig = createEntityConfig<LoanFormData>({
     desired_rate: undefined,
     // Collateral
     collateral: [],
+    // Visibility
+    show_on_profile: true,
   },
   guidanceContent: loanGuidanceContent,
   defaultGuidance: loanDefaultGuidance,

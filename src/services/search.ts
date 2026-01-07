@@ -12,7 +12,7 @@
 import { logger } from '@/utils/logger';
 import { generateCacheKey, getCachedResult, setCachedResult, clearSearchCache } from './search/cache';
 import { calculateRelevanceScore, sortResults, getSearchFacets, clearFacetsCache } from './search/processors';
-import { searchProfiles, searchFundingPages, getSearchSuggestions, getTrending as getTrendingData } from './search/queries';
+import { searchProfiles, searchFundingPages, searchLoans, getSearchSuggestions, getTrending as getTrendingData } from './search/queries';
 
 // Re-export all types from types module
 export type {
@@ -24,6 +24,7 @@ export type {
   SearchResponse,
   SearchProfile,
   SearchFundingPage,
+  SearchLoan,
 } from './search/types';
 
 // Import types for internal use
@@ -36,6 +37,7 @@ import type {
   SearchResponse,
   SearchProfile,
   SearchFundingPage,
+  SearchLoan,
 } from './search/types';
 
 /**
@@ -57,13 +59,17 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
 
     // Use Promise.all for parallel searches when type is 'all'
     if (type === 'all') {
-      const [profiles, projects] = await Promise.all([
+      const [profiles, projects, loans] = await Promise.all([
         searchProfiles(query, filters, limit, offset).catch(error => {
           logger.warn('Error searching profiles', error, 'Search');
           return [];
         }),
         searchFundingPages(query, filters, limit, offset).catch(error => {
           logger.warn('Error searching projects', error, 'Search');
+          return [];
+        }),
+        searchLoans(query, filters, limit, offset).catch(error => {
+          logger.warn('Error searching loans', error, 'Search');
           return [];
         }),
       ]);
@@ -80,6 +86,15 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
       // Process projects
       projects.forEach(project => {
         const result: SearchResult = { type: 'project', data: project };
+        if (query) {
+          result.relevanceScore = calculateRelevanceScore(result, query);
+        }
+        results.push(result);
+      });
+
+      // Process loans
+      loans.forEach(loan => {
+        const result: SearchResult = { type: 'loan', data: loan };
         if (query) {
           result.relevanceScore = calculateRelevanceScore(result, query);
         }
@@ -114,6 +129,21 @@ export async function search(options: SearchOptions): Promise<SearchResponse> {
           });
         } catch (projectError) {
           logger.warn('Error searching projects', projectError, 'Search');
+        }
+      }
+
+      if (type === 'loans') {
+        try {
+          const loans = await searchLoans(query, filters, limit, offset);
+          loans.forEach(loan => {
+            const result: SearchResult = { type: 'loan', data: loan };
+            if (query) {
+              result.relevanceScore = calculateRelevanceScore(result, query);
+            }
+            results.push(result);
+          });
+        } catch (loanError) {
+          logger.warn('Error searching loans', loanError, 'Search');
         }
       }
     }

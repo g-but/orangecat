@@ -42,6 +42,31 @@ export interface SearchFundingPage {
   };
 }
 
+export interface SearchLoan {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  loan_category_id: string | null;
+  original_amount: number;
+  remaining_balance: number;
+  interest_rate: number | null;
+  monthly_payment: number | null;
+  currency: string;
+  status: string;
+  loan_type?: 'new_request' | 'existing_loan';
+  is_public: boolean;
+  is_negotiable: boolean;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    id: string;
+    username: string | null;
+    name: string | null;
+    avatar_url: string | null;
+  };
+}
+
 // Raw type from Supabase (before transformation)
 export interface RawSearchFundingPage {
   id: string;
@@ -64,14 +89,14 @@ export interface RawSearchFundingPage {
 }
 
 export type SearchResult = {
-  type: 'profile' | 'project';
-  data: SearchProfile | SearchFundingPage;
+  type: 'profile' | 'project' | 'loan';
+  data: SearchProfile | SearchFundingPage | SearchLoan;
   relevanceScore?: number;
 };
 
 // ==================== SEARCH OPTIONS ====================
 
-export type SearchType = 'all' | 'profiles' | 'projects';
+export type SearchType = 'all' | 'profiles' | 'projects' | 'loans';
 export type SortOption = 'relevance' | 'recent';
 
 export interface SearchFilters {
@@ -111,6 +136,7 @@ export interface SearchResponse {
     categories: Array<{ name: string; count: number }>;
     totalProfiles: number;
     totalProjects: number;
+    totalLoans?: number;
   };
 }
 

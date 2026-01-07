@@ -26,6 +26,8 @@ export interface Profile {
   // Wallet fields (kept for backward compatibility, but wallets managed separately)
   bitcoin_address?: string | null;
   lightning_address?: string | null;
+  // User preferences
+  currency?: string | null; // User's preferred display currency (from CURRENCY_CODES)
   created_at: string;
   updated_at: string;
 

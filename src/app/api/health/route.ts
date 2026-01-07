@@ -6,6 +6,7 @@ import { withRateLimit } from '@/lib/api/withRateLimit';
 import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { ProfileServerService } from '@/services/profile/server';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // GET /api/health - Health check endpoint
 export const GET = compose(
@@ -18,7 +19,7 @@ export const GET = compose(
     // Test database connection
     // Note: Direct query is acceptable here as this is a health check endpoint
     // that needs to verify database connectivity
-    const { error } = await supabase.from('profiles').select('id').limit(1);
+    const { error } = await supabase.from(DATABASE_TABLES.PROFILES).select('id').limit(1);
 
     if (error) {
       logger.warn('Health check: Database connection failed', { error: error.message }, 'Health');

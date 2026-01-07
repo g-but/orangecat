@@ -24,12 +24,36 @@ This directory contains guides for AI agents working on OrangeCat. The structure
   - Points to COMMON.md
   - Explains modular structure
 
-### Agent-Specific Files
+### Claude Code Structure (New)
 
-- **`claude.md`** - Claude-specific workflows and examples
+**Claude Code now uses a dedicated `.claude/` directory structure for maximum agentic efficiency:**
+
+```
+.claude/
+├── CLAUDE.md                    # Main guide (auto-discovered)
+├── QUICK_REFERENCE.md           # ⚡ One-page lookup (optimized for tokens)
+├── CREDENTIALS.md               # 🔐 Tool access documentation
+├── ERROR_RECOVERY.md            # 🚨 Common errors & fixes
+├── RULES.md                     # 🛡️ Critical .env.local protection
+├── rules/                       # Modular best practices (6 files)
+├── hooks/                       # Automated guardrails (pre/post edit)
+└── commands/                    # Custom commands (audit, deploy-check, etc.)
+```
+
+**Why this structure?**
+- **80/20 Rule**: QUICK_REFERENCE.md covers 80% of needs in 500 lines vs 4000+ in detailed rules
+- **Token Efficiency**: Saves ~3000 tokens per session start
+- **Auto-Discovery**: Claude Code automatically finds `.claude/CLAUDE.md`
+- **Tool Integration**: Clear documentation of MCP tool access and credentials
+
+### Agent-Specific Files (Legacy)
+
+- **`claude.md`** - Legacy Claude guide (deprecated - use `.claude/CLAUDE.md`)
 - **`cursor.md`** - Cursor-specific inline assistance patterns
 - **`gemini.md`** - Gemini-specific workflows
 - **`codex.md`** - Codex CLI-specific patching patterns
+
+**IMPORTANT**: Claude Code now uses `.claude/CLAUDE.md` as the primary guide. The `docs/guides/ai/claude.md` is maintained for backward compatibility but agents should use the `.claude/` directory structure.
 
 **Each agent guide MUST read COMMON.md first.**
 

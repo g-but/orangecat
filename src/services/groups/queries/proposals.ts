@@ -236,7 +236,7 @@ export async function getPublicJobPostings(options?: {
     const limit = Math.min(options?.limit || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = options?.offset || 0;
 
-    let query = supabase
+    const query = supabase
       .from(TABLES.group_proposals)
       .select(
         `

@@ -11,7 +11,7 @@
 
 'use client';
 
-import { Bitcoin, ExternalLink, Heart, Copy, ShieldCheck } from 'lucide-react';
+import { Bitcoin, ExternalLink, Heart, Copy, ShieldCheck, Gift } from 'lucide-react';
 import BitcoinPaymentButton from '@/components/bitcoin/BitcoinPaymentButton';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -19,18 +19,29 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCallback, useEffect, useState } from 'react';
 import { logger } from '@/utils/logger';
 import { QRCodeSVG } from 'qrcode.react';
-import { formatDistanceToNow } from 'date-fns';
+import { WishlistDonationTiers } from '@/components/wishlist/WishlistDonationTiers';
+import { useUserCurrency } from '@/hooks/useUserCurrency';
+import { convertFromSats, formatCurrency, formatSatsAuto } from '@/services/currency';
 
 interface ProjectDonationSectionProps {
   projectId: string;
+  ownerId?: string;
   bitcoinAddress: string | null;
   lightningAddress: string | null;
   projectTitle?: string;
   isOwner?: boolean;
 }
 
+// Suggested donation amounts in sats (converted to user currency for display)
+const SUGGESTED_AMOUNTS_SATS = [
+  { sats: 100_000, label: 'Small' },    // ~$4-5 USD / ~CHF 5
+  { sats: 500_000, label: 'Medium' },   // ~$20-25 USD / ~CHF 25
+  { sats: 1_000_000, label: 'Large' },  // ~$40-50 USD / ~CHF 50
+];
+
 export function ProjectDonationSection({
   projectId,
+  ownerId,
   bitcoinAddress,
   lightningAddress,
   projectTitle = 'Project',
@@ -39,6 +50,7 @@ export function ProjectDonationSection({
   const { user } = useAuth();
   const [isFavorited, setIsFavorited] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
+  const userCurrency = useUserCurrency();
 
   // Check favorite status when project loads
   useEffect(() => {
@@ -257,31 +269,50 @@ export function ProjectDonationSection({
             </div>
           </div>
 
-          {/* Suggested donation amounts */}
+          {/* Wishlist-powered donation tiers */}
+          {ownerId && !isOwner && (
+            <div className="mt-6 border-t pt-6">
+              <WishlistDonationTiers
+                userId={ownerId}
+                projectId={projectId}
+                projectTitle={projectTitle}
+                recipientAddress={bitcoinAddress || lightningAddress || undefined}
+              />
+            </div>
+          )}
+
+          {/* Suggested donation amounts - Keep as fallback or secondary */}
           <div className="mt-6 border-t pt-6">
-            <p className="text-sm font-medium text-gray-700 mb-3">Suggested donation amounts:</p>
+            <p className="text-sm font-medium text-gray-700 mb-3">
+              {ownerId && !isOwner ? 'Other amounts:' : 'Suggested donation amounts:'}
+            </p>
             <div className="grid grid-cols-3 gap-3">
-              {[
-                { btc: 0.001, label: 'Small' },
-                { btc: 0.005, label: 'Medium' },
-                { btc: 0.01, label: 'Large' },
-              ].map(({ btc, label }) => (
-                <button
-                  key={btc}
-                  onClick={() => {
-                    copyToClipboard(bitcoinAddress, 'Bitcoin address');
-                    toast.success(`Address copied! Send ${btc} BTC`, {
-                      description: `Suggested ${label.toLowerCase()} donation`,
-                    });
-                  }}
-                  className="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all text-center group"
-                >
-                  <div className="font-semibold text-gray-900 group-hover:text-orange-700">
-                    {btc} BTC
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">{label}</div>
-                </button>
-              ))}
+              {SUGGESTED_AMOUNTS_SATS.map(({ sats, label }) => {
+                const displayAmount = convertFromSats(sats, userCurrency);
+                const formattedAmount = formatCurrency(displayAmount, userCurrency, { compact: true });
+                const satsDisplay = formatSatsAuto(sats);
+
+                return (
+                  <button
+                    key={sats}
+                    onClick={() => {
+                      copyToClipboard(bitcoinAddress, 'Bitcoin address');
+                      toast.success(`Address copied! Send ${satsDisplay}`, {
+                        description: `Suggested ${label.toLowerCase()} donation (≈ ${formattedAmount})`,
+                      });
+                    }}
+                    className="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all text-center group"
+                  >
+                    <div className="font-semibold text-gray-900 group-hover:text-orange-700">
+                      {formattedAmount}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5">
+                      ≈ {satsDisplay}
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">{label}</div>
+                  </button>
+                );
+              })}
             </div>
             <p className="text-xs text-gray-500 mt-3 text-center">
               Click to copy address with suggested amount reminder

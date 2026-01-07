@@ -34,17 +34,26 @@ export const GET = compose(
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
     const category = getString(request.url, 'category');
     const userId = getString(request.url, 'user_id');
+    const searchQuery = getString(request.url, 'q');
+    const sortBy = getString(request.url, 'sort') || 'popular';
 
     // Check auth for showing drafts
     const { data: { user } } = await supabase.auth.getUser();
     const includeOwnDrafts = Boolean(userId && user && userId === user.id);
 
-    // Build query
+    // Build query with user info for discovery page
     const tableName = getTableName('ai_assistant');
     let itemsQuery = supabase
       .from(tableName)
-      .select('*')
-      .order('created_at', { ascending: false })
+      .select(`
+        *,
+        user:profiles!ai_assistants_user_id_fkey(
+          id,
+          username,
+          name,
+          avatar_url
+        )
+      `)
       .range(offset, offset + limit - 1);
 
     let countQuery = supabase
@@ -69,13 +78,40 @@ export const GET = compose(
       }
     }
 
+    // Apply search filter
+    if (searchQuery) {
+      const searchFilter = `title.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`;
+      itemsQuery = itemsQuery.or(searchFilter);
+      countQuery = countQuery.or(searchFilter);
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'rating':
+        itemsQuery = itemsQuery.order('average_rating', { ascending: false, nullsFirst: false });
+        break;
+      case 'recent':
+        itemsQuery = itemsQuery.order('created_at', { ascending: false });
+        break;
+      case 'price_low':
+        itemsQuery = itemsQuery.order('price_per_message', { ascending: true, nullsFirst: false });
+        break;
+      case 'price_high':
+        itemsQuery = itemsQuery.order('price_per_message', { ascending: false, nullsFirst: false });
+        break;
+      case 'popular':
+      default:
+        itemsQuery = itemsQuery.order('total_conversations', { ascending: false, nullsFirst: false });
+        break;
+    }
+
     const [{ data: items, error: itemsError }, { count, error: countError }] = await Promise.all([
       itemsQuery,
       countQuery,
     ]);
 
-    if (itemsError) throw itemsError;
-    if (countError) throw countError;
+    if (itemsError) {throw itemsError;}
+    if (countError) {throw countError;}
 
     // Cache control based on query type
     const cacheControl = getCacheControl(Boolean(userId));

@@ -4,6 +4,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 /**
  * Get user's favorited projects
@@ -75,7 +76,7 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
 
     if (userIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('id, username, name, avatar_url')
         .in('id', userIds);
 

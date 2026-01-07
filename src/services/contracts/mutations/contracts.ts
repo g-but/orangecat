@@ -16,11 +16,11 @@ export interface CreateContractInput {
 export async function createContract(input: CreateContractInput) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) return { success: false, error: 'Authentication required' };
+    if (!userId) {return { success: false, error: 'Authentication required' };}
 
     const partyA = await getActor(input.party_a_actor_id);
     const partyB = await getActor(input.party_b_actor_id);
-    if (!partyA || !partyB) return { success: false, error: 'Invalid party actor' };
+    if (!partyA || !partyB) {return { success: false, error: 'Invalid party actor' };}
 
     if (partyB.actor_type === 'group') {
       const { createProposal } = await import('@/services/groups/mutations/proposals');
@@ -75,7 +75,7 @@ export async function createContract(input: CreateContractInput) {
 export async function activateContract(contractId: string) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) return { success: false, error: 'Authentication required' };
+    if (!userId) {return { success: false, error: 'Authentication required' };}
 
     const contract = await getContract(contractId);
     if (!contract.success || !contract.contract) {

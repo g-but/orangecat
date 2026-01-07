@@ -2,10 +2,12 @@
  * Sidebar User Profile Component
  *
  * Displays user profile section in the sidebar with avatar and user info
+ * Desktop: Icon-only with flyout tooltip on hover
+ * Mobile: Full avatar with name when drawer is open
  *
  * Created: 2025-01-07
- * Last Modified: 2025-01-07
- * Last Modified Summary: Created sidebar user profile component
+ * Last Modified: 2026-01-07
+ * Last Modified Summary: Added flyout tooltip for desktop fixed-width sidebar
  */
 
 'use client';
@@ -15,6 +17,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import type { Profile } from '@/types/database';
+import { FlyoutTooltip } from './FlyoutTooltip';
 
 interface SidebarUserProfileProps {
   profile: Profile;
@@ -24,30 +27,32 @@ interface SidebarUserProfileProps {
 
 export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarUserProfileProps) {
   const [avatarError, setAvatarError] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   if (!profile) {
     return null;
   }
 
   // Use actual username URL for better UX and SEO, fallback to /profiles/me if no username
-  const profileUrl = profile.username 
-    ? `/profiles/${profile.username}` 
+  const profileUrl = profile.username
+    ? `/profiles/${profile.username}`
     : '/profiles/me';
+
+  const displayName = profile.name || profile.username || 'User';
+  const username = profile.username || 'username';
 
   return (
     <div
-      className={`px-2 sm:px-3 lg:px-3 py-2 sm:py-3 lg:py-3 border-b border-gray-100 flex-shrink-0 transition-all duration-200 ${
-        isExpanded ? 'block' : 'hidden lg:flex lg:flex-col lg:items-center'
-      }`}
+      className="relative px-2 py-3 border-b border-gray-100 flex-shrink-0"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <Link
         href={profileUrl}
-        className={`flex items-center hover:bg-gray-50 p-1.5 sm:p-2 lg:p-2 rounded-xl transition-all duration-200 group w-full ${
-          isExpanded ? 'space-x-2 sm:space-x-3' : 'lg:flex-col lg:space-y-2 lg:space-x-0 lg:justify-center'
+        className={`flex items-center hover:bg-gray-50 p-2 rounded-xl transition-colors duration-150 group ${
+          isExpanded ? 'gap-3' : 'justify-center'
         }`}
-        onClick={(e) => {
-          // Only call onNavigate if provided (for mobile sidebar closing)
-          // Don't prevent default navigation
+        onClick={() => {
           if (onNavigate) {
             onNavigate();
           }
@@ -57,28 +62,38 @@ export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarU
           {profile.avatar_url && !avatarError ? (
             <Image
               src={profile.avatar_url}
-              alt={profile.name || 'User Avatar'}
-              width={isExpanded ? 40 : 36}
-              height={isExpanded ? 40 : 36}
-              className="rounded-full object-cover transition-all duration-300 group-hover:ring-2 group-hover:ring-tiffany-200"
+              alt={displayName}
+              width={isExpanded ? 40 : 32}
+              height={isExpanded ? 40 : 32}
+              className="rounded-full object-cover group-hover:ring-2 group-hover:ring-tiffany-200 transition-all"
               onError={() => setAvatarError(true)}
               unoptimized={profile.avatar_url?.includes('supabase.co')}
             />
           ) : (
             <DefaultAvatar
-              size={isExpanded ? 40 : 36}
-              className="transition-all duration-300 group-hover:ring-2 group-hover:ring-tiffany-200 rounded-full"
+              size={isExpanded ? 40 : 32}
+              className="group-hover:ring-2 group-hover:ring-tiffany-200 rounded-full transition-all"
             />
           )}
-          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 border-2 border-white rounded-full" />
+          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full" />
         </div>
-        <div className={`flex-1 min-w-0 transition-all duration-200 ${isExpanded ? 'block opacity-100' : 'hidden lg:hidden opacity-0'}`}>
-          <p className="text-xs sm:text-sm font-semibold text-gray-900 truncate group-hover:text-tiffany-700 transition-colors">
-            {profile.name || profile.username || 'User'}
-          </p>
-          <p className="text-xs text-gray-500 truncate">@{profile.username || 'username'}</p>
-        </div>
+
+        {/* Show text only on mobile expanded */}
+        {isExpanded && (
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-gray-900 truncate group-hover:text-tiffany-700 transition-colors">
+              {displayName}
+            </p>
+            <p className="text-xs text-gray-500 truncate">@{username}</p>
+          </div>
+        )}
       </Link>
+
+      {/* Flyout Tooltip - Desktop only */}
+      <FlyoutTooltip isVisible={!isExpanded && isHovered}>
+        <p className="font-medium">{displayName}</p>
+        <p className="text-xs text-gray-400">@{username}</p>
+      </FlyoutTooltip>
     </div>
   );
 }

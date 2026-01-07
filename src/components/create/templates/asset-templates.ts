@@ -1,227 +1,949 @@
 /**
  * Asset Templates
  *
- * Template definitions for asset creation.
+ * Comprehensive template definitions for asset creation.
+ * One-click form prefilling for common rentable/valuable assets.
+ *
+ * Categories:
+ * - Real Estate (apartments, houses, office, storage, parking)
+ * - Vehicles (cars, luxury, EVs, motorcycles, boats, RVs)
+ * - Luxury Items (watches, jewelry, bags, fashion)
+ * - Equipment (cameras, audio, tools, AV, construction)
+ * - Computing (GPUs, servers, mining, workstations)
+ * - Recreational (sports, instruments, outdoor, water)
+ * - Robots & Automation (industrial, service, warehouse)
+ * - Drones & UAVs (inspection, agriculture, cinema, security)
+ * - Business (equity, revenue share)
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
+ * Last Modified: 2026-01-06
  */
 
 import React from 'react';
-import { Building, Warehouse, Car, Shield, Bot, Plane, Cpu, Cog } from 'lucide-react';
+import {
+  Building, Building2, Home, Warehouse, Car, Bike, Ship, Plane,
+  Watch, Gem, ShoppingBag, Camera, Headphones, Wrench, HardHat,
+  Cpu, Server, MonitorPlay, Dumbbell, Music, Tent, Bot, Cog,
+  Tractor, CircuitBoard, Boxes, KeyRound, Sparkles, Zap,
+} from 'lucide-react';
 import type { EntityTemplate } from '../types';
 import type { CurrencyCode } from '@/config/currencies';
 
 export interface AssetDefaults {
   title: string;
-  type:
-    | 'real_estate'
-    | 'business'
-    | 'vehicle'
-    | 'equipment'
-    | 'securities'
-    | 'robot'
-    | 'drone'
-    | 'other';
+  type: 'real_estate' | 'vehicle' | 'luxury' | 'equipment' | 'computing'
+      | 'robot' | 'drone' | 'recreational' | 'business' | 'securities' | 'other';
   description?: string | null;
   location?: string | null;
   estimated_value?: number | null;
   currency?: CurrencyCode;
-  // Rental fields
+  is_for_sale?: boolean;
+  sale_price_sats?: number | null;
   is_for_rent?: boolean;
   rental_price_sats?: number | null;
   rental_period_type?: 'hourly' | 'daily' | 'weekly' | 'monthly';
   min_rental_period?: number;
+  max_rental_period?: number | null;
   requires_deposit?: boolean;
   deposit_amount_sats?: number | null;
+  show_on_profile?: boolean;
 }
 
-export const ASSET_TEMPLATES: EntityTemplate<AssetDefaults>[] = [
+// =============================================================================
+// REAL ESTATE
+// =============================================================================
+const realEstateTemplates: EntityTemplate<AssetDefaults>[] = [
   {
-    id: 'rental-unit',
+    id: 'rental-apartment',
     name: 'Rental Apartment',
     icon: React.createElement(Building, { className: 'w-4 h-4' }),
-    tagline: 'Income-producing city apartment, used as loan collateral',
+    tagline: 'City apartment for short or long-term rental',
+    category: 'Real Estate',
     defaults: {
-      title: 'Zurich 2BR Rental (Kreis 4)',
+      title: '2BR City Apartment',
       type: 'real_estate',
-      description:
-        'Well-maintained 2-bedroom apartment in Kreis 4, Zurich. Long-term tenant with on-time payments. Recently updated kitchen and windows; no outstanding repairs planned.',
+      description: 'Well-maintained 2-bedroom apartment. Fully furnished with modern amenities, WiFi, heating/cooling included.',
       location: 'Zurich, Switzerland',
-      estimated_value: 850000,
-      currency: 'CHF',
+      estimated_value: 850000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 2500000, rental_period_type: 'daily',
+      min_rental_period: 2, requires_deposit: true, deposit_amount_sats: 5000000,
+      show_on_profile: true,
     },
   },
   {
-    id: 'mining-rig',
-    name: 'Mining Hardware',
-    icon: React.createElement(Warehouse, { className: 'w-4 h-4' }),
-    tagline: 'Bitcoin mining rig with documented hash rate',
+    id: 'vacation-home',
+    name: 'Vacation Home',
+    icon: React.createElement(Home, { className: 'w-4 h-4' }),
+    tagline: 'Holiday property for seasonal rentals',
+    category: 'Real Estate',
     defaults: {
-      title: 'S19 XP Hyd. Miner (Managed)',
-      type: 'equipment',
-      description:
-        'Antminer S19 XP Hyd. hosted at managed facility. Clean uptime history, 255 TH/s average over last 30 days. Includes service contract and monitoring dashboard access.',
-      location: 'Lugano, Switzerland',
-      estimated_value: 6500,
-      currency: 'USD',
+      title: 'Mountain Chalet with Views',
+      type: 'real_estate',
+      description: '4-bedroom chalet with panoramic views. Private hot tub, fully equipped kitchen, ski-in/ski-out access.',
+      location: 'Zermatt, Switzerland',
+      estimated_value: 2500000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 7500000, rental_period_type: 'daily',
+      min_rental_period: 3, requires_deposit: true, deposit_amount_sats: 15000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'office-space',
+    name: 'Office Space',
+    icon: React.createElement(Building2, { className: 'w-4 h-4' }),
+    tagline: 'Professional workspace for teams',
+    category: 'Real Estate',
+    defaults: {
+      title: 'Modern Office Space (50m²)',
+      type: 'real_estate',
+      description: 'Private office in business district. High-speed internet, meeting room access, 24/7 security.',
+      location: 'Geneva, Switzerland',
+      estimated_value: 500000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 12500000, rental_period_type: 'monthly',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 25000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'coworking-desk',
+    name: 'Coworking Desk',
+    icon: React.createElement(MonitorPlay, { className: 'w-4 h-4' }),
+    tagline: 'Flexible workspace for individuals',
+    category: 'Real Estate',
+    defaults: {
+      title: 'Hot Desk - Coworking Space',
+      type: 'real_estate',
+      description: 'Flexible hot desk with WiFi, printing, coffee/tea. Meeting rooms bookable separately.',
+      location: 'Lausanne, Switzerland',
+      estimated_value: 5000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 50000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: false,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'storage-unit',
+    name: 'Storage Unit',
+    icon: React.createElement(Boxes, { className: 'w-4 h-4' }),
+    tagline: 'Secure storage space',
+    category: 'Real Estate',
+    defaults: {
+      title: 'Climate-Controlled Storage (10m²)',
+      type: 'real_estate',
+      description: 'Secure, climate-controlled storage. 24/7 access, CCTV monitoring.',
+      location: 'Bern, Switzerland',
+      estimated_value: 20000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 500000, rental_period_type: 'monthly',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 500000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'parking-space',
+    name: 'Parking Space',
+    icon: React.createElement(KeyRound, { className: 'w-4 h-4' }),
+    tagline: 'Indoor or outdoor parking',
+    category: 'Real Estate',
+    defaults: {
+      title: 'Indoor Parking - City Center',
+      type: 'real_estate',
+      description: 'Covered parking, 24/7 access, CCTV. EV charging available.',
+      location: 'Zurich, Switzerland',
+      estimated_value: 50000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 750000, rental_period_type: 'monthly',
+      min_rental_period: 1, requires_deposit: false,
+      show_on_profile: true,
+    },
+  },
+];
+
+// =============================================================================
+// VEHICLES
+// =============================================================================
+const vehicleTemplates: EntityTemplate<AssetDefaults>[] = [
+  {
+    id: 'economy-car',
+    name: 'Economy Car',
+    icon: React.createElement(Car, { className: 'w-4 h-4' }),
+    tagline: 'Affordable daily transportation',
+    category: 'Vehicles',
+    defaults: {
+      title: 'Compact Car - Economy Rental',
+      type: 'vehicle',
+      description: 'Fuel-efficient compact. Automatic, AC, Bluetooth. Basic insurance included.',
+      location: 'Zurich, Switzerland',
+      estimated_value: 25000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 150000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 1250000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'luxury-car',
+    name: 'Luxury Car',
+    icon: React.createElement(Car, { className: 'w-4 h-4' }),
+    tagline: 'Premium driving experience',
+    category: 'Vehicles',
+    defaults: {
+      title: 'Mercedes S-Class / BMW 7 Series',
+      type: 'vehicle',
+      description: 'Executive sedan with full premium features. Chauffeur available.',
+      location: 'Geneva, Switzerland',
+      estimated_value: 120000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 1250000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 12500000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'sports-car',
+    name: 'Sports Car',
+    icon: React.createElement(Car, { className: 'w-4 h-4' }),
+    tagline: 'High-performance exotic',
+    category: 'Vehicles',
+    defaults: {
+      title: 'Porsche 911 / Ferrari / Lamborghini',
+      type: 'vehicle',
+      description: 'High-performance sports car. Track packages available. 25+ with clean record.',
+      location: 'Monaco',
+      estimated_value: 250000, currency: 'EUR',
+      is_for_rent: true, rental_price_sats: 5000000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 25000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'electric-vehicle',
+    name: 'Electric Vehicle',
+    icon: React.createElement(Zap, { className: 'w-4 h-4' }),
+    tagline: 'Zero-emission transportation',
+    category: 'Vehicles',
+    defaults: {
+      title: 'Tesla Model 3 / Model Y',
+      type: 'vehicle',
+      description: 'Long-range EV with Autopilot. Supercharger access included. 400+ km range.',
+      location: 'Basel, Switzerland',
+      estimated_value: 55000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 250000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 2500000,
+      show_on_profile: true,
     },
   },
   {
     id: 'delivery-van',
     name: 'Delivery Van',
     icon: React.createElement(Car, { className: 'w-4 h-4' }),
-    tagline: 'Small business vehicle with service history',
+    tagline: 'Cargo transport vehicle',
+    category: 'Vehicles',
     defaults: {
-      title: '2021 VW Transporter T6.1',
+      title: 'Cargo Van - Moving & Delivery',
       type: 'vehicle',
-      description:
-        'Used for local deliveries (food service). Single owner, full service history, 62k km mileage. Comes with winter tires and dashcam.',
+      description: '12m³ cargo space, rear loading doors. Moving supplies available.',
       location: 'Bern, Switzerland',
-      estimated_value: 24500,
-      currency: 'CHF',
+      estimated_value: 35000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 200000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 1500000,
+      show_on_profile: true,
     },
   },
   {
-    id: 'equity-stake',
-    name: 'Startup Equity',
-    icon: React.createElement(Shield, { className: 'w-4 h-4' }),
-    tagline: 'Minority equity position in revenue-generating SaaS',
+    id: 'motorcycle',
+    name: 'Motorcycle',
+    icon: React.createElement(Bike, { className: 'w-4 h-4' }),
+    tagline: 'Two-wheel adventure',
+    category: 'Vehicles',
     defaults: {
-      title: 'Equity Stake – SaaS AR Platform',
-      type: 'business',
-      description:
-        '7% equity stake in B2B SaaS for AR training. ARR ~CHF 480k, 30% YoY growth, low churn. Cap table and shareholder agreement available on request.',
-      location: 'Remote-first',
-      estimated_value: 80000,
-      currency: 'CHF',
+      title: 'BMW GS / Ducati / Harley-Davidson',
+      type: 'vehicle',
+      description: 'Premium motorcycle. Helmet and gear available. Valid license required.',
+      location: 'Lugano, Switzerland',
+      estimated_value: 25000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 375000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 3750000,
+      show_on_profile: true,
     },
   },
-  // Robot & Drone Templates
+  {
+    id: 'e-bike',
+    name: 'E-Bike',
+    icon: React.createElement(Bike, { className: 'w-4 h-4' }),
+    tagline: 'Electric bicycle',
+    category: 'Vehicles',
+    defaults: {
+      title: 'Premium E-Bike - Long Range',
+      type: 'vehicle',
+      description: 'Electric bicycle with 80km+ range. Lock, helmet, phone mount included.',
+      location: 'Lucerne, Switzerland',
+      estimated_value: 4500, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 75000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 500000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'boat-yacht',
+    name: 'Boat / Yacht',
+    icon: React.createElement(Ship, { className: 'w-4 h-4' }),
+    tagline: 'Watercraft for lake or sea',
+    category: 'Vehicles',
+    defaults: {
+      title: 'Motor Yacht - Day Charter',
+      type: 'vehicle',
+      description: '40ft yacht for day trips. Captain included. Up to 8 guests. Fuel included.',
+      location: 'Lake Geneva, Switzerland',
+      estimated_value: 350000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 7500000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 12500000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'camper-rv',
+    name: 'Camper / RV',
+    icon: React.createElement(Car, { className: 'w-4 h-4' }),
+    tagline: 'Mobile accommodation',
+    category: 'Vehicles',
+    defaults: {
+      title: 'Campervan - Road Trip Ready',
+      type: 'vehicle',
+      description: 'Sleeps 2-4. Kitchen, shower, solar. Unlimited mileage. Linens included.',
+      location: 'Interlaken, Switzerland',
+      estimated_value: 85000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 375000, rental_period_type: 'daily',
+      min_rental_period: 3, requires_deposit: true, deposit_amount_sats: 3750000,
+      show_on_profile: true,
+    },
+  },
+];
+
+// =============================================================================
+// LUXURY ITEMS
+// =============================================================================
+const luxuryTemplates: EntityTemplate<AssetDefaults>[] = [
+  {
+    id: 'luxury-watch',
+    name: 'Luxury Watch',
+    icon: React.createElement(Watch, { className: 'w-4 h-4' }),
+    tagline: 'Premium timepiece for special occasions',
+    category: 'Luxury',
+    defaults: {
+      title: 'Rolex / Omega / Patek Philippe',
+      type: 'luxury',
+      description: 'Authentic luxury watch with box and papers. Insurance and secure delivery included.',
+      location: 'Zurich, Switzerland',
+      estimated_value: 25000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 250000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 25000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'designer-jewelry',
+    name: 'Designer Jewelry',
+    icon: React.createElement(Gem, { className: 'w-4 h-4' }),
+    tagline: 'Fine jewelry for elegant occasions',
+    category: 'Luxury',
+    defaults: {
+      title: 'Diamond Necklace / Earrings Set',
+      type: 'luxury',
+      description: 'Authenticated designer jewelry with certificate. Secure delivery included.',
+      location: 'Geneva, Switzerland',
+      estimated_value: 50000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 500000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 50000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'designer-bag',
+    name: 'Designer Bag',
+    icon: React.createElement(ShoppingBag, { className: 'w-4 h-4' }),
+    tagline: 'Luxury handbag rental',
+    category: 'Luxury',
+    defaults: {
+      title: 'Hermès Birkin / Chanel Classic',
+      type: 'luxury',
+      description: 'Iconic designer handbag. Authenticated with original packaging.',
+      location: 'Paris, France',
+      estimated_value: 15000, currency: 'EUR',
+      is_for_rent: true, rental_price_sats: 375000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 15000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'wedding-dress',
+    name: 'Wedding Dress',
+    icon: React.createElement(Sparkles, { className: 'w-4 h-4' }),
+    tagline: 'Designer gown rental',
+    category: 'Luxury',
+    defaults: {
+      title: 'Designer Wedding Gown',
+      type: 'luxury',
+      description: 'Exquisite designer wedding dress. Professional cleaning included.',
+      location: 'Milan, Italy',
+      estimated_value: 8000, currency: 'EUR',
+      is_for_rent: true, rental_price_sats: 750000, rental_period_type: 'daily',
+      min_rental_period: 3, requires_deposit: true, deposit_amount_sats: 5000000,
+      show_on_profile: true,
+    },
+  },
+];
+
+// =============================================================================
+// EQUIPMENT
+// =============================================================================
+const equipmentTemplates: EntityTemplate<AssetDefaults>[] = [
+  {
+    id: 'cinema-camera',
+    name: 'Cinema Camera',
+    icon: React.createElement(Camera, { className: 'w-4 h-4' }),
+    tagline: 'Professional video production',
+    category: 'Equipment',
+    defaults: {
+      title: 'RED Komodo / ARRI Alexa Mini',
+      type: 'equipment',
+      description: 'Cinema camera kit with lenses, cards, batteries, and rigging.',
+      location: 'Zurich, Switzerland',
+      estimated_value: 35000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 625000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 10000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'photo-camera',
+    name: 'Photography Kit',
+    icon: React.createElement(Camera, { className: 'w-4 h-4' }),
+    tagline: 'DSLR/Mirrorless package',
+    category: 'Equipment',
+    defaults: {
+      title: 'Sony Alpha / Canon EOS R5 Kit',
+      type: 'equipment',
+      description: 'Camera body with 24-70mm and 70-200mm lenses. Batteries and cards included.',
+      location: 'Basel, Switzerland',
+      estimated_value: 8000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 175000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 2500000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'audio-recording',
+    name: 'Audio Recording Kit',
+    icon: React.createElement(Headphones, { className: 'w-4 h-4' }),
+    tagline: 'Professional sound equipment',
+    category: 'Equipment',
+    defaults: {
+      title: 'Podcast / Field Recording Kit',
+      type: 'equipment',
+      description: 'Mics, audio interface, headphones. Perfect for podcasts or interviews.',
+      location: 'Bern, Switzerland',
+      estimated_value: 3500, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 100000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 1000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'dj-equipment',
+    name: 'DJ Equipment',
+    icon: React.createElement(Music, { className: 'w-4 h-4' }),
+    tagline: 'Complete DJ setup',
+    category: 'Equipment',
+    defaults: {
+      title: 'Professional DJ Setup',
+      type: 'equipment',
+      description: 'Pioneer CDJs, DJM mixer, speakers. Delivery and setup available.',
+      location: 'Zurich, Switzerland',
+      estimated_value: 15000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 500000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 5000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'power-tools',
+    name: 'Power Tools Set',
+    icon: React.createElement(Wrench, { className: 'w-4 h-4' }),
+    tagline: 'Professional tool kit',
+    category: 'Equipment',
+    defaults: {
+      title: 'DeWalt / Makita Power Tool Kit',
+      type: 'equipment',
+      description: 'Drill, saw, jigsaw, sander, impact driver. Batteries and case included.',
+      location: 'Winterthur, Switzerland',
+      estimated_value: 2500, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 50000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 625000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'construction-equipment',
+    name: 'Construction Equipment',
+    icon: React.createElement(HardHat, { className: 'w-4 h-4' }),
+    tagline: 'Heavy equipment rental',
+    category: 'Equipment',
+    defaults: {
+      title: 'Mini Excavator / Skid Steer',
+      type: 'equipment',
+      description: 'Compact construction equipment. Delivery available. Fuel not included.',
+      location: 'Bern, Switzerland',
+      estimated_value: 45000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 750000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 7500000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'projector-av',
+    name: 'Projector & AV',
+    icon: React.createElement(MonitorPlay, { className: 'w-4 h-4' }),
+    tagline: 'Presentation equipment',
+    category: 'Equipment',
+    defaults: {
+      title: '4K Projector + Screen Package',
+      type: 'equipment',
+      description: 'High-brightness laser projector, 120" screen, speakers, and wireless tools.',
+      location: 'Geneva, Switzerland',
+      estimated_value: 8000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 250000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 2500000,
+      show_on_profile: true,
+    },
+  },
+];
+
+// =============================================================================
+// COMPUTING
+// =============================================================================
+const computingTemplates: EntityTemplate<AssetDefaults>[] = [
+  {
+    id: 'gpu-cluster',
+    name: 'GPU Cluster',
+    icon: React.createElement(Cpu, { className: 'w-4 h-4' }),
+    tagline: 'High-performance AI/ML computing',
+    category: 'Computing',
+    defaults: {
+      title: 'NVIDIA A100 / H100 Cluster',
+      type: 'computing',
+      description: '8x GPU cluster for AI/ML training. SSH access, Docker, CUDA pre-installed.',
+      location: 'Data Center - Switzerland',
+      estimated_value: 200000, currency: 'USD',
+      is_for_rent: true, rental_price_sats: 12500000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: false,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'render-farm',
+    name: 'Render Farm',
+    icon: React.createElement(Server, { className: 'w-4 h-4' }),
+    tagline: '3D rendering and VFX',
+    category: 'Computing',
+    defaults: {
+      title: 'Distributed Render Farm Access',
+      type: 'computing',
+      description: 'Render farm for 3D animation/VFX. Supports Blender, Maya, C4D.',
+      location: 'Cloud-based',
+      estimated_value: 100000, currency: 'USD',
+      is_for_rent: true, rental_price_sats: 250000, rental_period_type: 'hourly',
+      min_rental_period: 1, requires_deposit: false,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'mining-rig',
+    name: 'Mining Hardware',
+    icon: React.createElement(CircuitBoard, { className: 'w-4 h-4' }),
+    tagline: 'Bitcoin mining equipment',
+    category: 'Computing',
+    defaults: {
+      title: 'Antminer S19 XP Hyd. (Managed)',
+      type: 'computing',
+      description: 'Hosted Bitcoin miner. 255 TH/s. Includes electricity and monitoring.',
+      location: 'Lugano, Switzerland',
+      estimated_value: 6500, currency: 'USD',
+      is_for_rent: true, rental_price_sats: 125000, rental_period_type: 'daily',
+      min_rental_period: 30, requires_deposit: false,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'dedicated-server',
+    name: 'Dedicated Server',
+    icon: React.createElement(Server, { className: 'w-4 h-4' }),
+    tagline: 'Bare metal hosting',
+    category: 'Computing',
+    defaults: {
+      title: 'High-Performance Dedicated Server',
+      type: 'computing',
+      description: '64-core CPU, 512GB RAM, 4TB NVMe. 10Gbps, DDoS protection.',
+      location: 'Data Center - Zurich',
+      estimated_value: 15000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 1250000, rental_period_type: 'monthly',
+      min_rental_period: 1, requires_deposit: false,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'workstation',
+    name: 'High-End Workstation',
+    icon: React.createElement(MonitorPlay, { className: 'w-4 h-4' }),
+    tagline: 'Creative workstation',
+    category: 'Computing',
+    defaults: {
+      title: 'Pro Workstation - 3D/Video',
+      type: 'computing',
+      description: 'RTX 4090, 128GB RAM, dual 4K monitors. Adobe CC, DaVinci, C4D installed.',
+      location: 'Zurich, Switzerland',
+      estimated_value: 12000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 375000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 5000000,
+      show_on_profile: true,
+    },
+  },
+];
+
+// =============================================================================
+// RECREATIONAL
+// =============================================================================
+const recreationalTemplates: EntityTemplate<AssetDefaults>[] = [
+  {
+    id: 'ski-equipment',
+    name: 'Ski Equipment',
+    icon: React.createElement(Dumbbell, { className: 'w-4 h-4' }),
+    tagline: 'Ski or snowboard package',
+    category: 'Recreational',
+    defaults: {
+      title: 'Premium Ski Package',
+      type: 'recreational',
+      description: 'Skis/board with fitted boots, poles, helmet, goggles.',
+      location: 'Verbier, Switzerland',
+      estimated_value: 1500, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 100000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 500000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'golf-clubs',
+    name: 'Golf Clubs',
+    icon: React.createElement(Dumbbell, { className: 'w-4 h-4' }),
+    tagline: 'Premium golf set',
+    category: 'Recreational',
+    defaults: {
+      title: 'Titleist / Callaway Club Set',
+      type: 'recreational',
+      description: 'Full golf club set with bag. GPS rangefinder available.',
+      location: 'Crans-Montana, Switzerland',
+      estimated_value: 4000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 150000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 1250000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'musical-instrument',
+    name: 'Musical Instrument',
+    icon: React.createElement(Music, { className: 'w-4 h-4' }),
+    tagline: 'Quality instruments',
+    category: 'Recreational',
+    defaults: {
+      title: 'Professional Guitar / Piano / Violin',
+      type: 'recreational',
+      description: 'High-quality instrument with case and accessories.',
+      location: 'Zurich, Switzerland',
+      estimated_value: 3000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 75000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 1000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'camping-gear',
+    name: 'Camping Gear',
+    icon: React.createElement(Tent, { className: 'w-4 h-4' }),
+    tagline: 'Complete outdoor kit',
+    category: 'Recreational',
+    defaults: {
+      title: 'Complete Camping Kit (4-person)',
+      type: 'recreational',
+      description: 'Tent, sleeping bags, mats, stove, cookware, lantern.',
+      location: 'Bern, Switzerland',
+      estimated_value: 1200, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 75000, rental_period_type: 'daily',
+      min_rental_period: 2, requires_deposit: true, deposit_amount_sats: 375000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'kayak-sup',
+    name: 'Kayak / SUP',
+    icon: React.createElement(Ship, { className: 'w-4 h-4' }),
+    tagline: 'Watercraft rental',
+    category: 'Recreational',
+    defaults: {
+      title: 'Kayak or Stand-Up Paddleboard',
+      type: 'recreational',
+      description: 'Paddle, life jacket, dry bag included. Roof carriers available.',
+      location: 'Lake Zurich, Switzerland',
+      estimated_value: 800, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 50000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 250000,
+      show_on_profile: true,
+    },
+  },
+];
+
+// =============================================================================
+// ROBOTS & AUTOMATION
+// =============================================================================
+const robotTemplates: EntityTemplate<AssetDefaults>[] = [
   {
     id: 'industrial-robot',
     name: 'Industrial Robot',
     icon: React.createElement(Cog, { className: 'w-4 h-4' }),
-    tagline: 'Robotic equipment for manufacturing or automation tasks',
+    tagline: 'Manufacturing automation',
+    category: 'Robots',
     defaults: {
       title: 'Universal Robots UR10e Cobot',
       type: 'robot',
-      description:
-        'Collaborative robot arm (cobot) for manufacturing automation. 10kg payload capacity, 1300mm reach. Includes force-torque sensor, gripper, and programming tablet. Recently serviced with certified maintenance records.',
+      description: 'Collaborative robot arm. 10kg payload, 1300mm reach. Includes gripper.',
       location: 'Zurich, Switzerland',
-      estimated_value: 45000,
-      currency: 'CHF',
-      is_for_rent: true,
-      rental_price_sats: 500000, // ~$200/day
-      rental_period_type: 'daily',
-      min_rental_period: 1,
-      requires_deposit: true,
-      deposit_amount_sats: 5000000, // ~$2000 deposit
+      estimated_value: 45000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 500000, rental_period_type: 'daily',
+      min_rental_period: 7, requires_deposit: true, deposit_amount_sats: 5000000,
+      show_on_profile: true,
     },
   },
   {
     id: 'service-robot',
     name: 'Service Robot',
     icon: React.createElement(Bot, { className: 'w-4 h-4' }),
-    tagline: 'Robot for hospitality, delivery, or customer assistance',
+    tagline: 'Hospitality automation',
+    category: 'Robots',
     defaults: {
-      title: 'Delivery Robot – Restaurant Service',
+      title: 'Delivery Robot - Restaurant/Hotel',
       type: 'robot',
-      description:
-        'Autonomous delivery robot for restaurant/hotel use. Multiple tray capacity, obstacle avoidance, and voice interaction. Suitable for food delivery, room service, or retail assistance.',
+      description: 'Autonomous delivery robot. Multiple trays, obstacle avoidance, voice interaction.',
       location: 'Basel, Switzerland',
-      estimated_value: 18000,
-      currency: 'CHF',
-      is_for_rent: true,
-      rental_price_sats: 250000, // ~$100/day
-      rental_period_type: 'daily',
-      min_rental_period: 1,
-      requires_deposit: true,
-      deposit_amount_sats: 2500000, // ~$1000 deposit
-    },
-  },
-  {
-    id: 'inspection-drone',
-    name: 'Inspection Drone',
-    icon: React.createElement(Plane, { className: 'w-4 h-4' }),
-    tagline: 'Professional drone for aerial photography and inspections',
-    defaults: {
-      title: 'DJI Matrice 300 RTK Inspection Drone',
-      type: 'drone',
-      description:
-        'Enterprise-grade drone for industrial inspections, mapping, and aerial photography. 55-minute flight time, dual camera payload, RTK positioning. Includes thermal camera and hard case.',
-      location: 'Geneva, Switzerland',
-      estimated_value: 25000,
-      currency: 'CHF',
-      is_for_rent: true,
-      rental_price_sats: 375000, // ~$150/hour
-      rental_period_type: 'hourly',
-      min_rental_period: 2,
-      requires_deposit: true,
-      deposit_amount_sats: 3750000, // ~$1500 deposit
-    },
-  },
-  {
-    id: 'agricultural-drone',
-    name: 'Agricultural Drone',
-    icon: React.createElement(Plane, { className: 'w-4 h-4' }),
-    tagline: 'Drone for crop spraying, monitoring, and farm automation',
-    defaults: {
-      title: 'DJI Agras T40 Agricultural Drone',
-      type: 'drone',
-      description:
-        'Large agricultural drone for precision spraying and spreading. 40L spray tank, 50kg spreading capacity. Ideal for vineyard management, crop protection, and fertilizer application.',
-      location: 'Lausanne, Switzerland',
-      estimated_value: 35000,
-      currency: 'CHF',
-      is_for_rent: true,
-      rental_price_sats: 625000, // ~$250/hour
-      rental_period_type: 'hourly',
-      min_rental_period: 4,
-      requires_deposit: true,
-      deposit_amount_sats: 5000000, // ~$2000 deposit
+      estimated_value: 18000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 250000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 2500000,
+      show_on_profile: true,
     },
   },
   {
     id: 'warehouse-robot',
     name: 'Warehouse Robot',
-    icon: React.createElement(Cpu, { className: 'w-4 h-4' }),
-    tagline: 'Autonomous mobile robot for warehouse logistics',
+    icon: React.createElement(Boxes, { className: 'w-4 h-4' }),
+    tagline: 'Logistics automation',
+    category: 'Robots',
     defaults: {
-      title: 'Autonomous Mobile Robot (AMR) – Logistics',
+      title: 'AMR - Autonomous Mobile Robot',
       type: 'robot',
-      description:
-        'Fleet-ready warehouse robot for goods transport. 500kg payload, autonomous navigation, and integration-ready with WMS systems. Battery swap capability for 24/7 operation.',
+      description: '500kg payload, autonomous navigation, WMS ready. 24/7 operation.',
       location: 'Bern, Switzerland',
-      estimated_value: 55000,
-      currency: 'CHF',
-      is_for_rent: true,
-      rental_price_sats: 750000, // ~$300/day
-      rental_period_type: 'daily',
-      min_rental_period: 7,
-      requires_deposit: true,
-      deposit_amount_sats: 7500000, // ~$3000 deposit
+      estimated_value: 55000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 750000, rental_period_type: 'daily',
+      min_rental_period: 7, requires_deposit: true, deposit_amount_sats: 7500000,
+      show_on_profile: true,
     },
   },
   {
     id: 'telepresence-robot',
     name: 'Telepresence Robot',
     icon: React.createElement(Bot, { className: 'w-4 h-4' }),
-    tagline: 'Remote presence robot for meetings and virtual visits',
+    tagline: 'Remote presence',
+    category: 'Robots',
     defaults: {
-      title: 'Telepresence Robot – Remote Collaboration',
+      title: 'Telepresence Robot',
       type: 'robot',
-      description:
-        'Mobile telepresence robot for remote meetings, facility tours, and virtual visits. HD camera, 360-degree navigation, and tablet interface. Perfect for remote work and distributed teams.',
+      description: 'HD camera, 360° navigation, tablet interface. For remote work.',
       location: 'Zurich, Switzerland',
-      estimated_value: 8000,
-      currency: 'CHF',
-      is_for_rent: true,
-      rental_price_sats: 125000, // ~$50/day
-      rental_period_type: 'daily',
-      min_rental_period: 1,
-      requires_deposit: true,
-      deposit_amount_sats: 1250000, // ~$500 deposit
+      estimated_value: 8000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 125000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 1250000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'cleaning-robot',
+    name: 'Cleaning Robot',
+    icon: React.createElement(Bot, { className: 'w-4 h-4' }),
+    tagline: 'Commercial floor cleaning',
+    category: 'Robots',
+    defaults: {
+      title: 'Industrial Floor Cleaning Robot',
+      type: 'robot',
+      description: 'Autonomous scrubber. 5000m²/hour. Self-emptying, self-charging.',
+      location: 'Geneva, Switzerland',
+      estimated_value: 35000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 375000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 3750000,
+      show_on_profile: true,
     },
   },
 ];
+
+// =============================================================================
+// DRONES & UAVs
+// =============================================================================
+const droneTemplates: EntityTemplate<AssetDefaults>[] = [
+  {
+    id: 'inspection-drone',
+    name: 'Inspection Drone',
+    icon: React.createElement(Plane, { className: 'w-4 h-4' }),
+    tagline: 'Industrial inspection',
+    category: 'Drones',
+    defaults: {
+      title: 'DJI Matrice 300 RTK',
+      type: 'drone',
+      description: 'Enterprise drone. 55-min flight, dual camera, thermal, RTK. Pilot available.',
+      location: 'Geneva, Switzerland',
+      estimated_value: 25000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 375000, rental_period_type: 'hourly',
+      min_rental_period: 2, requires_deposit: true, deposit_amount_sats: 3750000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'agricultural-drone',
+    name: 'Agricultural Drone',
+    icon: React.createElement(Tractor, { className: 'w-4 h-4' }),
+    tagline: 'Precision farming',
+    category: 'Drones',
+    defaults: {
+      title: 'DJI Agras T40',
+      type: 'drone',
+      description: '40L spray tank, 50kg spreading. For vineyards and crop protection.',
+      location: 'Lausanne, Switzerland',
+      estimated_value: 35000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 625000, rental_period_type: 'hourly',
+      min_rental_period: 4, requires_deposit: true, deposit_amount_sats: 5000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'cinema-drone',
+    name: 'Cinema Drone',
+    icon: React.createElement(Camera, { className: 'w-4 h-4' }),
+    tagline: 'Aerial cinematography',
+    category: 'Drones',
+    defaults: {
+      title: 'DJI Inspire 3 / FPV Combo',
+      type: 'drone',
+      description: '8K cinema drone with RAW. Multiple batteries, ND filters, monitor.',
+      location: 'Zurich, Switzerland',
+      estimated_value: 20000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 500000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 5000000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'surveying-drone',
+    name: 'Surveying Drone',
+    icon: React.createElement(Plane, { className: 'w-4 h-4' }),
+    tagline: 'Land surveying',
+    category: 'Drones',
+    defaults: {
+      title: 'Fixed-Wing Surveying Drone',
+      type: 'drone',
+      description: '90-min flight, RTK GPS, photogrammetry software. 1000 hectares/flight.',
+      location: 'Bern, Switzerland',
+      estimated_value: 30000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 1250000, rental_period_type: 'daily',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 7500000,
+      show_on_profile: true,
+    },
+  },
+  {
+    id: 'security-drone',
+    name: 'Security Drone',
+    icon: React.createElement(Plane, { className: 'w-4 h-4' }),
+    tagline: 'Autonomous patrol',
+    category: 'Drones',
+    defaults: {
+      title: 'Autonomous Security Drone',
+      type: 'drone',
+      description: 'Self-charging patrol drone. Scheduled routes, live stream, motion alerts.',
+      location: 'Basel, Switzerland',
+      estimated_value: 40000, currency: 'CHF',
+      is_for_rent: true, rental_price_sats: 2500000, rental_period_type: 'monthly',
+      min_rental_period: 1, requires_deposit: true, deposit_amount_sats: 10000000,
+      show_on_profile: true,
+    },
+  },
+];
+
+// =============================================================================
+// BUSINESS & SECURITIES
+// =============================================================================
+const businessTemplates: EntityTemplate<AssetDefaults>[] = [
+  {
+    id: 'equity-stake',
+    name: 'Startup Equity',
+    icon: React.createElement(Building2, { className: 'w-4 h-4' }),
+    tagline: 'Business ownership',
+    category: 'Business',
+    defaults: {
+      title: 'Equity Stake - SaaS Company',
+      type: 'business',
+      description: 'Minority equity in revenue-generating SaaS. Cap table available on request.',
+      location: 'Remote-first',
+      estimated_value: 80000, currency: 'CHF',
+      is_for_sale: true, sale_price_sats: 200000000,
+      is_for_rent: false,
+      show_on_profile: false, // Private by default
+    },
+  },
+  {
+    id: 'revenue-share',
+    name: 'Revenue Share Rights',
+    icon: React.createElement(Building2, { className: 'w-4 h-4' }),
+    tagline: 'Revenue participation',
+    category: 'Business',
+    defaults: {
+      title: 'Revenue Share - E-commerce Business',
+      type: 'securities',
+      description: '5% revenue share. Monthly payments. Contract transferable.',
+      location: 'Switzerland',
+      estimated_value: 60000, currency: 'CHF',
+      is_for_sale: true, sale_price_sats: 150000000,
+      is_for_rent: false,
+      show_on_profile: false,
+    },
+  },
+];
+
+// =============================================================================
+// COMBINED EXPORTS
+// =============================================================================
+export const ASSET_TEMPLATES: EntityTemplate<AssetDefaults>[] = [
+  ...realEstateTemplates,
+  ...vehicleTemplates,
+  ...luxuryTemplates,
+  ...equipmentTemplates,
+  ...computingTemplates,
+  ...recreationalTemplates,
+  ...robotTemplates,
+  ...droneTemplates,
+  ...businessTemplates,
+];
+
+export const ASSET_TEMPLATE_CATEGORIES = {
+  'Real Estate': realEstateTemplates,
+  'Vehicles': vehicleTemplates,
+  'Luxury': luxuryTemplates,
+  'Equipment': equipmentTemplates,
+  'Computing': computingTemplates,
+  'Recreational': recreationalTemplates,
+  'Robots': robotTemplates,
+  'Drones': droneTemplates,
+  'Business': businessTemplates,
+} as const;
+
+export type AssetTemplateCategory = keyof typeof ASSET_TEMPLATE_CATEGORIES;

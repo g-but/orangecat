@@ -23,6 +23,7 @@ import {
   EVENT_TEMPLATES,
 } from './templates-data';
 import { GROUP_TEMPLATES } from './group-templates';
+import { WISHLIST_TEMPLATES } from './wishlist-templates';
 
 // ==================== FACTORY FUNCTION ====================
 
@@ -69,6 +70,7 @@ export const ProjectTemplates = createTemplateComponent(PROJECT_TEMPLATES, 'Proj
 export const AssetTemplates = createTemplateComponent(ASSET_TEMPLATES, 'Assets');
 export const EventTemplates = createTemplateComponent(EVENT_TEMPLATES, 'Events');
 export const GroupTemplates = createTemplateComponent(GROUP_TEMPLATES, 'Groups');
+export const WishlistTemplates = createTemplateComponent(WISHLIST_TEMPLATES, 'Wishlists');
 
 // ==================== TYPE EXPORTS ====================
 
@@ -81,6 +83,7 @@ export type ProjectTemplate = typeof PROJECT_TEMPLATES[number];
 export type AssetTemplate = typeof ASSET_TEMPLATES[number];
 export type EventTemplate = typeof EVENT_TEMPLATES[number];
 export type GroupTemplate = typeof GROUP_TEMPLATES[number];
+export type WishlistTemplate = typeof WISHLIST_TEMPLATES[number];
 
 // ==================== TEMPLATE ARRAY EXPORTS ====================
 

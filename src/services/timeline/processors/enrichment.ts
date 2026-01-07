@@ -10,6 +10,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
 import type {
   TimelineEvent,
   TimelineDisplayEvent,
@@ -62,7 +63,7 @@ export async function getSubjectInfo(
   switch (type) {
     case 'project':
       const { data: project } = await supabase
-        .from('projects')
+        .from(getTableName('project'))
         .select('title')
         .eq('id', id)
         .single();

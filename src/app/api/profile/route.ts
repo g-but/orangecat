@@ -12,6 +12,7 @@ import { logger } from '@/utils/logger';
 import { ProfileServerService } from '@/services/profile/server';
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
@@ -167,7 +168,7 @@ export async function PUT(request: NextRequest) {
     // Use ProfileServerService for update (we'll need to add an update method)
     // For now, keeping direct update but this should be refactored to use service
     const { data: profile, error } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .update({
         ...dataToSave,
         updated_at: new Date().toISOString(),

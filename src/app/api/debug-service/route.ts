@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiError } from '@/lib/api/standardResponse';
+import { getTableName } from '@/config/entity-registry';
 
 export const POST = async (request: NextRequest) => {
   try {
@@ -11,6 +12,9 @@ export const POST = async (request: NextRequest) => {
     if (authError || !user) {
       return apiError('Not authenticated', 401);
     }
+
+    // Use entity registry for table name (SSOT compliance)
+    const tableName = getTableName('service');
 
     const debugResults = {
       authenticated: true,
@@ -24,7 +28,7 @@ export const POST = async (request: NextRequest) => {
     // Test table access
     try {
       const { data, error } = await supabase
-        .from('user_services')
+        .from(tableName)
         .select('count')
         .limit(1);
       
@@ -32,7 +36,7 @@ export const POST = async (request: NextRequest) => {
         { success: false, error: error.message } : 
         { success: true, data };
     } catch (e) {
-      debugResults.tableCheck = { success: false, error: e.message };
+      debugResults.tableCheck = { success: false, error: e instanceof Error ? e.message : String(e) };
     }
 
     // Test service creation
@@ -57,12 +61,12 @@ export const POST = async (request: NextRequest) => {
         { success: false, error: error.message, code: error.code, details: error.details } : 
         { success: true, data };
     } catch (e) {
-      debugResults.serviceCreation = { success: false, error: e.message };
+      debugResults.serviceCreation = { success: false, error: e instanceof Error ? e.message : String(e) };
     }
 
     return apiSuccess(debugResults);
 
   } catch (error) {
-    return apiError('Debug failed: ' + error.message, 500);
+    return apiError('Debug failed: ' + (error instanceof Error ? error.message : String(error)), 500);
   }
 };

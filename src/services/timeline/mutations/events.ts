@@ -12,6 +12,7 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
 import type {
   TimelineEventResponse,
   CreateTimelineEventRequest,
@@ -321,7 +322,7 @@ export async function createProjectEvent(
 ): Promise<TimelineEventResponse> {
   // Get project details
   const { data: project } = await supabase
-    .from('projects')
+    .from(getTableName('project'))
     .select('title, description, goal_amount, currency')
     .eq('id', projectId)
     .single();
@@ -371,7 +372,7 @@ export async function createTransactionEvent(
     .single();
 
   const { data: project } = await supabase
-    .from('projects')
+    .from(getTableName('project'))
     .select('title')
     .eq('id', projectId)
     .single();

@@ -20,6 +20,11 @@ import {
   Heart,
   Scale,
   Sparkles,
+  Stethoscope,
+  Paintbrush,
+  Mail,
+  Wrench,
+  BookOpen,
 } from 'lucide-react';
 import type { EntityTemplate } from '../types';
 import type { AIAssistantFormData } from '@/lib/validation';
@@ -57,7 +62,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are an expert code reviewer. Analyze code for bugs, performance issues, and best practices. Provide clear, actionable feedback.',
       pricing_model: 'per_message',
-      price_per_message_sats: 2000,
+      price_per_message: 2000,
       model_preference: 'gpt-4',
       temperature: 0.3,
       status: 'draft',
@@ -76,7 +81,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a helpful customer support representative. Be friendly, professional, and solution-oriented. Always try to resolve customer issues.',
       pricing_model: 'per_message',
-      price_per_message_sats: 500,
+      price_per_message: 500,
       model_preference: 'gpt-3.5-turbo',
       temperature: 0.5,
       status: 'draft',
@@ -95,7 +100,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a patient and encouraging tutor. Explain concepts clearly, use examples, and adapt to the student\'s learning style.',
       pricing_model: 'per_message',
-      price_per_message_sats: 1500,
+      price_per_message: 1500,
       model_preference: 'gpt-4',
       temperature: 0.6,
       status: 'draft',
@@ -114,7 +119,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are an experienced business consultant. Provide strategic, actionable advice based on business best practices and market insights.',
       pricing_model: 'per_message',
-      price_per_message_sats: 3000,
+      price_per_message: 3000,
       model_preference: 'gpt-4',
       temperature: 0.5,
       status: 'draft',
@@ -133,7 +138,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a creative design assistant. Provide innovative design ideas, color suggestions, and constructive feedback on visual concepts.',
       pricing_model: 'per_message',
-      price_per_message_sats: 2000,
+      price_per_message: 2000,
       model_preference: 'gpt-4',
       temperature: 0.8,
       status: 'draft',
@@ -171,7 +176,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a professional translator. Translate text accurately while preserving meaning, tone, and cultural context.',
       pricing_model: 'per_message',
-      price_per_message_sats: 800,
+      price_per_message: 800,
       model_preference: 'gpt-4',
       temperature: 0.2,
       status: 'draft',
@@ -190,7 +195,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a health and wellness advisor. Provide general wellness information and healthy lifestyle tips. Always remind users to consult healthcare professionals for medical advice.',
       pricing_model: 'per_message',
-      price_per_message_sats: 1500,
+      price_per_message: 1500,
       model_preference: 'gpt-4',
       temperature: 0.6,
       status: 'draft',
@@ -209,7 +214,7 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a legal information assistant. Provide general legal information and explain legal concepts. Always remind users to consult qualified attorneys for legal advice.',
       pricing_model: 'per_message',
-      price_per_message_sats: 4000,
+      price_per_message: 4000,
       model_preference: 'gpt-4',
       temperature: 0.4,
       status: 'draft',
@@ -228,9 +233,105 @@ export const AI_ASSISTANT_TEMPLATES: EntityTemplate<AIAssistantFormData>[] = [
       system_prompt:
         'You are a creative writing assistant. Help users develop stories, characters, and plots. Be imaginative and inspiring.',
       pricing_model: 'per_message',
-      price_per_message_sats: 2000,
+      price_per_message: 2000,
       model_preference: 'gpt-4',
       temperature: 0.9,
+      status: 'draft',
+    },
+  },
+  // ==================== PROFESSIONAL AI ASSISTANTS ====================
+  {
+    id: 'medical-information-advisor',
+    icon: React.createElement(Stethoscope, { className: 'w-4 h-4' }),
+    name: 'Medical Information Advisor',
+    tagline: 'Clinical health information with appropriate disclaimers.',
+    defaults: {
+      title: 'Medical Information Advisor',
+      description:
+        'Clinical medical information assistant that explains symptoms, conditions, medications, and treatments. Always emphasizes the importance of consulting healthcare professionals. Provides evidence-based health information.',
+      category: 'Healthcare & Medical',
+      system_prompt:
+        'You are a medical information assistant. Provide accurate, evidence-based medical information about symptoms, conditions, medications, and treatments. IMPORTANT: Always include clear disclaimers that this is for informational purposes only and users should consult qualified healthcare professionals for medical advice, diagnosis, or treatment. Never diagnose conditions or recommend specific treatments. Be empathetic but factual.',
+      pricing_model: 'per_message',
+      price_per_message: 3000,
+      model_preference: 'gpt-4',
+      temperature: 0.3, // Low temperature for accuracy
+      status: 'draft',
+    },
+  },
+  {
+    id: 'art-director',
+    icon: React.createElement(Paintbrush, { className: 'w-4 h-4' }),
+    name: 'Art Director',
+    tagline: 'Professional visual art direction and critique.',
+    defaults: {
+      title: 'Art Director Assistant',
+      description:
+        'Professional art director that provides visual direction, critiques artwork, discusses composition, color theory, and helps develop artistic concepts. Ideal for artists, illustrators, and creative professionals.',
+      category: 'Creative & Design',
+      system_prompt:
+        'You are a professional art director with expertise in visual composition, color theory, typography, and artistic styles. Provide constructive critique on artwork, suggest improvements, discuss artistic techniques, and help develop visual concepts. Reference art history and contemporary trends when relevant. Be encouraging while offering actionable feedback to help artists improve their work.',
+      pricing_model: 'per_message',
+      price_per_message: 2500,
+      model_preference: 'gpt-4',
+      temperature: 0.7,
+      status: 'draft',
+    },
+  },
+  {
+    id: 'language-tutor',
+    icon: React.createElement(BookOpen, { className: 'w-4 h-4' }),
+    name: 'Language Tutor',
+    tagline: 'Learn any language with personalized lessons.',
+    defaults: {
+      title: 'Language Learning Tutor',
+      description:
+        'Personalized language tutor that teaches vocabulary, grammar, pronunciation, and conversational skills. Adapts to your level and learning goals. Supports all major languages.',
+      category: 'Education & Languages',
+      system_prompt:
+        'You are a patient and encouraging language tutor. Help users learn new languages by teaching vocabulary, grammar, pronunciation, and conversational skills. Adapt your teaching to the user\'s level (beginner, intermediate, advanced). Provide exercises, correct mistakes gently, and explain language rules clearly. Use the target language progressively as the user advances. Include cultural context when appropriate.',
+      pricing_model: 'per_message',
+      price_per_message: 1500,
+      model_preference: 'gpt-4',
+      temperature: 0.6,
+      status: 'draft',
+    },
+  },
+  {
+    id: 'software-engineering-advisor',
+    icon: React.createElement(Wrench, { className: 'w-4 h-4' }),
+    name: 'Software Engineering Advisor',
+    tagline: 'Architecture, best practices, and technical guidance.',
+    defaults: {
+      title: 'Software Engineering Advisor',
+      description:
+        'Expert software engineering advisor that helps with system architecture, design patterns, code quality, performance optimization, and technical decision-making. Ideal for developers and tech leads.',
+      category: 'Engineering & Technical',
+      system_prompt:
+        'You are a senior software engineering advisor with expertise in system architecture, design patterns, and best practices. Help users with: architectural decisions, code review, performance optimization, scalability considerations, technical debt management, and technology selection. Explain trade-offs clearly and provide practical, actionable advice. Consider security, maintainability, and team capabilities in your recommendations.',
+      pricing_model: 'per_message',
+      price_per_message: 4000,
+      model_preference: 'gpt-4',
+      temperature: 0.4,
+      status: 'draft',
+    },
+  },
+  {
+    id: 'email-communication-assistant',
+    icon: React.createElement(Mail, { className: 'w-4 h-4' }),
+    name: 'Email & Communication Assistant',
+    tagline: 'Draft professional emails and messages.',
+    defaults: {
+      title: 'Email & Communication Assistant',
+      description:
+        'Professional communication assistant that helps draft emails, messages, and professional correspondence. Adapts tone for different contexts: formal, friendly, diplomatic, or persuasive.',
+      category: 'Productivity',
+      system_prompt:
+        'You are a professional communication assistant specializing in email and written correspondence. Help users draft clear, effective emails and messages. Adapt your tone based on context: formal for business communications, friendly for colleagues, diplomatic for sensitive situations, persuasive for sales/proposals. Consider cultural nuances in international communication. Suggest subject lines, organize content logically, and ensure messages are concise yet complete.',
+      pricing_model: 'per_message',
+      price_per_message: 800,
+      model_preference: 'gpt-4',
+      temperature: 0.5,
       status: 'draft',
     },
   },

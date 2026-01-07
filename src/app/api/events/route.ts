@@ -14,6 +14,8 @@ import { createEntityListHandler } from '@/lib/api/entityListHandler';
 import { createEntityPostHandler } from '@/lib/api/entityPostHandler';
 import { normalizeDates } from '@/lib/api/helpers';
 import { CURRENCY_CODES, PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { COLUMNS } from '@/config/database-columns';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Event status values
 const EVENT_PUBLIC_STATUSES = ['published', 'open', 'full', 'ongoing', 'completed'] as const;
@@ -42,7 +44,7 @@ export const POST = createEntityPostHandler({
     // Get user's preferred currency from profile (SSOT)
     let userCurrency = PLATFORM_DEFAULT_CURRENCY;
     const { data: profile } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select(COLUMNS.profiles.CURRENCY)
       .eq(COLUMNS.profiles.ID, userId)
       .single();

@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
     // Build query for wallets table
     let query = supabase
-      .from('wallets')
+      .from(getTableName('wallet'))
       .select('*')
       .eq('is_active', true)
       .order('display_order', { ascending: true })
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
 
     try {
       const { data: existingWallet } = await supabase
-        .from('wallets')
+        .from(getTableName('wallet'))
         .select('id')
         .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
         .eq('address_or_xpub', sanitized.address_or_xpub)
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest) {
       if (existingWallet && !forceDuplicate) {
         // Get details of existing wallets with the same address
         const { data: existingWallets } = await supabase
-          .from('wallets')
+          .from(getTableName('wallet'))
           .select('id, label, category')
           .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
           .eq('address_or_xpub', sanitized.address_or_xpub)
@@ -218,7 +218,7 @@ export async function POST(request: NextRequest) {
       }
 
       const { data: existingWallets } = await supabase
-        .from('wallets')
+        .from(getTableName('wallet'))
         .select('id')
         .eq(body.profile_id ? 'profile_id' : 'project_id', entityId)
         .eq('is_active', true);
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
     // Try to create the wallet in the dedicated wallets table first
     try {
       const { data: wallet, error } = await supabase
-        .from('wallets')
+        .from(getTableName('wallet'))
         .insert({
           profile_id: body.profile_id || null,
           project_id: body.project_id || null,

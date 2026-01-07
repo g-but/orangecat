@@ -180,7 +180,7 @@ const CREATE_OPTIONS = generateCreateOptions();
  * Dividers appear between category groups for visual separation
  */
 function shouldShowDivider(current: CreateOption, next: CreateOption | undefined): boolean {
-  if (!next) return false;
+  if (!next) {return false;}
   return current.category !== next.category;
 }
 

@@ -52,6 +52,9 @@ export interface EntityListProps<T extends EntityItem> {
   // Individual item actions
   onDeleteItem?: (id: string) => Promise<void>;
   deletingIds?: Set<string>;
+  // Visibility support
+  onToggleVisibility?: (id: string, currentValue: boolean | null | undefined) => Promise<void>;
+  togglingVisibilityIds?: Set<string>;
 }
 
 const defaultEmptyState = {
@@ -77,6 +80,8 @@ export default function EntityList<T extends EntityItem>({
   showSelection = false,
   onDeleteItem,
   deletingIds,
+  onToggleVisibility,
+  togglingVisibilityIds,
 }: EntityListProps<T>) {
   // Grid classes - using explicit Tailwind classes
   // Note: Tailwind requires full class names, so we map the numbers to actual classes
@@ -130,10 +135,14 @@ export default function EntityList<T extends EntityItem>({
         const cardProps = makeCardProps(item);
         const isSelected = selectedIds?.has(item.id) || false;
         const isDeleting = deletingIds?.has(item.id) || false;
+        const isTogglingVisibility = togglingVisibilityIds?.has(item.id) || false;
 
         // Normalize title - some entities use 'name' instead of 'title'
         const title = item.title || (item as any).name || 'Untitled';
         const description = item.description || (item as any).bio || null;
+
+        // Get show_on_profile value (may be on item or in cardProps)
+        const showOnProfile = item.show_on_profile;
 
         return (
           <div key={item.id} className="relative">
@@ -146,6 +155,13 @@ export default function EntityList<T extends EntityItem>({
               className={isSelected ? 'ring-2 ring-orange-500 border-orange-500' : undefined}
               onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
               isDeleting={isDeleting}
+              showOnProfile={showOnProfile}
+              onToggleVisibility={
+                onToggleVisibility
+                  ? () => onToggleVisibility(item.id, showOnProfile)
+                  : undefined
+              }
+              isTogglingVisibility={isTogglingVisibility}
               {...cardProps}
             />
             {/* Selection checkbox - positioned to avoid badge overlap */}

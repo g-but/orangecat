@@ -4,15 +4,14 @@
  * Reusable component for rendering navigation items in the sidebar
  * Follows DRY principle by centralizing item rendering logic
  *
- * Hover-to-expand pattern:
- * - When collapsed: shows icon only
- * - On sidebar hover: sidebar expands and text labels appear inline
- * - When manually expanded: shows icon + text inline (full width)
- * - Tooltip fallback: shows tooltip on mobile when sidebar is collapsed
+ * Fixed-width sidebar pattern with flyout tooltips:
+ * - Desktop: Icon-only with flyout tooltip on hover (appears to the right)
+ * - Mobile: Full text labels when drawer is open
+ * - Clean, no jarring animations
  *
  * Created: 2025-01-27
- * Last Modified: 2025-12-12
- * Last Modified Summary: Updated to work with hover-to-expand sidebar pattern
+ * Last Modified: 2026-01-07
+ * Last Modified Summary: Replaced hover-expand with flyout tooltips for desktop
  */
 
 'use client';
@@ -23,6 +22,7 @@ import type { NavItem } from '@/hooks/useNavigation';
 import { navigationLabels } from '@/config/navigation';
 import { SIDEBAR_COLORS, SIDEBAR_SPACING } from '@/constants/sidebar';
 import { useUnreadCount } from '@/stores/messaging';
+import { FlyoutTooltip } from './FlyoutTooltip';
 
 interface SidebarNavItemProps {
   item: NavItem;
@@ -34,10 +34,9 @@ interface SidebarNavItemProps {
 /**
  * Reusable sidebar navigation item component
  *
- * Hover-to-expand pattern:
- * - When collapsed: shows icon only
- * - When expanded (hover or manual): shows icon + text inline
- * - Tooltip: only shows on mobile when collapsed (fallback)
+ * Fixed-width pattern:
+ * - Desktop (collapsed): Icon centered with flyout tooltip on hover
+ * - Mobile (expanded): Icon + text inline
  */
 export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: SidebarNavItemProps) {
   const [isHovered, setIsHovered] = useState(false);
@@ -47,12 +46,11 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
   const count = showMessagesBadge ? unreadCount : 0;
 
   const linkClasses = [
-    'group flex items-center py-2.5 text-sm font-medium rounded-xl transition-all duration-200 relative',
+    'group flex items-center py-2.5 text-sm font-medium rounded-xl transition-colors duration-150 relative',
     SIDEBAR_SPACING.ITEM_HEIGHT,
-    // Consistent horizontal padding
-    // When collapsed: no padding, centered
-    // When expanded: px-3 for left alignment
-    isExpanded ? 'px-3' : 'px-0 lg:justify-center',
+    // When expanded (mobile): full width with padding
+    // When collapsed (desktop): centered icon
+    isExpanded ? 'px-3' : 'justify-center mx-2',
     isActive
       ? `${SIDEBAR_COLORS.ACTIVE_BACKGROUND} ${SIDEBAR_COLORS.ACTIVE_TEXT} shadow-sm border ${SIDEBAR_COLORS.ACTIVE_BORDER}`
       : item.comingSoon
@@ -62,8 +60,6 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
 
   const iconClasses = [
     'h-5 w-5 shrink-0 transition-colors',
-    // Ensure icon is centered when collapsed
-    isExpanded ? '' : 'lg:mx-auto',
     isActive
       ? 'text-tiffany-600'
       : item.comingSoon
@@ -71,15 +67,10 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
         : 'text-gray-400 group-hover:text-gray-600',
   ].join(' ');
 
-  // Text appears inline when expanded (hover or manual), smoothly transitions
-  const textClasses = [
-    'transition-all duration-200 whitespace-nowrap overflow-hidden text-ellipsis block',
-  ].join(' ');
-
   return (
     <div
       className="relative"
-      onMouseEnter={() => !isExpanded && setIsHovered(true)}
+      onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link
@@ -90,15 +81,17 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
       >
         <item.icon className={iconClasses} />
 
-        {/* Collapsed sidebar: tiny unread dot for Messages */}
+        {/* Collapsed (desktop): tiny unread dot for Messages */}
         {showMessagesBadge && count > 0 && !isExpanded && (
-          <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-sky-500"></span>
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 rounded-full bg-sky-500 border-2 border-white"></span>
         )}
 
+        {/* Expanded (mobile): Show text labels inline */}
         {isExpanded && (
           <div className="flex-1 min-w-0 ml-3">
-            <span className={textClasses}>{item.name}</span>
-            {/* Description - shown when expanded, especially helpful on mobile */}
+            <span className="whitespace-nowrap overflow-hidden text-ellipsis block">
+              {item.name}
+            </span>
             {item.description && (
               <span className="block text-xs text-gray-500 mt-0.5 leading-tight line-clamp-1">
                 {item.description}
@@ -107,30 +100,26 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
           </div>
         )}
 
-        {/* Active indicator */}
-        {isActive && (
-          <div
-            className={`absolute w-2 h-2 bg-tiffany-500 rounded-full ${
-              isExpanded ? 'right-3 block' : 'hidden lg:block lg:opacity-0'
-            }`}
-          />
+        {/* Active indicator - only visible on mobile expanded */}
+        {isActive && isExpanded && (
+          <div className="absolute right-3 w-2 h-2 bg-tiffany-500 rounded-full" />
         )}
 
-        {/* Coming soon badge */}
+        {/* Coming soon badge - mobile only */}
         {item.comingSoon && isExpanded && (
           <span className="ml-auto text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">
             Soon
           </span>
         )}
 
-        {/* Static badge */}
+        {/* Static badge - mobile only */}
         {item.badge && !item.comingSoon && isExpanded && (
           <span className="ml-auto text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-medium">
             {item.badge}
           </span>
         )}
 
-        {/* Dynamic messages unread badge */}
+        {/* Dynamic messages unread badge - mobile only */}
         {showMessagesBadge && count > 0 && isExpanded && (
           <span className="ml-auto text-xs bg-sky-500 text-white px-2 py-0.5 rounded-full font-medium">
             {count > 99 ? '99+' : count}
@@ -138,23 +127,29 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
         )}
       </Link>
 
-      {/* Tooltip: only shows on mobile when collapsed (desktop uses sidebar hover expansion) */}
-      {!isExpanded && isHovered && (
-        <div
-          className="absolute left-full ml-2 px-3 py-1.5 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap pointer-events-none shadow-lg lg:hidden"
-          style={{
-            // Position tooltip vertically centered with the icon
-            top: '50%',
-            transform: 'translateY(-50%)',
-            zIndex: 50, // Above sidebar, below header
-            animation: 'fadeInScale 150ms ease-out',
-          }}
-        >
-          {item.name}
-          {/* Tooltip arrow pointing left */}
-          <div className="absolute right-full top-1/2 -translate-y-1/2 w-0 h-0 border-t-4 border-t-transparent border-b-4 border-b-transparent border-r-4 border-r-gray-900" />
+      {/* Flyout Tooltip - Desktop only, appears on hover */}
+      <FlyoutTooltip isVisible={!isExpanded && isHovered}>
+        <div className="flex items-center gap-2">
+          <span className="font-medium">{item.name}</span>
+
+          {/* Show badges in tooltip */}
+          {item.comingSoon && (
+            <span className="text-xs bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded">
+              Soon
+            </span>
+          )}
+          {item.badge && !item.comingSoon && (
+            <span className="text-xs bg-orange-500 text-white px-1.5 py-0.5 rounded font-medium">
+              {item.badge}
+            </span>
+          )}
+          {showMessagesBadge && count > 0 && (
+            <span className="text-xs bg-sky-500 text-white px-1.5 py-0.5 rounded font-medium">
+              {count > 99 ? '99+' : count}
+            </span>
+          )}
         </div>
-      )}
+      </FlyoutTooltip>
     </div>
   );
 }

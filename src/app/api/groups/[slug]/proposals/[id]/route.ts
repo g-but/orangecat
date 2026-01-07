@@ -32,7 +32,7 @@ export async function PUT(
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     const { id } = params;
     const payload = await request.json();
@@ -57,7 +57,7 @@ export async function DELETE(
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     const { id } = params;
     const result = await deleteProposal(id);

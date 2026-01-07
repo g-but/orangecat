@@ -1,13 +1,16 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { Home, Plus, User, Compass, BookOpen, Rocket } from 'lucide-react';
+import { Home, Plus, User, Compass, BookOpen } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useBottomNavScroll } from '@/hooks/useHeaderScroll';
 import { useComposer } from '@/contexts/ComposerContext';
 import { cn } from '@/lib/utils';
-import { isAuthenticatedRoute, getRouteContext, ROUTE_CONTEXTS, ROUTES } from '@/config/routes';
+import { getRouteContext, ROUTE_CONTEXTS, ROUTES } from '@/config/routes';
+import { getContextualCreateAction } from '@/lib/navigation/contextual-create';
+import { MobileCreateSheet } from '@/components/create/MobileCreateSheet';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 const MobileBottomNav = React.memo(function MobileBottomNav() {
   const pathname = usePathname();
@@ -15,6 +18,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
   const { user, hydrated } = useAuth();
   const { shouldBeTransparent, shouldBeSmall } = useBottomNavScroll();
   const { openComposer } = useComposer();
+  const [showCreateSheet, setShowCreateSheet] = useState(false);
 
   // Don't render until auth is hydrated to prevent layout shift
   if (!hydrated) {
@@ -36,19 +40,20 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
     '/organizations',
     '/funding',
   ];
-  
+
   if (hiddenRoutes.some(route => pathname === route || pathname.startsWith(`${route}/`))) {
     return null;
   }
 
-  // Context-aware navigation based on current route
-  // Use centralized route detection instead of hardcoded pathname checks
-  const isAuthRoute = isAuthenticatedRoute(pathname) || routeContext === 'contextual';
-  // For home page, check user state to determine if showing authenticated nav
-  const isAuthenticatedRouteContext = isAuthRoute || (user && pathname === ROUTES.HOME);
+  // Get contextual create action for the "+" button
+  const createAction = getContextualCreateAction(pathname);
 
-  // Use centralized route constants instead of hardcoded strings
-  const navItems = isAuthenticatedRouteContext
+  // Authenticated users ALWAYS see the same 5 items for consistency
+  // Non-authenticated users see simplified nav
+  const isAuthenticated = !!user;
+
+  // Navigation items - consistent for authenticated users regardless of route
+  const navItems = isAuthenticated
     ? [
         {
           icon: Home,
@@ -64,17 +69,18 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
         },
         {
           icon: Plus,
-          label: 'Post',
-          href: `${ROUTES.TIMELINE}?compose=true`,
+          label: createAction.label,
+          href: createAction.href,
           active: false,
           primary: true,
+          createAction, // Pass the action for the click handler
         },
         {
-          icon: Rocket,
-          label: 'Projects',
-          href: ROUTES.DASHBOARD.PROJECTS,
+          icon: ENTITY_REGISTRY.project.icon,
+          label: ENTITY_REGISTRY.project.namePlural,
+          href: ENTITY_REGISTRY.project.basePath,
           active:
-            pathname?.startsWith(ROUTES.DASHBOARD.PROJECTS) ||
+            pathname?.startsWith(ENTITY_REGISTRY.project.basePath) ||
             (pathname?.startsWith(ROUTES.PROJECTS.LIST) && pathname !== ROUTES.PROJECTS.CREATE),
         },
         {
@@ -88,8 +94,8 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
         {
           icon: Home,
           label: 'Home',
-          href: user ? ROUTES.DASHBOARD.HOME : ROUTES.HOME,
-          active: user ? pathname === ROUTES.DASHBOARD.HOME : pathname === ROUTES.HOME,
+          href: ROUTES.HOME,
+          active: pathname === ROUTES.HOME,
         },
         {
           icon: Compass,
@@ -107,12 +113,34 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
         {
           icon: User,
           label: 'Profile',
-          href: user ? ROUTES.PROFILE.EDIT : ROUTES.AUTH,
+          href: ROUTES.AUTH,
           active: pathname?.startsWith('/profile') || pathname?.startsWith('/profiles'),
         },
       ];
 
+  // Handle click on primary "+" button
+  const handlePrimaryClick = (item: typeof navItems[number]) => {
+    if ('createAction' in item && item.createAction) {
+      const action = item.createAction;
+      if (action.type === 'post') {
+        // Open composer for posts
+        openComposer();
+        router.push(`${ROUTES.TIMELINE}?compose=true`);
+      } else if (action.type === 'entity') {
+        // Navigate directly to entity creation
+        router.push(action.href);
+      } else if (action.type === 'menu') {
+        // Show the create sheet with all options
+        setShowCreateSheet(true);
+      }
+    } else {
+      // Fallback for non-authenticated nav
+      router.push(item.href);
+    }
+  };
+
   return (
+    <>
     <div
       className={cn(
         'md:hidden fixed bottom-0 left-0 right-0 border-t',
@@ -120,7 +148,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
         shouldBeTransparent
           ? 'bg-white/20 backdrop-blur-sm border-transparent'
           : 'bg-white/95 backdrop-blur-md',
-        isAuthenticatedRouteContext ? 'border-orange-200/50 shadow-lg' : 'border-gray-200/50'
+        isAuthenticated ? 'border-orange-200/50 shadow-lg' : 'border-gray-200/50'
       )}
       style={{
         zIndex: 50,
@@ -154,13 +182,11 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
           return (
             <button
               key={`${item.href}-${index}`}
-              onClick={e => {
+              onClick={(e) => {
                 e.preventDefault();
-                // For Plus button, open composer immediately
-                if (item.primary && item.href.includes('compose=true')) {
-                  openComposer();
-                  // Also navigate to timeline in background (for URL consistency)
-                  router.push(`${ROUTES.TIMELINE}?compose=true`);
+                if (item.primary) {
+                  // Use contextual handler for primary "+" button
+                  handlePrimaryClick(item);
                 } else {
                   router.push(item.href);
                 }
@@ -171,7 +197,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
                 'touch-manipulation select-none',
                 '-webkit-tap-highlight-color-transparent',
                 'active:scale-95 active:bg-gray-100',
-                isActive && (isAuthenticatedRouteContext ? 'text-orange-600' : 'text-tiffany-600'),
+                isActive && (isAuthenticated ? 'text-orange-600' : 'text-tiffany-600'),
                 !isActive && 'text-gray-500',
                 item.primary && 'relative',
                 shouldBeSmall ? 'min-h-[48px] gap-0.5' : 'min-h-[56px] gap-1'
@@ -185,7 +211,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
                   className={cn(
                     'absolute flex items-center justify-center rounded-full shadow-lg',
                     'transition-all duration-300 hover:scale-105 active:scale-95',
-                    isAuthenticatedRouteContext
+                    isAuthenticated
                       ? 'bg-gradient-to-r from-orange-500 to-orange-600'
                       : 'bg-gradient-to-r from-tiffany-500 to-tiffany-600'
                   )}
@@ -229,6 +255,13 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
         })}
       </nav>
     </div>
+
+    {/* Mobile Create Sheet - shown when "+" triggers menu action */}
+    <MobileCreateSheet
+      isOpen={showCreateSheet}
+      onClose={() => setShowCreateSheet(false)}
+    />
+    </>
   );
 });
 

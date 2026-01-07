@@ -133,21 +133,21 @@ export async function updateGroup(
     // Build update payload
     const payload: Record<string, unknown> = {};
 
-    if (input.name !== undefined) payload.name = input.name;
+    if (input.name !== undefined) {payload.name = input.name;}
     if (input.slug !== undefined) {
       payload.slug = await ensureUniqueSlug(input.slug, groupId);
     }
-    if (input.description !== undefined) payload.description = input.description;
-    if (input.label !== undefined) payload.label = input.label;
-    if (input.tags !== undefined) payload.tags = input.tags;
-    if (input.avatar_url !== undefined) payload.avatar_url = input.avatar_url;
-    if (input.banner_url !== undefined) payload.banner_url = input.banner_url;
-    if (input.is_public !== undefined) payload.is_public = input.is_public;
-    if (input.visibility !== undefined) payload.visibility = input.visibility;
-    if (input.bitcoin_address !== undefined) payload.bitcoin_address = input.bitcoin_address;
-    if (input.lightning_address !== undefined) payload.lightning_address = input.lightning_address;
-    if (input.governance_preset !== undefined) payload.governance_preset = input.governance_preset;
-    if (input.voting_threshold !== undefined) payload.voting_threshold = input.voting_threshold;
+    if (input.description !== undefined) {payload.description = input.description;}
+    if (input.label !== undefined) {payload.label = input.label;}
+    if (input.tags !== undefined) {payload.tags = input.tags;}
+    if (input.avatar_url !== undefined) {payload.avatar_url = input.avatar_url;}
+    if (input.banner_url !== undefined) {payload.banner_url = input.banner_url;}
+    if (input.is_public !== undefined) {payload.is_public = input.is_public;}
+    if (input.visibility !== undefined) {payload.visibility = input.visibility;}
+    if (input.bitcoin_address !== undefined) {payload.bitcoin_address = input.bitcoin_address;}
+    if (input.lightning_address !== undefined) {payload.lightning_address = input.lightning_address;}
+    if (input.governance_preset !== undefined) {payload.governance_preset = input.governance_preset;}
+    if (input.voting_threshold !== undefined) {payload.voting_threshold = input.voting_threshold;}
 
     const { data, error } = await supabase
       .from(TABLES.groups)

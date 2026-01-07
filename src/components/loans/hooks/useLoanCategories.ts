@@ -18,7 +18,7 @@ export function useLoanCategories(enabled: boolean = true) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {return;}
 
     let cancelled = false;
 

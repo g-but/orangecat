@@ -114,6 +114,20 @@ const fieldGroups: FieldGroup[] = [
       },
     ],
   },
+  {
+    id: 'visibility',
+    title: 'Profile Visibility',
+    description: 'Control where this product appears',
+    fields: [
+      {
+        name: 'show_on_profile',
+        label: 'Show on Public Profile',
+        type: 'checkbox',
+        hint: 'When enabled, this product will appear on your public profile page',
+        colSpan: 2,
+      },
+    ],
+  },
 ];
 
 // ==================== DEFAULT VALUES ====================
@@ -132,6 +146,7 @@ const defaultValues: UserProductFormData = {
   tags: [],
   status: 'draft',
   is_featured: false,
+  show_on_profile: true,
 };
 
 // ==================== EXPORT CONFIG ====================

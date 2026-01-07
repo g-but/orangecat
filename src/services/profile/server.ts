@@ -10,6 +10,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/utils/logger';
 import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
@@ -171,7 +172,7 @@ export class ProfileServerService {
   ): Promise<number> {
     try {
       const { count, error } = await supabase
-        .from('projects')
+        .from(getTableName('project'))
         .select('*', { count: 'exact', head: true })
         .eq('user_id', userId);
 

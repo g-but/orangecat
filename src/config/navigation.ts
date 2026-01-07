@@ -16,6 +16,7 @@
 
 import { ComponentType, SVGProps } from 'react';
 import { generateEntityNavigation } from './navigation-generator';
+import { ENTITY_REGISTRY, type EntityType } from './entity-registry';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import {
   Home,
@@ -324,18 +325,67 @@ export const footerNavigation = {
 
 /**
  * User dropdown menu items (for header user menu)
+ *
+ * Uses ENTITY_REGISTRY as SSOT for entity paths.
+ * Non-entity items (Dashboard, Settings) use hardcoded paths.
  */
-export const userMenuItems = [
-  { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
-  { name: 'Groups', href: '/dashboard/groups', requiresAuth: true, description: 'Manage Groups' },
-  { name: 'Assets', href: '/dashboard/assets', requiresAuth: true, description: 'My Valuable Assets' },
-  { name: 'Loans', href: '/dashboard/loans', requiresAuth: true, description: 'Peer-to-Peer Lending' },
-  { name: 'Sell', href: '/dashboard/store', requiresAuth: true, description: 'Products & Services' },
-  { name: 'Raise', href: '/dashboard/projects', requiresAuth: true, description: 'Projects & Causes' },
-  { name: 'Network', href: '/dashboard/groups', requiresAuth: true, description: 'Groups, Events & People' },
-  { name: 'Wallet', href: '/dashboard/wallets', requiresAuth: true },
-  { name: 'Settings', href: '/settings', requiresAuth: true },
-];
+function generateUserMenuItems() {
+  // Helper to safely get entity path
+  const getEntityPath = (type: EntityType) => ENTITY_REGISTRY[type]?.basePath;
+
+  return [
+    // Static items - not entity-based
+    { name: 'Dashboard', href: '/dashboard', requiresAuth: true },
+
+    // Entity-based items - derived from ENTITY_REGISTRY
+    {
+      name: 'Groups',
+      href: getEntityPath('group'),
+      requiresAuth: true,
+      description: 'Manage Groups'
+    },
+    {
+      name: 'Assets',
+      href: getEntityPath('asset'),
+      requiresAuth: true,
+      description: 'My Valuable Assets'
+    },
+    {
+      name: 'Loans',
+      href: getEntityPath('loan'),
+      requiresAuth: true,
+      description: 'Peer-to-Peer Lending'
+    },
+    {
+      name: 'Sell',
+      href: getEntityPath('product'),
+      requiresAuth: true,
+      description: 'Products & Services'
+    },
+    {
+      name: 'Raise',
+      href: getEntityPath('project'),
+      requiresAuth: true,
+      description: 'Projects & Causes'
+    },
+    {
+      name: 'Network',
+      href: getEntityPath('group'),
+      requiresAuth: true,
+      description: 'Groups, Events & People'
+    },
+    {
+      name: 'Wallet',
+      href: getEntityPath('wallet'),
+      requiresAuth: true
+    },
+
+    // Static items - not entity-based
+    { name: 'Settings', href: '/settings', requiresAuth: true },
+  ];
+}
+
+export const userMenuItems = generateUserMenuItems();
 
 /**
  * Authentication navigation items

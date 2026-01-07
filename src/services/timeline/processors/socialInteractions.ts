@@ -45,7 +45,7 @@ export async function toggleLike(
 
       // Check if user already liked this event
       const { data: existingLike } = await supabase
-        .from('timeline_likes')
+        .from(DATABASE_TABLES.TIMELINE_LIKES)
         .select('id')
         .eq('event_id', eventId)
         .eq('user_id', targetUserId)
@@ -76,7 +76,7 @@ export async function toggleLike(
             'Timeline'
           );
           const { error: delErr } = await supabase
-            .from('timeline_likes')
+            .from(DATABASE_TABLES.TIMELINE_LIKES)
             .delete()
             .eq('event_id', eventId)
             .eq('user_id', targetUserId);
@@ -85,7 +85,7 @@ export async function toggleLike(
             return { success: false, liked: false, likeCount: 0, error: delErr.message };
           }
           const { count } = await supabase
-            .from('timeline_likes')
+            .from(DATABASE_TABLES.TIMELINE_LIKES)
             .select('*', { count: 'exact', head: true })
             .eq('event_id', eventId);
           return { success: true, liked: false, likeCount: count || 0 };
@@ -116,14 +116,14 @@ export async function toggleLike(
           );
           // Fallback: insert into timeline_likes and return new count
           const { error: insertErr } = await supabase
-            .from('timeline_likes')
+            .from(DATABASE_TABLES.TIMELINE_LIKES)
             .insert({ event_id: eventId, user_id: targetUserId });
           if (insertErr) {
             logger.error('Fallback like failed', insertErr, 'Timeline');
             return { success: false, liked: false, likeCount: 0, error: insertErr.message };
           }
           const { count } = await supabase
-            .from('timeline_likes')
+            .from(DATABASE_TABLES.TIMELINE_LIKES)
             .select('*', { count: 'exact', head: true })
             .eq('event_id', eventId);
           return { success: true, liked: true, likeCount: count || 0 };
@@ -151,7 +151,7 @@ export async function toggleDislike(
 
     // Check if user already disliked this event
     const { data: existingDislike } = await supabase
-      .from('timeline_dislikes')
+      .from(DATABASE_TABLES.TIMELINE_DISLIKES)
       .select('id')
       .eq('event_id', eventId)
       .eq('user_id', targetUserId)
@@ -182,7 +182,7 @@ export async function toggleDislike(
           'Timeline'
         );
         const { error: delErr } = await supabase
-          .from('timeline_dislikes')
+          .from(DATABASE_TABLES.TIMELINE_DISLIKES)
           .delete()
           .eq('event_id', eventId)
           .eq('user_id', targetUserId);
@@ -191,7 +191,7 @@ export async function toggleDislike(
           return { success: false, disliked: false, dislikeCount: 0, error: delErr.message };
         }
         const { count } = await supabase
-          .from('timeline_dislikes')
+          .from(DATABASE_TABLES.TIMELINE_DISLIKES)
           .select('*', { count: 'exact', head: true })
           .eq('event_id', eventId);
         return { success: true, disliked: false, dislikeCount: count || 0 };
@@ -222,14 +222,14 @@ export async function toggleDislike(
         );
         // Fallback: insert into timeline_dislikes and return new count
         const { error: insertErr } = await supabase
-          .from('timeline_dislikes')
+          .from(DATABASE_TABLES.TIMELINE_DISLIKES)
           .insert({ event_id: eventId, user_id: targetUserId });
         if (insertErr) {
           logger.error('Fallback dislike failed', insertErr, 'Timeline');
           return { success: false, disliked: false, dislikeCount: 0, error: insertErr.message };
         }
         const { count } = await supabase
-          .from('timeline_dislikes')
+          .from(DATABASE_TABLES.TIMELINE_DISLIKES)
           .select('*', { count: 'exact', head: true })
           .eq('event_id', eventId);
         return { success: true, disliked: true, dislikeCount: count || 0 };
@@ -282,7 +282,7 @@ export async function addComment(
       );
       // Fallback: insert directly into timeline_comments
       const { data: inserted, error: iErr } = await supabase
-        .from('timeline_comments')
+        .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .insert({
           event_id: eventId,
           user_id: userId,
@@ -296,7 +296,7 @@ export async function addComment(
         return { success: false, commentCount: 0, error: iErr?.message || 'Add comment failed' };
       }
       const { count } = await supabase
-        .from('timeline_comments')
+        .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .select('*', { count: 'exact', head: true })
         .eq('event_id', eventId);
       return { success: true, commentId: inserted.id, commentCount: count || 0 };
@@ -342,7 +342,7 @@ export async function updateComment(
       );
       // Fallback: update directly in timeline_comments table
       const { error: updateErr } = await supabase
-        .from('timeline_comments')
+        .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .update({ content, updated_at: new Date().toISOString() })
         .eq('id', commentId)
         .eq('user_id', targetUserId);
@@ -399,7 +399,7 @@ export async function deleteComment(
 
     // Fallback: soft delete by updating deleted_at timestamp
     const { error: deleteErr } = await supabase
-      .from('timeline_comments')
+      .from(DATABASE_TABLES.TIMELINE_COMMENTS)
       .update({
         deleted_at: new Date().toISOString(),
         content: '[deleted]',
@@ -427,11 +427,11 @@ export async function getEventCounts(eventId: string): Promise<{ likeCount: numb
   try {
     const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
       supabase
-        .from('timeline_likes')
+        .from(DATABASE_TABLES.TIMELINE_LIKES)
         .select('*', { count: 'exact', head: true })
         .eq('event_id', eventId),
       supabase
-        .from('timeline_comments')
+        .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .select('*', { count: 'exact', head: true })
         .eq('event_id', eventId),
     ]);
@@ -468,7 +468,7 @@ export async function getEventComments(eventId: string, limit: number = 50, offs
       );
       // Fallback: query comments table directly and enrich with profile info
       const { data: comments, error: cErr } = await supabase
-        .from('timeline_comments')
+        .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .select('id, event_id, user_id, content, created_at, parent_comment_id')
         .eq('event_id', eventId)
         .order('created_at', { ascending: true })
@@ -537,7 +537,7 @@ export async function getCommentReplies(commentId: string, limit: number = 20): 
         'Timeline'
       );
       const { data: replies, error: rErr } = await supabase
-        .from('timeline_comments')
+        .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .select('id, event_id, user_id, content, created_at, parent_comment_id')
         .eq('parent_comment_id', commentId)
         .order('created_at', { ascending: true })

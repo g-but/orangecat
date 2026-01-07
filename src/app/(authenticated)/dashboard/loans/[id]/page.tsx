@@ -33,7 +33,7 @@ export default async function LoanDetailPage({ params }: PageProps) {
   }
 
   function calculateProgress(original: number, remaining: number) {
-    if (original === 0) return 0;
+    if (original === 0) {return 0;}
     return ((original - remaining) / original) * 100;
   }
 

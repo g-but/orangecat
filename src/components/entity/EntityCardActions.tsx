@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { MoreHorizontal, Edit2, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -27,6 +28,12 @@ interface EntityCardActionsProps {
   deleteConfirmTitle?: string;
   deleteConfirmDescription?: string;
   isDeleting?: boolean;
+  /** Whether entity is currently shown on profile */
+  showOnProfile?: boolean;
+  /** Callback to toggle profile visibility */
+  onToggleVisibility?: () => void | Promise<void>;
+  /** Whether visibility toggle is in progress */
+  isTogglingVisibility?: boolean;
 }
 
 export function EntityCardActions({
@@ -36,6 +43,9 @@ export function EntityCardActions({
   deleteConfirmTitle = 'Delete Item',
   deleteConfirmDescription = 'Are you sure you want to delete this item? This action cannot be undone.',
   isDeleting = false,
+  showOnProfile,
+  onToggleVisibility,
+  isTogglingVisibility = false,
 }: EntityCardActionsProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -54,7 +64,15 @@ export function EntityCardActions({
     }
   };
 
-  if (!editUrl && !onEdit && !onDelete) {
+  const handleVisibilityClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onToggleVisibility) {
+      await onToggleVisibility();
+    }
+  };
+
+  if (!editUrl && !onEdit && !onDelete && !onToggleVisibility) {
     return null;
   }
 
@@ -89,6 +107,28 @@ export function EntityCardActions({
                 </>
               )}
             </DropdownMenuItem>
+          )}
+          {onToggleVisibility && (
+            <DropdownMenuItem
+              onClick={handleVisibilityClick}
+              disabled={isTogglingVisibility}
+              className={showOnProfile === false ? 'text-gray-500' : ''}
+            >
+              {showOnProfile === false ? (
+                <>
+                  <Eye className="mr-2 h-4 w-4" />
+                  {isTogglingVisibility ? 'Updating...' : 'Show on Profile'}
+                </>
+              ) : (
+                <>
+                  <EyeOff className="mr-2 h-4 w-4" />
+                  {isTogglingVisibility ? 'Updating...' : 'Hide from Profile'}
+                </>
+              )}
+            </DropdownMenuItem>
+          )}
+          {onDelete && (editUrl || onEdit || onToggleVisibility) && (
+            <DropdownMenuSeparator />
           )}
           {onDelete && (
             <DropdownMenuItem

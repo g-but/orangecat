@@ -55,7 +55,7 @@ function formatFieldValue(value: any, fieldName: string): string {
 
   // Handle arrays
   if (Array.isArray(value)) {
-    if (value.length === 0) return '—';
+    if (value.length === 0) {return '—';}
     return value.join(', ');
   }
 

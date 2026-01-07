@@ -44,7 +44,7 @@ export const entityTransforms = {
    * Used for UUID columns that reject empty strings
    */
   normalizeUUID: (value: unknown): string | null => {
-    if (value === '' || value === null || value === undefined) return null;
+    if (value === '' || value === null || value === undefined) {return null;}
     return typeof value === 'string' ? value : null;
   },
 
@@ -53,7 +53,7 @@ export const entityTransforms = {
    * Used for URL columns that should be null if empty
    */
   normalizeURL: (value: unknown): string | null => {
-    if (value === '' || value === null || value === undefined) return null;
+    if (value === '' || value === null || value === undefined) {return null;}
     return typeof value === 'string' ? value : null;
   },
 
@@ -62,7 +62,7 @@ export const entityTransforms = {
    * Used for optional number fields
    */
   normalizeOptionalNumber: (value: unknown): number | null => {
-    if (value === null || value === undefined) return null;
+    if (value === null || value === undefined) {return null;}
     return typeof value === 'number' ? value : null;
   },
 };

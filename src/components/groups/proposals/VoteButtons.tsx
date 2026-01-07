@@ -35,7 +35,7 @@ export function VoteButtons({
   const [selectedVote, setSelectedVote] = useState<'yes' | 'no' | 'abstain' | null>(currentVote || null);
 
   const handleVote = async (vote: 'yes' | 'no' | 'abstain') => {
-    if (voting || disabled) return;
+    if (voting || disabled) {return;}
 
     try {
       setVoting(true);

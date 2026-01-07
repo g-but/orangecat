@@ -1,11 +1,12 @@
 import { createServerClient } from '@/lib/supabase/server';
 import type { AssetInput } from './schema';
 import { DEFAULT_CURRENCY } from '@/config/currencies';
+import { getTableName } from '@/config/entity-registry';
 
 export async function listAssets(userId: string) {
   const supabase = await createServerClient();
   const { data, error } = await supabase
-    .from('assets')
+    .from(getTableName('asset'))
     .select('id, title, type, status, estimated_value, currency, created_at, verification_status')
     .eq('owner_id', userId)
     .order('created_at', { ascending: false });
@@ -18,14 +19,14 @@ export async function listAssets(userId: string) {
 export async function listAssetsPage(userId: string, limit: number, offset: number) {
   const supabase = await createServerClient();
   const itemsQuery = supabase
-    .from('assets')
+    .from(getTableName('asset'))
     .select('id, title, type, status, estimated_value, currency, created_at, verification_status')
     .eq('owner_id', userId)
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
   const countQuery = supabase
-    .from('assets')
+    .from(getTableName('asset'))
     .select('*', { count: 'exact', head: true })
     .eq('owner_id', userId);
 
@@ -58,7 +59,7 @@ export async function createAsset(userId: string, input: AssetInput) {
     public_visibility: false,
   };
   const { data, error } = await supabase
-    .from('assets')
+    .from(getTableName('asset'))
     .insert([insertPayload])
     .select('id, title, type, status, estimated_value, currency, created_at, verification_status')
     .single();

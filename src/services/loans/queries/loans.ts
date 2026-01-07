@@ -8,6 +8,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { getTableName } from '@/config/entity-registry';
 import type {
   LoanResponse,
   LoansListResponse,
@@ -28,7 +29,7 @@ export async function getLoan(loanId: string): Promise<LoanResponse> {
     const userId = await getCurrentUserId();
 
     let query = supabase
-      .from('loans')
+      .from(getTableName('loan'))
       .select(`
         *,
         loan_categories (
@@ -75,7 +76,7 @@ export async function getUserLoans(
     }
 
     let dbQuery = supabase
-      .from('loans')
+      .from(getTableName('loan'))
       .select(
         `
         *,
@@ -158,7 +159,7 @@ export async function getAvailableLoans(
 
       // Fallback query
       let dbQuery = supabase
-        .from('loans')
+        .from(getTableName('loan'))
         .select(
           `
           *,

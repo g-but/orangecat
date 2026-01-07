@@ -7,6 +7,7 @@ import {
   apiInternalError,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // GET /api/transparency/[profileId] - Get transparency score for a profile
 export async function GET(request: NextRequest, { params }: { params: { profileId: string } }) {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest, { params }: { params: { profileI
     if (!transparencyScore) {
       // Calculate transparency score if it doesn't exist
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+        .from(DATABASE_TABLES.PROFILES)
         .select('*')
         .eq('id', profileId)
         .single();

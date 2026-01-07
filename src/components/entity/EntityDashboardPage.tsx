@@ -113,13 +113,13 @@ export default function EntityDashboardPage<T extends BaseEntity>({
 
   // Bulk delete selected items
   const handleBulkDelete = useCallback(async () => {
-    if (selectedIds.size === 0) return;
+    if (selectedIds.size === 0) {return;}
 
     const confirmed = window.confirm(
       `Are you sure you want to delete ${selectedIds.size} ${selectedIds.size > 1 ? config.namePlural.toLowerCase() : config.name.toLowerCase()}? This action cannot be undone.`
     );
 
-    if (!confirmed) return;
+    if (!confirmed) {return;}
 
     setIsDeleting(true);
     try {
