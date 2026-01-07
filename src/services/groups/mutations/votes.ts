@@ -13,7 +13,7 @@ export interface CastVoteInput {
 export async function castVote(input: CastVoteInput) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) return { success: false, error: 'Authentication required' };
+    if (!userId) {return { success: false, error: 'Authentication required' };}
 
     const proposalResult = await getProposal(input.proposal_id);
     if (!proposalResult.success || !proposalResult.proposal) {
@@ -22,7 +22,7 @@ export async function castVote(input: CastVoteInput) {
     const proposal = proposalResult.proposal;
 
     const isMember = await isGroupMember(proposal.group_id, userId);
-    if (!isMember) return { success: false, error: 'Only group members can vote' };
+    if (!isMember) {return { success: false, error: 'Only group members can vote' };}
 
     if (proposal.status !== 'active') {
       return { success: false, error: `Cannot vote on proposal with status: ${proposal.status}` };
@@ -68,13 +68,13 @@ export async function castVote(input: CastVoteInput) {
 export async function checkAndResolveProposal(proposalId: string): Promise<void> {
   try {
     const proposalResult = await getProposal(proposalId);
-    if (!proposalResult.success || !proposalResult.proposal) return;
+    if (!proposalResult.success || !proposalResult.proposal) {return;}
     const proposal = proposalResult.proposal;
 
-    if (proposal.status !== 'active') return;
+    if (proposal.status !== 'active') {return;}
 
     const votesResult = await getProposalVotes(proposalId);
-    if (!votesResult.success || !votesResult.votes) return;
+    if (!votesResult.success || !votesResult.votes) {return;}
     const votes = votesResult.votes;
 
     const yesVotes = votes

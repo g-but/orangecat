@@ -78,7 +78,7 @@ export function ProposalDetail({
   };
 
   const loadUserVote = async () => {
-    if (!user) return;
+    if (!user) {return;}
     try {
       const response = await fetch(`/api/groups/${groupSlug}/proposals/${proposalId}/votes`);
       if (response.ok) {

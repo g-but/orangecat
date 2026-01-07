@@ -20,6 +20,7 @@ export { projectConfig } from './project-config';
 export { aiAssistantConfig } from './ai-assistant-config';
 export { eventConfig } from './event-config';
 export { groupConfig } from './group-config';
+export { wishlistConfig } from './wishlist-config';
 
 // Re-export types
 export type { EntityConfig, FieldGroup, FieldConfig } from '@/components/create/types';

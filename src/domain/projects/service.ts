@@ -1,11 +1,13 @@
 import { createServerClient } from '@/lib/supabase/server';
+import { getTableName } from '@/config/entity-registry';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 export async function listProjectsPage(limit: number, offset: number, userId?: string) {
   const supabase = await createServerClient();
   
   // Build base query
   let query = supabase
-    .from('projects')
+    .from(getTableName('project'))
     .select('*', { count: 'exact' });
 
   // If filtering by user_id, return all statuses (including drafts)
@@ -30,7 +32,7 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
   
   if (userIds.length > 0) {
     const { data: profiles, error: profilesError } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id, username, name, avatar_url, email')
       .in('id', userIds);
     
@@ -51,7 +53,7 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
   // However, the JS client returns it as part of the response if head is true; we issue range so count may be omitted
   // To ensure total, run a lightweight count query
   let countQuery = supabase
-    .from('projects')
+    .from(getTableName('project'))
     .select('*', { count: 'exact', head: true });
 
   if (userId) {
@@ -83,7 +85,7 @@ export async function createProject(userId: string, payload: any) {
   };
 
   const { data, error } = await supabase
-    .from('projects')
+    .from(getTableName('project'))
     .insert(insertPayload)
     .select('*')
     .single();

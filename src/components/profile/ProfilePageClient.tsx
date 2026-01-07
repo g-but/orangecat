@@ -26,6 +26,14 @@ interface ProfilePageClientProps {
     followerCount: number;
     followingCount: number;
     walletCount: number;
+    // Entity counts for profile tabs
+    productCount?: number;
+    serviceCount?: number;
+    causeCount?: number;
+    eventCount?: number;
+    loanCount?: number;
+    assetCount?: number;
+    aiAssistantCount?: number;
   };
 }
 

@@ -140,7 +140,7 @@ export function createGetHandler(config: EntityHandlerConfig) {
       // Handle authentication (optional for GET)
       let userId: string | null = null;
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) userId = user.id;
+      if (user) {userId = user.id;}
 
       if (requireAuthForGet && !userId) {
         return apiUnauthorized();
@@ -181,7 +181,7 @@ export function createGetHandler(config: EntityHandlerConfig) {
       // Custom authorization check
       if (checkGetAccess) {
         const authError = await checkGetAccess(entity, userId, supabase);
-        if (authError) return authError;
+        if (authError) {return authError;}
       }
 
       // Post-process entity (add computed fields, etc.)
@@ -268,7 +268,7 @@ export function createPutHandler(config: EntityHandlerConfig) {
       // Custom authorization check (if provided, use it; otherwise use default ownership check)
       if (checkPutAccess) {
         const authError = await checkPutAccess(existing, user.id, supabase);
-        if (authError) return authError;
+        if (authError) {return authError;}
       } else {
         // Default ownership check
         if (config.useActorOwnership && existing.actor_id) {
@@ -388,7 +388,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
       // Custom authorization check (if provided, use it; otherwise use default ownership check)
       if (checkDeleteAccess) {
         const authError = await checkDeleteAccess(existing, user.id, supabase);
-        if (authError) return authError;
+        if (authError) {return authError;}
       } else {
         // Default ownership check
         const ownerId = (existing as Record<string, unknown>)[ownershipField];

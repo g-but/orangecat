@@ -220,7 +220,7 @@ export function CreateProposalDialog({
                         }}
                         defaultValue={field.value}
                         onOpenChange={(open) => {
-                          if (open) setActiveField('proposal_type');
+                          if (open) {setActiveField('proposal_type');}
                         }}
                       >
                         <FormControl>

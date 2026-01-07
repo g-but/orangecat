@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+# One-word entrypoint to run the full OrangeCat shipping pipeline
+# Delegates to the existing Node workflow in ./w
+
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$DIR"
+
+if [ ! -x "./w" ]; then
+  echo "Error: ./w not found or not executable" >&2
+  exit 1
+fi
+
+exec ./w "$@"
+

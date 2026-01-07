@@ -12,6 +12,7 @@ import { ProfileImagesSection } from './ProfileImagesSection';
 import { ProfileBasicSection } from './sections/ProfileBasicSection';
 import { OnlinePresenceSection } from './sections/OnlinePresenceSection';
 import { ContactSection } from './sections/ContactSection';
+import { PreferencesSection } from './sections/PreferencesSection';
 import { FormErrorDisplay } from './components/FormErrorDisplay';
 import { ProfileFormActions } from './components/ProfileFormActions';
 import type { ModernProfileEditorProps } from './types';
@@ -110,6 +111,9 @@ export default function ModernProfileEditor({
 
               {/* Contact Section */}
               <ContactSection control={form.control} onFieldFocus={onFieldFocus} userEmail={userEmail} />
+
+              {/* Preferences Section */}
+              <PreferencesSection control={form.control} onFieldFocus={onFieldFocus} />
             </div>
 
             {/* Action Buttons */}
@@ -188,6 +192,9 @@ export default function ModernProfileEditor({
 
                 {/* Contact Section */}
                 <ContactSection control={form.control} onFieldFocus={onFieldFocus} userEmail={userEmail} />
+
+                {/* Preferences Section */}
+                <PreferencesSection control={form.control} onFieldFocus={onFieldFocus} />
               </div>
 
               {/* Action Buttons */}

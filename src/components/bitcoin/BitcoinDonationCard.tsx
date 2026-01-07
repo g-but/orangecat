@@ -4,6 +4,8 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Bitcoin, Zap, Copy, ExternalLink } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { useUserCurrency } from '@/hooks/useUserCurrency';
+import { convertFromSats, formatCurrency, formatSatsAuto } from '@/services/currency';
 
 interface AddressCardProps {
   type: 'bitcoin' | 'lightning';
@@ -119,9 +121,17 @@ export default function BitcoinDonationCard({
   balance,
   className = '',
 }: BitcoinDonationCardProps) {
+  const userCurrency = useUserCurrency();
+
   if (!bitcoinAddress && !lightningAddress) {
     return null;
   }
+
+  // Format balance in user's preferred currency
+  const formatBalance = (balanceSats: number) => {
+    const displayAmount = convertFromSats(balanceSats, userCurrency);
+    return formatCurrency(displayAmount, userCurrency, { compact: true });
+  };
 
   return (
     <div
@@ -139,7 +149,10 @@ export default function BitcoinDonationCard({
           <div className="text-right">
             <div className="text-xs text-gray-500">Balance</div>
             <div className="text-sm font-bold text-gray-900">
-              {(balance / 100_000_000).toFixed(8)} BTC
+              {formatBalance(balance)}
+            </div>
+            <div className="text-xs text-gray-400">
+              ≈ {formatSatsAuto(balance)}
             </div>
           </div>
         )}

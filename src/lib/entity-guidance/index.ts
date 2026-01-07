@@ -71,6 +71,17 @@ export {
   type AIAssistantFieldType,
 } from './ai-assistant-guidance';
 
+// Wishlist guidance
+export {
+  wishlistGuidanceContent,
+  wishlistDefaultGuidance,
+  wishlistItemGuidanceContent,
+  wishlistProofGuidance,
+  wishlistFeedbackGuidance,
+  type WishlistFieldType,
+  type WishlistItemFieldType,
+} from './wishlist-guidance';
+
 // Re-export profile/wallet guidance from lib/ (these are used elsewhere)
 export {
   profileGuidanceContent,

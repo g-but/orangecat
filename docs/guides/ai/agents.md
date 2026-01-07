@@ -50,7 +50,27 @@ This guide serves as the base reference for all AI agents working on OrangeCat. 
 
 ## 📚 Agent-Specific Guides
 
-- **Claude**: `docs/guides/ai/claude.md` - Detailed workflows and examples, browser automation patterns
+### Claude Code (Optimized Structure)
+
+**Claude Code uses the optimized `.claude/` directory structure for maximum agentic efficiency:**
+
+- **`.claude/CLAUDE.md`** ⭐ **PRIMARY** - Main guide (auto-discovered by Claude Code)
+- **`.claude/QUICK_REFERENCE.md`** ⚡ - One-page lookup (covers 80% of operations)
+- **`.claude/CREDENTIALS.md`** 🔐 - Tool access and credential documentation
+- **`.claude/ERROR_RECOVERY.md`** 🚨 - Common errors and step-by-step fixes
+- **`.claude/rules/`** 📖 - Detailed best practices (6 modular files)
+- **`.claude/hooks/`** 🛡️ - Automated guardrails (pre/post edit)
+- **`.claude/commands/`** ⚡ - Custom commands (audit, deploy-check, etc.)
+
+**Why this structure?**
+- **80/20 Rule**: QUICK_REFERENCE.md covers 80% of needs in 500 lines vs 4000+ in detailed rules
+- **Token Efficiency**: Saves ~3000 tokens per session start
+- **Auto-Discovery**: Claude Code automatically finds `.claude/CLAUDE.md`
+- **Tool Integration**: Clear documentation of MCP tool access
+
+### Other Agents (Legacy Structure)
+
+- **Claude (Legacy)**: `docs/guides/ai/claude.md` - Deprecated, use `.claude/CLAUDE.md`
 - **Cursor**: `docs/guides/ai/cursor.md` - Inline code assistance patterns, inline testing
 - **Gemini**: `docs/guides/ai/gemini.md` - Gemini-specific workflows, debugging patterns
 - **Codex**: `docs/guides/ai/codex.md` - CLI-specific patching patterns

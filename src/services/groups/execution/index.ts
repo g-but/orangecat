@@ -10,7 +10,7 @@ const handlers: Record<string, ActionHandler> = {
   async associate_entity(_proposalId, proposal) {
     // Extract entity details
     const { entity_type, entity_id } = proposal.action_data || {};
-    if (!entity_type || !entity_id) return;
+    if (!entity_type || !entity_id) {return;}
     try {
       // Idempotent: just set group ownership if not already
       const groupId = proposal.group_id;
@@ -20,7 +20,7 @@ const handlers: Record<string, ActionHandler> = {
       // Fetch group's actor id
       const { getActorByGroup } = await import('@/services/actors');
       const groupActor = await getActorByGroup(groupId);
-      if (!groupActor) return;
+      if (!groupActor) {return;}
 
       await supabase.from(tableName).update({ actor_id: groupActor.id, group_id: groupId }).eq('id', entity_id);
     } catch (error) {

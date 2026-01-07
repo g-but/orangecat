@@ -142,6 +142,20 @@ const fieldGroups: FieldGroup[] = [
       },
     ],
   },
+  {
+    id: 'visibility',
+    title: 'Profile Visibility',
+    description: 'Control where this project appears',
+    fields: [
+      {
+        name: 'show_on_profile',
+        label: 'Show on Public Profile',
+        type: 'checkbox',
+        hint: 'When enabled, this project will appear on your public profile page',
+        colSpan: 2,
+      },
+    ],
+  },
 ];
 
 // ==================== CONFIGURATION ====================
@@ -173,6 +187,7 @@ export const projectConfig = createEntityConfig<ProjectData>({
     tags: [],
     start_date: '',
     target_completion: '',
+    show_on_profile: true,
   },
   guidanceContent: projectGuidanceContent,
   defaultGuidance: projectDefaultGuidance,

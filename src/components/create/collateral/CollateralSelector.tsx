@@ -103,7 +103,7 @@ export function CollateralSelector({
 
   // Calculate coverage percentage
   const coveragePercentage = useMemo(() => {
-    if (!loanAmount || loanAmount === 0) return null;
+    if (!loanAmount || loanAmount === 0) {return null;}
     return Math.min(100, (totalCollateral / loanAmount) * 100);
   }, [totalCollateral, loanAmount]);
 

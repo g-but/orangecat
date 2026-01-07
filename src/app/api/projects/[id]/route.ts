@@ -7,6 +7,7 @@ import { logger } from '@/utils/logger';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
 import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Post-process GET: Fetch profile and add to response
 async function postProcessProjectGet(
@@ -19,7 +20,7 @@ async function postProcessProjectGet(
 
   if (projectUserId) {
     const { data: profileData, error: profileError } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id, username, name, avatar_url, email')
       .eq('id', projectUserId)
       .maybeSingle();

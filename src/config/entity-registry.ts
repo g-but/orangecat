@@ -19,7 +19,7 @@
  * Last Modified Summary: Added category, priority, createActionLabel fields; fixed wallet path; added color mapping for Tailwind
  */
 
-import { LucideIcon, Package, Briefcase, Heart, Coins, Users, Rocket, Wallet, Building2, Building, Bot, Calendar } from 'lucide-react';
+import { LucideIcon, Package, Briefcase, Heart, Coins, Users, Rocket, Wallet, Building2, Building, Bot, Calendar, Gift } from 'lucide-react';
 
 // ==================== ENTITY TYPES ====================
 
@@ -37,6 +37,8 @@ export const ENTITY_TYPES = [
   'asset',
   'loan',
   'event',
+  'research_entity',
+  'wishlist',
 ] as const;
 
 export type EntityType = typeof ENTITY_TYPES[number];
@@ -61,6 +63,8 @@ export interface EntityMetadata {
   namePlural: string;
   /** Database table name */
   tableName: string;
+  /** Column name for user/owner ID (used for RLS queries) */
+  userIdField: string;
   /** Lucide icon component */
   icon: LucideIcon;
   /** Color theme */
@@ -96,6 +100,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'Wallet',
     namePlural: 'Wallets',
     tableName: 'wallets',
+    userIdField: 'user_id',
     icon: Wallet,
     colorTheme: 'orange',
     basePath: '/dashboard/wallets',
@@ -114,6 +119,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'Project',
     namePlural: 'Projects',
     tableName: 'projects',
+    userIdField: 'user_id',
     icon: Rocket,
     colorTheme: 'orange',
     basePath: '/dashboard/projects',
@@ -130,6 +136,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'Product',
     namePlural: 'Products',
     tableName: 'user_products',
+    userIdField: 'user_id',
     icon: Package,
     colorTheme: 'blue',
     basePath: '/dashboard/store',
@@ -146,6 +153,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'Service',
     namePlural: 'Services',
     tableName: 'user_services',
+    userIdField: 'user_id',
     icon: Briefcase,
     colorTheme: 'tiffany',
     basePath: '/dashboard/services',
@@ -162,6 +170,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'Cause',
     namePlural: 'Causes',
     tableName: 'user_causes',
+    userIdField: 'user_id',
     icon: Heart,
     colorTheme: 'rose',
     basePath: '/dashboard/causes',
@@ -178,6 +187,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'AI Assistant',
     namePlural: 'AI Assistants',
     tableName: 'ai_assistants',
+    userIdField: 'user_id',
     icon: Bot,
     colorTheme: 'purple',
     basePath: '/dashboard/ai-assistants',
@@ -196,6 +206,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'Group',
     namePlural: 'Groups',
     tableName: 'groups',
+    userIdField: 'owner_id',
     icon: Users,
     colorTheme: 'purple',
     basePath: '/dashboard/groups',
@@ -213,7 +224,8 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     type: 'asset',
     name: 'Asset',
     namePlural: 'Assets',
-    tableName: 'user_assets',
+    tableName: 'assets',
+    userIdField: 'owner_id',
     icon: Building,
     colorTheme: 'green',
     basePath: '/dashboard/assets',
@@ -230,6 +242,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'Loan',
     namePlural: 'Loans',
     tableName: 'loans',
+    userIdField: 'user_id',
     icon: Coins,
     colorTheme: 'tiffany',
     basePath: '/dashboard/loans',
@@ -246,6 +259,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     name: 'Event',
     namePlural: 'Events',
     tableName: 'events',
+    userIdField: 'organizer_id',
     icon: Calendar,
     colorTheme: 'blue',
     basePath: '/dashboard/events',
@@ -256,6 +270,44 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Organize an in-person event',
     category: 'community',
     createPriority: 3,
+  },
+
+  // ==================== RESEARCH (DeSci ecosystem) ====================
+  research_entity: {
+    type: 'research_entity',
+    name: 'Research Entity',
+    namePlural: 'Research Entities',
+    tableName: 'research_entities',
+    userIdField: 'user_id',
+    icon: Bot,
+    colorTheme: 'purple',
+    basePath: '/dashboard/research',
+    createPath: '/dashboard/research/create',
+    apiEndpoint: '/api/research-entities',
+    hasTemplates: true,
+    description: 'Independent research projects with decentralized funding',
+    createActionLabel: 'Start a research project',
+    category: 'business', // Research as business innovation
+    createPriority: 2,
+  },
+
+  // ==================== PERSONAL (Wishlists & Registries) ====================
+  wishlist: {
+    type: 'wishlist',
+    name: 'Wishlist',
+    namePlural: 'Wishlists',
+    tableName: 'wishlists',
+    userIdField: 'actor_id',
+    icon: Gift,
+    colorTheme: 'rose',
+    basePath: '/dashboard/wishlists',
+    createPath: '/dashboard/wishlists/create',
+    apiEndpoint: '/api/wishlists',
+    hasTemplates: true,
+    description: 'Personal registries for crowdfunding gifts, needs, and wants',
+    createActionLabel: 'Create a wishlist or registry',
+    category: 'community',
+    createPriority: 2,
   },
 };
 
@@ -332,6 +384,13 @@ export function getApiEndpoint(type: EntityType): string {
  */
 export function getTableName(type: EntityType): string {
   return ENTITY_REGISTRY[type].tableName;
+}
+
+/**
+ * Get user ID field name for an entity type (used for RLS queries)
+ */
+export function getUserIdField(type: EntityType): string {
+  return ENTITY_REGISTRY[type].userIdField;
 }
 
 /**

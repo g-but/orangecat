@@ -9,6 +9,7 @@
     "d": "./scripts/dev/dev-start.js"
   },
   "scripts": {
+    "ship": "./w",
     "d": "node scripts/dev/dev-start.js",
     "dev": "next dev",
     "dev:clean": "bash scripts/dev.sh",

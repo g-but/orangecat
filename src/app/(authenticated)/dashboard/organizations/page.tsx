@@ -80,7 +80,7 @@ export default function OrganizationsDashboardPage() {
 
   // Handle delete confirmation
   const handleDeleteConfirm = async () => {
-    if (!orgToDelete) return;
+    if (!orgToDelete) {return;}
 
     setDeletingId(orgToDelete.id);
     try {

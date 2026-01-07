@@ -22,7 +22,7 @@ export async function shouldIncludeDrafts(
   requestedUserId: string | null,
   authenticatedUserId?: string | null
 ): Promise<boolean> {
-  if (!requestedUserId || !authenticatedUserId) return false;
+  if (!requestedUserId || !authenticatedUserId) {return false;}
   return requestedUserId === authenticatedUserId;
 }
 

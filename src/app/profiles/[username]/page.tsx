@@ -3,6 +3,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { notFound, redirect } from 'next/navigation';
 import ProfilePageClient from '@/components/profile/ProfilePageClient';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
 
 interface PageProps {
   params: Promise<{ username: string }>;
@@ -132,7 +133,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     notFound();
   }
 
-  // Fetch user's projects (exclude drafts from public view)
+  // Fetch user's projects (exclude drafts, respect show_on_profile setting)
   const { data: projects, error: projectsError } = await supabase
     .from('projects')
     .select(
@@ -154,6 +155,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     )
     .eq('user_id', profile.id)
     .neq('status', 'draft') // Exclude drafts from public profile
+    .neq('show_on_profile', false) // Respect user's visibility preference (null = true by default)
     .order('created_at', { ascending: false });
 
   // Fetch follower count
@@ -192,6 +194,61 @@ export default async function PublicProfilePage({ params }: PageProps) {
       console.log('Wallet architecture not available');
     }
   }
+
+  // Fetch entity counts for all entity types (for tab badges)
+  // Run these in parallel for efficiency
+  const [
+    { count: productCount },
+    { count: serviceCount },
+    { count: causeCount },
+    { count: eventCount },
+    { count: loanCount },
+    { count: assetCount },
+    { count: aiAssistantCount },
+  ] = await Promise.all([
+    supabase
+      .from(getTableName('product'))
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', profile.id)
+      .neq('status', 'draft')
+      .neq('show_on_profile', false),
+    supabase
+      .from(getTableName('service'))
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', profile.id)
+      .neq('status', 'draft')
+      .neq('show_on_profile', false),
+    supabase
+      .from(getTableName('cause'))
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', profile.id)
+      .neq('status', 'draft')
+      .neq('show_on_profile', false),
+    supabase
+      .from(getTableName('event'))
+      .select('*', { count: 'exact', head: true })
+      .eq('organizer_id', profile.id)
+      .neq('status', 'draft')
+      .neq('show_on_profile', false),
+    supabase
+      .from(getTableName('loan'))
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', profile.id)
+      .neq('status', 'draft')
+      .neq('show_on_profile', false),
+    supabase
+      .from(getTableName('asset'))
+      .select('*', { count: 'exact', head: true })
+      .eq('owner_id', profile.id)
+      .neq('status', 'draft')
+      .neq('show_on_profile', false),
+    supabase
+      .from(getTableName('ai_assistant'))
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', profile.id)
+      .neq('status', 'draft')
+      .neq('show_on_profile', false),
+  ]);
 
   // Calculate statistics
   const projectCount = projects?.length || 0;
@@ -232,6 +289,14 @@ export default async function PublicProfilePage({ params }: PageProps) {
           followerCount: followerCount || 0,
           followingCount: followingCount || 0,
           walletCount,
+          // Entity counts for profile tabs
+          productCount: productCount || 0,
+          serviceCount: serviceCount || 0,
+          causeCount: causeCount || 0,
+          eventCount: eventCount || 0,
+          loanCount: loanCount || 0,
+          assetCount: assetCount || 0,
+          aiAssistantCount: aiAssistantCount || 0,
         }}
       />
     </>

@@ -115,8 +115,8 @@ export async function checkGroupPermission(
     if (membership.permission_overrides) {
       const actionKey = PERMISSION_TO_ACTION[permission];
       const override = membership.permission_overrides[actionKey];
-      if (override === 'allow') return true;
-      if (override === 'deny') return false;
+      if (override === 'allow') {return true;}
+      if (override === 'deny') {return false;}
     }
 
     // Fall back to governance preset role defaults

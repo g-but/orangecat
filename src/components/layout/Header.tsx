@@ -43,6 +43,7 @@ import { cn } from '@/lib/utils';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { useUnreadCount } from '@/stores/messaging';
 import { useMessagingService } from '@/hooks/useMessagingService';
+import { useUnreadNotifications } from '@/hooks/useNotifications';
 import { EmailConfirmationBanner } from './EmailConfirmationBanner';
 
 interface HeaderProps {
@@ -80,6 +81,7 @@ export function Header({
   const mobileMenu = useMobileMenu();
   const { isActive } = useActiveRoute();
   const { count: unreadMessages } = useUnreadCount();
+  const { count: unreadNotifications } = useUnreadNotifications();
 
   const routeContext = getRouteContext(pathname);
   const isAuthRoute = routeContext === 'authenticated' || routeContext === 'contextual';
@@ -241,8 +243,8 @@ export function Header({
               </div>
             )}
 
-            {/* Messages Button (authenticated only) - Show on mobile but can be hidden if too crowded */}
-            {isAuthRoute && (
+            {/* Messages Button - Always visible for authenticated users regardless of route */}
+            {user && (
               <button
                 onClick={() => router.push('/messages')}
                 className="flex-shrink-0 w-11 h-11 sm:w-10 sm:h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
@@ -257,14 +259,21 @@ export function Header({
               </button>
             )}
 
-            {/* Notifications - Always visible but can be smaller on mobile */}
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="flex-shrink-0 w-11 h-11 sm:w-10 sm:h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
-              aria-label="Notifications"
-            >
-              <Bell className="w-5 h-5" />
-            </button>
+            {/* Notifications - Always visible for authenticated users regardless of route */}
+            {user && (
+              <button
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="flex-shrink-0 w-11 h-11 sm:w-10 sm:h-10 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative min-w-[44px] min-h-[44px] sm:min-w-0 sm:min-h-0"
+                aria-label={`Notifications ${unreadNotifications > 0 ? `(${unreadNotifications} unread)` : ''}`}
+              >
+                <Bell className="w-5 h-5" />
+                {unreadNotifications > 0 && (
+                  <span className="absolute top-1 right-1 bg-red-500 text-white text-[10px] rounded-full h-4 w-4 min-w-[16px] flex items-center justify-center font-semibold leading-none">
+                    {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* User Menu or Auth Buttons */}
             {user ? (

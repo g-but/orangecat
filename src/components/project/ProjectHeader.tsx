@@ -11,10 +11,13 @@
 import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Edit, Share2 } from 'lucide-react';
+import { Edit, Share2, MessageCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/lib/routes';
 import { getUniqueCategories } from '@/utils/project';
+import { useAuth } from '@/hooks/useAuth';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 
 interface ProjectHeaderProps {
   project: {
@@ -38,12 +41,43 @@ interface ProjectHeaderProps {
 }
 
 export default function ProjectHeader({ project, isOwner, onShare, getStatusInfo }: ProjectHeaderProps) {
+  const { user } = useAuth();
+  const router = useRouter();
   const statusInfo = getStatusInfo(project.status);
   const creatorProfileUrl = project.profiles?.username
     ? `/profile/${project.profiles.username}`
     : project.profiles?.id
       ? `/profile/${project.profiles.id}`
       : `/profile/${project.user_id}`;
+
+  // Handle contact/message the project creator
+  const handleContact = async () => {
+    if (!user) {
+      toast.info('Please sign in to send a message');
+      router.push(`/auth?mode=login&from=/projects/${project.id}`);
+      return;
+    }
+
+    try {
+      // Create or open conversation with project creator
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participantIds: [project.user_id],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start conversation');
+      }
+
+      const { conversationId } = await response.json();
+      router.push(`/messages/${conversationId}`);
+    } catch {
+      toast.error('Failed to start conversation. Please try again.');
+    }
+  };
 
   return (
     <div className="mb-6">
@@ -159,20 +193,29 @@ export default function ProjectHeader({ project, isOwner, onShare, getStatusInfo
         </div>
 
         {/* Action Buttons */}
-        {isOwner && (
-          <div className="flex gap-2 flex-shrink-0" role="group" aria-label="Project actions">
+        <div className="flex gap-2 flex-shrink-0" role="group" aria-label="Project actions">
+          {/* Edit - only for owners */}
+          {isOwner && (
             <Link href={ROUTES.PROJECTS.EDIT(project.id)}>
               <Button variant="outline" size="sm" aria-label="Edit project">
                 <Edit className="w-4 h-4 mr-2" aria-hidden="true" />
                 Edit
               </Button>
             </Link>
-            <Button variant="outline" size="sm" onClick={onShare} aria-label="Share project">
-              <Share2 className="w-4 h-4 mr-2" aria-hidden="true" />
-              Share
+          )}
+          {/* Contact - only for non-owners */}
+          {!isOwner && (
+            <Button variant="outline" size="sm" onClick={handleContact} aria-label="Contact project creator">
+              <MessageCircle className="w-4 h-4 mr-2" aria-hidden="true" />
+              Contact
             </Button>
-          </div>
-        )}
+          )}
+          {/* Share - available for everyone */}
+          <Button variant="outline" size="sm" onClick={onShare} aria-label="Share project">
+            <Share2 className="w-4 h-4 mr-2" aria-hidden="true" />
+            Share
+          </Button>
+        </div>
       </div>
     </div>
   );

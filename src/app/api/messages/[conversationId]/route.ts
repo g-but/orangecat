@@ -42,6 +42,7 @@ const sendMessageSchema = z.object({
     .enum([MESSAGE_TYPES.TEXT, MESSAGE_TYPES.IMAGE, MESSAGE_TYPES.FILE, MESSAGE_TYPES.SYSTEM])
     .default(MESSAGE_TYPES.TEXT),
   metadata: z.record(z.any()).optional(),
+  senderActorId: z.string().uuid().optional(), // Optional: send as specific actor
 });
 
 /**
@@ -204,7 +205,7 @@ export const POST = withAuth(async (
       });
     }
 
-    const { content, messageType, metadata } = validation.data;
+    const { content, messageType, metadata, senderActorId } = validation.data;
 
     // Use admin client to bypass RLS for participant check
     const admin = createAdminClient();
@@ -236,13 +237,14 @@ export const POST = withAuth(async (
       await (updateQuery as any);
     }
 
-    // Send message
+    // Send message (optionally as a specific actor)
     const newId = await svcSendMessage(
       conversationId,
       user.id,
       content,
       messageType,
-      metadata || null
+      metadata || null,
+      senderActorId || null
     );
 
     return apiCreated(

@@ -61,13 +61,16 @@ lerna-debug.log*
 # IDE
 .idea/
 .vscode/
-.claude/
 .cursor/
 .agents/
 # Note: .ai-guides/ moved to docs/guides/ai/ for better visibility
 *.swp
 *.swo
 *~
+
+# Claude Code - Keep structure, ignore local settings
+.claude/settings.local.json
+.claude/cache/
 
 # OS generated files
 .DS_Store

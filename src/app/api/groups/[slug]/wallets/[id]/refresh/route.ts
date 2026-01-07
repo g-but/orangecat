@@ -24,7 +24,7 @@ export async function POST(
       error: authError,
     } = await supabase.auth.getUser();
     
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     // Get group
     const groupResult = await getGroupBySlug(slug);

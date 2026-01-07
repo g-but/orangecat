@@ -66,7 +66,7 @@ const analyticsProvider = process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER || 'console
  * Initialize analytics - call this once in your app layout
  */
 export function initAnalytics() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   switch (analyticsProvider) {
     case 'mixpanel':
@@ -91,7 +91,7 @@ export function initAnalytics() {
  * Track an analytics event
  */
 export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperties) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   const enrichedProperties = {
     ...properties,
@@ -125,7 +125,7 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
     const events = JSON.parse(localStorage.getItem('orangecat_analytics') || '[]');
     events.push({ event, properties: enrichedProperties });
     // Keep only last 100 events
-    if (events.length > 100) events.shift();
+    if (events.length > 100) {events.shift();}
     localStorage.setItem('orangecat_analytics', JSON.stringify(events));
   } catch {
     // Ignore storage errors
@@ -136,7 +136,7 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
  * Identify a user for analytics
  */
 export function identifyUser(properties: UserProperties) {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
 
   switch (analyticsProvider) {
     case 'mixpanel':
@@ -217,7 +217,7 @@ export const userActions = {
  * Debug function to view stored analytics events
  */
 export function getStoredEvents(): Array<{ event: string; properties: AnalyticsProperties }> {
-  if (typeof window === 'undefined') return [];
+  if (typeof window === 'undefined') {return [];}
   try {
     return JSON.parse(localStorage.getItem('orangecat_analytics') || '[]');
   } catch {
@@ -229,6 +229,6 @@ export function getStoredEvents(): Array<{ event: string; properties: AnalyticsP
  * Clear stored analytics events
  */
 export function clearStoredEvents() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') {return;}
   localStorage.removeItem('orangecat_analytics');
 }

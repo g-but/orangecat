@@ -36,7 +36,7 @@ export function EmailConfirmationBanner({
 
   // Check if already dismissed this session
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {return;}
 
     const dismissKey = `${DISMISS_KEY_PREFIX}${userId}`;
     const wasDismissed = sessionStorage.getItem(dismissKey) === 'true';

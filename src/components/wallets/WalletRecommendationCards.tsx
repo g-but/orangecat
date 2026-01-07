@@ -178,7 +178,7 @@ export default function WalletRecommendationCards() {
    * Filter and sort wallets
    */
   const filteredWallets = useMemo(() => {
-    let result = wallets.filter((wallet) => {
+    const result = wallets.filter((wallet) => {
       // Platform filter
       if (filters.platform.length > 0 && !filters.platform.includes(wallet.platform)) {
         return false;
@@ -200,8 +200,8 @@ export default function WalletRecommendationCards() {
     // Sort: recommended first when no filters, then alphabetically
     if (!hasActiveFilters) {
       result.sort((a, b) => {
-        if (a.recommended && !b.recommended) return -1;
-        if (!a.recommended && b.recommended) return 1;
+        if (a.recommended && !b.recommended) {return -1;}
+        if (!a.recommended && b.recommended) {return 1;}
         return a.name.localeCompare(b.name);
       });
     } else {

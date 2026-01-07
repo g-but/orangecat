@@ -11,7 +11,9 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { PUBLIC_SEARCH_STATUSES } from '@/lib/projectStatus';
-import type { SearchResult, SearchProfile, SearchFundingPage, SortOption, SearchResponse } from './types';
+import { DATABASE_TABLES } from '@/config/database-tables';
+import { getTableName } from '@/config/entity-registry';
+import type { SearchResult, SearchProfile, SearchFundingPage, SearchLoan, SortOption, SearchResponse } from './types';
 
 // ==================== RELEVANCE SCORING ====================
 
@@ -50,6 +52,30 @@ export function calculateRelevanceScore(result: SearchResult, query: string): nu
 
     // Boost for profiles with avatars (more complete profiles)
     if (profile.avatar_url) {
+      score += 5;
+    }
+  } else if (result.type === 'loan') {
+    const loan = result.data as SearchLoan;
+
+    // Title matches get high score
+    if (loan.title.toLowerCase() === lowerQuery) {
+      score += 100;
+    } else if (loan.title.toLowerCase().includes(lowerQuery)) {
+      score += 60;
+    }
+
+    // Description matches
+    if (loan.description?.toLowerCase().includes(lowerQuery)) {
+      score += 30;
+    }
+
+    // Boost for loans with negotiable terms
+    if (loan.is_negotiable) {
+      score += 5;
+    }
+
+    // Boost for loans with interest rates (more complete listings)
+    if (loan.interest_rate) {
       score += 5;
     }
   } else {
@@ -139,19 +165,25 @@ export async function getSearchFacets(): Promise<SearchResponse['facets']> {
 
   try {
     // OPTIMIZATION: Use Promise.all for parallel queries
-    const [profilesResult, projectsResult] = await Promise.all([
+    const [profilesResult, projectsResult, loansResult] = await Promise.all([
       // Use count queries with head:true for better performance
-      supabase.from('profiles').select('id', { count: 'exact', head: true }),
+      supabase.from(DATABASE_TABLES.PROFILES).select('id', { count: 'exact', head: true }),
       supabase
-        .from('projects')
+        .from(getTableName('project'))
         .select('id', { count: 'exact', head: true })
         .in('status', PUBLIC_SEARCH_STATUSES as string[]),
+      supabase
+        .from(getTableName('loan'))
+        .select('id', { count: 'exact', head: true })
+        .eq('is_public', true)
+        .eq('status', 'active'),
     ]);
 
     const facets = {
       categories: [], // Categories don't exist in current schema
       totalProfiles: profilesResult.count || 0,
       totalProjects: projectsResult.count || 0,
+      totalLoans: loansResult.count || 0,
     };
 
     // Cache the facets
@@ -167,6 +199,7 @@ export async function getSearchFacets(): Promise<SearchResponse['facets']> {
       categories: [],
       totalProfiles: 0,
       totalProjects: 0,
+      totalLoans: 0,
     };
   }
 }

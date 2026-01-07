@@ -32,8 +32,8 @@ export default async function AIAssistantDetailPage({ params }: PageProps) {
           { label: 'Pricing Model', value: assistant.pricing_model ? assistant.pricing_model.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '—' },
         ];
 
-        if (assistant.price_per_message_sats) {
-          left.push({ label: 'Price per Message', value: `${assistant.price_per_message_sats.toLocaleString()} sats` });
+        if (assistant.price_per_message) {
+          left.push({ label: 'Price per Message', value: `${assistant.price_per_message.toLocaleString()} sats` });
         }
         if (assistant.free_messages_per_day) {
           left.push({ label: 'Free Messages/Day', value: String(assistant.free_messages_per_day) });

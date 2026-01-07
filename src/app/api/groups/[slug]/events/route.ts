@@ -19,6 +19,7 @@ import {
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
+import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Validation schema for creating events
 const createEventSchema = z.object({
@@ -198,7 +199,7 @@ export const POST = withAuth(async (
 
     // Get creator profile
     const { data: creatorProfile } = await supabase
-      .from('profiles')
+      .from(DATABASE_TABLES.PROFILES)
       .select('id, name, avatar_url')
       .eq('id', user.id)
       .single();

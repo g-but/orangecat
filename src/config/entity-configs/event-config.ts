@@ -294,6 +294,20 @@ const fieldGroups: FieldGroup[] = [
       },
     ],
   },
+  {
+    id: 'visibility',
+    title: 'Profile Visibility',
+    description: 'Control where this event appears',
+    fields: [
+      {
+        name: 'show_on_profile',
+        label: 'Show on Public Profile',
+        type: 'checkbox',
+        hint: 'When enabled, this event will appear on your public profile page',
+        colSpan: 2,
+      },
+    ],
+  },
 ];
 
 // ==================== DEFAULT VALUES ====================
@@ -334,6 +348,7 @@ const defaultValues: EventFormData = {
   banner_url: '',
   video_url: '',
   status: 'draft',
+  show_on_profile: true,
 };
 
 // ==================== EXPORT CONFIG ====================

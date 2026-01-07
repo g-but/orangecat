@@ -109,6 +109,20 @@ const fieldGroups: FieldGroup[] = [
       },
     ],
   },
+  {
+    id: 'visibility',
+    title: 'Profile Visibility',
+    description: 'Control where this cause appears',
+    fields: [
+      {
+        name: 'show_on_profile',
+        label: 'Show on Public Profile',
+        type: 'checkbox',
+        hint: 'When enabled, this cause will appear on your public profile page',
+        colSpan: 2,
+      },
+    ],
+  },
 ];
 
 // ==================== DEFAULT VALUES ====================
@@ -123,6 +137,7 @@ const defaultValues: UserCauseFormData = {
   lightning_address: '',
   beneficiaries: [],
   status: 'draft',
+  show_on_profile: true,
 };
 
 // ==================== EXPORT CONFIG ====================

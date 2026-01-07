@@ -22,7 +22,7 @@ export interface CreateProposalInput {
 export async function createProposal(input: CreateProposalInput) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) return { success: false, error: 'Authentication required' };
+    if (!userId) {return { success: false, error: 'Authentication required' };}
 
     const permResult = await canPerformAction(userId, input.group_id, 'create_proposal');
     if (!permResult.allowed) {
@@ -73,7 +73,7 @@ export async function createProposal(input: CreateProposalInput) {
 export async function activateProposal(proposalId: string) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) return { success: false, error: 'Authentication required' };
+    if (!userId) {return { success: false, error: 'Authentication required' };}
 
     const proposalResult = await getProposal(proposalId);
     if (!proposalResult.success || !proposalResult.proposal) {
@@ -141,7 +141,7 @@ export async function updateProposal(
 ) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) return { success: false, error: 'Authentication required' };
+    if (!userId) {return { success: false, error: 'Authentication required' };}
 
     const proposalResult = await getProposal(proposalId);
     if (!proposalResult.success || !proposalResult.proposal) {
@@ -171,7 +171,7 @@ export async function updateProposal(
     ] as const;
 
     for (const key of fields) {
-      if ((updates as any)[key] !== undefined) (payload as any)[key] = (updates as any)[key];
+      if ((updates as any)[key] !== undefined) {(payload as any)[key] = (updates as any)[key];}
     }
 
     if (payload.title && payload.title.trim().length === 0) {
@@ -200,7 +200,7 @@ export async function updateProposal(
 export async function deleteProposal(proposalId: string) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) return { success: false, error: 'Authentication required' };
+    if (!userId) {return { success: false, error: 'Authentication required' };}
 
     const proposalResult = await getProposal(proposalId);
     if (!proposalResult.success || !proposalResult.proposal) {

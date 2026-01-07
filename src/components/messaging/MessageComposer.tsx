@@ -3,7 +3,7 @@
 import { logger } from '@/utils/logger';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Send, Paperclip, Smile } from 'lucide-react';
+import { Send, Paperclip, Smile, ChevronDown, User, Users } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
@@ -14,6 +14,16 @@ import { queueIfOffline, handleNetworkError } from '@/features/messaging/lib/off
 import { MESSAGE_TYPES, debugLog, API_ROUTES } from '@/features/messaging/lib/constants';
 import { createOptimisticMessage, validateMessageContent } from '@/features/messaging/lib/message-utils';
 import { useTypingIndicator } from '@/features/messaging/hooks/useTypingIndicator';
+import { useMessagingActors, type MessagingActor } from '@/features/messaging/hooks/useMessagingActors';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 
 interface MessageComposerProps {
   conversationId: string;
@@ -27,6 +37,18 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
   const [content, setContent] = useState('');
   const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Fetch available actors for "Send As" feature
+  const { actors, personalActor, groupActors } = useMessagingActors();
+  const [selectedActorId, setSelectedActorId] = useState<string | null>(null);
+
+  // Determine which actor to use (default to personal actor)
+  const selectedActor = selectedActorId
+    ? actors.find((a) => a.actor_id === selectedActorId)
+    : personalActor;
+
+  // Show "Send As" selector only if user has multiple actors
+  const showActorSelector = actors.length > 1;
 
   // Typing indicator hook
   const { startTyping, stopTyping, typingText } = useTypingIndicator(conversationId, {
@@ -96,6 +118,8 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
         body: JSON.stringify({
           content: messageContent,
           messageType: MESSAGE_TYPES.TEXT,
+          // Include sender actor ID if sending as a different actor (e.g., group)
+          ...(selectedActor && !selectedActor.is_personal && { senderActorId: selectedActor.actor_id }),
         }),
       });
 
@@ -157,7 +181,7 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
     } finally {
       setIsSending(false);
     }
-  }, [content, isSending, user, profile, conversationId, stopTyping, onMessageSent, onMessageFailed, onMessageConfirmed]);
+  }, [content, isSending, user, profile, conversationId, stopTyping, onMessageSent, onMessageFailed, onMessageConfirmed, selectedActor]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -183,6 +207,85 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
 
   return (
     <div className="border-t border-gray-200 bg-white p-3 sm:p-4 pb-safe md:pb-4" style={{ paddingBottom: 'max(0.75rem, calc(0.75rem + env(safe-area-inset-bottom, 0px) + 4rem))' }}>
+      {/* Send As indicator - shown when user has multiple actors */}
+      {showActorSelector && selectedActor && (
+        <div className="mb-2 flex items-center gap-2 text-xs text-gray-500">
+          <span>Sending as:</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
+              >
+                <Avatar className="h-4 w-4">
+                  <AvatarImage src={selectedActor.avatar_url || undefined} />
+                  <AvatarFallback className="text-[8px]">
+                    {selectedActor.actor_type === 'group' ? (
+                      <Users className="h-2.5 w-2.5" />
+                    ) : (
+                      <User className="h-2.5 w-2.5" />
+                    )}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="font-medium text-gray-700">{selectedActor.display_name}</span>
+                <ChevronDown className="h-3 w-3 text-gray-400" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuLabel>Send message as</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {personalActor && (
+                <DropdownMenuItem
+                  onClick={() => setSelectedActorId(null)}
+                  className={cn(
+                    'flex items-center gap-2 cursor-pointer',
+                    (!selectedActorId || selectedActorId === personalActor.actor_id) && 'bg-gray-100'
+                  )}
+                >
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={personalActor.avatar_url || undefined} />
+                    <AvatarFallback>
+                      <User className="h-3 w-3" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{personalActor.display_name}</p>
+                    <p className="text-xs text-gray-500">Personal account</p>
+                  </div>
+                </DropdownMenuItem>
+              )}
+              {groupActors.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuLabel className="text-xs text-gray-500">Organizations</DropdownMenuLabel>
+                  {groupActors.map((actor) => (
+                    <DropdownMenuItem
+                      key={actor.actor_id}
+                      onClick={() => setSelectedActorId(actor.actor_id)}
+                      className={cn(
+                        'flex items-center gap-2 cursor-pointer',
+                        selectedActorId === actor.actor_id && 'bg-gray-100'
+                      )}
+                    >
+                      <Avatar className="h-6 w-6">
+                        <AvatarImage src={actor.avatar_url || undefined} />
+                        <AvatarFallback>
+                          <Users className="h-3 w-3" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium">{actor.display_name}</p>
+                        <p className="text-xs text-gray-500">Organization</p>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="flex items-end gap-2 sm:gap-3">
         {/* Attachment button - hidden on very small screens */}
         <Button

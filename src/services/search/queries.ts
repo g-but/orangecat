@@ -13,7 +13,8 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { PUBLIC_SEARCH_STATUSES } from '@/lib/projectStatus';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import type { SearchProfile, SearchFundingPage, SearchFilters } from './types';
+import { getTableName } from '@/config/entity-registry';
+import type { SearchProfile, SearchFundingPage, SearchLoan, SearchFilters } from './types';
 
 /**
  * Search profiles with filters
@@ -195,7 +196,7 @@ export async function searchFundingPages(
 ): Promise<SearchFundingPage[]> {
   // Only select necessary columns to reduce payload
   // Note: location columns (location_city, location_country, location_coordinates) don't exist in projects table
-  let projectQuery = supabase.from('projects').select(
+  let projectQuery = supabase.from(getTableName('project')).select(
     `
       id, user_id, title, description, bitcoin_address,
       created_at, updated_at, category, status, goal_amount, currency, raised_amount,
@@ -436,7 +437,7 @@ export async function searchFundingPages(
 
   // Apply radius filtering - REMOVED: projects don't have location_coordinates
   // Projects table doesn't have location columns, so radius filtering is not supported
-  let filteredProjects = rawProjects;
+  const filteredProjects = rawProjects;
 
   // Fetch profiles for all projects in parallel
   const userIds = [...new Set(filteredProjects.map((p: any) => p.user_id))];
@@ -459,7 +460,7 @@ export async function searchFundingPages(
   // Transform projects with profile data
   const projects: SearchFundingPage[] = filteredProjects.map((project: any) => {
     // Get first project_media image as fallback if cover_image_url is not set
-    let coverImageUrl = project.cover_image_url;
+    const coverImageUrl = project.cover_image_url;
     // project_media table doesn't exist - removed media processing
 
     return {
@@ -497,7 +498,7 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
         .limit(limit),
 
       supabase
-        .from('projects')
+        .from(getTableName('project'))
         .select('title, category')
         .or(`title.ilike.%${sanitizedQuery}%,category.ilike.%${sanitizedQuery}%`)
         .in('status', PUBLIC_SEARCH_STATUSES as string[])
@@ -547,7 +548,7 @@ export async function getTrending(): Promise<{
   try {
     const [projectsData, profilesData] = await Promise.all([
       supabase
-        .from('projects')
+        .from(getTableName('project'))
         .select(
           `
           id, user_id, title, description, bitcoin_address,
@@ -615,3 +616,81 @@ export async function getTrending(): Promise<{
   }
 }
 
+/**
+ * Search loans with filters
+ */
+export async function searchLoans(
+  query?: string,
+  filters?: SearchFilters,
+  limit: number = 20,
+  offset: number = 0
+): Promise<SearchLoan[]> {
+  // Only select necessary columns for better performance
+  let loanQuery = supabase
+    .from(getTableName('loan'))
+    .select(
+      `
+      id, user_id, title, description, loan_category_id,
+      original_amount, remaining_balance, interest_rate, monthly_payment,
+      currency, status, loan_type, is_public, is_negotiable,
+      created_at, updated_at
+    `
+    )
+    .eq('is_public', true)
+    .eq('status', 'active');
+
+  // Apply text search if query provided
+  if (query) {
+    const sanitizedQuery = query.replace(/[%_]/g, '\\$&');
+    loanQuery = loanQuery.or(
+      `title.ilike.%${sanitizedQuery}%,description.ilike.%${sanitizedQuery}%`
+    );
+  }
+
+  // Apply filters
+  if (filters) {
+    // Note: Loans don't have categories in the same way as projects
+    // but we could filter by loan_category_id if needed
+    // For now, we'll focus on basic search functionality
+  }
+
+  // Use index-friendly ordering
+  const { data: rawLoans, error } = await loanQuery
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) {
+    logger.warn('Error searching loans', error, 'Search');
+    return [];
+  }
+
+  if (!rawLoans || rawLoans.length === 0) {
+    return [];
+  }
+
+  // Fetch profiles for all loans in parallel
+  const userIds = [...new Set(rawLoans.map((l: any) => l.user_id))];
+  const { data: profiles } = await supabase
+    .from(DATABASE_TABLES.PROFILES)
+    .select('id, username, name, avatar_url')
+    .in('id', userIds);
+
+  // Create a map of user_id to profile for quick lookup
+  const profileMap = new Map(
+    profiles?.map((p: any) => [
+      p.id,
+      {
+        ...p,
+        name: p.name,
+      },
+    ]) || []
+  );
+
+  // Transform loans with profile data
+  const loans: SearchLoan[] = rawLoans.map((loan: any) => ({
+    ...loan,
+    profiles: profileMap.get(loan.user_id),
+  }));
+
+  return loans;
+}

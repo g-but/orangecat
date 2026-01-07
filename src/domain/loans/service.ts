@@ -2,6 +2,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { isTableNotFound } from '@/lib/db/errors';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { getTableName } from '@/config/entity-registry';
 
 interface CreateLoanInput {
   loan_type?: 'new_request' | 'existing_refinance';
@@ -25,7 +26,7 @@ interface CreateLoanInput {
 export async function listLoans() {
   const supabase = await createServerClient();
   const { data, error } = await supabase
-    .from('loans')
+    .from(getTableName('loan'))
     .select('*')
     .order('created_at', { ascending: false });
   if (error) {
@@ -61,7 +62,7 @@ export async function createLoan(
   
   // Normalize empty strings to null for UUID and optional fields
   const normalizeToNull = (value: any): any => {
-    if (value === '' || value === undefined) return null;
+    if (value === '' || value === undefined) {return null;}
     return value;
   };
 
@@ -89,7 +90,7 @@ export async function createLoan(
     status: 'active',
   };
 
-  const { data, error } = await client.from('loans').insert(payload).select().single();
+  const { data, error } = await client.from(getTableName('loan')).insert(payload).select().single();
   if (error) {
     logger.error('Failed to create loan', { 
       error, 

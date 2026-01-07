@@ -27,6 +27,7 @@ export const SIDEBAR_Z_INDEX = {
   SIDEBAR: 'z-40',
   OVERLAY: 'z-40',
   TOOLTIP: 'z-50', // Tooltips appear above sidebar but below header
+  FLYOUT_TOOLTIP: 60, // Flyout tooltips need higher z-index
   HEADER: 'z-50',
   HEADER_VALUE: 50,
   SIDEBAR_VALUE: 40,

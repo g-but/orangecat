@@ -12,8 +12,8 @@
  * - Easy to add new entity types
  *
  * Created: 2025-01-28
- * Last Modified: 2025-01-28
- * Last Modified Summary: Initial creation of generic entity list handler
+ * Last Modified: 2026-01-06
+ * Last Modified Summary: Added userIdField, publicFilters, requireAuth, selectColumns config options
  */
 
 import { NextRequest } from 'next/server';
@@ -52,6 +52,14 @@ export interface EntityListHandlerConfig {
   additionalFilters?: Record<string, string>;
   /** Whether to use listEntitiesPage helper (for commerce entities) */
   useListHelper?: boolean;
+  /** Custom user ID field name (default: 'user_id') - e.g., 'owner_id' for assets */
+  userIdField?: string;
+  /** Additional filters for public listings (e.g., { is_public: true } for AI assistants) */
+  publicFilters?: Record<string, unknown>;
+  /** Whether authentication is required (default: false) */
+  requireAuth?: boolean;
+  /** Select specific columns (default: '*') */
+  selectColumns?: string;
 }
 
 // ==================== HANDLER FACTORY ====================
@@ -77,6 +85,10 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
     orderDirection = 'desc',
     additionalFilters = {},
     useListHelper = false,
+    userIdField = 'user_id',
+    publicFilters = {},
+    requireAuth = false,
+    selectColumns = '*',
   } = config;
 
   const meta = getEntityMetadata(entityType);
@@ -94,13 +106,24 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
 
       // Check draft visibility
       const authenticatedUserId = await getAuthenticatedUserId();
+
+      // If auth is required, check it first
+      if (requireAuth && !authenticatedUserId) {
+        return apiSuccess([], {
+          page: calculatePage(offset, limit),
+          limit,
+          total: 0,
+          headers: { 'Cache-Control': 'private, no-cache' },
+        });
+      }
+
       const includeOwnDrafts = await shouldIncludeDrafts(userId ?? null, authenticatedUserId);
 
       // Use listEntitiesPage helper for commerce entities
       // Derive commerce table names from entity registry (SSOT)
       const commerceEntityTypes: EntityType[] = ['product', 'service', 'cause'];
       const commerceTables = commerceEntityTypes.map(type => ENTITY_REGISTRY[type].tableName) as readonly string[];
-      
+
       if (useListHelper && commerceTables.includes(table)) {
         const { items, total } = await listEntitiesPage(table as 'user_products' | 'user_services' | 'user_causes', {
           limit,
@@ -123,33 +146,39 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       // Build custom query for entities that don't use listEntitiesPage
       let query = supabase
         .from(table)
-        .select('*', { count: 'exact' });
+        .select(selectColumns, { count: 'exact' });
 
       // Apply filters in correct order for RLS compatibility
-      // When filtering by user_id, apply it first (RLS allows all statuses for own items)
+      // When filtering by user_id (or custom userIdField), apply it first
       if (userId) {
-        query = query.eq('user_id', userId);
+        query = query.eq(userIdField, userId);
         // For own items, only filter by status if includeOwnDrafts is false
-        // (when true, RLS already allows all statuses via "Users can read their own events")
         if (!includeOwnDrafts) {
           query = query.in('status', publicStatuses);
         }
-        // When includeOwnDrafts is true, don't filter by status - RLS handles it
+      } else if (requireAuth && authenticatedUserId) {
+        // For auth-required routes without user_id filter, show current user's items
+        query = query.eq(userIdField, authenticatedUserId);
       } else {
         // Public list: filter by public statuses only
         query = query.in('status', publicStatuses);
+
+        // Apply public filters (e.g., is_public = true for AI assistants)
+        for (const [field, value] of Object.entries(publicFilters)) {
+          query = query.eq(field, value);
+        }
       }
 
       // Apply standard filters
-      if (category) query = query.eq('category', category);
-      
+      if (category) {query = query.eq('category', category);}
+
       // Apply ordering (use nullsLast to handle NULL values gracefully)
       query = query.order(orderBy, { ascending: orderDirection === 'asc', nullsFirst: false });
 
       // Apply additional filters from config
       for (const [field, paramName] of Object.entries(additionalFilters)) {
         const value = getString(request.url, paramName);
-        if (value) query = query.eq(field, value);
+        if (value) {query = query.eq(field, value);}
       }
 
       // Apply pagination
@@ -158,8 +187,8 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       const { data: items, error, count } = await query;
 
       if (error) {
-        logger.error(`Error fetching ${entityType}`, { 
-          error, 
+        logger.error(`Error fetching ${entityType}`, {
+          error,
           table,
           code: error.code,
           message: error.message,

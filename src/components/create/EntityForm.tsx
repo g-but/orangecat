@@ -364,8 +364,14 @@ export function EntityForm<T extends Record<string, any>>({
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>{config.formTitle}</CardTitle>
-              <CardDescription>{config.formDescription}</CardDescription>
+              <CardTitle>
+                {mode === 'create' ? config.formTitle : `Edit ${config.name}`}
+              </CardTitle>
+              <CardDescription>
+                {mode === 'create'
+                  ? config.formDescription
+                  : `Update your ${config.name.toLowerCase()} details. Changes will be saved when you submit.`}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-8">

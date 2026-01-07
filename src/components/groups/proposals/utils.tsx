@@ -24,7 +24,7 @@ import {
  */
 export function getStatusBadge(status: ProposalStatus) {
   const config = PROPOSAL_STATUS_CONFIG[status];
-  if (!config) return null;
+  if (!config) {return null;}
 
   return (
     <Badge variant={config.badgeVariant} className={config.className}>

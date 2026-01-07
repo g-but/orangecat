@@ -25,6 +25,7 @@ import {
 import { ProfileStorageService } from '@/services/profile/storage';
 import { SocialLink } from '@/types/social';
 import { profileSchema as serverProfileSchema, normalizeProfileData } from '@/lib/validation';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 // Use server-side schema for consistency
 const profileSchema = serverProfileSchema;
@@ -117,6 +118,7 @@ export function useProfileEditor({
       phone: profile.phone || '',
       bitcoin_address: profile.bitcoin_address || '',
       lightning_address: profile.lightning_address || '',
+      currency: profile.currency || PLATFORM_DEFAULT_CURRENCY,
     },
   });
 

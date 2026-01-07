@@ -1,5 +1,6 @@
 import supabase from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
+import { getTableName } from '@/config/entity-registry'
 
 export type FeaturedType = 
   | 'trending' 
@@ -37,7 +38,7 @@ export async function getFeaturedProjects(limit: number = 6): Promise<FeaturedCa
     // For now, we'll simulate featured projects by getting high-performing projects
     // In the future, this would query a dedicated featured_projects table
     const { data: projects, error } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
@@ -87,7 +88,7 @@ export async function getFeaturedProjects(limit: number = 6): Promise<FeaturedCa
 export async function getTrendingProjects(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
     const { data: projects, error } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
@@ -117,7 +118,7 @@ export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign
   try {
     // For now, get projects with good descriptions and images
     const { data: projects, error } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
@@ -148,7 +149,7 @@ export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign
 export async function getNearlyFundedProjects(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
     const { data: projects, error } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
@@ -187,7 +188,7 @@ export async function getNewAndNoteworthy(limit: number = 3): Promise<FeaturedCa
   try {
     // Get recent projects with some traction
     const { data: projects, error } = await supabase
-      .from('projects')
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,

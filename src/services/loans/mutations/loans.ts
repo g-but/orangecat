@@ -9,6 +9,7 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { isSupportedCurrency, DEFAULT_CURRENCY } from '@/config/currencies';
+import { getTableName } from '@/config/entity-registry';
 import type {
   CreateLoanRequest,
   UpdateLoanRequest,
@@ -37,7 +38,7 @@ export async function createLoan(request: CreateLoanRequest): Promise<LoanRespon
     }
 
     const { data, error } = await supabase
-      .from('loans')
+      .from(getTableName('loan'))
       .insert({
         ...request,
         currency: isSupportedCurrency(request.currency) ? request.currency : DEFAULT_CURRENCY,
@@ -70,7 +71,7 @@ export async function updateLoan(loanId: string, request: UpdateLoanRequest): Pr
     }
 
     const { data, error } = await supabase
-      .from('loans')
+      .from(getTableName('loan'))
       .update(request)
       .eq('id', loanId)
       .eq('user_id', userId)
@@ -101,7 +102,7 @@ export async function deleteLoan(loanId: string): Promise<{ success: boolean; er
     }
 
     const { error } = await supabase
-      .from('loans')
+      .from(getTableName('loan'))
       .delete()
       .eq('id', loanId)
       .eq('user_id', userId);
@@ -156,7 +157,7 @@ export async function createObligationLoan(params: {
     };
 
     const { data, error } = await supabase
-      .from('loans')
+      .from(getTableName('loan'))
       .insert({
         ...newLoan,
         user_id: borrowerId,

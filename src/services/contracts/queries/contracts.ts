@@ -9,7 +9,7 @@ export async function getContract(contractId: string) {
       .eq('id', contractId)
       .single();
 
-    if (error) return { success: false, error: error.message };
+    if (error) {return { success: false, error: error.message };}
     return { success: true, contract: data };
   } catch (error) {
     logger.error('Exception getting contract', error, 'Contracts');

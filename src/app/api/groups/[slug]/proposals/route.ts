@@ -30,7 +30,7 @@ export async function GET(
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return apiUnauthorized();
+      if (!user) {return apiUnauthorized();}
       // membership is enforced in service queries as well; this guards early
     }
 
@@ -63,7 +63,7 @@ export async function POST(
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
-    if (authError || !user) return apiUnauthorized();
+    if (authError || !user) {return apiUnauthorized();}
 
     const groupResult = await getGroup(slug, true);
     if (!groupResult.success || !groupResult.group) {

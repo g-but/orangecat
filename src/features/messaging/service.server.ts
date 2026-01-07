@@ -430,7 +430,8 @@ export async function sendMessage(
   senderId: string,
   content: string,
   type: string = 'text',
-  metadata: any = null
+  metadata: any = null,
+  senderActorId?: string | null
 ): Promise<string> {
   const { supabase, user } = await getServerUser();
   if (!user) {
@@ -445,6 +446,39 @@ export async function sendMessage(
   try {
     // Use admin client to bypass RLS for participant check
     const admin = createAdminClient();
+
+    // If senderActorId provided, verify user has permission to send as that actor
+    if (senderActorId) {
+      const { data: actor, error: actorError } = await admin
+        .from(DATABASE_TABLES.ACTORS)
+        .select('id, actor_type, user_id, group_id')
+        .eq('id', senderActorId)
+        .single();
+
+      if (actorError || !actor) {
+        throw Object.assign(new Error('Invalid sender actor'), { status: 400 });
+      }
+
+      // Personal actor: must belong to user
+      if (actor.actor_type === 'user' && actor.user_id !== user.id) {
+        throw Object.assign(new Error('Cannot send as this actor'), { status: 403 });
+      }
+
+      // Group actor: user must be admin/moderator of the group
+      if (actor.actor_type === 'group' && actor.group_id) {
+        const { data: membership, error: memberError } = await admin
+          .from(DATABASE_TABLES.GROUP_MEMBERS)
+          .select('role')
+          .eq('group_id', actor.group_id)
+          .eq('user_id', user.id)
+          .in('role', ['founder', 'admin', 'moderator'])
+          .maybeSingle();
+
+        if (memberError || !membership) {
+          throw Object.assign(new Error('Not authorized to send as this group'), { status: 403 });
+        }
+      }
+    }
 
     // First verify the sender is a participant
     const { data: participant, error: partError } = await admin
@@ -469,6 +503,12 @@ export async function sendMessage(
       message_type: type,
       metadata: metadata || {},
     };
+
+    // Add sender_actor_id if provided (column added by migration)
+    if (senderActorId) {
+      (messageData as any).sender_actor_id = senderActorId;
+    }
+
     const { data: message, error: insertError } = await (admin
       .from(DATABASE_TABLES.MESSAGES)
       .insert(messageData as any)
