@@ -1,50 +1,40 @@
 # Security Policy
 
-## Reporting a Vulnerability
-
-We take the security of OrangeCat seriously. If you discover a security vulnerability, please report it responsibly.
-
-**How to Report:**
-
-### Option 1: GitHub Security Advisories (Preferred)
-Use GitHub's private vulnerability reporting:
-1. Go to the [Security tab](https://github.com/g-but/orangecat/security)
-2. Click "Report a vulnerability"
-3. Fill out the private advisory form
-
-### Option 2: Direct Contact
-If you cannot use GitHub Security Advisories, please contact:
-- **Security Email:** [Create a private GitHub security advisory instead of emailing]
-- For urgent issues, you may open a **draft security advisory** which notifies maintainers privately
-
-**IMPORTANT:**
-- ❌ **Do NOT** create public GitHub issues for security vulnerabilities
-- ❌ **Do NOT** disclose publicly until we've released a fix
-- ✅ **DO** use private channels only
-
-**What to Include:**
-- Description of the vulnerability
-- Steps to reproduce
-- Potential impact
-- Affected versions
-- Any suggested fixes (optional)
-
-## Response Time
-
-- **Initial Response:** Within 48 hours
-- **Detailed Update:** Within 7 days
-- **Fix Timeline:** As soon as possible based on severity
-
 ## Supported Versions
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 0.1.x   | :white_check_mark: |
+| latest  | :white_check_mark: |
 
-## More Information
+## Reporting a Vulnerability
 
-For detailed security guidelines, practices, and procedures, see our [full security documentation](./docs/security/SECURITY.md).
+If you discover a security vulnerability in this project, please report it responsibly:
 
----
+1. **Do NOT** create a public GitHub issue for security vulnerabilities
+2. Email the maintainer directly or use GitHub's private vulnerability reporting feature
+3. Include as much detail as possible:
+   - Description of the vulnerability
+   - Steps to reproduce
+   - Potential impact
+   - Suggested fix (if any)
 
-**Thank you for helping keep OrangeCat secure!**
+## Response Timeline
+
+- **Acknowledgment**: Within 48 hours
+- **Initial Assessment**: Within 7 days
+- **Resolution Target**: Within 30 days for critical issues
+
+## Security Measures
+
+This project implements the following security measures:
+
+- Dependency scanning via Dependabot
+- Secret scanning enabled
+- Code scanning (where applicable)
+- Signed commits required from maintainers
+
+## Disclosure Policy
+
+- We follow coordinated disclosure
+- Security patches will be released as soon as possible
+- Credit will be given to reporters (unless anonymity is requested)
