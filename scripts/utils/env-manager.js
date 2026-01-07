@@ -190,9 +190,9 @@ class EnvManager {
 
 # ==================== REQUIRED ====================
 
-# Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=https://ohkueislstxomdjavyhs.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=REPLACE_WITH_ENV_VAR
+# Supabase Configuration (get values from Supabase dashboard)
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=YOUR_ANON_KEY
 
 # Site Configuration
 NEXT_PUBLIC_SITE_URL=http://localhost:3000

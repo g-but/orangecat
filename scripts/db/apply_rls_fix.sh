@@ -3,8 +3,18 @@
 # Apply RLS policy fixes via curl to Supabase REST API
 echo "🔧 Applying RLS policy fixes..."
 
-SUPABASE_URL="https://ohkueislstxomdjavyhs.supabase.co"
-SUPABASE_KEY="REPLACE_WITH_ENV_VAR"
+# Load from .env.local if exists
+if [ -f .env.local ]; then
+  export $(grep -v '^#' .env.local | xargs)
+fi
+
+SUPABASE_URL="${NEXT_PUBLIC_SUPABASE_URL}"
+SUPABASE_KEY="${NEXT_PUBLIC_SUPABASE_ANON_KEY}"
+
+if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_KEY" ]; then
+  echo "Error: Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY"
+  exit 1
+fi
 
 # Read the SQL file and URL encode it
 SQL_CONTENT=$(cat fix_rls_policies.sql | jq -R -s '.')

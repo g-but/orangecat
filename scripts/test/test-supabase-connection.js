@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 
 const { createClient } = require('@supabase/supabase-js');
+require('dotenv').config({ path: '.env.local' });
 
 // Get environment variables
-const SUPABASE_URL = 'https://ohkueislstxomdjavyhs.supabase.co';
-const SUPABASE_ANON_KEY = 'REPLACE_WITH_ENV_VAR';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY');
+  process.exit(1);
+}
 
 async function testSupabaseConnection() {
   console.log('🔍 Testing Supabase Connection...');
