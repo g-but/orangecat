@@ -5,12 +5,14 @@
  * Supports receipts, screenshots, transaction IDs, and text descriptions.
  *
  * Created: 2026-01-06
- * Last Modified: 2026-01-06
+ * Last Modified: 2026-01-09
+ * Last Modified Summary: Added actual image upload support using ProofStorageService
  */
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -21,6 +23,8 @@ import {
   Upload,
   X,
   Loader2,
+  ImageIcon,
+  AlertCircle,
 } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -33,6 +37,7 @@ import {
 } from '@/lib/validation';
 import { cn } from '@/lib/utils';
 import { PROOF_TYPE_META, type ProofUploadFormProps, type ProofType } from './types';
+import { ProofStorageService, type FileUploadProgress } from '@/services/wishlist';
 
 const PROOF_TYPE_OPTIONS: Array<{
   value: ProofType;
@@ -74,6 +79,11 @@ export function ProofUploadForm({
 }: ProofUploadFormProps) {
   const [selectedType, setSelectedType] = useState<ProofType | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
@@ -94,19 +104,86 @@ export function ProofUploadForm({
   });
 
   const imageUrl = watch('image_url');
-  const proofType = watch('proof_type');
 
   const handleTypeSelect = (type: ProofType) => {
     setSelectedType(type);
     setValue('proof_type', type);
+    setUploadError(null);
   };
 
-  const handleImageUpload = (url: string) => {
-    setValue('image_url', url);
+  // Handle file upload to storage
+  const handleFileUpload = useCallback(
+    async (file: File) => {
+      if (!selectedType || (selectedType !== 'receipt' && selectedType !== 'screenshot')) {
+        return;
+      }
+
+      setIsUploading(true);
+      setUploadError(null);
+      setUploadProgress(0);
+
+      const result = await ProofStorageService.uploadProofImage(
+        wishlistItemId,
+        file,
+        selectedType,
+        (progress: FileUploadProgress) => {
+          setUploadProgress(progress.percentage);
+        }
+      );
+
+      setIsUploading(false);
+
+      if (result.success && result.url) {
+        setValue('image_url', result.url);
+        setUploadProgress(100);
+      } else {
+        setUploadError(result.error || 'Failed to upload image');
+        setUploadProgress(0);
+      }
+    },
+    [wishlistItemId, selectedType, setValue]
+  );
+
+  // Handle file input change
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      handleFileUpload(file);
+    }
   };
+
+  // Handle drag and drop
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        handleFileUpload(file);
+      } else {
+        setUploadError('Please drop an image file (JPEG, PNG, WebP, or GIF)');
+      }
+    },
+    [handleFileUpload]
+  );
 
   const handleImageRemove = () => {
     setValue('image_url', null);
+    setUploadProgress(0);
+    setUploadError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const onSubmit = async (data: WishlistFulfillmentProofFormData) => {
@@ -145,7 +222,7 @@ export function ProofUploadForm({
         <div className="space-y-2">
           <Label>Proof Type</Label>
           <div className="grid grid-cols-2 gap-2">
-            {PROOF_TYPE_OPTIONS.map((option) => {
+            {PROOF_TYPE_OPTIONS.map(option => {
               const Icon = option.icon;
               return (
                 <button
@@ -155,17 +232,13 @@ export function ProofUploadForm({
                   className={cn(
                     'flex flex-col items-center p-3 rounded-lg border-2 transition-colors',
                     'hover:bg-muted/50',
-                    selectedType === option.value
-                      ? 'border-primary bg-primary/5'
-                      : 'border-muted'
+                    selectedType === option.value ? 'border-primary bg-primary/5' : 'border-muted'
                   )}
                 >
                   <Icon
                     className={cn(
                       'h-5 w-5 mb-1',
-                      selectedType === option.value
-                        ? 'text-primary'
-                        : 'text-muted-foreground'
+                      selectedType === option.value ? 'text-primary' : 'text-muted-foreground'
                     )}
                   />
                   <span className="text-sm font-medium">{option.label}</span>
@@ -187,44 +260,80 @@ export function ProofUploadForm({
             {/* Image Upload (for receipt/screenshot) */}
             {proofMeta?.requiresImage && (
               <div className="space-y-2">
-                <Label>
-                  {selectedType === 'receipt' ? 'Receipt Image' : 'Screenshot'}
-                </Label>
+                <Label>{selectedType === 'receipt' ? 'Receipt Image' : 'Screenshot'}</Label>
                 {imageUrl ? (
-                  <div className="relative">
-                    <img
-                      src={imageUrl}
-                      alt="Proof"
-                      className="w-full rounded-lg object-cover max-h-48"
-                    />
+                  <div className="relative h-48 w-full">
+                    <Image src={imageUrl} alt="Proof" fill className="rounded-lg object-cover" />
                     <Button
                       type="button"
                       variant="danger"
                       size="sm"
                       className="absolute top-2 right-2"
                       onClick={handleImageRemove}
+                      disabled={isUploading}
                     >
                       <X className="h-4 w-4" />
                     </Button>
                   </div>
                 ) : (
-                  <div className="border-2 border-dashed border-muted rounded-lg p-6 text-center">
-                    <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      Image upload coming soon
-                    </p>
-                    <Input
-                      type="url"
-                      placeholder="Or paste image URL..."
-                      onChange={(e) => handleImageUpload(e.target.value)}
-                      className="mt-3"
+                  <div
+                    className={cn(
+                      'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors',
+                      isDragging
+                        ? 'border-primary bg-primary/5'
+                        : 'border-muted hover:border-muted-foreground/50',
+                      isUploading && 'pointer-events-none opacity-60'
+                    )}
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
+                      onChange={handleFileInputChange}
+                      className="hidden"
+                      disabled={isUploading}
                     />
+
+                    {isUploading ? (
+                      <div className="space-y-3">
+                        <Loader2 className="h-8 w-8 mx-auto text-primary animate-spin" />
+                        <p className="text-sm font-medium">Uploading...</p>
+                        <div className="w-full max-w-xs mx-auto bg-muted rounded-full h-2 overflow-hidden">
+                          <div
+                            className="h-full bg-primary transition-all duration-300"
+                            style={{ width: `${uploadProgress}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground">{uploadProgress}% complete</p>
+                      </div>
+                    ) : (
+                      <>
+                        <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm font-medium mb-1">
+                          {isDragging ? 'Drop image here' : 'Click to upload or drag and drop'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          JPEG, PNG, WebP or GIF (max 10MB)
+                        </p>
+                      </>
+                    )}
                   </div>
                 )}
+
+                {/* Upload Error */}
+                {uploadError && (
+                  <div className="flex items-center gap-2 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+
                 {errors.image_url && (
-                  <p className="text-sm text-destructive">
-                    {errors.image_url.message}
-                  </p>
+                  <p className="text-sm text-destructive">{errors.image_url.message}</p>
                 )}
               </div>
             )}
@@ -243,13 +352,10 @@ export function ProofUploadForm({
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  The transaction ID can be found in your wallet or on a block
-                  explorer
+                  The transaction ID can be found in your wallet or on a block explorer
                 </p>
                 {errors.transaction_id && (
-                  <p className="text-sm text-destructive">
-                    {errors.transaction_id.message}
-                  </p>
+                  <p className="text-sm text-destructive">{errors.transaction_id.message}</p>
                 )}
               </div>
             )}
@@ -263,33 +369,24 @@ export function ProofUploadForm({
                 placeholder="Describe how you used the funds..."
                 rows={3}
               />
-              <p className="text-xs text-muted-foreground">
-                Minimum 10 characters required
-              </p>
+              <p className="text-xs text-muted-foreground">Minimum 10 characters required</p>
               {errors.description && (
-                <p className="text-sm text-destructive">
-                  {errors.description.message}
-                </p>
+                <p className="text-sm text-destructive">{errors.description.message}</p>
               )}
             </div>
 
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               {onCancel && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={onCancel}
-                  disabled={isSubmitting}
-                >
+                <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
                   Cancel
                 </Button>
               )}
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || isUploading}>
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Uploading...
+                    Submitting...
                   </>
                 ) : (
                   <>
