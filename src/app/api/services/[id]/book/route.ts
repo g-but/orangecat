@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
+import { getTableName } from '@/config/entity-registry';
 import { z } from 'zod';
 
 interface RouteParams {
@@ -51,7 +52,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Verify service exists and is active
     const { data: service, error: serviceError } = await supabase
-      .from('user_services')
+      .from(getTableName('service'))
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
       .eq('status', 'active')

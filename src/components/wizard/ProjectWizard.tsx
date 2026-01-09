@@ -13,7 +13,6 @@ import { logger } from '@/utils/logger';
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
-import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { useProjectStore } from '@/stores/projectStore';
 import { toast } from 'sonner';
@@ -24,12 +23,9 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Rocket, X, Loader2, ExternalLink } from 'lucide-react';
-import {
-  ProjectTemplates,
-  type ProjectTemplate,
-} from '@/components/create/templates';
+import { ProjectTemplates, type ProjectTemplate } from '@/components/create/templates';
 import type { ProjectFieldType } from '@/lib/project-guidance';
-import { satoshisToBitcoin, bitcoinToSatoshis } from '@/utils/currency';
+import { satoshisToBitcoin, bitcoinToSatoshis } from '@/services/currency';
 import ProjectMediaUpload from '@/components/project/ProjectMediaUpload';
 import ProjectStatusManager from './ProjectStatusManager';
 import type { ProjectFormData, FormErrors, ProjectWizardProps, ProjectStatus } from './types';
@@ -63,9 +59,11 @@ export function ProjectWizard({
     title: initialData?.title || '',
     description: initialData?.description || '',
     goalAmount: initialData?.goalAmount || '',
-    goalCurrency: (initialData?.goalCurrency && ['CHF', 'USD', 'EUR', 'BTC', 'SATS'].includes(initialData.goalCurrency)) 
-      ? initialData.goalCurrency 
-      : 'CHF',
+    goalCurrency:
+      initialData?.goalCurrency &&
+      ['CHF', 'USD', 'EUR', 'BTC', 'SATS'].includes(initialData.goalCurrency)
+        ? initialData.goalCurrency
+        : 'CHF',
     fundingPurpose: initialData?.fundingPurpose || '',
     bitcoinAddress: initialData?.bitcoinAddress || '',
     websiteUrl: initialData?.websiteUrl || '',
@@ -126,6 +124,7 @@ export function ProjectWizard({
     if (editId) {
       loadProjectForEdit(editId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const loadProjectForEdit = async (projectId: string) => {
@@ -441,7 +440,9 @@ export function ProjectWizard({
                 onChange={e => {
                   const value = e.target.value;
                   if (['CHF', 'USD', 'EUR', 'BTC', 'SATS'].includes(value)) {
-                    updateFormData({ goalCurrency: value as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS' });
+                    updateFormData({
+                      goalCurrency: value as 'CHF' | 'USD' | 'EUR' | 'BTC' | 'SATS',
+                    });
                   }
                   handleFieldFocus('currency');
                 }}

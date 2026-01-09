@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
+import { getTableName } from '@/config/entity-registry';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -41,7 +42,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Verify service exists
     const { data: service, error: serviceError } = await supabase
-      .from('user_services')
+      .from(getTableName('service'))
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
       .eq('status', 'active')
