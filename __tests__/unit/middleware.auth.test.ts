@@ -69,6 +69,10 @@ describe('middleware auth protection', () => {
   it('allows protected route through when no token cookie (client-side auth handles it)', async () => {
     // With localStorage-based auth, middleware cannot check auth state server-side
     // It allows through and lets client-side auth redirect if needed
+    // Must set env vars or middleware redirects due to missing config
+    process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co';
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key';
+
     const req = buildRequest('/dashboard');
     const res = await middleware(req as any);
     expect(res?.status).toBeUndefined(); // NextResponse.next() - allows through
