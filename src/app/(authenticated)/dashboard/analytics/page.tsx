@@ -8,11 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Button from '@/components/ui/Button';
 import {
   TrendingUp,
-  TrendingDown,
   Users,
   DollarSign,
   Target,
-  Calendar,
   BarChart3,
   PieChart,
   Activity,
@@ -20,19 +18,17 @@ import {
   ArrowDownRight,
   Clock,
   Zap,
-  Eye,
   Share2,
   Heart,
 } from 'lucide-react';
-import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
-import { formatCurrency } from '@/utils/currency';
+import { formatCurrency } from '@/services/currency';
 
 interface AnalyticsMetric {
   label: string;
   value: string | number;
   change?: number;
   changeType?: 'increase' | 'decrease' | 'neutral';
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
 }
 
@@ -238,9 +234,9 @@ export default function AnalyticsPage() {
                       <p className="text-sm font-medium text-gray-600">{metric.label}</p>
                       <p className="text-2xl font-bold text-gray-900">
                         {typeof metric.value === 'number' && metric.label === 'Total Raised'
-                          ? formatCurrency(metric.value)
+                          ? formatCurrency(metric.value, 'SATS')
                           : typeof metric.value === 'number' && metric.label === 'Avg Donation'
-                            ? formatCurrency(metric.value)
+                            ? formatCurrency(metric.value, 'SATS')
                             : metric.value}
                       </p>
                     </div>
@@ -299,10 +295,10 @@ export default function AnalyticsPage() {
                           </div>
                         </td>
                         <td className="py-3 px-4 font-medium">
-                          {formatCurrency(project.totalRaised)}
+                          {formatCurrency(project.totalRaised, 'SATS')}
                         </td>
                         <td className="py-3 px-4 text-gray-600">
-                          {formatCurrency(project.goalAmount)}
+                          {formatCurrency(project.goalAmount, 'SATS')}
                         </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
@@ -317,7 +313,7 @@ export default function AnalyticsPage() {
                         </td>
                         <td className="py-3 px-4 font-medium">{project.supporters}</td>
                         <td className="py-3 px-4 text-gray-600">
-                          {formatCurrency(project.avgDonation)}
+                          {formatCurrency(project.avgDonation, 'SATS')}
                         </td>
                         <td className="py-3 px-4 text-gray-600">{project.views}</td>
                         <td className="py-3 px-4">

@@ -1,24 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import {
-  User,
-  Mail,
-  Lock,
-  Check,
-  AlertCircle,
-  Loader2,
-  Sparkles,
-  ChevronRight,
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { User, Mail, Lock, Check, Loader2, Sparkles, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 import { Button } from '@/components/ui/Button';
-import { satoshisToBitcoin } from '@/utils/currency';
+import { satsToBitcoin } from '@/services/currency';
 import {
   Form,
   FormControl,
@@ -66,12 +56,15 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 interface InlineAuthStepProps {
   onSuccess: (userId: string) => Promise<void>;
-  projectData: Partial<FundingPageFormData> & { title: string; goal_amount: number; category: string };
+  projectData: Partial<FundingPageFormData> & {
+    title: string;
+    goal_amount: number;
+    category: string;
+  };
   onBack: () => void;
 }
 
 export default function InlineAuthStep({ onSuccess, projectData, onBack }: InlineAuthStepProps) {
-  const router = useRouter();
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -117,7 +110,8 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
         await onSuccess(result.data.user.id);
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Please check your credentials and try again';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Please check your credentials and try again';
       toast.error('Login failed', {
         description: errorMessage,
       });
@@ -417,7 +411,7 @@ export default function InlineAuthStep({ onSuccess, projectData, onBack }: Inlin
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Goal</span>
               <span className="text-sm font-medium text-gray-900">
-                ₿{satoshisToBitcoin(projectData.goal_amount).toFixed(4)}
+                ₿{satsToBitcoin(projectData.goal_amount).toFixed(4)}
               </span>
             </div>
             <div className="flex items-center justify-between">
