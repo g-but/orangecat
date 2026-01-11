@@ -18,9 +18,6 @@ import Loading from '@/components/Loading';
 export default function CreateWishlistPage() {
   const { user, isLoading, hydrated } = useAuth();
 
-  console.log('CreateWishlistPage: wishlistConfig:', wishlistConfig);
-  console.log('CreateWishlistPage: validationSchema:', wishlistConfig?.validationSchema);
-
   if (!hydrated || isLoading) {
     return <Loading fullScreen message="Preparing wishlist creator..." />;
   }
@@ -29,10 +26,5 @@ export default function CreateWishlistPage() {
     return null;
   }
 
-  return (
-    <CreateEntityWorkflow
-      config={wishlistConfig}
-      userId={user.id}
-    />
-  );
+  return <CreateEntityWorkflow config={wishlistConfig} userId={user.id} />;
 }

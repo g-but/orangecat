@@ -13,12 +13,25 @@ import Loading from '@/components/Loading';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Link from 'next/link';
-import { BarChart3, Star, Eye, Users, Target, Wallet, Plus, MessageCircle, Share2, Copy, Sparkles, X } from 'lucide-react';
+import {
+  BarChart3,
+  Star,
+  Eye,
+  Users,
+  Target,
+  Wallet,
+  Plus,
+  MessageCircle,
+  Share2,
+  Copy,
+  Sparkles,
+  X,
+} from 'lucide-react';
 import ProfileShare from '@/components/sharing/ProfileShare';
 import { toast } from 'sonner';
-import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PROFILE_CATEGORIES } from '@/types/profile';
 import { ProjectCard } from '@/components/entity/variants/ProjectCard';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import TasksSection from '@/components/dashboard/TasksSection';
 
 const DashboardSidebar = dynamic(
@@ -32,7 +45,8 @@ const DashboardSidebar = dynamic(
 );
 
 const MobileDashboardSidebar = dynamic(
-  () => import('@/components/dashboard/MobileDashboardSidebar').then(mod => mod.MobileDashboardSidebar),
+  () =>
+    import('@/components/dashboard/MobileDashboardSidebar').then(mod => mod.MobileDashboardSidebar),
   {
     ssr: false,
     loading: () => (
@@ -54,7 +68,8 @@ const DashboardTimeline = dynamic(
 export default function DashboardPage() {
   const { user, profile, isLoading, error: authError, hydrated } = useAuth();
   const { projects, drafts, loadProjects, getStats } = useProjectStore();
-  const { dispatchProjectCreated } = useTimelineEvents(); // Enable automatic timeline event creation
+  // Timeline events hook - dispatch function available for future use
+  useTimelineEvents();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [localLoading, setLocalLoading] = useState(true);
@@ -95,7 +110,8 @@ export default function DashboardPage() {
       const isEmailConfirmed = searchParams?.get('confirmed') === 'true';
       const welcomeKey = `orangecat-welcome-shown-${user?.id}`;
       const hasSeenWelcome = localStorage.getItem(welcomeKey);
-      const onboardingComplete = (profile as { onboarding_completed?: boolean }).onboarding_completed;
+      const onboardingComplete = (profile as { onboarding_completed?: boolean })
+        .onboarding_completed;
 
       // Show welcome for new users OR email confirmation
       if (isWelcome || isEmailConfirmed || (onboardingComplete && !hasSeenWelcome)) {
@@ -160,7 +176,7 @@ export default function DashboardPage() {
   // Get project stats - ensure projects is an array before using reduce
   const safeProjects = useMemo(() => (Array.isArray(projects) ? projects : []), [projects]);
   const safeDrafts = useMemo(() => (Array.isArray(drafts) ? drafts : []), [drafts]);
-  const stats = useMemo(() => getStats(), [projects, drafts, getStats]);
+  const stats = useMemo(() => getStats(), [getStats]);
   const totalProjects = stats.totalProjects;
 
   // Calculate totals by currency to avoid mixing BTC and CHF - MEMOIZED
@@ -206,20 +222,18 @@ export default function DashboardPage() {
   }, [profile?.username, profile?.bio, profile?.bitcoin_address]);
 
   // Profile completion flags for UI - MEMOIZED
-  const hasUsername = useMemo(() => !!profile?.username, [profile?.username]);
-  const hasBio = useMemo(() => !!profile?.bio, [profile?.bio]);
   const hasBitcoinAddress = useMemo(() => !!profile?.bitcoin_address, [profile?.bitcoin_address]);
 
   // Get primary draft for urgent actions - MEMOIZED
   const hasAnyDraft = useMemo(() => safeDrafts.length > 0, [safeDrafts]);
-  const primaryDraft = useMemo(
-    () => (hasAnyDraft ? safeDrafts[0] : null),
-    [hasAnyDraft, safeDrafts]
-  );
   const totalDrafts = useMemo(() => safeDrafts.length, [safeDrafts]);
 
   const hasTimelineActivity = useMemo(() => {
-    const feed = timelineFeed as unknown as { events?: unknown[]; items?: unknown[]; data?: unknown[] };
+    const feed = timelineFeed as unknown as {
+      events?: unknown[];
+      items?: unknown[];
+      data?: unknown[];
+    };
     return Boolean(feed?.events?.length || feed?.items?.length || feed?.data?.length);
   }, [timelineFeed]);
 
@@ -296,16 +310,11 @@ export default function DashboardPage() {
 
     // Sort by priority and return top 4
     return suggestions.sort((a, b) => a.priority - b.priority).slice(0, 4);
-  }, [
-    hasAnyDraft,
-    hasBitcoinAddress,
-    hasTimelineActivity,
-    safeProjects.length,
-    totalDrafts,
-  ]);
+  }, [hasAnyDraft, hasBitcoinAddress, hasTimelineActivity, safeProjects.length, totalDrafts]);
 
   // Get featured project (most recent published or highest funded) - MEMOIZED
-  const featuredProject = useMemo(() => {
+  // Note: featuredProject is computed but can be used for future featured section
+  useMemo(() => {
     const publishedProjects = safeProjects.filter(p => !p.isDraft);
     if (publishedProjects.length > 0) {
       // Sort by funding amount (highest first) - use spread to avoid mutation
@@ -418,28 +427,35 @@ export default function DashboardPage() {
                   🎉 Welcome to OrangeCat, {profile?.name || profile?.username || 'Creator'}!
                 </h3>
                 <p className="text-green-800 mb-3 sm:mb-4 text-sm sm:text-base">
-                  Your Bitcoin crowdfunding journey starts now. Here's what you can do to get started:
+                  Your Bitcoin crowdfunding journey starts now. Here's what you can do to get
+                  started:
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-3">
                   <Link href="/projects/create">
                     <div className="p-3 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer min-h-[80px] sm:min-h-0">
                       <Target className="h-5 w-5 sm:h-5 sm:w-5 text-orange-600 mb-2 sm:mb-2" />
                       <p className="text-sm sm:text-sm font-medium text-gray-900">Create Project</p>
-                      <p className="text-xs text-gray-600 hidden sm:block mt-1">Launch your first campaign</p>
+                      <p className="text-xs text-gray-600 hidden sm:block mt-1">
+                        Launch your first campaign
+                      </p>
                     </div>
                   </Link>
                   <Link href="/dashboard/wallets">
                     <div className="p-3 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer min-h-[80px] sm:min-h-0">
                       <Wallet className="h-5 w-5 sm:h-5 sm:w-5 text-blue-600 mb-2 sm:mb-2" />
                       <p className="text-sm sm:text-sm font-medium text-gray-900">Add Wallet</p>
-                      <p className="text-xs text-gray-600 hidden sm:block mt-1">Connect Bitcoin wallet</p>
+                      <p className="text-xs text-gray-600 hidden sm:block mt-1">
+                        Connect Bitcoin wallet
+                      </p>
                     </div>
                   </Link>
                   <Link href="/discover">
                     <div className="p-3 sm:p-3 bg-white rounded-lg border border-green-200 hover:border-green-300 hover:shadow-sm transition-all cursor-pointer min-h-[80px] sm:min-h-0">
                       <Eye className="h-5 w-5 sm:h-5 sm:w-5 text-purple-600 mb-2 sm:mb-2" />
                       <p className="text-sm sm:text-sm font-medium text-gray-900">Explore</p>
-                      <p className="text-xs text-gray-600 hidden sm:block mt-1">Discover projects</p>
+                      <p className="text-xs text-gray-600 hidden sm:block mt-1">
+                        Discover projects
+                      </p>
                     </div>
                   </Link>
                   <Link href="/timeline">
@@ -461,8 +477,12 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-orange-200 bg-gradient-to-r from-orange-50 to-teal-50 p-4 sm:p-5 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">Invite friends to OrangeCat</h3>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1">Share your profile link and start building your network</p>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                Invite friends to OrangeCat
+              </h3>
+              <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                Share your profile link and start building your network
+              </p>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2 relative">
               <Link href="/dashboard/people" className="w-full sm:w-auto">
@@ -473,8 +493,8 @@ export default function DashboardPage() {
                 </Button>
               </Link>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 relative w-full sm:w-auto">
-                <Button 
-                  onClick={() => setShowShare(!showShare)} 
+                <Button
+                  onClick={() => setShowShare(!showShare)}
                   className="bg-orange-600 hover:bg-orange-700 text-white w-full sm:w-auto"
                 >
                   <Share2 className="w-4 h-4 sm:mr-2" />
@@ -543,7 +563,9 @@ export default function DashboardPage() {
                     <div className="mt-1">{suggestion.icon}</div>
                     <div>
                       <h3 className="font-semibold text-gray-900">{suggestion.title}</h3>
-                      <p className="text-sm text-gray-600 leading-tight">{suggestion.description}</p>
+                      <p className="text-sm text-gray-600 leading-tight">
+                        {suggestion.description}
+                      </p>
                     </div>
                   </div>
                 </Link>
@@ -634,19 +656,27 @@ export default function DashboardPage() {
             <CardContent className="p-4 sm:p-6">
               <div className="grid gap-4">
                 {safeProjects.slice(0, 3).map(project => (
-                  <ProjectCard 
+                  <ProjectCard
                     key={project.id}
                     id={project.id}
                     title={project.title}
                     href={`/projects/${project.id}`}
-                    project={{
-                      ...project,
-                      id: project.id,
-                      title: project.title,
-                      raised_amount: project.total_funding || 0,
-                      goal_amount: project.goal_amount || 0,
-                      status: project.isDraft ? 'draft' : project.isPaused ? 'paused' : project.isActive ? 'active' : 'draft',
-                    } as any}
+                    project={
+                      {
+                        ...project,
+                        id: project.id,
+                        title: project.title,
+                        raised_amount: project.total_funding || 0,
+                        goal_amount: project.goal_amount || 0,
+                        status: project.isDraft
+                          ? 'draft'
+                          : project.isPaused
+                            ? 'paused'
+                            : project.isActive
+                              ? 'active'
+                              : 'draft',
+                      } as Parameters<typeof ProjectCard>[0]['project']
+                    }
                   />
                 ))}
               </div>

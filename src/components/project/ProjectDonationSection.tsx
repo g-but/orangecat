@@ -11,7 +11,7 @@
 
 'use client';
 
-import { Bitcoin, ExternalLink, Heart, Copy, ShieldCheck, Gift } from 'lucide-react';
+import { Bitcoin, ExternalLink, Heart, Copy, ShieldCheck } from 'lucide-react';
 import BitcoinPaymentButton from '@/components/bitcoin/BitcoinPaymentButton';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
@@ -21,7 +21,7 @@ import { logger } from '@/utils/logger';
 import { QRCodeSVG } from 'qrcode.react';
 import { WishlistDonationTiers } from '@/components/wishlist/WishlistDonationTiers';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
-import { convertFromSats, formatCurrency, formatSatsAuto } from '@/services/currency';
+import { convert, formatCurrency } from '@/services/currency';
 
 interface ProjectDonationSectionProps {
   projectId: string;
@@ -34,9 +34,9 @@ interface ProjectDonationSectionProps {
 
 // Suggested donation amounts in sats (converted to user currency for display)
 const SUGGESTED_AMOUNTS_SATS = [
-  { sats: 100_000, label: 'Small' },    // ~$4-5 USD / ~CHF 5
-  { sats: 500_000, label: 'Medium' },   // ~$20-25 USD / ~CHF 25
-  { sats: 1_000_000, label: 'Large' },  // ~$40-50 USD / ~CHF 50
+  { sats: 100_000, label: 'Small' }, // ~$4-5 USD / ~CHF 5
+  { sats: 500_000, label: 'Medium' }, // ~$20-25 USD / ~CHF 25
+  { sats: 1_000_000, label: 'Large' }, // ~$40-50 USD / ~CHF 50
 ];
 
 export function ProjectDonationSection({
@@ -288,9 +288,11 @@ export function ProjectDonationSection({
             </p>
             <div className="grid grid-cols-3 gap-3">
               {SUGGESTED_AMOUNTS_SATS.map(({ sats, label }) => {
-                const displayAmount = convertFromSats(sats, userCurrency);
-                const formattedAmount = formatCurrency(displayAmount, userCurrency, { compact: true });
-                const satsDisplay = formatSatsAuto(sats);
+                const displayAmount = convert(sats, 'SATS', userCurrency);
+                const formattedAmount = formatCurrency(displayAmount, userCurrency, {
+                  compact: true,
+                });
+                const satsDisplay = formatCurrency(sats, 'SATS', { compact: true });
 
                 return (
                   <button
@@ -306,9 +308,7 @@ export function ProjectDonationSection({
                     <div className="font-semibold text-gray-900 group-hover:text-orange-700">
                       {formattedAmount}
                     </div>
-                    <div className="text-xs text-gray-400 mt-0.5">
-                      ≈ {satsDisplay}
-                    </div>
+                    <div className="text-xs text-gray-400 mt-0.5">≈ {satsDisplay}</div>
                     <div className="text-xs text-gray-500 mt-1">{label}</div>
                   </button>
                 );

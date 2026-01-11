@@ -33,6 +33,9 @@ import { rateLimitWrite } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { type EntityType, getEntityMetadata } from '@/config/entity-registry';
 
+// Type for the awaited Supabase client
+type SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
+
 // ==================== TYPES ====================
 
 export interface EntityPostHandlerConfig {
@@ -44,15 +47,15 @@ export interface EntityPostHandlerConfig {
   tableName?: string;
   /** Function to transform validated data before insertion */
   transformData?: (
-    data: Record<string, unknown>, 
+    data: Record<string, unknown>,
     userId: string,
-    supabase: ReturnType<typeof createServerClient>
+    supabase: SupabaseClient
   ) => Record<string, unknown> | Promise<Record<string, unknown>>;
   /** Custom creation function (if entity has special creation logic) */
   createEntity?: (
     userId: string,
     data: Record<string, unknown>,
-    supabase: ReturnType<typeof createServerClient>
+    supabase: SupabaseClient
   ) => Promise<Record<string, unknown>>;
   /** Additional fields to set on insert (e.g., current_attendees: 0) */
   defaultFields?: Record<string, unknown>;
@@ -78,14 +81,7 @@ export interface EntityPostHandlerConfig {
  * ```
  */
 export function createEntityPostHandler(config: EntityPostHandlerConfig) {
-  const {
-    entityType,
-    schema,
-    tableName,
-    transformData,
-    createEntity,
-    defaultFields = {},
-  } = config;
+  const { entityType, schema, tableName, transformData, createEntity, defaultFields = {} } = config;
 
   const meta = getEntityMetadata(entityType);
   const table = tableName ?? meta.tableName;
@@ -126,26 +122,28 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
       // Default creation: transform data and insert
       let transformedData;
       try {
-        transformedData = transformData 
+        transformedData = transformData
           ? await Promise.resolve(transformData(ctx.body, user.id, supabase))
           : { ...ctx.body, user_id: user.id };
-      } catch (transformError: any) {
+      } catch (transformError) {
         logger.error(`Error transforming data for ${entityType}`, {
           error: transformError,
           body: ctx.body,
-          userId: user.id
+          userId: user.id,
         });
-        return apiInternalError(`Failed to process ${meta.name.toLowerCase()}: ${transformError?.message || String(transformError)}`);
+        const errorMessage =
+          transformError instanceof Error ? transformError.message : String(transformError);
+        return apiInternalError(`Failed to process ${meta.name.toLowerCase()}: ${errorMessage}`);
       }
-      
+
       const entityData = { ...transformedData, ...defaultFields };
 
       // Log the data being inserted for debugging
-      logger.info(`Inserting ${entityType}`, { 
-        table, 
+      logger.info(`Inserting ${entityType}`, {
+        table,
         userId: user.id,
         dataKeys: Object.keys(entityData),
-        entityDataSample: JSON.stringify(entityData, null, 2).substring(0, 500)
+        entityDataSample: JSON.stringify(entityData, null, 2).substring(0, 500),
       });
 
       const { data: entity, error } = await supabase
@@ -155,19 +153,9 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
         .single();
 
       if (error) {
-        // Log full error object structure
-        console.error('Supabase error object:', {
-          error,
-          type: typeof error,
-          constructor: error?.constructor?.name,
-          keys: Object.keys(error || {}),
-          stringified: JSON.stringify(error, null, 2),
-          errorString: String(error)
-        });
-        
         const errorDetails = {
-          error, 
-          userId: user.id, 
+          error,
+          userId: user.id,
           table,
           code: error?.code,
           message: error?.message,
@@ -175,7 +163,7 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
           hint: error?.hint,
           entityData: JSON.stringify(entityData, null, 2),
           // Also log the raw error object
-          rawError: JSON.stringify(error, Object.getOwnPropertyNames(error || {}), 2)
+          rawError: JSON.stringify(error, Object.getOwnPropertyNames(error || {}), 2),
         };
         logger.error(`Error creating ${entityType}`, errorDetails);
         // Return more detailed error message
@@ -198,17 +186,23 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
               errorMsg = `Database error: ${errorStr.substring(0, 200)}`;
             } else {
               // Try to access common Supabase error properties directly
-              const errorCode = (error as any)?.code;
-              const errorMessage = (error as any)?.message;
-              const errorDetails = (error as any)?.details;
-              const errorHint = (error as any)?.hint;
-              if (errorCode || errorMessage || errorDetails || errorHint) {
-                errorMsg = `Database error: code=${errorCode || 'N/A'}, message=${errorMessage || 'N/A'}, details=${errorDetails || 'N/A'}, hint=${errorHint || 'N/A'}`;
+              const supabaseError = error as {
+                code?: string;
+                message?: string;
+                details?: string;
+                hint?: string;
+              };
+              const errorCode = supabaseError?.code;
+              const errorMessageProp = supabaseError?.message;
+              const errorDetails = supabaseError?.details;
+              const errorHint = supabaseError?.hint;
+              if (errorCode || errorMessageProp || errorDetails || errorHint) {
+                errorMsg = `Database error: code=${errorCode || 'N/A'}, message=${errorMessageProp || 'N/A'}, details=${errorDetails || 'N/A'}, hint=${errorHint || 'N/A'}`;
               } else {
                 errorMsg = `Database error: ${error?.toString?.() || String(error)}`;
               }
             }
-          } catch (e) {
+          } catch {
             errorMsg = `Database error: ${String(error)}`;
           }
         } else {
@@ -224,4 +218,3 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
     }
   });
 }
-

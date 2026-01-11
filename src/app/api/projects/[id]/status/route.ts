@@ -29,7 +29,7 @@ const VALID_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Rate limiting check
-    const rateLimitResult = rateLimit(request);
+    const rateLimitResult = await rateLimit(request);
     if (!rateLimitResult.success) {
       return createRateLimitResponse(rateLimitResult);
     }

@@ -26,12 +26,13 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Coins,
-  PenTool,
-  MessageSquare,
-  Heart,
-  Loader2,
-} from 'lucide-react';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Coins, PenTool, MessageSquare, Heart, Loader2 } from 'lucide-react';
 import { ReactionPicker } from './ReactionPicker';
 import type { SupportProjectRequest, ReactionEmoji } from '@/services/projects/support/types';
 import { SUPPORT_TYPE_DESCRIPTIONS } from '@/services/projects/support/constants';
@@ -39,6 +40,7 @@ import projectSupportService from '@/services/projects/support';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
 import { useAuth } from '@/hooks/useAuth';
+import { CURRENCY_CODES, CURRENCY_METADATA, PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 interface SupportModalProps {
   open: boolean;
@@ -53,7 +55,8 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
   const [loading, setLoading] = useState(false);
 
   // Bitcoin donation fields
-  const [amountSats, setAmountSats] = useState('');
+  const [amount, setAmount] = useState('');
+  const [currency, setCurrency] = useState(profile?.currency || PLATFORM_DEFAULT_CURRENCY);
   const [transactionHash, setTransactionHash] = useState('');
 
   // Signature/Message fields - pre-fill with logged-in user's info
@@ -65,15 +68,20 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
   // Reaction field
   const [selectedReaction, setSelectedReaction] = useState<ReactionEmoji | null>(null);
 
-  // Pre-fill display name when user/profile loads or modal opens
+  // Pre-fill display name and currency when user/profile loads or modal opens
   useEffect(() => {
-    if (open && !isAnonymous) {
-      const name = profile?.name || profile?.username || user?.email?.split('@')[0] || '';
-      if (name && !displayName) {
-        setDisplayName(name);
+    if (open) {
+      if (!isAnonymous) {
+        const name = profile?.name || profile?.username || user?.email?.split('@')[0] || '';
+        if (name && !displayName) {
+          setDisplayName(name);
+        }
+      }
+      if (profile?.currency && !currency) {
+        setCurrency(profile.currency);
       }
     }
-  }, [open, user, profile, isAnonymous, displayName]);
+  }, [open, user, profile, isAnonymous, displayName, currency]);
 
   const handleSubmit = async () => {
     try {
@@ -83,13 +91,14 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
 
       switch (activeTab) {
         case 'bitcoin':
-          if (!amountSats || parseFloat(amountSats) <= 0) {
+          if (!amount || parseFloat(amount) <= 0) {
             toast.error('Please enter a valid amount');
             return;
           }
           request = {
             support_type: 'bitcoin_donation',
-            amount_sats: parseInt(amountSats),
+            amount: parseFloat(amount),
+            currency: currency,
             transaction_hash: transactionHash || undefined,
           };
           break;
@@ -156,9 +165,9 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
   const handleClose = () => {
     // Reset form - keep user's display name as default for next time
     setActiveTab('reaction');
-    setAmountSats('');
+    setAmount('');
     setTransactionHash('');
-    setDisplayName(defaultDisplayName);  // Reset to logged-in user's name, not empty
+    setDisplayName(defaultDisplayName); // Reset to logged-in user's name, not empty
     setMessage('');
     setIsAnonymous(false);
     setSelectedReaction(null);
@@ -174,7 +183,8 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
         <DialogHeader>
           <DialogTitle>Support This Project</DialogTitle>
           <DialogDescription>
-            Show your support in multiple ways - donate Bitcoin, sign your name, leave a message, or react!
+            Show your support in multiple ways - donate Bitcoin, sign your name, leave a message, or
+            react!
           </DialogDescription>
         </DialogHeader>
 
@@ -202,9 +212,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
           <TabsContent value="reaction" className="space-y-4">
             <div>
               <Label className="mb-2 block">Choose a Reaction</Label>
-              <p className="text-sm text-gray-500 mb-4">
-                {SUPPORT_TYPE_DESCRIPTIONS.reaction}
-              </p>
+              <p className="text-sm text-gray-500 mb-4">{SUPPORT_TYPE_DESCRIPTIONS.reaction}</p>
               <ReactionPicker
                 onReactionSelect={setSelectedReaction}
                 disabled={loading}
@@ -226,12 +234,14 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
               <div className="space-y-0.5">
                 <Label>Sign Anonymously</Label>
                 <p className="text-xs text-gray-500">
-                  {isAnonymous ? 'Your name will be hidden' : 'Your name will appear on the Wall of Support'}
+                  {isAnonymous
+                    ? 'Your name will be hidden'
+                    : 'Your name will appear on the Wall of Support'}
                 </p>
               </div>
               <Switch
                 checked={isAnonymous}
-                onCheckedChange={(checked) => {
+                onCheckedChange={checked => {
                   setIsAnonymous(checked);
                   // When turning off anonymous, restore default name if empty
                   if (!checked && !displayName) {
@@ -252,7 +262,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
                       id="signature-name"
                       placeholder="Enter your name"
                       value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
+                      onChange={e => setDisplayName(e.target.value)}
                       disabled={loading}
                       className="mt-1"
                     />
@@ -266,7 +276,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
                       id="signature-name"
                       placeholder="Enter your name"
                       value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
+                      onChange={e => setDisplayName(e.target.value)}
                       disabled={loading}
                       className="mt-1"
                     />
@@ -284,7 +294,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
                 id="signature-message"
                 placeholder="Add a message of support (optional)"
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={e => setMessage(e.target.value)}
                 disabled={loading}
                 rows={3}
                 className="mt-1"
@@ -300,7 +310,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
                 id="message-text"
                 placeholder="Leave a message of encouragement, congratulations, or support..."
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={e => setMessage(e.target.value)}
                 disabled={loading}
                 rows={4}
                 className="mt-1"
@@ -315,12 +325,14 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
               <div className="space-y-0.5">
                 <Label>Send Anonymously</Label>
                 <p className="text-xs text-gray-500">
-                  {isAnonymous ? 'Your identity will be hidden' : 'Your name will be shown with the message'}
+                  {isAnonymous
+                    ? 'Your identity will be hidden'
+                    : 'Your name will be shown with the message'}
                 </p>
               </div>
               <Switch
                 checked={isAnonymous}
-                onCheckedChange={(checked) => {
+                onCheckedChange={checked => {
                   setIsAnonymous(checked);
                   if (!checked && !displayName) {
                     setDisplayName(defaultDisplayName);
@@ -340,20 +352,18 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
                       id="message-name"
                       placeholder="Your name"
                       value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
+                      onChange={e => setDisplayName(e.target.value)}
                       disabled={loading}
                       className="mt-1"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Pre-filled from your profile
-                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Pre-filled from your profile</p>
                   </>
                 ) : (
                   <Input
                     id="message-name"
                     placeholder="Your name (optional)"
                     value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
+                    onChange={e => setDisplayName(e.target.value)}
                     disabled={loading}
                     className="mt-1"
                   />
@@ -364,22 +374,40 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
 
           {/* Bitcoin Donation Tab */}
           <TabsContent value="bitcoin" className="space-y-4">
-            <div>
-              <Label htmlFor="amount-sats">Amount (sats) *</Label>
-              <Input
-                id="amount-sats"
-                type="number"
-                placeholder="100000"
-                value={amountSats}
-                onChange={(e) => setAmountSats(e.target.value)}
-                disabled={loading}
-                className="mt-1"
-                min="1"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                {SUPPORT_TYPE_DESCRIPTIONS.bitcoin_donation}
-              </p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="amount">Amount *</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  placeholder="100"
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                  disabled={loading}
+                  className="mt-1"
+                  min="0.01"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <Label htmlFor="currency">Currency</Label>
+                <Select value={currency} onValueChange={setCurrency} disabled={loading}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CURRENCY_CODES.map(code => (
+                      <SelectItem key={code} value={code}>
+                        {CURRENCY_METADATA[code].label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            <p className="text-xs text-gray-500 mt-1">
+              {SUPPORT_TYPE_DESCRIPTIONS.bitcoin_donation}
+            </p>
 
             <div>
               <Label htmlFor="transaction-hash">Transaction Hash (Optional)</Label>
@@ -387,7 +415,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
                 id="transaction-hash"
                 placeholder="Transaction hash if already sent"
                 value={transactionHash}
-                onChange={(e) => setTransactionHash(e.target.value)}
+                onChange={e => setTransactionHash(e.target.value)}
                 disabled={loading}
                 className="mt-1"
               />
@@ -418,5 +446,3 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
     </Dialog>
   );
 }
-
-

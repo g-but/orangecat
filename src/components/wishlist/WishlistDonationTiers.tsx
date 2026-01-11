@@ -13,11 +13,9 @@
 
 import React, { useEffect, useState } from 'react';
 import { Gift, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { toast } from 'sonner';
 import BitcoinPaymentModal from '@/components/bitcoin/BitcoinPaymentModal';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
-import { convertFromSats, formatCurrency, formatSatsAuto } from '@/services/currency';
+import { convert, formatCurrency } from '@/services/currency';
 
 interface WishlistItem {
   id: string;
@@ -90,13 +88,12 @@ export function WishlistDonationTiers({
         <Gift className="h-5 w-5 text-rose-500" />
         <h4 className="font-semibold text-gray-900">Support a specific goal:</h4>
       </div>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        {items.map((item) => {
-          const remaining = item.target_amount_sats - item.funded_amount_sats;
-          const displayAmount = convertFromSats(item.target_amount_sats, userCurrency);
+        {items.map(item => {
+          const displayAmount = convert(item.target_amount_sats, 'SATS', userCurrency);
           const formattedAmount = formatCurrency(displayAmount, userCurrency, { compact: true });
-          const satsDisplay = formatSatsAuto(item.target_amount_sats);
+          const satsDisplay = formatCurrency(item.target_amount_sats, 'SATS', { compact: true });
 
           return (
             <button
@@ -107,12 +104,8 @@ export function WishlistDonationTiers({
               <span className="text-sm font-bold text-gray-900 group-hover:text-orange-700">
                 {formattedAmount}
               </span>
-              <span className="text-xs text-gray-400 mt-0.5">
-                ≈ {satsDisplay}
-              </span>
-              <span className="text-xs text-gray-600 mt-1 line-clamp-1">
-                {item.title}
-              </span>
+              <span className="text-xs text-gray-400 mt-0.5">≈ {satsDisplay}</span>
+              <span className="text-xs text-gray-600 mt-1 line-clamp-1">{item.title}</span>
               <div className="w-full bg-gray-200 rounded-full h-1 mt-3">
                 <div
                   className="bg-orange-500 h-1 rounded-full"

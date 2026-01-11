@@ -1,9 +1,15 @@
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
-import { apiSuccess, apiNotFound, apiInternalError, handleApiError } from '@/lib/api/standardResponse';
+import {
+  apiSuccess,
+  apiNotFound,
+  apiInternalError,
+  handleApiError,
+} from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
+import { getTableName } from '@/config/entity-registry';
 
 /**
  * Toggle favorite status for a project
@@ -128,7 +134,11 @@ async function handleToggleFavorite(
 
     return apiInternalError('Method not allowed');
   } catch (error) {
-    logger.error('Unexpected error in favorite toggle', { error, userId: request.user.id }, 'Projects');
+    logger.error(
+      'Unexpected error in favorite toggle',
+      { error, userId: request.user.id },
+      'Projects'
+    );
     return handleApiError(error);
   }
 }
@@ -171,7 +181,11 @@ async function handleGetFavoriteStatus(
 
     return apiSuccess({ isFavorited: !!favorite });
   } catch (error) {
-    logger.error('Unexpected error checking favorite status', { error, userId: request.user.id }, 'Projects');
+    logger.error(
+      'Unexpected error checking favorite status',
+      { error, userId: request.user.id },
+      'Projects'
+    );
     return handleApiError(error);
   }
 }
