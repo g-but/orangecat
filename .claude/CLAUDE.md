@@ -1,18 +1,20 @@
 # OrangeCat Development Guide for Claude Code
 
-**Last Updated:** 2026-01-06  
-**Version:** 5.0 - Agentic & Tool-Driven Development
+**Last Updated:** 2026-01-07
+**Version:** 5.1 - Agentic & Tool-Driven Development
 
 > **🎯 Mission**: Maximize Claude's agentic power through automated workflows, intelligent tool usage, and self-correcting systems.
 
 ## 📚 Essential Documents (Read These First)
 
 **Quick Lookup**:
+
 - **`.claude/QUICK_REFERENCE.md`** ⚡ One-page lookup for common operations
 - **`.claude/CREDENTIALS.md`** 🔐 Where credentials are & how to access tools
 - **`.claude/RULES.md`** 🛡️ CRITICAL: .env.local protection rules
 
 **Detailed Guides**:
+
 - **`.claude/rules/`** 📖 All best practices (6 modular files)
 - **`docs/guides/ai/COMMON.md`** 🤝 Shared patterns with other agents
 
@@ -36,12 +38,14 @@ Every task follows this loop:
 ### Critical Principles
 
 **🔧 Tool Chaining**: Combine multiple tools in sequence
+
 ```bash
 # Example flow
 grep "ENTITY_REGISTRY" → read matched files → analyze patterns → edit file → run post-hook
 ```
 
 **📖 Always Inspect First**: NEVER edit files blindly
+
 ```typescript
 // ✅ Good workflow
 1. read_file to understand structure
@@ -57,6 +61,7 @@ grep "ENTITY_REGISTRY" → read matched files → analyze patterns → edit file
 ```
 
 **🔄 Self-Correction**: Use post-hooks to catch errors immediately
+
 - Type errors → Fix automatically
 - Lint errors → Auto-fix and report
 - Test failures → Analyze and retry
@@ -66,12 +71,14 @@ grep "ENTITY_REGISTRY" → read matched files → analyze patterns → edit file
 ## 🗂️ Project Context & Structure
 
 ### Tech Stack
-- **Frontend**: Next.js 14 (App Router), React Server Components, TypeScript, TailwindCSS
+
+- **Frontend**: Next.js 15 (App Router), React Server Components, TypeScript 5.8, TailwindCSS 3.3
 - **Backend**: Next.js API Routes, Supabase (PostgreSQL + Auth + RLS)
 - **Bitcoin**: Native Lightning Network integration, sats-only pricing
 - **Deployment**: Vercel (Production + Preview)
 
 ### Core Principles (ALWAYS Enforce)
+
 1. **DRY**: Don't Repeat Yourself - extract shared logic
 2. **SSOT**: Single Source of Truth - `src/config/entity-registry.ts`
 3. **Separation of Concerns**: domain/ → business logic, api/ → HTTP, components/ → UI
@@ -79,6 +86,7 @@ grep "ENTITY_REGISTRY" → read matched files → analyze patterns → edit file
 5. **Modularity**: Configuration over code
 
 ### Critical Files (Memorize These)
+
 - **Entity SSOT**: `src/config/entity-registry.ts`
 - **Validation**: `src/lib/validation.ts`
 - **Engineering Principles**: `docs/development/ENGINEERING_PRINCIPLES.md`
@@ -92,7 +100,9 @@ grep "ENTITY_REGISTRY" → read matched files → analyze patterns → edit file
 ### 1. Supabase (Database & Auth)
 
 #### Credentials Location
+
 **CRITICAL**: All Supabase credentials are in `.env.local`
+
 ```bash
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
@@ -100,20 +110,23 @@ SUPABASE_SERVICE_ROLE_KEY=eyJ...
 ```
 
 #### Remote-Only Setup
+
 - **NO local Supabase** for development
 - Always use remote instance
 - See `docs/operations/REMOTE_ONLY_SUPABASE.md`
 
 #### Tool Usage
+
 ```typescript
 // Always use MCP Supabase tools when available
-mcp_supabase_list_tables()        // List all tables
-mcp_supabase_execute_sql()        // Run queries
-mcp_supabase_apply_migration()    // Create migrations
-mcp_supabase_get_advisors()       // Check for issues
+mcp_supabase_list_tables(); // List all tables
+mcp_supabase_execute_sql(); // Run queries
+mcp_supabase_apply_migration(); // Create migrations
+mcp_supabase_get_advisors(); // Check for issues
 ```
 
 #### Common Operations
+
 ```bash
 # Check database structure
 Use mcp_supabase_list_tables to see all tables
@@ -131,12 +144,15 @@ query: "ALTER TABLE user_products ADD COLUMN warranty_period INTEGER;"
 ### 2. Vercel (Deployment)
 
 #### Environment Variables
+
 **Stored in**: Vercel Dashboard + `.env.local`
+
 - Use `mcp_vercel_*` tools if available
 - Check deployment status after changes
 - Preview URLs auto-generated for PRs
 
 #### Deployment Workflow
+
 ```bash
 # Automatic deploys
 main branch → Production (orangecat.app)
@@ -152,6 +168,7 @@ feature/* → Preview URL (check PR comments)
 ### 3. GitHub Integration
 
 #### PR Workflow
+
 ```bash
 # Create feature branch
 git checkout -b feature/add-warranty-field
@@ -170,6 +187,7 @@ git push origin feature/add-warranty-field
 ```
 
 #### Code Review Automation
+
 - GitHub Actions run on every PR
 - Claude can review code via MCP GitHub tools
 - Check `.github/workflows/` for CI config
@@ -177,20 +195,33 @@ git push origin feature/add-warranty-field
 ### 4. Browser Automation (MCP)
 
 #### Available Tools
+
 ```javascript
 // Navigate to page
-mcp_cursor-ide-browser_browser_navigate({ url: 'http://localhost:3001/dashboard' })
+mcp_cursor - ide - browser_browser_navigate({ url: 'http://localhost:3001/dashboard' });
 
 // Take snapshot (better than screenshot)
-mcp_cursor-ide-browser_browser_snapshot()
+mcp_cursor - ide - browser_browser_snapshot();
 
 // Interact with elements
-mcp_cursor-ide-browser_browser_click({ element: 'Create Product button', ref: 'button[data-testid="create-product"]' })
+mcp_cursor -
+  ide -
+  browser_browser_click({
+    element: 'Create Product button',
+    ref: 'button[data-testid="create-product"]',
+  });
 
-mcp_cursor-ide-browser_browser_type({ element: 'Title input', ref: 'input[name="title"]', text: 'Test Product' })
+mcp_cursor -
+  ide -
+  browser_browser_type({
+    element: 'Title input',
+    ref: 'input[name="title"]',
+    text: 'Test Product',
+  });
 ```
 
 #### Testing Flow Example
+
 ```javascript
 // 1. Navigate
 await navigate({ url: 'http://localhost:3001/dashboard/store' });
@@ -215,6 +246,7 @@ await wait_for({ text: 'Product created successfully' });
 ### 5. Context7 (Documentation)
 
 #### Usage
+
 ```bash
 # Get up-to-date docs for any library
 mcp_context7_resolve-library-id({ libraryName: 'next.js', query: 'user question' })
@@ -222,6 +254,7 @@ mcp_context7_query-docs({ libraryId: '/vercel/next.js', query: 'how to use serve
 ```
 
 #### When to Use
+
 - User asks about specific library/framework
 - Need current documentation (not training data)
 - Verify API usage patterns
@@ -231,12 +264,15 @@ mcp_context7_query-docs({ libraryId: '/vercel/next.js', query: 'how to use serve
 ## 🚨 Panic Buttons & Error Recovery
 
 ### Stop (Esc)
+
 **When**: Action goes off-track
 **Action**: Interrupt immediately, reset context
 
 ### Correction (Esc + Memory with #)
+
 **When**: Mistake needs to be taught
-**Action**: 
+**Action**:
+
 ```
 # Never modify migration files without explicit approval
 # Always use ENTITY_REGISTRY for entity metadata
@@ -244,10 +280,12 @@ mcp_context7_query-docs({ libraryId: '/vercel/next.js', query: 'how to use serve
 ```
 
 ### Rewind (Double Esc)
+
 **When**: Bad context pollutes conversation
 **Action**: Erase last exchange, start fresh
 
 ### Compact (/compact)
+
 **When**: Conversation gets long, need to summarize
 **Action**: Compress history to key points
 
@@ -262,6 +300,7 @@ mcp_context7_query-docs({ libraryId: '/vercel/next.js', query: 'how to use serve
 **Location**: `.claude/hooks/pre-edit.sh`
 
 **Checks**:
+
 - Block sensitive file edits (.env, credentials)
 - Verify entity registry usage
 - Check for duplicate functionality
@@ -274,12 +313,14 @@ mcp_context7_query-docs({ libraryId: '/vercel/next.js', query: 'how to use serve
 **Location**: `.claude/hooks/post-edit.sh`
 
 **Actions**:
+
 1. Run type checker → Feed errors back for fixing
 2. Run linter → Auto-fix issues
 3. Run affected tests → Report failures
 4. Check for magic strings → Flag violations
 
 **Self-Correction Loop**:
+
 ```
 Edit file → Post-hook runs → Errors detected → Claude reads stderr → Claude fixes → Verify
 ```
@@ -291,6 +332,7 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
 **Location**: `.claude/hooks/anti-bloat.sh`
 
 **Checks**:
+
 - File already exists with similar name?
 - Duplicate code patterns detected?
 - Entity can use existing generic component?
@@ -300,30 +342,37 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
 ## ⚡ Custom Commands (God Mode)
 
 ### `/audit`
+
 **Purpose**: Comprehensive project health check
 **Location**: `.claude/commands/audit.sh`
 **Runs**:
+
 - npm audit (security)
 - Type coverage check
 - Unused exports detection
 - Database advisors check
 
 ### `/test-entity <type>`
+
 **Purpose**: E2E test for entity type
 **Example**: `/test-entity product`
 **Runs**: Browser automation flow for entity
 
 ### `/db-check`
+
 **Purpose**: Verify database health
-**Runs**: 
+**Runs**:
+
 - List tables
 - Check migrations
 - Run security advisors
 - Check performance advisors
 
 ### `/deploy-check`
+
 **Purpose**: Pre-deployment verification
 **Runs**:
+
 - Type check
 - Lint
 - Tests
@@ -336,11 +385,13 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
 ### Project Initialization
 
 **First command in new session**:
+
 ```bash
 /init
 ```
 
 **This maps**:
+
 - Project structure
 - Key files
 - Entity registry
@@ -364,12 +415,14 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
 ### Laser-Focused References
 
 **Use `@file` for specific context**:
+
 ```
 @src/config/entity-registry.ts What entities are registered?
 @src/lib/validation.ts Show me the product schema
 ```
 
 **Benefits**:
+
 - More accurate responses
 - Token efficiency
 - Faster processing
@@ -377,6 +430,7 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
 ### Screenshot Support
 
 **Paste UI screenshots** (Ctrl+V / Cmd+V):
+
 - Visual debugging
 - UI design review
 - Error state analysis
@@ -388,6 +442,7 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
 **Strategies to Stay Efficient**:
 
 1. **Use grep before read_file**:
+
    ```bash
    # ✅ Find exactly what you need first
    grep "ENTITY_REGISTRY" -r src/
@@ -395,6 +450,7 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
    ```
 
 2. **Read file ranges, not whole files**:
+
    ```bash
    # ✅ Read specific sections
    read_file(file, offset=100, limit=50)
@@ -402,12 +458,14 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
    ```
 
 3. **Reference, don't duplicate**:
+
    ```
    # ✅ "See ENTITY_REGISTRY at line 45 for product config"
    # ❌ Don't paste entire registry into response
    ```
 
 4. **Use QUICK_REFERENCE.md**:
+
    ```
    # ✅ Scan at session start (500 lines)
    # Covers 80% of common operations
@@ -415,6 +473,7 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
    ```
 
 5. **Summarize, don't repeat**:
+
    ```
    # ✅ "Updated 3 files: entity-registry.ts (added event), validation.ts (added schema), event.ts (new file)"
    # ❌ Don't show all file contents in response
@@ -431,17 +490,21 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
 ## 🎯 Mode Selection
 
 ### Standard Mode
+
 **Use for**: Straightforward implementations, simple fixes
 **Characteristics**: Fast, direct, assumes clear path
 
 ### Planning Mode (Shift+Tab x2)
-**Use for**: 
+
+**Use for**:
+
 - Architecture decisions
 - Complex refactors
 - Multi-file changes
 - Strategic thinking
 
 **Process**:
+
 1. Outline approach
 2. Identify dependencies
 3. Plan file changes
@@ -449,13 +512,16 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
 5. Execute systematically
 
 ### Thinking Mode ("Ultra think")
+
 **Use for**:
+
 - Deep debugging
 - Algorithm design
 - Performance optimization
 - Complex business logic
 
 **Process**:
+
 1. First principles analysis
 2. Multiple approach exploration
 3. Trade-off evaluation
@@ -466,19 +532,25 @@ Edit file → Post-hook runs → Errors detected → Claude reads stderr → Cla
 ## 🔄 Handoff System
 
 ### Commands
+
 **From COMMON.md** (all agents use these):
+
 - `h` or `handoff` → Update SESSION_HANDOFF.md
 - `p` or `pickup` → Read and continue from handoff
 
 ### Purpose
+
 Enable seamless collaboration between:
+
 - Different AI agents (Claude, Cursor, etc.)
 - Different sessions
 - Different developers
 
 ### Handoff Document
+
 **Location**: `docs/development/SESSION_HANDOFF.md`
 **Contains**:
+
 - What was accomplished
 - Files modified
 - Recommended next steps
@@ -492,35 +564,41 @@ Enable seamless collaboration between:
 ### Core Rules (Detailed Documentation)
 
 **Engineering Principles**: `.claude/rules/engineering-principles.md`
+
 - DRY, SSOT, Separation of Concerns
 - Entity Registry Pattern
 - Anti-patterns to avoid
 
 **Frontend Best Practices**: `.claude/rules/frontend-best-practices.md`
+
 - Design system usage
 - Progressive disclosure
 - Context-aware navigation
 - Accessibility standards
 
 **Backend Best Practices**: `.claude/rules/backend-best-practices.md`
+
 - API design patterns
 - Supabase/RLS usage
 - Validation with Zod
 - Error handling
 
 **Architecture Patterns**: `.claude/rules/architecture-patterns.md`
+
 - Factory patterns
 - Composition patterns
 - Service layer patterns
 - Schema composition
 
 **Code Quality**: `.claude/rules/code-quality.md`
+
 - Naming conventions
 - File size limits
 - Testing requirements
 - Performance standards
 
 **Domain-Specific**: `.claude/rules/domain-specific.md`
+
 - Bitcoin integration
 - Actor system
 - OrangeCat terminology
@@ -586,7 +664,9 @@ Update SESSION_HANDOFF.md with:
 ## 🚀 Agentic Best Practices
 
 ### 1. Proactive Refactoring
+
 **When you see legacy code**:
+
 ```
 ❌ Don't just add to mess
 ✅ Suggest refactor first
@@ -596,7 +676,9 @@ Update SESSION_HANDOFF.md with:
 ```
 
 ### 2. Automated Verification
+
 **After every change**:
+
 ```
 ✅ Post-hooks auto-run
 ✅ Read stderr for errors
@@ -606,7 +688,9 @@ Update SESSION_HANDOFF.md with:
 ```
 
 ### 3. Tool-First Thinking
+
 **Before writing code**:
+
 ```
 1. Can Supabase MCP handle this? (database)
 2. Can browser automation verify? (UI)
@@ -615,7 +699,9 @@ Update SESSION_HANDOFF.md with:
 ```
 
 ### 4. Guardian Mindset
+
 **Always enforce**:
+
 ```
 ✅ Entity Registry usage (no magic strings)
 ✅ DRY principle (extract shared logic)
@@ -629,50 +715,56 @@ Update SESSION_HANDOFF.md with:
 ## 📚 Quick Reference
 
 ### Essential Commands
-| Command | Purpose | Example |
-|---------|---------|---------|
-| `ship` | Complete testing & deployment | Production ready |
-| `quick-ship` | Fast deployment | Skip full QA |
-| `/init` | Map project | Start of session |
-| `/audit` | Health check | Before PR |
-| `/test-entity` | E2E test | After entity changes |
-| `/db-check` | DB health | After migrations |
-| `h` | Handoff | End of session |
-| `p` | Pickup | Start of session |
+
+| Command        | Purpose                       | Example              |
+| -------------- | ----------------------------- | -------------------- |
+| `ship`         | Complete testing & deployment | Production ready     |
+| `quick-ship`   | Fast deployment               | Skip full QA         |
+| `/init`        | Map project                   | Start of session     |
+| `/audit`       | Health check                  | Before PR            |
+| `/test-entity` | E2E test                      | After entity changes |
+| `/db-check`    | DB health                     | After migrations     |
+| `h`            | Handoff                       | End of session       |
+| `p`            | Pickup                        | Start of session     |
 
 ### Essential Tools
-| Tool | Purpose | When to Use |
-|------|---------|-------------|
-| `mcp_supabase_*` | Database ops | Queries, migrations, checks |
-| `mcp_cursor-ide-browser_*` | UI testing | After UI changes |
-| `mcp_context7_*` | Documentation | Library questions |
-| `grep` | Find patterns | Before editing |
-| `read_file` | Understand code | Always before editing |
+
+| Tool                       | Purpose         | When to Use                 |
+| -------------------------- | --------------- | --------------------------- |
+| `mcp_supabase_*`           | Database ops    | Queries, migrations, checks |
+| `mcp_cursor-ide-browser_*` | UI testing      | After UI changes            |
+| `mcp_context7_*`           | Documentation   | Library questions           |
+| `grep`                     | Find patterns   | Before editing              |
+| `read_file`                | Understand code | Always before editing       |
 
 ### Essential Files
-| File | Purpose | Never Edit Without |
-|------|---------|---------------------|
-| `.env.local` | Credentials | Backup first |
+
+| File                            | Purpose     | Never Edit Without |
+| ------------------------------- | ----------- | ------------------ |
+| `.env.local`                    | Credentials | Backup first       |
 | `src/config/entity-registry.ts` | Entity SSOT | Full understanding |
-| `supabase/migrations/*` | DB schema | Explicit approval |
+| `supabase/migrations/*`         | DB schema   | Explicit approval  |
 
 ---
 
 ## 🎯 Success Metrics
 
 ### Developer Efficiency
+
 - Time to add new entity: < 1 hour
 - Bugs caught by hooks: > 90%
 - Test coverage: > 80%
 - Code duplication: < 5%
 
 ### Code Quality
+
 - Type safety: 100%
 - Lint errors: 0
 - Magic strings: 0
 - Entity registry usage: 100%
 
 ### User Experience
+
 - Page load: < 2s
 - Error states: Always shown
 - Loading states: Always shown
@@ -683,6 +775,7 @@ Update SESSION_HANDOFF.md with:
 ## 📖 Additional Resources
 
 ### Documentation
+
 - **All rules**: `.claude/rules/`
 - **Hooks**: `.claude/hooks/`
 - **Commands**: `.claude/commands/`
@@ -691,6 +784,7 @@ Update SESSION_HANDOFF.md with:
 - **Common guide**: `docs/guides/ai/COMMON.md`
 
 ### External Tools
+
 - **Supabase Dashboard**: Check `.env.local` for URL
 - **Vercel Dashboard**: https://vercel.com/orangecat
 - **GitHub**: https://github.com/orangecat/orangecat
@@ -709,6 +803,6 @@ Update SESSION_HANDOFF.md with:
 
 ---
 
-**Version**: 5.0  
-**Last Updated**: 2026-01-06  
+**Version**: 5.1
+**Last Updated**: 2026-01-07
 **Next Review**: When new tools or patterns emerge
