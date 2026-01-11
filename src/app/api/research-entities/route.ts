@@ -31,8 +31,8 @@ export const GET = compose(
     const field = getString(request.url, 'field');
     const status = getString(request.url, 'status');
 
-    // Check auth for showing private entities
-    const { data: { user } } = await supabase.auth.getUser();
+    // Check auth for showing private entities (user info available if needed)
+    await supabase.auth.getUser();
 
     // Build query
     const tableName = getTableName('research_entity');
@@ -42,9 +42,7 @@ export const GET = compose(
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
-    let countQuery = supabase
-      .from(tableName)
-      .select('*', { count: 'exact', head: true });
+    let countQuery = supabase.from(tableName).select('*', { count: 'exact', head: true });
 
     // Apply filters
     if (userId) {
@@ -77,8 +75,12 @@ export const GET = compose(
       countQuery,
     ]);
 
-    if (itemsError) {throw itemsError;}
-    if (countError) {throw countError;}
+    if (itemsError) {
+      throw itemsError;
+    }
+    if (countError) {
+      throw countError;
+    }
 
     // Cache control based on query type
     const cacheControl = getCacheControl(Boolean(userId));
@@ -97,12 +99,17 @@ export const GET = compose(
 // POST /api/research-entities - Create new research entity
 export const POST = compose(
   withRequestId(),
-  withZodBody(researchEntityConfig.schema || {}),
+  ...(researchEntityConfig.schema
+    ? [withZodBody(researchEntityConfig.schema as Parameters<typeof withZodBody>[0])]
+    : []),
   withRateLimit('write')
 )(async (request: NextRequest, ctx) => {
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return apiUnauthorized();
@@ -123,10 +130,15 @@ export const POST = compose(
       .select('*', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
-    if (countError) {throw countError;}
+    if (countError) {
+      throw countError;
+    }
 
     if (count && count >= 10) {
-      return apiRateLimited('Maximum 10 research entities per user. Please complete or archive existing projects.', 3600);
+      return apiRateLimited(
+        'Maximum 10 research entities per user. Please complete or archive existing projects.',
+        3600
+      );
     }
 
     const validatedData = ctx.body as ResearchEntityCreate;
@@ -146,8 +158,9 @@ export const POST = compose(
         methodology: validatedData.methodology,
         expected_outcome: validatedData.expected_outcome,
         timeline: validatedData.timeline,
-        funding_goal_sats: validatedData.funding_goal_sats,
-        funding_raised_sats: 0,
+        funding_goal: validatedData.funding_goal,
+        funding_goal_currency: validatedData.funding_goal_currency,
+        funding_raised_btc: 0,
         funding_model: validatedData.funding_model,
         wallet_address: walletAddress,
         lead_researcher: validatedData.lead_researcher,
@@ -183,7 +196,7 @@ export const POST = compose(
     logger.info('Research entity created successfully', {
       researchEntityId: researchEntity.id,
       userId: user.id,
-      walletAddress: walletAddress
+      walletAddress: walletAddress,
     });
 
     return apiSuccess(researchEntity, { status: 201 });

@@ -134,7 +134,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
   }
 
   // Fetch user's projects (exclude drafts, respect show_on_profile setting)
-  const { data: projects, error: projectsError } = await supabase
+  const { data: projects } = await supabase
     .from('projects')
     .select(
       `
@@ -160,13 +160,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
 
   // Fetch follower count
   const { count: followerCount } = await supabase
-        .from(DATABASE_TABLES.FOLLOWS)
+    .from(DATABASE_TABLES.FOLLOWS)
     .select('*', { count: 'exact', head: true })
     .eq('following_id', profile.id);
 
   // Fetch following count
   const { count: followingCount } = await supabase
-        .from(DATABASE_TABLES.FOLLOWS)
+    .from(DATABASE_TABLES.FOLLOWS)
     .select('*', { count: 'exact', head: true })
     .eq('follower_id', profile.id);
 
@@ -178,8 +178,10 @@ export default async function PublicProfilePage({ params }: PageProps) {
       p_entity_type: 'profile',
       p_entity_id: profile.id,
     });
-    walletCount = walletData ? walletData.filter((w: any) => w.is_active).length : 0;
-  } catch (error) {
+    walletCount = walletData
+      ? walletData.filter((w: { is_active: boolean }) => w.is_active).length
+      : 0;
+  } catch {
     // Fallback: try querying wallet_ownerships table directly
     try {
       const { count } = await supabase
@@ -189,9 +191,9 @@ export default async function PublicProfilePage({ params }: PageProps) {
         .eq('owner_id', profile.id)
         .eq('is_active', true);
       walletCount = count || 0;
-    } catch (fallbackError) {
-      // If both fail, wallets table might not be migrated yet
-      console.log('Wallet architecture not available');
+    } catch {
+      // Wallet architecture not fully migrated - this is expected during transition
+      // walletCount remains 0
     }
   }
 

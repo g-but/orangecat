@@ -39,34 +39,39 @@ export async function listLoans() {
 }
 
 export async function createLoan(
-  userId: string, 
-  input: CreateLoanInput & { collateral?: any[] },
-  supabase?: ReturnType<typeof createServerClient>
+  userId: string,
+  input: CreateLoanInput & {
+    collateral?: Array<{ type: string; value: number; description?: string }>;
+  },
+  supabase?: Awaited<ReturnType<typeof createServerClient>>
 ) {
   const mode = process.env.LOANS_WRITE_MODE || 'db';
   if (mode === 'mock') {
     throw new Error('Mock mode is disabled by policy. Set LOANS_WRITE_MODE=db');
   }
 
-  const client = supabase || await createServerClient();
-  
+  const client = supabase || (await createServerClient());
+
   // Extract collateral (will be handled separately)
   const { collateral, ...loanInput } = input;
-  
+
   // Map form fields to database columns
   // Handle both new schema (original_amount) and legacy schema (amount_sats)
   // Convert original_amount to sats for legacy field (rough conversion: 1 CHF ≈ 86,000 sats)
-  const amountInSats = loanInput.original_amount && loanInput.original_amount > 0
-    ? Math.floor(loanInput.original_amount * 100000000 / 86000)
-    : 1000000; // Default to 1M sats if no amount provided (shouldn't happen due to validation)
-  
+  const amountInSats =
+    loanInput.original_amount && loanInput.original_amount > 0
+      ? Math.floor((loanInput.original_amount * 100000000) / 86000)
+      : 1000000; // Default to 1M sats if no amount provided (shouldn't happen due to validation)
+
   // Normalize empty strings to null for UUID and optional fields
-  const normalizeToNull = (value: any): any => {
-    if (value === '' || value === undefined) {return null;}
+  const normalizeToNull = <T>(value: T): T | null => {
+    if (value === '' || value === undefined) {
+      return null;
+    }
     return value;
   };
 
-  const payload: any = {
+  const payload: Record<string, unknown> = {
     user_id: userId,
     title: loanInput.title,
     description: loanInput.description || '',
@@ -92,15 +97,15 @@ export async function createLoan(
 
   const { data, error } = await client.from(getTableName('loan')).insert(payload).select().single();
   if (error) {
-    logger.error('Failed to create loan', { 
-      error, 
+    logger.error('Failed to create loan', {
+      error,
       errorCode: error.code,
       errorMessage: error.message,
       errorDetails: error.details,
       errorHint: error.hint,
-      userId, 
+      userId,
       input: loanInput,
-      payload: JSON.stringify(payload, null, 2)
+      payload: JSON.stringify(payload, null, 2),
     });
     throw error;
   }

@@ -5,7 +5,7 @@ import { Bitcoin, Zap, Copy, ExternalLink } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
-import { convertFromSats, formatCurrency, formatSatsAuto } from '@/services/currency';
+import { convert, formatCurrency } from '@/services/currency';
 
 interface AddressCardProps {
   type: 'bitcoin' | 'lightning';
@@ -129,7 +129,7 @@ export default function BitcoinDonationCard({
 
   // Format balance in user's preferred currency
   const formatBalance = (balanceSats: number) => {
-    const displayAmount = convertFromSats(balanceSats, userCurrency);
+    const displayAmount = convert(balanceSats, 'SATS', userCurrency);
     return formatCurrency(displayAmount, userCurrency, { compact: true });
   };
 
@@ -148,11 +148,9 @@ export default function BitcoinDonationCard({
         {balance !== undefined && balance > 0 && (
           <div className="text-right">
             <div className="text-xs text-gray-500">Balance</div>
-            <div className="text-sm font-bold text-gray-900">
-              {formatBalance(balance)}
-            </div>
+            <div className="text-sm font-bold text-gray-900">{formatBalance(balance)}</div>
             <div className="text-xs text-gray-400">
-              ≈ {formatSatsAuto(balance)}
+              ≈ {formatCurrency(balance, 'SATS', { compact: true })}
             </div>
           </div>
         )}

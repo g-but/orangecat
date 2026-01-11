@@ -1,5 +1,6 @@
 import EntityDetailPage from '@/components/entity/EntityDetailPage';
 import { loanEntityConfig } from '@/config/entities/loans';
+import { Badge } from '@/components/ui/badge';
 import type { Loan } from '@/types/loans';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -33,7 +34,9 @@ export default async function LoanDetailPage({ params }: PageProps) {
   }
 
   function calculateProgress(original: number, remaining: number) {
-    if (original === 0) {return 0;}
+    if (original === 0) {
+      return 0;
+    }
     return ((original - remaining) / original) * 100;
   }
 
@@ -43,7 +46,7 @@ export default async function LoanDetailPage({ params }: PageProps) {
       entityId={id}
       requireAuth={true}
       redirectPath="/auth?mode=login&from=/dashboard/loans"
-      makeDetailFields={(loan) => {
+      makeDetailFields={loan => {
         const progress = calculateProgress(loan.original_amount, loan.remaining_balance);
         const paidAmount = loan.original_amount - loan.remaining_balance;
 
@@ -84,9 +87,7 @@ export default async function LoanDetailPage({ params }: PageProps) {
           left.push({
             label: 'Loan Type',
             value:
-              loan.loan_type === 'new_request'
-                ? 'New Loan Request'
-                : 'Existing Loan Refinancing',
+              loan.loan_type === 'new_request' ? 'New Loan Request' : 'Existing Loan Refinancing',
           });
         }
 

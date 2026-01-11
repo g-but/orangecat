@@ -27,10 +27,11 @@ import type { EntityConfig, BaseEntity } from '@/types/entity';
 import { PLATFORM_DEFAULT_CURRENCY, isSupportedCurrency } from '@/config/currencies';
 import type { Currency } from '@/types/settings';
 import { COLUMNS } from '@/config/database-columns';
+import type { ReactNode } from 'react';
 
-interface DetailField {
+export interface DetailField {
   label: string;
-  value: string;
+  value: string | ReactNode;
 }
 
 interface EntityDetailPageProps<T extends BaseEntity> {
@@ -39,7 +40,10 @@ interface EntityDetailPageProps<T extends BaseEntity> {
   userId?: string; // If provided, only show entities owned by this user
   requireAuth?: boolean; // If true, redirect to auth if not logged in
   redirectPath?: string; // Where to redirect if auth required but not logged in
-  makeDetailFields?: (entity: T, userCurrency?: string) => {
+  makeDetailFields?: (
+    entity: T,
+    userCurrency?: string
+  ) => {
     left?: DetailField[];
     right?: DetailField[];
   };
@@ -48,14 +52,16 @@ interface EntityDetailPageProps<T extends BaseEntity> {
 /**
  * Format a field value based on its type
  */
-function formatFieldValue(value: any, fieldName: string): string {
+function formatFieldValue(value: unknown, fieldName: string): string {
   if (value === null || value === undefined || value === '') {
     return '—';
   }
 
   // Handle arrays
   if (Array.isArray(value)) {
-    if (value.length === 0) {return '—';}
+    if (value.length === 0) {
+      return '—';
+    }
     return value.join(', ');
   }
 
@@ -72,7 +78,12 @@ function formatFieldValue(value: any, fieldName: string): string {
   }
 
   // Handle currency fields - format numbers with locale
-  if (fieldName.includes('price') || fieldName.includes('amount') || fieldName.includes('rate') || fieldName.includes('goal')) {
+  if (
+    fieldName.includes('price') ||
+    fieldName.includes('amount') ||
+    fieldName.includes('rate') ||
+    fieldName.includes('goal')
+  ) {
     if (typeof value === 'number') {
       return value.toLocaleString();
     }
@@ -90,7 +101,9 @@ function formatFieldValue(value: any, fieldName: string): string {
 /**
  * Default detail fields generator - creates fields from entity data
  */
-function makeDefaultDetailFields<T extends BaseEntity>(entity: T): {
+function makeDefaultDetailFields<T extends BaseEntity>(
+  entity: T
+): {
   left: DetailField[];
   right: DetailField[];
 } {
@@ -98,7 +111,18 @@ function makeDefaultDetailFields<T extends BaseEntity>(entity: T): {
   const right: DetailField[] = [];
 
   // Common fields to show on left
-  const leftFields = ['status', 'category', 'type', 'product_type', 'service_location_type', 'pricing', 'price', 'inventory_count', 'fulfillment_type', 'duration_minutes'];
+  const leftFields = [
+    'status',
+    'category',
+    'type',
+    'product_type',
+    'service_location_type',
+    'pricing',
+    'price',
+    'inventory_count',
+    'fulfillment_type',
+    'duration_minutes',
+  ];
   const rightFields = ['created_at', 'updated_at', 'published_at'];
 
   // Add status
@@ -112,7 +136,17 @@ function makeDefaultDetailFields<T extends BaseEntity>(entity: T): {
   // Add other common fields
   Object.entries(entity).forEach(([key, value]) => {
     // Skip base fields and internal fields
-    if (['id', 'user_id', 'title', 'description', 'thumbnail_url', 'created_at', 'updated_at'].includes(key)) {
+    if (
+      [
+        'id',
+        'user_id',
+        'title',
+        'description',
+        'thumbnail_url',
+        'created_at',
+        'updated_at',
+      ].includes(key)
+    ) {
       return;
     }
 
@@ -178,7 +212,7 @@ export default async function EntityDetailPage<T extends BaseEntity>({
       .select(COLUMNS.profiles.CURRENCY)
       .eq(COLUMNS.profiles.ID, user.id)
       .single();
-    
+
     if (profile?.currency && isSupportedCurrency(profile.currency)) {
       userCurrency = profile.currency as Currency;
     }
@@ -186,19 +220,19 @@ export default async function EntityDetailPage<T extends BaseEntity>({
 
   // Map entity config name to EntityType for getTableName
   const entityTypeMap: Record<string, string> = {
-    'product': 'product',
-    'service': 'service',
-    'cause': 'cause',
+    product: 'product',
+    service: 'service',
+    cause: 'cause',
     'ai assistant': 'ai_assistant',
     'ai assistants': 'ai_assistant',
-    'project': 'project',
-    'event': 'event',
-    'loan': 'loan',
-    'asset': 'asset',
+    project: 'project',
+    event: 'event',
+    loan: 'loan',
+    asset: 'asset',
   };
-  
+
   const entityType = entityTypeMap[config.name.toLowerCase()] || config.name.toLowerCase();
-  const tableName = getTableName(entityType as any);
+  const tableName = getTableName(entityType as Parameters<typeof getTableName>[0]);
 
   // Build query
   let query = supabase.from(tableName).select('*').eq('id', entityId);
