@@ -1,9 +1,23 @@
 /**
- * RATE LIMITING UTILITY
+ * PRODUCTION-READY RATE LIMITING
  *
- * Provides basic rate limiting for API endpoints to prevent abuse.
- * In production, consider using Redis or a dedicated rate limiting service.
+ * Uses Upstash Redis for distributed rate limiting in production.
+ * Falls back to in-memory for local development.
+ *
+ * Setup:
+ * 1. Create free account at https://upstash.com
+ * 2. Create a Redis database
+ * 3. Add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN to .env.local
+ *
+ * Created: 2025-01-28
+ * Last Modified: 2026-01-07
+ * Last Modified Summary: Replaced in-memory rate limiting with Upstash Redis for serverless compatibility
  */
+
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+// ==================== TYPES ====================
 
 export interface RateLimitResult {
   success: boolean;
@@ -23,21 +37,79 @@ export interface RateLimitConfig {
   maxRequests?: number;
 }
 
-class RateLimiter {
+// ==================== REDIS CLIENT ====================
+
+/**
+ * Create Redis client if credentials are available
+ * Returns null if not configured (development fallback)
+ */
+function createRedisClient(): Redis | null {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(
+        '[Rate Limit] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN not configured. ' +
+          'Rate limiting will use in-memory fallback which does NOT work correctly in serverless.'
+      );
+    }
+    return null;
+  }
+
+  return new Redis({ url, token });
+}
+
+const redis = createRedisClient();
+
+// ==================== RATE LIMITERS ====================
+
+/**
+ * Production rate limiter using Upstash Redis
+ * Uses sliding window algorithm for accurate rate limiting
+ */
+const createUpstashLimiter = (
+  prefix: string,
+  requests: number,
+  window: `${number} s` | `${number} m` | `${number} h`
+) => {
+  if (!redis) {
+    return null;
+  }
+
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(requests, window),
+    prefix: `ratelimit:${prefix}`,
+    analytics: true,
+  });
+};
+
+// Production rate limiters (Redis-backed)
+const upstashGeneralLimiter = createUpstashLimiter('general', 100, '15 m');
+const upstashSocialLimiter = createUpstashLimiter('social', 10, '1 m');
+const upstashWriteLimiter = createUpstashLimiter('write', 30, '1 m');
+
+// ==================== FALLBACK IN-MEMORY LIMITER ====================
+
+/**
+ * In-memory rate limiter for development only
+ * WARNING: Does not work correctly in serverless (each instance has separate memory)
+ */
+class InMemoryRateLimiter {
   private requests = new Map<string, { count: number; resetTime: number }>();
   private windowMs: number;
   private maxRequests: number;
 
   constructor(config?: RateLimitConfig) {
-    this.windowMs = config?.windowMs || 15 * 60 * 1000; // 15 minutes default
-    this.maxRequests = config?.maxRequests || 100; // 100 requests default
+    this.windowMs = config?.windowMs || 15 * 60 * 1000;
+    this.maxRequests = config?.maxRequests || 100;
   }
 
   check(key: string): RateLimitResult {
     const now = Date.now();
     const existing = this.requests.get(key);
 
-    // Clean up expired entries
     if (existing && now > existing.resetTime) {
       this.requests.delete(key);
     }
@@ -65,43 +137,102 @@ class RateLimiter {
   }
 }
 
-// Default rate limiter for general API requests
-const rateLimiter = new RateLimiter();
+// Fallback limiters for development
+const fallbackGeneralLimiter = new InMemoryRateLimiter();
+const fallbackSocialLimiter = new InMemoryRateLimiter({ windowMs: 60 * 1000, maxRequests: 10 });
+const fallbackWriteLimiter = new InMemoryRateLimiter({ windowMs: 60 * 1000, maxRequests: 30 });
 
-// Strict rate limiter for social actions (follow/unfollow)
-const socialRateLimiter = new RateLimiter({
-  windowMs: 60 * 1000, // 1 minute
-  maxRequests: 10, // 10 follow/unfollow actions per minute
-});
+// ==================== RATE LIMIT FUNCTIONS ====================
 
-// Medium rate limiter for write operations
-const writeRateLimiter = new RateLimiter({
-  windowMs: 60 * 1000, // 1 minute
-  maxRequests: 30, // 30 writes per minute
-});
+/**
+ * Convert Upstash result to our standard format
+ */
+function toRateLimitResult(upstashResult: {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
+}): RateLimitResult {
+  return {
+    success: upstashResult.success,
+    limit: upstashResult.limit,
+    remaining: upstashResult.remaining,
+    resetTime: upstashResult.reset,
+  };
+}
 
-export function rateLimit(request: RequestLike): RateLimitResult {
-  // Use IP address as the key (in production, get real IP from headers)
+/**
+ * General rate limit for API requests
+ * 100 requests per 15 minutes per IP
+ */
+export async function rateLimit(request: RequestLike): Promise<RateLimitResult> {
   const ip =
-    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
+  const key = `api:${ip}`;
 
-  return rateLimiter.check(`api:${ip}`);
+  if (upstashGeneralLimiter) {
+    const result = await upstashGeneralLimiter.limit(key);
+    return toRateLimitResult(result);
+  }
+
+  return fallbackGeneralLimiter.check(key);
+}
+
+/**
+ * Synchronous version for backward compatibility
+ * Uses in-memory fallback (not recommended for production)
+ */
+export function rateLimitSync(request: RequestLike): RateLimitResult {
+  const ip =
+    request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
+  return fallbackGeneralLimiter.check(`api:${ip}`);
 }
 
 /**
  * Rate limit for social actions (follow, unfollow)
- * Stricter limits to prevent spam
+ * 10 actions per minute per user
+ */
+export async function rateLimitSocialAsync(userId: string): Promise<RateLimitResult> {
+  const key = `social:${userId}`;
+
+  if (upstashSocialLimiter) {
+    const result = await upstashSocialLimiter.limit(key);
+    return toRateLimitResult(result);
+  }
+
+  return fallbackSocialLimiter.check(key);
+}
+
+/**
+ * Synchronous social rate limit (backward compatibility)
  */
 export function rateLimitSocial(userId: string): RateLimitResult {
-  return socialRateLimiter.check(`social:${userId}`);
+  return fallbackSocialLimiter.check(`social:${userId}`);
 }
 
 /**
  * Rate limit for write operations (create, update, delete)
+ * 30 writes per minute per user
+ */
+export async function rateLimitWriteAsync(userId: string): Promise<RateLimitResult> {
+  const key = `write:${userId}`;
+
+  if (upstashWriteLimiter) {
+    const result = await upstashWriteLimiter.limit(key);
+    return toRateLimitResult(result);
+  }
+
+  return fallbackWriteLimiter.check(key);
+}
+
+/**
+ * Synchronous write rate limit (backward compatibility)
  */
 export function rateLimitWrite(userId: string): RateLimitResult {
-  return writeRateLimiter.check(`write:${userId}`);
+  return fallbackWriteLimiter.check(`write:${userId}`);
 }
+
+// ==================== RESPONSE HELPER ====================
 
 export function createRateLimitResponse(result: RateLimitResult): Response {
   const resetDate = new Date(result.resetTime).toUTCString();
@@ -126,4 +257,13 @@ export function createRateLimitResponse(result: RateLimitResult): Response {
       },
     }
   );
+}
+
+// ==================== STATUS CHECK ====================
+
+/**
+ * Check if production rate limiting is configured
+ */
+export function isProductionRateLimitingEnabled(): boolean {
+  return redis !== null;
 }
