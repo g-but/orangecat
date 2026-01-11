@@ -30,32 +30,13 @@ export type ResearchMethodology =
   | 'case_study'
   | 'action_research';
 
-export type FundingModel =
-  | 'donation'
-  | 'subscription'
-  | 'milestone'
-  | 'royalty'
-  | 'hybrid';
+export type FundingModel = 'donation' | 'subscription' | 'milestone' | 'royalty' | 'hybrid';
 
-export type TransparencyLevel =
-  | 'full'
-  | 'progress'
-  | 'milestone'
-  | 'minimal';
+export type TransparencyLevel = 'full' | 'progress' | 'milestone' | 'minimal';
 
-export type ProgressFrequency =
-  | 'weekly'
-  | 'biweekly'
-  | 'monthly'
-  | 'milestone'
-  | 'as_needed';
+export type ProgressFrequency = 'weekly' | 'biweekly' | 'monthly' | 'milestone' | 'as_needed';
 
-export type TimelineType =
-  | 'short_term'
-  | 'medium_term'
-  | 'long_term'
-  | 'ongoing'
-  | 'indefinite';
+export type TimelineType = 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
 
 export interface TeamMember {
   id?: string;
@@ -68,14 +49,32 @@ export interface TeamMember {
 }
 
 export interface ResourceNeed {
-  type: 'compute' | 'data' | 'equipment' | 'collaboration' | 'publication' | 'travel' | 'software' | 'other';
+  type:
+    | 'compute'
+    | 'data'
+    | 'equipment'
+    | 'collaboration'
+    | 'publication'
+    | 'travel'
+    | 'software'
+    | 'other';
   description?: string;
   estimated_cost_sats?: number;
   priority: 'low' | 'medium' | 'high' | 'critical';
 }
 
 export interface ImpactArea {
-  area: 'scientific_understanding' | 'technological_innovation' | 'medical_advancement' | 'environmental_protection' | 'social_progress' | 'economic_development' | 'education' | 'policy_making' | 'philosophical_insight' | 'other';
+  area:
+    | 'scientific_understanding'
+    | 'technological_innovation'
+    | 'medical_advancement'
+    | 'environmental_protection'
+    | 'social_progress'
+    | 'economic_development'
+    | 'education'
+    | 'policy_making'
+    | 'philosophical_insight'
+    | 'other';
   description?: string;
 }
 
@@ -112,7 +111,7 @@ export interface ResearchVote {
 export interface FundingContribution {
   id: string;
   user_id: string;
-  amount_sats: number;
+  amount_btc: number;
   funding_model: FundingModel;
   message?: string;
   anonymous: boolean;
@@ -131,8 +130,9 @@ export interface ResearchEntity extends BaseEntity {
   timeline: TimelineType;
 
   // Funding
-  funding_goal_sats: number;
-  funding_raised_sats: number;
+  funding_goal: number;
+  funding_goal_currency: string;
+  funding_raised_btc: number; // Always stored in BTC
   funding_model: FundingModel;
   wallet_address: string; // Unique BTC wallet per research entity
 
@@ -174,15 +174,43 @@ export interface ResearchEntity extends BaseEntity {
   follower_count: number;
   share_count: number;
   citation_count: number;
+
+  // Visibility
+  is_public: boolean;
+  is_featured?: boolean;
+  status?: 'draft' | 'active' | 'paused' | 'archived';
 }
 
-export interface ResearchEntityCreate extends Omit<ResearchEntity, keyof BaseEntity | 'funding_raised_sats' | 'progress_updates' | 'contributions' | 'total_contributors' | 'completion_percentage' | 'days_active' | 'funding_velocity' | 'follower_count' | 'share_count' | 'citation_count' | 'total_votes' | 'average_rating'> {
-  // Additional fields for creation
+export interface ResearchEntityCreate extends Omit<
+  ResearchEntity,
+  // System fields (auto-generated)
+  | 'id'
+  | 'created_at'
+  | 'updated_at'
+  | 'thumbnail_url'
+  // Computed/aggregated fields (set by system)
+  | 'funding_raised_btc'
+  | 'progress_updates'
+  | 'contributions'
+  | 'total_contributors'
+  | 'completion_percentage'
+  | 'days_active'
+  | 'funding_velocity'
+  | 'follower_count'
+  | 'share_count'
+  | 'citation_count'
+  | 'total_votes'
+  | 'average_rating'
+  // System-managed fields
+  | 'wallet_address'
+  | 'is_featured'
+  | 'status'
+> {
+  // Optional overrides for creation
+  is_public?: boolean;
 }
 
-export interface ResearchEntityUpdate extends Partial<ResearchEntityCreate> {
-  // Update-specific fields can be added here
-}
+export type ResearchEntityUpdate = Partial<ResearchEntityCreate>;
 
 export interface ResearchEntityStats {
   total_entities: number;

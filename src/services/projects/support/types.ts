@@ -20,23 +20,23 @@ export interface ProjectSupport {
   id: string;
   project_id: string;
   user_id: string | null;
-  
+
   // Support type
   support_type: SupportType;
-  
+
   // Bitcoin donation fields (if type = 'bitcoin_donation')
   amount_sats?: number | null;
   transaction_hash?: string | null;
   lightning_invoice?: string | null;
-  
+
   // Signature/Message fields (if type = 'signature' or 'message')
   display_name?: string | null;
   message?: string | null;
   is_anonymous?: boolean;
-  
+
   // Reaction field (if type = 'reaction')
   reaction_emoji?: ReactionEmoji | null;
-  
+
   // Metadata
   created_at: string;
   updated_at: string;
@@ -67,17 +67,18 @@ export interface ProjectSupportStats {
 // Request interfaces
 export interface SupportProjectRequest {
   support_type: SupportType;
-  
+
   // Bitcoin donation
-  amount_sats?: number;
+  amount?: number;
+  currency?: string;
   lightning_invoice?: string;
   transaction_hash?: string;
-  
+
   // Signature/Message
   display_name?: string;
   message?: string;
   is_anonymous?: boolean;
-  
+
   // Reaction
   reaction_emoji?: ReactionEmoji;
 }
@@ -113,5 +114,3 @@ export interface SupportPagination {
   limit?: number;
   offset?: number;
 }
-
-
