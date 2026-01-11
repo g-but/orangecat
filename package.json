@@ -105,7 +105,6 @@
     "@mdx-js/loader": "^3.1.0",
     "@mdx-js/react": "^3.1.0",
     "@modelcontextprotocol/sdk": "^1.25.2",
-    "@modelcontextprotocol/server-github": "^2025.4.8",
     "@next/mdx": "^15.5.7",
     "@octokit/rest": "^22.0.0",
     "@playwright/mcp": "^0.0.54",
