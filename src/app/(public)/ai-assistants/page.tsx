@@ -71,7 +71,7 @@ function formatPrice(assistant: AIAssistant): string {
     return `${assistant.free_messages_per_day} free/day`;
   }
   if (assistant.price_per_message) {
-    return `${assistant.price_per_message.toLocaleString()} sats/msg`;
+    return `${assistant.price_per_message?.toFixed(8) || '0'} BTC/msg`;
   }
   return 'Paid';
 }
@@ -91,9 +91,7 @@ function AssistantCard({ assistant }: { assistant: AIAssistant }) {
         </Avatar>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-gray-900 truncate">
-            {assistant.title}
-          </h3>
+          <h3 className="font-semibold text-gray-900 truncate">{assistant.title}</h3>
 
           {assistant.category && (
             <span className="inline-block text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded mt-1">
@@ -102,28 +100,30 @@ function AssistantCard({ assistant }: { assistant: AIAssistant }) {
           )}
 
           {assistant.description && (
-            <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-              {assistant.description}
-            </p>
+            <p className="text-sm text-gray-600 mt-2 line-clamp-2">{assistant.description}</p>
           )}
 
           <div className="flex items-center gap-4 mt-3 text-sm">
-            {assistant.average_rating !== null && assistant.average_rating !== undefined && assistant.average_rating > 0 && (
-              <div className="flex items-center gap-1 text-amber-500">
-                <Star className="h-4 w-4 fill-current" />
-                <span className="font-medium">{assistant.average_rating.toFixed(1)}</span>
-                {assistant.total_ratings && assistant.total_ratings > 0 && (
-                  <span className="text-gray-400">({assistant.total_ratings})</span>
-                )}
-              </div>
-            )}
+            {assistant.average_rating !== null &&
+              assistant.average_rating !== undefined &&
+              assistant.average_rating > 0 && (
+                <div className="flex items-center gap-1 text-amber-500">
+                  <Star className="h-4 w-4 fill-current" />
+                  <span className="font-medium">{assistant.average_rating.toFixed(1)}</span>
+                  {assistant.total_ratings && assistant.total_ratings > 0 && (
+                    <span className="text-gray-400">({assistant.total_ratings})</span>
+                  )}
+                </div>
+              )}
 
-            {assistant.total_conversations !== null && assistant.total_conversations !== undefined && assistant.total_conversations > 0 && (
-              <div className="flex items-center gap-1 text-gray-500">
-                <MessageSquare className="h-4 w-4" />
-                <span>{assistant.total_conversations.toLocaleString()}</span>
-              </div>
-            )}
+            {assistant.total_conversations !== null &&
+              assistant.total_conversations !== undefined &&
+              assistant.total_conversations > 0 && (
+                <div className="flex items-center gap-1 text-gray-500">
+                  <MessageSquare className="h-4 w-4" />
+                  <span>{assistant.total_conversations.toLocaleString()}</span>
+                </div>
+              )}
 
             <div className="flex items-center gap-1 text-green-600 font-medium">
               <Zap className="h-4 w-4" />
@@ -132,9 +132,7 @@ function AssistantCard({ assistant }: { assistant: AIAssistant }) {
           </div>
 
           {assistant.user?.username && (
-            <p className="text-xs text-gray-400 mt-2">
-              by @{assistant.user.username}
-            </p>
+            <p className="text-xs text-gray-400 mt-2">by @{assistant.user.username}</p>
           )}
         </div>
       </div>
@@ -155,37 +153,44 @@ export default function AIAssistantsDiscoveryPage() {
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
 
-  const loadAssistants = useCallback(async (resetPage = false) => {
-    setIsLoading(true);
-    try {
-      const currentPage = resetPage ? 1 : page;
-      const params = new URLSearchParams();
+  const loadAssistants = useCallback(
+    async (resetPage = false) => {
+      setIsLoading(true);
+      try {
+        const currentPage = resetPage ? 1 : page;
+        const params = new URLSearchParams();
 
-      if (searchQuery) {params.set('q', searchQuery);}
-      if (category && category !== 'All Categories') {params.set('category', category);}
-      params.set('sort', sortBy);
-      params.set('page', currentPage.toString());
-      params.set('limit', '20');
-
-      const response = await fetch(`/api/ai-assistants?${params.toString()}`);
-      const data = await response.json();
-
-      if (data.success) {
-        if (resetPage) {
-          setAssistants(data.data || []);
-          setPage(1);
-        } else {
-          setAssistants(prev => currentPage === 1 ? data.data : [...prev, ...data.data]);
+        if (searchQuery) {
+          params.set('q', searchQuery);
         }
-        setTotalCount(data.pagination?.total || 0);
-        setHasMore((data.data?.length || 0) === 20);
+        if (category && category !== 'All Categories') {
+          params.set('category', category);
+        }
+        params.set('sort', sortBy);
+        params.set('page', currentPage.toString());
+        params.set('limit', '20');
+
+        const response = await fetch(`/api/ai-assistants?${params.toString()}`);
+        const data = await response.json();
+
+        if (data.success) {
+          if (resetPage) {
+            setAssistants(data.data || []);
+            setPage(1);
+          } else {
+            setAssistants(prev => (currentPage === 1 ? data.data : [...prev, ...data.data]));
+          }
+          setTotalCount(data.pagination?.total || 0);
+          setHasMore((data.data?.length || 0) === 20);
+        }
+      } catch (error) {
+        console.error('Error loading assistants:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Error loading assistants:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [searchQuery, category, sortBy, page]);
+    },
+    [searchQuery, category, sortBy, page]
+  );
 
   useEffect(() => {
     loadAssistants(true);
@@ -194,8 +199,12 @@ export default function AIAssistantsDiscoveryPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     const params = new URLSearchParams();
-    if (searchQuery) {params.set('q', searchQuery);}
-    if (category !== 'All Categories') {params.set('category', category);}
+    if (searchQuery) {
+      params.set('q', searchQuery);
+    }
+    if (category !== 'All Categories') {
+      params.set('category', category);
+    }
     params.set('sort', sortBy);
     router.push(`/ai-assistants?${params.toString()}`);
   };
@@ -203,8 +212,12 @@ export default function AIAssistantsDiscoveryPage() {
   const handleCategoryChange = (newCategory: string) => {
     setCategory(newCategory);
     const params = new URLSearchParams();
-    if (searchQuery) {params.set('q', searchQuery);}
-    if (newCategory !== 'All Categories') {params.set('category', newCategory);}
+    if (searchQuery) {
+      params.set('q', searchQuery);
+    }
+    if (newCategory !== 'All Categories') {
+      params.set('category', newCategory);
+    }
     params.set('sort', sortBy);
     router.push(`/ai-assistants?${params.toString()}`);
   };
@@ -212,8 +225,12 @@ export default function AIAssistantsDiscoveryPage() {
   const handleSortChange = (newSort: string) => {
     setSortBy(newSort);
     const params = new URLSearchParams();
-    if (searchQuery) {params.set('q', searchQuery);}
-    if (category !== 'All Categories') {params.set('category', category);}
+    if (searchQuery) {
+      params.set('q', searchQuery);
+    }
+    if (category !== 'All Categories') {
+      params.set('category', category);
+    }
     params.set('sort', newSort);
     router.push(`/ai-assistants?${params.toString()}`);
   };
@@ -232,12 +249,10 @@ export default function AIAssistantsDiscoveryPage() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
               <Bot className="h-8 w-8 text-purple-600" />
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              AI Assistants
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">AI Assistants</h1>
             <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover AI assistants created by the community. Chat with experts in
-              various fields, get help with tasks, or just have a conversation.
+              Discover AI assistants created by the community. Chat with experts in various fields,
+              get help with tasks, or just have a conversation.
             </p>
           </div>
 
@@ -249,7 +264,7 @@ export default function AIAssistantsDiscoveryPage() {
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search assistants..."
                   className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-sky-500"
                 />
@@ -266,7 +281,7 @@ export default function AIAssistantsDiscoveryPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {CATEGORIES.map((cat) => (
+                  {CATEGORIES.map(cat => (
                     <DropdownMenuItem
                       key={cat}
                       onClick={() => handleCategoryChange(cat)}
@@ -287,7 +302,7 @@ export default function AIAssistantsDiscoveryPage() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  {SORT_OPTIONS.map((option) => (
+                  {SORT_OPTIONS.map(option => (
                     <DropdownMenuItem
                       key={option.value}
                       onClick={() => handleSortChange(option.value)}
@@ -318,9 +333,7 @@ export default function AIAssistantsDiscoveryPage() {
         ) : assistants.length === 0 ? (
           <div className="text-center py-20">
             <Bot className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">
-              No assistants found
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">No assistants found</h3>
             <p className="text-gray-500 mb-6">
               {searchQuery || category !== 'All Categories'
                 ? 'Try adjusting your search or filters'
@@ -333,18 +346,14 @@ export default function AIAssistantsDiscoveryPage() {
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {assistants.map((assistant) => (
+              {assistants.map(assistant => (
                 <AssistantCard key={assistant.id} assistant={assistant} />
               ))}
             </div>
 
             {hasMore && (
               <div className="text-center mt-8">
-                <Button
-                  variant="outline"
-                  onClick={loadMore}
-                  disabled={isLoading}
-                >
+                <Button variant="outline" onClick={loadMore} disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <Loader2 className="h-4 w-4 mr-2 animate-spin" />

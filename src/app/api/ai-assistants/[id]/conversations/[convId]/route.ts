@@ -25,7 +25,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id: assistantId, convId } = await params;
     const supabase = await createServerClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -57,7 +60,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Get assistant info
     const { data: assistant } = await supabase
-      .from('ai_assistants')
+      .from(DATABASE_TABLES.AI_ASSISTANTS)
       .select('id, title, avatar_url, pricing_model, price_per_message, price_per_1k_tokens')
       .eq('id', assistantId)
       .single();
@@ -81,7 +84,10 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const { id: assistantId, convId } = await params;
     const supabase = await createServerClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -90,10 +96,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const result = updateConversationSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({
-        error: 'Validation failed',
-        details: result.error.flatten(),
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: result.error.flatten(),
+        },
+        { status: 400 }
+      );
     }
 
     // Update conversation
@@ -133,7 +142,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { id: assistantId, convId } = await params;
     const supabase = await createServerClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

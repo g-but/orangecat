@@ -24,16 +24,29 @@ export default async function AIAssistantDetailPage({ params }: PageProps) {
       entityId={id}
       requireAuth={true}
       redirectPath="/auth?mode=login&from=/dashboard/ai-assistants"
-      makeDetailFields={(assistant) => {
+      makeDetailFields={assistant => {
         const left = [
-          { label: 'Status', value: assistant.status ? assistant.status.charAt(0).toUpperCase() + assistant.status.slice(1) : 'Draft' },
+          {
+            label: 'Status',
+            value: assistant.status
+              ? assistant.status.charAt(0).toUpperCase() + assistant.status.slice(1)
+              : 'Draft',
+          },
           { label: 'Category', value: assistant.category || '—' },
           { label: 'Model Preference', value: assistant.model_preference || 'Any' },
-          { label: 'Pricing Model', value: assistant.pricing_model ? assistant.pricing_model.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) : '—' },
+          {
+            label: 'Pricing Model',
+            value: assistant.pricing_model
+              ? assistant.pricing_model.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+              : '—',
+          },
         ];
 
         if (assistant.price_per_message) {
-          left.push({ label: 'Price per Message', value: `${assistant.price_per_message.toLocaleString()} sats` });
+          left.push({
+            label: 'Price per Message',
+            value: `${assistant.price_per_message?.toFixed(8) || '0'} BTC`,
+          });
         }
         if (assistant.free_messages_per_day) {
           left.push({ label: 'Free Messages/Day', value: String(assistant.free_messages_per_day) });
@@ -59,7 +72,10 @@ export default async function AIAssistantDetailPage({ params }: PageProps) {
           right.push({ label: 'Updated', value: new Date(assistant.updated_at).toLocaleString() });
         }
         if (assistant.published_at) {
-          right.push({ label: 'Published', value: new Date(assistant.published_at).toLocaleString() });
+          right.push({
+            label: 'Published',
+            value: new Date(assistant.published_at).toLocaleString(),
+          });
         }
 
         return { left, right };

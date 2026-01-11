@@ -24,7 +24,10 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { id: assistantId } = await params;
     const supabase = await createServerClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -33,17 +36,20 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const result = ratingSchema.safeParse(body);
 
     if (!result.success) {
-      return NextResponse.json({
-        error: 'Validation failed',
-        details: result.error.flatten(),
-      }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Validation failed',
+          details: result.error.flatten(),
+        },
+        { status: 400 }
+      );
     }
 
     const { rating, review } = result.data;
 
     // Verify assistant exists and is active
     const { data: assistant, error: assistantError } = await supabase
-      .from('ai_assistants')
+      .from(DATABASE_TABLES.AI_ASSISTANTS)
       .select('id, status')
       .eq('id', assistantId)
       .single();
@@ -61,23 +67,29 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       .limit(1);
 
     if (convError || !conversations || conversations.length === 0) {
-      return NextResponse.json({
-        error: 'You must use this assistant before rating it',
-      }, { status: 403 });
+      return NextResponse.json(
+        {
+          error: 'You must use this assistant before rating it',
+        },
+        { status: 403 }
+      );
     }
 
     // Upsert rating (insert or update)
     const { data: ratingData, error: ratingError } = await supabase
       .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
-      .upsert({
-        assistant_id: assistantId,
-        user_id: user.id,
-        rating,
-        review,
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'assistant_id,user_id',
-      })
+      .upsert(
+        {
+          assistant_id: assistantId,
+          user_id: user.id,
+          rating,
+          review,
+          updated_at: new Date().toISOString(),
+        },
+        {
+          onConflict: 'assistant_id,user_id',
+        }
+      )
       .select()
       .single();
 
@@ -101,7 +113,10 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const { id: assistantId } = await params;
     const supabase = await createServerClient();
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
