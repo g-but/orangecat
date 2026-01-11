@@ -35,6 +35,10 @@ export interface LoanCategory {
   updated_at: string;
 }
 
+export type LoanType = 'new_request' | 'existing_loan';
+
+export type FulfillmentType = 'lightning' | 'onchain' | 'bank_transfer' | 'other';
+
 export interface Loan {
   id: string;
   user_id: string;
@@ -56,6 +60,16 @@ export interface Loan {
   minimum_offer_amount?: number;
   preferred_terms?: string;
   contact_method: ContactMethod;
+  // Loan type and fulfillment
+  loan_type?: LoanType;
+  fulfillment_type?: FulfillmentType;
+  // Existing loan details (for refinancing)
+  current_lender?: string;
+  current_interest_rate?: number;
+  desired_rate?: number;
+  // Bitcoin payment addresses
+  bitcoin_address?: string;
+  lightning_address?: string;
   created_at: string;
   updated_at: string;
   paid_off_at?: string;
@@ -380,13 +394,3 @@ export interface UseCreateOfferOptions {
 export interface UseUpdateOfferOptions extends UseCreateOfferOptions {
   offerId: string;
 }
-
-
-
-
-
-
-
-
-
-
