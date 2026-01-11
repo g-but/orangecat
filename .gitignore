@@ -107,6 +107,12 @@ demo-screenshots/**
 screenshots/**
 test-results/**
 
+# Work-in-progress files (personal notes, prompts)
+@fix_plan.md
+PROMPT.md
+RALPH.md
+ralph.sh
+
 # Sensitive config and credentials
 .cursor/mcp.json
 docs/operations/MCP_CREDENTIALS.md
