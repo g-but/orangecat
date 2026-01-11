@@ -2,21 +2,15 @@
  * CURRENCY SERVICE
  *
  * Handles currency conversions between fiat and Bitcoin.
- * All transactions are stored in satoshis, but users can input/view in their local currency.
+ * BTC is the base currency for all transactions and calculations.
+ * Users can input/view amounts in their preferred currency.
  *
  * Created: 2025-12-04
- * Last Modified: 2025-12-04
- * Last Modified Summary: Initial currency service
+ * Last Modified: 2026-01-07
+ * Last Modified Summary: Removed sats terminology, BTC is now the base currency
  */
 
-import {
-  Currency,
-  FiatCurrency,
-  CryptoCurrency,
-  CurrencyRate,
-  CURRENCY_INFO,
-  FIAT_CURRENCIES,
-} from '@/types/settings';
+import { CURRENCY_METADATA } from '@/config/currencies';
 
 // ==================== RATE CACHE ====================
 
@@ -33,7 +27,6 @@ const cache: RateCache = {
     BTC_EUR: 91000,
     BTC_CHF: 86000,
     BTC_GBP: 78000,
-    BTC_SATS: 100000000, // Fixed: 1 BTC = 100M sats
   },
   lastUpdated: null,
   expiresAt: null,
@@ -42,72 +35,48 @@ const cache: RateCache = {
 // ==================== CORE CONVERSION FUNCTIONS ====================
 
 /**
- * Convert satoshis to BTC
+ * Convert BTC to any display currency
  */
-export function satsToBtc(sats: number): number {
-  return sats / 100_000_000;
-}
-
-/**
- * Convert BTC to satoshis
- */
-export function btcToSats(btc: number): number {
-  return Math.round(btc * 100_000_000);
-}
-
-/**
- * Convert satoshis to fiat currency
- */
-export function satsToFiat(sats: number, currency: FiatCurrency): number {
-  const btc = satsToBtc(sats);
-  const rate = cache.rates[`BTC_${currency}`] || 0;
-  return btc * rate;
-}
-
-/**
- * Convert fiat currency to satoshis
- */
-export function fiatToSats(amount: number, currency: FiatCurrency): number {
-  const rate = cache.rates[`BTC_${currency}`] || 1;
-  const btc = amount / rate;
-  return btcToSats(btc);
-}
-
-/**
- * Convert satoshis to any currency
- */
-export function convertFromSats(sats: number, toCurrency: Currency): number {
-  if (toCurrency === 'SATS') {
-    return sats;
+export function convertBtcTo(amount: number, targetCurrency: string): number {
+  if (targetCurrency === 'BTC') {
+    return amount;
   }
-  if (toCurrency === 'BTC') {
-    return satsToBtc(sats);
+
+  if (targetCurrency === 'SATS') {
+    return Math.round(amount * 100_000_000);
   }
-  return satsToFiat(sats, toCurrency as FiatCurrency);
+
+  // Fiat currency conversion
+  const rate = cache.rates[`BTC_${targetCurrency}`] || 0;
+  return amount * rate;
 }
 
 /**
- * Convert any currency to satoshis
+ * Convert any currency to BTC
  */
-export function convertToSats(amount: number, fromCurrency: Currency): number {
-  if (fromCurrency === 'SATS') {
-    return Math.round(amount);
-  }
+export function convertToBtc(amount: number, fromCurrency: string): number {
   if (fromCurrency === 'BTC') {
-    return btcToSats(amount);
+    return amount;
   }
-  return fiatToSats(amount, fromCurrency as FiatCurrency);
+
+  if (fromCurrency === 'SATS') {
+    return amount / 100_000_000;
+  }
+
+  // Fiat currency conversion
+  const rate = cache.rates[`BTC_${fromCurrency}`] || 1;
+  return amount / rate;
 }
 
 /**
- * Convert between any two currencies (via sats)
+ * Convert between any two currencies (via BTC)
  */
-export function convert(amount: number, fromCurrency: Currency, toCurrency: Currency): number {
+export function convert(amount: number, fromCurrency: string, toCurrency: string): number {
   if (fromCurrency === toCurrency) {
     return amount;
   }
-  const sats = convertToSats(amount, fromCurrency);
-  return convertFromSats(sats, toCurrency);
+  const btc = convertToBtc(amount, fromCurrency);
+  return convertBtcTo(btc, toCurrency);
 }
 
 // ==================== FORMATTING ====================
@@ -117,7 +86,7 @@ export function convert(amount: number, fromCurrency: Currency, toCurrency: Curr
  */
 export function formatCurrency(
   amount: number,
-  currency: Currency,
+  currency: string,
   options: {
     showSymbol?: boolean;
     compact?: boolean;
@@ -125,7 +94,11 @@ export function formatCurrency(
   } = {}
 ): string {
   const { showSymbol = true, compact = false, locale = 'en-US' } = options;
-  const info = CURRENCY_INFO[currency];
+  const metadata = CURRENCY_METADATA[currency as keyof typeof CURRENCY_METADATA];
+
+  if (!metadata) {
+    return amount.toLocaleString(locale);
+  }
 
   if (currency === 'SATS') {
     const formatted =
@@ -142,8 +115,8 @@ export function formatCurrency(
 
   // Fiat currencies
   const formatted = amount.toLocaleString(locale, {
-    minimumFractionDigits: compact ? 0 : 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: compact ? 0 : metadata.precision,
+    maximumFractionDigits: metadata.precision,
   });
 
   if (!showSymbol) {
@@ -165,46 +138,27 @@ export function formatCurrency(
   }
 }
 
-/**
- * Format satoshis with automatic BTC conversion for large amounts
- */
-export function formatSatsAuto(sats: number, locale: string = 'en-US'): string {
-  if (sats >= 100_000_000) {
-    // >= 1 BTC: show in BTC
-    return formatCurrency(satsToBtc(sats), 'BTC', { locale });
-  }
-  if (sats >= 1_000_000) {
-    // >= 1M sats: show in millions
-    return `${(sats / 1_000_000).toFixed(1)}M sats`;
-  }
-  if (sats >= 1_000) {
-    // >= 1k sats: show in thousands
-    return `${(sats / 1_000).toFixed(1)}k sats`;
-  }
-  return `${sats.toLocaleString(locale)} sats`;
-}
-
 // ==================== MULTI-CURRENCY DISPLAY ====================
 
 export interface CurrencyBreakdown {
-  sats: number;
   btc: number;
-  fiat: Record<FiatCurrency, number>;
+  sats: number;
+  fiat: Record<string, number>;
 }
 
 /**
- * Get breakdown of amount in all currencies
+ * Get breakdown of BTC amount in all currencies
  */
-export function getCurrencyBreakdown(sats: number): CurrencyBreakdown {
+export function getCurrencyBreakdown(btcAmount: number): CurrencyBreakdown {
   return {
-    sats,
-    btc: satsToBtc(sats),
-    fiat: FIAT_CURRENCIES.reduce(
+    btc: btcAmount,
+    sats: Math.round(btcAmount * 100_000_000),
+    fiat: ['USD', 'EUR', 'CHF', 'GBP'].reduce(
       (acc, currency) => {
-        acc[currency] = satsToFiat(sats, currency);
+        acc[currency] = convertBtcTo(btcAmount, currency);
         return acc;
       },
-      {} as Record<FiatCurrency, number>
+      {} as Record<string, number>
     ),
   };
 }
@@ -223,7 +177,7 @@ export function updateRates(rates: Record<string, number>): void {
 /**
  * Get current rate for a currency pair
  */
-export function getRate(from: Currency, to: Currency): number {
+export function getRate(from: string, to: string): number {
   if (from === to) {
     return 1;
   }
@@ -290,6 +244,7 @@ export function ratesNeedRefresh(): boolean {
 /**
  * Parse user input to number, handling locale-specific formatting
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function parseAmount(input: string, locale: string = 'en-US'): number | null {
   if (!input || input.trim() === '') {
     return null;
@@ -320,7 +275,7 @@ export function parseAmount(input: string, locale: string = 'en-US'): number | n
  */
 export function validateAmount(
   amount: number,
-  currency: Currency
+  currency: string
 ): { valid: boolean; error?: string } {
   if (amount < 0) {
     return { valid: false, error: 'Amount cannot be negative' };
@@ -328,7 +283,7 @@ export function validateAmount(
 
   if (currency === 'SATS') {
     if (!Number.isInteger(amount)) {
-      return { valid: false, error: 'Satoshis must be a whole number' };
+      return { valid: false, error: 'Sats must be a whole number' };
     }
     if (amount > 21_000_000 * 100_000_000) {
       return { valid: false, error: 'Amount exceeds maximum Bitcoin supply' };
@@ -344,17 +299,175 @@ export function validateAmount(
   return { valid: true };
 }
 
+// ==================== BITCOIN SPECIFIC CONVERSIONS ====================
+
+/**
+ * Convert satoshis to BTC
+ */
+export function satsToBitcoin(sats: number): number {
+  return sats / 100_000_000;
+}
+
+/**
+ * Convert BTC to satoshis
+ */
+export function bitcoinToSats(bitcoin: number): number {
+  return Math.round(bitcoin * 100_000_000);
+}
+
+// Aliases for common naming conventions
+export const satsToBTC = satsToBitcoin;
+export const satsToBtc = satsToBitcoin;
+export const btcToSats = bitcoinToSats;
+export const satoshisToBitcoin = satsToBitcoin;
+export const bitcoinToSatoshis = bitcoinToSats;
+
+// ==================== BITCOIN DISPLAY FORMATTING ====================
+
+/**
+ * Format Bitcoin amount for display
+ */
+export function formatBitcoinDisplay(amount: number, unit: 'BTC' | 'sats' = 'BTC'): string {
+  if (unit === 'sats') {
+    return `${amount.toLocaleString('en-US')} sats`;
+  }
+
+  if (amount >= 1) {
+    return `${amount.toFixed(4)} BTC`;
+  } else if (amount >= 0.001) {
+    return `${amount.toFixed(6)} BTC`;
+  } else {
+    // For very small amounts, show in sats
+    const sats = bitcoinToSats(amount);
+    return `${sats.toLocaleString('en-US')} sats`;
+  }
+}
+
+/**
+ * Format amount in Swiss Francs
+ */
+export function formatSwissFrancs(amount: number): string {
+  return new Intl.NumberFormat('de-CH', {
+    style: 'currency',
+    currency: 'CHF',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+/**
+ * Format BTC amount with exact 8 decimal places
+ */
+export function formatBTC(amount: number): string {
+  const value = typeof amount === 'number' && isFinite(amount) ? amount : 0;
+  return `${value.toLocaleString('en-US', {
+    minimumFractionDigits: 8,
+    maximumFractionDigits: 8,
+  })} BTC`;
+}
+
+/**
+ * Format amount in sats
+ */
+export function formatSats(amount: number): string {
+  const value = typeof amount === 'number' && isFinite(amount) ? Math.round(amount) : 0;
+  return `${value.toLocaleString('en-US')} sats`;
+}
+
+/**
+ * Format amount in USD
+ */
+export function formatUSD(amount: number): string {
+  const value = typeof amount === 'number' && isFinite(amount) ? amount : 0;
+  return value.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+// ==================== CONVERSION RESULTS ====================
+
+export interface CurrencyConversion {
+  bitcoin: number;
+  sats: number;
+  chf: number;
+  usd: number;
+}
+
+/**
+ * Convert BTC amount to all common currencies
+ */
+export function convertBitcoinToAll(bitcoin: number): CurrencyConversion {
+  const sats = bitcoinToSats(bitcoin);
+  const chf = convertBtcTo(bitcoin, 'CHF');
+  const usd = convertBtcTo(bitcoin, 'USD');
+
+  return {
+    bitcoin,
+    sats,
+    chf,
+    usd,
+  };
+}
+
+/**
+ * Convert sats amount to all common currencies
+ */
+export function convertSatsToAll(sats: number): CurrencyConversion {
+  const bitcoin = satsToBitcoin(sats);
+  return convertBitcoinToAll(bitcoin);
+}
+
+// ==================== REGIONAL DISPLAY UTILITIES ====================
+
+/**
+ * Get region name for display
+ */
+export function getRegionName(): string {
+  // For now, hardcoded to Switzerland
+  // Later this will be dynamic based on user location
+  return 'Switzerland';
+}
+
+/**
+ * Get region emoji flag
+ */
+export function getRegionEmoji(): string {
+  // For now, hardcoded to Swiss flag
+  // Later this will be dynamic based on user location
+  return '🇨🇭';
+}
+
+/**
+ * Format regional alternatives text
+ */
+export function formatRegionalAlternatives(): string {
+  return 'alternatives popular in your region';
+}
+
+// ==================== BITCOIN PRICE HOOK (placeholder) ====================
+
+/**
+ * Hook for real-time price data (placeholder for future implementation)
+ */
+export function useBitcoinPrice() {
+  return {
+    btcUsd: cache.rates['BTC_USD'] || 97000,
+    btcChf: cache.rates['BTC_CHF'] || 86000,
+    usdChf: 0.89,
+    isLoading: false,
+    error: null,
+  };
+}
+
 // Export default service
 export const currencyService = {
-  satsToBtc,
-  btcToSats,
-  satsToFiat,
-  fiatToSats,
+  convertBtcTo,
+  convertToBtc,
   convert,
-  convertFromSats,
-  convertToSats,
   formatCurrency,
-  formatSatsAuto,
   getCurrencyBreakdown,
   getRate,
   updateRates,
@@ -362,9 +475,21 @@ export const currencyService = {
   ratesNeedRefresh,
   parseAmount,
   validateAmount,
+  // Bitcoin specific
+  satsToBitcoin,
+  bitcoinToSats,
+  formatBitcoinDisplay,
+  formatSwissFrancs,
+  formatBTC,
+  formatSats,
+  formatUSD,
+  convertBitcoinToAll,
+  convertSatsToAll,
+  // Regional
+  getRegionName,
+  getRegionEmoji,
+  formatRegionalAlternatives,
+  useBitcoinPrice,
 };
 
 export default currencyService;
-
-
-
