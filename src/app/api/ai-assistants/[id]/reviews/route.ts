@@ -27,11 +27,13 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const sortBy = url.searchParams.get('sort') || 'recent'; // recent, rating_high, rating_low
 
     // Get current user (optional - for showing if they've rated)
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     // Verify assistant exists
     const { data: assistant, error: assistantError } = await supabase
-      .from('ai_assistants')
+      .from(DATABASE_TABLES.AI_ASSISTANTS)
       .select('id, average_rating, total_ratings')
       .eq('id', assistantId)
       .single();
@@ -43,7 +45,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Build query
     let query = supabase
       .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
-      .select(`
+      .select(
+        `
         id,
         rating,
         review,
@@ -55,7 +58,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
           name,
           avatar_url
         )
-      `, { count: 'exact' })
+      `,
+        { count: 'exact' }
+      )
       .eq('assistant_id', assistantId);
 
     // Apply sorting

@@ -9,7 +9,7 @@ interface AIMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
   tokens_used?: number;
-  cost_sats?: number;
+  cost_btc?: number;
   created_at: string;
 }
 
@@ -32,15 +32,12 @@ export function AIChatMessage({
   const isSystem = message.role === 'system';
 
   // Don't render system messages (they're context for the AI)
-  if (isSystem) {return null;}
+  if (isSystem) {
+    return null;
+  }
 
   return (
-    <div
-      className={cn(
-        'flex gap-3 py-4 px-4',
-        isUser ? 'bg-gray-50' : 'bg-white'
-      )}
-    >
+    <div className={cn('flex gap-3 py-4 px-4', isUser ? 'bg-gray-50' : 'bg-white')}>
       <Avatar className="h-8 w-8 flex-shrink-0">
         {isUser ? (
           <>
@@ -71,18 +68,14 @@ export function AIChatMessage({
             })}
           </span>
           {!isUser && message.tokens_used && message.tokens_used > 0 && (
-            <span className="text-xs text-gray-400">
-              ({message.tokens_used} tokens)
-            </span>
+            <span className="text-xs text-gray-400">({message.tokens_used} tokens)</span>
           )}
         </div>
         <div className="prose prose-sm max-w-none text-gray-700 whitespace-pre-wrap">
           {message.content}
         </div>
-        {!isUser && message.cost_sats && message.cost_sats > 0 && (
-          <div className="mt-2 text-xs text-gray-400">
-            Cost: {message.cost_sats.toLocaleString()} sats
-          </div>
+        {!isUser && message.cost_btc && message.cost_btc > 0 && (
+          <div className="mt-2 text-xs text-gray-400">Cost: {message.cost_btc.toFixed(8)} BTC</div>
         )}
       </div>
     </div>

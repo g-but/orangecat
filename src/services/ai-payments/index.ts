@@ -49,13 +49,10 @@ export class AIPaymentService {
   /**
    * Check if user has sufficient balance/credits for an AI interaction
    */
-  async checkBalance(
-    userId: string,
-    assistantId: string
-  ): Promise<BalanceCheckResult> {
+  async checkBalance(userId: string, assistantId: string): Promise<BalanceCheckResult> {
     // Get assistant pricing
     const { data: assistant, error: assistantError } = await this.supabase
-      .from('ai_assistants')
+      .from(DATABASE_TABLES.AI_ASSISTANTS)
       .select('pricing_model, price_per_message, price_per_1k_tokens, free_messages_per_day')
       .eq('id', assistantId)
       .single();
@@ -121,13 +118,10 @@ export class AIPaymentService {
   /**
    * Get today's usage for a user with an assistant
    */
-  async getTodayUsage(
-    userId: string,
-    assistantId: string
-  ): Promise<UsageStats> {
+  async getTodayUsage(userId: string, assistantId: string): Promise<UsageStats> {
     // Get assistant's free messages allowance
     const { data: assistant } = await this.supabase
-      .from('ai_assistants')
+      .from(DATABASE_TABLES.AI_ASSISTANTS)
       .select('free_messages_per_day')
       .eq('id', assistantId)
       .single();
@@ -137,13 +131,6 @@ export class AIPaymentService {
     // Count today's messages
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
-    const { count } = await this.supabase
-      .from(DATABASE_TABLES.AI_CONVERSATIONS)
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('assistant_id', assistantId)
-      .gte('created_at', today.toISOString());
 
     // Get actual message count for today
     const { data: conversations } = await this.supabase
@@ -186,8 +173,10 @@ export class AIPaymentService {
 
     // Get assistant pricing
     const { data: assistant, error: assistantError } = await this.supabase
-      .from('ai_assistants')
-      .select('id, user_id, pricing_model, price_per_message, price_per_1k_tokens, free_messages_per_day')
+      .from(DATABASE_TABLES.AI_ASSISTANTS)
+      .select(
+        'id, user_id, pricing_model, price_per_message, price_per_1k_tokens, free_messages_per_day'
+      )
       .eq('id', assistantId)
       .single();
 
@@ -270,7 +259,7 @@ export class AIPaymentService {
     if (error) {
       // If RPC doesn't exist, do a direct update (less safe but works for MVP)
       await this.supabase
-        .from('ai_assistants')
+        .from(DATABASE_TABLES.AI_ASSISTANTS)
         .update({
           total_revenue_sats: this.supabase.rpc('coalesce_add', {
             current: 'total_revenue_sats',
@@ -290,7 +279,7 @@ export class AIPaymentService {
     totalMessages: number;
   }> {
     const { data: assistant } = await this.supabase
-      .from('ai_assistants')
+      .from(DATABASE_TABLES.AI_ASSISTANTS)
       .select('total_revenue_sats, total_conversations, total_messages')
       .eq('id', assistantId)
       .single();
