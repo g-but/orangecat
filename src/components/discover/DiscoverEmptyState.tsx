@@ -13,6 +13,8 @@ import { motion } from 'framer-motion';
 import { Target, Users, DollarSign } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import type { DiscoverTabType } from '@/components/discover/DiscoverTabs';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { ROUTES } from '@/config/routes';
 
 interface DiscoverEmptyStateProps {
   activeTab: DiscoverTabType;
@@ -45,18 +47,18 @@ export default function DiscoverEmptyState({
             )}
           </div>
           <h3 className="text-2xl font-bold text-gray-900 mb-3">
-            {activeTab === 'profiles' 
-              ? 'No People Found' 
+            {activeTab === 'profiles'
+              ? 'No People Found'
               : activeTab === 'loans'
-              ? 'No Loans Available'
-              : 'Be the First to Launch'}
+                ? 'No Loans Available'
+                : 'Be the First to Launch'}
           </h3>
           <p className="text-lg text-gray-600 mb-6 leading-relaxed">
             {activeTab === 'profiles'
               ? 'No profiles match your search criteria. Try adjusting your filters or browse all people.'
               : activeTab === 'loans'
-              ? 'No loan listings available yet. Be the first to request a loan or refinance an existing one!'
-              : 'No projects here yet—which means you could be the first! Whether you\'re funding a creative project, community initiative, or passion project, this is your chance to lead the way.'}
+                ? 'No loan listings available yet. Be the first to request a loan or refinance an existing one!'
+                : "No projects here yet—which means you could be the first! Whether you're funding a creative project, community initiative, or passion project, this is your chance to lead the way."}
           </p>
 
           {activeTab === 'loans' && (
@@ -75,7 +77,7 @@ export default function DiscoverEmptyState({
               </div>
 
               <Button
-                href="/dashboard/loans/create"
+                href={ENTITY_REGISTRY.loan.createPath}
                 size="lg"
                 className="bg-gradient-to-r from-tiffany-600 to-tiffany-700 hover:from-tiffany-700 hover:to-tiffany-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 mb-4"
               >
@@ -84,7 +86,7 @@ export default function DiscoverEmptyState({
 
               <p className="text-sm text-gray-500">
                 Already have an account?{' '}
-                <a href="/auth" className="text-tiffany-600 hover:underline font-medium">
+                <a href={ROUTES.AUTH} className="text-tiffany-600 hover:underline font-medium">
                   Sign in
                 </a>{' '}
                 to get started.
@@ -113,7 +115,7 @@ export default function DiscoverEmptyState({
               </div>
 
               <Button
-                href="/projects/create"
+                href={ENTITY_REGISTRY.project.createPath}
                 size="lg"
                 className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 mb-4"
               >
@@ -122,7 +124,7 @@ export default function DiscoverEmptyState({
 
               <p className="text-sm text-gray-500">
                 Already have an account?{' '}
-                <a href="/auth" className="text-orange-600 hover:underline font-medium">
+                <a href={ROUTES.AUTH} className="text-orange-600 hover:underline font-medium">
                   Sign in
                 </a>{' '}
                 to get started.
@@ -155,8 +157,8 @@ export default function DiscoverEmptyState({
           {activeTab === 'profiles'
             ? 'Try different filters or browse all people to discover someone new.'
             : activeTab === 'loans'
-            ? 'Try different filters or browse all loans to discover available lending opportunities.'
-            : 'Try different filters or browse all projects to discover something new.'}
+              ? 'Try different filters or browse all loans to discover available lending opportunities.'
+              : 'Try different filters or browse all projects to discover something new.'}
         </p>
         <div className="space-y-3">
           <Button onClick={onClearFilters} variant="outline" className="px-6 py-2">
@@ -164,7 +166,7 @@ export default function DiscoverEmptyState({
           </Button>
           {activeTab === 'loans' && (
             <Button
-              href="/dashboard/loans/create"
+              href={ENTITY_REGISTRY.loan.createPath}
               className="bg-gradient-to-r from-tiffany-600 to-tiffany-700 hover:from-tiffany-700 hover:to-tiffany-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
               Or create your own loan listing →
@@ -172,7 +174,7 @@ export default function DiscoverEmptyState({
           )}
           {activeTab !== 'profiles' && activeTab !== 'loans' && (
             <Button
-              href="/projects/create"
+              href={ENTITY_REGISTRY.project.createPath}
               className="bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white px-8 py-3 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
             >
               Or launch your own project →
@@ -183,5 +185,3 @@ export default function DiscoverEmptyState({
     </motion.div>
   );
 }
-
-

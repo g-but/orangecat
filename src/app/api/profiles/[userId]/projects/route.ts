@@ -23,7 +23,9 @@ export async function GET(
     // Create a client for storage operations
     const supabaseStorage = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SECRET_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY ||
+        process.env.SUPABASE_SECRET_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!
     );
 
     // Get user's projects (simplified MVP - no organizations)
@@ -63,11 +65,13 @@ export async function GET(
     }
 
     // Process projects to get first media URL
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const projectsWithMedia = (projects || []).map((project: any) => {
       if (project.project_media && project.project_media.length > 0) {
         // Get first media item (sorted by position)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const firstMedia = project.project_media.sort(
-          (a: any, b: any) => a.position - b.position
+          (a: { position: number }, b: { position: number }) => a.position - b.position
         )[0];
         const { data: urlData } = supabaseStorage.storage
           .from('project-media')
