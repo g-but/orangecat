@@ -1,17 +1,13 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createClient } from '@supabase/supabase-js';
-import {
-  apiSuccess,
-  apiNotFound,
-  handleApiError,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, apiNotFound, handleApiError } from '@/lib/api/standardResponse';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 /**
  * GET /api/profile/[identifier] - Get profile by username or email
- * 
+ *
  * Supports both username and email lookups for viewing other users' profiles
  */
 export async function GET(
@@ -20,7 +16,7 @@ export async function GET(
 ) {
   try {
     const { identifier } = await params;
-    
+
     if (!identifier?.trim()) {
       return apiNotFound('Profile identifier is required');
     }
@@ -28,11 +24,11 @@ export async function GET(
     const supabase = await createServerClient();
     const trimmedIdentifier = identifier.trim();
     const isEmail = trimmedIdentifier.includes('@');
-    
+
     let profile = null;
     let error = null;
     let userId: string | null = null;
-    
+
     if (isEmail) {
       // Try to find profile by email field first (if it exists in profiles table)
       const { data: profileByEmail, error: emailError } = await supabase
@@ -40,25 +36,26 @@ export async function GET(
         .select('*')
         .eq('email', trimmedIdentifier)
         .single();
-      
+
       if (!emailError && profileByEmail) {
         profile = profileByEmail;
         userId = profileByEmail.id;
       } else {
         // If email field doesn't exist in profiles, try to find user by email in auth.users
         // Use service role client if available for admin access
-        const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
+        const serviceRoleKey =
+          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY;
         const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-        
+
         if (serviceRoleKey && supabaseUrl) {
           try {
             const adminClient = createClient(supabaseUrl, serviceRoleKey, {
               auth: {
                 autoRefreshToken: false,
-                persistSession: false
-              }
+                persistSession: false,
+              },
             });
-            
+
             // List users and find by email (compatible across versions)
             const { data: usersData, error: listError } = await adminClient.auth.admin.listUsers();
             if (!listError && usersData?.users) {
@@ -73,7 +70,7 @@ export async function GET(
             } else {
               return apiNotFound('Profile not found');
             }
-            
+
             // Now fetch the profile by user ID
             if (userId) {
               const { data: profileById, error: profileError } = await supabase
@@ -81,7 +78,7 @@ export async function GET(
                 .select('*')
                 .eq('id', userId)
                 .single();
-              
+
               if (!profileError && profileById) {
                 profile = profileById;
               } else {
@@ -90,7 +87,7 @@ export async function GET(
             } else {
               return apiNotFound('Profile not found');
             }
-          } catch (adminError) {
+          } catch {
             // Fallback: return error suggesting username lookup
             return apiNotFound('Profile not found. Please use username instead of email.');
           }
@@ -106,7 +103,7 @@ export async function GET(
         .select('*')
         .eq('username', trimmedIdentifier)
         .single();
-      
+
       profile = profileByUsername;
       error = usernameError;
       if (profile) {

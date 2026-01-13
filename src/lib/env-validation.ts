@@ -164,7 +164,7 @@ export function getEnvironmentInfo() {
     nodeEnv: process.env.NODE_ENV,
     hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
     hasSupabaseKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    hasServiceRoleKey: !!process.env.SUPABASE_SECRET_KEY,
+    hasServiceRoleKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL?.split('.')[0] + '.supabase.co',
   };
 }
