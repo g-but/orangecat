@@ -249,7 +249,7 @@ export class BitcoinService {
         unconfirmed,
         total: confirmed + unconfirmed,
       };
-    } catch (error: CatchError) {
+    } catch (error: unknown) {
       return {
         confirmed: 0,
         unconfirmed: 0,
@@ -264,7 +264,7 @@ export class BitcoinService {
     try {
       const walletData = await this.fetchBitcoinWalletData(address);
       return walletData.transactions;
-    } catch (error: CatchError) {
+    } catch (error: unknown) {
       logger.error('Error fetching transactions:', getErrorMessage(error), 'Bitcoin');
       return [];
     }
@@ -334,7 +334,7 @@ export class BitcoinService {
           network: 'mainnet' as const,
           lastUpdated: new Date().toISOString(),
         };
-      } catch (error: CatchError) {
+      } catch (error: unknown) {
         const errorMessage = getErrorMessage(error);
         logger.error(`Error with provider ${provider.name}:`, errorMessage, 'Bitcoin');
         lastError = error instanceof Error ? error : new Error(errorMessage);

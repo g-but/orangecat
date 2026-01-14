@@ -4,6 +4,7 @@ import { logger } from '@/utils/logger';
 import { offlineQueueService } from './offline-queue';
 import { timelineService } from '@/services/timeline';
 import { queueUpdated, syncStart, syncProgress, syncComplete } from '@/lib/offline-queue-events';
+import type { CreateTimelineEventRequest } from '@/types/timeline';
 
 const MAX_SYNC_ATTEMPTS = 5;
 let isSyncing = false;
@@ -74,7 +75,9 @@ async function processQueue() {
       }
 
       try {
-        const result = await timelineService.createEvent(post.payload);
+        const result = await timelineService.createEvent(
+          post.payload as CreateTimelineEventRequest
+        );
         if (result.success) {
           logger.info(`Successfully synced post ${post.id}. Removing from queue.`, 'SyncManager');
           await offlineQueueService.removeFromQueue(post.id);
