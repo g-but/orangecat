@@ -31,6 +31,29 @@ export type {
 
 export { getOwnerType, getOwnerId, isFeatureEnabled, getFeatureConfig } from '@/types/group';
 
+// ==================== MEMBER DETAIL TYPE ====================
+
+/**
+ * Detailed member information including profile data
+ * Used when fetching members with joined profile information
+ */
+export interface GroupMemberDetail {
+  id: string;
+  group_id: string;
+  user_id: string;
+  role: string;
+  role_type: string;
+  status: 'active' | 'inactive' | 'suspended';
+  joined_at: string;
+  invited_by: string | null;
+  voting_weight: number;
+  equity_percentage: number | null;
+  permissions: Record<string, unknown> | null;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
 // ==================== SERVICE REQUEST/RESPONSE TYPES ====================
 
 export interface GroupResponse {
@@ -54,7 +77,7 @@ export interface GroupMemberResponse {
 
 export interface GroupMembersResponse {
   success: boolean;
-  members?: import('@/types/group').GroupMember[];
+  members?: GroupMemberDetail[];
   total?: number;
   error?: string;
 }

@@ -10,7 +10,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import { currencyConverter, CurrencyCode } from '@/services/currencyConverter';
+import { currencyConverter } from '@/services/currencyConverter';
+import { type CurrencyCode } from '@/config/currencies';
 
 export function useCurrencyConversion() {
   const [isLoading, setIsLoading] = useState(true);

@@ -43,8 +43,8 @@ export const GET = compose(
 
     // Build query with user info for discovery page
     const tableName = getTableName('ai_assistant');
-    let itemsQuery = supabase
-      .from(tableName)
+    let itemsQuery = (supabase
+      .from(tableName) as any)
       .select(`
         *,
         user:profiles!ai_assistants_user_id_fkey(
@@ -56,8 +56,8 @@ export const GET = compose(
       `)
       .range(offset, offset + limit - 1);
 
-    let countQuery = supabase
-      .from(tableName)
+    let countQuery = (supabase
+      .from(tableName) as any)
       .select('*', { count: 'exact', head: true });
 
     if (userId && includeOwnDrafts) {
@@ -152,8 +152,8 @@ export const POST = compose(
 
     // Create the AI assistant
     const tableName = getTableName('ai_assistant');
-    const { data: assistant, error } = await supabase
-      .from(tableName)
+    const { data: assistant, error } = await (supabase
+      .from(tableName) as any)
       .insert({
         user_id: user.id,
         title: validatedData.title,

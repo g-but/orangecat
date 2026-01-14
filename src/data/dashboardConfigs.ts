@@ -3,7 +3,7 @@
 export { fundraisingConfig, projectsConfig } from '@/config/dashboard';
 
 // Re-export demo data from the new location - MVP
-export { demoProjects } from './demo';
+export { DEMO_PROJECTS as demoProjects } from './demo';
 
 // Re-export types - MVP
-export type { ProjectData } from './demo';
+export type { DemoProject as ProjectData } from './demo';

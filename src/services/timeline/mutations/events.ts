@@ -11,7 +11,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
-import { DATABASE_TABLES } from '@/config/database-tables';
+import { DATABASE_TABLES, TIMELINE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import type {
   TimelineEventResponse,
@@ -94,7 +94,7 @@ export async function createEventWithVisibility(
 
     // Use database function to create post with visibility contexts
     // The function returns JSONB, so we need to parse it
-    const { data, error } = await supabase.rpc('create_post_with_visibility', {
+    const { data, error } = await (supabase.rpc as any)('create_post_with_visibility', {
       p_event_type: request.eventType || 'post_created',
       p_actor_id: actorId,
       p_subject_type: request.subjectType || 'profile',
@@ -170,11 +170,12 @@ export async function createEventWithVisibility(
     }
 
     // Fetch the created event
-    const { data: event, error: fetchError } = await supabase
-      .from(TIMELINE_TABLES.EVENTS)
+    const { data: eventData, error: fetchError } = await (supabase
+      .from(TIMELINE_TABLES.EVENTS) as any)
       .select('*')
       .eq('id', postId)
       .single();
+    const event = eventData as any;
 
     if (fetchError) {
       logger.error('Failed to fetch created post', fetchError, 'Timeline');
@@ -274,7 +275,7 @@ export async function createEvent(request: CreateTimelineEventRequest): Promise<
     let eventId: string;
 
     try {
-      const { data, error } = await supabase.rpc('create_timeline_event', eventData);
+      const { data, error } = await (supabase.rpc as any)('create_timeline_event', eventData);
 
       if (error) {
         logger.error('Failed to create timeline event', error, 'Timeline');
@@ -288,11 +289,12 @@ export async function createEvent(request: CreateTimelineEventRequest): Promise<
     }
 
     // Fetch the created event (only if database function succeeded)
-    const { data: event, error: fetchError } = await supabase
-      .from(TIMELINE_TABLES.EVENTS)
+    const { data: eventData2, error: fetchError } = await (supabase
+      .from(TIMELINE_TABLES.EVENTS) as any)
       .select('*')
       .eq('id', eventId)
       .single();
+    const event = eventData2 as any;
 
     if (fetchError) {
       logger.error('Failed to fetch created timeline event', fetchError, 'Timeline');
@@ -321,11 +323,12 @@ export async function createProjectEvent(
   additionalData?: Partial<CreateTimelineEventRequest>
 ): Promise<TimelineEventResponse> {
   // Get project details
-  const { data: project } = await supabase
-    .from(getTableName('project'))
+  const { data: projectData } = await (supabase
+    .from(getTableName('project')) as any)
     .select('title, description, goal_amount, currency')
     .eq('id', projectId)
     .single();
+  const project = projectData as any;
 
   if (!project) {
     return { success: false, error: 'Project not found' };
@@ -365,23 +368,26 @@ export async function createTransactionEvent(
   eventType: 'donation_received' | 'donation_sent' = 'donation_received'
 ): Promise<TimelineEventResponse> {
   // Get transaction and project details
-  const { data: transaction } = await supabase
-    .from(DATABASE_TABLES.TRANSACTIONS)
+  const { data: transactionData } = await (supabase
+    .from(DATABASE_TABLES.TRANSACTIONS) as any)
     .select('*')
     .eq('id', transactionId)
     .single();
+  const transaction = transactionData as any;
 
-  const { data: project } = await supabase
-    .from(getTableName('project'))
+  const { data: projectData } = await (supabase
+    .from(getTableName('project')) as any)
     .select('title')
     .eq('id', projectId)
     .single();
+  const project = projectData as any;
 
-  const { data: donor } = await supabase
-    .from(DATABASE_TABLES.PROFILES)
+  const { data: donorData } = await (supabase
+    .from(DATABASE_TABLES.PROFILES) as any)
     .select('username, display_name')
     .eq('id', donorId)
     .single();
+  const donor = donorData as any;
 
   if (!transaction || !project) {
     return { success: false, error: 'Transaction or project not found' };
@@ -432,7 +438,7 @@ export async function createQuoteReply(
   getEventById?: (eventId: string) => Promise<{ success: boolean; event?: any; error?: string }>
 ): Promise<TimelineEventResponse> {
   try {
-    const result = await supabase.rpc('create_quote_reply', {
+    const result = await (supabase.rpc as any)('create_quote_reply', {
       p_parent_event_id: parentPostId,
       p_actor_id: actorId,
       p_content: content,
@@ -459,11 +465,12 @@ export async function createQuoteReply(
     }
 
     // Fallback: fetch directly
-    const { data: event, error: fetchError } = await supabase
-      .from(TIMELINE_TABLES.EVENTS)
+    const { data: eventData, error: fetchError } = await (supabase
+      .from(TIMELINE_TABLES.EVENTS) as any)
       .select('*')
       .eq('id', result.data)
       .single();
+    const event = eventData as any;
 
     if (fetchError || !event) {
       return { success: false, error: 'Quote reply created but failed to fetch' };
@@ -510,7 +517,7 @@ export async function updateEvent(
 
     updateData.updated_at = new Date().toISOString();
 
-    const { error } = await supabase.from(TIMELINE_TABLES.EVENTS).update(updateData).eq('id', eventId);
+    const { error } = await (supabase.from(TIMELINE_TABLES.EVENTS) as any).update(updateData).eq('id', eventId);
 
     if (error) {
       logger.error('Failed to update timeline event', error, 'Timeline');
@@ -540,7 +547,7 @@ export async function updateEventVisibility(
  */
 export async function deleteEvent(eventId: string, reason?: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase.rpc('soft_delete_timeline_event', {
+    const { data, error } = await (supabase.rpc as any)('soft_delete_timeline_event', {
       event_id: eventId,
       reason,
     });
@@ -587,11 +594,11 @@ export async function shareEvent(
     }
     
     // Attempt to count share events referencing this original
-    const { count } = await supabase
-      .from(TIMELINE_TABLES.EVENTS)
+    const { count } = await (supabase
+      .from(TIMELINE_TABLES.EVENTS) as any)
       .select('id', { count: 'exact', head: true })
       .contains('metadata', { original_event_id: originalEventId });
-    
+
     return { success: true, shareCount: count || 0 };
   } catch (error) {
     logger.error('Error sharing timeline event', error, 'Timeline');

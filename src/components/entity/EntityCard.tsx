@@ -65,6 +65,14 @@ export interface EntityCardProps {
   onToggleVisibility?: () => void | Promise<void>;
   /** Whether visibility toggle is in progress */
   isTogglingVisibility?: boolean;
+  /** Custom header slot (e.g., status badges) */
+  headerSlot?: ReactNode;
+  /** Custom progress slot (e.g., funding progress bar) */
+  progressSlot?: ReactNode;
+  /** Custom metrics slot (e.g., funding metrics) */
+  metricsSlot?: ReactNode;
+  /** Custom footer slot */
+  footerSlot?: ReactNode;
 }
 
 const badgeVariantClasses: Record<string, string> = {
@@ -143,6 +151,10 @@ export function EntityCard({
   showOnProfile,
   onToggleVisibility,
   isTogglingVisibility,
+  headerSlot,
+  progressSlot,
+  metricsSlot,
+  footerSlot,
 }: EntityCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -249,6 +261,9 @@ export function EntityCard({
           </div>
         )}
 
+        {/* Header Slot */}
+        {headerSlot && <div className="mb-2">{headerSlot}</div>}
+
         {/* Title */}
         <Link href={detailHref}>
           <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-1">
@@ -305,6 +320,15 @@ export function EntityCard({
             </div>
           </div>
         )}
+
+        {/* Progress Slot */}
+        {progressSlot && <div className="mt-3">{progressSlot}</div>}
+
+        {/* Metrics Slot */}
+        {metricsSlot && <div className="mt-3">{metricsSlot}</div>}
+
+        {/* Footer Slot */}
+        {footerSlot && <div className="mt-3 pt-3 border-t border-gray-100">{footerSlot}</div>}
       </div>
     </div>
   );

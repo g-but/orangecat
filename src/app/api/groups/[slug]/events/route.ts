@@ -51,8 +51,8 @@ export const GET = withAuth(async (
     const { searchParams } = new URL(req.url);
 
     // Get group by slug
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
+    const { data: group, error: groupError } = await (supabase
+      .from('groups') as any)
       .select('id')
       .eq('slug', slug)
       .single();
@@ -68,8 +68,8 @@ export const GET = withAuth(async (
     const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
 
     // Build query
-    let query = supabase
-      .from('group_events')
+    let query = (supabase
+      .from('group_events') as any)
       .select(
         `
         *,
@@ -139,8 +139,8 @@ export const POST = withAuth(async (
     const supabase = await createServerClient();
 
     // Get group by slug
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
+    const { data: group, error: groupError } = await (supabase
+      .from('groups') as any)
       .select('id, name')
       .eq('slug', slug)
       .single();
@@ -150,8 +150,8 @@ export const POST = withAuth(async (
     }
 
     // Check if user is a member
-    const { data: membership } = await supabase
-      .from('group_members')
+    const { data: membership } = await (supabase
+      .from('group_members') as any)
       .select('role')
       .eq('group_id', group.id)
       .eq('user_id', user.id)
@@ -186,8 +186,8 @@ export const POST = withAuth(async (
     };
 
     // Create event
-    const { data: event, error: insertError } = await supabase
-      .from('group_events')
+    const { data: event, error: insertError } = await (supabase
+      .from('group_events') as any)
       .insert(eventData)
       .select()
       .single();
@@ -198,25 +198,22 @@ export const POST = withAuth(async (
     }
 
     // Get creator profile
-    const { data: creatorProfile } = await supabase
-      .from(DATABASE_TABLES.PROFILES)
+    const { data: creatorProfile } = await (supabase
+      .from(DATABASE_TABLES.PROFILES) as any)
       .select('id, name, avatar_url')
       .eq('id', user.id)
       .single();
 
-    return apiCreated(
-      {
-        event: {
-          ...event,
-          creator: creatorProfile || {
-            id: user.id,
-            name: null,
-            avatar_url: null,
-          },
+    return apiCreated({
+      event: {
+        ...event,
+        creator: creatorProfile || {
+          id: user.id,
+          name: null,
+          avatar_url: null,
         },
       },
-      { status: 201 }
-    );
+    });
   } catch (error) {
     logger.error('Events POST error', { error }, 'Groups');
     return handleApiError(error);

@@ -18,9 +18,9 @@ import { useProjectStore } from '@/stores/projectStore';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import { ROUTES } from '@/lib/routes';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { Card } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Rocket, X, Loader2, ExternalLink } from 'lucide-react';
 import { ProjectTemplates, type ProjectTemplate } from '@/components/create/templates';
@@ -48,7 +48,7 @@ export function ProjectWizard({
   const { loadProjects, updateProjectStatus } = useProjectStore();
 
   // Check both prop and query param for edit mode
-  const editIdFromQuery = searchParams.get('edit') || searchParams.get('draft');
+  const editIdFromQuery = searchParams?.get('edit') || searchParams?.get('draft');
   const [isEditMode, setIsEditMode] = useState(!!projectId || !!editIdFromQuery);
   const [editProjectId, setEditProjectId] = useState<string | null>(
     projectId || editIdFromQuery || null
@@ -120,7 +120,7 @@ export function ProjectWizard({
 
   useEffect(() => {
     // Support both 'edit' and 'draft' query parameters
-    const editId = searchParams.get('edit') || searchParams.get('draft');
+    const editId = searchParams?.get('edit') || searchParams?.get('draft');
     if (editId) {
       loadProjectForEdit(editId);
     }
@@ -190,6 +190,7 @@ export function ProjectWizard({
       }, 10000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [formData, isEditMode, editProjectId]);
 
   const updateFormData = (updates: Partial<ProjectFormData>) => {
@@ -226,11 +227,11 @@ export function ProjectWizard({
     }));
   };
 
-  const handleTemplateSelect = (template: ProjectTemplate) => {
-    setFormData(prev => ({ ...prev, ...template.data }));
+  const handleTemplateSelect = (template: Partial<Record<string, any>>) => {
+    setFormData(prev => ({ ...prev, ...template }));
     setErrors({}); // Clear validation errors when template is loaded
     setTouched(new Set()); // Reset touched fields
-    toast.success(`Template "${template.name}" loaded!`);
+    toast.success('Template loaded!');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

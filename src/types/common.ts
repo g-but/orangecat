@@ -144,6 +144,30 @@ export type JsonObject = { [key: string]: JsonValue }
  */
 export type JsonArray = JsonValue[]
 
+// ==================== ENTITY STATUS TYPES (SSOT) ====================
+
+/**
+ * Base entity status - used across most entity types
+ * SSOT: Use this instead of inline union types
+ */
+export type EntityStatus = 'draft' | 'active' | 'paused' | 'archived';
+
+/**
+ * Extended entity status including 'completed' state
+ * Used for entities that can be marked as finished (e.g., causes, projects)
+ */
+export type EntityStatusWithCompleted = 'draft' | 'active' | 'completed' | 'paused' | 'archived';
+
+/**
+ * Asset verification status levels
+ */
+export type VerificationStatus = 'unverified' | 'user_provided' | 'third_party_verified';
+
+/**
+ * Common visibility levels for entities
+ */
+export type VisibilityLevel = 'public' | 'private' | 'unlisted' | 'hidden';
+
 // ==================== DATABASE TYPES ====================
 
 /**

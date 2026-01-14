@@ -14,10 +14,13 @@ import { TABLES } from '../constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
+// Type alias for any SupabaseClient (accepts any database schema)
+type AnySupabaseClient = SupabaseClient<any, any, any>;
+
 /**
  * Get current authenticated user ID
  */
-export async function getCurrentUserId(client?: SupabaseClient<Database>): Promise<string | null> {
+export async function getCurrentUserId(client?: AnySupabaseClient): Promise<string | null> {
   try {
     const supabaseClient = client || supabase;
     const {
@@ -48,15 +51,15 @@ export function generateSlug(name: string): string {
 export async function ensureUniqueSlug(
   baseSlug: string,
   excludeId?: string,
-  client?: SupabaseClient<Database>
+  client?: AnySupabaseClient
 ): Promise<string> {
   const supabaseClient = client || supabase;
   let slug = baseSlug;
   let counter = 1;
 
   while (true) {
-    const { data } = await supabaseClient
-      .from(TABLES.groups)
+    const { data } = await (supabaseClient
+      .from(TABLES.groups) as any)
       .select('id')
       .eq('slug', slug)
       .maybeSingle();
@@ -75,12 +78,12 @@ export async function ensureUniqueSlug(
  */
 export async function getUserGroupIds(userId: string): Promise<string[]> {
   try {
-    const { data } = await supabase
-      .from(TABLES.group_members)
+    const { data } = await (supabase
+      .from(TABLES.group_members) as any)
       .select('group_id')
       .eq('user_id', userId);
 
-    return data?.map((m) => m.group_id) || [];
+    return data?.map((m: { group_id: string }) => m.group_id) || [];
   } catch (error) {
     logger.error('Error getting user group IDs', error, 'Groups');
     return [];
@@ -92,8 +95,8 @@ export async function getUserGroupIds(userId: string): Promise<string[]> {
  */
 export async function isGroupMember(groupId: string, userId: string): Promise<boolean> {
   try {
-    const { data } = await supabase
-      .from(TABLES.group_members)
+    const { data } = await (supabase
+      .from(TABLES.group_members) as any)
       .select('id')
       .eq('group_id', groupId)
       .eq('user_id', userId)
@@ -114,8 +117,8 @@ export async function getUserRole(
   userId: string
 ): Promise<'founder' | 'admin' | 'member' | null> {
   try {
-    const { data } = await supabase
-      .from(TABLES.group_members)
+    const { data } = await (supabase
+      .from(TABLES.group_members) as any)
       .select('role')
       .eq('group_id', groupId)
       .eq('user_id', userId)

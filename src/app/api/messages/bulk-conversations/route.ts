@@ -35,9 +35,9 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     // Default behavior: leave conversations (soft remove for this user)
     // PURE RLS: relies on 'Users can update their own participation' policy
-    const { error: updErr, data } = await supabase
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
-      .update({ is_active: false } as { is_active: boolean })
+    const { error: updErr, data } = await (supabase
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
+      .update({ is_active: false })
       .in('conversation_id', ids)
       .eq('user_id', user.id)
       .select('conversation_id')

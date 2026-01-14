@@ -43,7 +43,7 @@ export async function createProjectSupport(
 
     // Add type-specific fields
     if (request.support_type === 'bitcoin_donation') {
-      supportData.amount_sats = request.amount_sats;
+      supportData.amount_sats = request.amount;
       supportData.transaction_hash = request.transaction_hash || null;
       supportData.lightning_invoice = request.lightning_invoice || null;
     } else if (request.support_type === 'signature') {
@@ -104,8 +104,8 @@ export async function deleteProjectSupport(
     }
 
     // Check if user owns this support
-    const { data: support, error: fetchError } = await supabase
-      .from('project_support')
+    const { data: support, error: fetchError } = await (supabase
+      .from('project_support') as any)
       .select('user_id')
       .eq('id', supportId)
       .single();
@@ -114,7 +114,7 @@ export async function deleteProjectSupport(
       return { success: false, error: 'Support not found' };
     }
 
-    if (support.user_id !== userId) {
+    if ((support as any).user_id !== userId) {
       return { success: false, error: 'Forbidden' };
     }
 

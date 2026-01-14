@@ -75,7 +75,7 @@ export function PostContent({ event }: PostContentProps) {
       {/* Subject/Target Links */}
       {(event.subject || event.target) && event.metadata?.is_user_post !== true && (
         <div className="flex gap-2">
-          {event.subject && (
+          {event.subject && event.subject.url && (
             <Link
               href={event.subject.url}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -84,7 +84,7 @@ export function PostContent({ event }: PostContentProps) {
             </Link>
           )}
           {event.target && <span className="text-gray-400">→</span>}
-          {event.target && (
+          {event.target && event.target.url && (
             <Link
               href={event.target.url}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
@@ -202,17 +202,20 @@ export function PostContent({ event }: PostContentProps) {
 
       {/* Media Attachments Placeholder */}
       {/* TODO: Add media rendering (images, videos, etc.) */}
-      {event.attachments && event.attachments.length > 0 && (
-        <div className="mt-3 space-y-2">
-          {event.attachments.map((attachment, index) => (
-            <div key={index} className="bg-gray-100 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
-                Media attachment: {attachment.type} - {attachment.filename}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+      {(() => {
+        const attachments = (event.metadata?.attachments as Array<{ type: string; filename: string }>) || [];
+        return attachments.length > 0 ? (
+          <div className="mt-3 space-y-2">
+            {attachments.map((attachment: { type: string; filename: string }, index: number) => (
+              <div key={index} className="bg-gray-100 p-4 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  Media attachment: {attachment.type} - {attachment.filename}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null;
+      })()}
     </div>
   );
 }

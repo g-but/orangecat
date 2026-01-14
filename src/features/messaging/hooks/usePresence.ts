@@ -70,7 +70,7 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
       }
 
       try {
-        await supabase.rpc('update_presence', { p_status: status });
+        await (supabase.rpc as any)('update_presence', { p_status: status });
         setMyStatusState(status);
         debugLog('[usePresence] updated status:', status);
       } catch (error) {
@@ -187,7 +187,8 @@ export function usePresence(options: UsePresenceOptions = {}): UsePresenceReturn
         .in('user_id', userIds);
 
       if (data) {
-        for (const row of data) {
+        type PresenceRow = { user_id: string; status: string; last_seen_at: string };
+        for (const row of data as PresenceRow[]) {
           map.set(row.user_id, {
             userId: row.user_id,
             status: row.status as PresenceStatus,

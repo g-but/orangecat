@@ -74,12 +74,12 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link
-        href={item.href}
+        href={item.href || '#'}
         className={linkClasses}
         onClick={onNavigate}
         aria-label={item.comingSoon ? `${item.name} - ${navigationLabels.COMING_SOON}` : item.name}
       >
-        <item.icon className={iconClasses} />
+        {item.icon && <item.icon className={iconClasses} />}
 
         {/* Collapsed (desktop): tiny unread dot for Messages */}
         {showMessagesBadge && count > 0 && !isExpanded && (

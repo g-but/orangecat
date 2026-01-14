@@ -38,8 +38,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return apiBadRequest('Invalid storage path');
     }
 
-    const { data: project } = await supabase
-      .from(getTableName('project'))
+    const { data: project } = await (supabase
+      .from(getTableName('project')) as any)
       .select('user_id')
       .eq('id', projectId)
       .single();
@@ -59,8 +59,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Check current media count - use fresh query to avoid stale data
-    const { count, error: countError } = await supabase
-      .from('project_media')
+    const { count, error: countError } = await (supabase
+      .from('project_media') as any)
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId);
 
@@ -81,12 +81,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Find the first available position (0, 1, or 2)
     // Get all existing positions
-    const { data: existing } = await supabase
-      .from('project_media')
+    const { data: existing } = await (supabase
+      .from('project_media') as any)
       .select('position')
       .eq('project_id', projectId);
 
-    const existingPositions = (existing || []).map(m => m.position).sort((a, b) => a - b);
+    const existingPositions = (existing || []).map((m: any) => m.position).sort((a: number, b: number) => a - b);
 
     // Find first available position (0, 1, or 2)
     let nextPosition = 0;
@@ -102,8 +102,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return apiBadRequest('Maximum 3 images per project');
     }
 
-    const { data: media, error } = await supabase
-      .from('project_media')
+    const { data: media, error } = await (supabase
+      .from('project_media') as any)
       .insert({ project_id: projectId, storage_path: path, position: nextPosition, alt_text })
       .select()
       .single();

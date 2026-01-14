@@ -182,10 +182,11 @@ class TimelineService {
    * Get community timeline (events from followed users)
    */
   async getFollowedUsersFeed(
-    userId: string,
+    _userId: string,
     pagination?: Partial<TimelinePagination>
   ): Promise<TimelineFeedResponse> {
-    return getFollowedUsersFeed(userId, pagination);
+    // Note: getFollowedUsersFeed gets currentUserId internally
+    return getFollowedUsersFeed(undefined, pagination);
   }
 
   /**

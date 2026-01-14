@@ -26,8 +26,8 @@ export const wishlistEntityConfig = {
   entityType: 'wishlist' as const,
   apiEndpoint: '/api/wishlists',
   createPath: '/dashboard/wishlists/create',
-  makeHref: (id: string) => `/dashboard/wishlists/${id}`,
-  
+  makeHref: (item: WishlistListItem) => `/dashboard/wishlists/${item.id}`,
+
   makeCardProps: (item: WishlistListItem) => ({
     title: item.title,
     description: item.description,
@@ -45,5 +45,9 @@ export const wishlistEntityConfig = {
     description: 'Create your first wishlist for a birthday, wedding, or personal goal.',
   },
 
-  gridCols: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' as const,
+  gridCols: {
+    mobile: 1,
+    tablet: 2,
+    desktop: 3,
+  },
 };

@@ -66,8 +66,8 @@ export async function canPerformAction(
 
   try {
     // Get group from groups table
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
+    const { data: group, error: groupError } = await (supabase
+      .from('groups') as any)
       .select('governance_preset, voting_threshold')
       .eq('id', groupId)
       .maybeSingle();
@@ -83,8 +83,8 @@ export async function canPerformAction(
       };
 
       // Get membership from group_members
-      const { data: member } = await supabase
-        .from('group_members')
+      const { data: member } = await (supabase
+        .from('group_members') as any)
         .select('role, permission_overrides')
         .eq('group_id', groupId)
         .eq('user_id', userId)

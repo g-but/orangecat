@@ -1,13 +1,17 @@
 /**
  * JEST SETUP - COMPREHENSIVE TEST ENVIRONMENT
- * 
+ *
  * This file configures the Jest testing environment with all necessary
  * mocks, polyfills, and global configurations for OrangeCat testing.
- * 
+ *
  * Created: 2025-01-08
  * Last Modified: 2025-01-08
  * Last Modified Summary: Comprehensive test environment setup
  */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import '@testing-library/jest-dom'; 
 
@@ -57,7 +61,6 @@ Object.defineProperty(window, 'sessionStorage', {
 // (These are warning-level logs; suppress them globally.)
 jest.spyOn(console, 'error').mockImplementation((...args) => {
   if (typeof args[0] === 'string' && args[0].includes('not wrapped in act')) return
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (console.error as any).original?.(...args)
 })
 
@@ -303,7 +306,42 @@ jest.mock('lucide-react', () => ({
   UserX: () => 'div',
   Users: () => 'div',
   UserPlus: () => 'div',
-  UserMinus: () => 'div'
+  UserMinus: () => 'div',
+  // Additional icons used by home page components
+  ArrowRight: () => 'div',
+  Bitcoin: () => 'div',
+  Zap: () => 'div',
+  TrendingUp: () => 'div',
+  Menu: () => 'div',
+  Bell: () => 'div',
+  Package: () => 'div',
+  ShoppingCart: () => 'div',
+  CreditCard: () => 'div',
+  DollarSign: () => 'div',
+  Wallet: () => 'div',
+  Send: () => 'div',
+  Inbox: () => 'div',
+  MessageSquare: () => 'div',
+  MoreHorizontal: () => 'div',
+  MoreVertical: () => 'div',
+  Filter: () => 'div',
+  SortAsc: () => 'div',
+  SortDesc: () => 'div',
+  Grid: () => 'div',
+  List: () => 'div',
+  Layout: () => 'div',
+  Sidebar: () => 'div',
+  PanelLeft: () => 'div',
+  PanelRight: () => 'div',
+  Maximize: () => 'div',
+  Minimize: () => 'div',
+  Move: () => 'div',
+  Target: () => 'div',
+  Activity: () => 'div',
+  BarChart: () => 'div',
+  PieChart: () => 'div',
+  LineChart: () => 'div',
+  Loader2: () => 'div'
 }))
 
 // =====================================================================
@@ -401,6 +439,7 @@ afterAll(() => {
 // =====================================================================
 
 declare global {
+  // eslint-disable-next-line no-var
   var testUtils: {
     resetMocks: () => void
     mockSuccessResponse: (data: any) => void
@@ -553,18 +592,9 @@ jest.mock('@/services/profile/mapper', () => ({
 // =====================================================================
 
 jest.mock('@/services/profile/reader', () => {
-  const supabase = require('@/services/supabase/client').default
   return {
     ProfileReader: {
-      getProfile: jest.fn((userId: string) =>
-        supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', userId)
-          .single()
-          .then((res: any) => res?.data ?? null)
-          .catch(() => null)
-      ),
+      getProfile: jest.fn(() => Promise.resolve(null)),
       getProfiles: jest.fn(() => Promise.resolve([])),
       searchProfiles: jest.fn(() => Promise.resolve([])),
       getAllProfiles: jest.fn(() => Promise.resolve([])),

@@ -31,12 +31,12 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
   makeCardProps: (cause, userCurrency?: string) => {
     // Display goal in user's preferred currency (or cause's currency)
     const displayCurrency = (userCurrency || cause.currency || PLATFORM_DEFAULT_CURRENCY) as Currency;
-    // Build goal label
-    const goalLabel = cause.goal_amount && cause.currency
+    // Build goal label - use target_amount (database field name)
+    const goalLabel = cause.target_amount && cause.currency
       ? (() => {
           const goalAmount = cause.currency === displayCurrency
-            ? cause.goal_amount
-            : convert(cause.goal_amount, cause.currency as Currency, displayCurrency);
+            ? cause.target_amount
+            : convert(cause.target_amount, cause.currency as Currency, displayCurrency);
           return `Goal: ${formatCurrency(goalAmount, displayCurrency)}`;
         })()
       : undefined;
@@ -46,14 +46,15 @@ export const causeEntityConfig: EntityConfig<UserCause> = {
     if (cause.cause_category) {
       progressParts.push(cause.cause_category);
     }
-    if (cause.total_raised !== undefined && cause.goal_amount && cause.currency) {
+    // Use current_amount (database field name) instead of total_raised
+    if (cause.current_amount !== undefined && cause.target_amount && cause.currency) {
       // Convert both to same currency for percentage calculation
       const raisedInGoalCurrency = cause.currency === displayCurrency
-        ? cause.total_raised
-        : convert(cause.total_raised, cause.currency as Currency, displayCurrency);
+        ? cause.current_amount
+        : convert(cause.current_amount, cause.currency as Currency, displayCurrency);
       const goalInGoalCurrency = cause.currency === displayCurrency
-        ? cause.goal_amount
-        : convert(cause.goal_amount, cause.currency as Currency, displayCurrency);
+        ? cause.target_amount
+        : convert(cause.target_amount, cause.currency as Currency, displayCurrency);
       const percentage = Math.round((raisedInGoalCurrency / goalInGoalCurrency) * 100);
       progressParts.push(`${percentage}% funded`);
     }

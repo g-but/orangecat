@@ -39,8 +39,8 @@ export async function createProposal(input: CreateProposalInput) {
       return { success: false, error: 'Description must be 5000 characters or less' };
     }
 
-    const { data, error } = await supabase
-      .from(TABLES.group_proposals)
+    const { data, error } = await (supabase
+      .from(TABLES.group_proposals) as any)
       .insert({
         group_id: input.group_id,
         proposer_id: userId,
@@ -100,8 +100,8 @@ export async function activateProposal(proposalId: string) {
 
     const threshold = proposal.voting_threshold || 50;
 
-    const { data, error } = await supabase
-      .from(TABLES.group_proposals)
+    const { data, error } = await (supabase
+      .from(TABLES.group_proposals) as any)
       .update({
         status: 'active',
         voting_starts_at: votingStartsAt.toISOString(),
@@ -178,8 +178,8 @@ export async function updateProposal(
       return { success: false, error: 'Title is required' };
     }
 
-    const { data, error } = await supabase
-      .from(TABLES.group_proposals)
+    const { data, error } = await (supabase
+      .from(TABLES.group_proposals) as any)
       .update({ ...payload, updated_at: new Date().toISOString() })
       .eq('id', proposalId)
       .select()
@@ -216,7 +216,7 @@ export async function deleteProposal(proposalId: string) {
       return { success: false, error: 'Only the proposer can delete the proposal' };
     }
 
-    const { error } = await supabase.from(TABLES.group_proposals).delete().eq('id', proposalId);
+    const { error } = await (supabase.from(TABLES.group_proposals) as any).delete().eq('id', proposalId);
     if (error) {
       logger.error('Failed to delete proposal', error, 'Groups');
       return { success: false, error: error.message };

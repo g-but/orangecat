@@ -96,7 +96,7 @@ export default function ModernProjectCard({
   const goalAmount = project.goal_amount ?? 0;
   const currentAmount = project.raised_amount ?? 0;
   // Get currency from project, default to CHF if not set (more likely for new projects)
-  const projectCurrency = project.currency || 'CHF';
+  const projectCurrency = (project.currency || 'CHF') as 'USD' | 'EUR' | 'CHF' | 'BTC' | 'SATS';
   const showProgress = goalAmount > 0;
   const progressPercentage = showProgress ? Math.min((currentAmount / goalAmount) * 100, 100) : 0;
 

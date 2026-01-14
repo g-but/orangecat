@@ -33,8 +33,8 @@ export async function createCause(userId: string, input: CreateCauseInput) {
     status: 'active', // Always create as active
   };
 
-  const { data, error } = await supabase
-    .from(getTableName('cause'))
+  const { data, error } = await (supabase
+    .from(getTableName('cause')) as any)
     .insert(payload)
     .select()
     .single();
@@ -50,8 +50,8 @@ export async function createCause(userId: string, input: CreateCauseInput) {
 export async function updateCause(id: string, userId: string, input: UpdateCauseInput) {
   const supabase = await createServerClient();
 
-  const { data, error } = await supabase
-    .from(getTableName('cause'))
+  const { data, error } = await (supabase
+    .from(getTableName('cause')) as any)
     .update(input)
     .eq('id', id)
     .eq('user_id', userId)

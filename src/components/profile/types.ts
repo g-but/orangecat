@@ -14,6 +14,7 @@ import { LocationMode } from '@/lib/location-privacy';
 import { Control } from 'react-hook-form';
 import { z } from 'zod';
 import { profileSchema } from '@/lib/validation';
+import { SocialLink } from '@/types/social';
 
 export type ProfileFormValues = z.infer<typeof profileSchema>;
 
@@ -57,8 +58,8 @@ export interface ProfileBasicSectionProps {
 export interface OnlinePresenceSectionProps {
   control: Control<ProfileFormValues>;
   onFieldFocus?: (field: ProfileFieldType) => void;
-  socialLinks: Array<{ platform: string; label?: string | null; value: string }>;
-  setSocialLinks: React.Dispatch<React.SetStateAction<Array<{ platform: string; label?: string | null; value: string }>>>;
+  socialLinks: SocialLink[];
+  setSocialLinks: React.Dispatch<React.SetStateAction<SocialLink[]>>;
 }
 
 export interface ContactSectionProps {

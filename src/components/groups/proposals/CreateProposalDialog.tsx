@@ -68,7 +68,7 @@ const proposalSchema = z.object({
   action_data: z.record(z.any()).optional(),
 });
 
-type ProposalFormData = z.infer<typeof proposalSchema>;
+type ProposalFormData = z.input<typeof proposalSchema>;
 
 interface CreateProposalDialogProps {
   open: boolean;

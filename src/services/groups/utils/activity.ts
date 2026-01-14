@@ -15,15 +15,19 @@ import { TABLES } from '../constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
+// Type alias for any SupabaseClient (accepts any database schema)
+type AnySupabaseClient = SupabaseClient<any, any, any>;
+
 /**
  * Log group activity
+ * @param metadata - Can include related_wallet_id, related_project_id, etc. plus any extra keys
+ * @param client - Optional Supabase client override
  */
 export async function logGroupActivity(
   groupId: string,
   userId: string,
   activityType: ActivityType,
   description: string,
-  client?: SupabaseClient<Database>,
   metadata?: {
     related_wallet_id?: string;
     related_project_id?: string;
@@ -31,11 +35,12 @@ export async function logGroupActivity(
     related_proposal_id?: string;
     related_amount_sats?: number;
     [key: string]: unknown;
-  }
+  },
+  client?: AnySupabaseClient
 ): Promise<void> {
   try {
     const supabaseClient = client || supabase;
-    await supabaseClient.from(TABLES.group_activities).insert({
+    await (supabaseClient.from(TABLES.group_activities) as any).insert({
       group_id: groupId,
       user_id: userId,
       activity_type: activityType,

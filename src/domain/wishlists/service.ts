@@ -31,11 +31,21 @@ export async function listWishlistsPage(limit: number, offset: number, userId?: 
     throw error;
   }
 
+  // Type for wishlist data from view
+  type WishlistWithStats = {
+    id: string;
+    actor_id: string;
+    title: string;
+    description?: string | null;
+    item_count?: number;
+    [key: string]: unknown;
+  };
+
   // Transform data to include items_count from item_count view field
-  const items = data?.map(w => ({
+  const items = ((data || []) as WishlistWithStats[]).map(w => ({
     ...w,
     items_count: w.item_count || 0
-  })) || [];
+  }));
 
   return { items, total: count || 0 };
 }
@@ -44,20 +54,22 @@ export async function createWishlist(userId: string, data: any) {
   const supabase = await createServerClient();
   
   // Fetch the actor ID for this user
-  const { data: actor, error: actorError } = await supabase
+  const { data: actorData, error: actorError } = await supabase
     .from('actors')
     .select('id')
     .eq('user_id', userId)
     .eq('actor_type', 'user')
     .single();
 
-  if (actorError || !actor) {
+  if (actorError || !actorData) {
     logger.error('Failed to find actor for user', { error: actorError?.message, userId });
     throw new Error('User account configuration incomplete (missing actor)');
   }
 
-  const { data: wishlist, error } = await supabase
-    .from('wishlists')
+  const actor = actorData as { id: string };
+
+  const { data: wishlist, error } = await (supabase
+    .from('wishlists') as any)
     .insert({
       actor_id: actor.id,
       title: data.title,

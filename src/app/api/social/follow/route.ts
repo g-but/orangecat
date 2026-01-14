@@ -65,7 +65,7 @@ async function handleFollow(request: AuthenticatedRequest) {
     }
 
     // Create follow relationship
-    const { error: followError } = await supabase.from(DATABASE_TABLES.FOLLOWS).insert({
+    const { error: followError } = await (supabase.from(DATABASE_TABLES.FOLLOWS) as any).insert({
       follower_id: user.id,
       following_id: following_id,
     });

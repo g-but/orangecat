@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 
@@ -9,8 +10,8 @@ export default async function CauseEditPage({ params }: CauseEditPageProps) {
   const { id } = await params;
   
   const supabase = await createServerClient();
-  const { data: cause, error } = await supabase
-    .from('causes')
+  const { data: cause, error } = await (supabase
+    .from('user_causes') as any)
     .select('*')
     .eq('id', id)
     .single();

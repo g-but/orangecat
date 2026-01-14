@@ -14,8 +14,8 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
     const supabase = await createServerClient();
 
     // Get project details
-    const { data: project, error: projectError } = await supabase
-      .from(getTableName('project'))
+    const { data: projectData, error: projectError } = await (supabase
+      .from(getTableName('project')) as any)
       .select(
         `
         id,
@@ -33,6 +33,7 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
       )
       .eq('id', projectId)
       .single();
+    const project = projectData as any;
 
     if (projectError || !project) {
       return apiNotFound('Campaign not found');
@@ -65,12 +66,13 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
     const dailyFundingRate = project.raised_amount / daysSinceCreation;
 
     // Get project category and related projects
-    const { data: relatedProjects, error: relatedError } = await supabase
-      .from(getTableName('project'))
+    const { data: relatedProjectsData, error: relatedError } = await (supabase
+      .from(getTableName('project')) as any)
       .select('id, title, raised_amount')
       .eq('category', project.category || '')
       .neq('id', projectId)
       .limit(5);
+    const relatedProjects = relatedProjectsData as any[];
 
     const categoryRank = relatedProjects?.length || 0;
 

@@ -14,7 +14,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// Type alias for any SupabaseClient (accepts any database schema)
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { ZodSchema, ZodError } from 'zod';
 import { createServerClient } from '@/lib/supabase/server';
 import {
@@ -54,43 +57,43 @@ export interface EntityHandlerConfig {
   checkGetAccess?: (
     entity: Record<string, unknown>,
     userId: string | null,
-    supabase: SupabaseClient
+    supabase: AnySupabaseClient
   ) => Promise<NextResponse | null>;
   /** Post-process entity after GET (add computed fields, etc.) */
   postProcessGet?: (
     entity: Record<string, unknown>,
     userId: string | null,
-    supabase: SupabaseClient
+    supabase: AnySupabaseClient
   ) => Promise<Record<string, unknown>>;
   /** Custom authorization check for PUT (returns error response if unauthorized) */
   checkPutAccess?: (
     entity: Record<string, unknown>,
     userId: string,
-    supabase: SupabaseClient
+    supabase: AnySupabaseClient
   ) => Promise<NextResponse | null>;
   /** Post-process entity after PUT (audit logging, etc.) */
   postProcessPut?: (
     entity: Record<string, unknown>,
     userId: string,
-    supabase: SupabaseClient
+    supabase: AnySupabaseClient
   ) => Promise<void>;
   /** Custom authorization check for DELETE (returns error response if unauthorized) */
   checkDeleteAccess?: (
     entity: Record<string, unknown>,
     userId: string,
-    supabase: SupabaseClient
+    supabase: AnySupabaseClient
   ) => Promise<NextResponse | null>;
   /** Pre-delete hook (cleanup operations, etc.) */
   preDelete?: (
     entity: Record<string, unknown>,
     userId: string,
-    supabase: SupabaseClient
+    supabase: AnySupabaseClient
   ) => Promise<void>;
   /** Post-process after DELETE (audit logging, etc.) */
   postProcessDelete?: (
     entity: Record<string, unknown>,
     userId: string,
-    supabase: SupabaseClient
+    supabase: AnySupabaseClient
   ) => Promise<void>;
   /** Custom cache control for GET */
   getCacheControl?: (entity: Record<string, unknown>, userId: string | null) => string;
@@ -130,7 +133,7 @@ export function createGetHandler(config: EntityHandlerConfig) {
   ) {
     try {
       // Rate limiting check
-      const rateLimitResult = rateLimit(request);
+      const rateLimitResult = await rateLimit(request);
       if (!rateLimitResult.success) {
         return createRateLimitResponse(rateLimitResult);
       }
@@ -148,14 +151,14 @@ export function createGetHandler(config: EntityHandlerConfig) {
 
       const entityId = params.id;
 
-      let query = supabase
-        .from(table)
+      let query = (supabase
+        .from(table) as any)
         .select('*')
         .eq('id', entityId);
 
       // If auth required, filter by ownership
       if (requireAuthForGet && userId) {
-        if (useActorOwnership) {
+        if (config.useActorOwnership) {
           // For actor-based ownership, we need to get user's actor_id first
           // For now, fall back to user_id check if actor_id not available
           // This will be fully implemented once all entities have actor_id populated
@@ -180,14 +183,14 @@ export function createGetHandler(config: EntityHandlerConfig) {
 
       // Custom authorization check
       if (checkGetAccess) {
-        const authError = await checkGetAccess(entity, userId, supabase);
+        const authError = await checkGetAccess(entity, userId, supabase as any);
         if (authError) {return authError;}
       }
 
       // Post-process entity (add computed fields, etc.)
       let processedEntity = entity;
       if (postProcessGet) {
-        processedEntity = await postProcessGet(entity, userId, supabase);
+        processedEntity = await postProcessGet(entity, userId, supabase as any);
       }
 
       // Custom cache control
@@ -255,11 +258,12 @@ export function createPutHandler(config: EntityHandlerConfig) {
       const entityId = params.id;
 
       // Check if entity exists
-      const { data: existing, error: fetchError } = await supabase
-        .from(table)
+      const { data: existingData, error: fetchError } = await (supabase
+        .from(table) as any)
         .select('*')
         .eq('id', entityId)
         .single();
+      const existing = existingData as any;
 
       if (fetchError || !existing) {
         return apiNotFound(`${meta.name} not found`);
@@ -267,7 +271,7 @@ export function createPutHandler(config: EntityHandlerConfig) {
 
       // Custom authorization check (if provided, use it; otherwise use default ownership check)
       if (checkPutAccess) {
-        const authError = await checkPutAccess(existing, user.id, supabase);
+        const authError = await checkPutAccess(existing, user.id, supabase as any);
         if (authError) {return authError;}
       } else {
         // Default ownership check
@@ -300,8 +304,8 @@ export function createPutHandler(config: EntityHandlerConfig) {
         updated_at: new Date().toISOString(),
       };
 
-      const { data: entity, error } = await supabase
-        .from(table)
+      const { data: entity, error } = await (supabase
+        .from(table) as any)
         .update(updatePayload)
         .eq('id', entityId)
         .select('*')
@@ -319,7 +323,7 @@ export function createPutHandler(config: EntityHandlerConfig) {
 
       // Post-process (audit logging, etc.)
       if (postProcessPut) {
-        await postProcessPut(entity, user.id, supabase);
+        await postProcessPut(entity, user.id, supabase as any);
       }
 
       logger.info(`${meta.name} updated successfully`, { userId: user.id, entityId });
@@ -375,11 +379,12 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
       const entityId = params.id;
 
       // Check if entity exists
-      const { data: existing, error: fetchError } = await supabase
-        .from(table)
+      const { data: existingData2, error: fetchError } = await (supabase
+        .from(table) as any)
         .select('*')
         .eq('id', entityId)
         .single();
+      const existing = existingData2 as any;
 
       if (fetchError || !existing) {
         return apiNotFound(`${meta.name} not found`);
@@ -387,7 +392,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
 
       // Custom authorization check (if provided, use it; otherwise use default ownership check)
       if (checkDeleteAccess) {
-        const authError = await checkDeleteAccess(existing, user.id, supabase);
+        const authError = await checkDeleteAccess(existing, user.id, supabase as any);
         if (authError) {return authError;}
       } else {
         // Default ownership check
@@ -399,11 +404,11 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
 
       // Pre-delete hook (cleanup operations)
       if (preDelete) {
-        await preDelete(existing, user.id, supabase);
+        await preDelete(existing, user.id, supabase as any);
       }
 
-      const { error } = await supabase
-        .from(table)
+      const { error } = await (supabase
+        .from(table) as any)
         .delete()
         .eq('id', entityId);
 
@@ -419,7 +424,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
 
       // Post-process (audit logging, etc.)
       if (postProcessDelete) {
-        await postProcessDelete(existing, user.id, supabase);
+        await postProcessDelete(existing, user.id, supabase as any);
       }
 
       logger.info(`${meta.name} deleted successfully`, { userId: user.id, entityId });

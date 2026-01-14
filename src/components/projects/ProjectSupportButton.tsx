@@ -22,7 +22,7 @@ import { logger } from '@/utils/logger';
 
 interface ProjectSupportButtonProps {
   projectId: string;
-  variant?: 'default' | 'outline' | 'ghost';
+  variant?: 'primary' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   showStats?: boolean;
   className?: string;
@@ -31,7 +31,7 @@ interface ProjectSupportButtonProps {
 
 export function ProjectSupportButton({
   projectId,
-  variant = 'default',
+  variant = 'primary',
   size = 'md',
   showStats = false,
   className,

@@ -226,7 +226,7 @@ export default function DiscoverPage() {
 
   // Sync URL params with search state
   useEffect(() => {
-    const newSearchParams = new URLSearchParams(searchParams.toString());
+    const newSearchParams = new URLSearchParams(searchParams?.toString() || '');
 
     // Tab/type parameter
     if (activeTab !== 'all') {

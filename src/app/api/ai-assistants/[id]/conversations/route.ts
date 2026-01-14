@@ -5,6 +5,8 @@
  * POST /api/ai-assistants/[id]/conversations - Create a new conversation
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -74,8 +76,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify assistant exists and is active
-    const { data: assistant, error: assistantError } = await supabase
-      .from(DATABASE_TABLES.AI_ASSISTANTS)
+    const { data: assistant, error: assistantError } = await (supabase
+      .from(DATABASE_TABLES.AI_ASSISTANTS) as any)
       .select('id, title, status, system_prompt, welcome_message')
       .eq('id', assistantId)
       .single();
@@ -89,8 +91,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Create new conversation
-    const { data: conversation, error: createError } = await supabase
-      .from(DATABASE_TABLES.AI_CONVERSATIONS)
+    const { data: conversation, error: createError } = await (supabase
+      .from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
       .insert({
         assistant_id: assistantId,
         user_id: user.id,
@@ -106,7 +108,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Add system prompt as first message if exists
     if (assistant.system_prompt) {
-      await supabase.from(DATABASE_TABLES.AI_MESSAGES).insert({
+      await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any).insert({
         conversation_id: conversation.id,
         role: 'system',
         content: assistant.system_prompt,
@@ -115,7 +117,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Add welcome message if exists
     if (assistant.welcome_message) {
-      await supabase.from(DATABASE_TABLES.AI_MESSAGES).insert({
+      await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any).insert({
         conversation_id: conversation.id,
         role: 'assistant',
         content: assistant.welcome_message,

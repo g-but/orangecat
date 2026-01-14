@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
 import { calculateTransparencyScore } from '@/services/transparency'
-import { Profile } from '@/types/database'
+import { ScalableProfile } from '@/types/database'
 import Card from '@/components/ui/Card'
 import { Progress } from '@/components/ui/progress'
 import { Info } from 'lucide-react'
 import type { TransparencyData } from '@/services/transparency'
 
 interface TransparencyScoreProps {
-  profile: Profile
+  profile: ScalableProfile
 }
 
 // Helper function to convert Profile to TransparencyData
-const profileToTransparencyData = (profile: Profile): TransparencyData => {
+const profileToTransparencyData = (profile: ScalableProfile): TransparencyData => {
   // Use some heuristics to determine transparency metrics based on profile data
   return {
     isOpenSource: true, // Default for the platform

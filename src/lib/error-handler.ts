@@ -42,7 +42,11 @@ export interface ErrorContext {
   url?: string
   method?: string
   timestamp?: string
-  additionalData?: Record<string, any>
+  additionalData?: Record<string, unknown>
+  // Common additional error context fields
+  field?: string
+  promise?: string
+  originalError?: string
 }
 
 // Base error class with enhanced context

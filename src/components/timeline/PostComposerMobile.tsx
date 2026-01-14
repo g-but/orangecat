@@ -1,21 +1,16 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import BottomSheet from '@/components/ui/BottomSheet';
 import AvatarLink from '@/components/ui/AvatarLink';
-import { Globe, Lock, X, ChevronDown, ArrowLeft, Image, Bold, Italic } from 'lucide-react';
+import { Globe, X, ChevronDown, ArrowLeft, Image, Bold, Italic } from 'lucide-react';
 import { usePostComposer, type PostComposerOptions } from '@/hooks/usePostComposerNew';
+import { useContentEditableEditor } from '@/hooks/useContentEditableEditor';
 import { cn } from '@/lib/utils';
-import {
-  markdownToHtml,
-  htmlToMarkdown,
-  getSelectionRange,
-  setSelectionRange,
-} from '@/utils/markdownEditor';
 import { sanitizeHtml } from '@/lib/validation';
 
 /**
@@ -75,10 +70,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
     },
   });
 
-  const editorRef = useRef<HTMLDivElement>(null);
-  const [isComposing, setIsComposing] = useState(false);
   const [isOptionsSheetOpen, setIsOptionsSheetOpen] = useState(false);
-  const [showProjectSelector, setShowProjectSelector] = useState(false);
 
   // Lazy load project selection modal (always available, only rendered when needed)
   const LazyProjectSelectionModal = dynamic(() => import('./ProjectSelectionModal'), {
@@ -86,44 +78,17 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
     loading: () => null,
   });
 
-  // Sync markdown content to HTML in editor (only when not actively composing or focused)
-  useEffect(() => {
-    const editor = editorRef.current;
-    if (!editor || isComposing) {
-      return;
-    }
-
-    // Do not re-render the HTML while the user is actively typing to avoid cursor jumps
-    if (document.activeElement === editor) {
-      return;
-    }
-
-    const currentHtml = editor.innerHTML.replace(/\s+/g, ' ').trim();
-    const expectedHtml = markdownToHtml(composer.content).replace(/\s+/g, ' ').trim();
-
-    // Only update if significantly different (avoid cursor jumping on every keystroke)
-    if (currentHtml !== expectedHtml && expectedHtml !== '<br>') {
-      const selection = getSelectionRange(editor);
-      const wasFocused = document.activeElement === editor;
-
-      editor.innerHTML = sanitizeHtml(expectedHtml || '<br>');
-
-      // Restore cursor position and focus
-      if (selection && wasFocused) {
-        requestAnimationFrame(() => {
-          if (editor) {
-            try {
-              setSelectionRange(editor, selection.start, selection.end);
-              editor.focus();
-            } catch (e) {
-              // Fallback: just focus
-              editor.focus();
-            }
-          }
-        });
-      }
-    }
-  }, [composer.content, isComposing]);
+  // Use the shared contentEditable editor hook
+  const { editorRef, handleInput, handlePaste, handleKeyDown, handleFormat } =
+    useContentEditableEditor({
+      content: composer.content,
+      onContentChange: composer.setContent,
+      onSubmit: composer.handlePost,
+      onCancel: onCancel || (fullScreen ? onClose : undefined),
+      maxHeight: fullScreen ? 480 : 320,
+      disabled: composer.isPosting,
+      sanitizer: sanitizeHtml,
+    });
 
   // Auto-focus on mount (mobile-friendly)
   useEffect(() => {
@@ -131,104 +96,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
       // Delay focus for mobile keyboards
       setTimeout(() => editorRef.current?.focus(), 100);
     }
-  }, [autoFocus, compact, fullScreen, isOpen]);
-
-  // Handle input in contentEditable
-  const handleInput = useCallback(() => {
-    if (!editorRef.current) {
-      return;
-    }
-
-    setIsComposing(true);
-
-    // Debounce the markdown conversion slightly to avoid cursor jumping
-    setTimeout(() => {
-      if (editorRef.current) {
-        const html = sanitizeHtml(editorRef.current.innerHTML);
-        const markdown = htmlToMarkdown(html);
-
-        // Only update if different to avoid unnecessary re-renders
-        if (markdown !== composer.content) {
-          composer.setContent(markdown);
-        }
-
-        // Auto-resize with generous cap for long pastes; allow scroll after cap
-        editorRef.current.style.height = 'auto';
-        const maxHeight = fullScreen ? 480 : 320; // px
-        editorRef.current.style.height = `${Math.min(editorRef.current.scrollHeight, maxHeight)}px`;
-        editorRef.current.style.overflowY =
-          editorRef.current.scrollHeight > maxHeight ? 'auto' : 'hidden';
-      }
-      setIsComposing(false);
-    }, 10);
-  }, [composer, fullScreen]);
-
-  // Handle paste to force plain text (no rich formatting)
-  const handlePaste = useCallback(
-    (e: React.ClipboardEvent<HTMLDivElement>) => {
-      if (!editorRef.current) {
-        return;
-      }
-      e.preventDefault();
-      const text = e.clipboardData.getData('text/plain');
-      document.execCommand('insertText', false, text);
-      const html = sanitizeHtml(editorRef.current.innerHTML);
-      const markdown = htmlToMarkdown(html);
-      composer.setContent(markdown);
-    },
-    [composer]
-  );
-
-  // Formatting handler - uses document.execCommand for contentEditable
-  const handleFormat = useCallback(
-    (format: 'bold' | 'italic') => {
-      if (!editorRef.current) {
-        return;
-      }
-
-      // Focus editor if not already focused
-      editorRef.current.focus();
-
-      // Use document.execCommand for formatting (works with contentEditable)
-      const command = format === 'bold' ? 'bold' : 'italic';
-      document.execCommand(command, false);
-
-      // Sync back to markdown after a brief delay to let browser update
-      setTimeout(() => {
-        if (editorRef.current) {
-          const html = sanitizeHtml(editorRef.current.innerHTML);
-          const markdown = htmlToMarkdown(html);
-          composer.setContent(markdown);
-        }
-      }, 0);
-    },
-    [composer]
-  );
-
-  // Handle keyboard shortcuts (desktop enhancement)
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-      e.preventDefault();
-      composer.handlePost();
-    }
-    if (e.key === 'Escape') {
-      if (onCancel) {
-        onCancel();
-      } else if (fullScreen && onClose) {
-        onClose();
-      }
-    }
-    // Ctrl/Cmd + B for bold
-    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-      e.preventDefault();
-      handleFormat('bold');
-    }
-    // Ctrl/Cmd + I for italic
-    if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
-      e.preventDefault();
-      handleFormat('italic');
-    }
-  };
+  }, [autoFocus, compact, fullScreen, isOpen, editorRef]);
 
   // Render composer content (reusable for both Card and BottomSheet)
   const renderComposerContent = () => (

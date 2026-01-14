@@ -21,8 +21,8 @@ export const POST = withAuth(async (
     const admin = createAdminClient();
 
     // Verify user is a participant
-    const { data: participant, error: partError } = await admin
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+    const { data: participant, error: partError } = await (admin
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
       .select('*')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -38,13 +38,12 @@ export const POST = withAuth(async (
     const updateData: Database['public']['Tables']['conversation_participants']['Update'] = {
       last_read_at: new Date().toISOString(),
     };
-    const updateQuery = admin
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
-      .update(updateData as any)
+    const { error: readError } = await (admin
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
+      .update(updateData)
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
       .eq('is_active', true);
-    const { error: readError } = await (updateQuery as any);
 
     if (readError) {
       logger.error('Error marking conversation as read', { error: readError, conversationId, userId: user.id }, 'Messages');

@@ -56,6 +56,7 @@ export interface Event {
   status: string;
   created_at: string;
   updated_at: string;
+  [key: string]: unknown; // Index signature for BaseEntity compatibility
 }
 
 export const eventEntityConfig: EntityConfig<Event> = {

@@ -134,7 +134,7 @@ async function testDatabaseOptimization(): Promise<PerformanceTestResult[]> {
     results.push({
       testName: 'Parallel Query Execution',
       duration,
-      success: duration < 80 && parallelResults.query1.data === 'parallel1'
+      success: duration < 80 && (parallelResults as any).query1.data === 'parallel1'
     })
   } catch (error) {
     results.push({

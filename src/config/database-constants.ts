@@ -263,6 +263,6 @@ export type SupportType = typeof SUPPORT_TYPES[keyof typeof SUPPORT_TYPES];
 export function isValidStatus<T extends keyof typeof STATUS>(
   entity: T,
   status: string
-): status is typeof STATUS[T][keyof typeof STATUS[T]] {
-  return Object.values(STATUS[entity]).includes(status as any);
+): boolean {
+  return Object.values(STATUS[entity]).includes(status as never);
 }

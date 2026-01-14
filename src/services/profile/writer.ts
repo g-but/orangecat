@@ -82,8 +82,8 @@ export class ProfileWriter {
       };
 
       // Update in database
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data, error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .update(updateData)
         .eq('id', userId)
         .select('*')
@@ -106,7 +106,7 @@ export class ProfileWriter {
       const updatedProfile = ProfileMapper.mapDatabaseToProfile(data);
       logProfile('updateProfile success', { userId, profile: updatedProfile });
 
-      return { success: true, data: updatedProfile };
+      return { success: true, data: updatedProfile ?? undefined };
 
     } catch (err) {
       logger.error('ProfileWriter.updateProfile unexpected error:', err);
@@ -169,7 +169,7 @@ export class ProfileWriter {
       const newProfile = ProfileMapper.mapDatabaseToProfile(data);
       logProfile('createProfile success', { userId, profile: newProfile })
 
-      return { success: true, data: newProfile }
+      return { success: true, data: newProfile ?? undefined }
 
     } catch (err) {
       logger.error('ProfileWriter.createProfile unexpected error:', err)
@@ -205,8 +205,8 @@ export class ProfileWriter {
       // Map to database format
       const updateData = ProfileMapper.mapProfileToDatabase(updatedProfile);
 
-      const { error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .update(updateData)
         .eq('id', userId)
 
@@ -245,8 +245,8 @@ export class ProfileWriter {
 
       logProfile('deleteProfile', { userId })
 
-      const { error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .delete()
         .eq('id', userId)
 
@@ -277,7 +277,7 @@ export class ProfileWriter {
 
     try {
       // Prefer Postgres function for atomic profile update when available
-      const { data, error } = await supabase.rpc('update_profile', {
+      const { data, error } = await (supabase.rpc as any)('update_profile', {
         profile_data: updates
       })
 

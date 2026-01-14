@@ -12,6 +12,9 @@ import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 
+// Type alias for any SupabaseClient (accepts any database schema)
+type AnySupabaseClient = SupabaseClient<any, any, any>;
+
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
 type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
@@ -25,7 +28,7 @@ export class ProfileServerService {
    * Get profile by user ID
    */
   static async getProfile(
-    supabase: SupabaseClient<Database>,
+    supabase: AnySupabaseClient,
     userId: string
   ): Promise<{ data: ProfileRow | null; error: Error | null }> {
     try {
@@ -54,7 +57,7 @@ export class ProfileServerService {
    * Check if username is available
    */
   static async checkUsernameAvailability(
-    supabase: SupabaseClient<Database>,
+    supabase: AnySupabaseClient,
     username: string,
     excludeUserId?: string
   ): Promise<boolean> {
@@ -85,7 +88,7 @@ export class ProfileServerService {
    * Create a new profile
    */
   static async createProfile(
-    supabase: SupabaseClient<Database>,
+    supabase: AnySupabaseClient,
     profileData: ProfileInsert
   ): Promise<{ data: ProfileRow | null; error: Error | null }> {
     try {
@@ -111,7 +114,7 @@ export class ProfileServerService {
    * Ensure profile exists, creating it if it doesn't
    */
   static async ensureProfile(
-    supabase: SupabaseClient<Database>,
+    supabase: AnySupabaseClient,
     userId: string,
     userEmail?: string | null,
     userMetadata?: Record<string, any> | null
@@ -167,7 +170,7 @@ export class ProfileServerService {
    * Get project count for a user
    */
   static async getProjectCount(
-    supabase: SupabaseClient<Database>,
+    supabase: AnySupabaseClient,
     userId: string
   ): Promise<number> {
     try {

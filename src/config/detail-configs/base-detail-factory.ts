@@ -30,7 +30,7 @@ export interface BaseDetailConfigOptions<T = any> {
   /** Override plural name */
   namePlural?: string;
   /** Override color theme */
-  colorTheme?: 'orange' | 'tiffany' | 'rose' | 'blue' | 'green' | 'purple';
+  colorTheme?: 'orange' | 'tiffany' | 'rose' | 'blue' | 'green' | 'purple' | 'indigo';
   /** Layout configuration */
   layout?: Partial<LayoutConfig>;
   /** Main sections (required) */

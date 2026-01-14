@@ -50,23 +50,25 @@ export async function GET(request: NextRequest) {
     }
 
     // Get profile
-    const { data: profile, error: profileError } = await supabase
-      .from(DATABASE_TABLES.PROFILES)
+    const { data: profileData, error: profileError } = await (supabase
+      .from(DATABASE_TABLES.PROFILES) as any)
       .select('*')
       .eq('id', user.id)
       .single();
+    const profile = profileData as any;
 
     if (profileError || !profile) {
       return apiUnauthorized('Profile not found');
     }
 
     // Get actor ID for entity queries
-    const { data: actor } = await supabase
-      .from('actors')
+    const { data: actorData } = await (supabase
+      .from('actors') as any)
       .select('id')
       .eq('user_id', user.id)
       .eq('actor_type', 'user')
       .single();
+    const actor = actorData as any;
 
     const actorId = actor?.id;
 
@@ -79,8 +81,8 @@ export async function GET(request: NextRequest) {
 
         try {
           // Build query based on user ID field type
-          let query = supabase
-            .from(meta.tableName)
+          let query = (supabase
+            .from(meta.tableName) as any)
             .select('id', { count: 'exact', head: true });
 
           // Different entities use different ID fields
@@ -115,8 +117,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Check wallet status
-    const { count: walletCount } = await supabase
-      .from('wallets')
+    const { count: walletCount } = await (supabase
+      .from('wallets') as any)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
@@ -125,15 +127,16 @@ export async function GET(request: NextRequest) {
     // Get wishlist item count (separate from wishlist count)
     let wishlistItemCount = 0;
     if (actorId && (entityCounts.wishlist ?? 0) > 0) {
-      const { data: wishlists } = await supabase
-        .from('wishlists')
+      const { data: wishlistsData } = await (supabase
+        .from('wishlists') as any)
         .select('id')
         .eq('actor_id', actorId);
+      const wishlists = wishlistsData as any[];
 
       if (wishlists && wishlists.length > 0) {
         const wishlistIds = wishlists.map(w => w.id);
-        const { count: itemCount } = await supabase
-          .from('wishlist_items')
+        const { count: itemCount } = await (supabase
+          .from('wishlist_items') as any)
           .select('id', { count: 'exact', head: true })
           .in('wishlist_id', wishlistIds);
 
@@ -147,13 +150,14 @@ export async function GET(request: NextRequest) {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     // Check most recent project update
-    const { data: recentProject } = await supabase
-      .from('projects')
+    const { data: recentProjectData } = await (supabase
+      .from('projects') as any)
       .select('updated_at')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(1)
       .single();
+    const recentProject = recentProjectData as any;
 
     if (recentProject?.updated_at) {
       const lastUpdate = new Date(recentProject.updated_at);
@@ -163,8 +167,8 @@ export async function GET(request: NextRequest) {
 
     // Check for published entities
     let hasPublishedEntities = false;
-    const { count: publishedCount } = await supabase
-      .from('projects')
+    const { count: publishedCount } = await (supabase
+      .from('projects') as any)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('status', 'active');

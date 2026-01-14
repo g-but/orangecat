@@ -95,7 +95,7 @@ export async function createLoan(
     status: 'active',
   };
 
-  const { data, error } = await client.from(getTableName('loan')).insert(payload).select().single();
+  const { data, error } = await (client.from(getTableName('loan')) as any).insert(payload).select().single();
   if (error) {
     logger.error('Failed to create loan', {
       error,

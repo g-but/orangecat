@@ -147,7 +147,7 @@ const featureDetails: Record<string, FeatureInfo> = {
 export default function ComingSoon() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const feature = searchParams.get('feature')
+  const feature = searchParams?.get('feature') ?? null
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
 

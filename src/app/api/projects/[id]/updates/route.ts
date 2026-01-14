@@ -40,8 +40,8 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
     const supabase = await createServerClient();
 
     // Fetch project to ensure it exists and is viewable
-    const { data: project, error: projectError } = await supabase
-      .from(getTableName('project'))
+    const { data: project, error: projectError } = await (supabase
+      .from(getTableName('project')) as any)
       .select('id, status')
       .eq('id', projectId)
       .single();
@@ -57,8 +57,8 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
     }
 
     // Fetch recent updates (limit to 10 most recent)
-    const { data: updates, error: updatesError } = await supabase
-      .from('project_updates')
+    const { data: updates, error: updatesError } = await (supabase
+      .from('project_updates') as any)
       .select('id, project_id, type, title, content, amount_btc, created_at')
       .eq('project_id', projectId)
       .order('created_at', { ascending: false })

@@ -146,7 +146,6 @@ const defaultValues: UserProductFormData = {
   tags: [],
   status: 'draft',
   is_featured: false,
-  show_on_profile: true,
 };
 
 // ==================== EXPORT CONFIG ====================

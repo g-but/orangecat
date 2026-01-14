@@ -164,7 +164,6 @@ const defaultValues: UserServiceFormData = {
   images: [],
   portfolio_links: [],
   status: 'draft',
-  show_on_profile: true,
 };
 
 // ==================== EXPORT CONFIG ====================

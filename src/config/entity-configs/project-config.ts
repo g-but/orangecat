@@ -187,7 +187,6 @@ export const projectConfig = createEntityConfig<ProjectData>({
     tags: [],
     start_date: '',
     target_completion: '',
-    show_on_profile: true,
   },
   guidanceContent: projectGuidanceContent,
   defaultGuidance: projectDefaultGuidance,

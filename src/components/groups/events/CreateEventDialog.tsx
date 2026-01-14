@@ -59,7 +59,7 @@ const eventSchema = z.object({
   requires_rsvp: z.boolean().default(false),
 });
 
-type EventFormData = z.infer<typeof eventSchema>;
+type EventFormData = z.input<typeof eventSchema>;
 
 interface CreateEventDialogProps {
   open: boolean;

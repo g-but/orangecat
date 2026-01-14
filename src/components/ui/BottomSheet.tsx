@@ -62,13 +62,15 @@ export default function BottomSheet({
 
   // Prevent body scroll when open
   useEffect(() => {
-    if (isOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalStyle;
-      };
+    if (!isOpen) {
+      return;
     }
+
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
   }, [isOpen]);
 
   // Touch handlers for swipe-to-dismiss

@@ -348,7 +348,6 @@ const defaultValues: EventFormData = {
   banner_url: '',
   video_url: '',
   status: 'draft',
-  show_on_profile: true,
 };
 
 // ==================== EXPORT CONFIG ====================

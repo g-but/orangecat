@@ -57,8 +57,8 @@ export async function updateWalletBalance(
   balanceSats: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const { error } = await supabase
-      .from(TABLES.group_wallets)
+    const { error } = await (supabase
+      .from(TABLES.group_wallets) as any)
       .update({
         current_balance_sats: balanceSats,
         last_balance_update: new Date().toISOString(),
@@ -87,8 +87,8 @@ export async function refreshWalletBalance(
 ): Promise<{ success: boolean; balance?: number; error?: string }> {
   try {
     // Get wallet with Bitcoin address
-    const { data: wallet, error: fetchError } = await supabase
-      .from(TABLES.group_wallets)
+    const { data: wallet, error: fetchError } = await (supabase
+      .from(TABLES.group_wallets) as any)
       .select('bitcoin_address')
       .eq('id', walletId)
       .single();
@@ -132,8 +132,8 @@ export async function refreshGroupTreasuryBalances(
 ): Promise<{ success: boolean; updated: number; error?: string }> {
   try {
     // Get all wallets for the group
-    const { data: wallets, error: fetchError } = await supabase
-      .from(TABLES.group_wallets)
+    const { data: wallets, error: fetchError } = await (supabase
+      .from(TABLES.group_wallets) as any)
       .select('id, bitcoin_address')
       .eq('group_id', groupId)
       .eq('is_active', true)

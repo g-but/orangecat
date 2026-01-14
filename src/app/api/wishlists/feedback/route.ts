@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the wishlist item exists
-    const { data: wishlistItem, error: itemError } = await supabase
-      .from('wishlist_items')
+    const { data: wishlistItem, error: itemError } = await (supabase
+      .from('wishlist_items') as any)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', validationResult.data.wishlist_item_id)
       .single();
@@ -61,8 +61,8 @@ export async function POST(request: NextRequest) {
 
     // If feedback is associated with a proof, verify it exists
     if (validationResult.data.fulfillment_proof_id) {
-      const { data: proof, error: proofError } = await supabase
-        .from('wishlist_fulfillment_proofs')
+      const { data: proof, error: proofError } = await (supabase
+        .from('wishlist_fulfillment_proofs') as any)
         .select('id, wishlist_item_id')
         .eq('id', validationResult.data.fulfillment_proof_id)
         .eq('wishlist_item_id', validationResult.data.wishlist_item_id)
@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already provided feedback for this proof/item combination
-    const existingFeedbackQuery = supabase
-      .from('wishlist_feedback')
+    const existingFeedbackQuery = (supabase
+      .from('wishlist_feedback') as any)
       .select('id, feedback_type')
       .eq('user_id', user.id)
       .eq('wishlist_item_id', validationResult.data.wishlist_item_id);
@@ -112,8 +112,8 @@ export async function POST(request: NextRequest) {
         );
       } else {
         // Update existing feedback (allow changing like to dislike or vice versa)
-        const { data: updatedFeedback, error: updateError } = await supabase
-          .from('wishlist_feedback')
+        const { data: updatedFeedback, error: updateError } = await (supabase
+          .from('wishlist_feedback') as any)
           .update({
             feedback_type: validationResult.data.feedback_type,
             comment: validationResult.data.comment,
@@ -149,8 +149,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new feedback
-    const { data: feedback, error: feedbackError } = await supabase
-      .from('wishlist_feedback')
+    const { data: feedback, error: feedbackError } = await (supabase
+      .from('wishlist_feedback') as any)
       .insert({
         wishlist_item_id: validationResult.data.wishlist_item_id,
         fulfillment_proof_id: validationResult.data.fulfillment_proof_id,

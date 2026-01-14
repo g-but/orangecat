@@ -144,8 +144,8 @@ export async function POST(request: NextRequest) {
         return apiForbidden('Forbidden: Profile does not belong to this user');
       }
     } else if (body.project_id) {
-      const { data: project } = await supabase
-        .from(getTableName('project'))
+      const { data: project } = await (supabase
+        .from(getTableName('project')) as any)
         .select('user_id')
         .eq('id', body.project_id)
         .single();
@@ -242,8 +242,8 @@ export async function POST(request: NextRequest) {
 
     // Try to create the wallet in the dedicated wallets table first
     try {
-      const { data: wallet, error } = await supabase
-        .from(getTableName('wallet'))
+      const { data: wallet, error } = await (supabase
+        .from(getTableName('wallet')) as any)
         .insert({
           profile_id: body.profile_id || null,
           project_id: body.project_id || null,

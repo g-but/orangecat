@@ -44,7 +44,7 @@ import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Loader2, Users, Info } from 'lucide-react';
 import groupsService from '@/services/groups';
-import type { CreateGroupInput, GroupLabel } from '@/types/group';
+import type { CreateGroupInput, GroupLabel, GovernancePreset } from '@/types/group';
 import { createGroupSchema } from '@/services/groups/validation';
 import { GROUP_LABELS, getGroupLabelDefaults, getGroupLabelsArray } from '@/config/group-labels';
 import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
@@ -83,7 +83,7 @@ export function CreateGroupDialog({ open, onOpenChange, onSuccess }: CreateGroup
     },
   });
 
-  const watchedLabel = form.watch('label');
+  const watchedLabel = form.watch('label') as GroupLabel;
   const labelConfig = GROUP_LABELS[watchedLabel];
 
   // Update form when label changes - apply smart defaults
@@ -104,9 +104,9 @@ export function CreateGroupDialog({ open, onOpenChange, onSuccess }: CreateGroup
       const groupData: CreateGroupInput = {
         name: data.name,
         description: data.description || undefined,
-        label: data.label,
+        label: data.label as GroupLabel,
         tags: data.tags,
-        governance_preset: data.governance_preset,
+        governance_preset: data.governance_preset as GovernancePreset,
         is_public: data.is_public,
         visibility: data.visibility,
         bitcoin_address: data.bitcoin_address || undefined,

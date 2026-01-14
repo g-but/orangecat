@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     const status = statusParam ? (statusParam.split(',') as BookingStatus[]) : undefined;
 
-    const bookingService = createBookingService(supabase);
+    const bookingService = createBookingService(supabase as any);
     const bookings = await bookingService.getUserBookings(user.id, {
       role: role || 'both',
       status,

@@ -42,8 +42,9 @@ import type {
 /**
  * Helper to safely get a field that might be in snake_case or camelCase
  */
-function getField<T>(obj: Record<string, unknown>, snakeCase: string, camelCase: string): T | undefined {
-  return (obj[snakeCase] as T) ?? (obj[camelCase] as T) ?? undefined;
+function getField<T>(obj: object, snakeCase: string, camelCase: string): T | undefined {
+  const record = obj as Record<string, unknown>;
+  return (record[snakeCase] as T) ?? (record[camelCase] as T) ?? undefined;
 }
 
 /**

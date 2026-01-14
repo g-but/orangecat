@@ -94,8 +94,8 @@ export async function createInvitation(
       }
 
       // Check for existing pending invitation
-      const { data: existing } = await supabase
-        .from('group_invitations')
+      const { data: existing } = await (supabase
+        .from('group_invitations') as any)
         .select('id')
         .eq('group_id', input.group_id)
         .eq('user_id', input.user_id)
@@ -138,11 +138,12 @@ export async function createInvitation(
         .replace(/=/g, '');
     }
 
-    const { data, error } = await supabase
-      .from('group_invitations')
+    const { data: invData, error } = await (supabase
+      .from('group_invitations') as any)
       .insert(invitationData)
       .select()
       .single();
+    const data = invData as any;
 
     if (error) {
       logger.error('Failed to create invitation', error, 'Groups');
@@ -196,7 +197,7 @@ export async function acceptInvitation(
     }
 
     // Use the database function for atomic operation
-    const { data, error } = await supabase.rpc('accept_group_invitation', {
+    const { data, error } = await (supabase.rpc as any)('accept_group_invitation', {
       invitation_id: invitationId,
     });
 
@@ -236,7 +237,7 @@ export async function declineInvitation(
     }
 
     // Use the database function
-    const { data, error } = await supabase.rpc('decline_group_invitation', {
+    const { data, error } = await (supabase.rpc as any)('decline_group_invitation', {
       invitation_id: invitationId,
     });
 
@@ -271,12 +272,13 @@ export async function acceptInvitationByToken(
     }
 
     // Find invitation by token
-    const { data: invitation, error: findError } = await supabase
-      .from('group_invitations')
+    const { data: invitationData, error: findError } = await (supabase
+      .from('group_invitations') as any)
       .select('id, group_id, status, expires_at')
       .eq('token', token)
       .eq('status', 'pending')
       .maybeSingle();
+    const invitation = invitationData as any;
 
     if (findError) {
       logger.error('Failed to find invitation by token', findError, 'Groups');
@@ -321,11 +323,12 @@ export async function revokeInvitation(
     }
 
     // Get invitation to check group
-    const { data: invitation, error: findError } = await supabase
-      .from('group_invitations')
+    const { data: invitationData2, error: findError } = await (supabase
+      .from('group_invitations') as any)
       .select('group_id, status')
       .eq('id', invitationId)
       .single();
+    const invitation = invitationData2 as any;
 
     if (findError || !invitation) {
       return { success: false, error: 'Invitation not found' };
@@ -342,8 +345,8 @@ export async function revokeInvitation(
     }
 
     // Revoke
-    const { error } = await supabase
-      .from('group_invitations')
+    const { error } = await (supabase
+      .from('group_invitations') as any)
       .update({ status: 'revoked' })
       .eq('id', invitationId);
 

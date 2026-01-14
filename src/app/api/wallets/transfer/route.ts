@@ -63,11 +63,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch both wallets and verify ownership
-    const { data: wallets, error: walletsError } = await supabase
-      .from('wallets')
+    const { data: walletsData, error: walletsError } = await (supabase
+      .from('wallets') as any)
       .select('id, user_id, label, balance_btc, profile_id, project_id')
       .in('id', [body.from_wallet_id, body.to_wallet_id])
       .eq('is_active', true);
+    const wallets = walletsData as any[] | null;
 
     if (walletsError) {
       logger.error('Failed to fetch wallets for transfer', {
@@ -134,8 +135,8 @@ export async function POST(request: NextRequest) {
     const to_entity_id = toWallet.profile_id || toWallet.project_id;
 
     // Create transaction record (marked as internal transfer)
-    const { data: transaction, error: txError } = await supabase
-      .from('transactions')
+    const { data: transactionData, error: txError } = await (supabase
+      .from('transactions') as any)
       .insert({
         amount_sats,
         from_entity_type,
@@ -154,6 +155,7 @@ export async function POST(request: NextRequest) {
       })
       .select()
       .single();
+    const transaction = transactionData as any;
 
     if (txError) {
       logger.error('Failed to create transaction record', {
@@ -166,7 +168,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update wallet balances using RPC function
-    const { error: updateError } = await supabase.rpc('transfer_between_wallets', {
+    const { error: updateError } = await (supabase.rpc as any)('transfer_between_wallets', {
       p_from_wallet_id: body.from_wallet_id,
       p_to_wallet_id: body.to_wallet_id,
       p_amount_btc: body.amount_btc,
@@ -183,10 +185,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch updated wallets
-    const { data: updatedWallets } = await supabase
-      .from('wallets')
+    const { data: updatedWalletsData } = await (supabase
+      .from('wallets') as any)
       .select('*')
       .in('id', [body.from_wallet_id, body.to_wallet_id]);
+    const updatedWallets = updatedWalletsData as any[] | null;
 
     // Audit log wallet transfer
     await auditSuccess(

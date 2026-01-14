@@ -52,6 +52,7 @@ export interface NavigationItem {
   description?: string;
   children?: NavigationItem[]; // For dropdown menus
   external?: boolean; // For external links that open in new tab
+  comingSoon?: boolean; // For features not yet available
 }
 
 export interface NavSection {

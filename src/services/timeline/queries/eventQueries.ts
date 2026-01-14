@@ -14,6 +14,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { TIMELINE_TABLES } from '@/config/database-tables';
 import type {
   TimelineDisplayEvent,
   TimelineEventType,
@@ -181,7 +182,7 @@ export async function getThreadPosts(threadId: string): Promise<{
   error?: string;
 }> {
   try {
-    const result = await supabase.rpc('get_thread_posts', {
+    const result = await (supabase.rpc as any)('get_thread_posts', {
       p_thread_id: threadId,
       p_limit: 50,
       p_offset: 0,
@@ -213,8 +214,9 @@ export async function getThreadPosts(threadId: string): Promise<{
       [key: string]: unknown;
     }
 
-    // Convert to display events
-    const displayEvents: TimelineDisplayEvent[] = result.data.map((event: ThreadPostRow) => ({
+    // Convert to display events - cast to satisfy TimelineDisplayEvent requirements
+    // RPC returns partial data that gets enriched later in the UI
+    const displayEvents = (result.data as ThreadPostRow[]).map((event: ThreadPostRow) => ({
       ...event,
       eventType: event.event_type as TimelineEventType,
       actor: {
@@ -237,7 +239,7 @@ export async function getThreadPosts(threadId: string): Promise<{
       threadDepth: event.thread_depth,
       isQuoteReply: event.is_quote_reply || false,
       quotedContent: (event.metadata as { quoted_content?: string })?.quoted_content,
-    }));
+    })) as unknown as TimelineDisplayEvent[];
 
     return {
       success: true,

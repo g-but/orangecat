@@ -20,6 +20,9 @@ import type { GroupLabel } from '@/config/group-labels';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 
+// Type alias for any SupabaseClient (accepts any database schema)
+type AnySupabaseClient = SupabaseClient<any, any, any>;
+
 /**
  * Create a new group
  * @param input - Group creation input
@@ -28,7 +31,7 @@ import type { Database } from '@/types/database';
  */
 export async function createGroup(
   input: CreateGroupInput,
-  client?: SupabaseClient<Database>,
+  client?: AnySupabaseClient,
   userId?: string
 ): Promise<GroupResponse> {
   try {
@@ -64,8 +67,8 @@ export async function createGroup(
     };
 
     // Insert into groups table
-    const { data, error } = await supabaseClient
-      .from(TABLES.groups)
+    const { data, error } = await (supabaseClient
+      .from(TABLES.groups) as any)
       .insert(payload)
       .select()
       .single();
@@ -76,7 +79,7 @@ export async function createGroup(
     }
 
     // Add creator as founder in group_members
-    const { error: memberError } = await supabaseClient.from(TABLES.group_members).insert({
+    const { error: memberError } = await (supabaseClient.from(TABLES.group_members) as any).insert({
       group_id: data.id,
       user_id: currentUserId,
       role: 'founder',
@@ -95,11 +98,11 @@ export async function createGroup(
         enabled_by: currentUserId,
       }));
 
-      await supabaseClient.from(TABLES.group_features).insert(featureInserts);
+      await (supabaseClient.from(TABLES.group_features) as any).insert(featureInserts);
     }
 
     // Log activity
-    await logGroupActivity(data.id, currentUserId, 'created_group', 'Created the group', supabaseClient);
+    await logGroupActivity(data.id, currentUserId, 'created_group', 'Created the group', undefined, supabaseClient);
 
     logger.info('Group created', { groupId: data.id, label }, 'Groups');
 
@@ -149,8 +152,8 @@ export async function updateGroup(
     if (input.governance_preset !== undefined) {payload.governance_preset = input.governance_preset;}
     if (input.voting_threshold !== undefined) {payload.voting_threshold = input.voting_threshold;}
 
-    const { data, error } = await supabase
-      .from(TABLES.groups)
+    const { data, error } = await (supabase
+      .from(TABLES.groups) as any)
       .update(payload)
       .eq('id', groupId)
       .select()
@@ -185,7 +188,7 @@ export async function deleteGroup(groupId: string): Promise<{ success: boolean; 
       return { success: false, error: permResult.reason || 'Only group founders can delete groups' };
     }
 
-    const { error } = await supabase.from(TABLES.groups).delete().eq('id', groupId);
+    const { error } = await (supabase.from(TABLES.groups) as any).delete().eq('id', groupId);
 
     if (error) {
       logger.error('Failed to delete group', error, 'Groups');

@@ -168,7 +168,7 @@ export function CircleTemplates({ onSelectTemplate }: CircleTemplatesProps) {
           {categories.map(category => (
             <Button
               key={category.id}
-              variant={selectedCategory === category.id ? 'default' : 'outline'}
+              variant={selectedCategory === category.id ? 'primary' : 'outline'}
               size="sm"
               onClick={() => setSelectedCategory(category.id)}
               className="flex items-center gap-2"
@@ -204,7 +204,7 @@ export function CircleTemplates({ onSelectTemplate }: CircleTemplatesProps) {
               <div>
                 <h5 className="text-sm font-medium text-gray-900 mb-2">Benefits:</h5>
                 <ul className="text-xs text-gray-600 space-y-1">
-                  {template.benefits.slice(0, 2).map((benefit, index) => (
+                  {(template.benefits || []).slice(0, 2).map((benefit, index) => (
                     <li key={index} className="flex items-center">
                       <span className="w-1 h-1 bg-purple-500 rounded-full mr-2 flex-shrink-0"></span>
                       {benefit}

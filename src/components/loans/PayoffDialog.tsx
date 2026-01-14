@@ -40,7 +40,7 @@ import { toast } from 'sonner';
 
 const payoffSchema = z.object({
   amount: z.number().min(0.01, 'Amount must be greater than 0'),
-  currency: z.enum(['USD', 'EUR', 'BTC', 'SATS']),
+  currency: z.enum(['USD', 'EUR', 'CHF', 'BTC', 'SATS']),
   payment_method: z.enum(['bitcoin', 'lightning', 'bank_transfer', 'card', 'other']),
   notes: z.string().optional(),
 });
@@ -62,7 +62,7 @@ export function PayoffDialog({ loan, offer, open, onOpenChange, onRecorded }: Pa
     resolver: zodResolver(payoffSchema),
     defaultValues: {
       amount: offer.offer_amount,
-      currency: loan.currency,
+      currency: (loan.currency as 'USD' | 'EUR' | 'CHF' | 'BTC' | 'SATS') || 'CHF',
       payment_method: 'bank_transfer',
       notes: '',
     },
@@ -153,6 +153,7 @@ export function PayoffDialog({ loan, offer, open, onOpenChange, onRecorded }: Pa
                     <SelectContent>
                       <SelectItem value="USD">USD</SelectItem>
                       <SelectItem value="EUR">EUR</SelectItem>
+                      <SelectItem value="CHF">CHF</SelectItem>
                       <SelectItem value="BTC">BTC</SelectItem>
                       <SelectItem value="SATS">SATS</SelectItem>
                     </SelectContent>

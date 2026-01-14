@@ -113,8 +113,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Get wallet
-    const { data: wallet, error: fetchError } = await supabase
-      .from('wallets')
+    const { data: wallet, error: fetchError } = await (supabase
+      .from('wallets') as any)
       .select('*')
       .eq('id', id)
       .eq('user_id', user.id)
@@ -206,8 +206,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Update wallet balance
-    const { data: updatedWallet, error: updateError } = await supabase
-      .from('wallets')
+    const { data: updatedWallet, error: updateError } = await (supabase
+      .from('wallets') as any)
       .update({
         balance_btc: totalBalanceBtc,
         balance_updated_at: new Date().toISOString(),

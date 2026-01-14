@@ -52,11 +52,12 @@ export const POST = withAuth(async (
     const { action } = validation.data;
 
     // Get invitation
-    const { data: invitation, error: inviteError } = await supabase
-      .from('group_invitations')
+    const { data: invitationData, error: inviteError } = await (supabase
+      .from('group_invitations') as any)
       .select('*, groups(slug)')
       .eq('id', invitationId)
       .single();
+    const invitation = invitationData as any;
 
     if (inviteError || !invitation) {
       return apiNotFound('Invitation not found');
@@ -74,8 +75,8 @@ export const POST = withAuth(async (
 
     // Check if expired
     if (new Date(invitation.expires_at) < new Date()) {
-      await supabase
-        .from('group_invitations')
+      await (supabase
+        .from('group_invitations') as any)
         .update({ status: 'expired' })
         .eq('id', invitationId);
       return apiValidationError('Invitation has expired');
@@ -83,8 +84,8 @@ export const POST = withAuth(async (
 
     if (action === 'accept') {
       // Check if already a member
-      const { data: existingMember } = await supabase
-        .from('group_members')
+      const { data: existingMember } = await (supabase
+        .from('group_members') as any)
         .select('id')
         .eq('group_id', invitation.group_id)
         .eq('user_id', user.id)
@@ -92,8 +93,8 @@ export const POST = withAuth(async (
 
       if (existingMember) {
         // Already a member, just update invitation status
-        await supabase
-          .from('group_invitations')
+        await (supabase
+          .from('group_invitations') as any)
           .update({ status: 'accepted', responded_at: new Date().toISOString() })
           .eq('id', invitationId);
 
@@ -105,7 +106,7 @@ export const POST = withAuth(async (
       }
 
       // Add as member
-      const { error: memberError } = await supabase.from('group_members').insert({
+      const { error: memberError } = await (supabase.from('group_members') as any).insert({
         group_id: invitation.group_id,
         user_id: user.id,
         role: invitation.role,
@@ -118,8 +119,8 @@ export const POST = withAuth(async (
       }
 
       // Update invitation status
-      await supabase
-        .from('group_invitations')
+      await (supabase
+        .from('group_invitations') as any)
         .update({ status: 'accepted', responded_at: new Date().toISOString() })
         .eq('id', invitationId);
 
@@ -130,8 +131,8 @@ export const POST = withAuth(async (
       });
     } else {
       // Decline
-      await supabase
-        .from('group_invitations')
+      await (supabase
+        .from('group_invitations') as any)
         .update({ status: 'declined', responded_at: new Date().toISOString() })
         .eq('id', invitationId);
 
@@ -157,23 +158,25 @@ export const DELETE = withAuth(async (
     const supabase = await createServerClient();
 
     // Get invitation
-    const { data: invitation, error: inviteError } = await supabase
-      .from('group_invitations')
+    const { data: invitationData2, error: inviteError } = await (supabase
+      .from('group_invitations') as any)
       .select('group_id, status')
       .eq('id', invitationId)
       .single();
+    const invitation = invitationData2 as any;
 
     if (inviteError || !invitation) {
       return apiNotFound('Invitation not found');
     }
 
     // Check if user is admin/founder
-    const { data: membership } = await supabase
-      .from('group_members')
+    const { data: membershipData } = await (supabase
+      .from('group_members') as any)
       .select('role')
       .eq('group_id', invitation.group_id)
       .eq('user_id', user.id)
       .maybeSingle();
+    const membership = membershipData as any;
 
     if (!membership || !['founder', 'admin'].includes(membership.role)) {
       return apiForbidden('Only admins can revoke invitations');
@@ -184,8 +187,8 @@ export const DELETE = withAuth(async (
     }
 
     // Revoke
-    const { error } = await supabase
-      .from('group_invitations')
+    const { error } = await (supabase
+      .from('group_invitations') as any)
       .update({ status: 'revoked' })
       .eq('id', invitationId);
 

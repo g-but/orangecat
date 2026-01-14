@@ -18,15 +18,25 @@ interface VotingProgressProps {
   votingResults: {
     yes_votes: number;
     no_votes: number;
+    abstain_votes?: number;
     total_voting_power: number;
-    yes_percentage: number;
-    has_passed: boolean;
+    yes_percentage?: number;
+    has_passed?: boolean;
   };
   threshold: number;
   totalMembers?: number;
 }
 
 export function VotingProgress({ votingResults, threshold, totalMembers }: VotingProgressProps) {
+  // Calculate yes_percentage if not provided
+  const yesPercentage = votingResults.yes_percentage ??
+    (votingResults.total_voting_power > 0
+      ? (votingResults.yes_votes / votingResults.total_voting_power) * 100
+      : 0);
+
+  // Calculate has_passed if not provided
+  const hasPassed = votingResults.has_passed ?? (yesPercentage >= threshold);
+
   const noPercentage = votingResults.total_voting_power > 0
     ? (votingResults.no_votes / votingResults.total_voting_power) * 100
     : 0;
@@ -40,11 +50,11 @@ export function VotingProgress({ votingResults, threshold, totalMembers }: Votin
       <CardHeader>
         <CardTitle>Voting Results</CardTitle>
         <CardDescription>
-          {votingResults.has_passed ? (
+          {hasPassed ? (
             <span className="text-green-600 font-medium">Proposal has passed!</span>
           ) : (
             <span>
-              Needs {threshold}% Yes votes to pass (currently {votingResults.yes_percentage.toFixed(1)}%)
+              Needs {threshold}% Yes votes to pass (currently {yesPercentage.toFixed(1)}%)
             </span>
           )}
         </CardDescription>
@@ -58,11 +68,11 @@ export function VotingProgress({ votingResults, threshold, totalMembers }: Votin
               <span className="font-medium">Yes</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-semibold">{votingResults.yes_percentage.toFixed(1)}%</span>
+              <span className="font-semibold">{yesPercentage.toFixed(1)}%</span>
               <span className="text-gray-500">({votingResults.yes_votes} votes)</span>
             </div>
           </div>
-          <Progress value={votingResults.yes_percentage} className="h-2" />
+          <Progress value={yesPercentage} className="h-2" />
         </div>
 
         {/* No Votes */}
@@ -100,14 +110,14 @@ export function VotingProgress({ votingResults, threshold, totalMembers }: Votin
             <span className="text-gray-600">Required Threshold</span>
             <span className="font-medium">{threshold}%</span>
           </div>
-          {votingResults.yes_percentage >= threshold ? (
+          {yesPercentage >= threshold ? (
             <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
               <CheckCircle2 className="h-3 w-3" />
               Threshold met - Proposal will pass
             </p>
           ) : (
             <p className="text-xs text-gray-500 mt-1">
-              Need {((threshold - votingResults.yes_percentage) / 100) * votingResults.total_voting_power} more Yes votes
+              Need {((threshold - yesPercentage) / 100) * votingResults.total_voting_power} more Yes votes
             </p>
           )}
         </div>

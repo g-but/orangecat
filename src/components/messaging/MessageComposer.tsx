@@ -152,14 +152,14 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
           // Fetch full message details from message_details view
           try {
             const { data: fullMessage } = await supabase
-              .from('message_details')
+              .from('message_details' as any)
               .select('*')
               .eq('id', data.id)
-              .single();
+              .single() as { data: Message | null };
 
             if (fullMessage) {
               debugLog('[MessageComposer] confirmed full message', fullMessage.id);
-              onMessageConfirmed?.(tempId, fullMessage as Message);
+              onMessageConfirmed?.(tempId, fullMessage);
             } else {
               debugLog('[MessageComposer] no full message returned from query');
             }

@@ -62,8 +62,8 @@ export function CreateAsSelector({
         } = await supabase.auth.getUser();
         if (authUser) {
           // Get user profile
-          const { data: profile } = await supabase
-            .from(DATABASE_TABLES.PROFILES)
+          const { data: profile } = await (supabase
+            .from(DATABASE_TABLES.PROFILES) as any)
             .select('avatar_url, username')
             .eq('id', authUser.id)
             .single();
@@ -84,8 +84,8 @@ export function CreateAsSelector({
 
     async function loadUserGroups(uid: string) {
       // Try new groups table first
-      const { data: groupMemberships } = await supabase
-        .from(DATABASE_TABLES.GROUP_MEMBERS)
+      const { data: groupMemberships } = await (supabase
+        .from(DATABASE_TABLES.GROUP_MEMBERS) as any)
         .select(
           `
           role,
@@ -102,8 +102,8 @@ export function CreateAsSelector({
 
       if (groupMemberships && groupMemberships.length > 0) {
         const userGroups: UserGroup[] = groupMemberships
-          .filter((m) => m.groups)
-          .map((m) => ({
+          .filter((m: any) => m.groups)
+          .map((m: any) => ({
             id: (m.groups as any).id,
             name: (m.groups as any).name,
             slug: (m.groups as any).slug,
@@ -250,15 +250,15 @@ export function useUserGroups(userId?: string) {
       }
 
       // Try new groups table
-      const { data: groupMemberships } = await supabase
-        .from(DATABASE_TABLES.GROUP_MEMBERS)
+      const { data: groupMemberships } = await (supabase
+        .from(DATABASE_TABLES.GROUP_MEMBERS) as any)
         .select('role, groups(id, name, slug, label, avatar_url)')
         .eq('user_id', uid);
 
       if (groupMemberships && groupMemberships.length > 0) {
         const userGroups: UserGroup[] = groupMemberships
-          .filter((m) => m.groups)
-          .map((m) => ({
+          .filter((m: any) => m.groups)
+          .map((m: any) => ({
             id: (m.groups as any).id,
             name: (m.groups as any).name,
             slug: (m.groups as any).slug,

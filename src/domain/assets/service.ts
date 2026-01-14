@@ -58,8 +58,8 @@ export async function createAsset(userId: string, input: AssetInput) {
     status: 'draft' as const,
     public_visibility: false,
   };
-  const { data, error } = await supabase
-    .from(getTableName('asset'))
+  const { data, error } = await (supabase
+    .from(getTableName('asset')) as any)
     .insert([insertPayload])
     .select('id, title, type, status, estimated_value, currency, created_at, verification_status')
     .single();

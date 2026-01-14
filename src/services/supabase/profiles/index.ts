@@ -38,8 +38,8 @@ export async function getProfile(userId: string): Promise<ProfileResponse> {
   try {
     logProfile('Fetching profile', { userId })
     
-    const { data, error } = await supabase
-      .from(DATABASE_TABLES.PROFILES)
+    const { data, error } = await (supabase
+      .from(DATABASE_TABLES.PROFILES) as any)
       .select('*')
       .eq('id', userId)
       .single()
@@ -110,8 +110,8 @@ export async function updateProfile(
       updated_at: new Date().toISOString()
     }
     
-    const { data, error } = await supabase
-      .from(DATABASE_TABLES.PROFILES)
+    const { data, error } = await (supabase
+      .from(DATABASE_TABLES.PROFILES) as any)
       .update(updateData)
       .eq('id', userId)
       .select()
@@ -197,8 +197,8 @@ export async function createProfile(
       updated_at: new Date().toISOString()
     }
     
-    const { data, error } = await supabase
-      .from(DATABASE_TABLES.PROFILES)
+    const { data, error } = await (supabase
+      .from(DATABASE_TABLES.PROFILES) as any)
       .insert(newProfile)
       .select()
       .single()
@@ -257,8 +257,8 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
   try {
     logProfile('Checking username availability', { username })
     
-    const { data, error } = await supabase
-      .from(DATABASE_TABLES.PROFILES)
+    const { data, error } = await (supabase
+      .from(DATABASE_TABLES.PROFILES) as any)
       .select('id')
       .eq('username', username)
       .single()
@@ -308,8 +308,8 @@ export async function getProfileByUsername(username: string): Promise<ProfileRes
   try {
     logProfile('Fetching profile by username', { username })
     
-    const { data, error } = await supabase
-      .from(DATABASE_TABLES.PROFILES)
+    const { data, error } = await (supabase
+      .from(DATABASE_TABLES.PROFILES) as any)
       .select('*')
       .eq('username', username)
       .single()

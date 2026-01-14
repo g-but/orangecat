@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const bookingService = createBookingService(supabase);
+    const bookingService = createBookingService(supabase as any);
     const booking = await bookingService.getBooking(id);
 
     if (!booking) {
@@ -41,9 +41,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify user has access (is customer or provider)
-    const { data: actors } = await supabase.from('actors').select('id').eq('user_id', user.id);
+    const { data: actors } = await (supabase.from('actors') as any).select('id').eq('user_id', user.id);
 
-    const actorIds = actors?.map(a => a.id) || [];
+    const actorIds = actors?.map((a: { id: string }) => a.id) || [];
     const isCustomer = booking.customer_user_id === user.id;
     const isProvider = actorIds.includes(booking.provider_actor_id);
 
@@ -89,12 +89,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const { action, reason } = result.data;
-    const bookingService = createBookingService(supabase);
+    const bookingService = createBookingService(supabase as any);
 
     // Get user's actor IDs
-    const { data: actors } = await supabase.from('actors').select('id').eq('user_id', user.id);
+    const { data: actors } = await (supabase.from('actors') as any).select('id').eq('user_id', user.id);
 
-    const actorIds = actors?.map(a => a.id) || [];
+    const actorIds = actors?.map((a: { id: string }) => a.id) || [];
 
     let bookingResult;
 
@@ -173,7 +173,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const url = new URL(request.url);
     const reason = url.searchParams.get('reason') || undefined;
 
-    const bookingService = createBookingService(supabase);
+    const bookingService = createBookingService(supabase as any);
     const result = await bookingService.cancelBooking(id, user.id, reason);
 
     if (!result.success) {

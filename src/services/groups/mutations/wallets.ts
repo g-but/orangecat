@@ -35,8 +35,8 @@ export async function createGroupWallet(
       return { success: false, error: 'Insufficient permissions' };
     }
 
-    const { data, error } = await supabase
-      .from(TABLES.group_wallets)
+    const { data, error } = await (supabase
+      .from(TABLES.group_wallets) as any)
       .insert({
         group_id: request.group_id,
         name: request.name,
@@ -97,11 +97,12 @@ export async function updateGroupWallet(
     }
 
     // Get wallet to check group_id
-    const { data: wallet } = await supabase
-      .from(TABLES.group_wallets)
+    const { data: walletData } = await (supabase
+      .from(TABLES.group_wallets) as any)
       .select('group_id')
       .eq('id', walletId)
       .single();
+    const wallet = walletData as any;
 
     if (!wallet) {
       return { success: false, error: 'Wallet not found' };
@@ -123,7 +124,7 @@ export async function updateGroupWallet(
     if (request.required_signatures !== undefined) {payload.required_signatures = request.required_signatures;}
     if (request.is_active !== undefined) {payload.is_active = request.is_active;}
 
-    const { error } = await supabase.from(TABLES.group_wallets).update(payload).eq('id', walletId);
+    const { error } = await (supabase.from(TABLES.group_wallets) as any).update(payload).eq('id', walletId);
 
     if (error) {
       logger.error('Failed to update group wallet', error, 'Groups');

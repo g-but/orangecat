@@ -51,7 +51,7 @@ export function PreferencesSection({
               <FormControl>
                 <SelectTrigger
                   className="w-full"
-                  onFocus={() => onFieldFocus?.('currency' as ProfileFieldType)}
+                  onFocus={() => onFieldFocus?.('currencyPreference')}
                 >
                   <SelectValue placeholder="Select your preferred currency" />
                 </SelectTrigger>

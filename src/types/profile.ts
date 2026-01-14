@@ -35,7 +35,7 @@ export interface Profile {
   profile_type?: ProfileType;
   category_tags?: string[];
   associated_entities?: AssociatedEntity[];
-  inspiration_statement?: string | null; // What inspires supporters to contribute
+  // Note: inspiration_statement is defined above in the transparency fields section
   impact_metrics?: ImpactMetric[];
   verification_status?: VerificationStatus;
 }
@@ -112,17 +112,6 @@ export const PROFILE_CATEGORIES = {
       'What brings this collective together?',
       'How does the group amplify individual efforts?',
       'What unique value does collaboration create?',
-    ],
-  },
-  project: {
-    label: 'Project',
-    description: 'An ongoing initiative or creative work seeking ongoing support',
-    icon: '🚀',
-    color: 'teal',
-    inspirationPrompts: [
-      'What makes this project innovative or important?',
-      'How will ongoing support help the project grow?',
-      'What milestones and goals lie ahead?',
     ],
   },
 } as const;

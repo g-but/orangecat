@@ -15,6 +15,7 @@ export interface Proposal {
   action_type?: string | null;
   action_data?: Record<string, unknown> | null;
   voting_threshold?: number | null;
+  voting_starts_at?: string | null;
   voting_ends_at?: string | null;
   voting_results?: {
     yes_votes: number;
@@ -47,10 +48,15 @@ export interface ProposalResponse {
   error?: string;
 }
 
+export interface VoteData {
+  vote: string;
+  voting_power: number | string;
+}
+
 export async function getProposal(proposalId: string): Promise<ProposalResponse> {
   try {
-    const { data, error } = await supabase
-      .from(TABLES.group_proposals)
+    const { data, error } = await (supabase
+      .from(TABLES.group_proposals) as any)
       .select(`
         *,
         proposer:profiles!group_proposals_proposer_id_fkey (
@@ -71,10 +77,6 @@ export async function getProposal(proposalId: string): Promise<ProposalResponse>
       return { success: false, error: error.message };
     }
 
-    interface VoteData {
-      vote: string;
-      voting_power: number | string;
-    }
     const votes = ((data as { group_votes?: VoteData[] })?.group_votes || []) as VoteData[];
     const yesVotes = votes
       .filter((v) => v.vote === 'yes')
@@ -118,8 +120,8 @@ export async function getProposalVotes(
   proposalId: string
 ): Promise<{ success: boolean; votes?: ProposalVote[]; error?: string }> {
   try {
-    const { data, error } = await supabase
-      .from(TABLES.group_votes)
+    const { data, error } = await (supabase
+      .from(TABLES.group_votes) as any)
       .select('*')
       .eq('proposal_id', proposalId);
 
@@ -149,8 +151,8 @@ export async function getGroupProposals(
     const offset = options?.offset || 0;
     const status = options?.status || 'all';
 
-    let query = supabase
-      .from(TABLES.group_proposals)
+    let query = (supabase
+      .from(TABLES.group_proposals) as any)
       .select(
         `
         *,
@@ -236,8 +238,8 @@ export async function getPublicJobPostings(options?: {
     const limit = Math.min(options?.limit || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = options?.offset || 0;
 
-    const query = supabase
-      .from(TABLES.group_proposals)
+    const query = (supabase
+      .from(TABLES.group_proposals) as any)
       .select(
         `
         *,

@@ -12,7 +12,7 @@ import {
   WebsiteField
 } from './ProfileFormFields'
 import { Control } from 'react-hook-form'
-import type { ProfileFormValues } from './ModernProfileEditor'
+import type { ProfileFormValues } from './types'
 
 interface ProfileTabsProps {
   control: Control<ProfileFormValues>

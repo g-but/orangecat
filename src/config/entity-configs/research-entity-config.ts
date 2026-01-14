@@ -51,12 +51,31 @@ export const researchEntitySchema = z.object({
 
 export const researchEntityConfig: EntityConfig<ResearchEntity> = {
   entityType: 'research_entity',
+  name: 'Research Entity',
+  namePlural: 'Research Entities',
   displayName: 'Research Entity',
   displayNamePlural: 'Research Entities',
   description: 'Independent research projects with their own funding and governance',
   icon: '🔬',
   color: '#8B5CF6', // Purple for research
+  colorTheme: 'purple',
   schema: researchEntitySchema,
+
+  // Routing
+  listPath: '/dashboard/research',
+  detailPath: (id: string) => `/research/${id}`,
+  createPath: '/dashboard/research/create',
+  editPath: (id: string) => `/dashboard/research/${id}/edit`,
+  apiEndpoint: '/api/research',
+
+  // Card rendering
+  makeHref: (entity) => `/research/${entity.id}`,
+  makeCardProps: (entity) => ({
+    badge: entity.status === 'active' ? 'Active' : entity.status === 'draft' ? 'Draft' : undefined,
+    badgeVariant: entity.status === 'active' ? 'success' : 'default',
+    showEditButton: true,
+    editHref: `/dashboard/research/${entity.id}/edit`,
+  }),
 
   // Basic fields
   fields: [
@@ -338,12 +357,16 @@ export const researchEntityConfig: EntityConfig<ResearchEntity> = {
     custom: [
       {
         field: 'funding_goal_sats',
-        rule: (value) => value >= 1000,
+        rule: (value: unknown) => typeof value === 'number' && value >= 1000,
         message: 'Funding goal must be at least 1000 sats',
       },
       {
         field: 'team_members',
-        rule: (value) => !value || value.reduce((sum, member) => sum + (member.contribution_percentage || 0), 0) <= 100,
+        rule: (value: unknown) => {
+          if (!value || !Array.isArray(value)) {return true;}
+          const members = value as Array<{ contribution_percentage?: number }>;
+          return members.reduce((sum: number, member) => sum + (member.contribution_percentage || 0), 0) <= 100;
+        },
         message: 'Total contribution percentages cannot exceed 100%',
       },
     ],

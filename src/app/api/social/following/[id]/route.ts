@@ -28,8 +28,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       data: follows,
       error: followsError,
       count,
-    } = await supabase
-      .from(DATABASE_TABLES.FOLLOWS)
+    } = await (supabase
+      .from(DATABASE_TABLES.FOLLOWS) as any)
       .select('following_id, created_at', { count: 'exact' })
       .eq('follower_id', id)
       .order('created_at', { ascending: false })
@@ -41,12 +41,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Then fetch profiles for each following_id
-    const followingIds = (follows || []).map(f => f.following_id);
+    const followingIds = (follows || []).map((f: any) => f.following_id);
     let following: any[] = [];
 
     if (followingIds.length > 0) {
-      const { data: profiles, error: profilesError } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data: profiles, error: profilesError } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .select('id, username, name, avatar_url, bio, bitcoin_address, lightning_address')
         .in('id', followingIds);
 
@@ -60,8 +60,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
 
       // Combine follows with profiles
-      following = (follows || []).map(follow => {
-        const profile = profiles?.find(p => p.id === follow.following_id);
+      following = (follows || []).map((follow: any) => {
+        const profile = profiles?.find((p: any) => p.id === follow.following_id);
         return {
           following_id: follow.following_id,
           created_at: follow.created_at,

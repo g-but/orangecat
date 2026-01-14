@@ -1,4 +1,5 @@
 import { type CurrencyCode } from '@/config/currencies';
+import { type EntityStatus, type VerificationStatus } from '@/types/common';
 
 export type AssetType =
   | 'real_estate'
@@ -18,8 +19,8 @@ export interface Asset {
   estimated_value: number | null;
   currency: CurrencyCode; // e.g., 'USD', 'CHF', 'BTC'
   documents: string[] | null; // links to docs hosted in storage
-  verification_status: 'unverified' | 'user_provided' | 'third_party_verified';
-  status: 'draft' | 'active' | 'archived';
+  verification_status: VerificationStatus;
+  status: Exclude<EntityStatus, 'paused'>; // Assets don't use 'paused' status
   // Additional fields
   purchase_date: string | null;
   purchase_price: number | null;
@@ -27,4 +28,6 @@ export interface Asset {
   notes: string | null;
   created_at: string;
   updated_at: string;
+  // Index signature for BaseEntity compatibility
+  [key: string]: unknown;
 }

@@ -64,7 +64,7 @@ const supabase = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
   // Fixed: Increased timeout to match auth operations (20s)
   global: {
-    fetch: (url, options = {}) => {
+    fetch: (url: RequestInfo | URL, options: RequestInit = {}) => {
       // Create timeout controller
       const timeoutController = new AbortController();
       const timeoutId = setTimeout(() => timeoutController.abort(), 20000);
@@ -131,7 +131,7 @@ export const createSupabaseClient = () =>
       debug: enableAuthDebug, // Controlled by NEXT_PUBLIC_SUPABASE_DEBUG env var
     },
     global: {
-      fetch: (url, options = {}) => {
+      fetch: (url: RequestInfo | URL, options: RequestInit = {}) => {
         // Create timeout controller
         const timeoutController = new AbortController();
         const timeoutId = setTimeout(() => timeoutController.abort(), 20000);

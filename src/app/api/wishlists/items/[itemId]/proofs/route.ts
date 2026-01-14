@@ -30,11 +30,12 @@ export async function GET(
     const { data: { user } } = await supabase.auth.getUser();
 
     // Verify the wishlist item exists
-    const { data: wishlistItem, error: itemError } = await supabase
-      .from('wishlist_items')
+    const { data: wishlistItemData, error: itemError } = await (supabase
+      .from('wishlist_items') as any)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', itemId)
       .single();
+    const wishlistItem = wishlistItemData as any;
 
     if (itemError || !wishlistItem) {
       return NextResponse.json(
@@ -44,8 +45,8 @@ export async function GET(
     }
 
     // Get all proofs for this item
-    const { data: proofs, error: proofsError } = await supabase
-      .from('wishlist_fulfillment_proofs')
+    const { data: proofsData, error: proofsError } = await (supabase
+      .from('wishlist_fulfillment_proofs') as any)
       .select(`
         id,
         wishlist_item_id,
@@ -64,6 +65,7 @@ export async function GET(
       `)
       .eq('wishlist_item_id', itemId)
       .order('created_at', { ascending: false });
+    const proofs = proofsData as any[];
 
     if (proofsError) {
       logger.error('Failed to fetch wishlist proofs', {
@@ -81,8 +83,8 @@ export async function GET(
     let feedbackMap: Record<string, any[]> = {};
 
     if (proofIds.length > 0) {
-      const { data: feedback, error: feedbackError } = await supabase
-        .from('wishlist_feedback')
+      const { data: feedbackData, error: feedbackError } = await (supabase
+        .from('wishlist_feedback') as any)
         .select(`
           id,
           fulfillment_proof_id,
@@ -98,10 +100,11 @@ export async function GET(
           )
         `)
         .in('fulfillment_proof_id', proofIds);
+      const feedback = feedbackData as any[];
 
       if (!feedbackError && feedback) {
         // Group feedback by proof_id
-        feedbackMap = feedback.reduce((acc, f) => {
+        feedbackMap = feedback.reduce((acc: Record<string, any[]>, f: any) => {
           if (f.fulfillment_proof_id) {
             if (!acc[f.fulfillment_proof_id]) {
               acc[f.fulfillment_proof_id] = [];

@@ -90,8 +90,8 @@ export function useMessages(
 
     setReadReceiptsLoading(true);
     try {
-      const { data: participants, error } = await supabase
-        .from('conversation_participants')
+      const { data: participants, error } = await (supabase
+        .from('conversation_participants') as any)
         .select('user_id, last_read_at')
         .eq('conversation_id', conversationId)
         .eq('is_active', true);
@@ -202,8 +202,8 @@ export function useMessages(
     }
 
     try {
-      const { data: conv } = await supabase
-        .from('conversation_details')
+      const { data: conv } = await (supabase
+        .from('conversation_details') as any)
         .select('*')
         .eq('id', conversationId)
         .maybeSingle();
@@ -228,8 +228,8 @@ export function useMessages(
       };
       setConversation(mappedConversation);
 
-      const { data: msgs } = await supabase
-        .from('message_details')
+      const { data: msgs } = await (supabase
+        .from('message_details') as any)
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });

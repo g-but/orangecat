@@ -5,6 +5,9 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { logger } from '@/utils/logger'
 import { apiUnauthorized, apiInternalError } from './standardResponse'
 
+// Type alias for any SupabaseClient (accepts any database schema)
+type AnySupabaseClient = SupabaseClient<any, any, any>;
+
 /**
  * Authentication Middleware for API Routes
  *
@@ -25,12 +28,12 @@ import { apiUnauthorized, apiInternalError } from './standardResponse'
 
 export interface AuthContext {
   user: User
-  supabase: SupabaseClient
+  supabase: AnySupabaseClient
 }
 
 export type AuthenticatedRequest = NextRequest & {
   user: User
-  supabase: SupabaseClient
+  supabase: AnySupabaseClient
 }
 
 export type AuthenticatedHandler<TContext = Record<string, unknown>> = (
@@ -39,7 +42,7 @@ export type AuthenticatedHandler<TContext = Record<string, unknown>> = (
 ) => Promise<NextResponse>
 
 export type OptionalAuthHandler<TContext = Record<string, unknown>> = (
-  req: NextRequest & { user: User | null; supabase: SupabaseClient },
+  req: NextRequest & { user: User | null; supabase: AnySupabaseClient },
   context: TContext & { params?: Record<string, string> }
 ) => Promise<NextResponse>
 
@@ -116,7 +119,7 @@ export function withOptionalAuth<TContext = Record<string, unknown>>(
       const { data: { user } } = await supabase.auth.getUser()
 
       // Add user (may be null) and supabase to request object
-      const augmentedReq = req as NextRequest & { user: User | null; supabase: SupabaseClient }
+      const augmentedReq = req as NextRequest & { user: User | null; supabase: AnySupabaseClient }
       augmentedReq.user = user
       augmentedReq.supabase = supabase
 
@@ -183,7 +186,7 @@ export async function getAuthUser(req: NextRequest): Promise<AuthContext | null>
  * Require authentication and return user/supabase or throw error response
  * For use in handlers that need manual auth checking
  */
-export async function requireAuth(req: NextRequest): Promise<{ user: User; supabase: SupabaseClient }> {
+export async function requireAuth(req: NextRequest): Promise<{ user: User; supabase: AnySupabaseClient }> {
   const auth = await getAuthUser(req)
 
   if (!auth) {

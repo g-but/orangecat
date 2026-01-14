@@ -11,7 +11,7 @@ import { ArrowUp } from 'lucide-react';
 
 const Footer = React.memo(function Footer() {
   const pathname = usePathname();
-  const shouldRender = shouldShowFooter(pathname);
+  const shouldRender = shouldShowFooter(pathname ?? '/');
 
   const scrollToTop = () => {
     if (typeof window !== 'undefined' && window.scrollTo) {
@@ -109,7 +109,7 @@ const Footer = React.memo(function Footer() {
             <ul className="space-y-3">
               {footerNavigation.company.map(item => (
                 <li key={item.name}>
-                  {item.external ? (
+                  {'external' in item && item.external ? (
                     <a
                       href={item.href}
                       target="_blank"

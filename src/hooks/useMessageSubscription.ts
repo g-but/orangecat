@@ -194,15 +194,37 @@ export function useMessageSubscription(
                 .eq('id', payload.new.id)
                 .single();
 
-              if (messageData && !messageError) {
+              // Type for the joined query result
+              type MessageWithSender = {
+                id: string;
+                conversation_id: string;
+                sender_id: string;
+                content: string;
+                message_type: string;
+                metadata: Record<string, unknown> | null;
+                created_at: string;
+                updated_at: string;
+                is_deleted: boolean;
+                edited_at: string | null;
+                sender: {
+                  id: string;
+                  username: string | null;
+                  name: string | null;
+                  avatar_url: string | null;
+                } | null;
+              };
+
+              const typedMessageData = messageData as MessageWithSender | null;
+
+              if (typedMessageData && !messageError) {
                 newMessage = {
-                  ...messageData,
-                  sender: messageData.sender
+                  ...typedMessageData,
+                  sender: typedMessageData.sender
                     ? {
-                        id: messageData.sender.id,
-                        username: messageData.sender.username || '',
-                        name: messageData.sender.name || '',
-                        avatar_url: messageData.sender.avatar_url || null,
+                        id: typedMessageData.sender.id,
+                        username: typedMessageData.sender.username || '',
+                        name: typedMessageData.sender.name || '',
+                        avatar_url: typedMessageData.sender.avatar_url || null,
                       }
                     : {
                         id: payload.new.sender_id,

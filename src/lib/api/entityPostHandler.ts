@@ -211,8 +211,9 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
         return apiInternalError(`Failed to create ${meta.name.toLowerCase()}: ${errorMsg}`);
       }
 
-      logger.info(`${meta.name} created successfully`, { [`${entityType}Id`]: entity.id });
-      return apiSuccess(entity, { status: 201 });
+      const createdEntity = entity as { id: string } & Record<string, unknown>;
+      logger.info(`${meta.name} created successfully`, { [`${entityType}Id`]: createdEntity.id });
+      return apiSuccess(createdEntity, { status: 201 });
     } catch (error) {
       return handleApiError(error);
     }

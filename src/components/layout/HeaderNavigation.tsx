@@ -182,10 +182,11 @@ function HeaderNavDropdown({ item, isActive }: HeaderNavDropdownProps) {
 
     if (isOpen) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-      };
     }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, [isOpen]);
 
   // Check if any child is active

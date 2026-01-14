@@ -77,7 +77,7 @@ export function useTypingIndicator(
       }
 
       try {
-        await supabase.rpc('set_typing_indicator', {
+        await (supabase.rpc as any)('set_typing_indicator', {
           p_conversation_id: conversationId,
           p_user_id: user.id,
           p_is_typing: isTyping,
@@ -214,11 +214,14 @@ export function useTypingIndicator(
               }
 
               // Fetch profile if needed
-              const { data: profile } = await supabase
+              const { data: profileData } = await supabase
                 .from('profiles')
                 .select('username, name')
                 .eq('id', typingUserId)
                 .single();
+
+              type ProfileData = { username?: string | null; name?: string | null };
+              const profile = profileData as ProfileData | null;
 
               setTypingUsers(prev => {
                 const existing = prev.find(u => u.userId === typingUserId);

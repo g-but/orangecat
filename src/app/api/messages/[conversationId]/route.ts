@@ -70,8 +70,8 @@ export const GET = withAuth(async (
     const admin = createAdminClient();
 
     // Verify user is a participant
-    const { data: participant, error: partError } = await admin
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+    const { data: participant, error: partError } = await (admin
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
       .select('user_id, last_read_at, is_active')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -79,8 +79,8 @@ export const GET = withAuth(async (
       .maybeSingle();
 
     if (partError || !participant) {
-      const { data: convExists } = await admin
-        .from(DATABASE_TABLES.CONVERSATIONS)
+      const { data: convExists } = await (admin
+        .from(DATABASE_TABLES.CONVERSATIONS) as any)
         .select('id')
         .eq('id', conversationId)
         .maybeSingle();
@@ -100,8 +100,8 @@ export const GET = withAuth(async (
     );
 
     // Get conversation info
-    const { data: conv, error: convError } = await admin
-      .from(DATABASE_TABLES.CONVERSATIONS)
+    const { data: conv, error: convError } = await (admin
+      .from(DATABASE_TABLES.CONVERSATIONS) as any)
       .select('*')
       .eq('id', conversationId)
       .single();
@@ -111,8 +111,8 @@ export const GET = withAuth(async (
     }
 
     // Fetch participants
-    const { data: participants } = await admin
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+    const { data: participants } = await (admin
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
       .select(
         `
         user_id,
@@ -138,11 +138,11 @@ export const GET = withAuth(async (
     }));
 
     // Calculate unread count
-    const userParticipant = formattedParticipants.find(p => p.user_id === user.id);
+    const userParticipant = formattedParticipants.find((p: any) => p.user_id === user.id);
     let unreadCount = 0;
     if (userParticipant?.last_read_at) {
-      const { count } = await admin
-        .from(DATABASE_TABLES.MESSAGES)
+      const { count } = await (admin
+        .from(DATABASE_TABLES.MESSAGES) as any)
         .select('*', { count: 'exact', head: true })
         .eq('conversation_id', conversationId)
         .neq('sender_id', user.id)
@@ -211,8 +211,8 @@ export const POST = withAuth(async (
     const admin = createAdminClient();
 
     // Check membership (with auto-reactivation for soft-deleted participants)
-    const { data: participantMaybe, error: partError } = await admin
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+    const { data: participantMaybe, error: partError } = await (admin
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
       .select('user_id, is_active')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -229,12 +229,11 @@ export const POST = withAuth(async (
         is_active: true,
         last_read_at: new Date().toISOString(),
       };
-      const updateQuery = admin
-        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
-        .update(updateData as any)
+      await (admin
+        .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
+        .update(updateData)
         .eq('conversation_id', conversationId)
         .eq('user_id', user.id);
-      await (updateQuery as any);
     }
 
     // Send message (optionally as a specific actor)

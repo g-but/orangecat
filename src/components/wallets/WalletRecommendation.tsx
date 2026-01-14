@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import Badge from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 
 export interface UserPreferences {
   experience: 'beginner' | 'intermediate' | 'advanced';

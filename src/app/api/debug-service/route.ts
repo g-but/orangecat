@@ -1,22 +1,29 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { apiSuccess, apiError } from '@/lib/api/standardResponse';
+import { apiSuccess, apiUnauthorized } from '@/lib/api/standardResponse';
 import { getTableName } from '@/config/entity-registry';
 
 export const POST = async (request: NextRequest) => {
   try {
     const supabase = await createServerClient();
-    
+
     // Check authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      return apiError('Not authenticated', 401);
+      return apiUnauthorized('Not authenticated');
     }
 
     // Use entity registry for table name (SSOT compliance)
     const tableName = getTableName('service');
 
-    const debugResults = {
+    const debugResults: {
+      authenticated: boolean;
+      userId: string;
+      userEmail: string | undefined;
+      tableCheck: { success: boolean; error?: string; data?: any } | null;
+      policyCheck: { success: boolean; error?: string } | null;
+      serviceCreation: { success: boolean; error?: string; code?: string; details?: any; data?: any } | null;
+    } = {
       authenticated: true,
       userId: user.id,
       userEmail: user.email,
@@ -27,8 +34,8 @@ export const POST = async (request: NextRequest) => {
 
     // Test table access
     try {
-      const { data, error } = await supabase
-        .from(tableName)
+      const { data, error } = await (supabase
+        .from(tableName) as any)
         .select('count')
         .limit(1);
       
@@ -51,8 +58,8 @@ export const POST = async (request: NextRequest) => {
     };
 
     try {
-      const { data, error } = await supabase
-        .from(tableName)
+      const { data, error } = await (supabase
+        .from(tableName) as any)
         .insert(testService)
         .select()
         .single();
@@ -67,6 +74,7 @@ export const POST = async (request: NextRequest) => {
     return apiSuccess(debugResults);
 
   } catch (error) {
-    return apiError('Debug failed: ' + (error instanceof Error ? error.message : String(error)), 500);
+    const { apiError } = await import('@/lib/api/standardResponse');
+    return apiError('Debug failed: ' + (error instanceof Error ? error.message : String(error)), 'DEBUG_ERROR', 500);
   }
 };

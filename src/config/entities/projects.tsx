@@ -34,6 +34,7 @@ export interface ProjectListItem {
   isActive?: boolean;
   isPaused?: boolean;
   tags?: string[];
+  [key: string]: unknown; // Index signature for BaseEntity compatibility
 }
 
 export const projectEntityConfig: EntityConfig<ProjectListItem> = {

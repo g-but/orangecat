@@ -8,22 +8,31 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 
+// Helper to extract ID from URL
+function extractIdFromUrl(url: string): string {
+  const segments = new URL(url).pathname.split('/');
+  const idx = segments.findIndex(s => s === 'research-entities');
+  return segments[idx + 1] || '';
+}
+
 // GET /api/research-entities/[id]/vote - Get voting results
-export const GET = withRateLimit('read')(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
+export const GET = compose(
+  withRateLimit('read')
+)(async (request: NextRequest) => {
+  const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
 
     // Check if research entity exists and allows voting
-    const { data: entity, error: entityError } = await supabase
-      .from('research_entities')
+    const { data: entityData, error: entityError } = await (supabase
+      .from('research_entities') as any)
       .select('id, is_public, voting_enabled')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
+    const entity = entityData as any;
 
     if (entityError) {
       if (entityError.code === 'PGRST116') {
@@ -44,10 +53,11 @@ export const GET = withRateLimit('read')(async (
     }
 
     // Get all votes for this entity
-    const { data: votes, error } = await supabase
-      .from('research_votes')
+    const { data: votesData, error } = await (supabase
+      .from('research_votes') as any)
       .select('*')
-      .eq('research_entity_id', params.id);
+      .eq('research_entity_id', id);
+    const votes = votesData as any[];
 
     if (error) {throw error;}
 
@@ -82,10 +92,10 @@ export const GET = withRateLimit('read')(async (
 });
 
 // POST /api/research-entities/[id]/vote - Cast a vote
-export const POST = withRateLimit('write')(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
+export const POST = compose(
+  withRateLimit('write')
+)(async (request: NextRequest) => {
+  const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -95,11 +105,12 @@ export const POST = withRateLimit('write')(async (
     }
 
     // Check if research entity exists and allows voting
-    const { data: entity, error: entityError } = await supabase
-      .from('research_entities')
+    const { data: entityData2, error: entityError } = await (supabase
+      .from('research_entities') as any)
       .select('id, is_public, voting_enabled, contributions')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
+    const entity = entityData2 as any;
 
     if (entityError) {
       if (entityError.code === 'PGRST116') {
@@ -140,10 +151,10 @@ export const POST = withRateLimit('write')(async (
     }
 
     // Insert or update vote (UPSERT)
-    const { data: vote, error } = await supabase
-      .from('research_votes')
+    const { data: voteData, error } = await (supabase
+      .from('research_votes') as any)
       .upsert({
-        research_entity_id: params.id,
+        research_entity_id: id,
         user_id: user.id,
         vote_type,
         choice,
@@ -153,11 +164,12 @@ export const POST = withRateLimit('write')(async (
       })
       .select()
       .single();
+    const vote = voteData as any;
 
     if (error) {throw error;}
 
     logger.info('Vote cast successfully', {
-      researchEntityId: params.id,
+      researchEntityId: id,
       userId: user.id,
       voteType: vote_type,
       choice,

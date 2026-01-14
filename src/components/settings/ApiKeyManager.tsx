@@ -10,7 +10,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Key, Plus, Trash2, Star, Check, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { Input } from '@/components/ui/input';
+import { Input } from '@/components/ui/Input';
 import {
   Card,
   CardHeader,
@@ -18,8 +18,8 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from '@/components/ui/Card';
+import { Alert, AlertDescription } from '@/components/ui/Alert';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 
@@ -359,7 +359,7 @@ export function ApiKeyManager() {
 
             {/* Validation Result */}
             {validationResult && (
-              <Alert variant={validationResult.isValid ? 'default' : 'destructive'}>
+              <Alert variant={validationResult.isValid ? 'success' : 'destructive'}>
                 <AlertDescription>
                   {validationResult.isValid ? (
                     <span className="flex items-center gap-2 text-green-700">

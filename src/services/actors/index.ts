@@ -11,7 +11,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
-import type { Actor, ActorType } from '../types/actor';
+import type { Actor, ActorType } from './types/actor';
 
 /**
  * Get actor by ID

@@ -1,13 +1,13 @@
 'use client';
 
-import { Profile } from '@/types/database';
+import { ScalableProfile } from '@/types/database';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { User, MapPin, Globe, Calendar, Bitcoin, Zap, Mail, Phone } from 'lucide-react';
 import { SocialLinksDisplay } from './SocialLinksDisplay';
 import { SocialLink } from '@/types/social';
 
 interface ProfileOverviewTabProps {
-  profile: Profile;
+  profile: ScalableProfile;
   stats?: {
     projectCount: number;
     totalRaised: number;

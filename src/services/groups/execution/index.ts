@@ -22,7 +22,7 @@ const handlers: Record<string, ActionHandler> = {
       const groupActor = await getActorByGroup(groupId);
       if (!groupActor) {return;}
 
-      await supabase.from(tableName).update({ actor_id: groupActor.id, group_id: groupId }).eq('id', entity_id);
+      await (supabase.from(tableName) as any).update({ actor_id: groupActor.id, group_id: groupId }).eq('id', entity_id);
     } catch (error) {
       logger.error('Error executing associate_entity', error, 'Groups');
     }
@@ -90,8 +90,8 @@ const handlers: Record<string, ActionHandler> = {
       });
 
       // Update proposal with created project ID
-      await supabase
-        .from(TABLES.group_proposals)
+      await (supabase
+        .from(TABLES.group_proposals) as any)
         .update({
           action_data: {
             ...proposal.action_data,
@@ -122,8 +122,8 @@ const handlers: Record<string, ActionHandler> = {
       // 3. Notify authorized signers
       // 4. Wait for multisig execution
       
-      await supabase
-        .from(TABLES.group_proposals)
+      await (supabase
+        .from(TABLES.group_proposals) as any)
         .update({
           action_data: {
             ...proposal.action_data,
@@ -155,8 +155,8 @@ export async function executeProposalAction(proposalId: string, proposal: Propos
     }
 
     // Mark as executed before/after to avoid duplicate runs
-    const { data: reloaded } = await supabase
-      .from(TABLES.group_proposals)
+    const { data: reloaded } = await (supabase
+      .from(TABLES.group_proposals) as any)
       .select('executed_at, execution_result')
       .eq('id', proposalId)
       .single();
@@ -167,14 +167,14 @@ export async function executeProposalAction(proposalId: string, proposal: Propos
 
     await handler(proposalId, proposal);
 
-    await supabase
-      .from(TABLES.group_proposals)
+    await (supabase
+      .from(TABLES.group_proposals) as any)
       .update({ executed_at: new Date().toISOString(), execution_result: { ok: true, action: proposal.action_type } })
       .eq('id', proposalId);
   } catch (error) {
     logger.error('Exception executing proposal action', error, 'Groups');
-    await supabase
-      .from(TABLES.group_proposals)
+    await (supabase
+      .from(TABLES.group_proposals) as any)
       .update({ executed_at: new Date().toISOString(), execution_result: { ok: false, error: String(error) } })
       .eq('id', proposalId);
   }

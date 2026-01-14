@@ -33,7 +33,7 @@ interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const pathname = usePathname();
   const { user, profile, hydrated, isLoading } = useAuth();
-  const routeContext = getRouteContext(pathname);
+  const routeContext = getRouteContext(pathname ?? '/');
   const isAuthenticatedRoute = routeContext === 'authenticated' || routeContext === 'contextual';
 
   // Wait for auth hydration to prevent sidebar flash
@@ -60,7 +60,7 @@ export function AppShell({ children }: AppShellProps) {
       
       {/* Header - Always visible */}
       <Header
-        showSidebarToggle={shouldShowSidebar}
+        showSidebarToggle={!!shouldShowSidebar}
         onToggleSidebar={toggleSidebar}
         showSearch={true}
         variant="default"

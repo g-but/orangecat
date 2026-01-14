@@ -6,7 +6,10 @@
  * for Lightning Network payments in the future.
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// Type alias for any SupabaseClient (accepts any database schema)
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Payment result types
@@ -44,7 +47,7 @@ export interface UsageStats {
  * for AI assistant interactions.
  */
 export class AIPaymentService {
-  constructor(private supabase: SupabaseClient) {}
+  constructor(private supabase: AnySupabaseClient) {}
 
   /**
    * Check if user has sufficient balance/credits for an AI interaction
@@ -335,6 +338,6 @@ export class AIPaymentService {
 /**
  * Create AI payment service instance
  */
-export function createAIPaymentService(supabase: SupabaseClient): AIPaymentService {
+export function createAIPaymentService(supabase: AnySupabaseClient): AIPaymentService {
   return new AIPaymentService(supabase);
 }

@@ -15,6 +15,7 @@ import { EntityConfig } from '@/types/entity';
 import { Asset } from '@/types/asset';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
 export const assetEntityConfig: EntityConfig<Asset> = {
   name: 'Asset',

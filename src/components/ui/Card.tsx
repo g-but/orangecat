@@ -43,5 +43,9 @@ export const CardContent = ({ className, ...p }: React.HTMLAttributes<HTMLDivEle
   <div {...p} className={cn('p-6 pt-0', className)} />
 );
 
+export const CardFooter = ({ className, ...p }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div {...p} className={cn('p-6 pt-0 flex items-center', className)} />
+);
+
 // keep default export so existing imports still work
 export default Card;

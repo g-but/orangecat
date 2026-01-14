@@ -59,8 +59,8 @@ export const serviceEntityConfig: EntityConfig<UserService> = {
 
     return {
       priceLabel,
-      badge: service.status === 'published' ? 'Published' : service.status === 'draft' ? 'Draft' : undefined,
-      badgeVariant: service.status === 'published' ? 'success' : service.status === 'draft' ? 'default' : 'default',
+      badge: service.status === 'active' ? 'Active' : service.status === 'draft' ? 'Draft' : service.status === 'paused' ? 'Paused' : service.status === 'unavailable' ? 'Unavailable' : undefined,
+      badgeVariant: service.status === 'active' ? 'success' : service.status === 'draft' ? 'default' : service.status === 'paused' ? 'warning' : service.status === 'unavailable' ? 'destructive' : 'default',
       metadata: metadataParts.length > 0 ? (
         <div className="flex flex-wrap gap-2 text-xs text-gray-500">
           {metadataParts.map((part, idx) => (

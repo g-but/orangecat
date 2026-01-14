@@ -34,11 +34,12 @@ export async function getGroupMembers(
       }
     } else {
       // Check if group is public
-      const { data: group } = await supabase
-        .from(TABLES.groups)
+      const { data: groupData } = await (supabase
+        .from(TABLES.groups) as any)
         .select('is_public')
         .eq('id', groupId)
         .single();
+      const group = groupData as any;
 
       if (!group?.is_public) {
         return { success: false, error: 'Cannot view group members' };
@@ -46,8 +47,8 @@ export async function getGroupMembers(
     }
 
     // Build query
-    let query = supabase
-      .from(TABLES.group_members)
+    let query = (supabase
+      .from(TABLES.group_members) as any)
       .select(
         `
         *,
@@ -120,8 +121,8 @@ export async function getGroupMember(
       }
     }
 
-    const { data, error } = await supabase
-      .from(TABLES.group_members)
+    const { data, error } = await (supabase
+      .from(TABLES.group_members) as any)
       .select(
         `
         *,

@@ -37,11 +37,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = (await request.json()) as Partial<WalletFormData>;
 
     // Fetch wallet with ownership info
-    const { data: wallet, error: fetchError } = await supabase
-      .from('wallets')
+    const { data: walletData, error: fetchError } = await (supabase
+      .from('wallets') as any)
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
       .single();
+    const wallet = walletData as any;
 
     if (fetchError || !wallet) {
       logger.error('Wallet not found', { walletId: id, error: fetchError?.message });
@@ -121,8 +122,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           : { project_id: wallet.project_id };
 
         // Unset all other wallets as primary
-        await supabase
-          .from('wallets')
+        await (supabase
+          .from('wallets') as any)
           .update({ is_primary: false })
           .eq('is_active', true)
           .neq('id', id)
@@ -133,8 +134,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     updates.updated_at = new Date().toISOString();
 
     // Update wallet
-    const { data: updatedWallet, error: updateError } = await supabase
-      .from('wallets')
+    const { data: updatedWallet, error: updateError } = await (supabase
+      .from('wallets') as any)
       .update(updates)
       .eq('id', id)
       .select()
@@ -184,11 +185,12 @@ export async function DELETE(
     }
 
     // Fetch wallet with ownership info
-    const { data: wallet, error: fetchError } = await supabase
-      .from('wallets')
+    const { data: walletData2, error: fetchError } = await (supabase
+      .from('wallets') as any)
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
       .single();
+    const wallet = walletData2 as any;
 
     if (fetchError || !wallet) {
       logger.error('Wallet not found for deletion', { walletId: id, error: fetchError?.message });
@@ -217,8 +219,8 @@ export async function DELETE(
     }
 
     // Soft delete
-    const { error: deleteError } = await supabase
-      .from('wallets')
+    const { error: deleteError } = await (supabase
+      .from('wallets') as any)
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', id);
 

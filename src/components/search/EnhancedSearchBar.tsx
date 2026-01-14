@@ -304,7 +304,7 @@ export default function EnhancedSearchBar({
                   return (
                     <button
                       key={index}
-                      ref={(el) => (itemRefs.current[currentIndex] = el)}
+                      ref={(el) => { itemRefs.current[currentIndex] = el }}
                       onClick={action.action}
                       className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors ${
                         focusedIndex === currentIndex 
@@ -346,7 +346,7 @@ export default function EnhancedSearchBar({
                   return (
                     <button
                       key={index}
-                      ref={(el) => (itemRefs.current[currentIndex] = el)}
+                      ref={(el) => { itemRefs.current[currentIndex] = el }}
                       onClick={() => handleSearch(historyItem)}
                       className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left ${
                         focusedIndex === currentIndex 
@@ -381,7 +381,7 @@ export default function EnhancedSearchBar({
                   return (
                     <button
                       key={index}
-                      ref={(el) => (itemRefs.current[currentIndex] = el)}
+                      ref={(el) => { itemRefs.current[currentIndex] = el }}
                       onClick={() => handleSearch(trending)}
                       className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left ${
                         focusedIndex === currentIndex 
@@ -418,7 +418,7 @@ export default function EnhancedSearchBar({
                     return (
                       <button
                         key={index}
-                        ref={(el) => (itemRefs.current[currentIndex] = el)}
+                        ref={(el) => { itemRefs.current[currentIndex] = el }}
                         onClick={() => handleSearch(suggestion)}
                         className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg transition-colors text-left ${
                           focusedIndex === currentIndex 
@@ -447,7 +447,7 @@ export default function EnhancedSearchBar({
                   const currentIndex = itemIndex
                   return (
                     <button
-                      ref={(el) => (itemRefs.current[currentIndex] = el)}
+                      ref={(el) => { itemRefs.current[currentIndex] = el }}
                       onClick={() => handleSearch(query)}
                       className={`w-full flex items-center gap-3 px-3 py-2 text-sm text-orange-600 hover:bg-orange-50 rounded-lg transition-colors font-medium ${
                         focusedIndex === currentIndex 

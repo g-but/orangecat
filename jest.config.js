@@ -5,13 +5,11 @@ module.exports = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   transform: {
     '^.+\\.(ts|tsx)$': ['ts-jest', {
-      tsconfig: {
-        jsx: 'react-jsx',
-      },
+      tsconfig: 'tsconfig.test.json',
     }],
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@supabase/.*|@playwright/.*|isows/.*))'
+    'node_modules/(?!(@supabase/.*|@playwright/.*|isows/.*|bitcoin-address-validation|base58-js|bs58check|bs58|safe-buffer|base-x))'
   ],
   testTimeout: 30000,
   collectCoverageFrom: [
@@ -28,7 +26,8 @@ module.exports = {
     '<rootDir>/tests/e2e/',
     '<rootDir>/.next/',
     '<rootDir>/playwright-report/',
-    '<rootDir>/test-results/'
+    '<rootDir>/test-results/',
+    '\\.spec\\.(ts|tsx)$'  // Exclude Playwright spec files
   ],
   // Mock Next.js modules that cause issues in Jest
   moduleNameMapper: {
@@ -39,6 +38,8 @@ module.exports = {
     '^next/server$': '<rootDir>/__mocks__/next-server.js',
     '^react-router-dom$': '<rootDir>/__mocks__/react-router-dom.js',
     '^vitest$': '<rootDir>/__mocks__/vitest.js',
-    '^isows/(.*)$': '<rootDir>/__mocks__/isows.js'
+    '^isows/(.*)$': '<rootDir>/__mocks__/isows.js',
+    '^bitcoin-address-validation$': '<rootDir>/__mocks__/bitcoin-address-validation.js',
+    '^bs58check$': '<rootDir>/__mocks__/bs58check.js'
   }
 }; 

@@ -20,13 +20,13 @@ export default function CreateProgressSidebar({
       number: 1,
       title: 'Project Details',
       description: 'Basic information about your project',
-      fields: ['title', 'description', 'categories']
+      fields: ['title', 'description', 'tags']
     },
     {
       number: 2,
       title: 'Payment Setup',
       description: 'Configure Bitcoin payment addresses',
-      fields: ['bitcoin_address', 'lightning_address', 'goal_amount']
+      fields: ['bitcoin_address', 'goal_amount']
     },
     {
       number: 3,
@@ -54,15 +54,14 @@ export default function CreateProgressSidebar({
       const total = 3
       if (formData.title?.trim()) {completed++}
       if (formData.description?.trim()) {completed++}
-      if (formData.categories?.length > 0) {completed++}
+      if (formData.tags?.trim()) {completed++}
       return (completed / total) * 100
     }
     if (stepNumber === 2) {
       let completed = 0
-      const total = 3
-      if (formData.bitcoin_address?.trim() || formData.lightning_address?.trim()) {completed++}
+      const total = 2
+      if (formData.bitcoin_address?.trim()) {completed++}
       if (formData.goal_amount?.trim()) {completed++}
-      completed++ // Payment setup is always considered partially complete if user reached step 2
       return (completed / total) * 100
     }
     if (stepNumber === 3) {

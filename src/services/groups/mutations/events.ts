@@ -45,8 +45,8 @@ export async function createEvent(
     }
 
     // Create event
-    const { data, error } = await supabase
-      .from(TABLES.group_events)
+    const { data: eventData, error } = await (supabase
+      .from(TABLES.group_events) as any)
       .insert({
         ...input,
         creator_id: userId,
@@ -58,6 +58,7 @@ export async function createEvent(
       })
       .select()
       .single();
+    const data = eventData as any;
 
     if (error) {
       logger.error('Failed to create event', error, 'Groups');
@@ -97,11 +98,12 @@ export async function updateEvent(
     }
 
     // Get event to check permissions
-    const { data: event, error: fetchError } = await supabase
-      .from(TABLES.group_events)
+    const { data: eventData, error: fetchError } = await (supabase
+      .from(TABLES.group_events) as any)
       .select('id, group_id, creator_id')
       .eq('id', eventId)
       .single();
+    const event = eventData as any;
 
     if (fetchError || !event) {
       return { success: false, error: 'Event not found' };
@@ -120,12 +122,13 @@ export async function updateEvent(
     }
 
     // Update event
-    const { data, error } = await supabase
-      .from(TABLES.group_events)
+    const { data: updatedData, error } = await (supabase
+      .from(TABLES.group_events) as any)
       .update(input)
       .eq('id', eventId)
       .select()
       .single();
+    const data = updatedData as any;
 
     if (error) {
       logger.error('Failed to update event', error, 'Groups');
@@ -164,11 +167,12 @@ export async function deleteEvent(
     }
 
     // Get event to check permissions
-    const { data: event, error: fetchError } = await supabase
-      .from(TABLES.group_events)
+    const { data: eventData2, error: fetchError } = await (supabase
+      .from(TABLES.group_events) as any)
       .select('id, group_id, creator_id, title')
       .eq('id', eventId)
       .single();
+    const event = eventData2 as any;
 
     if (fetchError || !event) {
       return { success: false, error: 'Event not found' };
@@ -187,8 +191,8 @@ export async function deleteEvent(
     }
 
     // Delete event (RSVPs will be cascade deleted)
-    const { error } = await supabase
-      .from(TABLES.group_events)
+    const { error } = await (supabase
+      .from(TABLES.group_events) as any)
       .delete()
       .eq('id', eventId);
 
@@ -230,11 +234,12 @@ export async function rsvpToEvent(
     }
 
     // Get event to verify it exists and is accessible
-    const { data: event, error: fetchError } = await supabase
-      .from(TABLES.group_events)
+    const { data: eventData3, error: fetchError } = await (supabase
+      .from(TABLES.group_events) as any)
       .select('id, group_id, is_public, requires_rsvp')
       .eq('id', eventId)
       .single();
+    const event = eventData3 as any;
 
     if (fetchError || !event) {
       return { success: false, error: 'Event not found' };
@@ -247,8 +252,8 @@ export async function rsvpToEvent(
     }
 
     // Upsert RSVP
-    const { data, error } = await supabase
-      .from(TABLES.group_event_rsvps)
+    const { data: rsvpData, error } = await (supabase
+      .from(TABLES.group_event_rsvps) as any)
       .upsert(
         {
           event_id: eventId,
@@ -261,6 +266,7 @@ export async function rsvpToEvent(
       )
       .select()
       .single();
+    const data = rsvpData as any;
 
     if (error) {
       logger.error('Failed to RSVP to event', error, 'Groups');

@@ -9,7 +9,8 @@ import { getTableName } from '@/config/entity-registry';
 // These are the actual table names from the database
 // Accept string to allow dynamic table names from entity registry
 type Table = string;
-type SupabaseInstance = SupabaseClient<Database>;
+// Type alias for any SupabaseClient (accepts any database schema)
+type SupabaseInstance = SupabaseClient<any, any, any>;
 
 interface ListParams {
   limit?: number;
@@ -23,8 +24,8 @@ export async function listEntities(table: Table, params: ListParams) {
   const supabase = await createServerClient();
   const { limit = 20, offset = 0, category, userId, includeOwnDrafts } = params;
 
-  let query = supabase
-    .from(table)
+  let query = (supabase
+    .from(table) as any)
     .select('*')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -57,14 +58,14 @@ export async function listEntitiesPage(
   const { limit, offset, category, userId, includeOwnDrafts } = params;
 
   // base query for items
-  let itemsQuery = supabase
-    .from(table)
+  let itemsQuery = (supabase
+    .from(table) as any)
     .select('*')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
   // base query for count (head=true)
-  let countQuery = supabase.from(table).select('*', { count: 'exact', head: true });
+  let countQuery = (supabase.from(table) as any).select('*', { count: 'exact', head: true });
 
   // Circles table doesn't have a 'status' column like commerce tables
   const isCirclesTable = table === 'circles';
@@ -113,9 +114,9 @@ export async function listEntitiesPage(
   // Filter out example/test data after fetching
   // TODO: Add is_example field to database and filter at query level
   const exampleTitles = ["Assassin's Creed", "Example Service", "Test Service", "Sample Service"];
-  const filteredItems = (items || []).filter(item => {
+  const filteredItems = (items || []).filter((item: { title?: string; name?: string }) => {
     const title = item.title || item.name || '';
-    return !exampleTitles.some(exampleTitle => 
+    return !exampleTitles.some(exampleTitle =>
       title.toLowerCase().includes(exampleTitle.toLowerCase())
     );
   });
@@ -182,7 +183,7 @@ export async function createProduct(
     description: input.description ?? null,
     price: input.price,
   };
-  const { data, error } = await adminClient.from(getTableName('product')).insert(payload).select().single();
+  const { data, error } = await (adminClient.from(getTableName('product')) as any).insert(payload).select().single();
   if (error) {
     logger.error('Product creation failed', { error, userId });
     throw error;
@@ -215,7 +216,7 @@ export async function createService(
     status: 'draft' as const,
   };
 
-  const { data, error } = await adminClient.from(getTableName('service')).insert(payload).select().single();
+  const { data, error } = await (adminClient.from(getTableName('service')) as any).insert(payload).select().single();
   if (error) {
     logger.error('Service creation failed', { error, userId });
     throw error;
@@ -258,7 +259,7 @@ export async function createCause(
     total_raised: 0,
   };
 
-  const { data, error } = await adminClient.from(getTableName('cause')).insert(payload).select().single();
+  const { data, error } = await (adminClient.from(getTableName('cause')) as any).insert(payload).select().single();
   if (error) {
     logger.error('Cause creation failed', { error, userId });
     throw error;
@@ -334,7 +335,7 @@ export async function createOrganization(
     application_process: { questions: [] },
     founded_at: new Date().toISOString(),
   };
-  const { data, error } = await adminClient.from(getTableName('group')).insert(payload).select().single();
+  const { data, error } = await (adminClient.from(getTableName('group')) as any).insert(payload).select().single();
   if (error) {
     logger.error('Organization creation failed', { error, userId });
     throw error;

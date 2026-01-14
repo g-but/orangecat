@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
+import { Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { getStatusBadge, getStatusIcon, getTypeLabel } from './utils';
 import { PROPOSAL_STATUSES, type ProposalStatus } from '@/config/proposal-constants';
 
@@ -28,14 +29,15 @@ interface ProposalCardProps {
     voting_results?: {
       yes_votes: number;
       no_votes: number;
+      abstain_votes?: number;
       total_voting_power: number;
-      yes_percentage: number;
-      has_passed: boolean;
-    };
+      yes_percentage?: number;
+      has_passed?: boolean;
+    } | null;
     proposer?: {
-      name?: string;
-      avatar_url?: string;
-    };
+      name?: string | null;
+      avatar_url?: string | null;
+    } | null;
     created_at: string;
     voting_ends_at?: string | null;
     groupSlug: string;
@@ -43,6 +45,19 @@ interface ProposalCardProps {
 }
 
 export function ProposalCard({ proposal }: ProposalCardProps) {
+  // Calculate yes_percentage if not provided
+  const getYesPercentage = () => {
+    if (!proposal.voting_results) {return 0;}
+    if (proposal.voting_results.yes_percentage !== undefined) {
+      return proposal.voting_results.yes_percentage;
+    }
+    if (proposal.voting_results.total_voting_power > 0) {
+      return (proposal.voting_results.yes_votes / proposal.voting_results.total_voting_power) * 100;
+    }
+    return 0;
+  };
+
+  const yesPercentage = getYesPercentage();
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -89,13 +104,13 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-600">Voting Progress</span>
                 <span className="font-medium">
-                  {proposal.voting_results.yes_percentage.toFixed(1)}% Yes
+                  {yesPercentage.toFixed(1)}% Yes
                 </span>
               </div>
               <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-blue-500 transition-all"
-                  style={{ width: `${proposal.voting_results.yes_percentage}%` }}
+                  style={{ width: `${yesPercentage}%` }}
                 />
               </div>
               <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
@@ -120,14 +135,14 @@ export function ProposalCard({ proposal }: ProposalCardProps) {
                     <>
                       <CheckCircle2 className="h-4 w-4 text-green-500" />
                       <span className="text-green-600 font-medium">
-                        Passed with {proposal.voting_results.yes_percentage.toFixed(1)}% Yes votes
+                        Passed with {yesPercentage.toFixed(1)}% Yes votes
                       </span>
                     </>
                   ) : (
                     <>
                       <XCircle className="h-4 w-4 text-red-500" />
                       <span className="text-red-600 font-medium">
-                        Failed with {proposal.voting_results.yes_percentage.toFixed(1)}% Yes votes
+                        Failed with {yesPercentage.toFixed(1)}% Yes votes
                       </span>
                     </>
                   )}

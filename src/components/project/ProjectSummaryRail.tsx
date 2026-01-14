@@ -152,7 +152,7 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
       {/* Support Button */}
       <ProjectSupportButton
         projectId={project.id}
-        variant="default"
+        variant="primary"
         size="md"
         showStats={false}
         className="w-full"

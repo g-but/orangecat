@@ -162,6 +162,7 @@ export function CreateAssetDialog({
                     placeholder="Brief description of the asset..."
                     className="min-h-[80px]"
                     {...field}
+                    value={field.value ?? ''}
                   />
                 </FormControl>
                 <FormMessage />
@@ -182,6 +183,7 @@ export function CreateAssetDialog({
                       step="0.01"
                       placeholder="100000.00"
                       {...field}
+                      value={field.value ?? ''}
                       onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                     />
                   </FormControl>

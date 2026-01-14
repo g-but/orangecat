@@ -19,6 +19,8 @@ export interface Project extends FundingPage {
   isDraft: boolean;
   isActive: boolean;
   isPaused: boolean;
+  status?: 'draft' | 'active' | 'paused' | 'completed' | 'cancelled';
+  creator_name?: string;
 }
 
 export interface ProjectState {

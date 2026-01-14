@@ -15,7 +15,7 @@ export function PostMetrics({ event }: PostMetricsProps) {
   const commentsCount = event.commentsCount || 0;
   const repostsCount = event.repostsCount || 0;
   const sharesCount = event.sharesCount || 0;
-  const viewsCount = event.viewsCount || event.metadata?.views_count || 0;
+  const viewsCount = (event.metadata?.views_count as number) || 0;
 
   // Format large numbers
   const formatCount = (count: number): string => {

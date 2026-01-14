@@ -37,8 +37,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the wishlist item exists and user has access
-    const { data: wishlistItem, error: itemError } = await supabase
-      .from('wishlist_items')
+    const { data: wishlistItem, error: itemError } = await (supabase
+      .from('wishlist_items') as any)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', validationResult.data.wishlist_item_id)
       .single();
@@ -60,8 +60,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the proof
-    const { data: proof, error: proofError } = await supabase
-      .from('wishlist_fulfillment_proofs')
+    const { data: proof, error: proofError } = await (supabase
+      .from('wishlist_fulfillment_proofs') as any)
       .insert({
         wishlist_item_id: validationResult.data.wishlist_item_id,
         user_id: user.id,

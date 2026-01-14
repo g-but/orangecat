@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { TimelineDisplayEvent } from '@/types/timeline';
+import { TimelineDisplayEvent, TimelineVisibility } from '@/types/timeline';
 import { timelineService } from '@/services/timeline';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
@@ -30,8 +30,8 @@ export interface UsePostEditingReturn {
   setEditTitle: (title: string) => void;
   editDescription: string;
   setEditDescription: (description: string) => void;
-  editVisibility: 'public' | 'private';
-  setEditVisibility: (visibility: 'public' | 'private') => void;
+  editVisibility: TimelineVisibility;
+  setEditVisibility: (visibility: TimelineVisibility) => void;
 
   // Loading states
   isEditing: boolean;
@@ -63,7 +63,7 @@ export function usePostEditing({
   // Edit form state
   const [editTitle, setEditTitle] = useState(event.title);
   const [editDescription, setEditDescription] = useState(event.description || '');
-  const [editVisibility, setEditVisibility] = useState<'public' | 'private'>(
+  const [editVisibility, setEditVisibility] = useState<TimelineVisibility>(
     event.visibility || 'public'
   );
 
@@ -136,14 +136,14 @@ export function usePostEditing({
 
     setIsDeleting(true);
     try {
-      const result = await timelineService.deleteEvent(event.id);
-      if (result.success) {
+      const success = await timelineService.deleteEvent(event.id);
+      if (success) {
         setShowDeleteConfirm(false);
         setShowMenu(false);
         onDelete?.();
         logger.info('Successfully deleted event', null, 'usePostEditing');
       } else {
-        throw new Error(result.error || 'Failed to delete post');
+        throw new Error('Failed to delete post');
       }
     } catch (error) {
       logger.error('Failed to delete event', error, 'usePostEditing');

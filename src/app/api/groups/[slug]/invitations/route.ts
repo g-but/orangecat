@@ -48,23 +48,25 @@ export const GET = withAuth(async (
     const { searchParams } = new URL(req.url);
 
     // Get group by slug
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
+    const { data: groupData, error: groupError } = await (supabase
+      .from('groups') as any)
       .select('id')
       .eq('slug', slug)
       .single();
+    const group = groupData as any;
 
     if (groupError || !group) {
       return apiNotFound('Group not found');
     }
 
     // Check if user is admin/founder
-    const { data: membership } = await supabase
-      .from('group_members')
+    const { data: membershipData } = await (supabase
+      .from('group_members') as any)
       .select('role')
       .eq('group_id', group.id)
       .eq('user_id', user.id)
       .maybeSingle();
+    const membership = membershipData as any;
 
     if (!membership || !['founder', 'admin'].includes(membership.role)) {
       return apiForbidden('Only admins can view invitations');
@@ -76,8 +78,8 @@ export const GET = withAuth(async (
     const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
 
     // Build query
-    let query = supabase
-      .from('group_invitations')
+    let query = (supabase
+      .from('group_invitations') as any)
       .select(
         `
         *,
@@ -100,7 +102,8 @@ export const GET = withAuth(async (
       query = query.eq('status', status);
     }
 
-    const { data: invitations, count, error } = await query;
+    const { data: invitationsData, count, error } = await query;
+    const invitations = invitationsData as any[];
 
     if (error) {
       logger.error('Failed to fetch invitations', { error, groupId: group.id }, 'Groups');
@@ -132,23 +135,25 @@ export const POST = withAuth(async (
     const supabase = await createServerClient();
 
     // Get group by slug
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
+    const { data: groupData2, error: groupError } = await (supabase
+      .from('groups') as any)
       .select('id, name')
       .eq('slug', slug)
       .single();
+    const group = groupData2 as any;
 
     if (groupError || !group) {
       return apiNotFound('Group not found');
     }
 
     // Check if user is admin/founder
-    const { data: membership } = await supabase
-      .from('group_members')
+    const { data: membershipData2 } = await (supabase
+      .from('group_members') as any)
       .select('role')
       .eq('group_id', group.id)
       .eq('user_id', user.id)
       .maybeSingle();
+    const membership = membershipData2 as any;
 
     if (!membership || !['founder', 'admin'].includes(membership.role)) {
       return apiForbidden('Only admins can create invitations');
@@ -171,8 +176,8 @@ export const POST = withAuth(async (
 
     // If inviting a specific user, check if already a member
     if (user_id) {
-      const { data: existingMember } = await supabase
-        .from('group_members')
+      const { data: existingMember } = await (supabase
+        .from('group_members') as any)
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user_id)
@@ -183,8 +188,8 @@ export const POST = withAuth(async (
       }
 
       // Check for existing pending invitation
-      const { data: existingInvite } = await supabase
-        .from('group_invitations')
+      const { data: existingInvite } = await (supabase
+        .from('group_invitations') as any)
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user_id)
@@ -228,11 +233,12 @@ export const POST = withAuth(async (
     }
 
     // Create invitation
-    const { data: invitation, error: insertError } = await supabase
-      .from('group_invitations')
+    const { data: invitationData2, error: insertError } = await (supabase
+      .from('group_invitations') as any)
       .insert(invitationData)
       .select()
       .single();
+    const invitation = invitationData2 as any;
 
     if (insertError) {
       logger.error('Failed to create invitation', { error: insertError, groupId: group.id }, 'Groups');
@@ -255,7 +261,7 @@ export const POST = withAuth(async (
         expires_at: invitation.expires_at,
         invite_url: inviteUrl,
       },
-    }, { status: 201 });
+    });
   } catch (error) {
     logger.error('Invitations POST error', { error }, 'Groups');
     return handleApiError(error);

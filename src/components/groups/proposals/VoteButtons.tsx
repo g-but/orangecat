@@ -63,9 +63,9 @@ export function VoteButtons({
     }
   };
 
-  const getButtonVariant = (vote: 'yes' | 'no' | 'abstain') => {
+  const getButtonVariant = (vote: 'yes' | 'no' | 'abstain'): 'primary' | 'secondary' | 'danger' | 'outline' => {
     if (selectedVote === vote) {
-      return vote === 'yes' ? 'default' : vote === 'no' ? 'destructive' : 'secondary';
+      return vote === 'yes' ? 'primary' : vote === 'no' ? 'danger' : 'secondary';
     }
     return 'outline';
   };

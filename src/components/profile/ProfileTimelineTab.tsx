@@ -1,11 +1,11 @@
 'use client';
 
 import { Suspense, useCallback, useState } from 'react';
-import { Profile } from '@/types/database';
+import { ScalableProfile } from '@/types/database';
 import TimelineView from '@/components/timeline/TimelineView';
 
 interface ProfileTimelineTabProps {
-  profile: Profile;
+  profile: ScalableProfile;
   isOwnProfile?: boolean;
 }
 

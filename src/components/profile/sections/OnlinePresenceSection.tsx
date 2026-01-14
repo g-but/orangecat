@@ -13,16 +13,9 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/comp
 import { Input } from '@/components/ui/Input';
 import { ProfileFieldType } from '@/lib/profile-guidance';
 import { Control } from 'react-hook-form';
-import { ProfileFormValues } from '../types';
+import { ProfileFormValues, OnlinePresenceSectionProps } from '../types';
 import { SocialLinksEditor } from '../SocialLinksEditor';
 import { MAX_SOCIAL_LINKS, PROFILE_SECTIONS, PROFILE_SECTION_DESCRIPTIONS } from '../constants';
-
-interface OnlinePresenceSectionProps {
-  control: Control<ProfileFormValues>;
-  onFieldFocus?: (field: ProfileFieldType) => void;
-  socialLinks: Array<{ platform: string; label?: string | null; value: string }>;
-  setSocialLinks: React.Dispatch<React.SetStateAction<Array<{ platform: string; label?: string | null; value: string }>>>;
-}
 
 export function OnlinePresenceSection({
   control,

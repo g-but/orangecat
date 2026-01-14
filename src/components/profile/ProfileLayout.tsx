@@ -191,8 +191,9 @@ export default function ProfileLayout({
 
     if (showShare) {
       document.addEventListener('mousedown', handleClickOutside);
-      return () => document.removeEventListener('mousedown', handleClickOutside);
     }
+
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showShare]);
 
   // Define tabs for progressive loading
@@ -217,7 +218,7 @@ export default function ProfileLayout({
       icon: <Info className="w-4 h-4" />,
       content: (
         <ProfileInfoTab
-          profile={profile}
+          profile={profile as import('@/types/database').Profile & { email?: string | null }}
           isOwnProfile={isOwnProfile}
           userId={user?.id}
           userEmail={user?.email}
@@ -410,7 +411,7 @@ export default function ProfileLayout({
                   <ProfileShare
                     username={profile.username || ''}
                     profileName={profile.name || profile.username || 'User'}
-                    profileBio={profile.bio}
+                    profileBio={profile.bio ?? undefined}
                     onClose={() => setShowShare(false)}
                   />
                 </div>

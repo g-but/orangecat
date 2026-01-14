@@ -26,5 +26,5 @@ export default function CreateWishlistPage() {
     return null;
   }
 
-  return <CreateEntityWorkflow config={wishlistConfig} userId={user.id} />;
+  return <CreateEntityWorkflow config={wishlistConfig} />;
 }

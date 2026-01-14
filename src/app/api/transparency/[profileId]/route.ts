@@ -10,8 +10,9 @@ import {
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 // GET /api/transparency/[profileId] - Get transparency score for a profile
-export async function GET(request: NextRequest, { params }: { params: { profileId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ profileId: string }> }) {
   try {
+    const { profileId } = await params;
     const supabase = await createServerClient();
     const {
       data: { user },
@@ -22,11 +23,9 @@ export async function GET(request: NextRequest, { params }: { params: { profileI
       return apiUnauthorized();
     }
 
-    const { profileId } = params;
-
     // Get transparency score for the profile
-    const { data: transparencyScore, error } = await supabase
-      .from('transparency_scores')
+    const { data: transparencyScore, error } = await (supabase
+      .from('transparency_scores') as any)
       .select('*')
       .eq('entity_type', 'profile')
       .eq('entity_id', profileId)
@@ -39,8 +38,8 @@ export async function GET(request: NextRequest, { params }: { params: { profileI
 
     if (!transparencyScore) {
       // Calculate transparency score if it doesn't exist
-      const { data: profile, error: profileError } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data: profile, error: profileError } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
         .eq('id', profileId)
         .single();
@@ -50,7 +49,7 @@ export async function GET(request: NextRequest, { params }: { params: { profileI
       }
 
       // Call the database function to calculate transparency score
-      const { data: calculatedScore, error: calcError } = await supabase.rpc(
+      const { data: calculatedScore, error: calcError } = await (supabase as any).rpc(
         'calculate_profile_transparency_score',
         { profile_id: profileId }
       );
@@ -60,8 +59,8 @@ export async function GET(request: NextRequest, { params }: { params: { profileI
       }
 
       // Fetch the newly calculated score
-      const { data: newScore, error: fetchError } = await supabase
-        .from('transparency_scores')
+      const { data: newScore, error: fetchError } = await (supabase
+        .from('transparency_scores') as any)
         .select('*')
         .eq('entity_type', 'profile')
         .eq('entity_id', profileId)

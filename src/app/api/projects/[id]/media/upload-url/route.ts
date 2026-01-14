@@ -31,8 +31,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return apiUnauthorized();
     }
 
-    const { data: project } = await supabase
-      .from(getTableName('project'))
+    const { data: project } = await (supabase
+      .from(getTableName('project')) as any)
       .select('user_id')
       .eq('id', projectId)
       .single();
@@ -52,8 +52,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Check current media count - use fresh query to avoid stale data
-    const { count, error: countError } = await supabase
-      .from('project_media')
+    const { count, error: countError } = await (supabase
+      .from('project_media') as any)
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId);
 

@@ -137,7 +137,6 @@ const defaultValues: UserCauseFormData = {
   lightning_address: '',
   beneficiaries: [],
   status: 'draft',
-  show_on_profile: true,
 };
 
 // ==================== EXPORT CONFIG ====================

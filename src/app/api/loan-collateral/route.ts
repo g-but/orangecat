@@ -24,8 +24,8 @@ const postHandler = withSecurity<CollateralInput>(
     }
 
     // Verify ownership of loan and asset
-    const { data: loan, error: loanErr } = await supabase
-      .from(getTableName('loan'))
+    const { data: loan, error: loanErr } = await (supabase
+      .from(getTableName('loan')) as any)
       .select('id, user_id')
       .eq('id', data.loan_id)
       .single()
@@ -33,8 +33,8 @@ const postHandler = withSecurity<CollateralInput>(
       return NextResponse.json({ error: 'Loan not found or not owned' }, { status: 403 })
     }
 
-    const { data: asset, error: assetErr } = await supabase
-      .from(getTableName('asset'))
+    const { data: asset, error: assetErr } = await (supabase
+      .from(getTableName('asset')) as any)
       .select('id, owner_id')
       .eq('id', data.asset_id)
       .single()
@@ -43,8 +43,8 @@ const postHandler = withSecurity<CollateralInput>(
     }
 
     // Insert collateral link
-    const { data: created, error } = await supabase
-      .from('loan_collateral')
+    const { data: created, error } = await (supabase
+      .from('loan_collateral') as any)
       .insert({
         loan_id: data.loan_id,
         asset_id: data.asset_id,
