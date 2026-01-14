@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Heart, Coins } from 'lucide-react';
 import { SupportModal } from './SupportModal';
@@ -41,13 +41,7 @@ export function ProjectSupportButton({
   const [stats, setStats] = useState<ProjectSupportStats | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (showStats) {
-      loadStats();
-    }
-  }, [projectId, showStats]);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       setLoading(true);
       const result = await projectSupportService.getProjectSupportStats(projectId);
@@ -59,7 +53,13 @@ export function ProjectSupportButton({
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    if (showStats) {
+      loadStats();
+    }
+  }, [showStats, loadStats]);
 
   const handleSupportAdded = () => {
     if (showStats) {
@@ -68,9 +68,8 @@ export function ProjectSupportButton({
     onSupportAdded?.();
   };
 
-  const totalSupport = (stats?.total_signatures || 0) + 
-                       (stats?.total_messages || 0) + 
-                       (stats?.total_reactions || 0);
+  const totalSupport =
+    (stats?.total_signatures || 0) + (stats?.total_messages || 0) + (stats?.total_reactions || 0);
 
   return (
     <>
@@ -112,5 +111,3 @@ export function ProjectSupportButton({
     </>
   );
 }
-
-

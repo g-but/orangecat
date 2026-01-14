@@ -136,6 +136,7 @@ export default function MessagePanel({
       setSelectedConversationId(null);
       setHasInitializedFromUrl(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialConversationId, user, isAuthReady, hasInitializedFromUrl, selectedConversationId]);
 
   // Reset initialization flag when URL changes

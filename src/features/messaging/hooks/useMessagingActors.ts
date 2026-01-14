@@ -62,10 +62,11 @@ export function useMessagingActors(): UseMessagingActorsResult {
     };
 
     fetchActors();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
-  const personalActor = actors.find((a) => a.is_personal) || null;
-  const groupActors = actors.filter((a) => !a.is_personal);
+  const personalActor = actors.find(a => a.is_personal) || null;
+  const groupActors = actors.filter(a => !a.is_personal);
 
   return {
     actors,

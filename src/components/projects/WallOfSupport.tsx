@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Heart, MessageSquare, PenTool, Coins, Trash2 } from 'lucide-react';
 import type { ProjectSupportWithUser } from '@/services/projects/support/types';
@@ -33,11 +33,7 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadSupports();
-  }, [projectId]);
-
-  const loadSupports = async () => {
+  const loadSupports = useCallback(async () => {
     try {
       setLoading(true);
       const result = await projectSupportService.getProjectSupport(projectId, {
@@ -50,7 +46,11 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    loadSupports();
+  }, [loadSupports]);
 
   const handleDelete = async (supportId: string) => {
     try {

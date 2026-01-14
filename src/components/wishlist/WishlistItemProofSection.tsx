@@ -10,7 +10,7 @@
 
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { WishlistProofSection } from './WishlistProofSection';
 import type { FulfillmentProof } from './types';
 
@@ -19,25 +19,22 @@ interface WishlistItemProofSectionProps {
   canAddProof: boolean;
 }
 
-export function WishlistItemProofSection({
-  itemId,
-  canAddProof,
-}: WishlistItemProofSectionProps) {
+export function WishlistItemProofSection({ itemId, canAddProof }: WishlistItemProofSectionProps) {
   const [proofs, setProofs] = useState<FulfillmentProof[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProofs = async () => {
+  const fetchProofs = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/wishlists/items/${itemId}/proofs`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch proofs');
       }
 
       const data = await response.json();
-      
+
       // Transform the API response to match FulfillmentProof type
       const transformedProofs: FulfillmentProof[] = data.proofs.map((proof: any) => ({
         id: proof.id,
@@ -48,16 +45,20 @@ export function WishlistItemProofSection({
         image_url: proof.image_url || undefined,
         transaction_id: proof.transaction_id || undefined,
         created_at: proof.created_at,
-        user: proof.creator ? {
-          id: proof.creator.id,
-          username: proof.creator.username,
-          avatar_url: proof.creator.avatar_url,
-        } : undefined,
-        feedback_summary: proof.feedback ? {
-          likes: proof.feedback.likes,
-          dislikes: proof.feedback.dislikes,
-          user_feedback: proof.feedback.user_feedback?.type || null,
-        } : undefined,
+        user: proof.creator
+          ? {
+              id: proof.creator.id,
+              username: proof.creator.username,
+              avatar_url: proof.creator.avatar_url,
+            }
+          : undefined,
+        feedback_summary: proof.feedback
+          ? {
+              likes: proof.feedback.likes,
+              dislikes: proof.feedback.dislikes,
+              user_feedback: proof.feedback.user_feedback?.type || null,
+            }
+          : undefined,
       }));
 
       setProofs(transformedProofs);
@@ -68,20 +69,20 @@ export function WishlistItemProofSection({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [itemId]);
 
   useEffect(() => {
     fetchProofs();
-  }, [itemId]);
+  }, [fetchProofs]);
 
   const handleProofAdded = (proof: FulfillmentProof) => {
-    setProofs((prev) => [proof, ...prev]);
+    setProofs(prev => [proof, ...prev]);
     // Refetch to get the full proof data with feedback
     fetchProofs();
   };
 
   const handleProofDeleted = (proofId: string) => {
-    setProofs((prev) => prev.filter((p) => p.id !== proofId));
+    setProofs(prev => prev.filter(p => p.id !== proofId));
   };
 
   const handleFeedbackChanged = () => {

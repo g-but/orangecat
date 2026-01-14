@@ -56,17 +56,6 @@ export function useComments({ eventId }: UseCommentsProps): UseCommentsReturn {
   // Replies state
   const [expandedReplies, setExpandedReplies] = useState<Record<string, boolean>>({});
 
-  // Toggle comments visibility
-  const toggleComments = useCallback(() => {
-    setShowComments(prev => {
-      const newState = !prev;
-      if (newState && comments.length === 0) {
-        loadComments();
-      }
-      return newState;
-    });
-  }, [comments.length]);
-
   // Load comments
   const loadComments = useCallback(async () => {
     if (isLoadingComments) {
@@ -99,6 +88,17 @@ export function useComments({ eventId }: UseCommentsProps): UseCommentsReturn {
       setIsLoadingComments(false);
     }
   }, [eventId, isLoadingComments]);
+
+  // Toggle comments visibility
+  const toggleComments = useCallback(() => {
+    setShowComments(prev => {
+      const newState = !prev;
+      if (newState && comments.length === 0) {
+        loadComments();
+      }
+      return newState;
+    });
+  }, [comments.length, loadComments]);
 
   // Load replies for a specific comment
   const loadReplies = useCallback(async (parentId: string): Promise<Comment[]> => {

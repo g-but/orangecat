@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
@@ -47,11 +47,29 @@ export function ProposalDetail({
   const [userVote, setUserVote] = useState<'yes' | 'no' | 'abstain' | null>(null);
   const [activating, setActivating] = useState(false);
 
-  useEffect(() => {
-    loadProposal();
-  }, [proposalId]);
+  const loadUserVote = useCallback(async () => {
+    if (!user) {
+      return;
+    }
+    try {
+      const response = await fetch(`/api/groups/${groupSlug}/proposals/${proposalId}/votes`);
+      if (response.ok) {
+        const data = await response.json();
+        const votes = data.data?.votes || data.votes || [];
+        const myVote = votes.find(
+          (v: { voter_id: string; vote: string }) => v.voter_id === user.id
+        );
+        if (myVote) {
+          setUserVote(myVote.vote);
+        }
+      }
+    } catch (error) {
+      // Silently fail - not critical
+      logger.error('Failed to load user vote:', error);
+    }
+  }, [user, groupSlug, proposalId]);
 
-  const loadProposal = async () => {
+  const loadProposal = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/groups/${groupSlug}/proposals/${proposalId}`);
@@ -75,29 +93,11 @@ export function ProposalDetail({
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupSlug, proposalId, user, loadUserVote]);
 
-  const loadUserVote = async () => {
-    if (!user) {
-      return;
-    }
-    try {
-      const response = await fetch(`/api/groups/${groupSlug}/proposals/${proposalId}/votes`);
-      if (response.ok) {
-        const data = await response.json();
-        const votes = data.data?.votes || data.votes || [];
-        const myVote = votes.find(
-          (v: { voter_id: string; vote: string }) => v.voter_id === user.id
-        );
-        if (myVote) {
-          setUserVote(myVote.vote);
-        }
-      }
-    } catch (error) {
-      // Silently fail - not critical
-      logger.error('Failed to load user vote:', error);
-    }
-  };
+  useEffect(() => {
+    loadProposal();
+  }, [proposalId, loadProposal]);
 
   const handleActivate = async () => {
     try {

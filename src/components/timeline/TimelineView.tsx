@@ -25,7 +25,7 @@ import { filterOptimisticEvents } from '@/utils/timeline';
  * IMPORTANT: 'journey' and 'profile' show DIFFERENT data:
  * - Journey (My Timeline): Shows posts WHERE user is the actor (posts user created)
  * - Profile Timeline: Shows posts WHERE profile is the subject (posts on that profile's timeline)
- * 
+ *
  * This means a post can appear on a profile timeline but not in "My Timeline" if:
  * - Someone else posted on that profile's timeline, OR
  * - The user posted on someone else's profile timeline
@@ -75,11 +75,14 @@ export default function TimelineView({
   const [error, setError] = useState<string | null>(null);
 
   // Handle optimistic event updates
-  const handleOptimisticEvent = useCallback((event: TimelineDisplayEvent) => {
-    // Add optimistic event to the beginning of the list
-    setOptimisticEvents(prev => [event, ...prev]);
-    onOptimisticEvent?.(event);
-  }, [onOptimisticEvent]);
+  const handleOptimisticEvent = useCallback(
+    (event: TimelineDisplayEvent) => {
+      // Add optimistic event to the beginning of the list
+      setOptimisticEvents(prev => [event, ...prev]);
+      onOptimisticEvent?.(event);
+    },
+    [onOptimisticEvent]
+  );
 
   // Remove optimistic event when real event arrives
   const removeOptimisticEvent = useCallback((optimisticId: string) => {
@@ -88,7 +91,9 @@ export default function TimelineView({
 
   // Merge optimistic events with real feed using shared utility (DRY)
   const mergedEvents = React.useMemo(() => {
-    if (!feed?.events) {return optimisticEvents;}
+    if (!feed?.events) {
+      return optimisticEvents;
+    }
 
     // Use centralized utility to filter optimistic events
     const filteredOptimistic = filterOptimisticEvents(optimisticEvents, feed.events);
@@ -98,7 +103,9 @@ export default function TimelineView({
 
   // Create merged feed for rendering (must be declared before any early returns)
   const mergedFeed = React.useMemo(() => {
-    if (!feed) {return null;}
+    if (!feed) {
+      return null;
+    }
     return {
       ...feed,
       events: mergedEvents,
@@ -174,7 +181,7 @@ export default function TimelineView({
         setLoading(false);
       }
     },
-    [feedType, ownerId, user?.id, hydrated]
+    [feedType, ownerId, user, hydrated]
   );
 
   // Load feed on mount and when dependencies change
@@ -291,12 +298,10 @@ export default function TimelineView({
   return (
     <div className="space-y-4">
       {/* Focus handling: if ?focus=<eventId> present, scroll that post into view */}
-      {mergedFeed && (
-        <FocusScroller />
-      )}
+      {mergedFeed && <FocusScroller />}
       {/* Timeline Composer - Show at top if enabled */}
-      {showComposer && (
-        user ? (
+      {showComposer &&
+        (user ? (
           <TimelineComposer
             targetOwnerId={ownerId}
             targetOwnerType={ownerType}
@@ -317,11 +322,16 @@ export default function TimelineView({
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="font-medium text-gray-900">Sign in to post</p>
-                <p className="text-sm text-gray-600">You need to be signed in to write on this timeline.</p>
+                <p className="text-sm text-gray-600">
+                  You need to be signed in to write on this timeline.
+                </p>
               </div>
               <Button
                 onClick={() => {
-                  const redirect = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '/profiles/me';
+                  const redirect =
+                    typeof window !== 'undefined'
+                      ? window.location.pathname + window.location.search
+                      : '/profiles/me';
                   window.location.href = `/auth?redirect=${encodeURIComponent(redirect)}`;
                 }}
                 className="bg-orange-500 hover:bg-orange-600 text-white"
@@ -330,8 +340,7 @@ export default function TimelineView({
               </Button>
             </div>
           </div>
-        )
-      )}
+        ))}
 
       {/* Timeline Feed */}
       {mergedFeed && (

@@ -154,7 +154,7 @@ export function usePostInteractions({
         setShareOpen(false);
       }
     },
-    [event.id, isSharing, onUpdate]
+    [event.id, event.sharesCount, isSharing, onUpdate]
   );
 
   // Repost handlers
@@ -217,6 +217,8 @@ export function usePostInteractions({
     event.id,
     event.actor.id,
     event.actor.name,
+    event.actor.username,
+    event.actor.avatar,
     event.description,
     isReposting,
     user?.id,
@@ -248,7 +250,10 @@ export function usePostInteractions({
             original_actor_username: event.actor.username,
             original_actor_avatar: event.actor.avatar,
             original_description:
-              (event.metadata && typeof event.metadata === 'object' && 'original_description' in event.metadata && typeof event.metadata.original_description === 'string')
+              event.metadata &&
+              typeof event.metadata === 'object' &&
+              'original_description' in event.metadata &&
+              typeof event.metadata.original_description === 'string'
                 ? event.metadata.original_description
                 : event.description || '',
             quote_text: quoteText.trim(),
@@ -278,7 +283,10 @@ export function usePostInteractions({
       event.id,
       event.actor.id,
       event.actor.name,
+      event.actor.username,
+      event.actor.avatar,
       event.description,
+      event.metadata,
       isReposting,
       user?.id,
       onAddEvent,
@@ -310,4 +318,3 @@ export function usePostInteractions({
     handleQuoteRepost,
   };
 }
-

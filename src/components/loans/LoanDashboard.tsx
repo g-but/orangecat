@@ -1,7 +1,7 @@
 'use client';
 import { logger } from '@/utils/logger';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -25,11 +25,7 @@ export default function LoanDashboard() {
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [availablePage]);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -60,7 +56,11 @@ export default function LoanDashboard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [availablePage, availablePageSize]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [availablePage, loadDashboardData]);
 
   const handleLoanCreated = () => {
     setCreateDialogOpen(false);

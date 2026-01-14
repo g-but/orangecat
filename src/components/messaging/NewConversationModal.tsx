@@ -2,7 +2,7 @@
 
 import { logger } from '@/utils/logger';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { X, Search, MessageSquare, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
@@ -38,27 +38,7 @@ export default function NewConversationModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchProfiles('');
-      // Focus search input when modal opens
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-    return () => {
-      if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [isOpen]);
-
-  // Handle initial user ID
-  useEffect(() => {
-    if (isOpen && initialUserId) {
-      startConversation(initialUserId);
-    }
-  }, [isOpen, initialUserId]);
-
-  const fetchProfiles = async (q: string) => {
+  const fetchProfiles = useCallback(async (q: string) => {
     try {
       setLoading(true);
       setError(null);
@@ -94,7 +74,71 @@ export default function NewConversationModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  const startConversation = useCallback(
+    async (profileId: string) => {
+      try {
+        setCreatingId(profileId);
+        setError(null);
+
+        // Use /api/messages/open which handles self / direct / group cases
+        const res = await fetch('/api/messages/open', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'same-origin',
+          body: JSON.stringify({ participantIds: [profileId] }),
+        });
+
+        const data = await res.json();
+
+        // Handle wrapped response format from apiSuccess
+        const conversationId = data.data?.conversationId || data.conversationId;
+
+        if (!res.ok || !conversationId) {
+          const errorMessage =
+            data.error || data.details || data.hint || 'Failed to create conversation';
+          logger.error('Failed to create conversation:', {
+            status: res.status,
+            error: data.error,
+            details: data.details,
+            code: data.code,
+            hint: data.hint,
+            responseData: data,
+          });
+          throw new Error(errorMessage);
+        }
+        // Note: onCreated handler in parent already closes the modal via setShowNewModal(false)
+        onCreated(conversationId);
+      } catch (e) {
+        logger.error('Error creating conversation:', e);
+        setError(e instanceof Error ? e.message : 'Failed to create conversation');
+      } finally {
+        setCreatingId(null);
+      }
+    },
+    [onCreated]
+  );
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchProfiles('');
+      // Focus search input when modal opens
+      setTimeout(() => inputRef.current?.focus(), 100);
+    }
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [isOpen, fetchProfiles]);
+
+  // Handle initial user ID
+  useEffect(() => {
+    if (isOpen && initialUserId) {
+      startConversation(initialUserId);
+    }
+  }, [isOpen, initialUserId, startConversation]);
 
   const handleChange = (val: string) => {
     setSearch(val);
@@ -102,47 +146,6 @@ export default function NewConversationModal({
       window.clearTimeout(timeoutRef.current);
     }
     timeoutRef.current = window.setTimeout(() => fetchProfiles(val), 300);
-  };
-
-  const startConversation = async (profileId: string) => {
-    try {
-      setCreatingId(profileId);
-      setError(null);
-
-      // Use /api/messages/open which handles self / direct / group cases
-      const res = await fetch('/api/messages/open', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'same-origin',
-        body: JSON.stringify({ participantIds: [profileId] }),
-      });
-
-      const data = await res.json();
-
-      // Handle wrapped response format from apiSuccess
-      const conversationId = data.data?.conversationId || data.conversationId;
-
-      if (!res.ok || !conversationId) {
-        const errorMessage =
-          data.error || data.details || data.hint || 'Failed to create conversation';
-        logger.error('Failed to create conversation:', {
-          status: res.status,
-          error: data.error,
-          details: data.details,
-          code: data.code,
-          hint: data.hint,
-          responseData: data,
-        });
-        throw new Error(errorMessage);
-      }
-      // Note: onCreated handler in parent already closes the modal via setShowNewModal(false)
-      onCreated(conversationId);
-    } catch (e) {
-      logger.error('Error creating conversation:', e);
-      setError(e instanceof Error ? e.message : 'Failed to create conversation');
-    } finally {
-      setCreatingId(null);
-    }
   };
 
   if (!isOpen) {

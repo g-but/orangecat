@@ -34,6 +34,74 @@ interface Filters {
   lightning: boolean;
 }
 
+// Wallet data - defined outside component to prevent recreation on each render
+const WALLETS: Wallet[] = [
+  {
+    name: 'BlueWallet',
+    description: 'Best all-around mobile wallet with easy Lightning and on-chain support',
+    platform: 'mobile',
+    level: 'beginner',
+    lightning: true,
+    custodial: false,
+    downloadLinks: {
+      ios: 'https://apps.apple.com/app/bluewallet-bitcoin-wallet/id1376878040',
+      android: 'https://play.google.com/store/apps/details?id=io.bluewallet.bluewallet',
+    },
+    website: 'https://bluewallet.io',
+    recommended: true,
+  },
+  {
+    name: 'Phoenix Wallet',
+    description: 'Simple mobile Lightning wallet with automatic channel management',
+    platform: 'mobile',
+    level: 'beginner',
+    lightning: true,
+    custodial: false,
+    downloadLinks: {
+      ios: 'https://apps.apple.com/app/phoenix-wallet/id6449854979',
+      android: 'https://phoenix.acinq.co',
+    },
+    website: 'https://phoenix.acinq.co',
+    recommended: true,
+  },
+  {
+    name: 'Breez',
+    description: 'Non-custodial Lightning wallet with creator tools and instant payments',
+    platform: 'mobile',
+    level: 'beginner',
+    lightning: true,
+    custodial: false,
+    downloadLinks: {
+      ios: 'https://apps.apple.com/app/breez-lightning-client-pos/id1473040547',
+      android: 'https://play.google.com/store/apps/details?id=com.breez.client',
+    },
+    website: 'https://breez.technology',
+    recommended: false,
+  },
+  {
+    name: 'Electrum',
+    description: 'Powerful, lightweight desktop wallet with advanced features',
+    platform: 'desktop',
+    level: 'advanced',
+    lightning: false,
+    custodial: false,
+    website: 'https://electrum.org',
+    downloadLinks: {},
+    recommended: false,
+  },
+  {
+    name: 'Sparrow Wallet',
+    description: 'Privacy-focused desktop wallet with CoinJoin and full control',
+    platform: 'desktop',
+    level: 'advanced',
+    lightning: false,
+    custodial: false,
+    website: 'https://sparrowwallet.com',
+    downloadLinks: {},
+    recommended: false,
+  },
+];
+
 /**
  * WalletRecommendationCards Component
  *
@@ -47,74 +115,6 @@ interface Filters {
  * - Modern Tailwind styling matching OrangeCat's orange/white aesthetic
  */
 export default function WalletRecommendationCards() {
-  // Wallet data - all non-custodial
-  const wallets: Wallet[] = [
-    {
-      name: 'BlueWallet',
-      description: 'Best all-around mobile wallet with easy Lightning and on-chain support',
-      platform: 'mobile',
-      level: 'beginner',
-      lightning: true,
-      custodial: false,
-      downloadLinks: {
-        ios: 'https://apps.apple.com/app/bluewallet-bitcoin-wallet/id1376878040',
-        android: 'https://play.google.com/store/apps/details?id=io.bluewallet.bluewallet',
-      },
-      website: 'https://bluewallet.io',
-      recommended: true,
-    },
-    {
-      name: 'Phoenix Wallet',
-      description: 'Simple mobile Lightning wallet with automatic channel management',
-      platform: 'mobile',
-      level: 'beginner',
-      lightning: true,
-      custodial: false,
-      downloadLinks: {
-        ios: 'https://apps.apple.com/app/phoenix-wallet/id6449854979',
-        android: 'https://phoenix.acinq.co',
-      },
-      website: 'https://phoenix.acinq.co',
-      recommended: true,
-    },
-    {
-      name: 'Breez',
-      description: 'Non-custodial Lightning wallet with creator tools and instant payments',
-      platform: 'mobile',
-      level: 'beginner',
-      lightning: true,
-      custodial: false,
-      downloadLinks: {
-        ios: 'https://apps.apple.com/app/breez-lightning-client-pos/id1473040547',
-        android: 'https://play.google.com/store/apps/details?id=com.breez.client',
-      },
-      website: 'https://breez.technology',
-      recommended: false,
-    },
-    {
-      name: 'Electrum',
-      description: 'Powerful, lightweight desktop wallet with advanced features',
-      platform: 'desktop',
-      level: 'advanced',
-      lightning: false,
-      custodial: false,
-      website: 'https://electrum.org',
-      downloadLinks: {},
-      recommended: false,
-    },
-    {
-      name: 'Sparrow Wallet',
-      description: 'Privacy-focused desktop wallet with CoinJoin and full control',
-      platform: 'desktop',
-      level: 'advanced',
-      lightning: false,
-      custodial: false,
-      website: 'https://sparrowwallet.com',
-      downloadLinks: {},
-      recommended: false,
-    },
-  ];
-
   // Filter state
   const [filters, setFilters] = useState<Filters>({
     platform: [],
@@ -126,10 +126,10 @@ export default function WalletRecommendationCards() {
    * Toggle platform filter
    */
   const togglePlatform = (platform: 'mobile' | 'desktop') => {
-    setFilters((prev) => ({
+    setFilters(prev => ({
       ...prev,
       platform: prev.platform.includes(platform)
-        ? prev.platform.filter((p) => p !== platform)
+        ? prev.platform.filter(p => p !== platform)
         : [...prev.platform, platform],
     }));
   };
@@ -138,10 +138,10 @@ export default function WalletRecommendationCards() {
    * Toggle level filter
    */
   const toggleLevel = (level: 'beginner' | 'advanced') => {
-    setFilters((prev) => ({
+    setFilters(prev => ({
       ...prev,
       level: prev.level.includes(level)
-        ? prev.level.filter((l) => l !== level)
+        ? prev.level.filter(l => l !== level)
         : [...prev.level, level],
     }));
   };
@@ -150,7 +150,7 @@ export default function WalletRecommendationCards() {
    * Toggle Lightning filter
    */
   const toggleLightning = () => {
-    setFilters((prev) => ({
+    setFilters(prev => ({
       ...prev,
       lightning: !prev.lightning,
     }));
@@ -178,7 +178,7 @@ export default function WalletRecommendationCards() {
    * Filter and sort wallets
    */
   const filteredWallets = useMemo(() => {
-    const result = wallets.filter((wallet) => {
+    const result = WALLETS.filter(wallet => {
       // Platform filter
       if (filters.platform.length > 0 && !filters.platform.includes(wallet.platform)) {
         return false;
@@ -200,8 +200,12 @@ export default function WalletRecommendationCards() {
     // Sort: recommended first when no filters, then alphabetically
     if (!hasActiveFilters) {
       result.sort((a, b) => {
-        if (a.recommended && !b.recommended) {return -1;}
-        if (!a.recommended && b.recommended) {return 1;}
+        if (a.recommended && !b.recommended) {
+          return -1;
+        }
+        if (!a.recommended && b.recommended) {
+          return 1;
+        }
         return a.name.localeCompare(b.name);
       });
     } else {
@@ -322,7 +326,7 @@ export default function WalletRecommendationCards() {
       {/* Wallet Cards Grid */}
       {filteredWallets.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredWallets.map((wallet) => (
+          {filteredWallets.map(wallet => (
             <Card
               key={wallet.name}
               className={cn(
@@ -376,47 +380,54 @@ export default function WalletRecommendationCards() {
                   </Badge>
 
                   {wallet.lightning && (
-                    <Badge variant="outline" className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200">
+                    <Badge
+                      variant="outline"
+                      className="text-xs bg-yellow-50 text-yellow-700 border-yellow-200"
+                    >
                       <Zap className="w-3 h-3 mr-1" />
                       Lightning
                     </Badge>
                   )}
 
-                  <Badge variant="outline" className="text-xs bg-gray-50 text-gray-700 border-gray-200">
+                  <Badge
+                    variant="outline"
+                    className="text-xs bg-gray-50 text-gray-700 border-gray-200"
+                  >
                     <Shield className="w-3 h-3 mr-1" />
                     Non-custodial
                   </Badge>
                 </div>
 
                 {/* Download Buttons (Mobile wallets only) */}
-                {wallet.downloadLinks && (wallet.downloadLinks.ios || wallet.downloadLinks.android) && (
-                  <div className="flex flex-col gap-2">
-                    {wallet.downloadLinks.ios && (
-                      <a
-                        href={wallet.downloadLinks.ios}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-                      >
-                        <Smartphone className="w-4 h-4" />
-                        iOS App Store
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                    {wallet.downloadLinks.android && (
-                      <a
-                        href={wallet.downloadLinks.android}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
-                      >
-                        <Smartphone className="w-4 h-4" />
-                        Google Play
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                  </div>
-                )}
+                {wallet.downloadLinks &&
+                  (wallet.downloadLinks.ios || wallet.downloadLinks.android) && (
+                    <div className="flex flex-col gap-2">
+                      {wallet.downloadLinks.ios && (
+                        <a
+                          href={wallet.downloadLinks.ios}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+                        >
+                          <Smartphone className="w-4 h-4" />
+                          iOS App Store
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                      {wallet.downloadLinks.android && (
+                        <a
+                          href={wallet.downloadLinks.android}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors"
+                        >
+                          <Smartphone className="w-4 h-4" />
+                          Google Play
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
+                  )}
 
                 {/* Visit Website Link */}
                 <a
@@ -443,4 +454,3 @@ export default function WalletRecommendationCards() {
     </div>
   );
 }
-

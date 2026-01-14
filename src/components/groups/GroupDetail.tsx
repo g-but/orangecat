@@ -11,7 +11,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import EntityDetailLayout from '@/components/entity/EntityDetailLayout';
@@ -48,11 +48,7 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
   const [canCreateProposal, setCanCreateProposal] = useState(false);
   const [canVote, setCanVote] = useState(false);
 
-  useEffect(() => {
-    loadGroupData();
-  }, [groupSlug]);
-
-  const loadGroupData = async () => {
+  const loadGroupData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -101,7 +97,11 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupSlug, user]);
+
+  useEffect(() => {
+    loadGroupData();
+  }, [groupSlug, loadGroupData]);
 
   if (loading) {
     return (

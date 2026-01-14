@@ -7,7 +7,7 @@
  * Last Modified: 2025-01-30
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Wallet } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import { API_TIMEOUT_MS, AUTH_TIMEOUT_MS } from '@/lib/wallets/constants';
@@ -31,7 +31,7 @@ export function useWallets({ profileId, authLoading }: UseWalletsOptions): UseWa
   const [isLoading, setIsLoading] = useState(true);
   const [loadingError, setLoadingError] = useState<string | null>(null);
 
-  const fetchWallets = async () => {
+  const fetchWallets = useCallback(async () => {
     if (!profileId) {
       setIsLoading(false);
       setWallets([]);
@@ -87,7 +87,7 @@ export function useWallets({ profileId, authLoading }: UseWalletsOptions): UseWa
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [profileId]);
 
   useEffect(() => {
     let authTimeoutId: NodeJS.Timeout | null = null;
@@ -112,7 +112,7 @@ export function useWallets({ profileId, authLoading }: UseWalletsOptions): UseWa
         clearTimeout(authTimeoutId);
       }
     };
-  }, [profileId, authLoading]);
+  }, [profileId, authLoading, fetchWallets]);
 
   return {
     wallets,
@@ -121,5 +121,3 @@ export function useWallets({ profileId, authLoading }: UseWalletsOptions): UseWa
     refreshWallets: fetchWallets,
   };
 }
-
-

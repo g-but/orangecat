@@ -119,7 +119,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
     if (!isLoading && messages.length > 0 && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
     }
-  }, [isLoading]);
+  }, [isLoading, messages.length]);
 
   // Handle message sent from composer
   const handleMessageSent = useCallback(
@@ -184,7 +184,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
         body: JSON.stringify({ content: updated.trim() }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({} as Record<string, unknown>));
+        const data = await res.json().catch(() => ({}) as Record<string, unknown>);
         toast.error(data.error || 'Failed to edit message');
       } else {
         // Fetch updated message and apply
@@ -217,7 +217,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
         body: JSON.stringify({ conversationId, ids: [msg.id] }),
       });
       if (!res.ok) {
-        const data = await res.json().catch(() => ({} as Record<string, unknown>));
+        const data = await res.json().catch(() => ({}) as Record<string, unknown>);
         toast.error(data.error || 'Failed to delete message');
       } else {
         removeMessage(msg.id);

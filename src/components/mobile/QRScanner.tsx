@@ -37,13 +37,76 @@ export function QRScanner({
   const [error, setError] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
 
-  // Initialize camera and scanner
-  useEffect(() => {
-    initializeCamera();
-    return cleanup;
+  const stopScanning = useCallback(() => {
+    setScanning(false);
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
   }, []);
 
-  const initializeCamera = async () => {
+  const cleanup = useCallback(() => {
+    stopScanning();
+
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+  }, [stopScanning]);
+
+  const scanQRCode = useCallback(async () => {
+    if (!videoRef.current || !canvasRef.current) {
+      return;
+    }
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const context = canvas.getContext('2d');
+
+    if (!context || video.videoWidth === 0 || video.videoHeight === 0) {
+      return;
+    }
+
+    // Set canvas size to match video
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+
+    // Draw video frame to canvas
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    // Get image data for QR scanning
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    try {
+      // Use a QR code scanning library here
+      // For now, we'll simulate QR detection
+      const result = await detectQRCode(imageData);
+
+      if (result) {
+        const scanResult = parseQRData(result);
+
+        if (scanResult && acceptedFormats.includes(scanResult.format)) {
+          stopScanning();
+          onScan(scanResult.data);
+        }
+      }
+    } catch (_error) {
+      // Silently fail - QR detection may fail on many frames
+    }
+  }, [acceptedFormats, onScan, stopScanning]);
+
+  const startScanning = useCallback(() => {
+    if (!isScanning || scanning) {
+      return;
+    }
+
+    setScanning(true);
+    scanIntervalRef.current = setInterval(() => {
+      scanQRCode();
+    }, 500); // Scan every 500ms
+  }, [isScanning, scanning, scanQRCode]);
+
+  const initializeCamera = useCallback(async () => {
     try {
       setError(null);
 
@@ -99,65 +162,13 @@ export function QRScanner({
 
       setHasCamera(false);
     }
-  };
+  }, [startScanning]);
 
-  const startScanning = useCallback(() => {
-    if (!isScanning || scanning) {
-      return;
-    }
-
-    setScanning(true);
-    scanIntervalRef.current = setInterval(() => {
-      scanQRCode();
-    }, 500); // Scan every 500ms
-  }, [isScanning, scanning]);
-
-  const stopScanning = useCallback(() => {
-    setScanning(false);
-    if (scanIntervalRef.current) {
-      clearInterval(scanIntervalRef.current);
-      scanIntervalRef.current = null;
-    }
-  }, []);
-
-  const scanQRCode = async () => {
-    if (!videoRef.current || !canvasRef.current) {
-      return;
-    }
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
-
-    if (!context || video.videoWidth === 0 || video.videoHeight === 0) {
-      return;
-    }
-
-    // Set canvas size to match video
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-
-    // Draw video frame to canvas
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-    // Get image data for QR scanning
-    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-
-    try {
-      // Use a QR code scanning library here
-      // For now, we'll simulate QR detection
-      const result = await detectQRCode(imageData);
-
-      if (result) {
-        const scanResult = parseQRData(result);
-
-        if (scanResult && acceptedFormats.includes(scanResult.format)) {
-          stopScanning();
-          onScan(scanResult.data);
-        }
-      }
-    } catch (error) {}
-  };
+  // Initialize camera and scanner
+  useEffect(() => {
+    initializeCamera();
+    return cleanup;
+  }, [initializeCamera, cleanup]);
 
   // Toggle flash
   const toggleFlash = async () => {
@@ -201,15 +212,6 @@ export function QRScanner({
       }
     };
     reader.readAsDataURL(file);
-  };
-
-  const cleanup = () => {
-    stopScanning();
-
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
   };
 
   // Close scanner

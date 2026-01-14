@@ -133,7 +133,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
     if (profile.id) {
       fetchConnections();
     }
-  }, [profile.id]);
+  }, [profile.id, isOwnProfile, user?.id]);
 
   if (loading) {
     return <div className="text-gray-500 text-sm py-8 text-center">Loading connections...</div>;

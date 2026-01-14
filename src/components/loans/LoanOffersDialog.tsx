@@ -10,7 +10,7 @@
  * Last Modified Summary: Initial borrower offers review dialog
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -43,13 +43,7 @@ export function LoanOffersDialog({
   const [payoffOffer, setPayoffOffer] = useState<LoanOffer | null>(null);
   const [payoffOpen, setPayoffOpen] = useState(false);
 
-  useEffect(() => {
-    if (open) {
-      void loadOffers();
-    }
-  }, [open]);
-
-  const loadOffers = async () => {
+  const loadOffers = useCallback(async () => {
     try {
       setLoading(true);
       const result = await loansService.getLoanOffers(loan.id);
@@ -63,7 +57,13 @@ export function LoanOffersDialog({
     } finally {
       setLoading(false);
     }
-  };
+  }, [loan.id]);
+
+  useEffect(() => {
+    if (open) {
+      void loadOffers();
+    }
+  }, [open, loadOffers]);
 
   const handleRespond = async (offerId: string, accept: boolean) => {
     try {
@@ -94,7 +94,9 @@ export function LoanOffersDialog({
 
   const formatLoanAmount = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
     // Validate currency and fallback to platform default
-    const validCurrency = (CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY) as CurrencyCode;
+    const validCurrency = (
+      CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY
+    ) as CurrencyCode;
     return formatCurrency(amount, validCurrency);
   };
 
@@ -219,6 +221,3 @@ export function LoanOffersDialog({
     </Dialog>
   );
 }
-
-
-
