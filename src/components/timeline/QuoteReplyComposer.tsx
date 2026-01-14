@@ -63,7 +63,8 @@ export function QuoteReplyComposer({
       );
 
       if (result.success && result.event) {
-        onReply?.(result.event);
+        // Cast to TimelineDisplayEvent since the service returns display-ready events
+        onReply?.(result.event as TimelineDisplayEvent);
         setContent('');
         setQuotedText('');
         onCancel?.();

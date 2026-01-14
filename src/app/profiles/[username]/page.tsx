@@ -28,11 +28,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (user) {
       // Get username for current user
-      const { data: userProfile } = await supabase
+      const { data: userProfileData } = await supabase
         .from(DATABASE_TABLES.PROFILES)
         .select('username')
         .eq('id', user.id)
         .single();
+      const userProfile = userProfileData as any;
 
       targetUsername = userProfile?.username || user.id;
     } else {
@@ -44,12 +45,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     }
   }
 
-  const { data: profile } = await supabase
+  const { data: profileData } = await supabase
     .from('profiles')
     .select('name, bio, avatar_url, username')
     .eq('username', targetUsername)
     .single();
 
+  const profile = profileData as any;
   if (!profile) {
     return {
       title: 'Profile Not Found | OrangeCat',
@@ -113,28 +115,30 @@ export default async function PublicProfilePage({ params }: PageProps) {
     }
 
     // Get username for current user
-    const { data: userProfile } = await supabase
+    const { data: userProfileData } = await supabase
       .from('profiles')
       .select('username')
       .eq('id', user.id)
       .single();
+    const userProfile = userProfileData as any;
 
     targetUsername = userProfile?.username || user.id;
   }
 
   // Fetch profile data server-side
-  const { data: profile, error: profileError } = await supabase
+  const { data: profileData, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('username', targetUsername)
     .single();
+  const profile = profileData as any;
 
   if (profileError || !profile) {
     notFound();
   }
 
   // Fetch user's projects (exclude drafts, respect show_on_profile setting)
-  const { data: projects } = await supabase
+  const { data: projectsData } = await supabase
     .from('projects')
     .select(
       `
@@ -157,6 +161,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     .neq('status', 'draft') // Exclude drafts from public profile
     .neq('show_on_profile', false) // Respect user's visibility preference (null = true by default)
     .order('created_at', { ascending: false });
+  const projects = projectsData as any[] | null;
 
   // Fetch follower count
   const { count: followerCount } = await supabase
@@ -174,18 +179,18 @@ export default async function PublicProfilePage({ params }: PageProps) {
   let walletCount = 0;
   try {
     // Use the get_entity_wallets function to get active wallets for this profile
-    const { data: walletData } = await supabase.rpc('get_entity_wallets', {
+    const { data: walletData } = await (supabase.rpc as any)('get_entity_wallets', {
       p_entity_type: 'profile',
       p_entity_id: profile.id,
     });
     walletCount = walletData
-      ? walletData.filter((w: { is_active: boolean }) => w.is_active).length
+      ? (walletData as any[]).filter((w: { is_active: boolean }) => w.is_active).length
       : 0;
   } catch {
     // Fallback: try querying wallet_ownerships table directly
     try {
-      const { count } = await supabase
-        .from('wallet_ownerships')
+      const { count } = await (supabase
+        .from('wallet_ownerships') as any)
         .select('*', { count: 'exact', head: true })
         .eq('owner_type', 'profile')
         .eq('owner_id', profile.id)

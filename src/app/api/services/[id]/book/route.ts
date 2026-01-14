@@ -51,8 +51,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const endsAt = new Date(ends_at);
 
     // Verify service exists and is active
-    const { data: service, error: serviceError } = await supabase
-      .from(getTableName('service'))
+    const { data: service, error: serviceError } = await (supabase
+      .from(getTableName('service')) as any)
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
       .eq('status', 'active')
@@ -63,8 +63,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get customer's actor
-    const { data: customerActor } = await supabase
-      .from('actors')
+    const { data: customerActor } = await (supabase
+      .from('actors') as any)
       .select('id')
       .eq('user_id', user.id)
       .single();

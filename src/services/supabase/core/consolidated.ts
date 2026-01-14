@@ -62,8 +62,8 @@ export class ProfileService {
     }
 
     try {
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data, error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
         .eq('id', userId)
         .single()
@@ -106,8 +106,8 @@ export class ProfileService {
         updated_at: new Date().toISOString()
       }
 
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data, error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .update(updateData)
         .eq('id', userId)
         .select()
@@ -147,8 +147,8 @@ export class ProfileService {
         updated_at: new Date().toISOString()
       }
 
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data, error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .insert(newProfile)
         .select()
         .single()
@@ -177,8 +177,8 @@ export class ProfileService {
     }
 
     try {
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data, error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
         .eq('username', username.trim())
         .single()
@@ -210,8 +210,8 @@ export class ProfileService {
     }
 
     try {
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data, error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
         .or(`username.ilike.%${query}%,name.ilike.%${query}%`)
         .limit(limit)
@@ -239,8 +239,8 @@ export class DatabaseService {
    */
   static async testConnection(): Promise<ServiceResponse<boolean>> {
     try {
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data, error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .select('id')
         .limit(1)
 
@@ -262,8 +262,8 @@ export class DatabaseService {
   static async checkSchema(): Promise<ServiceResponse<boolean>> {
     try {
       // Test expected columns exist
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data, error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .select('id, username, name, bio, avatar_url, banner_url, website, bitcoin_address, lightning_address, created_at, updated_at')
         .limit(1)
 
@@ -280,12 +280,4 @@ export class DatabaseService {
   }
 }
 
-// =====================================================================
-// 🔧 EXPORTS
-// =====================================================================
-
-export {
-  type DatabaseProfile,
-  type ServiceResponse,
-  type ProfileUpdateData
-} 
+// Note: Types DatabaseProfile, ServiceResponse, and ProfileUpdateData are already exported above 

@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
-import { Wallet, Plus, Copy, ExternalLink, RefreshCw } from 'lucide-react';
+import { Wallet, Plus, Copy, ExternalLink, RefreshCw, Loader2 } from 'lucide-react';
 import type { GroupWalletSummary } from '@/services/groups/types';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';

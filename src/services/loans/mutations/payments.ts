@@ -23,8 +23,8 @@ export async function createPayment(
       return { success: false, error: 'Authentication required' };
     }
 
-    const { data, error } = await supabase
-      .from('loan_payments')
+    const { data, error } = await (supabase
+      .from('loan_payments') as any)
       .insert({
         ...request,
         payer_id: userId,
@@ -56,8 +56,8 @@ export async function completePayment(
       return { success: false, error: 'Authentication required' };
     }
 
-    const { data, error } = await supabase
-      .from('loan_payments')
+    const { data, error } = await (supabase
+      .from('loan_payments') as any)
       .update({
         status: 'completed',
         processed_at: new Date().toISOString(),

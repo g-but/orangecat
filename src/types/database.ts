@@ -10,6 +10,7 @@
 import type { Profile as AppProfile } from './profile';
 import type { Project as AppProject } from './project';
 import type { ProfileData } from '../lib/validation';
+import type { EntityStatus, EntityStatusWithCompleted, VisibilityLevel } from './common';
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -389,32 +390,131 @@ export interface Database {
       };
 
       /**
-       * The following tables are added with permissive typings to restore
-       * type-safety for Supabase operations that were previously resolving
-       * to `never` due to missing table definitions. These can be tightened
-       * over time but are sufficient for compile-time safety.
+       * Entity tables with proper type definitions for Supabase operations.
        */
       user_products: {
         Row: {
-          [key: string]: any;
+          id: string;
+          user_id: string;
+          actor_id: string | null;
+          title: string;
+          description: string | null;
+          price_sats: number;
+          currency: 'SATS' | 'BTC';
+          product_type: 'physical' | 'digital' | 'service';
+          images: string[];
+          thumbnail_url: string | null;
+          inventory_count: number;
+          fulfillment_type: 'manual' | 'automatic' | 'digital';
+          category: string | null;
+          tags: string[];
+          status: 'draft' | 'active' | 'paused' | 'sold_out';
+          is_featured: boolean;
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
-          [key: string]: any;
+          id?: string;
+          user_id: string;
+          actor_id?: string | null;
+          title: string;
+          description?: string | null;
+          price_sats: number;
+          currency?: 'SATS' | 'BTC';
+          product_type?: 'physical' | 'digital' | 'service';
+          images?: string[];
+          thumbnail_url?: string | null;
+          inventory_count?: number;
+          fulfillment_type?: 'manual' | 'automatic' | 'digital';
+          category?: string | null;
+          tags?: string[];
+          status?: 'draft' | 'active' | 'paused' | 'sold_out';
+          is_featured?: boolean;
+          created_at?: string;
+          updated_at?: string;
         };
         Update: {
-          [key: string]: any;
+          id?: string;
+          user_id?: string;
+          actor_id?: string | null;
+          title?: string;
+          description?: string | null;
+          price_sats?: number;
+          currency?: 'SATS' | 'BTC';
+          product_type?: 'physical' | 'digital' | 'service';
+          images?: string[];
+          thumbnail_url?: string | null;
+          inventory_count?: number;
+          fulfillment_type?: 'manual' | 'automatic' | 'digital';
+          category?: string | null;
+          tags?: string[];
+          status?: 'draft' | 'active' | 'paused' | 'sold_out';
+          is_featured?: boolean;
+          created_at?: string;
+          updated_at?: string;
         };
       };
 
       user_services: {
         Row: {
-          [key: string]: any;
+          id: string;
+          user_id: string;
+          actor_id: string | null;
+          title: string;
+          description: string | null;
+          category: string;
+          hourly_rate_sats: number | null;
+          fixed_price_sats: number | null;
+          currency: 'SATS' | 'BTC';
+          duration_minutes: number | null;
+          availability_schedule: Json | null;
+          service_location_type: 'remote' | 'onsite' | 'both';
+          service_area: string | null;
+          images: string[];
+          portfolio_links: string[];
+          status: 'draft' | 'active' | 'paused' | 'unavailable';
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
-          [key: string]: any;
+          id?: string;
+          user_id: string;
+          actor_id?: string | null;
+          title: string;
+          description?: string | null;
+          category: string;
+          hourly_rate_sats?: number | null;
+          fixed_price_sats?: number | null;
+          currency?: 'SATS' | 'BTC';
+          duration_minutes?: number | null;
+          availability_schedule?: Json | null;
+          service_location_type?: 'remote' | 'onsite' | 'both';
+          service_area?: string | null;
+          images?: string[];
+          portfolio_links?: string[];
+          status?: 'draft' | 'active' | 'paused' | 'unavailable';
+          created_at?: string;
+          updated_at?: string;
         };
         Update: {
-          [key: string]: any;
+          id?: string;
+          user_id?: string;
+          actor_id?: string | null;
+          title?: string;
+          description?: string | null;
+          category?: string;
+          hourly_rate_sats?: number | null;
+          fixed_price_sats?: number | null;
+          currency?: 'SATS' | 'BTC';
+          duration_minutes?: number | null;
+          availability_schedule?: Json | null;
+          service_location_type?: 'remote' | 'onsite' | 'both';
+          service_area?: string | null;
+          images?: string[];
+          portfolio_links?: string[];
+          status?: 'draft' | 'active' | 'paused' | 'unavailable';
+          created_at?: string;
+          updated_at?: string;
         };
       };
 
@@ -422,59 +522,56 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
+          actor_id: string | null;
           title: string;
           description: string | null;
-          cause_category: string;
-          goal_amount: number | null;
-          total_raised: number;
-          total_distributed: number | null;
-          currency: string;
+          cause_category: string | null;
+          target_amount: number | null;
+          current_amount: number;
+          currency: 'SATS' | 'BTC' | 'CHF' | 'EUR' | 'USD' | 'GBP';
+          status: 'draft' | 'active' | 'completed' | 'cancelled';
+          is_public: boolean;
+          contact_method: 'platform' | 'email' | 'phone';
           bitcoin_address: string | null;
           lightning_address: string | null;
-          distribution_rules: any;
-          beneficiaries: any[];
-          status: 'draft' | 'active' | 'completed' | 'paused';
           created_at: string;
           updated_at: string;
-          [key: string]: any;
         };
         Insert: {
           id?: string;
           user_id: string;
+          actor_id?: string | null;
           title: string;
           description?: string | null;
-          cause_category: string;
-          goal_amount?: number | null;
-          total_raised?: number;
-          total_distributed?: number | null;
-          currency?: string;
+          cause_category?: string | null;
+          target_amount?: number | null;
+          current_amount?: number;
+          currency?: 'SATS' | 'BTC' | 'CHF' | 'EUR' | 'USD' | 'GBP';
+          status?: 'draft' | 'active' | 'completed' | 'cancelled';
+          is_public?: boolean;
+          contact_method?: 'platform' | 'email' | 'phone';
           bitcoin_address?: string | null;
           lightning_address?: string | null;
-          distribution_rules?: any;
-          beneficiaries?: any[];
-          status?: 'draft' | 'active' | 'completed' | 'paused';
           created_at?: string;
           updated_at?: string;
-          [key: string]: any;
         };
         Update: {
           id?: string;
           user_id?: string;
+          actor_id?: string | null;
           title?: string;
           description?: string | null;
-          cause_category?: string;
-          goal_amount?: number | null;
-          total_raised?: number;
-          total_distributed?: number | null;
-          currency?: string;
+          cause_category?: string | null;
+          target_amount?: number | null;
+          current_amount?: number;
+          currency?: 'SATS' | 'BTC' | 'CHF' | 'EUR' | 'USD' | 'GBP';
+          status?: 'draft' | 'active' | 'completed' | 'cancelled';
+          is_public?: boolean;
+          contact_method?: 'platform' | 'email' | 'phone';
           bitcoin_address?: string | null;
           lightning_address?: string | null;
-          distribution_rules?: any;
-          beneficiaries?: any[];
-          status?: 'draft' | 'active' | 'completed' | 'paused';
           created_at?: string;
           updated_at?: string;
-          [key: string]: any;
         };
       };
 
@@ -484,7 +581,7 @@ export interface Database {
           name: string;
           description: string | null;
           category: string;
-          visibility: 'public' | 'private' | 'hidden';
+          visibility: Exclude<VisibilityLevel, 'unlisted'>;
           max_members: number | null;
           member_approval: 'auto' | 'manual' | 'invite';
           location_restricted: boolean;
@@ -508,7 +605,7 @@ export interface Database {
           name: string;
           description?: string | null;
           category: string;
-          visibility?: 'public' | 'private' | 'hidden';
+          visibility?: Exclude<VisibilityLevel, 'unlisted'>;
           max_members?: number | null;
           member_approval?: 'auto' | 'manual' | 'invite';
           location_restricted?: boolean;
@@ -532,7 +629,7 @@ export interface Database {
           name?: string;
           description?: string | null;
           category?: string;
-          visibility?: 'public' | 'private' | 'hidden';
+          visibility?: Exclude<VisibilityLevel, 'unlisted'>;
           max_members?: number | null;
           member_approval?: 'auto' | 'manual' | 'invite';
           location_restricted?: boolean;
@@ -626,7 +723,6 @@ export interface Database {
           created_by: string;
           created_at: string;
           updated_at: string;
-          [key: string]: any;
         };
         Insert: {
           id?: string;
@@ -640,7 +736,6 @@ export interface Database {
           created_by: string;
           created_at?: string;
           updated_at?: string;
-          [key: string]: any;
         };
         Update: {
           id?: string;
@@ -654,7 +749,6 @@ export interface Database {
           created_by?: string;
           created_at?: string;
           updated_at?: string;
-          [key: string]: any;
         };
       };
 
@@ -682,13 +776,13 @@ export interface Database {
           price_per_1k_tokens: number;
           subscription_price: number;
           free_messages_per_day: number;
-          status: 'draft' | 'active' | 'paused' | 'archived';
+          status: EntityStatus;
           is_public: boolean;
           is_featured: boolean;
           total_conversations: number;
           total_messages: number;
           total_tokens_used: number;
-          total_revenue: number;
+          total_revenue_sats: number;
           average_rating: number | null;
           total_ratings: number;
           lightning_address: string | null;
@@ -696,6 +790,7 @@ export interface Database {
           created_at: string;
           updated_at: string;
           published_at: string | null;
+          allowed_models: string[] | null;
         };
         Insert: {
           id?: string;
@@ -720,13 +815,13 @@ export interface Database {
           price_per_1k_tokens?: number;
           subscription_price?: number;
           free_messages_per_day?: number;
-          status?: 'draft' | 'active' | 'paused' | 'archived';
+          status?: EntityStatus;
           is_public?: boolean;
           is_featured?: boolean;
           total_conversations?: number;
           total_messages?: number;
           total_tokens_used?: number;
-          total_revenue?: number;
+          total_revenue_sats?: number;
           average_rating?: number | null;
           total_ratings?: number;
           lightning_address?: string | null;
@@ -734,6 +829,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
+          allowed_models?: string[] | null;
         };
         Update: {
           id?: string;
@@ -758,7 +854,7 @@ export interface Database {
           price_per_1k_tokens?: number;
           subscription_price?: number;
           free_messages_per_day?: number;
-          status?: 'draft' | 'active' | 'paused' | 'archived';
+          status?: EntityStatus;
           is_public?: boolean;
           is_featured?: boolean;
           total_conversations?: number;
@@ -772,6 +868,2013 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
           published_at?: string | null;
+          allowed_models?: string[] | null;
+        };
+      };
+
+      ai_conversations: {
+        Row: {
+          id: string;
+          assistant_id: string;
+          user_id: string;
+          title: string | null;
+          status: 'active' | 'archived';
+          last_message_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          assistant_id: string;
+          user_id: string;
+          title?: string | null;
+          status?: 'active' | 'archived';
+          last_message_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          assistant_id?: string;
+          user_id?: string;
+          title?: string | null;
+          status?: 'active' | 'archived';
+          last_message_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      ai_messages: {
+        Row: {
+          id: string;
+          conversation_id: string;
+          role: 'user' | 'assistant' | 'system';
+          content: string;
+          tokens_used: number;
+          cost_sats: number;
+          api_cost_sats: number | null;
+          creator_markup_sats: number | null;
+          model_used: string | null;
+          metadata: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          conversation_id: string;
+          role: 'user' | 'assistant' | 'system';
+          content: string;
+          tokens_used?: number;
+          cost_sats?: number;
+          api_cost_sats?: number | null;
+          creator_markup_sats?: number | null;
+          model_used?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          conversation_id?: string;
+          role?: 'user' | 'assistant' | 'system';
+          content?: string;
+          tokens_used?: number;
+          cost_sats?: number;
+          api_cost_sats?: number | null;
+          creator_markup_sats?: number | null;
+          model_used?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+        };
+      };
+
+      ai_assistant_ratings: {
+        Row: {
+          id: string;
+          assistant_id: string;
+          user_id: string;
+          rating: number;
+          review: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          assistant_id: string;
+          user_id: string;
+          rating: number;
+          review?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          assistant_id?: string;
+          user_id?: string;
+          rating?: number;
+          review?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      user_api_keys: {
+        Row: {
+          id: string;
+          user_id: string;
+          provider: string;
+          encrypted_key: string;
+          key_suffix: string;
+          is_active: boolean;
+          last_used_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          provider: string;
+          encrypted_key: string;
+          key_suffix: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          provider?: string;
+          encrypted_key?: string;
+          key_suffix?: string;
+          is_active?: boolean;
+          last_used_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      wishlists: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          type: string;
+          visibility: Exclude<VisibilityLevel, 'hidden'>;
+          is_active: boolean;
+          event_date: string | null;
+          cover_image_url: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          type?: string;
+          visibility?: Exclude<VisibilityLevel, 'hidden'>;
+          is_active?: boolean;
+          event_date?: string | null;
+          cover_image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          type?: string;
+          visibility?: Exclude<VisibilityLevel, 'hidden'>;
+          is_active?: boolean;
+          event_date?: string | null;
+          cover_image_url?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      wishlist_items: {
+        Row: {
+          id: string;
+          wishlist_id: string;
+          title: string;
+          description: string | null;
+          target_amount_sats: number;
+          funded_amount_sats: number;
+          priority: number;
+          url: string | null;
+          image_url: string | null;
+          status: 'active' | 'funded' | 'purchased' | 'cancelled';
+          created_at: string;
+          updated_at: string;
+          wishlists?: {
+            id: string;
+            user_id: string;
+            title: string;
+          };
+        };
+        Insert: {
+          id?: string;
+          wishlist_id: string;
+          title: string;
+          description?: string | null;
+          target_amount_sats?: number;
+          funded_amount_sats?: number;
+          priority?: number;
+          url?: string | null;
+          image_url?: string | null;
+          status?: 'active' | 'funded' | 'purchased' | 'cancelled';
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          wishlist_id?: string;
+          title?: string;
+          description?: string | null;
+          target_amount_sats?: number;
+          funded_amount_sats?: number;
+          priority?: number;
+          url?: string | null;
+          image_url?: string | null;
+          status?: 'active' | 'funded' | 'purchased' | 'cancelled';
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      research_entities: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string;
+          field: 'fundamental_physics' | 'mathematics' | 'computer_science' | 'biology' | 'chemistry' | 'neuroscience' | 'psychology' | 'economics' | 'philosophy' | 'engineering' | 'medicine' | 'environmental_science' | 'social_science' | 'artificial_intelligence' | 'blockchain_cryptography' | 'other';
+          methodology: 'theoretical' | 'experimental' | 'computational' | 'empirical' | 'qualitative' | 'mixed_methods' | 'meta_analysis' | 'survey' | 'case_study' | 'action_research';
+          expected_outcome: string;
+          timeline: 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
+          funding_goal_sats: number;
+          funding_raised_sats: number;
+          funding_model: 'donation' | 'subscription' | 'milestone' | 'royalty' | 'hybrid';
+          wallet_address: string;
+          lead_researcher: string;
+          team_members: Json;
+          open_collaboration: boolean;
+          resource_needs: Json;
+          progress_frequency: 'weekly' | 'biweekly' | 'monthly' | 'milestone' | 'as_needed';
+          transparency_level: 'full' | 'progress' | 'milestone' | 'minimal';
+          voting_enabled: boolean;
+          current_milestone: string | null;
+          next_deadline: string | null;
+          impact_areas: Json;
+          target_audience: string[];
+          sdg_alignment: Json;
+          progress_updates: Json;
+          total_votes: number;
+          average_rating: number | null;
+          contributions: Json;
+          total_contributors: number;
+          completion_percentage: number;
+          days_active: number;
+          funding_velocity: number;
+          follower_count: number;
+          share_count: number;
+          citation_count: number;
+          status: 'draft' | 'active' | 'completed' | 'paused' | 'cancelled';
+          is_public: boolean;
+          is_featured: boolean;
+          search_vector: unknown;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description: string;
+          field: 'fundamental_physics' | 'mathematics' | 'computer_science' | 'biology' | 'chemistry' | 'neuroscience' | 'psychology' | 'economics' | 'philosophy' | 'engineering' | 'medicine' | 'environmental_science' | 'social_science' | 'artificial_intelligence' | 'blockchain_cryptography' | 'other';
+          methodology: 'theoretical' | 'experimental' | 'computational' | 'empirical' | 'qualitative' | 'mixed_methods' | 'meta_analysis' | 'survey' | 'case_study' | 'action_research';
+          expected_outcome: string;
+          timeline: 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
+          funding_goal_sats: number;
+          funding_raised_sats?: number;
+          funding_model: 'donation' | 'subscription' | 'milestone' | 'royalty' | 'hybrid';
+          wallet_address: string;
+          lead_researcher: string;
+          team_members?: Json;
+          open_collaboration?: boolean;
+          resource_needs?: Json;
+          progress_frequency: 'weekly' | 'biweekly' | 'monthly' | 'milestone' | 'as_needed';
+          transparency_level: 'full' | 'progress' | 'milestone' | 'minimal';
+          voting_enabled?: boolean;
+          current_milestone?: string | null;
+          next_deadline?: string | null;
+          impact_areas?: Json;
+          target_audience?: string[];
+          sdg_alignment?: Json;
+          progress_updates?: Json;
+          total_votes?: number;
+          average_rating?: number | null;
+          contributions?: Json;
+          total_contributors?: number;
+          completion_percentage?: number;
+          days_active?: number;
+          funding_velocity?: number;
+          follower_count?: number;
+          share_count?: number;
+          citation_count?: number;
+          status?: 'draft' | 'active' | 'completed' | 'paused' | 'cancelled';
+          is_public?: boolean;
+          is_featured?: boolean;
+          search_vector?: unknown;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string;
+          field?: 'fundamental_physics' | 'mathematics' | 'computer_science' | 'biology' | 'chemistry' | 'neuroscience' | 'psychology' | 'economics' | 'philosophy' | 'engineering' | 'medicine' | 'environmental_science' | 'social_science' | 'artificial_intelligence' | 'blockchain_cryptography' | 'other';
+          methodology?: 'theoretical' | 'experimental' | 'computational' | 'empirical' | 'qualitative' | 'mixed_methods' | 'meta_analysis' | 'survey' | 'case_study' | 'action_research';
+          expected_outcome?: string;
+          timeline?: 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
+          funding_goal_sats?: number;
+          funding_raised_sats?: number;
+          funding_model?: 'donation' | 'subscription' | 'milestone' | 'royalty' | 'hybrid';
+          wallet_address?: string;
+          lead_researcher?: string;
+          team_members?: Json;
+          open_collaboration?: boolean;
+          resource_needs?: Json;
+          progress_frequency?: 'weekly' | 'biweekly' | 'monthly' | 'milestone' | 'as_needed';
+          transparency_level?: 'full' | 'progress' | 'milestone' | 'minimal';
+          voting_enabled?: boolean;
+          current_milestone?: string | null;
+          next_deadline?: string | null;
+          impact_areas?: Json;
+          target_audience?: string[];
+          sdg_alignment?: Json;
+          progress_updates?: Json;
+          total_votes?: number;
+          average_rating?: number | null;
+          contributions?: Json;
+          total_contributors?: number;
+          completion_percentage?: number;
+          days_active?: number;
+          funding_velocity?: number;
+          follower_count?: number;
+          share_count?: number;
+          citation_count?: number;
+          status?: 'draft' | 'active' | 'completed' | 'paused' | 'cancelled';
+          is_public?: boolean;
+          is_featured?: boolean;
+          search_vector?: unknown;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      // Groups and related tables
+      groups: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          label: string;
+          tags: string[];
+          avatar_url: string | null;
+          banner_url: string | null;
+          is_public: boolean;
+          visibility: 'public' | 'members_only' | 'private';
+          bitcoin_address: string | null;
+          lightning_address: string | null;
+          governance_preset: string;
+          voting_threshold: number | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          label?: string;
+          tags?: string[];
+          avatar_url?: string | null;
+          banner_url?: string | null;
+          is_public?: boolean;
+          visibility?: 'public' | 'members_only' | 'private';
+          bitcoin_address?: string | null;
+          lightning_address?: string | null;
+          governance_preset?: string;
+          voting_threshold?: number | null;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          label?: string;
+          tags?: string[];
+          avatar_url?: string | null;
+          banner_url?: string | null;
+          is_public?: boolean;
+          visibility?: 'public' | 'members_only' | 'private';
+          bitcoin_address?: string | null;
+          lightning_address?: string | null;
+          governance_preset?: string;
+          voting_threshold?: number | null;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      group_members: {
+        Row: {
+          id: string;
+          group_id: string;
+          user_id: string;
+          role: 'founder' | 'admin' | 'member';
+          permission_overrides: Json | null;
+          invited_by: string | null;
+          joined_at: string;
+        };
+        Insert: {
+          id?: string;
+          group_id: string;
+          user_id: string;
+          role?: 'founder' | 'admin' | 'member';
+          permission_overrides?: Json | null;
+          invited_by?: string | null;
+          joined_at?: string;
+        };
+        Update: {
+          id?: string;
+          group_id?: string;
+          user_id?: string;
+          role?: 'founder' | 'admin' | 'member';
+          permission_overrides?: Json | null;
+          invited_by?: string | null;
+          joined_at?: string;
+        };
+      };
+
+      group_invitations: {
+        Row: {
+          id: string;
+          group_id: string;
+          user_id: string | null;
+          email: string | null;
+          role: 'admin' | 'member';
+          status: 'pending' | 'accepted' | 'rejected' | 'expired';
+          message: string | null;
+          invited_by: string;
+          expires_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          group_id: string;
+          user_id?: string | null;
+          email?: string | null;
+          role?: 'admin' | 'member';
+          status?: 'pending' | 'accepted' | 'rejected' | 'expired';
+          message?: string | null;
+          invited_by: string;
+          expires_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          group_id?: string;
+          user_id?: string | null;
+          email?: string | null;
+          role?: 'admin' | 'member';
+          status?: 'pending' | 'accepted' | 'rejected' | 'expired';
+          message?: string | null;
+          invited_by?: string;
+          expires_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      group_events: {
+        Row: {
+          id: string;
+          group_id: string;
+          title: string;
+          description: string | null;
+          location: string | null;
+          start_time: string;
+          end_time: string | null;
+          is_online: boolean;
+          meeting_url: string | null;
+          max_attendees: number | null;
+          created_by: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          group_id: string;
+          title: string;
+          description?: string | null;
+          location?: string | null;
+          start_time: string;
+          end_time?: string | null;
+          is_online?: boolean;
+          meeting_url?: string | null;
+          max_attendees?: number | null;
+          created_by: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          group_id?: string;
+          title?: string;
+          description?: string | null;
+          location?: string | null;
+          start_time?: string;
+          end_time?: string | null;
+          is_online?: boolean;
+          meeting_url?: string | null;
+          max_attendees?: number | null;
+          created_by?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      group_proposals: {
+        Row: {
+          id: string;
+          group_id: string;
+          proposer_id: string;
+          title: string;
+          description: string | null;
+          proposal_type: 'general' | 'treasury' | 'membership' | 'governance';
+          status: 'draft' | 'active' | 'passed' | 'failed' | 'executed' | 'cancelled';
+          voting_threshold: number | null;
+          action_type: string | null;
+          action_data: Json;
+          voting_starts_at: string | null;
+          voting_ends_at: string | null;
+          executed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          group_id: string;
+          proposer_id: string;
+          title: string;
+          description?: string | null;
+          proposal_type?: 'general' | 'treasury' | 'membership' | 'governance';
+          status?: 'draft' | 'active' | 'passed' | 'failed' | 'executed' | 'cancelled';
+          voting_threshold?: number | null;
+          action_type?: string | null;
+          action_data?: Json;
+          voting_starts_at?: string | null;
+          voting_ends_at?: string | null;
+          executed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          group_id?: string;
+          proposer_id?: string;
+          title?: string;
+          description?: string | null;
+          proposal_type?: 'general' | 'treasury' | 'membership' | 'governance';
+          status?: 'draft' | 'active' | 'passed' | 'failed' | 'executed' | 'cancelled';
+          voting_threshold?: number | null;
+          action_type?: string | null;
+          action_data?: Json;
+          voting_starts_at?: string | null;
+          voting_ends_at?: string | null;
+          executed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      // Core system tables
+      wallets: {
+        Row: {
+          id: string;
+          profile_id: string | null;
+          project_id: string | null;
+          label: string;
+          description: string | null;
+          wallet_type: 'bitcoin' | 'lightning' | 'xpub';
+          address: string | null;
+          xpub: string | null;
+          derivation_path: string | null;
+          balance_sats: number;
+          last_sync_at: string | null;
+          is_primary: boolean;
+          is_verified: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          profile_id?: string | null;
+          project_id?: string | null;
+          label: string;
+          description?: string | null;
+          wallet_type: 'bitcoin' | 'lightning' | 'xpub';
+          address?: string | null;
+          xpub?: string | null;
+          derivation_path?: string | null;
+          balance_sats?: number;
+          last_sync_at?: string | null;
+          is_primary?: boolean;
+          is_verified?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          profile_id?: string | null;
+          project_id?: string | null;
+          label?: string;
+          description?: string | null;
+          wallet_type?: 'bitcoin' | 'lightning' | 'xpub';
+          address?: string | null;
+          xpub?: string | null;
+          derivation_path?: string | null;
+          balance_sats?: number;
+          last_sync_at?: string | null;
+          is_primary?: boolean;
+          is_verified?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      actors: {
+        Row: {
+          id: string;
+          actor_type: 'user' | 'group';
+          user_id: string | null;
+          group_id: string | null;
+          display_name: string;
+          avatar_url: string | null;
+          slug: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          actor_type: 'user' | 'group';
+          user_id?: string | null;
+          group_id?: string | null;
+          display_name: string;
+          avatar_url?: string | null;
+          slug?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          actor_type?: 'user' | 'group';
+          user_id?: string | null;
+          group_id?: string | null;
+          display_name?: string;
+          avatar_url?: string | null;
+          slug?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      notifications: {
+        Row: {
+          id: string;
+          user_id: string;
+          type: string;
+          title: string;
+          message: string | null;
+          data: Json | null;
+          read: boolean;
+          read_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          type: string;
+          title: string;
+          message?: string | null;
+          data?: Json | null;
+          read?: boolean;
+          read_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          type?: string;
+          title?: string;
+          message?: string | null;
+          data?: Json | null;
+          read?: boolean;
+          read_at?: string | null;
+          created_at?: string;
+        };
+      };
+
+      transactions: {
+        Row: {
+          id: string;
+          wallet_id: string | null;
+          from_wallet_id: string | null;
+          to_wallet_id: string | null;
+          type: string;
+          amount_sats: number;
+          fee_sats: number | null;
+          status: 'pending' | 'confirmed' | 'failed';
+          tx_hash: string | null;
+          description: string | null;
+          metadata: Json | null;
+          created_at: string;
+          confirmed_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          wallet_id?: string | null;
+          from_wallet_id?: string | null;
+          to_wallet_id?: string | null;
+          type: string;
+          amount_sats: number;
+          fee_sats?: number | null;
+          status?: 'pending' | 'confirmed' | 'failed';
+          tx_hash?: string | null;
+          description?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+          confirmed_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          wallet_id?: string | null;
+          from_wallet_id?: string | null;
+          to_wallet_id?: string | null;
+          type?: string;
+          amount_sats?: number;
+          fee_sats?: number | null;
+          status?: 'pending' | 'confirmed' | 'failed';
+          tx_hash?: string | null;
+          description?: string | null;
+          metadata?: Json | null;
+          created_at?: string;
+          confirmed_at?: string | null;
+        };
+      };
+
+      // Loans
+      loan_offers: {
+        Row: {
+          id: string;
+          loan_id: string;
+          offerer_id: string;
+          offer_type: 'refinance' | 'payoff';
+          offer_amount: number;
+          interest_rate: number | null;
+          term_months: number | null;
+          monthly_payment: number | null;
+          terms: string | null;
+          conditions: string | null;
+          status: 'pending' | 'accepted' | 'rejected' | 'expired' | 'cancelled';
+          is_binding: boolean;
+          expires_at: string;
+          created_at: string;
+          updated_at: string;
+          accepted_at: string | null;
+          rejected_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          loan_id: string;
+          offerer_id: string;
+          offer_type: 'refinance' | 'payoff';
+          offer_amount: number;
+          interest_rate?: number | null;
+          term_months?: number | null;
+          monthly_payment?: number | null;
+          terms?: string | null;
+          conditions?: string | null;
+          status?: 'pending' | 'accepted' | 'rejected' | 'expired' | 'cancelled';
+          is_binding?: boolean;
+          expires_at?: string;
+          created_at?: string;
+          updated_at?: string;
+          accepted_at?: string | null;
+          rejected_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          loan_id?: string;
+          offerer_id?: string;
+          offer_type?: 'refinance' | 'payoff';
+          offer_amount?: number;
+          interest_rate?: number | null;
+          term_months?: number | null;
+          monthly_payment?: number | null;
+          terms?: string | null;
+          conditions?: string | null;
+          status?: 'pending' | 'accepted' | 'rejected' | 'expired' | 'cancelled';
+          is_binding?: boolean;
+          expires_at?: string;
+          created_at?: string;
+          updated_at?: string;
+          accepted_at?: string | null;
+          rejected_at?: string | null;
+        };
+      };
+
+      loan_payments: {
+        Row: {
+          id: string;
+          loan_id: string;
+          offer_id: string | null;
+          amount: number;
+          currency: string;
+          payment_type: 'monthly' | 'lump_sum' | 'refinance' | 'payoff';
+          payer_id: string;
+          recipient_id: string;
+          transaction_id: string | null;
+          payment_method: string | null;
+          notes: string | null;
+          status: 'pending' | 'completed' | 'failed' | 'refunded';
+          processed_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          loan_id: string;
+          offer_id?: string | null;
+          amount: number;
+          currency: string;
+          payment_type: 'monthly' | 'lump_sum' | 'refinance' | 'payoff';
+          payer_id: string;
+          recipient_id: string;
+          transaction_id?: string | null;
+          payment_method?: string | null;
+          notes?: string | null;
+          status?: 'pending' | 'completed' | 'failed' | 'refunded';
+          processed_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          loan_id?: string;
+          offer_id?: string | null;
+          amount?: number;
+          currency?: string;
+          payment_type?: 'monthly' | 'lump_sum' | 'refinance' | 'payoff';
+          payer_id?: string;
+          recipient_id?: string;
+          transaction_id?: string | null;
+          payment_method?: string | null;
+          notes?: string | null;
+          status?: 'pending' | 'completed' | 'failed' | 'refunded';
+          processed_at?: string;
+          created_at?: string;
+        };
+      };
+
+      user_loans: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          loan_category_id: string | null;
+          original_amount: number;
+          remaining_balance: number;
+          interest_rate: number | null;
+          monthly_payment: number | null;
+          currency: string;
+          lender_name: string | null;
+          loan_number: string | null;
+          origination_date: string | null;
+          maturity_date: string | null;
+          status: 'active' | 'paid_off' | 'refinanced' | 'defaulted' | 'cancelled';
+          is_public: boolean;
+          is_negotiable: boolean;
+          minimum_offer_amount: number | null;
+          preferred_terms: string | null;
+          contact_method: 'platform' | 'email' | 'phone';
+          loan_type: string | null;
+          fulfillment_type: string | null;
+          current_lender: string | null;
+          current_interest_rate: number | null;
+          desired_rate: number | null;
+          bitcoin_address: string | null;
+          lightning_address: string | null;
+          created_at: string;
+          updated_at: string;
+          paid_off_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          loan_category_id?: string | null;
+          original_amount: number;
+          remaining_balance: number;
+          interest_rate?: number | null;
+          monthly_payment?: number | null;
+          currency?: string;
+          lender_name?: string | null;
+          loan_number?: string | null;
+          origination_date?: string | null;
+          maturity_date?: string | null;
+          status?: 'active' | 'paid_off' | 'refinanced' | 'defaulted' | 'cancelled';
+          is_public?: boolean;
+          is_negotiable?: boolean;
+          minimum_offer_amount?: number | null;
+          preferred_terms?: string | null;
+          contact_method?: 'platform' | 'email' | 'phone';
+          loan_type?: string | null;
+          fulfillment_type?: string | null;
+          current_lender?: string | null;
+          current_interest_rate?: number | null;
+          desired_rate?: number | null;
+          bitcoin_address?: string | null;
+          lightning_address?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          paid_off_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          loan_category_id?: string | null;
+          original_amount?: number;
+          remaining_balance?: number;
+          interest_rate?: number | null;
+          monthly_payment?: number | null;
+          currency?: string;
+          lender_name?: string | null;
+          loan_number?: string | null;
+          origination_date?: string | null;
+          maturity_date?: string | null;
+          status?: 'active' | 'paid_off' | 'refinanced' | 'defaulted' | 'cancelled';
+          is_public?: boolean;
+          is_negotiable?: boolean;
+          minimum_offer_amount?: number | null;
+          preferred_terms?: string | null;
+          contact_method?: 'platform' | 'email' | 'phone';
+          loan_type?: string | null;
+          fulfillment_type?: string | null;
+          current_lender?: string | null;
+          current_interest_rate?: number | null;
+          desired_rate?: number | null;
+          bitcoin_address?: string | null;
+          lightning_address?: string | null;
+          created_at?: string;
+          updated_at?: string;
+          paid_off_at?: string | null;
+        };
+      };
+
+      // Assets and bookings
+      user_assets: {
+        Row: {
+          id: string;
+          owner_id: string;
+          type: 'real_estate' | 'business' | 'vehicle' | 'equipment' | 'securities' | 'other';
+          title: string;
+          description: string | null;
+          location: string | null;
+          estimated_value: number | null;
+          currency: string;
+          documents: string[] | null;
+          verification_status: 'unverified' | 'user_provided' | 'third_party_verified';
+          status: 'draft' | 'active' | 'archived';
+          purchase_date: string | null;
+          purchase_price: number | null;
+          documentation_url: string | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          owner_id: string;
+          type: 'real_estate' | 'business' | 'vehicle' | 'equipment' | 'securities' | 'other';
+          title: string;
+          description?: string | null;
+          location?: string | null;
+          estimated_value?: number | null;
+          currency?: string;
+          documents?: string[] | null;
+          verification_status?: 'unverified' | 'user_provided' | 'third_party_verified';
+          status?: 'draft' | 'active' | 'archived';
+          purchase_date?: string | null;
+          purchase_price?: number | null;
+          documentation_url?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          owner_id?: string;
+          type?: 'real_estate' | 'business' | 'vehicle' | 'equipment' | 'securities' | 'other';
+          title?: string;
+          description?: string | null;
+          location?: string | null;
+          estimated_value?: number | null;
+          currency?: string;
+          documents?: string[] | null;
+          verification_status?: 'unverified' | 'user_provided' | 'third_party_verified';
+          status?: 'draft' | 'active' | 'archived';
+          purchase_date?: string | null;
+          purchase_price?: number | null;
+          documentation_url?: string | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      bookings: {
+        Row: {
+          id: string;
+          asset_id: string;
+          user_id: string;
+          start_time: string;
+          end_time: string;
+          status: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+          total_price_sats: number | null;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          asset_id: string;
+          user_id: string;
+          start_time: string;
+          end_time: string;
+          status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+          total_price_sats?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          asset_id?: string;
+          user_id?: string;
+          start_time?: string;
+          end_time?: string;
+          status?: 'pending' | 'confirmed' | 'cancelled' | 'completed';
+          total_price_sats?: number | null;
+          notes?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      availability_slots: {
+        Row: {
+          id: string;
+          asset_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+          is_available: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          asset_id: string;
+          day_of_week: number;
+          start_time: string;
+          end_time: string;
+          is_available?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          asset_id?: string;
+          day_of_week?: number;
+          start_time?: string;
+          end_time?: string;
+          is_available?: boolean;
+          created_at?: string;
+        };
+      };
+
+      asset_availability: {
+        Row: {
+          id: string;
+          asset_id: string;
+          date: string;
+          is_available: boolean;
+          price_override_sats: number | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          asset_id: string;
+          date: string;
+          is_available?: boolean;
+          price_override_sats?: number | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          asset_id?: string;
+          date?: string;
+          is_available?: boolean;
+          price_override_sats?: number | null;
+          notes?: string | null;
+          created_at?: string;
+        };
+      };
+
+      // Wishlist extras
+      wishlist_fulfillment_proofs: {
+        Row: {
+          id: string;
+          wishlist_item_id: string;
+          user_id: string;
+          proof_type: 'receipt' | 'screenshot' | 'transaction' | 'comment';
+          description: string;
+          image_url: string | null;
+          transaction_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          wishlist_item_id: string;
+          user_id: string;
+          proof_type: 'receipt' | 'screenshot' | 'transaction' | 'comment';
+          description: string;
+          image_url?: string | null;
+          transaction_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          wishlist_item_id?: string;
+          user_id?: string;
+          proof_type?: 'receipt' | 'screenshot' | 'transaction' | 'comment';
+          description?: string;
+          image_url?: string | null;
+          transaction_id?: string | null;
+          created_at?: string;
+        };
+      };
+
+      wishlist_feedback: {
+        Row: {
+          id: string;
+          wishlist_item_id: string;
+          fulfillment_proof_id: string | null;
+          user_id: string;
+          feedback_type: 'like' | 'dislike';
+          comment: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          wishlist_item_id: string;
+          fulfillment_proof_id?: string | null;
+          user_id: string;
+          feedback_type: 'like' | 'dislike';
+          comment?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          wishlist_item_id?: string;
+          fulfillment_proof_id?: string | null;
+          user_id?: string;
+          feedback_type?: 'like' | 'dislike';
+          comment?: string | null;
+          created_at?: string;
+        };
+      };
+
+      // Projects
+      projects: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string;
+          description: string | null;
+          goal_sats: number | null;
+          raised_sats: number;
+          status: 'draft' | 'active' | 'completed' | 'paused';
+          category: string | null;
+          tags: string[];
+          images: string[];
+          bitcoin_address: string | null;
+          lightning_address: string | null;
+          is_public: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title: string;
+          description?: string | null;
+          goal_sats?: number | null;
+          raised_sats?: number;
+          status?: 'draft' | 'active' | 'completed' | 'paused';
+          category?: string | null;
+          tags?: string[];
+          images?: string[];
+          bitcoin_address?: string | null;
+          lightning_address?: string | null;
+          is_public?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string | null;
+          goal_sats?: number | null;
+          raised_sats?: number;
+          status?: 'draft' | 'active' | 'completed' | 'paused';
+          category?: string | null;
+          tags?: string[];
+          images?: string[];
+          bitcoin_address?: string | null;
+          lightning_address?: string | null;
+          is_public?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      user_projects: {
+        Row: {
+          id: string;
+          user_id: string;
+          project_id: string;
+          role: 'owner' | 'contributor' | 'supporter';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          project_id: string;
+          role: 'owner' | 'contributor' | 'supporter';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          project_id?: string;
+          role?: 'owner' | 'contributor' | 'supporter';
+          created_at?: string;
+        };
+      };
+
+      project_support: {
+        Row: {
+          id: string;
+          project_id: string;
+          user_id: string;
+          amount_sats: number;
+          message: string | null;
+          is_anonymous: boolean;
+          transaction_id: string | null;
+          status: 'pending' | 'confirmed' | 'failed';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          user_id: string;
+          amount_sats: number;
+          message?: string | null;
+          is_anonymous?: boolean;
+          transaction_id?: string | null;
+          status?: 'pending' | 'confirmed' | 'failed';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          user_id?: string;
+          amount_sats?: number;
+          message?: string | null;
+          is_anonymous?: boolean;
+          transaction_id?: string | null;
+          status?: 'pending' | 'confirmed' | 'failed';
+          created_at?: string;
+        };
+      };
+
+      project_favorites: {
+        Row: {
+          id: string;
+          project_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+      };
+
+      project_media: {
+        Row: {
+          id: string;
+          project_id: string;
+          media_type: 'image' | 'video' | 'document';
+          url: string;
+          title: string | null;
+          description: string | null;
+          order_index: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          media_type: 'image' | 'video' | 'document';
+          url: string;
+          title?: string | null;
+          description?: string | null;
+          order_index?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          project_id?: string;
+          media_type?: 'image' | 'video' | 'document';
+          url?: string;
+          title?: string | null;
+          description?: string | null;
+          order_index?: number;
+          created_at?: string;
+        };
+      };
+
+      project_drafts: {
+        Row: {
+          id: string;
+          user_id: string;
+          title: string | null;
+          description: string | null;
+          goal_sats: number | null;
+          category: string | null;
+          tags: string[];
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          title?: string | null;
+          description?: string | null;
+          goal_sats?: number | null;
+          category?: string | null;
+          tags?: string[];
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          title?: string | null;
+          description?: string | null;
+          goal_sats?: number | null;
+          category?: string | null;
+          tags?: string[];
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      // Research extras
+      research_contributions: {
+        Row: {
+          id: string;
+          research_entity_id: string;
+          user_id: string | null;
+          amount_sats: number;
+          funding_model: 'donation' | 'subscription' | 'milestone' | 'royalty';
+          message: string | null;
+          anonymous: boolean;
+          lightning_invoice: string | null;
+          onchain_tx: string | null;
+          status: 'pending' | 'confirmed' | 'failed';
+          confirmed_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          research_entity_id: string;
+          user_id?: string | null;
+          amount_sats: number;
+          funding_model: 'donation' | 'subscription' | 'milestone' | 'royalty';
+          message?: string | null;
+          anonymous?: boolean;
+          lightning_invoice?: string | null;
+          onchain_tx?: string | null;
+          status?: 'pending' | 'confirmed' | 'failed';
+          confirmed_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          research_entity_id?: string;
+          user_id?: string | null;
+          amount_sats?: number;
+          funding_model?: 'donation' | 'subscription' | 'milestone' | 'royalty';
+          message?: string | null;
+          anonymous?: boolean;
+          lightning_invoice?: string | null;
+          onchain_tx?: string | null;
+          status?: 'pending' | 'confirmed' | 'failed';
+          confirmed_at?: string | null;
+          created_at?: string;
+        };
+      };
+
+      research_votes: {
+        Row: {
+          id: string;
+          research_entity_id: string;
+          user_id: string;
+          vote_type: 'direction' | 'priority' | 'impact' | 'continuation';
+          choice: string;
+          weight: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          research_entity_id: string;
+          user_id: string;
+          vote_type: 'direction' | 'priority' | 'impact' | 'continuation';
+          choice: string;
+          weight?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          research_entity_id?: string;
+          user_id?: string;
+          vote_type?: 'direction' | 'priority' | 'impact' | 'continuation';
+          choice?: string;
+          weight?: number;
+          created_at?: string;
+        };
+      };
+
+      research_progress_updates: {
+        Row: {
+          id: string;
+          research_entity_id: string;
+          user_id: string;
+          title: string;
+          description: string;
+          milestone_achieved: boolean;
+          funding_released: number;
+          attachments: string[];
+          votes_up: number;
+          votes_down: number;
+          total_votes: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          research_entity_id: string;
+          user_id: string;
+          title: string;
+          description: string;
+          milestone_achieved?: boolean;
+          funding_released?: number;
+          attachments?: string[];
+          votes_up?: number;
+          votes_down?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          research_entity_id?: string;
+          user_id?: string;
+          title?: string;
+          description?: string;
+          milestone_achieved?: boolean;
+          funding_released?: number;
+          attachments?: string[];
+          votes_up?: number;
+          votes_down?: number;
+          created_at?: string;
+        };
+      };
+
+      // Other
+      contracts: {
+        Row: {
+          id: string;
+          user_id: string;
+          counterparty_id: string | null;
+          title: string;
+          description: string | null;
+          contract_type: string;
+          terms: Json;
+          status: 'draft' | 'pending' | 'active' | 'completed' | 'cancelled';
+          amount_sats: number | null;
+          signed_at: string | null;
+          expires_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          counterparty_id?: string | null;
+          title: string;
+          description?: string | null;
+          contract_type: string;
+          terms?: Json;
+          status?: 'draft' | 'pending' | 'active' | 'completed' | 'cancelled';
+          amount_sats?: number | null;
+          signed_at?: string | null;
+          expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          counterparty_id?: string | null;
+          title?: string;
+          description?: string | null;
+          contract_type?: string;
+          terms?: Json;
+          status?: 'draft' | 'pending' | 'active' | 'completed' | 'cancelled';
+          amount_sats?: number | null;
+          signed_at?: string | null;
+          expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      avatars: {
+        Row: {
+          id: string;
+          user_id: string;
+          url: string;
+          is_primary: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          url: string;
+          is_primary?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          url?: string;
+          is_primary?: boolean;
+          created_at?: string;
+        };
+      };
+
+      transparency_scores: {
+        Row: {
+          id: string;
+          entity_id: string;
+          entity_type: string;
+          score: number;
+          factors: Json;
+          last_calculated_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          entity_id: string;
+          entity_type: string;
+          score: number;
+          factors?: Json;
+          last_calculated_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          entity_id?: string;
+          entity_type?: string;
+          score?: number;
+          factors?: Json;
+          last_calculated_at?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      user_stats: {
+        Row: {
+          id: string;
+          user_id: string;
+          total_raised_sats: number;
+          total_donated_sats: number;
+          total_projects: number;
+          total_supporters: number;
+          follower_count: number;
+          following_count: number;
+          reputation_score: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          total_raised_sats?: number;
+          total_donated_sats?: number;
+          total_projects?: number;
+          total_supporters?: number;
+          follower_count?: number;
+          following_count?: number;
+          reputation_score?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          total_raised_sats?: number;
+          total_donated_sats?: number;
+          total_projects?: number;
+          total_supporters?: number;
+          follower_count?: number;
+          following_count?: number;
+          reputation_score?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      user_follows: {
+        Row: {
+          id: string;
+          follower_id: string;
+          following_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          follower_id: string;
+          following_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          follower_id?: string;
+          following_id?: string;
+          created_at?: string;
+        };
+      };
+
+      follows: {
+        Row: {
+          id: string;
+          follower_id: string;
+          following_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          follower_id: string;
+          following_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          follower_id?: string;
+          following_id?: string;
+          created_at?: string;
+        };
+      };
+
+      // Timeline
+      timeline_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          actor_id: string | null;
+          event_type: 'post' | 'comment' | 'like' | 'follow' | 'project_created' | 'donation' | 'repost' | 'quote';
+          content: string | null;
+          metadata: Json;
+          visibility: 'public' | 'followers' | 'private';
+          parent_id: string | null;
+          parent_event_id: string | null;
+          project_id: string | null;
+          is_deleted: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          actor_id?: string | null;
+          event_type: 'post' | 'comment' | 'like' | 'follow' | 'project_created' | 'donation' | 'repost' | 'quote';
+          content?: string | null;
+          metadata?: Json;
+          visibility?: 'public' | 'followers' | 'private';
+          parent_id?: string | null;
+          parent_event_id?: string | null;
+          project_id?: string | null;
+          is_deleted?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          actor_id?: string | null;
+          event_type?: 'post' | 'comment' | 'like' | 'follow' | 'project_created' | 'donation' | 'repost' | 'quote';
+          content?: string | null;
+          metadata?: Json;
+          visibility?: 'public' | 'followers' | 'private';
+          parent_id?: string | null;
+          parent_event_id?: string | null;
+          project_id?: string | null;
+          is_deleted?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      timeline_comments: {
+        Row: {
+          id: string;
+          event_id: string;
+          user_id: string;
+          content: string;
+          parent_comment_id: string | null;
+          is_deleted: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          user_id: string;
+          content: string;
+          parent_comment_id?: string | null;
+          is_deleted?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          user_id?: string;
+          content?: string;
+          parent_comment_id?: string | null;
+          is_deleted?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      timeline_likes: {
+        Row: {
+          id: string;
+          event_id: string;
+          user_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          user_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          user_id?: string;
+          created_at?: string;
+        };
+      };
+
+      // AI credits
+      ai_user_credits: {
+        Row: {
+          id: string;
+          user_id: string;
+          balance_sats: number;
+          total_deposited_sats: number;
+          total_spent_sats: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          balance_sats?: number;
+          total_deposited_sats?: number;
+          total_spent_sats?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          balance_sats?: number;
+          total_deposited_sats?: number;
+          total_spent_sats?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      ai_credit_transactions: {
+        Row: {
+          id: string;
+          user_id: string;
+          assistant_id: string | null;
+          conversation_id: string | null;
+          message_id: string | null;
+          transaction_type: 'deposit' | 'charge' | 'refund' | 'bonus';
+          amount_sats: number;
+          balance_before: number;
+          balance_after: number;
+          description: string | null;
+          metadata: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          assistant_id?: string | null;
+          conversation_id?: string | null;
+          message_id?: string | null;
+          transaction_type: 'deposit' | 'charge' | 'refund' | 'bonus';
+          amount_sats: number;
+          balance_before: number;
+          balance_after: number;
+          description?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          assistant_id?: string | null;
+          conversation_id?: string | null;
+          message_id?: string | null;
+          transaction_type?: 'deposit' | 'charge' | 'refund' | 'bonus';
+          amount_sats?: number;
+          balance_before?: number;
+          balance_after?: number;
+          description?: string | null;
+          metadata?: Json;
+          created_at?: string;
+        };
+      };
+
+      // Audit and system
+      audit_logs: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          action: string;
+          entity_type: string | null;
+          entity_id: string | null;
+          old_data: Json | null;
+          new_data: Json | null;
+          ip_address: string | null;
+          user_agent: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          action: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          old_data?: Json | null;
+          new_data?: Json | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          action?: string;
+          entity_type?: string | null;
+          entity_id?: string | null;
+          old_data?: Json | null;
+          new_data?: Json | null;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          created_at?: string;
+        };
+      };
+
+      draft_events: {
+        Row: {
+          id: string;
+          user_id: string;
+          event_type: string;
+          content: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          event_type: string;
+          content?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          event_type?: string;
+          content?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
+
+      channel_waitlist: {
+        Row: {
+          id: string;
+          email: string;
+          name: string | null;
+          referral_code: string | null;
+          status: 'pending' | 'approved' | 'rejected';
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          email: string;
+          name?: string | null;
+          referral_code?: string | null;
+          status?: 'pending' | 'approved' | 'rejected';
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          email?: string;
+          name?: string | null;
+          referral_code?: string | null;
+          status?: 'pending' | 'approved' | 'rejected';
+          created_at?: string;
         };
       };
     };
@@ -885,31 +2988,15 @@ export type UserService = Database['public']['Tables']['user_services']['Row'] &
   service_location_type?: string;
 };
 
-export type UserCause = {
-  id: string;
-  user_id: string;
-  title: string;
-  description?: string | null;
-  thumbnail_url?: string | null;
-  cause_category: string;
-  goal_amount?: number | null;
-  total_raised: number;
-  total_distributed?: number | null;
-  currency?: string;
-  bitcoin_address?: string | null;
-  lightning_address?: string | null;
-  distribution_rules?: any;
-  beneficiaries?: any[];
-  status: 'draft' | 'active' | 'completed' | 'paused';
-  created_at: string;
-  updated_at?: string;
-  [key: string]: any; // Allow additional properties
-};
+export type UserCause = Database['public']['Tables']['user_causes']['Row'];
 
 // Extended Profile type that includes email from database
 export type Profile = AppProfile & {
   email?: string | null;
 };
+
+// Re-export ScalableProfile from services for backwards compatibility
+export type { ScalableProfile, ScalableProfileFormData } from '@/services/profile/types';
 
 // AI Assistant type for dashboard and entity components
 export type AIAssistant = Database['public']['Tables']['ai_assistants']['Row'];

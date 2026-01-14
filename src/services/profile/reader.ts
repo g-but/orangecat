@@ -30,8 +30,8 @@ export class ProfileReader {
     try {
       logProfile('getProfile', { userId })
 
-      const { data, error } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
+      const { data, error } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
         .eq('id', userId)
         .single()
@@ -87,7 +87,7 @@ export class ProfileReader {
         return []
       }
 
-      return data?.map(profile => ProfileMapper.mapDatabaseToProfile(profile)) || []
+      return (data?.map(profile => ProfileMapper.mapDatabaseToProfile(profile)) || []).filter((p): p is ScalableProfile => p !== null)
 
     } catch (err) {
       logger.error('ProfileReader.getProfiles unexpected error:', err)
@@ -120,7 +120,7 @@ export class ProfileReader {
         return []
       }
 
-      return data?.map(profile => ProfileMapper.mapDatabaseToProfile(profile)) || []
+      return (data?.map(profile => ProfileMapper.mapDatabaseToProfile(profile)) || []).filter((p): p is ScalableProfile => p !== null)
 
     } catch (err) {
       logger.error('ProfileReader.searchProfiles unexpected error:', err)
@@ -143,7 +143,7 @@ export class ProfileReader {
         return []
       }
 
-      return data?.map(profile => ProfileMapper.mapDatabaseToProfile(profile)) || []
+      return (data?.map(profile => ProfileMapper.mapDatabaseToProfile(profile)) || []).filter((p): p is ScalableProfile => p !== null)
 
     } catch (err) {
       logger.error('ProfileReader.getAllProfiles unexpected error:', err)
@@ -164,9 +164,9 @@ export class ProfileReader {
 
       
       // Update view count
-      await supabase
-        .from(DATABASE_TABLES.PROFILES)
-        .update({ 
+      await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
+        .update({
           website: JSON.stringify({
             ...JSON.parse(profile.website || '{}'),
             last_viewed_at: new Date().toISOString()

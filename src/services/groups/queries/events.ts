@@ -29,8 +29,8 @@ export async function getGroupEvents(
   try {
     const userId = await getCurrentUserId();
 
-    let query = supabase
-      .from(TABLES.group_events)
+    let query = (supabase
+      .from(TABLES.group_events) as any)
       .select(
         `
         *,
@@ -95,8 +95,8 @@ export async function getEvent(eventId: string): Promise<EventResponse> {
   try {
     const userId = await getCurrentUserId();
 
-    const { data, error } = await supabase
-      .from(TABLES.group_events)
+    const { data, error } = await (supabase
+      .from(TABLES.group_events) as any)
       .select(
         `
         *,
@@ -156,8 +156,8 @@ export async function getEventRsvps(
     }
 
     // First check if user can access the event
-    const { data: event } = await supabase
-      .from(TABLES.group_events)
+    const { data: event } = await (supabase
+      .from(TABLES.group_events) as any)
       .select('id, is_public, group_id')
       .eq('id', eventId)
       .single();
@@ -167,8 +167,8 @@ export async function getEventRsvps(
     }
 
     // Get RSVPs
-    const { data, error, count } = await supabase
-      .from(TABLES.group_event_rsvps)
+    const { data, error, count } = await (supabase
+      .from(TABLES.group_event_rsvps) as any)
       .select(
         `
         *,
@@ -226,8 +226,8 @@ export async function getUserRsvpStatus(
       return { success: false, error: 'Authentication required' };
     }
 
-    const { data, error } = await supabase
-      .from(TABLES.group_event_rsvps)
+    const { data, error } = await (supabase
+      .from(TABLES.group_event_rsvps) as any)
       .select('status')
       .eq('event_id', eventId)
       .eq('user_id', userId)

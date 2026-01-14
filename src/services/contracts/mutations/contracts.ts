@@ -45,8 +45,8 @@ export async function createContract(input: CreateContractInput) {
 
       return { success: true, contract: null, proposalId: proposalResult.proposal?.id, method: 'proposal' };
     } else {
-      const { data, error } = await supabase
-        .from('contracts')
+      const { data, error } = await (supabase
+        .from('contracts') as any)
         .insert({
           party_a_actor_id: input.party_a_actor_id,
           party_b_actor_id: input.party_b_actor_id,
@@ -86,8 +86,8 @@ export async function activateContract(contractId: string) {
       return { success: false, error: `Cannot activate contract with status: ${contract.contract.status}` };
     }
 
-    const { data, error } = await supabase
-      .from('contracts')
+    const { data, error } = await (supabase
+      .from('contracts') as any)
       .update({
         status: 'active',
         activated_at: new Date().toISOString(),

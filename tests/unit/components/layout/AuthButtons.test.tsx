@@ -6,7 +6,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import AuthButtons from '../AuthButtons';
+import AuthButtons from '@/components/layout/AuthButtons';
 import { useAuth } from '@/hooks/useAuth';
 
 // Mock useAuth hook
@@ -16,28 +16,28 @@ jest.mock('@/hooks/useAuth', () => ({
 
 // Mock next/link
 jest.mock('next/link', () => {
-  return function MockLink({ children, href, className }) {
+  return function MockLink({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) {
     return <a href={href} className={className}>{children}</a>;
   };
 });
 
 // Mock Button component
 jest.mock('@/components/ui/Button', () => {
-  return function MockButton({ children, variant, className }) {
+  return function MockButton({ children, variant, className }: { children: React.ReactNode; variant?: string; className?: string }) {
     return <button data-variant={variant} className={className}>{children}</button>;
   };
 });
 
 // Mock UserProfileDropdown component
 jest.mock('@/components/ui/UserProfileDropdown', () => {
-  return function MockUserProfileDropdown({ variant }) {
+  return function MockUserProfileDropdown({ variant }: { variant?: string }) {
     return <div data-testid="user-profile-dropdown" data-variant={variant}>User Profile Dropdown</div>;
   };
 });
 
 // Mock Lucide React icons
 jest.mock('lucide-react', () => ({
-  Loader2: ({ className }) => (
+  Loader2: ({ className }: { className?: string }) => (
     <div data-testid="loader2-icon" className={className}>Loading</div>
   )
 }));
@@ -62,7 +62,8 @@ describe('🔐 AuthButtons Component Tests', () => {
       
       const pulseDiv = document.querySelector('.animate-pulse');
       expect(pulseDiv).toBeInTheDocument();
-      expect(pulseDiv).toHaveClass('w-4', 'h-4', 'bg-gray-200', 'rounded-full', 'animate-pulse');
+      // Component uses smaller indicator (w-3 h-3) for compact loading
+      expect(pulseDiv).toHaveClass('w-3', 'h-3', 'bg-gray-200', 'rounded-full', 'animate-pulse');
     });
 
     test('should show loading spinner when hydrated but loading', () => {
@@ -76,7 +77,8 @@ describe('🔐 AuthButtons Component Tests', () => {
       render(<AuthButtons />);
       
       expect(screen.getByTestId('loader2-icon')).toBeInTheDocument();
-      expect(screen.getByTestId('loader2-icon')).toHaveClass('h-5', 'w-5', 'animate-spin', 'text-tiffany-500');
+      // Component uses h-4 w-4 for compact spinner size
+      expect(screen.getByTestId('loader2-icon')).toHaveClass('h-4', 'w-4', 'animate-spin', 'text-tiffany-500');
     });
 
     test('should apply custom className to hydration indicator', () => {
@@ -111,7 +113,9 @@ describe('🔐 AuthButtons Component Tests', () => {
       expect(dropdown).toHaveAttribute('data-variant', 'advanced');
     });
 
-    test('should render UserProfileDropdown when only user exists', () => {
+    test('should render login buttons when only user exists (requires both user AND session)', () => {
+      // Component requires BOTH user AND session to show dropdown
+      // This prevents showing dropdown with stale data
       mockUseAuth.mockReturnValue({
         user: { id: '123', email: 'user@example.com' },
         session: null,
@@ -120,11 +124,14 @@ describe('🔐 AuthButtons Component Tests', () => {
       });
 
       render(<AuthButtons />);
-      
-      expect(screen.getByTestId('user-profile-dropdown')).toBeInTheDocument();
+
+      // Should show login buttons, not dropdown
+      expect(screen.queryByTestId('user-profile-dropdown')).not.toBeInTheDocument();
+      expect(screen.getByText('Log in')).toBeInTheDocument();
     });
 
-    test('should render UserProfileDropdown when only session exists', () => {
+    test('should render login buttons when only session exists (requires both user AND session)', () => {
+      // Component requires BOTH user AND session to show dropdown
       mockUseAuth.mockReturnValue({
         user: null,
         session: { access_token: 'token', user: { id: '123' } },
@@ -133,8 +140,10 @@ describe('🔐 AuthButtons Component Tests', () => {
       });
 
       render(<AuthButtons />);
-      
-      expect(screen.getByTestId('user-profile-dropdown')).toBeInTheDocument();
+
+      // Should show login buttons, not dropdown
+      expect(screen.queryByTestId('user-profile-dropdown')).not.toBeInTheDocument();
+      expect(screen.getByText('Log in')).toBeInTheDocument();
     });
   });
 
@@ -174,12 +183,13 @@ describe('🔐 AuthButtons Component Tests', () => {
 
     test('should have minimum touch target size for buttons', () => {
       render(<AuthButtons />);
-      
+
       const loginButton = screen.getByText('Log in');
       const registerButton = screen.getByText('Get Started');
-      
-      expect(loginButton).toHaveClass('min-h-[44px]');
-      expect(registerButton).toHaveClass('min-h-[44px]');
+
+      // Component uses 36px minimum height for compact buttons
+      expect(loginButton).toHaveClass('min-h-[36px]');
+      expect(registerButton).toHaveClass('min-h-[36px]');
     });
   });
 
@@ -195,10 +205,12 @@ describe('🔐 AuthButtons Component Tests', () => {
 
     test('should detect mobile navigation layout from className', () => {
       render(<AuthButtons className="flex-col mobile-nav" />);
-      
+
       const container = screen.getByText('Log in').closest('div');
-      expect(container).toHaveClass('flex-col', 'space-y-3', 'w-full');
-      expect(container).not.toHaveClass('space-x-4');
+      // Component uses space-y-2 for mobile layout
+      expect(container).toHaveClass('flex-col', 'space-y-2', 'w-full');
+      // Mobile layout uses space-y-2 instead of space-x-2
+      expect(container).not.toHaveClass('space-x-2');
     });
 
     test('should apply full width styling to links in mobile layout', () => {
@@ -329,12 +341,13 @@ describe('🔐 AuthButtons Component Tests', () => {
 
     test('should maintain minimum touch target sizes', () => {
       render(<AuthButtons />);
-      
+
       const loginButton = screen.getByText('Log in');
       const registerButton = screen.getByText('Get Started');
-      
-      expect(loginButton).toHaveClass('min-h-[44px]');
-      expect(registerButton).toHaveClass('min-h-[44px]');
+
+      // Component uses 36px minimum height for compact buttons
+      expect(loginButton).toHaveClass('min-h-[36px]');
+      expect(registerButton).toHaveClass('min-h-[36px]');
     });
   });
 

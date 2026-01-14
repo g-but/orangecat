@@ -148,7 +148,7 @@ export async function getAvailableLoans(
     const pageSize = Math.min(pagination?.pageSize || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = pagination?.offset || 0;
 
-    const { data, error } = await supabase.rpc('get_available_loans', {
+    const { data, error } = await (supabase.rpc as any)('get_available_loans', {
       p_user_id: userId || null,
       p_limit: pageSize,
       p_offset: offset,
@@ -158,8 +158,8 @@ export async function getAvailableLoans(
       logger.warn('Database function not available, using fallback', error, 'Loans');
 
       // Fallback query
-      let dbQuery = supabase
-        .from(getTableName('loan'))
+      let dbQuery = (supabase
+        .from(getTableName('loan')) as any)
         .select(
           `
           *,

@@ -77,8 +77,8 @@ export async function checkGroupPermission(
 
   try {
     // Get group and membership
-    const { data: group } = await supabase
-      .from(TABLES.groups)
+    const { data: group } = await (supabase
+      .from(TABLES.groups) as any)
       .select('is_public, governance_preset')
       .eq('id', groupId)
       .single();
@@ -88,8 +88,8 @@ export async function checkGroupPermission(
     }
 
     // Get membership
-    const { data: membership } = await supabase
-      .from(TABLES.group_members)
+    const { data: membership } = await (supabase
+      .from(TABLES.group_members) as any)
       .select('role, permission_overrides')
       .eq('group_id', groupId)
       .eq('user_id', userId)
@@ -155,27 +155,27 @@ export async function getGroupPermissions(
 
   try {
     // Get group and membership
-    const { data: group } = await supabase
-      .from(TABLES.groups)
+    const { data: group2 } = await (supabase
+      .from(TABLES.groups) as any)
       .select('is_public, governance_preset')
       .eq('id', groupId)
       .single();
 
-    if (!group) {
+    if (!group2) {
       return null;
     }
 
     // Get membership
-    const { data: membership } = await supabase
-      .from(TABLES.group_members)
+    const { data: membership2 } = await (supabase
+      .from(TABLES.group_members) as any)
       .select('role, permission_overrides')
       .eq('group_id', groupId)
       .eq('user_id', userId)
       .maybeSingle();
 
     // Non-members get view-only permissions for public groups
-    if (!membership) {
-      if (group.is_public) {
+    if (!membership2) {
+      if (group2.is_public) {
         return {
           canView: true,
           canJoin: true,
@@ -193,12 +193,12 @@ export async function getGroupPermissions(
     }
 
     // Get role permissions from governance preset
-    const preset = GOVERNANCE_PRESETS[group.governance_preset as keyof typeof GOVERNANCE_PRESETS];
+    const preset = GOVERNANCE_PRESETS[group2.governance_preset as keyof typeof GOVERNANCE_PRESETS];
     if (!preset) {
       return null;
     }
 
-    const role = membership.role as 'founder' | 'admin' | 'member';
+    const role = membership2.role as 'founder' | 'admin' | 'member';
     const rolePermissions = preset.roles[role];
     if (!rolePermissions) {
       return null;
@@ -219,8 +219,8 @@ export async function getGroupPermissions(
     };
 
     // Apply permission overrides
-    if (membership.permission_overrides) {
-      for (const [key, value] of Object.entries(membership.permission_overrides)) {
+    if (membership2.permission_overrides) {
+      for (const [key, value] of Object.entries(membership2.permission_overrides)) {
         // Find the permission key for this action
         const permKey = Object.entries(PERMISSION_TO_ACTION).find(([_, v]) => v === key)?.[0] as GroupPermissionKey | undefined;
         if (permKey && permKey in permissions) {

@@ -56,12 +56,12 @@ export const loanEntityConfig: EntityConfig<Loan> = {
              loan.status === 'paid_off' ? 'Paid Off' :
              loan.status === 'refinanced' ? 'Refinanced' :
              loan.status === 'defaulted' ? 'Defaulted' :
-             loan.status === 'draft' ? 'Draft' : undefined,
+             loan.status === 'cancelled' ? 'Cancelled' : undefined,
       badgeVariant: loan.status === 'active' ? 'success' :
                     loan.status === 'paid_off' ? 'success' :
                     loan.status === 'refinanced' ? 'default' :
                     loan.status === 'defaulted' ? 'destructive' :
-                    loan.status === 'draft' ? 'default' : 'default',
+                    loan.status === 'cancelled' ? 'warning' : 'default',
       metadata: metadataParts.length > 0 ? (
         <div className="flex flex-wrap gap-2 text-xs text-gray-500">
           {metadataParts.map((part, idx) => (

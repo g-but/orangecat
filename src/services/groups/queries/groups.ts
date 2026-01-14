@@ -30,7 +30,7 @@ export async function getGroup(identifier: string, bySlug: boolean = false): Pro
   try {
     const userId = await getCurrentUserId();
 
-    let query = supabase.from(TABLES.groups).select('*');
+    let query = (supabase.from(TABLES.groups) as any).select('*');
 
     if (bySlug) {
       query = query.eq('slug', identifier);
@@ -83,8 +83,8 @@ export async function getUserGroups(
     }
 
     // Get user's group IDs from group_members
-    const { data: memberships } = await supabase
-      .from('group_members')
+    const { data: memberships } = await (supabase
+      .from('group_members') as any)
       .select('group_id')
       .eq('user_id', userId);
 
@@ -92,10 +92,10 @@ export async function getUserGroups(
       return { success: true, groups: [], total: 0 };
     }
 
-    const groupIds = memberships.map((m) => m.group_id);
+    const groupIds = memberships.map((m: { group_id: string }) => m.group_id);
 
-    let dbQuery = supabase
-      .from(TABLES.groups)
+    let dbQuery = (supabase
+      .from(TABLES.groups) as any)
       .select('*', { count: 'exact' })
       .in('id', groupIds);
 
@@ -146,7 +146,7 @@ export async function getAvailableGroups(
   try {
     const userId = await getCurrentUserId();
 
-    let dbQuery = supabase.from(TABLES.groups).select('*', { count: 'exact' }).eq('is_public', true);
+    let dbQuery = (supabase.from(TABLES.groups) as any).select('*', { count: 'exact' }).eq('is_public', true);
 
     // Apply filters
     if (query?.type) {
@@ -237,8 +237,8 @@ export async function searchGroups(
   try {
     const userId = await getCurrentUserId();
 
-    let dbQuery = supabase
-      .from(TABLES.groups)
+    let dbQuery = (supabase
+      .from(TABLES.groups) as any)
       .select('*', { count: 'exact' })
       .or(`name.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
 

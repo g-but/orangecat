@@ -39,12 +39,12 @@ export async function ensureMessagingFunctions() {
     // Try to create the send_message function directly
     // This will fail gracefully if it already exists
     try {
-      const testArgs: Database['public']['Functions']['send_message']['Args'] = {
+      const testArgs = {
         p_conversation_id: '00000000-0000-0000-0000-000000000000',
         p_sender_id: '00000000-0000-0000-0000-000000000000',
         p_content: 'test',
       };
-      await admin.rpc('send_message', testArgs);
+      await (admin.rpc as any)('send_message', testArgs);
       logger.info('send_message function exists');
     } catch (testError: any) {
       if (testError.message && testError.message.includes('function send_message')) {
@@ -449,8 +449,8 @@ export async function sendMessage(
 
     // If senderActorId provided, verify user has permission to send as that actor
     if (senderActorId) {
-      const { data: actor, error: actorError } = await admin
-        .from(DATABASE_TABLES.ACTORS)
+      const { data: actor, error: actorError } = await (admin
+        .from(DATABASE_TABLES.ACTORS) as any)
         .select('id, actor_type, user_id, group_id')
         .eq('id', senderActorId)
         .single();
@@ -466,8 +466,8 @@ export async function sendMessage(
 
       // Group actor: user must be admin/moderator of the group
       if (actor.actor_type === 'group' && actor.group_id) {
-        const { data: membership, error: memberError } = await admin
-          .from(DATABASE_TABLES.GROUP_MEMBERS)
+        const { data: membership, error: memberError } = await (admin
+          .from(DATABASE_TABLES.GROUP_MEMBERS) as any)
           .select('role')
           .eq('group_id', actor.group_id)
           .eq('user_id', user.id)
@@ -527,8 +527,8 @@ export async function sendMessage(
       last_message_sender_id: senderId,
       updated_at: new Date().toISOString(),
     };
-    const { error: updateError } = await admin
-      .from(DATABASE_TABLES.CONVERSATIONS)
+    const { error: updateError } = await (admin
+      .from(DATABASE_TABLES.CONVERSATIONS) as any)
       .update(conversationUpdate)
       .eq('id', conversationId);
 
@@ -541,12 +541,12 @@ export async function sendMessage(
     const participantUpdate: ConversationParticipantsUpdate = {
       last_read_at: new Date().toISOString(),
     };
-    const updateQuery = admin
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
-      .update(participantUpdate as any)
+    const updateQuery = (admin
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
+      .update(participantUpdate)
       .eq('conversation_id', conversationId)
       .eq('user_id', senderId);
-    const { error: readError } = await (updateQuery as any);
+    const { error: readError } = await updateQuery;
 
     if (readError) {
       logger.warn('Failed to update sender read time:', readError);
@@ -572,8 +572,8 @@ export async function markConversationRead(conversationId: string) {
   const participantUpdate: ConversationParticipantsUpdate = {
     last_read_at: new Date().toISOString(),
   };
-  await admin
-    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+  await (admin
+    .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
     .update(participantUpdate)
     .eq('conversation_id', conversationId)
     .eq('user_id', user.id);
@@ -685,7 +685,7 @@ export async function openConversation(
   }
 
   // Group conversation
-  const { data: groupId, error: groupErr } = await supabase.rpc('create_group_conversation', {
+  const { data: groupId, error: groupErr } = await (supabase.rpc as any)('create_group_conversation', {
     p_created_by: user.id,
     p_participant_ids: participantIds,
     p_title: title || null,

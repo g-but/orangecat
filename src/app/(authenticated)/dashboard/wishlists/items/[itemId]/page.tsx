@@ -8,6 +8,8 @@
  * Last Modified Summary: Created wishlist item detail page with proof section
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { WishlistItemProofSection } from '@/components/wishlist/WishlistItemProofSection';
@@ -27,8 +29,8 @@ export default async function WishlistItemDetailPage({ params }: PageProps) {
   }
 
   // Fetch wishlist item
-  const { data: item, error: itemError } = await supabase
-    .from('wishlist_items')
+  const { data: item, error: itemError } = await (supabase
+    .from('wishlist_items') as any)
     .select(`
       id,
       title,

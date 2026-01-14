@@ -91,7 +91,7 @@ export function normalizeEntityData<T extends Record<string, unknown>>(
     normalizeAllEmptyStrings?: boolean;
   }
 ): T {
-  const normalized = { ...data };
+  const normalized: Record<string, unknown> = { ...data };
 
   // Normalize specific empty string fields to null
   if (config?.emptyStringFields) {
@@ -147,5 +147,5 @@ export function normalizeEntityData<T extends Record<string, unknown>>(
     });
   }
 
-  return normalized;
+  return normalized as T;
 }

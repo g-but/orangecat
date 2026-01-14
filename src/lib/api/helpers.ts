@@ -45,13 +45,13 @@ export function normalizeDates<T extends Record<string, unknown>>(
   data: T,
   dateFields: string[]
 ): T {
-  const normalized = { ...data };
+  const normalized: Record<string, unknown> = { ...data };
   for (const field of dateFields) {
     if (field in normalized) {
-      normalized[field] = normalizeDate(normalized[field] as string | Date | null) as T[keyof T];
+      normalized[field] = normalizeDate(normalized[field] as string | Date | null);
     }
   }
-  return normalized;
+  return normalized as T;
 }
 
 /**

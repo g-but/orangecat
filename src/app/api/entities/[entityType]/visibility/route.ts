@@ -57,8 +57,8 @@ export async function PATCH(
     const userIdField = getUserIdField(entityType as EntityType);
 
     // Update entities - RLS ensures user can only update their own
-    const { data, error } = await supabase
-      .from(tableName)
+    const { data, error } = await (supabase
+      .from(tableName) as any)
       .update({ show_on_profile, updated_at: new Date().toISOString() })
       .in('id', ids)
       .eq(userIdField, user.id)

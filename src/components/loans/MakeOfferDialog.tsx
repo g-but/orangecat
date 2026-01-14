@@ -36,7 +36,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, Target, DollarSign, Percent, Calendar } from 'lucide-react';
 import { formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY, CURRENCY_CODES } from '@/config/currencies';
-import type { Currency } from '@/types/settings';
+import type { CurrencyCode } from '@/config/currencies';
 import loansService from '@/services/loans';
 import { Loan, CreateLoanOfferRequest } from '@/types/loans';
 import { toast } from 'sonner';
@@ -85,7 +85,7 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
 
   const formatLoanCurrency = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
     // Validate currency and fallback to platform default
-    const validCurrency = (CURRENCY_CODES.includes(currency as Currency) ? currency : PLATFORM_DEFAULT_CURRENCY) as Currency;
+    const validCurrency = (CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY) as CurrencyCode;
     return formatCurrency(amount, validCurrency);
   };
 

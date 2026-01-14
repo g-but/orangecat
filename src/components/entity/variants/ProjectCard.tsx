@@ -17,12 +17,14 @@ import { PROJECT_STATUSES } from '@/config/project-statuses';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import BTCAmountDisplay from '@/components/ui/BTCAmountDisplay';
 import type { SearchFundingPage } from '@/services/search';
+import type { CurrencyCode } from '@/config/currencies';
 
-interface ProjectCardProps extends Omit<EntityCardProps, 'headerSlot' | 'progressSlot' | 'metricsSlot' | 'footerSlot'> {
+interface ProjectCardProps extends Omit<EntityCardProps, 'id' | 'title' | 'headerSlot' | 'progressSlot' | 'metricsSlot' | 'footerSlot'> {
   project: SearchFundingPage & {
     currency?: string;
     tags?: string[] | null;
     cover_image_url?: string | null;
+    supporters_count?: number;
   };
   showProgress?: boolean;
   showMetrics?: boolean;
@@ -31,7 +33,7 @@ interface ProjectCardProps extends Omit<EntityCardProps, 'headerSlot' | 'progres
 export function ProjectCard({ project, showProgress = true, showMetrics = true, ...props }: ProjectCardProps) {
   const goalAmount = project.goal_amount ?? 0;
   const currentAmount = project.raised_amount ?? 0;
-  const projectCurrency = project.currency || 'CHF';
+  const projectCurrency = (project.currency || 'CHF') as CurrencyCode;
   const showProgressBar = showProgress && goalAmount > 0;
   const progressPercentage = showProgressBar ? Math.min((currentAmount / goalAmount) * 100, 100) : 0;
 
@@ -78,7 +80,7 @@ export function ProjectCard({ project, showProgress = true, showMetrics = true, 
           </span>
           {projectCurrency !== 'BTC' && (
             <span className="text-xs text-gray-500">
-              (<BTCAmountDisplay sats={Math.round(currentAmount * 100)} />)
+              (<BTCAmountDisplay amount={currentAmount} currency={projectCurrency} />)
             </span>
           )}
         </div>
@@ -98,7 +100,7 @@ export function ProjectCard({ project, showProgress = true, showMetrics = true, 
       id={project.id}
       title={project.title || 'Untitled Project'}
       description={project.description || null}
-      thumbnailUrl={project.cover_image_url || project.banner_url || null}
+      thumbnailUrl={project.cover_image_url || project.banner_url || undefined}
       href={props.href || `/projects/${project.id}`}
       badge={statusConfig.label}
       badgeVariant={statusConfig.badgeVariant}

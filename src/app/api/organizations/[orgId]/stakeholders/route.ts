@@ -17,15 +17,15 @@ export const GET = withOptionalAuth(async (
     const supabase = await createServerClient();
 
     // Check access permissions
-    const { data: member } = await supabase
-      .from('group_members')
+    const { data: member } = await (supabase
+      .from('group_members') as any)
       .select('user_id')
       .eq('group_id', organizationId)
       .eq('user_id', user?.id || '')
       .maybeSingle();
 
-    const { data: group } = await supabase
-      .from('groups')
+    const { data: group } = await (supabase
+      .from('groups') as any)
       .select('is_public')
       .eq('id', organizationId)
       .single();
@@ -35,8 +35,8 @@ export const GET = withOptionalAuth(async (
     }
 
     // Get members with profile information
-    const { data: members, error } = await supabase
-      .from('group_members')
+    const { data: members, error } = await (supabase
+      .from('group_members') as any)
       .select(`
         *,
         profiles (
@@ -57,7 +57,7 @@ export const GET = withOptionalAuth(async (
 
     // Map group_members to stakeholders format for backward compatibility
     // Map role to role_type for compatibility
-    const stakeholders = members?.map(m => ({
+    const stakeholders = members?.map((m: any) => ({
       ...m,
       role_type: m.role,
       organization_id: m.group_id,
@@ -74,10 +74,10 @@ export const GET = withOptionalAuth(async (
     };
 
     const groupedStakeholders = {
-      founders: stakeholders.filter(s => s.role === 'founder') || [],
-      employees: stakeholders.filter(s => s.role === 'admin') || [],
-      contractors: stakeholders.filter(s => s.role === 'admin') || [], // Map admin to contractors too
-      shareholders: stakeholders.filter(s => s.role === 'member') || [],
+      founders: stakeholders.filter((s: any) => s.role === 'founder') || [],
+      employees: stakeholders.filter((s: any) => s.role === 'admin') || [],
+      contractors: stakeholders.filter((s: any) => s.role === 'admin') || [], // Map admin to contractors too
+      shareholders: stakeholders.filter((s: any) => s.role === 'member') || [],
       lenders: [] as typeof stakeholders, // No lenders in new system
       donors: [] as typeof stakeholders, // No donors in new system
     };
@@ -131,15 +131,15 @@ export const POST = withAuth(async (
     const supabase = await createServerClient();
 
     // Check if user is a founder or admin (only founders/admins can manage members)
-    const { data: member } = await supabase
-      .from('group_members')
+    const { data: member2 } = await (supabase
+      .from('group_members') as any)
       .select('role')
       .eq('group_id', organizationId)
       .eq('user_id', user.id)
       .in('role', ['founder', 'admin'])
       .maybeSingle();
 
-    if (!member) {
+    if (!member2) {
       return apiForbidden('Only founders and admins can manage members');
     }
 
@@ -177,8 +177,8 @@ export const POST = withAuth(async (
     const role = roleTypeToRole[role_type] || 'member';
 
     // Check if user is already a member
-    const { data: existingMember } = await supabase
-      .from('group_members')
+    const { data: existingMember } = await (supabase
+      .from('group_members') as any)
       .select('id')
       .eq('group_id', organizationId)
       .eq('user_id', user_id)
@@ -196,8 +196,8 @@ export const POST = withAuth(async (
       permission_overrides: permissions && permissions.length > 0 ? permissions : null,
     };
 
-    const { data: newMember, error: insertError } = await supabase
-      .from('group_members')
+    const { data: newMember, error: insertError } = await (supabase
+      .from('group_members') as any)
       .insert(memberData)
       .select(`
         *,
@@ -223,7 +223,7 @@ export const POST = withAuth(async (
       permissions: newMember.permission_overrides || [],
     };
 
-    return apiCreated(newStakeholder, { status: 201 });
+    return apiCreated(newStakeholder);
   } catch (error) {
     logger.error('Stakeholder POST error', { error, organizationId: (await params).id, userId: req.user.id }, 'Organizations');
     return handleApiError(error);

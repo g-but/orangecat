@@ -17,7 +17,7 @@ import { FileUploadValidator } from '@/utils/fileUploadValidation'
 export interface FileUploadConfig {
   bucketName: string
   logPrefix: string
-  validationType: 'avatar' | 'banner' | 'document'
+  validationType: 'avatar' | 'banner' | 'project'
 }
 
 export async function createFileUploadHandler(config: FileUploadConfig) {

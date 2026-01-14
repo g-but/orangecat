@@ -59,8 +59,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // Fetch current project
-    const { data: existingProject, error: fetchError } = await supabase
-      .from(getTableName('project'))
+    const { data: existingProject, error: fetchError } = await (supabase
+      .from(getTableName('project')) as any)
       .select('id, user_id, status')
       .eq('id', id)
       .single();
@@ -86,8 +86,8 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // Update status
-    const { data: project, error: updateError } = await supabase
-      .from(getTableName('project'))
+    const { data: project, error: updateError } = await (supabase
+      .from(getTableName('project')) as any)
       .update({
         status: normalizedStatus,
         updated_at: new Date().toISOString(),

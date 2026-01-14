@@ -32,8 +32,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     } = await supabase.auth.getUser();
 
     // Verify assistant exists
-    const { data: assistant, error: assistantError } = await supabase
-      .from(DATABASE_TABLES.AI_ASSISTANTS)
+    const { data: assistant, error: assistantError } = await (supabase
+      .from(DATABASE_TABLES.AI_ASSISTANTS) as any)
       .select('id, average_rating, total_ratings')
       .eq('id', assistantId)
       .single();
@@ -43,8 +43,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Build query
-    let query = supabase
-      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
+    let query = (supabase
+      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
       .select(
         `
         id,
@@ -83,8 +83,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get rating distribution
-    const { data: distribution } = await supabase
-      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
+    const { data: distribution } = await (supabase
+      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
       .select('rating')
       .eq('assistant_id', assistantId);
 
@@ -105,8 +105,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get current user's rating if authenticated
     let userRating = null;
     if (user) {
-      const { data: myRating } = await supabase
-        .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
+      const { data: myRating } = await (supabase
+        .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
         .select('id, rating, review, created_at')
         .eq('assistant_id', assistantId)
         .eq('user_id', user.id)

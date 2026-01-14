@@ -14,15 +14,15 @@ export function withRateLimit(mode: Mode = 'read'): Middleware<any> {
   return async (req, ctx, next) => {
     let result: RateLimitResult
     if (mode === 'read') {
-      result = rateLimit(req)
+      result = await rateLimit(req)
     } else {
       // If a user is available in ctx, use their id; otherwise fall back to IP-based
       const ctxWithUser = ctx as ContextWithUser | undefined;
       const userId = ctxWithUser?.user?.id
       if (userId) {
-        result = rateLimitWrite(userId)
+        result = await rateLimitWrite(userId)
       } else {
-        result = rateLimit(req)
+        result = await rateLimit(req)
       }
     }
 

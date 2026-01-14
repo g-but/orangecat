@@ -76,10 +76,10 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
 
       setGroup(groupResult.group);
 
-      // Load members
+      // Load members - cast GroupMemberDetail[] to GroupMember[] for component state
       const membersResult = await groupsService.getGroupMembers(groupResult.group.id);
       if (membersResult.success) {
-        setMembers(membersResult.members || []);
+        setMembers((membersResult.members || []) as unknown as GroupMember[]);
       }
 
       // Load wallets

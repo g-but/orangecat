@@ -28,15 +28,15 @@ export const GET = withOptionalAuth(async (
     const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
 
     // Check if user can view this group's proposals
-    const { data: member } = await supabase
-      .from('group_members')
+    const { data: member } = await (supabase
+      .from('group_members') as any)
       .select('user_id')
       .eq('group_id', organizationId)
       .eq('user_id', user?.id || '')
       .maybeSingle();
 
-    const { data: group } = await supabase
-      .from('groups')
+    const { data: group } = await (supabase
+      .from('groups') as any)
       .select('is_public')
       .eq('id', organizationId)
       .single();
@@ -46,8 +46,8 @@ export const GET = withOptionalAuth(async (
     }
 
     // Get proposals with vote counts
-    const { data: proposals, error } = await supabase
-      .from('group_proposals')
+    const { data: proposals, error } = await (supabase
+      .from('group_proposals') as any)
       .select(`
         *,
         profiles!group_proposals_proposer_id_fkey (
@@ -70,7 +70,7 @@ export const GET = withOptionalAuth(async (
     }
 
     // Calculate voting results for each proposal
-    const proposalsWithResults = proposals?.map(proposal => {
+    const proposalsWithResults = proposals?.map((proposal: any) => {
       const votes: Vote[] = proposal.group_votes || [];
       const totalVotes = votes.length;
       const yesVotes = votes.filter((v: Vote) => v.vote === 'yes').reduce((sum: number, v: Vote) => sum + Number(v.voting_power), 0);
@@ -133,8 +133,8 @@ export const POST = withAuth(async (
     const supabase = await createServerClient();
 
     // Check if user is a member
-    const { data: member } = await supabase
-      .from('group_members')
+    const { data: member } = await (supabase
+      .from('group_members') as any)
       .select('user_id')
       .eq('group_id', organizationId)
       .eq('user_id', user.id)
@@ -168,8 +168,8 @@ export const POST = withAuth(async (
     } = validation.data;
 
     // Get group's governance preset to set default voting type
-    const { data: group } = await supabase
-      .from('groups')
+    const { data: group } = await (supabase
+      .from('groups') as any)
       .select('governance_preset')
       .eq('id', organizationId)
       .single();
@@ -186,8 +186,8 @@ export const POST = withAuth(async (
       action_data: data || {},
     };
 
-    const { data: proposal, error: insertError } = await supabase
-      .from('group_proposals')
+    const { data: proposal, error: insertError } = await (supabase
+      .from('group_proposals') as any)
       .insert(proposalData)
       .select(`
         *,
@@ -203,7 +203,7 @@ export const POST = withAuth(async (
       return handleApiError(insertError);
     }
 
-    return apiCreated(proposal, { status: 201 });
+    return apiCreated(proposal);
   } catch (error) {
     logger.error('Proposal POST error', { error, organizationId: (await params).id, userId: req.user.id }, 'Organizations');
     return handleApiError(error);

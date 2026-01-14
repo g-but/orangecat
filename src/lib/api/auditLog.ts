@@ -104,7 +104,7 @@ export async function auditLog(entry: AuditLogEntry): Promise<void> {
     const supabase = await createServerClient();
 
     // Create audit log entry in database
-    const { error } = await supabase.from('audit_logs').insert({
+    const { error } = await (supabase.from('audit_logs') as any).insert({
       action: entry.action,
       user_id: entry.userId,
       entity_type: entry.entityType,

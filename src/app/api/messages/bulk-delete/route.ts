@@ -35,8 +35,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     const { conversationId, ids } = validation.data
 
     // Verify user is participant
-    const { data: participant } = await supabase
-      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+    const { data: participant } = await (supabase
+      .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
       .select('user_id')
       .eq('conversation_id', conversationId)
       .eq('user_id', user.id)
@@ -48,9 +48,9 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     // Soft delete messages (only messages sent by current user)
     // PURE RLS: relies on 'Message senders can update their messages' policy
-    const { error: updErr, data } = await supabase
-      .from(DATABASE_TABLES.MESSAGES)
-      .update({ is_deleted: true } as { is_deleted: boolean })
+    const { error: updErr, data } = await (supabase
+      .from(DATABASE_TABLES.MESSAGES) as any)
+      .update({ is_deleted: true })
       .in('id', ids)
       .eq('conversation_id', conversationId)
       .eq('sender_id', user.id)

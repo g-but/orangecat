@@ -118,7 +118,7 @@ export function WalletFilters({ filters, onFiltersChange, className }: WalletFil
           return (
             <Button
               key={option.value}
-              variant={isSelected ? 'default' : 'outline'}
+              variant={isSelected ? 'primary' : 'outline'}
               size="sm"
               onClick={() => {
                 const newTypes = isSelected
@@ -164,7 +164,7 @@ export function WalletFilters({ filters, onFiltersChange, className }: WalletFil
               {filterOptions.difficulty.map(option => (
                 <Button
                   key={option.value}
-                  variant={filters.difficulty.includes(option.value) ? 'default' : 'outline'}
+                  variant={filters.difficulty.includes(option.value) ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => {
                     const newDifficulties = filters.difficulty.includes(option.value)
@@ -186,7 +186,7 @@ export function WalletFilters({ filters, onFiltersChange, className }: WalletFil
               {filterOptions.privacy.map(option => (
                 <Button
                   key={option.value}
-                  variant={filters.privacy.includes(option.value) ? 'default' : 'outline'}
+                  variant={filters.privacy.includes(option.value) ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => {
                     const newPrivacy = filters.privacy.includes(option.value)
@@ -208,7 +208,7 @@ export function WalletFilters({ filters, onFiltersChange, className }: WalletFil
               {filterOptions.custody.map(option => (
                 <Button
                   key={option.value}
-                  variant={filters.custody.includes(option.value) ? 'default' : 'outline'}
+                  variant={filters.custody.includes(option.value) ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => {
                     const newCustody = filters.custody.includes(option.value)
@@ -232,7 +232,7 @@ export function WalletFilters({ filters, onFiltersChange, className }: WalletFil
               {filterOptions.countries.map(option => (
                 <Button
                   key={option.value}
-                  variant={filters.countries.includes(option.value) ? 'default' : 'outline'}
+                  variant={filters.countries.includes(option.value) ? 'primary' : 'outline'}
                   size="sm"
                   onClick={() => {
                     const newCountries = filters.countries.includes(option.value)

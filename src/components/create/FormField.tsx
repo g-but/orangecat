@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/Textarea';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import type { FieldConfig, FormFieldProps } from './types';
+import type { Currency } from '@/types/settings';
 
 // ==================== COMPONENT ====================
 

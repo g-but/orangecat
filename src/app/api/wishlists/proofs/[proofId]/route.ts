@@ -43,8 +43,8 @@ export async function DELETE(
     }
 
     // Get the proof and verify ownership
-    const { data: proof, error: proofError } = await supabase
-      .from('wishlist_fulfillment_proofs')
+    const { data: proof, error: proofError } = await (supabase
+      .from('wishlist_fulfillment_proofs') as any)
       .select('id, user_id, wishlist_item_id')
       .eq('id', proofId)
       .single();
@@ -65,8 +65,8 @@ export async function DELETE(
     }
 
     // Delete the proof
-    const { error: deleteError } = await supabase
-      .from('wishlist_fulfillment_proofs')
+    const { error: deleteError } = await (supabase
+      .from('wishlist_fulfillment_proofs') as any)
       .delete()
       .eq('id', proofId);
 
@@ -83,8 +83,8 @@ export async function DELETE(
     }
 
     // Also delete any associated feedback
-    const { error: feedbackDeleteError } = await supabase
-      .from('wishlist_feedback')
+    const { error: feedbackDeleteError } = await (supabase
+      .from('wishlist_feedback') as any)
       .delete()
       .eq('fulfillment_proof_id', proofId);
 

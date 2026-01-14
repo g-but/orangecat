@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Profile } from '@/types/database';
+import { ScalableProfile } from '@/types/database';
 import { Wallet } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import ProfileWalletSection from '@/components/profile/ProfileWalletSection';
 import { toast } from 'sonner';
 
 interface ProfileWalletsTabProps {
-  profile: Profile;
+  profile: ScalableProfile;
   isOwnProfile: boolean;
 }
 

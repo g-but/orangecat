@@ -28,7 +28,7 @@ export const CurrencyDisplay: React.FC<CurrencyDisplayProps> = ({
   className,
   showSymbol = true,
 }) => {
-  const colorConfig = componentColors.currencyDisplay(currency);
+  const colorConfig = componentColors.currencyDisplay(currency as 'BTC' | 'USD' | 'CHF' | 'SATS');
 
   const sizeClasses = {
     sm: 'text-sm',

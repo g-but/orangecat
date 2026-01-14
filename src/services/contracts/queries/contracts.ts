@@ -3,8 +3,8 @@ import { logger } from '@/utils/logger';
 
 export async function getContract(contractId: string) {
   try {
-    const { data, error } = await supabase
-      .from('contracts')
+    const { data, error } = await (supabase
+      .from('contracts') as any)
       .select('*')
       .eq('id', contractId)
       .single();

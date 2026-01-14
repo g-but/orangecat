@@ -21,8 +21,8 @@ interface RouteParams {
 async function getOrgSlugById(id: string): Promise<string | null> {
   const supabase = await createServerClient();
 
-  const { data: org } = await supabase
-      .from('groups')
+  const { data: org } = await (supabase
+      .from('groups') as any)
     .select('slug')
     .eq('id', id)
     .single();

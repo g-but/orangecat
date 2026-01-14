@@ -314,7 +314,7 @@ export function isValidBitcoinAddress(
   network: 'mainnet' | 'testnet' = 'mainnet'
 ): boolean {
   try {
-    return validateBitcoinAddress(address, network);
+    return validateBitcoinAddress(address, network as any);
   } catch {
     return false;
   }

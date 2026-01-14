@@ -54,7 +54,7 @@ export async function toggleLike(
       if (existingLike) {
         // Unlike the event
         try {
-          const { data, error } = await supabase.rpc('unlike_timeline_event', {
+          const { data, error } = await (supabase.rpc as any)('unlike_timeline_event', {
             p_event_id: eventId,
             p_user_id: targetUserId,
           });
@@ -67,7 +67,7 @@ export async function toggleLike(
           return {
             success: true,
             liked: false,
-            likeCount: data.like_count || 0,
+            likeCount: (data as any)?.like_count || 0,
           };
         } catch (dbError) {
           logger.warn(
@@ -93,7 +93,7 @@ export async function toggleLike(
       } else {
         // Like the event
         try {
-          const { data, error } = await supabase.rpc('like_timeline_event', {
+          const { data, error } = await (supabase.rpc as any)('like_timeline_event', {
             p_event_id: eventId,
             p_user_id: targetUserId,
           });
@@ -106,7 +106,7 @@ export async function toggleLike(
           return {
             success: true,
             liked: true,
-            likeCount: data.like_count || 0,
+            likeCount: (data as any)?.like_count || 0,
           };
         } catch (dbError) {
           logger.warn(
@@ -117,7 +117,7 @@ export async function toggleLike(
           // Fallback: insert into timeline_likes and return new count
           const { error: insertErr } = await supabase
             .from(DATABASE_TABLES.TIMELINE_LIKES)
-            .insert({ event_id: eventId, user_id: targetUserId });
+            .insert({ event_id: eventId, user_id: targetUserId } as any);
           if (insertErr) {
             logger.error('Fallback like failed', insertErr, 'Timeline');
             return { success: false, liked: false, likeCount: 0, error: insertErr.message };
@@ -160,7 +160,7 @@ export async function toggleDislike(
     if (existingDislike) {
       // Undislike the event
       try {
-        const { data, error } = await supabase.rpc('undislike_timeline_event', {
+        const { data, error } = await (supabase.rpc as any)('undislike_timeline_event', {
           p_event_id: eventId,
           p_user_id: targetUserId,
         });
@@ -173,7 +173,7 @@ export async function toggleDislike(
         return {
           success: true,
           disliked: false,
-          dislikeCount: data.dislike_count || 0,
+          dislikeCount: (data as any)?.dislike_count || 0,
         };
       } catch (dbError) {
         logger.warn(
@@ -199,7 +199,7 @@ export async function toggleDislike(
     } else {
       // Dislike the event
       try {
-        const { data, error } = await supabase.rpc('dislike_timeline_event', {
+        const { data, error } = await (supabase.rpc as any)('dislike_timeline_event', {
           p_event_id: eventId,
           p_user_id: targetUserId,
         });
@@ -212,7 +212,7 @@ export async function toggleDislike(
         return {
           success: true,
           disliked: true,
-          dislikeCount: data.dislike_count || 0,
+          dislikeCount: (data as any)?.dislike_count || 0,
         };
       } catch (dbError) {
         logger.warn(
@@ -223,7 +223,7 @@ export async function toggleDislike(
         // Fallback: insert into timeline_dislikes and return new count
         const { error: insertErr } = await supabase
           .from(DATABASE_TABLES.TIMELINE_DISLIKES)
-          .insert({ event_id: eventId, user_id: targetUserId });
+          .insert({ event_id: eventId, user_id: targetUserId } as any);
         if (insertErr) {
           logger.error('Fallback dislike failed', insertErr, 'Timeline');
           return { success: false, disliked: false, dislikeCount: 0, error: insertErr.message };
@@ -257,7 +257,7 @@ export async function addComment(
     }
 
     try {
-      const { data, error } = await supabase.rpc('add_timeline_comment', {
+      const { data, error } = await (supabase.rpc as any)('add_timeline_comment', {
         p_event_id: eventId,
         p_user_id: userId,
         p_content: content,
@@ -271,8 +271,8 @@ export async function addComment(
 
       return {
         success: true,
-        commentId: data.comment_id,
-        commentCount: data.comment_count || 0,
+        commentId: (data as any)?.comment_id,
+        commentCount: (data as any)?.comment_count || 0,
       };
     } catch (dbError) {
       logger.warn(
@@ -288,7 +288,7 @@ export async function addComment(
           user_id: userId,
           content,
           parent_comment_id: parentCommentId,
-        })
+        } as any)
         .select('id')
         .single();
       if (iErr || !inserted) {
@@ -299,7 +299,7 @@ export async function addComment(
         .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .select('*', { count: 'exact', head: true })
         .eq('event_id', eventId);
-      return { success: true, commentId: inserted.id, commentCount: count || 0 };
+      return { success: true, commentId: (inserted as any).id, commentCount: count || 0 };
     }
   } catch (error) {
     logger.error('Error adding timeline comment', error, 'Timeline');
@@ -322,7 +322,7 @@ export async function updateComment(
     }
 
     try {
-      const { error } = await supabase.rpc('update_timeline_comment', {
+      const { error } = await (supabase.rpc as any)('update_timeline_comment', {
         p_comment_id: commentId,
         p_user_id: targetUserId,
         p_content: content,
@@ -341,8 +341,8 @@ export async function updateComment(
         'Timeline'
       );
       // Fallback: update directly in timeline_comments table
-      const { error: updateErr } = await supabase
-        .from(DATABASE_TABLES.TIMELINE_COMMENTS)
+      const { error: updateErr } = await (supabase
+        .from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
         .update({ content, updated_at: new Date().toISOString() })
         .eq('id', commentId)
         .eq('user_id', targetUserId);
@@ -374,7 +374,7 @@ export async function deleteComment(
     }
 
     try {
-      const { error } = await supabase.rpc('delete_timeline_comment', {
+      const { error } = await (supabase.rpc as any)('delete_timeline_comment', {
         p_comment_id: commentId,
         p_user_id: targetUserId,
       });
@@ -398,8 +398,8 @@ export async function deleteComment(
     }
 
     // Fallback: soft delete by updating deleted_at timestamp
-    const { error: deleteErr } = await supabase
-      .from(DATABASE_TABLES.TIMELINE_COMMENTS)
+    const { error: deleteErr } = await (supabase
+      .from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
       .update({
         deleted_at: new Date().toISOString(),
         content: '[deleted]',
@@ -448,7 +448,7 @@ export async function getEventCounts(eventId: string): Promise<{ likeCount: numb
 export async function getEventComments(eventId: string, limit: number = 50, offset: number = 0): Promise<any[]> {
   try {
     try {
-      const { data, error } = await supabase.rpc('get_event_comments', {
+      const { data, error } = await (supabase.rpc as any)('get_event_comments', {
         p_event_id: eventId,
         p_limit: limit,
         p_offset: offset,
@@ -477,7 +477,8 @@ export async function getEventComments(eventId: string, limit: number = 50, offs
         logger.error('Fallback comments query failed', cErr, 'Timeline');
         return [];
       }
-      const userIds = Array.from(new Set(comments.map(c => c.user_id).filter(Boolean)));
+      const commentsData = comments as any[];
+      const userIds = Array.from(new Set(commentsData.map(c => c.user_id).filter(Boolean)));
       let profilesMap: Record<
         string,
         { display_name: string; username: string | null; avatar_url: string | null }
@@ -489,14 +490,14 @@ export async function getEventComments(eventId: string, limit: number = 50, offs
           .in('id', userIds as string[]);
         if (!pErr && profiles) {
           profilesMap = Object.fromEntries(
-            profiles.map((p: any) => [
+            (profiles as any[]).map((p: any) => [
               p.id,
               { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url },
             ])
           );
         }
       }
-      return comments.map(c => ({
+      return commentsData.map(c => ({
         id: c.id,
         content: c.content,
         created_at: c.created_at,
@@ -519,7 +520,7 @@ export async function getEventComments(eventId: string, limit: number = 50, offs
 export async function getCommentReplies(commentId: string, limit: number = 20): Promise<any[]> {
   try {
     try {
-      const { data, error } = await supabase.rpc('get_comment_replies', {
+      const { data, error } = await (supabase.rpc as any)('get_comment_replies', {
         p_comment_id: commentId,
         p_limit: limit,
       });
@@ -546,7 +547,8 @@ export async function getCommentReplies(commentId: string, limit: number = 20): 
         logger.error('Fallback replies query failed', rErr, 'Timeline');
         return [];
       }
-      const userIds = Array.from(new Set(replies.map(c => c.user_id).filter(Boolean)));
+      const repliesData = replies as any[];
+      const userIds = Array.from(new Set(repliesData.map(c => c.user_id).filter(Boolean)));
       let profilesMap: Record<
         string,
         { display_name: string; username: string | null; avatar_url: string | null }
@@ -558,17 +560,17 @@ export async function getCommentReplies(commentId: string, limit: number = 20): 
           .in('id', userIds as string[]);
         if (!pErr && profiles) {
           profilesMap = Object.fromEntries(
-            profiles.map((p: any) => [
+            (profiles as any[]).map((p: any) => [
               p.id,
               { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url },
             ])
           );
         }
       }
-        return replies.map(c => ({
-          id: c.id,
-          content: c.content,
-          created_at: c.created_at,
+      return repliesData.map(c => ({
+        id: c.id,
+        content: c.content,
+        created_at: c.created_at,
         user_id: c.user_id,
         user_name: profilesMap[c.user_id]?.display_name || 'User',
         user_username: profilesMap[c.user_id]?.username || null,

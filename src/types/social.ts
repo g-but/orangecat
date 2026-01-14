@@ -12,8 +12,11 @@
 
 import type { ScalableProfile } from '@/services/profileService';
 import { Profile } from './database';
-import { MembershipRole } from './organization';
+import { Project } from './project';
 import type { SocialPlatformId } from '@/lib/social-platforms';
+
+// MembershipRole type (previously imported from ./organization which doesn't exist)
+export type MembershipRole = 'owner' | 'admin' | 'member' | 'contributor';
 
 // =====================================================================
 // 🔗 SOCIAL LINKS

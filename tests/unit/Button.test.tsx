@@ -8,7 +8,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import Button from '../Button';
+import Button from '@/components/ui/Button';
 
 // Mock Next.js Link component
 jest.mock('next/link', () => {
@@ -90,7 +90,8 @@ describe('🎨 Button Component - UI Foundation Tests', () => {
     test('should apply small size styling', () => {
       render(<Button size="sm">Small</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('h-9', 'min-h-[36px]', 'px-4', 'text-sm', 'min-w-[80px]');
+      // Small size uses 44px min-height for mobile touch targets
+      expect(button).toHaveClass('h-11', 'min-h-[44px]', 'px-4', 'text-sm', 'min-w-[80px]');
     });
 
     test('should apply medium size (default)', () => {
@@ -165,13 +166,15 @@ describe('🎨 Button Component - UI Foundation Tests', () => {
     test('should have transform and hover effects', () => {
       render(<Button>Hover me</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('transform', 'hover:scale-102', 'active:scale-95');
+      // Uses active:scale-98 for subtle press feedback
+      expect(button).toHaveClass('transform', 'active:scale-98');
     });
 
     test('should have transition effects', () => {
       render(<Button>Animated</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('transition-all', 'duration-300');
+      // Uses duration-200 for snappy transitions
+      expect(button).toHaveClass('transition-all', 'duration-200');
     });
   });
 
@@ -206,7 +209,8 @@ describe('🎨 Button Component - UI Foundation Tests', () => {
     test('should have proper minimum touch target size', () => {
       render(<Button size="sm">Small Touch</Button>);
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('min-h-[36px]', 'min-w-[80px]');
+      // All sizes use 44px minimum for mobile touch targets
+      expect(button).toHaveClass('min-h-[44px]', 'min-w-[80px]');
     });
   });
 

@@ -20,6 +20,8 @@ import loansService from '@/services/loans';
 import { Loan, LoanOffer } from '@/types/loans';
 import { toast } from 'sonner';
 import { PayoffDialog } from './PayoffDialog';
+import { formatCurrency } from '@/services/currency';
+import { PLATFORM_DEFAULT_CURRENCY, CURRENCY_CODES, type CurrencyCode } from '@/config/currencies';
 
 interface LoanOffersDialogProps {
   loan: Loan;
@@ -90,10 +92,10 @@ export function LoanOffersDialog({
     }
   };
 
-  const formatLoanCurrency = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
+  const formatLoanAmount = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
     // Validate currency and fallback to platform default
-    const validCurrency = (CURRENCY_CODES.includes(currency as Currency) ? currency : PLATFORM_DEFAULT_CURRENCY) as Currency;
-    return formatLoanCurrency(amount, validCurrency);
+    const validCurrency = (CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY) as CurrencyCode;
+    return formatCurrency(amount, validCurrency);
   };
 
   const getStatusColor = (status: string) => {
@@ -146,7 +148,7 @@ export function LoanOffersDialog({
                         )}
                       </div>
                       <div className="text-lg font-semibold">
-                        {formatLoanCurrency(offer.offer_amount, loan.currency)}
+                        {formatLoanAmount(offer.offer_amount, loan.currency)}
                       </div>
                       {offer.interest_rate && (
                         <div className="text-sm text-muted-foreground">

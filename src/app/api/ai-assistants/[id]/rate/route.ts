@@ -5,6 +5,8 @@
  * DELETE /api/ai-assistants/[id]/rate - Remove user's rating
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -48,8 +50,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { rating, review } = result.data;
 
     // Verify assistant exists and is active
-    const { data: assistant, error: assistantError } = await supabase
-      .from(DATABASE_TABLES.AI_ASSISTANTS)
+    const { data: assistant, error: assistantError } = await (supabase
+      .from(DATABASE_TABLES.AI_ASSISTANTS) as any)
       .select('id, status')
       .eq('id', assistantId)
       .single();
@@ -59,8 +61,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Check if user has used this assistant (has conversations)
-    const { data: conversations, error: convError } = await supabase
-      .from(DATABASE_TABLES.AI_CONVERSATIONS)
+    const { data: conversations, error: convError } = await (supabase
+      .from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
       .select('id')
       .eq('assistant_id', assistantId)
       .eq('user_id', user.id)
@@ -76,8 +78,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Upsert rating (insert or update)
-    const { data: ratingData, error: ratingError } = await supabase
-      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
+    const { data: ratingData, error: ratingError } = await (supabase
+      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
       .upsert(
         {
           assistant_id: assistantId,
@@ -121,8 +123,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { error: deleteError } = await supabase
-      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS)
+    const { error: deleteError } = await (supabase
+      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
       .delete()
       .eq('assistant_id', assistantId)
       .eq('user_id', user.id);

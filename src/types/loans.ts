@@ -17,7 +17,7 @@ export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
 
 export type PaymentType = 'monthly' | 'lump_sum' | 'refinance' | 'payoff';
 
-export type Currency = CurrencyCode;
+// Use CurrencyCode directly from @/config/currencies instead of creating an alias
 
 export type ContactMethod = 'platform' | 'email' | 'phone';
 
@@ -49,7 +49,7 @@ export interface Loan {
   remaining_balance: number;
   interest_rate?: number;
   monthly_payment?: number;
-  currency: Currency;
+  currency: CurrencyCode;
   lender_name?: string;
   loan_number?: string;
   origination_date?: string;
@@ -73,6 +73,8 @@ export interface Loan {
   created_at: string;
   updated_at: string;
   paid_off_at?: string;
+  // Index signature for BaseEntity compatibility
+  [key: string]: unknown;
 }
 
 export interface LoanOffer {
@@ -100,7 +102,7 @@ export interface LoanPayment {
   loan_id: string;
   offer_id?: string;
   amount: number;
-  currency: Currency;
+  currency: CurrencyCode;
   payment_type: PaymentType;
   payer_id: string;
   recipient_id: string;
@@ -167,7 +169,7 @@ export interface CreateLoanRequest {
   remaining_balance: number;
   interest_rate?: number;
   monthly_payment?: number;
-  currency: Currency;
+  currency: CurrencyCode;
   lender_name?: string;
   loan_number?: string;
   origination_date?: string;
@@ -202,7 +204,7 @@ export interface CreateLoanPaymentRequest {
   loan_id: string;
   offer_id?: string;
   amount: number;
-  currency: Currency;
+  currency: CurrencyCode;
   payment_type: PaymentType;
   recipient_id: string;
   transaction_id?: string;

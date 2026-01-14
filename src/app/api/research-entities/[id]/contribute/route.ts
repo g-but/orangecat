@@ -7,23 +7,32 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { convertToBtc } from '@/services/currency';
 
+// Helper to extract ID from URL
+function extractIdFromUrl(url: string): string {
+  const segments = new URL(url).pathname.split('/');
+  const idx = segments.findIndex(s => s === 'research-entities');
+  return segments[idx + 1] || '';
+}
+
 // GET /api/research-entities/[id]/contribute - Get contribution history
-export const GET = withRateLimit('read')(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
+export const GET = compose(
+  withRateLimit('read')
+)(async (request: NextRequest) => {
+  const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
 
     // Check if research entity exists
-    const { data: entity, error: entityError } = await supabase
-      .from('research_entities')
+    const { data: entityData, error: entityError } = await (supabase
+      .from('research_entities') as any)
       .select('id, is_public, user_id')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
+    const entity = entityData as any;
 
     if (entityError) {
       if (entityError.code === 'PGRST116') {
@@ -40,18 +49,18 @@ export const GET = withRateLimit('read')(async (
     const canSeeDetails =
       user &&
       (user.id === entity.user_id ||
-        (await supabase
-          .from('research_contributions')
+        (await (supabase
+          .from('research_contributions') as any)
           .select('id')
-          .eq('research_entity_id', params.id)
+          .eq('research_entity_id', id)
           .eq('user_id', user.id)
           .limit(1)
-          .then(({ data }) => data && data.length > 0)));
+          .then(({ data }: any) => data && data.length > 0)));
 
-    let query = supabase
-      .from('research_contributions')
+    let query = (supabase
+      .from('research_contributions') as any)
       .select(canSeeDetails ? '*' : 'id, amount_btc, funding_model, anonymous, status, created_at')
-      .eq('research_entity_id', params.id)
+      .eq('research_entity_id', id)
       .order('created_at', { ascending: false });
 
     // Hide anonymous contributor details unless owner
@@ -59,7 +68,8 @@ export const GET = withRateLimit('read')(async (
       query = query.eq('anonymous', false);
     }
 
-    const { data: contributions, error } = await query;
+    const { data: contributionsData, error } = await query;
+    const contributions = contributionsData as any[];
 
     if (error) {
       throw error;
@@ -91,10 +101,10 @@ export const GET = withRateLimit('read')(async (
 });
 
 // POST /api/research-entities/[id]/contribute - Make a contribution
-export const POST = withRateLimit('write')(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
+export const POST = compose(
+  withRateLimit('write')
+)(async (request: NextRequest) => {
+  const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
     const {
@@ -102,11 +112,12 @@ export const POST = withRateLimit('write')(async (
     } = await supabase.auth.getUser();
 
     // Check if research entity exists and accepts contributions
-    const { data: entity, error: entityError } = await supabase
-      .from('research_entities')
+    const { data: entityData2, error: entityError } = await (supabase
+      .from('research_entities') as any)
       .select('id, is_public, funding_goal, funding_goal_currency, funding_raised_btc, status')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
+    const entity = entityData2 as any;
 
     if (entityError) {
       if (entityError.code === 'PGRST116') {
@@ -148,7 +159,7 @@ export const POST = withRateLimit('write')(async (
 
     // Create contribution record
     const contributionData = {
-      research_entity_id: params.id,
+      research_entity_id: id,
       user_id: anonymous ? null : user?.id || null,
       amount_btc: amountBtc,
       funding_model,
@@ -158,8 +169,8 @@ export const POST = withRateLimit('write')(async (
       status: 'pending',
     };
 
-    const { data: contribution, error } = await supabase
-      .from('research_contributions')
+    const { data: contribution, error } = await (supabase
+      .from('research_contributions') as any)
       .insert(contributionData)
       .select()
       .single();
@@ -169,13 +180,13 @@ export const POST = withRateLimit('write')(async (
     }
 
     // Update research entity funding total
-    await supabase.rpc('update_research_funding', {
-      research_entity_id: params.id,
+    await (supabase.rpc as any)('update_research_funding', {
+      research_entity_id: id,
       amount_btc: amountBtc,
     });
 
     logger.info('Research contribution created', {
-      researchEntityId: params.id,
+      researchEntityId: id,
       contributionId: contribution.id,
       amountBtc,
       anonymous,

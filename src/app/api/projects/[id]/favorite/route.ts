@@ -33,8 +33,8 @@ async function handleToggleFavorite(
     const user = request.user;
 
     // Verify project exists
-    const { data: project, error: projectError } = await supabase
-      .from(getTableName('project'))
+    const { data: project, error: projectError } = await (supabase
+      .from(getTableName('project')) as any)
       .select('id, user_id, title')
       .eq('id', projectId)
       .single();
@@ -45,8 +45,8 @@ async function handleToggleFavorite(
     }
 
     // Check if already favorited
-    const { data: existingFavorite, error: favoriteCheckError } = await supabase
-      .from('project_favorites')
+    const { data: existingFavorite, error: favoriteCheckError } = await (supabase
+      .from('project_favorites') as any)
       .select('id')
       .eq('user_id', user.id)
       .eq('project_id', projectId)
@@ -70,7 +70,7 @@ async function handleToggleFavorite(
         });
       }
 
-      const { error: insertError } = await supabase.from('project_favorites').insert({
+      const { error: insertError } = await (supabase.from('project_favorites') as any).insert({
         user_id: user.id,
         project_id: projectId,
       });
@@ -104,8 +104,8 @@ async function handleToggleFavorite(
         });
       }
 
-      const { error: deleteError } = await supabase
-        .from('project_favorites')
+      const { error: deleteError } = await (supabase
+        .from('project_favorites') as any)
         .delete()
         .eq('user_id', user.id)
         .eq('project_id', projectId);
@@ -163,8 +163,8 @@ async function handleGetFavoriteStatus(
     const supabase = await createServerClient();
     const user = request.user;
 
-    const { data: favorite, error: favoriteError } = await supabase
-      .from('project_favorites')
+    const { data: favorite, error: favoriteError } = await (supabase
+      .from('project_favorites') as any)
       .select('id')
       .eq('user_id', user.id)
       .eq('project_id', projectId)

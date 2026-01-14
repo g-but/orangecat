@@ -64,8 +64,8 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
           created_by: user.id,
           is_group: false,
         };
-        const { data: convIns, error: convErr } = await supabase
-          .from(DATABASE_TABLES.CONVERSATIONS)
+        const { data: convIns, error: convErr } = await (supabase
+          .from(DATABASE_TABLES.CONVERSATIONS) as any)
           .insert(conversationInsert)
           .select('id')
           .single();
@@ -79,8 +79,8 @@ export const GET = withAuth(async (_req: AuthenticatedRequest) => {
             user_id: user.id,
             role: 'member',
           };
-        const { error: partErr } = await supabase
-          .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS)
+        const { error: partErr } = await (supabase
+          .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
           .insert(participantInsert);
         if (partErr) {
           // Roll back conversation if participant insert fails

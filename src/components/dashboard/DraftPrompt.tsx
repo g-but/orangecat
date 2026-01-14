@@ -5,7 +5,7 @@ import { Clock, Edit3, ArrowRight, X, FileText, Calendar, Target, AlertCircle } 
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { useProjectStore, Project } from '@/stores/projectStore';
+import { useProjectStore, Project, Campaign } from '@/stores/projectStore';
 import { formatDistanceToNow } from 'date-fns';
 
 interface DraftPromptProps {
@@ -60,7 +60,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
     return Math.round((completed / total) * 100);
   };
 
-  const isDraftLocal = primaryDraft.syncStatus === 'pending';
+  const isDraftLocal = primaryDraft.isDraft;
   const totalDrafts = drafts.length;
 
   return (

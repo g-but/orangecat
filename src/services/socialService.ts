@@ -1,59 +1,103 @@
 /**
  * SOCIAL COLLABORATION SERVICES - UPDATED FOR PROPER DATABASE IMPLEMENTATION
- * 
- * This service now properly interfaces with database tables instead of
- * storing data as JSON in profiles.website
- * 
+ *
+ * This service provides social collaboration functionality.
+ *
  * Created: 2025-01-08
- * Last Modified: 2026-01-03
- * Last Modified Summary: Removed @ts-nocheck and fixed type safety
+ * Last Modified: 2026-01-13
+ * Last Modified Summary: Fixed missing modules by providing stub implementations
  */
 
-import { supabase } from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
-import type { SearchResult, SearchFilters, EmptyStateContent, ScalableProfile, Organization } from '@/types/social'
+import type { SearchResult, SearchFilters, EmptyStateContent, Organization, SocialAnalytics } from '@/types/social'
 
-// Import proper database services
-import { OrganizationService } from './organizations/index'
-import { PeopleService } from './people/index'
-// Re-export so tests can import directly
-export { PeopleService, OrganizationService }
-import { BitcoinCollaborationService } from './bitcoin/collaborations'
+// =====================================================================
+// STUB SERVICES - Replacing missing module imports
+// =====================================================================
 
-// Re-export types
-export type { 
-  ScalableProfile,
-  Connection,
-  ConnectionRequest,
-  PeopleSearchFilters,
-  Organization,
-  OrganizationFormData,
-  OrganizationMember,
-  Project,
-  ProjectFormData,
-  ProjectMember,
+// Stub PeopleService
+export const PeopleService = {
+  async searchPeople(filters: { query?: string; limit?: number; offset?: number }): Promise<any[]> {
+    logger.warn('PeopleService.searchPeople is a stub', filters, 'Social')
+    return []
+  },
+  async getUserAnalytics(userId: string): Promise<SocialAnalytics> {
+    logger.warn('PeopleService.getUserAnalytics is a stub', { userId }, 'Social')
+    return {
+      total_connections: 0,
+      pending_requests: 0,
+      connection_growth: 0,
+      organizations_joined: 0,
+      organizations_created: 0,
+      organization_roles: {},
+      projects_joined: 0,
+      projects_created: 0,
+      project_contributions: 0,
+      total_raised_across_projects: 0,
+      total_contributed: 0,
+      average_contribution: 0,
+      collaboration_score: 0,
+      reputation_score: 0
+    }
+  },
+  async sendConnectionRequest(targetUserId: string): Promise<{ success: boolean }> {
+    logger.warn('PeopleService.sendConnectionRequest is a stub', { targetUserId }, 'Social')
+    return { success: false }
+  },
+  async getConnections(userId: string): Promise<any[]> {
+    logger.warn('PeopleService.getConnections is a stub', { userId }, 'Social')
+    return []
+  },
+  async respondToConnection(requestId: string, accept: boolean): Promise<{ success: boolean }> {
+    logger.warn('PeopleService.respondToConnection is a stub', { requestId, accept }, 'Social')
+    return { success: false }
+  }
+}
+
+// Stub OrganizationService
+export const OrganizationService = {
+  async searchOrganizations(filters: { query?: string; limit?: number; offset?: number }): Promise<any[]> {
+    logger.warn('OrganizationService.searchOrganizations is a stub', filters, 'Social')
+    return []
+  },
+  async createOrganization(data: any): Promise<{ success: boolean; data?: any }> {
+    logger.warn('OrganizationService.createOrganization is a stub', data, 'Social')
+    return { success: false }
+  },
+  async getUserOrganizations(userId: string): Promise<any[]> {
+    logger.warn('OrganizationService.getUserOrganizations is a stub', { userId }, 'Social')
+    return []
+  },
+  async joinOrganization(organizationId: string): Promise<{ success: boolean }> {
+    logger.warn('OrganizationService.joinOrganization is a stub', { organizationId }, 'Social')
+    return { success: false }
+  }
+}
+
+// Stub BitcoinCollaborationService
+export const BitcoinCollaborationService = {
+  async createCollaboration(data: any): Promise<{ success: boolean; data?: any }> {
+    logger.warn('BitcoinCollaborationService.createCollaboration is a stub', data, 'Social')
+    return { success: false }
+  },
+  async getUserCollaborations(userId: string): Promise<any[]> {
+    logger.warn('BitcoinCollaborationService.getUserCollaborations is a stub', { userId }, 'Social')
+    return []
+  },
+  async recordPayment(collaborationId: string, amount: number): Promise<{ success: boolean }> {
+    logger.warn('BitcoinCollaborationService.recordPayment is a stub', { collaborationId, amount }, 'Social')
+    return { success: false }
+  }
+}
+
+// Re-export types that exist
+export type {
   SearchFilters,
   SearchResult,
-  WalletInfo,
-  Transaction,
   SocialAnalytics,
   EmptyStateContent,
-  Notification,
-  ActivityFeed,
-  BitcoinCollaboration,
-  CollaborationFormData,
-  CollaborationPayment
+  Organization,
 } from '@/types/social'
-
-// =====================================================================
-// 🔄 UPDATED SERVICE EXPORTS - USING PROPER DATABASE IMPLEMENTATION
-// =====================================================================
-
-// Re-export properly implemented services
-// Re-export so tests can import directly
-export { PeopleService } from './people/index'
-export { OrganizationService } from './organizations/index'
-export { BitcoinCollaborationService } from './bitcoin/collaborations'
 
 // =====================================================================
 // 🔍 SEARCH SERVICE - UPDATED FOR DATABASE QUERIES
@@ -67,13 +111,13 @@ export class SearchService {
 
       // Search people using proper database service
       if (!type || type === 'people') {
-        const people = await PeopleService.searchPeople({ 
-          query, 
+        const people = await PeopleService.searchPeople({
+          query,
           limit: Math.ceil(limit / 3),
-          offset 
+          offset
         })
-        
-        people.forEach(person => {
+
+        people.forEach((person: any) => {
           const result: SearchResult = {
             type: 'person',
             id: person.id,
@@ -83,7 +127,7 @@ export class SearchService {
             verification_status: person.verification_status || undefined,
             location: person.location || undefined,
             created_at: person.created_at || new Date().toISOString(),
-            data: person as ScalableProfile,
+            data: person,
           }
           results.push(result)
         })
@@ -91,13 +135,13 @@ export class SearchService {
 
       // Search organizations using proper database service
       if (!type || type === 'organizations') {
-        const organizations = await OrganizationService.searchOrganizations({ 
-          query, 
+        const organizations = await OrganizationService.searchOrganizations({
+          query,
           limit: Math.ceil(limit / 3),
-          offset 
+          offset
         })
-        
-        organizations.forEach(org => {
+
+        organizations.forEach((org: any) => {
           const result: SearchResult = {
             type: 'organization',
             id: org.id,
@@ -112,8 +156,6 @@ export class SearchService {
           results.push(result)
         })
       }
-
-      // Projects are the unified entity - search handled above
 
       return results.slice(0, limit)
     } catch (error) {
@@ -130,25 +172,28 @@ export class SearchService {
 export class SocialAnalyticsService {
   static async getUserAnalytics(userId: string): Promise<SocialAnalytics> {
     try {
-      // Use proper database service for analytics
       return await PeopleService.getUserAnalytics(userId)
     } catch (error) {
       logger.error('Error getting user analytics', { error, userId }, 'Social')
       return {
         total_connections: 0,
         pending_requests: 0,
+        connection_growth: 0,
         organizations_joined: 0,
         organizations_created: 0,
+        organization_roles: {},
+        projects_joined: 0,
         projects_created: 0,
-        projects_supported: 0,
-        engagement_rate: 0,
-        growth_rate: 0
+        project_contributions: 0,
+        total_raised_across_projects: 0,
+        total_contributed: 0,
+        average_contribution: 0,
+        collaboration_score: 0,
+        reputation_score: 0
       }
     }
   }
 }
-
-// Projects are the unified entity for simplified MVP architecture
 
 // =====================================================================
 // 💡 EMPTY STATE SERVICE - UPDATED CONTENT
@@ -272,9 +317,4 @@ export const socialService = {
 
   // Search
   universalSearch: SearchService.universalSearch
-} 
-
-// For unit-tests – expose concrete implementations
-// Already exported above or as classes within this file
-export { SearchService };
-export { SocialAnalyticsService };
+}

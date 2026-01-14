@@ -1,5 +1,4 @@
 /**
-import { logger } from '@/utils/logger';
  * useProfileEditor Hook
  *
  * Extracts all profile editing logic from ModernProfileEditor component.
@@ -11,6 +10,7 @@ import { logger } from '@/utils/logger';
  */
 
 import { useState, useRef, useEffect } from 'react';
+import { logger } from '@/utils/logger';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -26,6 +26,7 @@ import { ProfileStorageService } from '@/services/profile/storage';
 import { SocialLink } from '@/types/social';
 import { profileSchema as serverProfileSchema, normalizeProfileData } from '@/lib/validation';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { ProfileFieldType } from '@/lib/profile-guidance';
 
 // Use server-side schema for consistency
 const profileSchema = serverProfileSchema;
@@ -37,7 +38,7 @@ export interface UseProfileEditorOptions {
   userEmail?: string;
   onSave: (data: ProfileFormData) => Promise<void>;
   onCancel: () => void;
-  onFieldFocus?: (field: string) => void;
+  onFieldFocus?: (field: ProfileFieldType) => void;
 }
 
 export interface UseProfileEditorReturn {
@@ -118,7 +119,7 @@ export function useProfileEditor({
       phone: profile.phone || '',
       bitcoin_address: profile.bitcoin_address || '',
       lightning_address: profile.lightning_address || '',
-      currency: profile.currency || PLATFORM_DEFAULT_CURRENCY,
+      currency: (profile.currency as typeof PLATFORM_DEFAULT_CURRENCY) || PLATFORM_DEFAULT_CURRENCY,
     },
   });
 
@@ -260,7 +261,7 @@ export function useProfileEditor({
   };
 
   return {
-    form,
+    form: form as ReturnType<typeof useForm<ProfileFormValues>>,
     isSaving,
     avatarPreview,
     bannerPreview,

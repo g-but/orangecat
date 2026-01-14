@@ -165,7 +165,7 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
 
         // Apply public filters (e.g., is_public = true for AI assistants)
         for (const [field, value] of Object.entries(publicFilters)) {
-          query = query.eq(field, value);
+          query = query.eq(field, value as string | number | boolean);
         }
       }
 

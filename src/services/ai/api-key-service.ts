@@ -10,7 +10,10 @@
  * Created: 2026-01-08
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// Type alias for any SupabaseClient (accepts any database schema)
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
 
 // ==================== TYPES ====================
@@ -122,7 +125,7 @@ export function generateKeyHint(apiKey: string): string {
 // ==================== SERVICE CLASS ====================
 
 export class ApiKeyService {
-  constructor(private supabase: SupabaseClient) {}
+  constructor(private supabase: AnySupabaseClient) {}
 
   /**
    * Add a new API key for a user
@@ -350,6 +353,6 @@ export class ApiKeyService {
 
 // ==================== FACTORY ====================
 
-export function createApiKeyService(supabase: SupabaseClient): ApiKeyService {
+export function createApiKeyService(supabase: AnySupabaseClient): ApiKeyService {
   return new ApiKeyService(supabase);
 }

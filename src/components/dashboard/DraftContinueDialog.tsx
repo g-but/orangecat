@@ -39,7 +39,7 @@ export default function DraftContinueDialog({
     return null;
   }
 
-  const isLocalDraft = primaryDraft.syncStatus === 'pending';
+  const isLocalDraft = primaryDraft.isDraft;
   const totalDrafts = drafts.length;
 
   const formatLastUpdated = (date: Date | null) => {

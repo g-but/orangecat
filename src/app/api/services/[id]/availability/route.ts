@@ -41,8 +41,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify service exists
-    const { data: service, error: serviceError } = await supabase
-      .from(getTableName('service'))
+    const { data: service, error: serviceError } = await (supabase
+      .from(getTableName('service')) as any)
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
       .eq('status', 'active')
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Service not found' }, { status: 404 });
     }
 
-    const bookingService = createBookingService(supabase);
+    const bookingService = createBookingService(supabase as any);
     const slots = await bookingService.getServiceAvailability(serviceId, date);
 
     return NextResponse.json({

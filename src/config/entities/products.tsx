@@ -45,8 +45,8 @@ export const productEntityConfig: EntityConfig<UserProduct> = {
 
     return {
       priceLabel,
-      badge: product.status === 'published' ? 'Published' : product.status === 'draft' ? 'Draft' : undefined,
-      badgeVariant: product.status === 'published' ? 'success' : product.status === 'draft' ? 'default' : 'default',
+      badge: product.status === 'active' ? 'Active' : product.status === 'draft' ? 'Draft' : product.status === 'paused' ? 'Paused' : product.status === 'sold_out' ? 'Sold Out' : undefined,
+      badgeVariant: product.status === 'active' ? 'success' : product.status === 'draft' ? 'default' : product.status === 'paused' ? 'warning' : product.status === 'sold_out' ? 'destructive' : 'default',
       showEditButton: true,
       editHref: `/dashboard/store/create?edit=${product.id}`,
       // Removed duplicate actions button - edit icon overlay is sufficient

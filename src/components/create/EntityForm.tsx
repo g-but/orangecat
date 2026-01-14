@@ -136,7 +136,7 @@ export function EntityForm<T extends Record<string, any>>({
     const updatedData = { ...formState.data, [field]: value };
 
     // Auto-generate slug from name for groups
-    if (field === 'name' && config.entityType === 'group') {
+    if (field === 'name' && config.type === 'group') {
       const slug = value
         .toLowerCase()
         .replace(/[^a-z0-9\s-]/g, '') // Remove special characters
@@ -144,7 +144,7 @@ export function EntityForm<T extends Record<string, any>>({
         .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
         .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
 
-      updatedData.slug = slug;
+      (updatedData as Record<string, unknown>).slug = slug;
     }
 
     setFormState(prev => ({
@@ -153,7 +153,7 @@ export function EntityForm<T extends Record<string, any>>({
       errors: { ...prev.errors, [field as string]: '' },
       isDirty: true,
     }));
-  }, [formState.data, config.entityType]);
+  }, [formState.data, config.type]);
 
   // Field focus handler
   const handleFieldFocus = useCallback((field: string) => {

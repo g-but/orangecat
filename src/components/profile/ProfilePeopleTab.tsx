@@ -5,14 +5,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Users, UserPlus } from 'lucide-react';
-import { Profile } from '@/types/database';
+import { ScalableProfile } from '@/types/database';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 interface ProfilePeopleTabProps {
-  profile: Profile;
+  profile: ScalableProfile;
   isOwnProfile?: boolean;
 }
 

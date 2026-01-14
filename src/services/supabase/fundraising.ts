@@ -26,8 +26,8 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
   try {
     // Use centralized supabase client
     // Get user's projects (both as creator and through organizations)
-    const { data: ownedProjects, error: ownedError } = await supabase
-      .from(getTableName('project'))
+    const { data: ownedProjects, error: ownedError } = await (supabase
+      .from(getTableName('project')) as any)
       .select('*')
       .eq('user_id', userId);
 
@@ -39,18 +39,18 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
     const uniqueProjects = ownedProjects || [];
 
     // Get transactions for these projects to calculate stats
-    const projectIds = uniqueProjects.map(p => p.id);
+    const projectIds = uniqueProjects.map((p: { id: string }) => p.id);
     let totalRaised = 0;
     let totalSupporters = 0;
 
     if (projectIds.length > 0) {
       // Build OR filter for multiple project IDs
-      const projectFilters = projectIds.map(id => `to_entity_id.eq.${id}`).join(',');
+      const projectFilters = projectIds.map((id: string) => `to_entity_id.eq.${id}`).join(',');
 
       // Only query transactions if we have valid project IDs
       if (projectFilters) {
-        const { data: transactions, error: transactionsError } = await supabase
-          .from(DATABASE_TABLES.TRANSACTIONS)
+        const { data: transactions, error: transactionsError } = await (supabase
+          .from(DATABASE_TABLES.TRANSACTIONS) as any)
           .select('amount_sats, from_entity_id, to_entity_id, from_entity_type')
           .eq('to_entity_type', 'project')
           .or(projectFilters)
@@ -60,11 +60,11 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
           throw transactionsError;
         }
 
-        totalRaised = transactions?.reduce((sum, t) => sum + (t.amount_sats || 0), 0) || 0;
+        totalRaised = transactions?.reduce((sum: number, t: { amount_sats?: number }) => sum + (t.amount_sats || 0), 0) || 0;
 
         // Count unique donors (from_entity_id where from_entity_type = 'profile')
         const uniqueDonors = new Set(
-          transactions?.filter(t => t.from_entity_type === 'profile').map(t => t.from_entity_id) ||
+          transactions?.filter((t: { from_entity_type?: string }) => t.from_entity_type === 'profile').map((t: { from_entity_id?: string }) => t.from_entity_id) ||
             []
         );
         totalSupporters = uniqueDonors.size;
@@ -72,7 +72,7 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
     }
 
     const totalProjects = uniqueProjects.length;
-    const activeProjects = uniqueProjects.filter(p => p.status === 'active').length;
+    const activeProjects = uniqueProjects.filter((p: { status?: string }) => p.status === 'active').length;
 
     return {
       totalProjects,
@@ -103,8 +103,8 @@ export async function getUserFundraisingActivity(
     const activities: FundraisingActivity[] = [];
 
     // Get user's funding pages
-    const { data: pages, error: pagesError } = await supabase
-      .from(getTableName('project'))
+    const { data: pages, error: pagesError } = await (supabase
+      .from(getTableName('project')) as any)
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -113,12 +113,12 @@ export async function getUserFundraisingActivity(
       throw pagesError;
     }
 
-    const pageIds = pages?.map(page => page.id) || [];
+    const pageIds = pages?.map((page: any) => page.id) || [];
 
     // Get recent transactions
     if (pageIds.length > 0) {
-      const { data: transactions, error: transactionsError } = await supabase
-        .from(DATABASE_TABLES.TRANSACTIONS)
+      const { data: transactions, error: transactionsError } = await (supabase
+        .from(DATABASE_TABLES.TRANSACTIONS) as any)
         .select(
           `
           *,
@@ -155,7 +155,7 @@ export async function getUserFundraisingActivity(
     }
 
     // Add project creation activities
-    pages?.slice(0, 3).forEach(page => {
+    pages?.slice(0, 3).forEach((page: { created_at: string; title: string }) => {
       const timeDiff = Date.now() - new Date(page.created_at).getTime();
       const timeAgo = formatTimeAgo(timeDiff);
 
@@ -181,8 +181,8 @@ export async function getUserFundraisingActivity(
 export async function getUserProjects(userId: string): Promise<any[]> {
   try {
     // Get user's projects (both as creator and through organizations)
-    const { data: ownedProjects, error: ownedError } = await supabase
-      .from(getTableName('project'))
+    const { data: ownedProjects, error: ownedError } = await (supabase
+      .from(getTableName('project')) as any)
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -205,8 +205,8 @@ export async function getUserProjects(userId: string): Promise<any[]> {
 export async function getProject(projectId: string): Promise<any | null> {
   try {
     // Use centralized supabase client
-    const { data, error } = await supabase
-      .from(getTableName('project'))
+    const { data, error } = await (supabase
+      .from(getTableName('project')) as any)
       .select('*')
       .eq('id', projectId)
       .single();
@@ -232,8 +232,8 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
   try {
     // Use centralized supabase client
     // Get all funding pages
-    const { data: pages, error: pagesError } = await supabase
-      .from(getTableName('project'))
+    const { data: pages2, error: pagesError } = await (supabase
+      .from(getTableName('project')) as any)
       .select('*')
       .eq('is_public', true);
 
@@ -242,8 +242,8 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
     }
 
     // Get all confirmed transactions
-    const { data: transactions, error: transactionsError } = await supabase
-      .from('transactions')
+    const { data: transactions2, error: transactionsError } = await (supabase
+      .from('transactions') as any)
       .select('user_id, amount')
       .eq('status', 'confirmed');
 
@@ -251,14 +251,14 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
       throw transactionsError;
     }
 
-    const totalProjects = pages?.length || 0;
+    const totalProjects = pages2?.length || 0;
     // Current schema doesn't have is_active, so assume all public pages are active
-    const activeProjects = pages?.filter(page => page.is_public).length || 0;
+    const activeProjects = pages2?.filter((page: any) => page.is_public).length || 0;
     // Current schema doesn't have total_funding, so use 0 for now
     const totalRaised = 0;
 
     // Count unique supporters
-    const uniqueSupporters = new Set(transactions?.map(t => t.user_id) || []);
+    const uniqueSupporters = new Set(transactions2?.map((t: any) => t.user_id) || []);
     const totalSupporters = uniqueSupporters.size;
 
     return {
@@ -287,23 +287,23 @@ export async function getRecentDonationsCount(userId: string): Promise<number> {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     // Get user's funding pages
-    const { data: pages, error: pagesError } = await supabase
-      .from(getTableName('project'))
+    const { data: pages3, error: pagesError } = await (supabase
+      .from(getTableName('project')) as any)
       .select('id')
       .eq('user_id', userId);
 
     if (pagesError) {
       throw pagesError;
     }
-    if (!pages || pages.length === 0) {
+    if (!pages3 || pages3.length === 0) {
       return 0;
     }
 
-    const pageIds = pages.map(page => page.id);
+    const pageIds = pages3.map((page: any) => page.id);
 
     // Count transactions this month
-    const { count, error: transactionsError } = await supabase
-      .from('transactions')
+    const { count, error: transactionsError } = await (supabase
+      .from('transactions') as any)
       .select('*', { count: 'exact', head: true })
       .in('funding_page_id', pageIds)
       .eq('status', 'confirmed')

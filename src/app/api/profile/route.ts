@@ -167,8 +167,8 @@ export async function PUT(request: NextRequest) {
 
     // Use ProfileServerService for update (we'll need to add an update method)
     // For now, keeping direct update but this should be refactored to use service
-    const { data: profile, error } = await supabase
-      .from(DATABASE_TABLES.PROFILES)
+    const { data: profile, error } = await (supabase
+      .from(DATABASE_TABLES.PROFILES) as any)
       .update({
         ...dataToSave,
         updated_at: new Date().toISOString(),

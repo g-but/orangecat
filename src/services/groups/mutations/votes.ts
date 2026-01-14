@@ -36,8 +36,8 @@ export async function castVote(input: CastVoteInput) {
       return { success: false, error: 'Voting has ended' };
     }
 
-    const { data, error } = await supabase
-      .from(TABLES.group_votes)
+    const { data, error } = await (supabase
+      .from(TABLES.group_votes) as any)
       .upsert(
         {
           proposal_id: input.proposal_id,
@@ -95,8 +95,8 @@ export async function checkAndResolveProposal(proposalId: string): Promise<void>
       const newStatus: 'passed' | 'failed' = yesPercentage >= threshold ? 'passed' : 'failed';
 
       // Single update; accept idempotency (if already updated, harmless)
-      await supabase
-        .from(TABLES.group_proposals)
+      await (supabase
+        .from(TABLES.group_proposals) as any)
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', proposalId);
 

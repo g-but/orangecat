@@ -6,14 +6,22 @@ export function getBitcoinNetwork(name?: string) {
   return name === 'testnet' ? bitcoin.networks.testnet : bitcoin.networks.bitcoin
 }
 
-export function deriveP2WPKHFromXpub(xpub: string, chain: 0 | 1, index: number, networkName?: NetworkName) {
-  const network = getBitcoinNetwork(networkName)
-  const node = bitcoin.bip32.fromBase58(xpub, network)
-  const child = node.derive(chain).derive(index)
-  const payment = bitcoin.payments.p2wpkh({ pubkey: child.publicKey, network })
-  if (!payment.address) {
-    throw new Error('Failed to derive address')
-  }
-  return payment.address
+/**
+ * Derive P2WPKH address from xpub
+ * Note: This function requires the 'bip32' and 'tiny-secp256k1' packages
+ * which are not currently installed. Install them with:
+ * npm install bip32 tiny-secp256k1
+ */
+export function deriveP2WPKHFromXpub(
+  _xpub: string,
+  _chain: 0 | 1,
+  _index: number,
+  _networkName?: NetworkName
+): string {
+  // TODO: Install bip32 and tiny-secp256k1 packages to enable this functionality
+  // In bitcoinjs-lib v6+, bip32 is a separate package
+  throw new Error(
+    'deriveP2WPKHFromXpub is not available. Install bip32 and tiny-secp256k1 packages.'
+  )
 }
 

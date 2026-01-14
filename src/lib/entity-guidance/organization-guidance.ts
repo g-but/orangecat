@@ -180,18 +180,26 @@ export const organizationDefaultGuidance: DefaultGuidance = {
   description:
     'Organizations enable collective action, shared governance, and community building around common goals.',
   features: [
-    'Multi-signature treasury for secure Bitcoin management',
-    'Democratic governance with voting and proposals',
-    'Member management and role assignments',
-    'Project affiliation and collective fundraising',
-    'Transparent operations and community accountability',
-  ],
-  benefits: [
-    'Pool resources and knowledge for greater impact',
-    'Establish credibility through formal structure',
-    'Enable large-scale collaborative projects',
-    'Create sustainable funding mechanisms',
-    'Build lasting communities around shared values',
+    {
+      icon: React.createElement(Bitcoin, { className: 'w-4 h-4 text-purple-600' }),
+      text: 'Multi-signature treasury for secure Bitcoin management',
+    },
+    {
+      icon: React.createElement(Shield, { className: 'w-4 h-4 text-purple-600' }),
+      text: 'Democratic governance with voting and proposals',
+    },
+    {
+      icon: React.createElement(Users, { className: 'w-4 h-4 text-purple-600' }),
+      text: 'Member management and role assignments',
+    },
+    {
+      icon: React.createElement(Building2, { className: 'w-4 h-4 text-purple-600' }),
+      text: 'Project affiliation and collective fundraising',
+    },
+    {
+      icon: React.createElement(CheckCircle2, { className: 'w-4 h-4 text-purple-600' }),
+      text: 'Transparent operations and community accountability',
+    },
   ],
 };
 

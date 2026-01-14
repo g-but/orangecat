@@ -21,7 +21,7 @@ import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import EntityDetailLayout from '@/components/entity/EntityDetailLayout';
 import Link from 'next/link';
-import Button from '@/components/ui/Button';
+import { Button } from '@/components/ui/Button';
 import { getTableName } from '@/config/entity-registry';
 import type { EntityConfig, BaseEntity } from '@/types/entity';
 import { PLATFORM_DEFAULT_CURRENCY, isSupportedCurrency } from '@/config/currencies';
@@ -68,7 +68,7 @@ function formatFieldValue(value: unknown, fieldName: string): string {
   // Handle dates
   if (fieldName.includes('_at') || fieldName.includes('date') || fieldName.includes('Date')) {
     try {
-      const date = new Date(value);
+      const date = new Date(value as string | number | Date);
       if (!isNaN(date.getTime())) {
         return date.toLocaleString();
       }
@@ -207,8 +207,8 @@ export default async function EntityDetailPage<T extends BaseEntity>({
   // Get user's currency preference from profile
   let userCurrency: Currency = PLATFORM_DEFAULT_CURRENCY;
   if (user) {
-    const { data: profile } = await supabase
-      .from('profiles')
+    const { data: profile } = await (supabase
+      .from('profiles') as any)
       .select(COLUMNS.profiles.CURRENCY)
       .eq(COLUMNS.profiles.ID, user.id)
       .single();
@@ -235,7 +235,7 @@ export default async function EntityDetailPage<T extends BaseEntity>({
   const tableName = getTableName(entityType as Parameters<typeof getTableName>[0]);
 
   // Build query
-  let query = supabase.from(tableName).select('*').eq('id', entityId);
+  let query = (supabase.from(tableName) as any).select('*').eq('id', entityId);
 
   // If userId provided, filter by user
   if (userId || (user && requireAuth)) {
@@ -272,9 +272,9 @@ export default async function EntityDetailPage<T extends BaseEntity>({
       headerActions={headerActions}
       left={
         <div className="space-y-4">
-          {fields.left.length > 0 ? (
+          {(fields.left ?? []).length > 0 ? (
             <div className="grid grid-cols-2 gap-3 text-sm">
-              {fields.left.map((field, idx) => (
+              {(fields.left ?? []).map((field, idx) => (
                 <div key={idx}>
                   <div className="text-gray-500">{field.label}</div>
                   <div className="font-medium mt-1">{field.value}</div>
@@ -287,9 +287,9 @@ export default async function EntityDetailPage<T extends BaseEntity>({
         </div>
       }
       right={
-        fields.right.length > 0 ? (
+        (fields.right ?? []).length > 0 ? (
           <div className="space-y-3 text-sm">
-            {fields.right.map((field, idx) => (
+            {(fields.right ?? []).map((field, idx) => (
               <div key={idx}>
                 <div className="text-gray-500">{field.label}</div>
                 <div className="font-medium mt-1">{field.value}</div>

@@ -102,11 +102,15 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
     if (nav) {
       nav.addEventListener('scroll', updateScrollIndicators);
       window.addEventListener('resize', updateScrollIndicators);
-      return () => {
-        nav.removeEventListener('scroll', updateScrollIndicators);
-        window.removeEventListener('resize', updateScrollIndicators);
-      };
     }
+
+    return () => {
+      const nav = navRef.current;
+      if (nav) {
+        nav.removeEventListener('scroll', updateScrollIndicators);
+      }
+      window.removeEventListener('resize', updateScrollIndicators);
+    };
   }, [updateScrollIndicators, tabs]);
 
   const handleTabClick = (tabId: string) => {

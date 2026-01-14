@@ -2,6 +2,7 @@
 import { logger } from '@/utils/logger';
 
 import { useState, useEffect } from 'react';
+import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import {
@@ -34,28 +35,10 @@ import {
 import { Profile } from '@/types/profile';
 import { ProfileFormData } from '@/types/database';
 import { profileSchema } from '@/lib/validation';
-import { ProfileImagesSection } from './ModernProfileEditor';
+import { ProfileImagesSection } from './ProfileImagesSection';
 
-type ProfileFormValues = {
-  username?: string | null;
-  name?: string | null;
-  bio?: string | null;
-  location_country?: string | null;
-  location_city?: string | null;
-  location_zip?: string | null;
-  location_search?: string | null;
-  latitude?: number | null;
-  longitude?: number | null;
-  location_context?: string | null;
-  background?: string | null;
-  inspiration_statement?: string | null;
-  location?: string | null;
-  avatar_url?: string | null;
-  banner_url?: string | null;
-  website?: string | null;
-  bitcoin_address?: string | null;
-  lightning_address?: string | null;
-};
+// Use the schema-inferred type for type safety
+type ProfileFormValues = z.infer<typeof profileSchema>;
 
 interface ProfileWizardProps {
   profile: Profile;

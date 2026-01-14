@@ -12,6 +12,7 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { withApiRetry } from '@/utils/retry';
+import { TIMELINE_TABLES } from '@/config/database-tables';
 import type {
   TimelineFeedResponse,
   TimelineFilters,

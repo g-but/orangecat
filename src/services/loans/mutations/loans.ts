@@ -37,8 +37,8 @@ export async function createLoan(request: CreateLoanRequest): Promise<LoanRespon
       return { success: false, error: validation.errors[0]?.message || 'Invalid request' };
     }
 
-    const { data, error } = await supabase
-      .from(getTableName('loan'))
+    const { data, error } = await (supabase
+      .from(getTableName('loan')) as any)
       .insert({
         ...request,
         currency: isSupportedCurrency(request.currency) ? request.currency : DEFAULT_CURRENCY,
@@ -70,8 +70,8 @@ export async function updateLoan(loanId: string, request: UpdateLoanRequest): Pr
       return { success: false, error: 'Authentication required' };
     }
 
-    const { data, error } = await supabase
-      .from(getTableName('loan'))
+    const { data, error } = await (supabase
+      .from(getTableName('loan')) as any)
       .update(request)
       .eq('id', loanId)
       .eq('user_id', userId)
@@ -101,8 +101,8 @@ export async function deleteLoan(loanId: string): Promise<{ success: boolean; er
       return { success: false, error: 'Authentication required' };
     }
 
-    const { error } = await supabase
-      .from(getTableName('loan'))
+    const { error } = await (supabase
+      .from(getTableName('loan')) as any)
       .delete()
       .eq('id', loanId)
       .eq('user_id', userId);
@@ -156,8 +156,8 @@ export async function createObligationLoan(params: {
       contact_method: 'platform',
     };
 
-    const { data, error } = await supabase
-      .from(getTableName('loan'))
+    const { data, error } = await (supabase
+      .from(getTableName('loan')) as any)
       .insert({
         ...newLoan,
         user_id: borrowerId,

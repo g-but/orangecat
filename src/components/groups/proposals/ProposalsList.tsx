@@ -30,6 +30,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { PROPOSAL_STATUSES, type ProposalStatus } from '@/config/proposal-constants';
 import type { Proposal } from '@/services/groups/queries/proposals';
 
+type ProposalWithSlug = Proposal & { groupSlug: string };
+
 interface ProposalsListProps {
   groupId: string;
   groupSlug: string;
@@ -40,7 +42,7 @@ type ProposalStatusFilter = 'all' | ProposalStatus;
 
 export function ProposalsList({ groupId, groupSlug, canCreateProposal = false }: ProposalsListProps) {
   const { user } = useAuth();
-  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [proposals, setProposals] = useState<ProposalWithSlug[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<ProposalStatusFilter>('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -66,7 +68,7 @@ export function ProposalsList({ groupId, groupSlug, canCreateProposal = false }:
       const data = await response.json();
       if (data.success) {
         setProposals(
-          (data.data?.proposals || []).map((p: Proposal) => ({
+          (data.data?.proposals || []).map((p: Proposal): ProposalWithSlug => ({
             ...p,
             groupSlug,
           }))

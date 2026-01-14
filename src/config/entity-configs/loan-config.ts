@@ -251,8 +251,6 @@ export const loanConfig = createEntityConfig<LoanFormData>({
     desired_rate: undefined,
     // Collateral
     collateral: [],
-    // Visibility
-    show_on_profile: true,
   },
   guidanceContent: loanGuidanceContent,
   defaultGuidance: loanDefaultGuidance,

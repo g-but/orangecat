@@ -42,8 +42,9 @@ export default function ShareButton({
 
     if (showShare) {
       document.addEventListener('mousedown', handleClickOutside)
-      return () => document.removeEventListener('mousedown', handleClickOutside)
     }
+
+    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showShare])
 
   // Handle escape key
@@ -56,8 +57,9 @@ export default function ShareButton({
 
     if (showShare) {
       document.addEventListener('keydown', handleEscape)
-      return () => document.removeEventListener('keydown', handleEscape)
     }
+
+    return () => document.removeEventListener('keydown', handleEscape)
   }, [showShare])
 
   const toggleShare = (e: React.MouseEvent) => {

@@ -148,8 +148,8 @@ export const POST = compose(
     const walletAddress = `bc1q${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
 
     // Create the research entity
-    const { data: researchEntity, error } = await supabase
-      .from(tableName)
+    const { data: researchEntity, error } = await (supabase
+      .from(tableName) as any)
       .insert({
         user_id: user.id,
         title: validatedData.title,

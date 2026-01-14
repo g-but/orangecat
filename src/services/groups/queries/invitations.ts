@@ -75,7 +75,7 @@ export async function getUserPendingInvitations(): Promise<UserInvitationsRespon
     }
 
     // Use the database function for optimized query
-    const { data, error } = await supabase.rpc('get_user_pending_invitations', {
+    const { data, error } = await (supabase.rpc as any)('get_user_pending_invitations', {
       user_uuid: userId,
     });
 
@@ -116,8 +116,8 @@ export async function getUserInvitationCount(): Promise<number> {
       return 0;
     }
 
-    const { count, error } = await supabase
-      .from('group_invitations')
+    const { count, error } = await (supabase
+      .from('group_invitations') as any)
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'pending')
@@ -165,8 +165,8 @@ export async function getGroupInvitations(
     const status = options?.status || 'all';
 
     // Build query
-    let query = supabase
-      .from('group_invitations')
+    let query = (supabase
+      .from('group_invitations') as any)
       .select(
         `
         *,
@@ -254,8 +254,8 @@ export async function getInvitationByToken(
   error?: string;
 }> {
   try {
-    const { data, error } = await supabase
-      .from('group_invitations')
+    const { data, error } = await (supabase
+      .from('group_invitations') as any)
       .select(
         `
         id,
@@ -291,8 +291,8 @@ export async function getInvitationByToken(
     const inviter = data.inviter as { name?: string } | null;
 
     // Get member count
-    const { count: memberCount } = await supabase
-      .from('group_members')
+    const { count: memberCount } = await (supabase
+      .from('group_members') as any)
       .select('*', { count: 'exact', head: true })
       .eq('group_id', group.id);
 

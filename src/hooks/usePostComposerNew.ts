@@ -366,11 +366,14 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       }
 
       // Build timeline visibility contexts
-      const timelineContexts = [];
+      const timelineContexts: Array<{
+        timeline_type: 'profile' | 'project' | 'community';
+        timeline_owner_id: string | null;
+      }> = [];
 
       // Add main subject timeline (profile or project)
       timelineContexts.push({
-        timeline_type: subjectType,
+        timeline_type: subjectType as 'profile' | 'project',
         timeline_owner_id: subjectId || user.id,
       });
 
@@ -531,13 +534,16 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     // Offline handling: queue the post instead of sending
     if (!navigator.onLine) {
       try {
+        const postContent = content.trim();
+        const postTitle =
+          postContent.length <= 120 ? postContent : `${postContent.slice(0, 117).trimEnd()}...`;
         const postPayload = {
           eventType: 'status_update',
           actorId: user.id,
           subjectType,
           subjectId: subjectId || user.id,
-          title,
-          description: content.trim(),
+          title: postTitle,
+          description: postContent,
           visibility,
           metadata: {
             is_user_post: true,

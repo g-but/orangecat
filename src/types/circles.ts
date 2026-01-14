@@ -350,10 +350,10 @@ export interface CirclePermissions {
 }
 
 export interface CircleRolePermissions {
-  [CircleRole.owner]: CirclePermissions;
-  [CircleRole.admin]: CirclePermissions;
-  [CircleRole.moderator]: CirclePermissions;
-  [CircleRole.member]: CirclePermissions;
+  owner: CirclePermissions;
+  admin: CirclePermissions;
+  moderator: CirclePermissions;
+  member: CirclePermissions;
 }
 
 // Default permissions by role

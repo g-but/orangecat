@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion'
 import { TransparencyScore } from './TransparencyScore'
-import { Profile } from '@/types/database'
+import { ScalableProfile } from '@/types/database'
 
 interface ProfileStatsProps {
-  profile: Profile
+  profile: ScalableProfile
 }
 
 export function ProfileStats({ profile }: ProfileStatsProps) {

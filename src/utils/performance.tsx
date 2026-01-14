@@ -20,16 +20,16 @@ import { logger } from './logger'
 /**
  * Enhanced lazy loading with error boundary and loading states
  */
-export function createLazyComponent<T = any>(
+export function createLazyComponent<T extends Record<string, unknown> = Record<string, unknown>>(
   importFn: () => Promise<{ default: ComponentType<T> }>,
   fallback?: ComponentType
 ) {
   const LazyComponent = lazy(importFn)
-  
+
   return function LazyWrapper(props: T) {
     return (
       <Suspense fallback={fallback ? React.createElement(fallback) : <div>Loading...</div>}>
-        <LazyComponent {...props} />
+        <LazyComponent {...(props as any)} />
       </Suspense>
     )
   }

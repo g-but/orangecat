@@ -37,8 +37,8 @@ export const POST = withAuth(async (
     const supabase = await createServerClient();
 
     // Get group by slug
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
+    const { data: group, error: groupError } = await (supabase
+      .from('groups') as any)
       .select('id')
       .eq('slug', slug)
       .single();
@@ -48,8 +48,8 @@ export const POST = withAuth(async (
     }
 
     // Get event
-    const { data: event, error: eventError } = await supabase
-      .from('group_events')
+    const { data: event, error: eventError } = await (supabase
+      .from('group_events') as any)
       .select('id, group_id, is_public, requires_rsvp')
       .eq('id', eventId)
       .eq('group_id', group.id)
@@ -61,8 +61,8 @@ export const POST = withAuth(async (
 
     // Check if user can access the event (public or member)
     if (!event.is_public) {
-      const { data: membership } = await supabase
-        .from('group_members')
+      const { data: membership } = await (supabase
+        .from('group_members') as any)
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user.id)
@@ -87,8 +87,8 @@ export const POST = withAuth(async (
     }
 
     // Upsert RSVP
-    const { data: rsvp, error: rsvpError } = await supabase
-      .from('group_event_rsvps')
+    const { data: rsvp, error: rsvpError } = await (supabase
+      .from('group_event_rsvps') as any)
       .upsert(
         {
           event_id: eventId,

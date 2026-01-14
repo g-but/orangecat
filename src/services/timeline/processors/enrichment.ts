@@ -38,15 +38,15 @@ export async function getActorInfo(actorId: string): Promise<{
   avatar?: string;
   type: TimelineActorType;
 }> {
-  const { data: profile } = await supabase
-    .from(DATABASE_TABLES.PROFILES)
-    .select('id, display_name, username, avatar_url')
+  const { data: profile } = await (supabase
+    .from(DATABASE_TABLES.PROFILES) as any)
+    .select('id, name, username, avatar_url')
     .eq('id', actorId)
     .single();
 
   return {
     id: actorId,
-    name: profile?.display_name || profile?.username || 'Unknown User',
+    name: profile?.name || profile?.username || 'Unknown User',
     username: profile?.username,
     avatar: profile?.avatar_url,
     type: 'user',
@@ -62,8 +62,8 @@ export async function getSubjectInfo(
 ): Promise<{ id: string; name: string; type: TimelineSubjectType; url?: string }> {
   switch (type) {
     case 'project':
-      const { data: project } = await supabase
-        .from(getTableName('project'))
+      const { data: project } = await (supabase
+        .from(getTableName('project')) as any)
         .select('title')
         .eq('id', id)
         .single();
@@ -74,14 +74,14 @@ export async function getSubjectInfo(
         url: `/projects/${id}`,
       };
     case 'profile':
-      const { data: profile } = await supabase
-        .from(DATABASE_TABLES.PROFILES)
-        .select('display_name, username')
+      const { data: profile } = await (supabase
+        .from(DATABASE_TABLES.PROFILES) as any)
+        .select('name, username')
         .eq('id', id)
         .single();
       return {
         id,
-        name: profile?.display_name || profile?.username || 'Unknown User',
+        name: profile?.name || profile?.username || 'Unknown User',
         type: 'profile',
         url: `/profiles/${profile?.username || id}`,
       };

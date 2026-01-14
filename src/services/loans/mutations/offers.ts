@@ -29,7 +29,7 @@ export async function createLoanOffer(
 
     // Use database function if available
     try {
-      const { data, error } = await supabase.rpc('create_loan_offer', {
+      const { data, error } = await (supabase.rpc as any)('create_loan_offer', {
         p_loan_id: request.loan_id,
         p_offerer_id: userId,
         p_offer_type: request.offer_type,
@@ -49,8 +49,8 @@ export async function createLoanOffer(
       }
 
       // Get the created offer
-      const { data: offer, error: fetchError } = await supabase
-        .from('loan_offers')
+      const { data: offer, error: fetchError } = await (supabase
+        .from('loan_offers') as any)
         .select()
         .eq('id', data.offer_id)
         .single();
@@ -65,8 +65,8 @@ export async function createLoanOffer(
       logger.warn('Using fallback offer creation', dbError, 'Loans');
 
       // Fallback: direct insert
-      const { data, error } = await supabase
-        .from('loan_offers')
+      const { data, error } = await (supabase
+        .from('loan_offers') as any)
         .insert({
           ...request,
           offerer_id: userId,
@@ -100,8 +100,8 @@ export async function updateLoanOffer(
       return { success: false, error: 'Authentication required' };
     }
 
-    const { data, error } = await supabase
-      .from('loan_offers')
+    const { data, error } = await (supabase
+      .from('loan_offers') as any)
       .update(request)
       .eq('id', offerId)
       .eq('offerer_id', userId)
@@ -135,8 +135,8 @@ export async function respondToOffer(
     }
 
     // Verify user owns the loan
-    const { data: offer, error: fetchError } = await supabase
-      .from('loan_offers')
+    const { data: offer, error: fetchError } = await (supabase
+      .from('loan_offers') as any)
       .select(`
         *,
         loans!inner(user_id)
@@ -164,8 +164,8 @@ export async function respondToOffer(
       updateData.rejected_at = new Date().toISOString();
     }
 
-    const { data, error } = await supabase
-      .from('loan_offers')
+    const { data, error } = await (supabase
+      .from('loan_offers') as any)
       .update(updateData)
       .eq('id', offerId)
       .select()

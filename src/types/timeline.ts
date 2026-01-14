@@ -342,6 +342,7 @@ export interface TimelineFilters {
   subjects: string[]; // Project/Organization IDs
   tags: string[];
   sortBy?: 'recent' | 'trending' | 'popular';
+  search?: string; // Search query for filtering events
   amountRange?: {
     min: number;
     max: number;

@@ -5,14 +5,30 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Target, Bitcoin, ArrowRight } from 'lucide-react';
-import { Profile } from '@/types/database';
+import { ScalableProfile } from '@/types/database';
 import Button from '@/components/ui/Button';
 import { ROUTES } from '@/lib/routes';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
+// Extended project list item for profile display
+interface ProfileProjectItem {
+  id: string;
+  title: string;
+  description?: string | null;
+  thumbnail_url?: string | null;
+  goal_amount?: number | null;
+  raised_amount?: number;
+  bitcoin_balance_btc?: number;
+  bitcoin_address?: string | null;
+  currency?: string;
+  category?: string;
+  status?: string;
+  created_at: string;
+}
+
 interface ProfileProjectsTabProps {
-  profile: Profile;
+  profile: ScalableProfile;
   isOwnProfile?: boolean;
 }
 
@@ -23,7 +39,7 @@ interface ProfileProjectsTabProps {
  * Reuses project display logic for DRY principle.
  */
 export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfileProjectsTabProps) {
-  const [projects, setProjects] = useState<ProjectListItem[]>([]);
+  const [projects, setProjects] = useState<ProfileProjectItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -138,7 +154,7 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
       {/* Projects Grid */}
       <div className="space-y-4">
         {publicProjects.map(project => {
-          const statusInfo = getStatusInfo(project.status);
+          const statusInfo = getStatusInfo(project.status || 'active');
           const balanceBTC = project.bitcoin_balance_btc || 0;
           const goalAmount = project.goal_amount || 0;
           const raisedAmount = project.raised_amount || 0;

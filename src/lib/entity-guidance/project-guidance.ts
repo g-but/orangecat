@@ -28,12 +28,16 @@ export type ProjectFieldType =
   | 'title'
   | 'description'
   | 'goal_amount'
+  | 'goalAmount'
   | 'currency'
   | 'funding_purpose'
+  | 'fundingPurpose'
   | 'bitcoin_address'
+  | 'bitcoinAddress'
   | 'lightning_address'
   | 'website_url'
   | 'category'
+  | 'categories'
   | 'tags'
   | 'start_date'
   | 'target_completion'
@@ -257,6 +261,80 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
       'Ongoing - continuous community support',
     ],
   },
+  // CamelCase aliases for backward compatibility
+  goalAmount: {
+    icon: React.createElement(Target, { className: 'w-5 h-5 text-orange-600' }),
+    title: 'Funding Goal',
+    description:
+      'Set a realistic funding target that covers your project costs and gives backers confidence.',
+    tips: [
+      'Calculate actual costs first',
+      'Include a small buffer for unexpected expenses',
+      'Consider what amount shows serious commitment',
+      'Think about what success looks like',
+      'Some projects work better without fixed goals',
+    ],
+    examples: [
+      '5000 CHF for initial prototype development',
+      '25000 USD for community center construction',
+      'No fixed goal - ongoing development funding',
+    ],
+  },
+  fundingPurpose: {
+    icon: React.createElement(Coins, { className: 'w-5 h-5 text-orange-600' }),
+    title: 'Funding Purpose',
+    description:
+      'Clearly explain how donations will be used and what specific outcomes they enable.',
+    tips: [
+      'Break down costs into categories',
+      'Be transparent about allocation',
+      'Explain why each expense is necessary',
+      'Include both direct and indirect benefits',
+      'Update backers on actual spending',
+    ],
+    examples: [
+      '60% hardware and materials, 30% labor, 10% community outreach',
+      '100% goes directly to software development and server costs',
+      'Funds support full-time development for 6 months',
+    ],
+  },
+  bitcoinAddress: {
+    icon: React.createElement(Bitcoin, { className: 'w-5 h-5 text-orange-600' }),
+    title: 'Bitcoin Address',
+    description:
+      'Your secure Bitcoin address where donations will be received.',
+    tips: [
+      'Use a fresh address for this project',
+      'Consider using a multi-signature wallet',
+      'Keep private keys secure and backed up',
+      'Use a hardware wallet for large amounts',
+      'Consider privacy implications',
+    ],
+    examples: [
+      'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlhfe2s',
+      'Multi-signature wallet with 3-of-5 structure',
+      'Hardware wallet address for security',
+    ],
+  },
+  categories: {
+    icon: React.createElement(Tag, { className: 'w-5 h-5 text-orange-600' }),
+    title: 'Project Categories',
+    description:
+      'Choose the categories that best describe your project\'s focus areas.',
+    tips: [
+      'Pick the most specific categories available',
+      'Think about how people search for projects',
+      'Consider your project\'s primary impact areas',
+      'Categories help with discoverability',
+      'You can change this later if needed',
+    ],
+    examples: [
+      'Environment & Sustainability',
+      'Technology & Innovation',
+      'Community & Culture',
+      'Education & Learning',
+    ],
+  },
 };
 
 export const projectDefaultGuidance: DefaultGuidance = {
@@ -264,18 +342,26 @@ export const projectDefaultGuidance: DefaultGuidance = {
   description:
     'Transform your idea into a funded reality. Projects on OrangeCat combine crowdfunding with Bitcoin payments for transparent, community-driven development.',
   features: [
-    'Set clear funding goals with Bitcoin payments',
-    'Reach global supporters through our network',
-    'Maintain full control and transparency',
-    'Build community around your vision',
-    'Access ongoing funding and support',
-  ],
-  benefits: [
-    'Get paid directly in Bitcoin with no platform fees',
-    'Build trust through transparent fund allocation',
-    'Connect with supporters who share your values',
-    'Scale your impact with community backing',
-    'Create sustainable funding for long-term projects',
+    {
+      icon: React.createElement(Target, { className: 'w-4 h-4 text-tiffany-600' }),
+      text: 'Set clear funding goals with Bitcoin payments',
+    },
+    {
+      icon: React.createElement(ExternalLink, { className: 'w-4 h-4 text-tiffany-600' }),
+      text: 'Reach global supporters through our network',
+    },
+    {
+      icon: React.createElement(CheckCircle2, { className: 'w-4 h-4 text-tiffany-600' }),
+      text: 'Maintain full control and transparency',
+    },
+    {
+      icon: React.createElement(Rocket, { className: 'w-4 h-4 text-tiffany-600' }),
+      text: 'Build community around your vision',
+    },
+    {
+      icon: React.createElement(DollarSign, { className: 'w-4 h-4 text-tiffany-600' }),
+      text: 'Access ongoing funding and support',
+    },
   ],
 };
 

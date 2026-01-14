@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
@@ -20,7 +20,7 @@ import EntityList from '@/components/entity/EntityList';
 import CommercePagination from '@/components/commerce/CommercePagination';
 import { useEntityList } from '@/hooks/useEntityList';
 import { wishlistEntityConfig, type WishlistListItem } from '@/config/entities/wishlists';
-import { Gift, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 export default function WishlistsPage() {
   const { user, isLoading: authLoading, hydrated } = useAuth();
@@ -29,7 +29,6 @@ export default function WishlistsPage() {
   const {
     items: wishlists,
     loading: wishlistsLoading,
-    error,
     page,
     total,
     setPage,
@@ -69,7 +68,6 @@ export default function WishlistsPage() {
       title="My Wishlists"
       description="Manage your gift registries and personal goal lists"
       headerActions={headerActions}
-      icon={<Gift className="h-5 w-5 text-rose-500" />}
     >
       <div className="space-y-6">
         <EntityList

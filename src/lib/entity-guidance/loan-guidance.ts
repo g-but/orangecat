@@ -203,17 +203,25 @@ export const loanDefaultGuidance: DefaultGuidance = {
   description:
     'Peer-to-peer lending connects borrowers with lenders directly. Create a clear, trustworthy loan listing to attract competitive offers.',
   features: [
-    'Set transparent loan terms and rates',
-    'Connect directly with individual lenders',
-    'No traditional bank approval process',
-    'Bitcoin-powered payments and repayments',
-    'Flexible terms negotiated with lenders',
-  ],
-  benefits: [
-    'Access capital without traditional banks',
-    'Negotiate better rates than institutional loans',
-    'Build relationships with supportive lenders',
-    'Transparent process with clear expectations',
-    'Bitcoin payments reduce friction and fees',
+    {
+      icon: React.createElement(FileText, { className: 'w-4 h-4 text-green-600' }),
+      text: 'Set transparent loan terms and rates',
+    },
+    {
+      icon: React.createElement(Target, { className: 'w-4 h-4 text-green-600' }),
+      text: 'Connect directly with individual lenders',
+    },
+    {
+      icon: React.createElement(CheckCircle2, { className: 'w-4 h-4 text-green-600' }),
+      text: 'No traditional bank approval process',
+    },
+    {
+      icon: React.createElement(Bitcoin, { className: 'w-4 h-4 text-green-600' }),
+      text: 'Bitcoin-powered payments and repayments',
+    },
+    {
+      icon: React.createElement(Settings, { className: 'w-4 h-4 text-green-600' }),
+      text: 'Flexible terms negotiated with lenders',
+    },
   ],
 };

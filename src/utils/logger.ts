@@ -57,7 +57,7 @@ const LOG_LEVELS = {
 
 class Logger {
   private shouldLog(level: LogLevel): boolean {
-    return LOG_LEVELS[level] >= LOG_LEVELS[LOGGER_CONFIG.activeLevel]
+    return LOG_LEVELS[level] >= LOG_LEVELS[LOGGER_CONFIG.activeLevel as LogLevel]
   }
 
   private formatLogEntry(level: LogLevel, message: string, data?: any, source?: string): LogEntry {

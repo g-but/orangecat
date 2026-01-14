@@ -19,8 +19,8 @@ export async function GET(
     const { data: { user } } = await supabase.auth.getUser();
 
     const tableName = getTableName('research_entity');
-    const { data: entity, error } = await supabase
-      .from(tableName)
+    const { data: entity, error } = await (supabase
+      .from(tableName) as any)
       .select('*')
       .eq('id', params.id)
       .single();
@@ -43,17 +43,17 @@ export async function GET(
       { data: votes },
       { data: contributions }
     ] = await Promise.all([
-      supabase
-        .from('research_progress_updates')
+      (supabase
+        .from('research_progress_updates') as any)
         .select('*')
         .eq('research_entity_id', params.id)
         .order('created_at', { ascending: false }),
-      supabase
-        .from('research_votes')
+      (supabase
+        .from('research_votes') as any)
         .select('*')
         .eq('research_entity_id', params.id),
-      supabase
-        .from('research_contributions')
+      (supabase
+        .from('research_contributions') as any)
         .select('*')
         .eq('research_entity_id', params.id)
         .order('created_at', { ascending: false })
@@ -89,8 +89,8 @@ export async function PUT(
 
     // Check ownership
     const tableName = getTableName('research_entity');
-    const { data: existing, error: fetchError } = await supabase
-      .from(tableName)
+    const { data: existing, error: fetchError } = await (supabase
+      .from(tableName) as any)
       .select('user_id')
       .eq('id', params.id)
       .single();
@@ -107,8 +107,8 @@ export async function PUT(
     }
 
     // Update the entity
-    const { data: entity, error: updateError } = await supabase
-      .from(tableName)
+    const { data: entity, error: updateError } = await (supabase
+      .from(tableName) as any)
       .update({
         ...updates,
         updated_at: new Date().toISOString(),
@@ -145,8 +145,8 @@ export async function DELETE(
 
     // Check ownership
     const tableName = getTableName('research_entity');
-    const { data: existing, error: fetchError } = await supabase
-      .from(tableName)
+    const { data: existing, error: fetchError } = await (supabase
+      .from(tableName) as any)
       .select('user_id, funding_raised_sats')
       .eq('id', params.id)
       .single();
@@ -168,8 +168,8 @@ export async function DELETE(
     }
 
     // Delete the entity (cascading deletes will handle related records)
-    const { error: deleteError } = await supabase
-      .from(tableName)
+    const { error: deleteError } = await (supabase
+      .from(tableName) as any)
       .delete()
       .eq('id', params.id);
 

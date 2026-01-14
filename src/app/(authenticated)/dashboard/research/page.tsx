@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Button from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Input from '@/components/ui/Input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, TrendingUp, Users, DollarSign, Target } from 'lucide-react';
@@ -126,7 +125,7 @@ export default function ResearchDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {entities.reduce((sum, e) => sum + e.funding_raised_sats, 0).toLocaleString()} sats
+              {entities.reduce((sum, e) => sum + (e.funding_raised_btc || 0), 0).toLocaleString()} sats
             </div>
           </CardContent>
         </Card>
@@ -199,8 +198,8 @@ export default function ResearchDashboard() {
                     {entity.description}
                   </CardDescription>
                 </div>
-                <Badge className={getStatusColor(entity.status)}>
-                  {entity.status}
+                <Badge className={getStatusColor(entity.status || 'draft')}>
+                  {entity.status || 'draft'}
                 </Badge>
               </div>
             </CardHeader>
@@ -215,10 +214,10 @@ export default function ResearchDashboard() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Funding Progress</span>
-                  <span>{entity.funding_raised_sats.toLocaleString()} / {entity.funding_goal_sats.toLocaleString()} sats</span>
+                  <span>{(entity.funding_raised_btc || 0).toLocaleString()} / {(entity.funding_goal || 0).toLocaleString()} sats</span>
                 </div>
                 <Progress
-                  value={(entity.funding_raised_sats / entity.funding_goal_sats) * 100}
+                  value={entity.funding_goal ? ((entity.funding_raised_btc || 0) / entity.funding_goal) * 100 : 0}
                   className="h-2"
                 />
               </div>

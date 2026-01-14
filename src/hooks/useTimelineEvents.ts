@@ -89,7 +89,7 @@ export const useTimelineEvents = () => {
             subjectType: 'profile',
             subjectId: user.id,
             title: 'Updated profile information',
-            description: `${profile?.display_name || profile?.username || 'User'} updated their profile`,
+            description: `${profile?.name || profile?.username || 'User'} updated their profile`,
             visibility: 'followers',
             metadata: { changes },
           });
@@ -118,7 +118,7 @@ export const useTimelineEvents = () => {
           targetType: 'profile',
           targetId: followedUserId,
           title: `Started following ${followedUserData?.display_name || followedUserData?.username || 'someone'}`,
-          description: `${profile?.display_name || profile?.username || 'User'} started following ${followedUserData?.display_name || followedUserData?.username || 'someone'}`,
+          description: `${profile?.name || profile?.username || 'User'} started following ${followedUserData?.display_name || followedUserData?.username || 'someone'}`,
           visibility: 'followers',
         });
 
@@ -135,17 +135,17 @@ export const useTimelineEvents = () => {
     const profileUpdatedEvent = 'profile-updated';
     const userFollowedEvent = 'user-followed';
 
-    window.addEventListener(projectCreatedEvent, handleProjectCreated as EventListener);
-    window.addEventListener(donationReceivedEvent, handleDonationReceived as EventListener);
-    window.addEventListener(profileUpdatedEvent, handleProfileUpdated as EventListener);
-    window.addEventListener(userFollowedEvent, handleUserFollowed as EventListener);
+    window.addEventListener(projectCreatedEvent, handleProjectCreated as unknown as EventListener);
+    window.addEventListener(donationReceivedEvent, handleDonationReceived as unknown as EventListener);
+    window.addEventListener(profileUpdatedEvent, handleProfileUpdated as unknown as EventListener);
+    window.addEventListener(userFollowedEvent, handleUserFollowed as unknown as EventListener);
 
     // Cleanup
     return () => {
-      window.removeEventListener(projectCreatedEvent, handleProjectCreated as EventListener);
-      window.removeEventListener(donationReceivedEvent, handleDonationReceived as EventListener);
-      window.removeEventListener(profileUpdatedEvent, handleProfileUpdated as EventListener);
-      window.removeEventListener(userFollowedEvent, handleUserFollowed as EventListener);
+      window.removeEventListener(projectCreatedEvent, handleProjectCreated as unknown as EventListener);
+      window.removeEventListener(donationReceivedEvent, handleDonationReceived as unknown as EventListener);
+      window.removeEventListener(profileUpdatedEvent, handleProfileUpdated as unknown as EventListener);
+      window.removeEventListener(userFollowedEvent, handleUserFollowed as unknown as EventListener);
     };
   }, [user?.id, profile]);
 

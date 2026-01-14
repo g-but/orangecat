@@ -42,7 +42,7 @@ interface SidebarProps {
   };
   isItemActive: (href: string) => boolean;
   toggleSidebar: () => void;
-  toggleSection: (sectionId: string) => boolean;
+  toggleSection: (sectionId: string) => void;
   onNavigate?: () => void;
 }
 

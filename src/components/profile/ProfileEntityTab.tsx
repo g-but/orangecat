@@ -14,7 +14,7 @@ import {
   Rocket,
   LucideIcon,
 } from 'lucide-react';
-import { Profile } from '@/types/database';
+import { ScalableProfile } from '@/types/database';
 import Button from '@/components/ui/Button';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
@@ -66,7 +66,7 @@ const getRelativeTime = (date: string) => {
 };
 
 interface ProfileEntityTabProps {
-  profile: Profile;
+  profile: ScalableProfile;
   entityType: EntityType;
   isOwnProfile?: boolean;
 }

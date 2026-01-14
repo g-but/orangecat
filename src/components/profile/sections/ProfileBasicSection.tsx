@@ -15,9 +15,8 @@ import { Textarea } from '@/components/ui/Textarea';
 import { ProfileFieldType } from '@/lib/profile-guidance';
 import { LocationMode } from '@/lib/location-privacy';
 import { Control } from 'react-hook-form';
-import { ProfileFormValues } from '../types';
-import { ProfileLocationSection } from './ProfileLocationSection';
 import type { ProfileFormValues } from '../types';
+import { ProfileLocationSection } from './ProfileLocationSection';
 import { PROFILE_SECTIONS, PROFILE_SECTION_DESCRIPTIONS } from '../constants';
 
 interface ProfileBasicSectionProps {
@@ -28,6 +27,7 @@ interface ProfileBasicSectionProps {
   locationGroupLabel: string;
   setLocationGroupLabel: (value: string) => void;
   form: {
+    control: Control<ProfileFormValues>;
     setValue: (name: keyof ProfileFormValues, value: any) => void;
     register: (name: keyof ProfileFormValues) => any;
   };

@@ -106,8 +106,8 @@ export const POST = async (request: NextRequest) => {
     };
     
     const { getTableName } = await import('@/config/entity-registry');
-    const { data: serviceData, error: serviceError } = await supabase
-      .from(getTableName('service'))
+    const { data: serviceData, error: serviceError } = await (supabase
+      .from(getTableName('service')) as any)
       .insert(testService)
       .select()
       .single();
@@ -127,6 +127,7 @@ export const POST = async (request: NextRequest) => {
     
   } catch (error) {
     logger.error('❌ RLS fix failed:', error);
-    return apiError('Failed to apply RLS fixes: ' + error.message, 500);
+    const message = error instanceof Error ? error.message : String(error);
+    return apiError('Failed to apply RLS fixes: ' + message, 'RLS_FIX_ERROR', 500);
   }
 };

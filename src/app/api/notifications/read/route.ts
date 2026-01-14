@@ -29,8 +29,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
     if (all) {
       // Mark all notifications as read
-      const { error, count } = await admin
-        .from('notifications')
+      const { error, count } = await (admin
+        .from('notifications') as any)
         .update({ read: true, read_at: now })
         .eq('recipient_user_id', user.id)
         .eq('read', false);
@@ -40,8 +40,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return apiSuccess({ marked: count || 0 });
     } else if (id) {
       // Mark single notification as read
-      const { error } = await admin
-        .from('notifications')
+      const { error } = await (admin
+        .from('notifications') as any)
         .update({ read: true, read_at: now })
         .eq('id', id)
         .eq('recipient_user_id', user.id);
@@ -51,8 +51,8 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
       return apiSuccess({ marked: 1 });
     } else if (ids && Array.isArray(ids) && ids.length > 0) {
       // Mark multiple notifications as read
-      const { error, count } = await admin
-        .from('notifications')
+      const { error, count } = await (admin
+        .from('notifications') as any)
         .update({ read: true, read_at: now })
         .in('id', ids)
         .eq('recipient_user_id', user.id);

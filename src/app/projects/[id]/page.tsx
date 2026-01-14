@@ -28,12 +28,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { id } = await params;
   const supabase = await createServerClient();
 
-  const { data: project } = await supabase
+  const { data: projectData } = await supabase
     .from('projects')
     .select('title, description, goal_amount, raised_amount, currency, category, status, user_id')
     .eq('id', id)
     .single();
 
+  const project = projectData as any;
   if (!project) {
     return {
       title: 'Project Not Found | OrangeCat',
@@ -42,7 +43,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   // Fetch creator profile separately for metadata
-  let creatorProfile = null;
+  let creatorProfile: any = null;
   if (project.user_id) {
     const { data: profileData } = await supabase
       .from('profiles')
@@ -51,7 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       .maybeSingle();
 
     if (profileData) {
-      creatorProfile = profileData;
+      creatorProfile = profileData as any;
     }
   }
 
@@ -108,18 +109,19 @@ export default async function PublicProjectPage({ params }: PageProps) {
   const supabase = await createServerClient();
 
   // Fetch project data server-side
-  const { data: project, error: projectError } = await supabase
+  const { data: projectData, error: projectError } = await supabase
     .from('projects')
     .select('*')
     .eq('id', id)
     .single();
 
+  const project = projectData as any;
   if (projectError || !project) {
     notFound();
   }
 
   // Fetch profile separately (more reliable than JOIN)
-  let profile = null;
+  let profile: any = null;
   if (project.user_id) {
     const { data: profileData } = await supabase
       .from('profiles')
@@ -128,7 +130,7 @@ export default async function PublicProjectPage({ params }: PageProps) {
       .maybeSingle();
 
     if (profileData) {
-      profile = profileData;
+      profile = profileData as any;
     }
   }
 

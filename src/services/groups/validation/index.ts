@@ -95,7 +95,7 @@ export function validateUpdateGroupRequest(
   }
 
   // Description validation (if provided)
-  if (request.description !== undefined && request.description.length > 2000) {
+  if (request.description !== undefined && request.description !== null && request.description.length > 2000) {
     errors.push({ field: 'description', message: 'Description cannot exceed 2000 characters' });
   }
 
@@ -154,7 +154,7 @@ export const createGroupSchema = z.object({
 export const updateGroupSchema = z.object({
   name: z.string().min(3).max(100).optional(),
   description: z.string().max(2000).optional().nullable(),
-  label: z.enum(validLabels).optional(),
+  label: z.enum(validLabelsTuple).optional(),
   tags: z.array(z.string()).optional(),
   avatar_url: z.string().url().optional().nullable().or(z.literal('')),
   banner_url: z.string().url().optional().nullable().or(z.literal('')),

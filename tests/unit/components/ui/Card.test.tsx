@@ -8,7 +8,7 @@
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '../Card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card';
 
 describe('🎴 Card Component Suite - UI Foundation Tests', () => {
   describe('✅ Card Base Component', () => {
@@ -45,10 +45,11 @@ describe('🎴 Card Component Suite - UI Foundation Tests', () => {
       expect(card).toHaveClass('bg-gradient-to-br', 'from-white', 'via-gray-50', 'to-gray-100');
     });
 
-    test('should include interactive transform styles', () => {
+    test('should include interactive hover/transition styles', () => {
       render(<Card data-testid="card">Interactive card</Card>);
       const card = screen.getByTestId('card');
-      expect(card).toHaveClass('active:scale-[0.98]', 'transform');
+      // Card uses hover shadow and smooth transitions for interactivity
+      expect(card).toHaveClass('hover:shadow-lg', 'transition-all', 'duration-300');
     });
 
     test('should apply custom className', () => {

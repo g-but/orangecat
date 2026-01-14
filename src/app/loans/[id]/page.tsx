@@ -47,7 +47,7 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
   const supabase = await createServerClient();
 
   // Fetch public loan with owner profile
-  const { data: loan, error } = await supabase
+  const { data: loanData, error } = await supabase
     .from('loans')
     .select(`
       *,
@@ -62,6 +62,7 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
     .eq('is_public', true)
     .single();
 
+  const loan = loanData as any;
   if (error || !loan) {
     notFound();
   }

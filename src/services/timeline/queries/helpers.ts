@@ -53,7 +53,11 @@ export function transformEnrichedEventToDisplay(event: any): TimelineDisplayEven
           avatar: event.actor_data.avatar_url,
           type: 'user' as TimelineActorType,
         }
-      : undefined,
+      : {
+          id: event.actor_id || 'unknown',
+          name: 'Unknown',
+          type: 'user' as TimelineActorType,
+        },
     subject: event.subject_data
       ? {
           id: event.subject_data.id,

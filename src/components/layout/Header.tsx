@@ -4,15 +4,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Menu,
-  X,
   Bell,
   Search,
-  Settings,
-  LogOut,
-  Home,
-  User,
-  FileText,
-  Wallet,
   MessageSquare,
 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
@@ -22,14 +15,10 @@ import { useHeaderScroll } from '@/hooks/useHeaderScroll';
 import { useMobileMenu } from '@/hooks/useMobileMenu';
 import { useActiveRoute } from '@/hooks/useActiveRoute';
 import { HeaderNavigation } from './HeaderNavigation';
-import { getRouteContext, isAuthenticatedRoute } from '@/config/routes';
+import { getRouteContext } from '@/config/routes';
 import {
   getHeaderNavigationItems,
-  sidebarSections,
-  bottomNavItems,
   footerNavigation,
-  userMenuItems,
-  authNavigationItems,
 } from '@/config/navigation';
 import { Z_INDEX_CLASSES } from '@/constants/z-index';
 import Logo from './Logo';
@@ -38,11 +27,9 @@ import { HeaderCreateButton } from '@/components/dashboard/SmartCreateButton';
 import EnhancedSearchBar from '@/components/search/EnhancedSearchBar';
 import MobileSearchModal from '@/components/search/MobileSearchModal';
 import UserProfileDropdown from '@/components/ui/UserProfileDropdown';
-import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { useUnreadCount } from '@/stores/messaging';
-import { useMessagingService } from '@/hooks/useMessagingService';
 import { useUnreadNotifications } from '@/hooks/useNotifications';
 import { EmailConfirmationBanner } from './EmailConfirmationBanner';
 
@@ -76,14 +63,14 @@ export function Header({
   const [showNotifications, setShowNotifications] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, profile, signOut } = useAuth();
+  const { user } = useAuth();
   const { isScrolled, isHidden } = useHeaderScroll();
   const mobileMenu = useMobileMenu();
   const { isActive } = useActiveRoute();
-  const { count: unreadMessages } = useUnreadCount();
+  const unreadMessages = useUnreadCount();
   const { count: unreadNotifications } = useUnreadNotifications();
 
-  const routeContext = getRouteContext(pathname);
+  const routeContext = getRouteContext(pathname ?? '/');
   const isAuthRoute = routeContext === 'authenticated' || routeContext === 'contextual';
   const navigation = getHeaderNavigationItems(user);
 
@@ -103,14 +90,15 @@ export function Header({
       closeTimeoutRef.current = setTimeout(() => {
         setIsClosing(false);
       }, 300);
-      return () => {
-        if (closeTimeoutRef.current) {
-          clearTimeout(closeTimeoutRef.current);
-        }
-      };
     } else if (mobileMenu.isOpen) {
       setIsClosing(false);
     }
+
+    return () => {
+      if (closeTimeoutRef.current) {
+        clearTimeout(closeTimeoutRef.current);
+      }
+    };
   }, [mobileMenu.isOpen, isClosing]);
 
   // Close mobile menu when clicking outside or pressing Escape
@@ -278,16 +266,11 @@ export function Header({
             {/* User Menu or Auth Buttons */}
             {user ? (
               <div className="flex-shrink-0">
-                <UserProfileDropdown
-                  user={user}
-                  profile={profile}
-                  onSignOut={signOut}
-                  navigationItems={userMenuItems}
-                />
+                <UserProfileDropdown />
               </div>
             ) : (
               <div className="hidden sm:flex items-center gap-2">
-                <AuthButtons items={authNavigationItems} />
+                <AuthButtons />
               </div>
             )}
           </div>
@@ -304,10 +287,10 @@ export function Header({
       )}
 
       {/* Mobile Search Modal */}
-      {showMobileSearch && <MobileSearchModal onClose={() => setShowMobileSearch(false)} />}
+      {showMobileSearch && <MobileSearchModal isOpen={showMobileSearch} onClose={() => setShowMobileSearch(false)} />}
 
       {/* Notification Center */}
-      {showNotifications && <NotificationCenter onClose={() => setShowNotifications(false)} />}
+      {showNotifications && <NotificationCenter isOpen={showNotifications} onClose={() => setShowNotifications(false)} />}
 
       {/* Mobile Menu (public routes only) */}
       {!isAuthRoute &&

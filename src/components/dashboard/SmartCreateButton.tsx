@@ -72,7 +72,7 @@ export default function SmartCreateButton({
   // Determine button content based on draft status
   const getButtonContent = () => {
     if (shouldShowDraftPrompt && primaryDraft) {
-      const isPendingDraft = primaryDraft.syncStatus === 'pending';
+      const isPendingDraft = primaryDraft.isDraft;
 
       return (
         <>

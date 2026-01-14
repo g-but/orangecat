@@ -315,7 +315,7 @@ export interface DetailPageConfig<T = any> {
   /** Plural display name */
   namePlural?: string;
   /** Color theme */
-  colorTheme?: 'orange' | 'tiffany' | 'rose' | 'blue' | 'green' | 'purple';
+  colorTheme?: 'orange' | 'tiffany' | 'rose' | 'blue' | 'green' | 'purple' | 'indigo';
   /** Layout configuration */
   layout: LayoutConfig;
   /** Sections to render in the main content area */

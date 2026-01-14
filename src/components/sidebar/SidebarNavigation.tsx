@@ -45,7 +45,7 @@ export function SidebarNavigation({
       >
         {sections.map(section => {
           const isCollapsed = collapsedSections.has(section.id);
-          const hasActiveItem = section.items.some(item => isItemActive(item.href));
+          const hasActiveItem = section.items.some(item => item.href && isItemActive(item.href));
 
           return (
             <div key={section.id} className="space-y-1">
@@ -78,7 +78,7 @@ export function SidebarNavigation({
                     <SidebarNavItem
                       key={item.name}
                       item={item}
-                      isActive={isItemActive(item.href)}
+                      isActive={item.href ? isItemActive(item.href) : false}
                       isExpanded={isExpanded}
                       onNavigate={onNavigate}
                     />
@@ -97,7 +97,7 @@ export function SidebarNavigation({
             <SidebarNavItem
               key={item.name}
               item={item}
-              isActive={isItemActive(item.href)}
+              isActive={item.href ? isItemActive(item.href) : false}
               isExpanded={isExpanded}
               onNavigate={onNavigate}
             />

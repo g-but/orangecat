@@ -8,13 +8,15 @@ import { logger } from '@/utils/logger';
 // Navigation types
 export interface NavItem {
   name: string;
-  href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  href?: string;
+  icon?: React.ComponentType<{ className?: string }>;
   comingSoon?: boolean;
   badge?: string;
   description?: string;
   requiresAuth?: boolean;
   requiresProfile?: boolean;
+  children?: NavItem[];
+  external?: boolean;
 }
 
 export interface NavSection {
@@ -155,7 +157,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
         // Use improved matching logic
         if (pathname === item.href) {
           activeSection = section.id;
-          activeItem = item.href;
+          activeItem = item.href ?? null;
           break;
         }
         // Special handling for dashboard
@@ -164,7 +166,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
           (pathname === '/dashboard' || pathname.startsWith('/dashboard/'))
         ) {
           activeSection = section.id;
-          activeItem = item.href;
+          activeItem = item.href ?? null;
           break;
         }
         // For other routes, use precise matching
@@ -173,7 +175,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
           (pathname.startsWith(`${item.href}/`) || pathname === item.href)
         ) {
           activeSection = section.id;
-          activeItem = item.href;
+          activeItem = item.href ?? null;
           break;
         }
       }

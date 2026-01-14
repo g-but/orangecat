@@ -35,7 +35,7 @@ export async function searchProfiles(
   // Priority 1: If radius is specified, use PostGIS RPC (handles both query and radius)
   if (filters?.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
     try {
-      const { data, error } = await supabase.rpc('search_profiles_nearby', {
+      const { data, error } = await (supabase.rpc as any)('search_profiles_nearby', {
         p_lat: filters.lat,
         p_lng: filters.lng,
         p_radius_km: filters.radius_km,
@@ -46,9 +46,9 @@ export async function searchProfiles(
 
       if (!error && data) {
         // Apply additional location filters if needed
-        let results = data;
+        let results = data as any[];
         if (filters.country) {
-          results = results.filter((p: any) => p.location_country === filters.country.toUpperCase());
+          results = results.filter((p: any) => p.location_country === filters.country!.toUpperCase());
         }
         if (filters.city) {
           const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
@@ -74,7 +74,7 @@ export async function searchProfiles(
   // Priority 2: If query is specified (and no radius), use full-text search RPC
   if (query) {
     try {
-      const { data, error } = await supabase.rpc('search_profiles_fts', {
+      const { data, error } = await (supabase.rpc as any)('search_profiles_fts', {
         p_query: query,
         p_limit: limit,
         p_offset: offset,
@@ -82,10 +82,10 @@ export async function searchProfiles(
 
       if (!error && data) {
         // Apply location filters to RPC results if needed
-        let results = data;
+        let results = data as any[];
         if (filters) {
           if (filters.country) {
-            results = results.filter((p: any) => p.location_country === filters.country.toUpperCase());
+            results = results.filter((p: any) => p.location_country === filters.country!.toUpperCase());
           }
           if (filters.city) {
             const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
@@ -207,7 +207,7 @@ export async function searchFundingPages(
   // Priority 1: If radius is specified, use PostGIS RPC (handles both query and radius)
   if (filters?.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
     try {
-      const { data, error } = await supabase.rpc('search_projects_nearby', {
+      const { data, error } = await (supabase.rpc as any)('search_projects_nearby', {
         p_lat: filters.lat,
         p_lng: filters.lng,
         p_radius_km: filters.radius_km,
@@ -218,7 +218,7 @@ export async function searchFundingPages(
 
       if (!error && data) {
         // Apply additional filters to RPC results
-        let results = data;
+        let results = data as any[];
         if (filters.statuses && filters.statuses.length > 0) {
           results = results.filter((p: any) => filters.statuses!.includes(p.status));
         } else if (filters.isActive !== undefined) {
@@ -290,7 +290,7 @@ export async function searchFundingPages(
   // Priority 2: If query is specified (and no radius), use full-text search RPC
   if (query) {
     try {
-      const { data, error } = await supabase.rpc('search_projects_fts', {
+      const { data, error } = await (supabase.rpc as any)('search_projects_fts', {
         p_query: query,
         p_limit: limit,
         p_offset: offset,
@@ -298,7 +298,7 @@ export async function searchFundingPages(
 
       if (!error && data) {
         // Apply filters to RPC results
-        let results = data;
+        let results = data as any[];
         if (filters) {
           if (filters.statuses && filters.statuses.length > 0) {
             results = results.filter((p: any) => filters.statuses!.includes(p.status));
@@ -521,7 +521,7 @@ export async function getSearchSuggestions(query: string, limit: number = 5): Pr
 
     // Add project suggestions
     if (!projectSuggestions.error && projectSuggestions.data) {
-      projectSuggestions.data.forEach(project => {
+      (projectSuggestions.data as any[]).forEach((project: any) => {
         if (project.title) {
           suggestions.add(project.title);
         }
@@ -577,12 +577,12 @@ export async function getTrending(): Promise<{
         .in('id', userIds);
 
       const profileMap = new Map(
-        profiles
-          ?.map(p => ({
+        (profiles as any[] | null)
+          ?.map((p: any) => ({
             ...p,
             name: p.name,
           }))
-          .map(p => [p.id, p]) || []
+          .map((p: any) => [p.id, p]) || []
       );
 
       projects = projectsData.data.map((project: any) => {

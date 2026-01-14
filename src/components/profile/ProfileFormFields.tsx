@@ -12,11 +12,20 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
-import type { ProfileFormValues } from './ModernProfileEditor';
+import type { ProfileFormValues } from './types';
+
+// Extract only string/null keys from ProfileFormValues for text field usage
+// Use NonNullable to exclude undefined from the resulting union type
+type TextFieldKeys = NonNullable<{
+  [K in keyof ProfileFormValues]: ProfileFormValues[K] extends string | null | undefined ? K : never;
+}[keyof ProfileFormValues]>;
+
+// Define a more permissive type for the name prop to satisfy react-hook-form's FieldPath
+type TextFieldName = TextFieldKeys | `social_links.links.${number}.platform` | `social_links.links.${number}.label` | `social_links.links.${number}.value`;
 
 interface BaseFieldProps {
   control: Control<ProfileFormValues>;
-  name: keyof ProfileFormValues;
+  name: TextFieldName;
   label: string;
   placeholder: string;
   description: string;
@@ -64,6 +73,7 @@ export function ProfileTextField({
                 className="resize-none min-h-[120px]"
                 maxLength={maxLength}
                 {...field}
+                value={(field.value as string) ?? ''}
               />
             ) : (
               <Input
@@ -71,6 +81,7 @@ export function ProfileTextField({
                 className={`${icon ? 'pl-8' : ''}`}
                 maxLength={maxLength}
                 {...field}
+                value={(field.value as string) ?? ''}
               />
             )}
           </FormControl>
@@ -81,10 +92,10 @@ export function ProfileTextField({
             {showCharCount && maxLength && (
               <span
                 className={
-                  field.value?.length > maxLength * 0.9 ? 'text-orange-500 font-semibold' : ''
+                  ((field.value as string)?.length ?? 0) > maxLength * 0.9 ? 'text-orange-500 font-semibold' : ''
                 }
               >
-                {field.value?.length || 0}/{maxLength}
+                {(field.value as string)?.length || 0}/{maxLength}
               </span>
             )}
           </FormDescription>
@@ -143,6 +154,7 @@ export function DisplayNameField({ control }: { control: Control<ProfileFormValu
                 placeholder="Your awesome display name (optional)"
                 className="pl-8"
                 {...field}
+                value={field.value ?? ''}
               />
             </div>
           </FormControl>
@@ -173,12 +185,13 @@ export function BioField({ control }: { control: Control<ProfileFormValues> }) {
               placeholder="Tell your story... What drives you? What are you passionate about? Share your journey! 🚀"
               className="resize-none min-h-[120px] border-2 focus:border-purple-300"
               {...field}
+              value={field.value ?? ''}
             />
           </FormControl>
           <FormDescription className="flex justify-between">
             <span>Share your awesome story with the community!</span>
-            <span className={field.value?.length > 450 ? 'text-orange-500 font-semibold' : ''}>
-              {field.value?.length || 0}/500
+            <span className={(field.value?.length ?? 0) > 450 ? 'text-orange-500 font-semibold' : ''}>
+              {field.value?.length ?? 0}/500
             </span>
           </FormDescription>
           <FormMessage />
@@ -201,7 +214,7 @@ export function BitcoinAddressField({ control }: { control: Control<ProfileFormV
             Bitcoin Address
           </FormLabel>
           <FormControl>
-            <Input placeholder="bc1..." className="font-mono text-sm" {...field} />
+            <Input placeholder="bc1..." className="font-mono text-sm" {...field} value={field.value ?? ''} />
           </FormControl>
           <FormDescription className="text-xs text-gray-500">
             Your on-chain Bitcoin address (starts with bc1, 1, or 3)
@@ -226,7 +239,7 @@ export function LightningAddressField({ control }: { control: Control<ProfileFor
             Lightning Address
           </FormLabel>
           <FormControl>
-            <Input placeholder="you@getalby.com" className="font-mono text-sm" {...field} />
+            <Input placeholder="you@getalby.com" className="font-mono text-sm" {...field} value={field.value ?? ''} />
           </FormControl>
           <FormDescription className="text-xs text-gray-500">
             Your Lightning Network address (email format)
@@ -251,7 +264,7 @@ export function WebsiteField({ control }: { control: Control<ProfileFormValues> 
             Website
           </FormLabel>
           <FormControl>
-            <Input placeholder="orangecat.ch or https://your-website.com" {...field} />
+            <Input placeholder="orangecat.ch or https://your-website.com" {...field} value={field.value ?? ''} />
           </FormControl>
           <FormDescription className="text-xs text-gray-500">
             Your personal website or portfolio

@@ -34,7 +34,7 @@ export default class ProfileErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to error reporting service
-    logger.error('Profile section error:', error, errorInfo);
+    logger.error('Profile section error', { message: error.message, stack: errorInfo.componentStack });
   }
 
   handleReset = () => {

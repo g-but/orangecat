@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
-    const { error } = await supabase.from('channel_waitlist').insert({
+    const { error } = await (supabase.from('channel_waitlist') as any).insert({
       email,
       user_id: user?.id || null,
       source,

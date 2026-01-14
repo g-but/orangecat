@@ -253,8 +253,8 @@ export default function CreateCampaignForm({
         currency: 'BTC',
       };
 
-      const { data, error: insertError } = await supabase
-        .from('projects')
+      const { data, error: insertError } = await (supabase
+        .from('projects') as any)
         .insert([fundingPageData])
         .select()
         .single();
@@ -299,7 +299,7 @@ export default function CreateCampaignForm({
     if (formData.goal_amount.trim()) {
       completed++;
     }
-    if (formData.banner_.url) {
+    if (formData.banner_url) {
       completed++;
     }
     if (formData.gallery_images.length > 0) {

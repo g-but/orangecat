@@ -44,11 +44,10 @@ export class QueryAnalyzer {
    */
   async analyzePerformance(timeRange: 'hour' | 'day' | 'week' = 'day'): Promise<PerformanceMetrics> {
     try {
-      const { data: queries, error } = await supabase
-        .rpc('get_slow_queries', {
-          threshold_ms: this.slowQueryThreshold,
-          time_range: timeRange
-        })
+      const { data: queries, error } = await (supabase.rpc as any)('get_slow_queries', {
+        threshold_ms: this.slowQueryThreshold,
+        time_range: timeRange
+      })
 
       if (error) {
         logger.error('Failed to analyze query performance', error, 'QueryAnalyzer')

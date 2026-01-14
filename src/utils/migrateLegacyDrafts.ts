@@ -1,196 +1,60 @@
 /**
  * LEGACY DRAFT MIGRATION UTILITY
  *
- * Safely migrates from the old multiple-system approach to the new unified store.
- * Recovers localStorage drafts and ensures no data is lost.
+ * This module was used to migrate from the old multiple-system approach to the new unified store.
+ * The migration has been completed and the old store API no longer exists.
+ * These functions are kept as no-ops for backwards compatibility.
+ *
+ * @deprecated The migration is complete. These functions do nothing.
  */
 
-import { useProjectStore, ProjectFormData } from '@/stores/projectStore';
 import { logger } from './logger';
-import type { CampaignFormData } from '@/types/campaign';
-
-interface LegacyLocalStorageDraft {
-  formData: CampaignFormData;
-  currentStep: number;
-  draftId?: string;
-  lastSaved: string;
-}
 
 /**
- * Migrate all legacy drafts to the new unified system
+ * @deprecated Migration is complete - this function is now a no-op
  */
-export async function migrateLegacyDrafts(userId: string): Promise<{
+export async function migrateLegacyDrafts(_userId: string): Promise<{
   migrated: number;
   recovered: string[];
   errors: string[];
 }> {
-  const results = {
+  logger.info('Legacy draft migration is complete - no action needed');
+  return {
     migrated: 0,
-    recovered: [] as string[],
-    errors: [] as string[],
+    recovered: [],
+    errors: [],
   };
-
-  try {
-    // 1. Check for legacy localStorage drafts
-    const legacyKeys = Object.keys(localStorage).filter(
-      key => key.includes('funding-draft') || key.includes('draft-')
-    );
-
-    // Found legacy localStorage keys for migration
-
-    for (const key of legacyKeys) {
-      try {
-        const rawData = localStorage.getItem(key);
-        if (!rawData) {
-          continue;
-        }
-
-        const legacyDraft: LegacyLocalStorageDraft = JSON.parse(rawData);
-        const title = legacyDraft.formData?.title?.trim();
-
-        if (!title) {
-          // Skipping empty draft
-          continue;
-        }
-
-        // Migrate to new store
-        const { saveDraft } = useProjectStore.getState();
-        const newDraftId = await saveDraft(userId, legacyDraft.formData);
-
-        results.migrated++;
-        results.recovered.push(title);
-
-        // Remove legacy draft
-        localStorage.removeItem(key);
-
-        // Migrated draft successfully
-      } catch (error) {
-        results.errors.push(`Failed to migrate ${key}: ${error}`);
-      }
-    }
-
-    // 2. Clean up other legacy localStorage
-    const legacyPatterns = ['useDrafts-', 'tesla-draft-', 'project-service-'];
-
-    legacyPatterns.forEach(pattern => {
-      Object.keys(localStorage).forEach(key => {
-        if (key.includes(pattern)) {
-          localStorage.removeItem(key);
-          // Cleaned up legacy key
-        }
-      });
-    });
-
-    // Migration complete
-    return results;
-  } catch (error) {
-    results.errors.push(`Migration failed: ${error}`);
-    return results;
-  }
 }
 
 /**
- * Check if user has any legacy drafts that need migration
+ * @deprecated Migration is complete - always returns false
  */
 export function hasLegacyDrafts(): boolean {
-  const legacyKeys = Object.keys(localStorage).filter(
-    key => key.includes('funding-draft') || key.includes('draft-') || key.includes('tesla-draft')
-  );
-
-  return legacyKeys.length > 0;
+  return false;
 }
 
 /**
- * Get preview of legacy drafts before migration
+ * @deprecated Migration is complete - this function is now a no-op
  */
-export function getLegacyDraftPreview(): Array<{
-  key: string;
-  title: string;
-  lastSaved: string;
-  size: number;
-}> {
-  const previews: Array<{
-    key: string;
-    title: string;
-    lastSaved: string;
-    size: number;
-  }> = [];
-
-  Object.keys(localStorage).forEach(key => {
-    if (key.includes('funding-draft') || key.includes('draft-')) {
-      try {
-        const rawData = localStorage.getItem(key);
-        if (!rawData) {
-          return;
-        }
-
-        const data = JSON.parse(rawData);
-        const title = data.formData?.title || 'Untitled';
-        const lastSaved = data.lastSaved || 'Unknown';
-
-        previews.push({
-          key,
-          title,
-          lastSaved,
-          size: rawData.length,
-        });
-      } catch (error) {}
-    }
-  });
-
-  return previews;
+export function clearLegacyLocalStorage(): number {
+  return 0;
 }
 
 /**
- * Force recover a specific draft by key
+ * @deprecated Migration is complete - this function is now a no-op
  */
-export async function recoverSpecificDraft(
-  userId: string,
-  storageKey: string
+export async function recoverDraftFromLocalStorage(
+  _userId: string,
+  _storageKey: string
 ): Promise<string | null> {
-  try {
-    const rawData = localStorage.getItem(storageKey);
-    if (!rawData) {
-      throw new Error('Draft not found in localStorage');
-    }
-
-    const legacyDraft: LegacyLocalStorageDraft = JSON.parse(rawData);
-
-    if (!legacyDraft.formData?.title?.trim()) {
-      throw new Error('Draft has no title');
-    }
-
-    const { saveDraft } = useProjectStore.getState();
-    const newDraftId = await saveDraft(userId, legacyDraft.formData);
-
-    if (process.env.NODE_ENV === 'development') {
-      logger.info(`Recovered draft "${legacyDraft.formData.title}" -> ${newDraftId}`);
-    }
-    return newDraftId;
-  } catch (error) {
-    throw error;
-  }
+  logger.info('Legacy draft recovery is no longer available');
+  return null;
 }
 
 /**
- * Create the "mao" draft if it's missing
+ * @deprecated Migration is complete - this function is now a no-op
  */
-export async function recreateMaoDraft(userId: string): Promise<string> {
-  const { saveDraft } = useProjectStore.getState();
-
-  const maoDraft: CampaignFormData = {
-    title: 'mao',
-    description: '',
-    bitcoin_address: '',
-    lightning_address: '',
-    website_url: '',
-    goal_amount: 0,
-    categories: [],
-    images: [],
-  };
-
-  const draftId = await saveDraft(userId, maoDraft);
-  // REMOVED: console.log statement
-
-  return draftId;
+export async function recreateMaoDraft(_userId: string): Promise<string> {
+  logger.info('recreateMaoDraft is deprecated');
+  return '';
 }

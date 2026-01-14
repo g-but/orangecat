@@ -48,4 +48,4 @@ export {
 
 // Export custom template components
 export { CircleTemplates } from './CircleTemplates';
-export { default as OrganizationTemplates, ORGANIZATION_TEMPLATES } from './OrganizationTemplates';
+export { default as OrganizationTemplates, ORGANIZATION_TEMPLATES, type OrganizationTemplate } from './OrganizationTemplates';

@@ -92,7 +92,7 @@ export const profileSchema = z.object({
       },
       val => {
         const result = validatePhoneNumber(val || '');
-        return result.error || 'Invalid phone number format';
+        return { message: result.error || 'Invalid phone number format' };
       }
     ),
   // Wallet fields (kept for backward compatibility, but wallets are now managed separately)
@@ -100,6 +100,8 @@ export const profileSchema = z.object({
   // when legacy data contains non-standard test values.
   bitcoin_address: z.string().max(200).optional().nullable().or(z.literal('')),
   lightning_address: z.string().max(200).optional().nullable().or(z.literal('')),
+  // Currency preference for displaying prices
+  currency: z.enum(CURRENCY_CODES).optional().nullable(),
 });
 
 // Project validation
@@ -176,10 +178,10 @@ export function sanitizeHtml(html: string): string {
 
 // Helper function to normalize profile data
 export function normalizeProfileData(data: unknown): ProfileData {
-  const normalized = { ...data };
+  const normalized = { ...(data as Record<string, unknown>) } as Record<string, unknown>;
 
   // If name is empty or not provided, use username
-  if (!normalized.name || normalized.name.trim() === '') {
+  if (!normalized.name || (typeof normalized.name === 'string' && normalized.name.trim() === '')) {
     normalized.name = normalized.username;
   }
 
@@ -229,30 +231,37 @@ export function normalizeProfileData(data: unknown): ProfileData {
     if (Array.isArray(normalized.social_links)) {
       // If it's an array, wrap it
       normalized.social_links = { links: normalized.social_links };
-    } else if (normalized.social_links && !normalized.social_links.links) {
-      // If it's an object but not the right structure, try to convert
-      normalized.social_links = { links: [] };
+    } else if (typeof normalized.social_links === 'object' && normalized.social_links !== null) {
+      const socialLinks = normalized.social_links as Record<string, unknown>;
+      if (!socialLinks.links) {
+        // If it's an object but not the right structure, try to convert
+        normalized.social_links = { links: [] };
+      }
     }
     // Filter out empty links
-    if (normalized.social_links.links) {
-      normalized.social_links.links = normalized.social_links.links.filter(
-        (link: { value?: string }) => link && link.value && link.value.trim()
-      );
-      // If no links, set to undefined
-      if (normalized.social_links.links.length === 0) {
-        normalized.social_links = undefined;
+    if (typeof normalized.social_links === 'object' && normalized.social_links !== null) {
+      const socialLinks = normalized.social_links as { links?: Array<{ value?: string }> };
+      if (socialLinks.links) {
+        socialLinks.links = socialLinks.links.filter(
+          (link: { value?: string }) => link && link.value && link.value.trim()
+        );
+        // If no links, set to undefined
+        if (socialLinks.links.length === 0) {
+          normalized.social_links = undefined;
+        }
       }
     }
   }
 
   // Normalize empty strings to undefined for optional fields
   Object.keys(normalized).forEach(key => {
-    if (typeof normalized[key] === 'string' && normalized[key].trim() === '') {
+    const value = normalized[key];
+    if (typeof value === 'string' && value.trim() === '') {
       normalized[key] = undefined;
     }
   });
 
-  return normalized;
+  return normalized as unknown as ProfileData;
 }
 
 // Personal Economy validation schemas

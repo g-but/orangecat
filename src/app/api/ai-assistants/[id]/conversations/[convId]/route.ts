@@ -6,6 +6,8 @@
  * DELETE /api/ai-assistants/[id]/conversations/[convId] - Delete conversation
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -68,7 +70,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({
       success: true,
       data: {
-        ...conversation,
+        ...(conversation as Record<string, unknown>),
         messages: messages || [],
         assistant,
       },
@@ -106,8 +108,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Update conversation
-    const { data: conversation, error } = await supabase
-      .from(DATABASE_TABLES.AI_CONVERSATIONS)
+    const { data: conversation, error } = await (supabase
+      .from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
       .update({
         ...result.data,
         updated_at: new Date().toISOString(),

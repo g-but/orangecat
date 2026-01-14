@@ -5,7 +5,10 @@
  * Provides availability checking, booking creation, and status management.
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+// Type alias for any SupabaseClient (accepts any database schema)
+type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 // Types
@@ -91,7 +94,7 @@ export interface BookingResult {
  * Booking Service Class
  */
 export class BookingService {
-  constructor(private supabase: SupabaseClient) {}
+  constructor(private supabase: AnySupabaseClient) {}
 
   /**
    * Get available time slots for a service on a given date
@@ -514,6 +517,6 @@ export class BookingService {
 /**
  * Create booking service instance
  */
-export function createBookingService(supabase: SupabaseClient): BookingService {
+export function createBookingService(supabase: AnySupabaseClient): BookingService {
   return new BookingService(supabase);
 }

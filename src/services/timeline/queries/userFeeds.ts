@@ -13,6 +13,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
+import { TIMELINE_TABLES } from '@/config/database-tables';
 import type {
   TimelineFeedResponse,
   TimelineDisplayEvent,
@@ -39,7 +40,7 @@ export async function getUserFeed(
     const offset = (page - 1) * limit;
 
     // Build filter conditions
-    let query = supabase.rpc('get_user_timeline_feed', {
+    let query = (supabase.rpc as any)('get_user_timeline_feed', {
       p_user_id: userId,
       p_limit: limit,
       p_offset: offset,
@@ -135,8 +136,8 @@ export async function getFollowedUsersFeed(
     const offset = (page - 1) * limit;
 
     // Get list of followed user IDs
-    const { data: follows, error: followsError } = await supabase
-      .from('user_follows')
+    const { data: follows, error: followsError } = await (supabase
+      .from('user_follows') as any)
       .select('followed_user_id')
       .eq('follower_id', currentUserId)
       .eq('is_active', true);
@@ -146,7 +147,7 @@ export async function getFollowedUsersFeed(
       throw followsError;
     }
 
-    const followedUserIds = follows?.map(f => f.followed_user_id) || [];
+    const followedUserIds = (follows as any[])?.map((f: any) => f.followed_user_id) || [];
 
     if (followedUserIds.length === 0) {
       return {
@@ -249,7 +250,7 @@ export async function getEnrichedUserFeed(
         data: enrichedEvents,
         error,
         count,
-      } = await supabase.rpc('get_enriched_timeline_feed', {
+      } = await (supabase.rpc as any)('get_enriched_timeline_feed', {
         p_user_id: userId,
         p_limit: limit,
         p_offset: offset,
@@ -263,7 +264,7 @@ export async function getEnrichedUserFeed(
         );
 
         // Fallback to basic timeline feed if enriched version isn't available
-        const { data: basicEvents, error: basicError } = await supabase.rpc(
+        const { data: basicEvents, error: basicError } = await (supabase.rpc as any)(
           'get_user_timeline_feed',
           {
             p_user_id: userId,
@@ -282,7 +283,7 @@ export async function getEnrichedUserFeed(
           totalEvents = 0;
         } else {
           // Convert basic events to enriched format
-          events = (basicEvents || []).map((event: any) => ({
+          events = ((basicEvents || []) as any[]).map((event: any) => ({
             ...event,
             like_count: 0,
             share_count: 0,

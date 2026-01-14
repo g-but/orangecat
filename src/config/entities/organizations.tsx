@@ -36,17 +36,37 @@ export interface OrganizationEntity {
   // Required for BaseEntity compatibility
   title: string;
   thumbnail_url?: string | null;
+  [key: string]: unknown; // Index signature for BaseEntity compatibility
 }
 
 /**
  * Transform database organization to entity format
  */
 export function toOrganizationEntity(org: Omit<OrganizationEntity, 'title' | 'thumbnail_url'>): OrganizationEntity {
-  return {
-    ...org,
-    title: org.name,
-    thumbnail_url: org.avatar_url,
+  // Explicitly construct the return object to handle index signature
+  const result: OrganizationEntity = {
+    id: org.id as string,
+    name: org.name as string,
+    slug: org.slug as string,
+    description: org.description as string | null | undefined,
+    type: org.type as string,
+    governance_model: org.governance_model as string,
+    is_public: org.is_public as boolean,
+    requires_approval: org.requires_approval as boolean | undefined,
+    transparency_score: org.transparency_score as number | undefined,
+    website_url: org.website_url as string | null | undefined,
+    treasury_address: org.treasury_address as string | null | undefined,
+    lightning_address: org.lightning_address as string | null | undefined,
+    category: org.category as string | null | undefined,
+    avatar_url: org.avatar_url as string | null | undefined,
+    banner_url: org.banner_url as string | null | undefined,
+    created_by: org.created_by as string,
+    created_at: org.created_at as string,
+    updated_at: org.updated_at as string | undefined,
+    title: (org.name as string),
+    thumbnail_url: org.avatar_url as string | null | undefined,
   };
+  return result;
 }
 
 export const organizationEntityConfig: EntityConfig<OrganizationEntity> = {

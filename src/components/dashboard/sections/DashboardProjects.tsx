@@ -51,8 +51,6 @@ export function DashboardProjects({ projects }: DashboardProjectsProps) {
             {projects.slice(0, 3).map(project => (
               <ProjectCard
                 key={project.id}
-                id={project.id}
-                title={project.title}
                 href={`/projects/${project.id}`}
                 project={
                   {

@@ -18,8 +18,8 @@
  * Lazy loader for large data files with chunking support
  */
 export class LazyDataLoader<T = unknown> {
-  private cache = new Map<string, T>();
-  private loadingPromises = new Map<string, Promise<T>>();
+  private cache = new Map<string, T[]>();
+  private loadingPromises = new Map<string, Promise<T[]>>();
 
   constructor(
     private chunkSize: number = 50,
@@ -29,7 +29,7 @@ export class LazyDataLoader<T = unknown> {
   /**
    * Load data chunk lazily with caching
    */
-  async loadData<T>(loader: () => Promise<T[]>, cacheKey: string): Promise<T[]> {
+  async loadData(loader: () => Promise<T[]>, cacheKey: string): Promise<T[]> {
     if (this.cache.has(cacheKey)) {
       return this.cache.get(cacheKey) as T[];
     }
@@ -39,7 +39,7 @@ export class LazyDataLoader<T = unknown> {
     }
 
     const loadingPromise = loader();
-    this.loadingPromises.set(cacheKey, loadingPromise as Promise<T>);
+    this.loadingPromises.set(cacheKey, loadingPromise);
 
     try {
       const data = await loadingPromise;
@@ -52,7 +52,7 @@ export class LazyDataLoader<T = unknown> {
     }
   }
 
-  private setCache(key: string, data: T): void {
+  private setCache(key: string, data: T[]): void {
     // Remove oldest entry if cache is full
     if (this.cache.size >= this.maxCacheSize) {
       const firstKey = this.cache.keys().next().value;

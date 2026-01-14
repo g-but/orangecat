@@ -1,18 +1,13 @@
 'use client';
 
-import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
-import { Globe, Lock, FolderPlus, X, Bold, Italic, Wifi, WifiOff, Users } from 'lucide-react';
+import { Globe, Lock, FolderPlus, X, Bold, Italic, WifiOff, Users } from 'lucide-react';
 import { usePostComposer } from '@/hooks/usePostComposerNew';
+import { useContentEditableEditor } from '@/hooks/useContentEditableEditor';
 import AvatarLink from '@/components/ui/AvatarLink';
 import { cn } from '@/lib/utils';
-import {
-  markdownToHtml,
-  htmlToMarkdown,
-  getSelectionRange,
-  setSelectionRange,
-} from '@/utils/markdownEditor';
 
 /**
  * TimelineComposer Component - X-Inspired Minimal Design
@@ -178,8 +173,6 @@ const TimelineComposer = React.memo(function TimelineComposer({
 }: TimelineComposerProps) {
   const { user, profile } = useAuth();
   const [showProjects, setShowProjects] = useState(false);
-  const editorRef = useRef<HTMLDivElement>(null);
-  const [isComposing, setIsComposing] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
 
   const VISIBILITY_PRESETS = useMemo(
@@ -240,143 +233,20 @@ const TimelineComposer = React.memo(function TimelineComposer({
     ? "What's happening?"
     : `Write on ${targetName}...`;
 
-  // Sync markdown content to HTML in editor (only when not actively composing)
-  useEffect(() => {
-    // Skip syncing while composing or when the editor is focused to avoid cursor drops
-    if (!editorRef.current || isComposing || document.activeElement === editorRef.current) {
-      return;
-    }
-
-    const currentHtml = editorRef.current.innerHTML.replace(/\s+/g, ' ').trim();
-    const expectedHtml = markdownToHtml(postComposer.content).replace(/\s+/g, ' ').trim();
-
-    // Only update if significantly different (avoid cursor jumping on every keystroke)
-    if (currentHtml !== expectedHtml && expectedHtml !== '<br>') {
-      const selection = getSelectionRange(editorRef.current);
-      const wasFocused = document.activeElement === editorRef.current;
-
-      editorRef.current.innerHTML = expectedHtml || '<br>';
-
-      // Restore cursor position and focus
-      if (selection && wasFocused) {
-        requestAnimationFrame(() => {
-          if (editorRef.current) {
-            try {
-              setSelectionRange(editorRef.current, selection.start, selection.end);
-              editorRef.current.focus();
-            } catch (e) {
-              // Fallback: just focus
-              editorRef.current.focus();
-            }
-          }
-        });
-      }
-    }
-  }, [postComposer.content, isComposing]);
-
-  // Formatting handler - uses document.execCommand for contentEditable
-  const handleFormat = useCallback(
-    (format: 'bold' | 'italic') => {
-      if (!editorRef.current) {
-        return;
-      }
-
-      // Focus editor if not already focused
-      editorRef.current.focus();
-
-      // Use document.execCommand for formatting (works with contentEditable)
-      // Note: execCommand is deprecated but still widely supported
-      const command = format === 'bold' ? 'bold' : 'italic';
-      document.execCommand(command, false);
-
-      // Sync back to markdown after a brief delay to let browser update
-      setTimeout(() => {
-        if (editorRef.current) {
-          const html = editorRef.current.innerHTML;
-          const markdown = htmlToMarkdown(html);
-          postComposer.setContent(markdown);
-        }
-      }, 0);
-    },
-    [postComposer]
-  );
-
-  // Handle input in contentEditable
-  const handleInput = useCallback(() => {
-    if (!editorRef.current) {
-      return;
-    }
-
-    setIsComposing(true);
-
-    // Debounce the markdown conversion slightly to avoid cursor jumping
-    setTimeout(() => {
-      if (editorRef.current) {
-        const html = editorRef.current.innerHTML;
-        const markdown = htmlToMarkdown(html);
-
-        // Only update if different to avoid unnecessary re-renders
-        if (markdown !== postComposer.content) {
-          postComposer.setContent(markdown);
-        }
-
-        // Auto-resize with a higher cap for long pastes
-        editorRef.current.style.height = 'auto';
-        const maxHeight = 480; // px cap to avoid covering screen
-        editorRef.current.style.height = `${Math.min(editorRef.current.scrollHeight, maxHeight)}px`;
-      }
-      setIsComposing(false);
-    }, 10);
-  }, [postComposer]);
-
-  // Handle paste to strip formatting and avoid broken HTML fragments
-  const handlePaste = useCallback(
-    (e: React.ClipboardEvent<HTMLDivElement>) => {
-      if (!editorRef.current) {
-        return;
-      }
-
-      e.preventDefault();
-      const text = e.clipboardData.getData('text/plain');
-
-      // Insert plain text at the cursor
-      document.execCommand('insertText', false, text);
-
-      // Sync markdown from the updated HTML
-      const html = editorRef.current.innerHTML;
-      const markdown = htmlToMarkdown(html);
-      postComposer.setContent(markdown);
-    },
-    [postComposer]
-  );
-
-  // Handle keyboard shortcuts (desktop only - mobile keyboards don't have Ctrl/Cmd)
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLDivElement>) => {
-      // Ctrl/Cmd + Enter to post (desktop only)
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault();
+  // Use the shared contentEditable editor hook
+  const { editorRef, handleInput, handlePaste, handleKeyDown, handleFormat } =
+    useContentEditableEditor({
+      content: postComposer.content,
+      onContentChange: postComposer.setContent,
+      onSubmit: () => {
         if (!postComposer.isPosting && postComposer.content.trim()) {
           postComposer.handlePost();
         }
-      }
-      // Escape to cancel
-      if (e.key === 'Escape' && onCancel) {
-        onCancel();
-      }
-      // Ctrl/Cmd + B for bold (desktop only)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-        e.preventDefault();
-        handleFormat('bold');
-      }
-      // Ctrl/Cmd + I for italic (desktop only)
-      if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
-        e.preventDefault();
-        handleFormat('italic');
-      }
-    },
-    [postComposer, onCancel, handleFormat]
-  );
+      },
+      onCancel,
+      maxHeight: 480,
+      disabled: postComposer.isPosting,
+    });
 
   // Project selection handlers
   const handleToggleProject = useCallback(

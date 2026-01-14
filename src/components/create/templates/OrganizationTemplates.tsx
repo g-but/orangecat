@@ -216,7 +216,7 @@ export default function OrganizationTemplates({ onSelectTemplate }: Organization
             <p className="text-xs text-gray-500 italic mb-3 line-clamp-2">{template.useCase}</p>
 
             <Button
-              variant={selectedId === template.id ? 'default' : 'outline'}
+              variant={selectedId === template.id ? 'primary' : 'outline'}
               size="sm"
               className="w-full"
               onClick={(e) => {
@@ -235,7 +235,7 @@ export default function OrganizationTemplates({ onSelectTemplate }: Organization
           Don't see what you need?{' '}
           <button
             type="button"
-            onClick={() => onSelectTemplate(null)}
+            onClick={() => onSelectTemplate({})}
             className="text-purple-600 hover:text-purple-700 font-medium"
           >
             Start from scratch

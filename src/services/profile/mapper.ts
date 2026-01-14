@@ -16,7 +16,7 @@ export class ProfileMapper {
   /**
    * Map database row to scalable profile interface
    */
-  static mapDatabaseToProfile(dbRow: any): ScalableProfile {
+  static mapDatabaseToProfile(dbRow: any): ScalableProfile | null {
     if (!dbRow) {
       return null;
     }

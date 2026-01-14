@@ -255,6 +255,8 @@ export interface EntityTemplate<T extends Record<string, any> = Record<string, a
   name: string;
   /** Short description/tagline */
   tagline: string;
+  /** Category for grouping templates (optional) */
+  category?: string;
   /** Default values to prefill the form with */
   defaults: Partial<T>;
 }

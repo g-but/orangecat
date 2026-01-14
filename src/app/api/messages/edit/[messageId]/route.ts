@@ -52,8 +52,8 @@ export const PATCH = withAuth(async (
     const { content } = validation.data;
 
     // Verify user is the sender of this message
-    const { data: message, error: messageError } = await supabase
-      .from(DATABASE_TABLES.MESSAGES)
+    const { data: message, error: messageError } = await (supabase
+      .from(DATABASE_TABLES.MESSAGES) as any)
       .select('id, sender_id, conversation_id, is_deleted')
       .eq('id', messageId)
       .single();
@@ -71,8 +71,8 @@ export const PATCH = withAuth(async (
     }
 
     // Update message content and set edited_at
-    const { data: updatedMessage, error: updateError } = await supabase
-      .from(DATABASE_TABLES.MESSAGES)
+    const { data: updatedMessage, error: updateError } = await (supabase
+      .from(DATABASE_TABLES.MESSAGES) as any)
       .update({
         content,
         edited_at: new Date().toISOString(),

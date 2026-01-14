@@ -8,7 +8,18 @@
  */
 
 import { defineConfig, devices } from '@playwright/test';
-import * as path from 'path';
+
+// Base configuration shared across different test configs
+const baseConfig = {
+  use: {
+    baseURL: process.env.BASE_URL || 'http://localhost:3000',
+    trace: 'on-first-retry' as const,
+    screenshot: 'only-on-failure' as const,
+    video: process.env.CI ? 'retain-on-failure' as const : 'off' as const,
+    actionTimeout: 10000,
+    navigationTimeout: 30000,
+  },
+};
 
 /**
  * @see https://playwright.dev/docs/test-configuration
@@ -51,9 +62,10 @@ export default defineConfig({
     actionTimeout: 10000,
     navigationTimeout: 30000,
 
-    /* Global test timeout */
-    timeout: 60000,
   },
+
+  /* Global test timeout */
+  timeout: 60000,
 
   /* Configure projects for major browsers */
   projects: [
@@ -119,36 +131,6 @@ export default defineConfig({
     },
   },
 
-  /* Custom test annotations */
-  testAnnotations: [
-    { type: 'issue', description: 'Test for specific issue' },
-    { type: 'performance', description: 'Performance test' },
-    { type: 'security', description: 'Security test' },
-    { type: 'accessibility', description: 'Accessibility test' },
-  ],
-
-  /* Test data configuration */
-  testData: {
-    users: {
-      admin: {
-        email: 'admin@orangecat.ch',
-        password: 'AdminPassword123!'
-      },
-      user: {
-        email: 'user@orangecat.ch',
-        password: 'UserPassword123!'
-      },
-      test: {
-        email: 'test@orangecat.ch',
-        password: 'TestPassword123!'
-      }
-    },
-    campaigns: {
-      active: 'orange-cat',
-      completed: 'bitcoin-education',
-      draft: 'community-fund'
-    }
-  }
 });
 
 /* Additional configuration for different environments */
@@ -160,24 +142,23 @@ if (process.env.ENVIRONMENT === 'staging') {
   // Staging-specific configuration
 }
 
-if (process.env.BROWSER === 'brave') {
-  // Brave browser configuration
-  export default defineConfig({
-    ...baseConfig,
-    projects: [
-      {
-        name: 'Brave',
-        use: {
-          ...devices['Desktop Chrome'],
-          channel: 'chrome',
-          launchOptions: {
-            executablePath: '/usr/bin/brave-browser',
-          },
+// Brave browser configuration (use BROWSER=brave environment variable)
+// Note: When using Brave, set this config manually or extend the base config
+export const braveConfig = defineConfig({
+  ...baseConfig,
+  projects: [
+    {
+      name: 'Brave',
+      use: {
+        ...devices['Desktop Chrome'],
+        channel: 'chrome',
+        launchOptions: {
+          executablePath: '/usr/bin/brave-browser',
         },
       },
-    ],
-  });
-}
+    },
+  ],
+});
 
 /* Performance testing configuration */
 export const performanceConfig = defineConfig({

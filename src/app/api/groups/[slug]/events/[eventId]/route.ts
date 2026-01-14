@@ -49,8 +49,8 @@ export const GET = withAuth(async (
     const supabase = await createServerClient();
 
     // Get group by slug
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
+    const { data: group, error: groupError } = await (supabase
+      .from('groups') as any)
       .select('id')
       .eq('slug', slug)
       .single();
@@ -60,8 +60,8 @@ export const GET = withAuth(async (
     }
 
     // Get event
-    const { data: event, error: eventError } = await supabase
-      .from('group_events')
+    const { data: event, error: eventError } = await (supabase
+      .from('group_events') as any)
       .select(
         `
         *,
@@ -99,8 +99,8 @@ export const GET = withAuth(async (
 
     // Check if user can view (public or member)
     if (!event.is_public) {
-      const { data: membership } = await supabase
-        .from('group_members')
+      const { data: membership } = await (supabase
+        .from('group_members') as any)
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user.id)
@@ -132,38 +132,38 @@ export const PUT = withAuth(async (
     const supabase = await createServerClient();
 
     // Get group by slug
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
+    const { data: group2, error: groupError } = await (supabase
+      .from('groups') as any)
       .select('id')
       .eq('slug', slug)
       .single();
 
-    if (groupError || !group) {
+    if (groupError || !group2) {
       return apiNotFound('Group not found');
     }
 
     // Get event
-    const { data: event, error: eventError } = await supabase
-      .from('group_events')
+    const { data: event2, error: eventError } = await (supabase
+      .from('group_events') as any)
       .select('id, group_id, creator_id')
       .eq('id', eventId)
-      .eq('group_id', group.id)
+      .eq('group_id', group2.id)
       .single();
 
-    if (eventError || !event) {
+    if (eventError || !event2) {
       return apiNotFound('Event not found');
     }
 
     // Check permissions (creator or admin)
-    const isCreator = event.creator_id === user.id;
-    const { data: membership } = await supabase
-      .from('group_members')
+    const isCreator = event2.creator_id === user.id;
+    const { data: membership2 } = await (supabase
+      .from('group_members') as any)
       .select('role')
-      .eq('group_id', group.id)
+      .eq('group_id', group2.id)
       .eq('user_id', user.id)
       .maybeSingle();
 
-    const isAdmin = membership && ['founder', 'admin'].includes(membership.role);
+    const isAdmin = membership2 && ['founder', 'admin'].includes(membership2.role);
 
     if (!isCreator && !isAdmin) {
       return apiForbidden('Only event creator or group admins can update events');
@@ -183,8 +183,8 @@ export const PUT = withAuth(async (
     }
 
     // Update event
-    const { data: updatedEvent, error: updateError } = await supabase
-      .from('group_events')
+    const { data: updatedEvent, error: updateError } = await (supabase
+      .from('group_events') as any)
       .update(validation.data)
       .eq('id', eventId)
       .select()
@@ -216,46 +216,46 @@ export const DELETE = withAuth(async (
     const supabase = await createServerClient();
 
     // Get group by slug
-    const { data: group, error: groupError } = await supabase
-      .from('groups')
+    const { data: group3, error: groupError } = await (supabase
+      .from('groups') as any)
       .select('id')
       .eq('slug', slug)
       .single();
 
-    if (groupError || !group) {
+    if (groupError || !group3) {
       return apiNotFound('Group not found');
     }
 
     // Get event
-    const { data: event, error: eventError } = await supabase
-      .from('group_events')
+    const { data: event3, error: eventError } = await (supabase
+      .from('group_events') as any)
       .select('id, group_id, creator_id, title')
       .eq('id', eventId)
-      .eq('group_id', group.id)
+      .eq('group_id', group3.id)
       .single();
 
-    if (eventError || !event) {
+    if (eventError || !event3) {
       return apiNotFound('Event not found');
     }
 
     // Check permissions (creator or admin)
-    const isCreator = event.creator_id === user.id;
-    const { data: membership } = await supabase
-      .from('group_members')
+    const isCreator3 = event3.creator_id === user.id;
+    const { data: membership3 } = await (supabase
+      .from('group_members') as any)
       .select('role')
-      .eq('group_id', group.id)
+      .eq('group_id', group3.id)
       .eq('user_id', user.id)
       .maybeSingle();
 
-    const isAdmin = membership && ['founder', 'admin'].includes(membership.role);
+    const isAdmin3 = membership3 && ['founder', 'admin'].includes(membership3.role);
 
-    if (!isCreator && !isAdmin) {
+    if (!isCreator3 && !isAdmin3) {
       return apiForbidden('Only event creator or group admins can delete events');
     }
 
     // Delete event (RSVPs will be cascade deleted)
-    const { error: deleteError } = await supabase
-      .from('group_events')
+    const { error: deleteError } = await (supabase
+      .from('group_events') as any)
       .delete()
       .eq('id', eventId);
 

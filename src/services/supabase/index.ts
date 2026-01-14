@@ -1,2 +1,2 @@
-export * from './client'
-export * from './server' 
+export * from './core/client'
+export * from './core/consolidated' 

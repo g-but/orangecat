@@ -12,7 +12,7 @@ import type { Profile, ProfileFormData } from '@/types/database';
 // 🎯 SCALABLE PROFILE INTERFACE (CURRENT SCHEMA COMPATIBLE)
 // =====================================================================
 
-export interface ScalableProfile extends Profile {
+export interface ScalableProfile extends Omit<Profile, 'social_links' | 'verification_status' | 'currency'> {
   // Core fields (existing in database)
   id: string;
   username: string | null;
@@ -64,14 +64,16 @@ export interface ScalableProfile extends Profile {
   privacy_policy_accepted_at: string | null;
 
   // Extensibility (JSON fields)
-  social_links: Record<string, any> | null;
+  // Note: social_links is inherited from Profile with type { links: Array<{...}> } | null
+  // We override it to allow both the structured format and flexible Record for backward compatibility
+  social_links: { links: Array<{ platform: string; label?: string; value: string }> } | Record<string, any> | null;
   preferences: Record<string, any> | null;
   metadata: Record<string, any> | null;
   verification_data: Record<string, any> | null;
   privacy_settings: Record<string, any> | null;
 }
 
-export interface ScalableProfileFormData extends ProfileFormData {
+export interface ScalableProfileFormData extends Omit<ProfileFormData, 'social_links' | 'currency'> {
   // All existing fields plus new ones
   email?: string;
   phone?: string;

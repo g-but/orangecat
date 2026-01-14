@@ -84,8 +84,8 @@ export async function createProject(userId: string, payload: any) {
     status: 'draft' as const,
   };
 
-  const { data, error } = await supabase
-    .from(getTableName('project'))
+  const { data, error } = await (supabase
+    .from(getTableName('project')) as any)
     .insert(insertPayload)
     .select('*')
     .single();

@@ -239,7 +239,7 @@ export function ThreadIndicator({
       <span>Part of thread ({replyCount} replies)</span>
       {onShowThread && (
         <Button
-          variant="link"
+          variant="ghost"
           size="sm"
           onClick={onShowThread}
           className="text-xs text-blue-600 hover:text-blue-800 p-0 h-auto"

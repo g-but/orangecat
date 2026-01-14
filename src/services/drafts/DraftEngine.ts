@@ -153,8 +153,8 @@ export class DraftEngine {
     try {
       const supabaseClient = this.supabase
       // Check for remote changes
-      const { data: remoteDraft, error } = await supabaseClient
-        .from('project_drafts')
+      const { data: remoteDraft, error } = await (supabaseClient
+        .from('project_drafts') as any)
         .select('*')
         .eq('id', draftId)
         .single()
@@ -191,8 +191,8 @@ export class DraftEngine {
         session_id: this.sessionId
       }
 
-      const { error: syncError } = await supabase
-        .from('project_drafts')
+      const { error: syncError } = await (supabase
+        .from('project_drafts') as any)
         .upsert(syncData)
 
       if (syncError) {throw syncError}
@@ -418,8 +418,8 @@ export class DraftEngine {
     this.eventStore.push(event)
     
     // Persist to database for audit trail
-    await this.supabase
-      .from('draft_events')
+    await (this.supabase
+      .from('draft_events') as any)
       .insert({
         id: event.id,
         draft_id: event.draftId,

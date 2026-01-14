@@ -8,22 +8,30 @@ import {
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
+import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { rateLimitWrite } from '@/lib/rate-limit';
 
+// Helper to extract ID from URL
+function extractIdFromUrl(url: string): string {
+  const segments = new URL(url).pathname.split('/');
+  const idx = segments.findIndex(s => s === 'research-entities');
+  return segments[idx + 1] || '';
+}
+
 // GET /api/research-entities/[id]/progress - Get progress updates
-export const GET = withRateLimit('read')(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
+export const GET = compose(
+  withRateLimit('read')
+)(async (request: NextRequest) => {
+  const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
 
     // Check if research entity exists and is accessible
-    const { data: entity, error: entityError } = await supabase
-      .from('research_entities')
+    const { data: entity, error: entityError } = await (supabase
+      .from('research_entities') as any)
       .select('id, user_id, is_public')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (entityError) {
@@ -41,10 +49,10 @@ export const GET = withRateLimit('read')(async (
     }
 
     // Get progress updates
-    const { data: updates, error } = await supabase
-      .from('research_progress_updates')
+    const { data: updates, error } = await (supabase
+      .from('research_progress_updates') as any)
       .select('*')
-      .eq('research_entity_id', params.id)
+      .eq('research_entity_id', id)
       .order('created_at', { ascending: false });
 
     if (error) {throw error;}
@@ -56,10 +64,10 @@ export const GET = withRateLimit('read')(async (
 });
 
 // POST /api/research-entities/[id]/progress - Create progress update
-export const POST = withRateLimit('write')(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
+export const POST = compose(
+  withRateLimit('write')
+)(async (request: NextRequest) => {
+  const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -69,10 +77,10 @@ export const POST = withRateLimit('write')(async (
     }
 
     // Check if user owns this research entity
-    const { data: entity, error: entityError } = await supabase
-      .from('research_entities')
+    const { data: entity, error: entityError } = await (supabase
+      .from('research_entities') as any)
       .select('id, user_id, transparency_level')
-      .eq('id', params.id)
+      .eq('id', id)
       .single();
 
     if (entityError) {
@@ -100,10 +108,10 @@ export const POST = withRateLimit('write')(async (
     }
 
     // Create progress update
-    const { data: update, error } = await supabase
-      .from('research_progress_updates')
+    const { data: update, error } = await (supabase
+      .from('research_progress_updates') as any)
       .insert({
-        research_entity_id: params.id,
+        research_entity_id: id,
         user_id: user.id,
         title,
         description,
@@ -118,14 +126,14 @@ export const POST = withRateLimit('write')(async (
 
     // Update research entity metrics if milestone achieved
     if (milestone_achieved) {
-      await supabase.rpc('increment_research_completion', {
-        research_entity_id: params.id,
+      await (supabase.rpc as any)('increment_research_completion', {
+        research_entity_id: id,
         percentage_increase: 10 // Assume 10% progress per milestone
       });
     }
 
     logger.info('Research progress update created', {
-      researchEntityId: params.id,
+      researchEntityId: id,
       updateId: update.id,
       userId: user.id,
       milestoneAchieved: milestone_achieved
