@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bitcoin,
@@ -19,11 +19,9 @@ import {
   AlertTriangle,
   Lightbulb,
   Target,
-  Zap,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
 interface OnboardingStep {

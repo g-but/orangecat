@@ -1,6 +1,6 @@
 /**
  * @deprecated This file is deprecated. Use @/config/routes.ts instead.
- * 
+ *
  * This file re-exports from the unified route configuration for backward compatibility.
  * All route detection logic has been consolidated into src/config/routes.ts
  *
@@ -20,7 +20,7 @@ export {
 } from './routes';
 
 // Legacy exports for backward compatibility
-import { ROUTE_CONTEXTS, isAuthenticatedRoute, type AuthenticatedRoute } from './routes';
+import { ROUTE_CONTEXTS } from './routes';
 
 export const ROUTES = {
   AUTHENTICATED: ROUTE_CONTEXTS.authenticated,

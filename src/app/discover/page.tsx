@@ -12,7 +12,7 @@ import { SearchFundingPage, SearchProfile, SearchType, SortOption } from '@/serv
 import { PUBLIC_SEARCH_STATUSES } from '@/lib/projectStatus';
 import supabase from '@/lib/supabase/browser';
 import DiscoverTabs, { DiscoverTabType } from '@/components/discover/DiscoverTabs';
-import DiscoverFilters, { StatusKey } from '@/components/discover/DiscoverFilters';
+import DiscoverFilters from '@/components/discover/DiscoverFilters';
 import DiscoverHero from '@/components/discover/DiscoverHero';
 import DiscoverEmptyState from '@/components/discover/DiscoverEmptyState';
 import DiscoverResults from '@/components/discover/DiscoverResults';
@@ -61,7 +61,8 @@ export default function DiscoverPage() {
     error: searchError,
   } = useSearch({
     initialQuery: initialSearchTerm,
-    initialType: initialType === 'all' ? 'all' : initialType === 'profiles' ? 'profiles' : 'projects',
+    initialType:
+      initialType === 'all' ? 'all' : initialType === 'profiles' ? 'profiles' : 'projects',
     initialSort: initialSort,
     initialFilters: {
       categories: initialCategories.length > 0 ? initialCategories : undefined,
@@ -80,15 +81,15 @@ export default function DiscoverPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategories);
-  const [selectedStatuses, setSelectedStatuses] = useState<('active' | 'paused' | 'completed' | 'cancelled')[]>(
-    PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[]
-  ); // Default: show active and paused
+  const [selectedStatuses, setSelectedStatuses] = useState<
+    ('active' | 'paused' | 'completed' | 'cancelled')[]
+  >(PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[]); // Default: show active and paused
   const [country, setCountry] = useState(initialCountry);
   const [city, setCity] = useState(initialCity);
   const [postal, setPostal] = useState(initialPostal);
   const [radiusKm, setRadiusKm] = useState<number>(initialRadiusKm);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  
+
   // Total counts from database (for stats display)
   const [totalProjectsCount, setTotalProjectsCount] = useState(0);
   const [totalProfilesCount, setTotalProfilesCount] = useState(0);
@@ -123,9 +124,7 @@ export default function DiscoverPage() {
             .from('projects')
             .select('*', { count: 'exact', head: true })
             .eq('status', 'active'),
-          supabase
-            .from('profiles')
-            .select('*', { count: 'exact', head: true }),
+          supabase.from('profiles').select('*', { count: 'exact', head: true }),
           supabase
             .from('loans')
             .select('*', { count: 'exact', head: true })
@@ -142,12 +141,15 @@ export default function DiscoverPage() {
         setTotalLoansCount(loanCount);
 
         // Cache the results
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-          projects: projectCount,
-          profiles: profileCount,
-          loans: loanCount,
-          timestamp: Date.now(),
-        }));
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            projects: projectCount,
+            profiles: profileCount,
+            loans: loanCount,
+            timestamp: Date.now(),
+          })
+        );
       } catch (error) {
         logger.error('Error fetching total counts', error, 'Discover');
       }
@@ -333,24 +335,33 @@ export default function DiscoverPage() {
     // URL update happens automatically via useEffect
   };
 
-  const handleToggleStatus = useCallback((status: 'active' | 'paused' | 'completed' | 'cancelled') => {
-    setSelectedStatuses(prev => {
-      const next = prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status];
-      return next.length > 0 ? next : ['active', 'paused']; // Always have at least one status selected
-    });
-  }, []);
+  const handleToggleStatus = useCallback(
+    (status: 'active' | 'paused' | 'completed' | 'cancelled') => {
+      setSelectedStatuses(prev => {
+        const next = prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status];
+        return next.length > 0 ? next : ['active', 'paused']; // Always have at least one status selected
+      });
+    },
+    []
+  );
 
-  const handleTabChange = useCallback((tab: DiscoverTabType) => {
-    setActiveTab(tab);
-    // Convert tab to search type
-    const newSearchType: SearchType = tab === 'all' ? 'all' : tab === 'profiles' ? 'profiles' : 'projects';
-    setSearchType(newSearchType);
-  }, [setSearchType]);
+  const handleTabChange = useCallback(
+    (tab: DiscoverTabType) => {
+      setActiveTab(tab);
+      // Convert tab to search type
+      const newSearchType: SearchType =
+        tab === 'all' ? 'all' : tab === 'profiles' ? 'profiles' : 'projects';
+      setSearchType(newSearchType);
+    },
+    [setSearchType]
+  );
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedCategories([]);
-    setSelectedStatuses(PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[]); // Reset to default statuses
+    setSelectedStatuses(
+      PUBLIC_SEARCH_STATUSES as ('active' | 'paused' | 'completed' | 'cancelled')[]
+    ); // Reset to default statuses
     setSortBy('recent');
     setCountry('');
     setCity('');
@@ -447,89 +458,101 @@ export default function DiscoverPage() {
                 </Button>
               </div>
 
-            {/* Mobile Filter Panel */}
-            <AnimatePresence>
-              {showFilters && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="lg:hidden mb-6 overflow-hidden"
-                >
-                  <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-5">
-                    <DiscoverFilters
-                      variant="mobile"
-                      searchTerm={searchTerm}
-                      onSearchChange={handleSearch}
-                      loading={loading}
-                      sortBy={sortBy}
-                      onSortChange={handleSortChange}
-                      viewMode={viewMode}
-                      onViewModeChange={setViewMode}
-                      selectedStatuses={selectedStatuses}
-                      onToggleStatus={handleToggleStatus}
-                      showStatusFilter={activeTab !== 'profiles'}
-                      selectedCategories={selectedCategories}
-                      onToggleCategory={handleToggleCategory}
-                      showCategoryFilter={activeTab !== 'profiles'}
-                      country={country}
-                      onCountryChange={setCountry}
-                      city={city}
-                      onCityChange={setCity}
-                      postal={postal}
-                      onPostalChange={setPostal}
-                      radiusKm={radiusKm}
-                      onRadiusChange={setRadiusKm}
-                      onClearFilters={clearFilters}
-                    />
+              {/* Mobile Filter Panel */}
+              <AnimatePresence>
+                {showFilters && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="lg:hidden mb-6 overflow-hidden"
+                  >
+                    <div className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/60 p-5">
+                      <DiscoverFilters
+                        variant="mobile"
+                        searchTerm={searchTerm}
+                        onSearchChange={handleSearch}
+                        loading={loading}
+                        sortBy={sortBy}
+                        onSortChange={handleSortChange}
+                        viewMode={viewMode}
+                        onViewModeChange={setViewMode}
+                        selectedStatuses={selectedStatuses}
+                        onToggleStatus={handleToggleStatus}
+                        showStatusFilter={activeTab !== 'profiles'}
+                        selectedCategories={selectedCategories}
+                        onToggleCategory={handleToggleCategory}
+                        showCategoryFilter={activeTab !== 'profiles'}
+                        country={country}
+                        onCountryChange={setCountry}
+                        city={city}
+                        onCityChange={setCity}
+                        postal={postal}
+                        onPostalChange={setPostal}
+                        radiusKm={radiusKm}
+                        onRadiusChange={setRadiusKm}
+                        onClearFilters={clearFilters}
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              {/* Error State */}
+              {searchError && (
+                <div className="text-center py-16">
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md mx-auto">
+                    <p className="text-red-800 font-medium mb-2">Error loading projects</p>
+                    <p className="text-red-600 text-sm">{searchError}</p>
                   </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-            {/* Error State */}
-            {searchError && (
-              <div className="text-center py-16">
-                <div className="bg-red-50 border border-red-200 rounded-xl p-6 max-w-md mx-auto">
-                  <p className="text-red-800 font-medium mb-2">Error loading projects</p>
-                  <p className="text-red-600 text-sm">{searchError}</p>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Empty State */}
-            {!loading && !loansLoading && !searchError &&
-             ((activeTab === 'projects' && projects.length === 0) ||
-              (activeTab === 'profiles' && profiles.length === 0) ||
-              (activeTab === 'loans' && loans.length === 0) ||
-              (activeTab === 'all' && projects.length === 0 && profiles.length === 0 && loans.length === 0)) && (
-              <DiscoverEmptyState
-                activeTab={activeTab}
-                hasFilters={!!(searchTerm || selectedCategories.length > 0)}
-                onClearFilters={clearFilters}
-              />
-            )}
+              {/* Empty State */}
+              {!loading &&
+                !loansLoading &&
+                !searchError &&
+                ((activeTab === 'projects' && projects.length === 0) ||
+                  (activeTab === 'profiles' && profiles.length === 0) ||
+                  (activeTab === 'loans' && loans.length === 0) ||
+                  (activeTab === 'all' &&
+                    projects.length === 0 &&
+                    profiles.length === 0 &&
+                    loans.length === 0)) && (
+                  <DiscoverEmptyState
+                    activeTab={activeTab}
+                    hasFilters={!!(searchTerm || selectedCategories.length > 0)}
+                    onClearFilters={clearFilters}
+                  />
+                )}
 
-            {/* Results */}
-            {!loading && !loansLoading && !searchError &&
-             !((activeTab === 'projects' && projects.length === 0) ||
-               (activeTab === 'profiles' && profiles.length === 0) ||
-               (activeTab === 'loans' && loans.length === 0) ||
-               (activeTab === 'all' && projects.length === 0 && profiles.length === 0 && loans.length === 0)) && (
-              <DiscoverResults
-                activeTab={activeTab}
-                viewMode={viewMode}
-                projects={projects}
-                profiles={profiles}
-                loans={loans}
-                totalResults={totalResults + loans.length}
-                loading={loading || loansLoading}
-                hasMore={hasMore}
-                isLoadingMore={isLoadingMore}
-                onLoadMore={handleLoadMore}
-                onTabChange={handleTabChange}
-              />
-            )}
+              {/* Results */}
+              {!loading &&
+                !loansLoading &&
+                !searchError &&
+                !(
+                  (activeTab === 'projects' && projects.length === 0) ||
+                  (activeTab === 'profiles' && profiles.length === 0) ||
+                  (activeTab === 'loans' && loans.length === 0) ||
+                  (activeTab === 'all' &&
+                    projects.length === 0 &&
+                    profiles.length === 0 &&
+                    loans.length === 0)
+                ) && (
+                  <DiscoverResults
+                    activeTab={activeTab}
+                    viewMode={viewMode}
+                    projects={projects}
+                    profiles={profiles}
+                    loans={loans}
+                    totalResults={totalResults + loans.length}
+                    loading={loading || loansLoading}
+                    hasMore={hasMore}
+                    isLoadingMore={isLoadingMore}
+                    onLoadMore={handleLoadMore}
+                    onTabChange={handleTabChange}
+                  />
+                )}
             </div>
           </div>
         </motion.div>

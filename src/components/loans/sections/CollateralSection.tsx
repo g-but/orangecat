@@ -10,11 +10,7 @@
 
 'use client';
 
-import {
-  FormControl,
-  FormDescription,
-  FormLabel,
-} from '@/components/ui/form';
+import { FormControl, FormDescription, FormLabel } from '@/components/ui/form';
 import {
   Select,
   SelectContent,
@@ -27,7 +23,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Shield } from 'lucide-react';
 import type { AssetOption } from '../types';
 import { currencySelectOptions } from '@/config/currencies';
-import { DEFAULT_CURRENCY } from '@/config/currencies';
 
 interface CollateralSectionProps {
   assets: AssetOption[];
@@ -87,9 +82,7 @@ export function CollateralSection({
             </FormControl>
             <SelectContent>
               {assetsLoading && (
-                <div className="px-3 py-2 text-sm text-muted-foreground">
-                  Loading assets...
-                </div>
+                <div className="px-3 py-2 text-sm text-muted-foreground">Loading assets...</div>
               )}
               {!assetsLoading && assets.length === 0 && (
                 <div className="px-3 py-2 text-sm text-muted-foreground">
@@ -99,8 +92,7 @@ export function CollateralSection({
               {!assetsLoading &&
                 assets.map(a => (
                   <SelectItem key={a.id} value={a.id}>
-                    {a.title}{' '}
-                    {a.estimated_value ? `(${a.estimated_value} ${a.currency})` : ''}
+                    {a.title} {a.estimated_value ? `(${a.estimated_value} ${a.currency})` : ''}
                   </SelectItem>
                 ))}
               {/* Create Asset Option */}
@@ -109,9 +101,7 @@ export function CollateralSection({
               </SelectItem>
             </SelectContent>
           </Select>
-          {assetsError && (
-            <FormDescription className="text-red-600">{assetsError}</FormDescription>
-          )}
+          {assetsError && <FormDescription className="text-red-600">{assetsError}</FormDescription>}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -147,5 +137,3 @@ export function CollateralSection({
     </Card>
   );
 }
-
-

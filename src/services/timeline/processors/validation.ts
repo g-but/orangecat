@@ -1,14 +1,14 @@
 /**
  * Timeline Event Validation
- * 
+ *
  * Validates timeline event creation requests.
- * 
+ *
  * Created: 2025-01-28
  * Last Modified: 2025-01-28
  * Last Modified Summary: Extracted validation logic from monolithic timeline service
  */
 
-import type { CreateTimelineEventRequest, TimelineEventType } from '@/types/timeline';
+import type { CreateTimelineEventRequest } from '@/types/timeline';
 
 /**
  * Validate event creation request
@@ -20,9 +20,7 @@ export function validateEventRequest(request: CreateTimelineEventRequest): {
   const hasTitle = !!request.title?.trim();
   const isStatusUpdate = request.eventType === 'status_update';
   const isRepost =
-    !!request.metadata?.is_repost ||
-    !!request.metadata?.is_quote_repost ||
-    !!request.parentEventId;
+    !!request.metadata?.is_repost || !!request.metadata?.is_quote_repost || !!request.parentEventId;
 
   if (!hasTitle && !(isStatusUpdate || isRepost)) {
     return { valid: false, error: 'Title is required' };
@@ -46,6 +44,3 @@ export function validateEventRequest(request: CreateTimelineEventRequest): {
 
   return { valid: true };
 }
-
-
-

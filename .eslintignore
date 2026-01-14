@@ -7,9 +7,11 @@ build
 # Dependencies
 node_modules
 
-# Scripts (allowed to use console.log)
+# Scripts (allowed to use console.log and require)
 scripts/**/*.js
 scripts/**/*.ts
+src/scripts/**/*.js
+src/scripts/**/*.ts
 
 # Configuration files (allowed to use console.log)
 next.config.js

@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout';
 import {
-  Calendar,
   Bitcoin,
   Zap,
   Users,
@@ -15,7 +13,6 @@ import {
   ArrowRight,
   Check,
   BarChart3,
-  Heart,
   Ticket,
   QrCode,
   Camera,
@@ -277,6 +274,3 @@ export default function EventsPage() {
     </PageLayout>
   );
 }
-
-
-

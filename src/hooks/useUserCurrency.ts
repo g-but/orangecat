@@ -12,7 +12,7 @@
 'use client';
 
 import { useAuthStore } from '@/stores/auth';
-import { PLATFORM_DEFAULT_CURRENCY, type CurrencyCode, isSupportedCurrency } from '@/config/currencies';
+import { PLATFORM_DEFAULT_CURRENCY, isSupportedCurrency } from '@/config/currencies';
 import type { Currency } from '@/types/settings';
 
 /**
@@ -20,11 +20,13 @@ import type { Currency } from '@/types/settings';
  * Falls back to PLATFORM_DEFAULT_CURRENCY ('CHF') if not set or invalid.
  */
 export function useUserCurrency(): Currency {
-  const profile = useAuthStore((state) => state.profile);
+  const profile = useAuthStore(state => state.profile);
 
   // Check if profile has a currency setting
   // Note: currency might be in profile or in settings depending on implementation
-  const profileCurrency = (profile as Record<string, unknown> | null)?.currency as string | undefined;
+  const profileCurrency = (profile as Record<string, unknown> | null)?.currency as
+    | string
+    | undefined;
 
   if (profileCurrency && isSupportedCurrency(profileCurrency)) {
     return profileCurrency as Currency;

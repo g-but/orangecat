@@ -1,8 +1,8 @@
 /**
  * Timeline Event Enrichment
- * 
+ *
  * Enriches timeline events with actor, subject, and target information.
- * 
+ *
  * Created: 2025-01-28
  * Last Modified: 2025-01-28
  * Last Modified Summary: Extracted enrichment logic from monolithic timeline service
@@ -12,7 +12,6 @@ import supabase from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 import type {
-  TimelineEvent,
   TimelineDisplayEvent,
   TimelineActorType,
   TimelineSubjectType,
@@ -38,8 +37,7 @@ export async function getActorInfo(actorId: string): Promise<{
   avatar?: string;
   type: TimelineActorType;
 }> {
-  const { data: profile } = await (supabase
-    .from(DATABASE_TABLES.PROFILES) as any)
+  const { data: profile } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
     .select('id, name, username, avatar_url')
     .eq('id', actorId)
     .single();
@@ -62,8 +60,7 @@ export async function getSubjectInfo(
 ): Promise<{ id: string; name: string; type: TimelineSubjectType; url?: string }> {
   switch (type) {
     case 'project':
-      const { data: project } = await (supabase
-        .from(getTableName('project')) as any)
+      const { data: project } = await (supabase.from(getTableName('project')) as any)
         .select('title')
         .eq('id', id)
         .single();
@@ -74,8 +71,7 @@ export async function getSubjectInfo(
         url: `/projects/${id}`,
       };
     case 'profile':
-      const { data: profile } = await (supabase
-        .from(DATABASE_TABLES.PROFILES) as any)
+      const { data: profile } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
         .select('name, username')
         .eq('id', id)
         .single();
@@ -127,4 +123,3 @@ export async function enrichEventsForDisplay(events: unknown[]): Promise<Timelin
 
   return enrichedEvents;
 }
-

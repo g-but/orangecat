@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';

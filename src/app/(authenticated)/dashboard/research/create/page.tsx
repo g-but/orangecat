@@ -6,9 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ArrowLeft, Plus, Minus, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -20,14 +24,32 @@ interface TeamMember {
 }
 
 interface ResourceNeed {
-  type: 'compute' | 'data' | 'equipment' | 'collaboration' | 'publication' | 'travel' | 'software' | 'other';
+  type:
+    | 'compute'
+    | 'data'
+    | 'equipment'
+    | 'collaboration'
+    | 'publication'
+    | 'travel'
+    | 'software'
+    | 'other';
   description?: string;
   estimated_cost_sats?: number;
   priority: 'low' | 'medium' | 'high' | 'critical';
 }
 
 interface ImpactArea {
-  area: 'scientific_understanding' | 'technological_innovation' | 'medical_advancement' | 'environmental_protection' | 'social_progress' | 'economic_development' | 'education' | 'policy_making' | 'philosophical_insight' | 'other';
+  area:
+    | 'scientific_understanding'
+    | 'technological_innovation'
+    | 'medical_advancement'
+    | 'environmental_protection'
+    | 'social_progress'
+    | 'economic_development'
+    | 'education'
+    | 'policy_making'
+    | 'philosophical_insight'
+    | 'other';
   description?: string;
 }
 
@@ -66,7 +88,10 @@ export default function CreateResearchEntity() {
   const [isPublic, setIsPublic] = useState(true);
 
   const addTeamMember = () => {
-    setTeamMembers([...teamMembers, { name: '', role: '', expertise: '', contribution_percentage: 0 }]);
+    setTeamMembers([
+      ...teamMembers,
+      { name: '', role: '', expertise: '', contribution_percentage: 0 },
+    ]);
   };
 
   const removeTeamMember = (index: number) => {
@@ -181,9 +206,7 @@ export default function CreateResearchEntity() {
               <Zap className="w-5 h-5" />
               Basic Research Information
             </CardTitle>
-            <CardDescription>
-              Define your research question and approach
-            </CardDescription>
+            <CardDescription>Define your research question and approach</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -246,7 +269,9 @@ export default function CreateResearchEntity() {
               <label className="text-sm font-medium">Expected Outcome *</label>
               <Textarea
                 value={expectedOutcome}
-                onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setExpectedOutcome(e.target.value)}
+                onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+                  setExpectedOutcome(e.target.value)
+                }
                 placeholder="What understanding or breakthrough do you hope to achieve?"
                 rows={3}
                 required
@@ -331,7 +356,9 @@ export default function CreateResearchEntity() {
                 type="checkbox"
                 id="open-collaboration"
                 checked={openCollaboration}
-                onChange={(e: ChangeEvent<HTMLInputElement>) => setOpenCollaboration(e.target.checked)}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setOpenCollaboration(e.target.checked)
+                }
                 className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
               />
               <label htmlFor="open-collaboration" className="text-sm">
@@ -354,25 +381,37 @@ export default function CreateResearchEntity() {
                     <Input
                       placeholder="Name"
                       value={member.name}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => updateTeamMember(index, 'name', e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        updateTeamMember(index, 'name', e.target.value)
+                      }
                     />
                     <Input
                       placeholder="Role"
                       value={member.role}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => updateTeamMember(index, 'role', e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        updateTeamMember(index, 'role', e.target.value)
+                      }
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4 mb-2">
                     <Input
                       placeholder="Expertise (optional)"
                       value={member.expertise || ''}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => updateTeamMember(index, 'expertise', e.target.value)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        updateTeamMember(index, 'expertise', e.target.value)
+                      }
                     />
                     <Input
                       type="number"
                       placeholder="Funding share %"
                       value={member.contribution_percentage || ''}
-                      onChange={(e: ChangeEvent<HTMLInputElement>) => updateTeamMember(index, 'contribution_percentage', parseInt(e.target.value) || 0)}
+                      onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                        updateTeamMember(
+                          index,
+                          'contribution_percentage',
+                          parseInt(e.target.value) || 0
+                        )
+                      }
                       min="0"
                       max="100"
                     />

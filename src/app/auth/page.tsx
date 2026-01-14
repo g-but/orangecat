@@ -8,12 +8,9 @@ import {
   ArrowRight,
   CheckCircle2,
   Shield,
-  Zap,
   Loader2,
   AlertCircle,
   Globe,
-  ShieldCheck,
-  Users,
   Eye,
   EyeOff,
   RefreshCw,
@@ -21,11 +18,8 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import Card from '@/components/ui/Card';
 import Loading from '@/components/Loading';
-import AuthRecovery from '@/components/AuthRecovery';
 import { useAuth, useRedirectIfAuthenticated } from '@/hooks/useAuth';
-import { toast } from 'sonner';
 import { resetPassword } from '@/services/supabase/auth';
 import { registrationEvents, trackEvent } from '@/lib/analytics';
 

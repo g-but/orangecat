@@ -1,19 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import {
-  ChevronDown,
-  User,
-  Settings,
-  LogOut,
-  CheckCircle2,
-  Handshake,
-  ExternalLink,
-  BarChart3,
-} from 'lucide-react';
+import { ChevronDown, Settings, LogOut, Handshake, ExternalLink, BarChart3 } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useAuthStore } from '@/stores/auth';
 import { useDropdown } from '@/hooks/useDropdown';
@@ -284,7 +275,9 @@ export default function UserProfileDropdown({
           className="fixed z-50 rounded-2xl shadow-2xl bg-white border border-gray-100 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 origin-top-right overflow-hidden"
           style={{
             top: buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + 12 : 'auto',
-            right: buttonRef.current ? Math.max(16, window.innerWidth - buttonRef.current.getBoundingClientRect().right) : 'auto',
+            right: buttonRef.current
+              ? Math.max(16, window.innerWidth - buttonRef.current.getBoundingClientRect().right)
+              : 'auto',
             width: Math.min(320, window.innerWidth - 32),
           }}
           role="menu"

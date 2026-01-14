@@ -2,15 +2,13 @@
 
 import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bitcoin, RefreshCw } from 'lucide-react';
+import { Bitcoin } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { cn } from '@/lib/utils';
 
 // Import our new modular components
 import { WalletCard } from './WalletCard';
 import { WalletFilters, WalletFilters as WalletFiltersType } from './WalletFilters';
 import { walletProviders } from '@/data/walletProviders';
-import type { WalletProvider } from '@/data/walletProviders';
 
 export default function WalletDiscovery() {
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());

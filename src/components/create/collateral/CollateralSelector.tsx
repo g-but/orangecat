@@ -12,7 +12,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Shield, Wallet, Package, Plus, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Shield, Wallet, Package, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
@@ -103,7 +103,9 @@ export function CollateralSelector({
 
   // Calculate coverage percentage
   const coveragePercentage = useMemo(() => {
-    if (!loanAmount || loanAmount === 0) {return null;}
+    if (!loanAmount || loanAmount === 0) {
+      return null;
+    }
     return Math.min(100, (totalCollateral / loanAmount) * 100);
   }, [totalCollateral, loanAmount]);
 
@@ -153,7 +155,8 @@ export function CollateralSelector({
           Collateral (Optional)
         </CardTitle>
         <CardDescription>
-          Add assets or wallets as collateral to potentially improve loan terms. Higher collateral value may result in better interest rates.
+          Add assets or wallets as collateral to potentially improve loan terms. Higher collateral
+          value may result in better interest rates.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -163,7 +166,11 @@ export function CollateralSelector({
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium text-gray-700">Total Collateral Value</span>
               <span className="text-lg font-bold text-gray-900">
-                {totalCollateral.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {loanCurrency}
+                {totalCollateral.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}{' '}
+                {loanCurrency}
               </span>
             </div>
             {loanAmount && (
@@ -177,8 +184,8 @@ export function CollateralSelector({
                           coveragePercentage >= 100
                             ? 'bg-green-500'
                             : coveragePercentage >= 50
-                            ? 'bg-yellow-500'
-                            : 'bg-orange-500'
+                              ? 'bg-yellow-500'
+                              : 'bg-orange-500'
                         )}
                         style={{ width: `${Math.min(100, coveragePercentage)}%` }}
                       />
@@ -216,16 +223,20 @@ export function CollateralSelector({
         {/* Selected Collateral Items */}
         {selectedCollateral.length > 0 && (
           <div className="space-y-2">
-            {selectedCollateral.map((item) => (
+            {selectedCollateral.map(item => (
               <div
                 key={`${item.type}-${item.id}`}
                 className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
               >
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    'h-8 w-8 rounded-full flex items-center justify-center',
-                    item.type === 'asset' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                  )}>
+                  <div
+                    className={cn(
+                      'h-8 w-8 rounded-full flex items-center justify-center',
+                      item.type === 'asset'
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-purple-100 text-purple-700'
+                    )}
+                  >
                     {item.type === 'asset' ? (
                       <Package className="w-4 h-4" />
                     ) : (
@@ -240,7 +251,11 @@ export function CollateralSelector({
                       </Badge>
                     </div>
                     <span className="text-xs text-gray-500">
-                      {item.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {item.currency}
+                      {item.value.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}{' '}
+                      {item.currency}
                     </span>
                   </div>
                 </div>
@@ -297,15 +312,20 @@ export function CollateralSelector({
             ) : assets.length === 0 ? (
               <div className="text-center py-4">
                 <p className="text-sm text-gray-500 mb-2">No assets available</p>
-                <a href="/dashboard/assets/create" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                <a
+                  href="/dashboard/assets/create"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
                   Create an asset
                 </a>
               </div>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {assets
-                  .filter(asset => !selectedCollateral.some(c => c.id === asset.id && c.type === 'asset'))
-                  .map((asset) => (
+                  .filter(
+                    asset => !selectedCollateral.some(c => c.id === asset.id && c.type === 'asset')
+                  )
+                  .map(asset => (
                     <button
                       key={asset.id}
                       type="button"
@@ -316,7 +336,8 @@ export function CollateralSelector({
                         <span className="text-sm font-medium text-gray-900">{asset.title}</span>
                         {asset.estimated_value && (
                           <span className="text-xs text-gray-500">
-                            {asset.estimated_value.toLocaleString()} {asset.currency || DEFAULT_CURRENCY}
+                            {asset.estimated_value.toLocaleString()}{' '}
+                            {asset.currency || DEFAULT_CURRENCY}
                           </span>
                         )}
                       </div>
@@ -336,15 +357,21 @@ export function CollateralSelector({
             ) : wallets.length === 0 ? (
               <div className="text-center py-4">
                 <p className="text-sm text-gray-500 mb-2">No wallets available</p>
-                <a href="/dashboard/wallets/create" className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                <a
+                  href="/dashboard/wallets/create"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
                   Create a wallet
                 </a>
               </div>
             ) : (
               <div className="space-y-2 max-h-48 overflow-y-auto">
                 {wallets
-                  .filter(wallet => !selectedCollateral.some(c => c.id === wallet.id && c.type === 'wallet'))
-                  .map((wallet) => (
+                  .filter(
+                    wallet =>
+                      !selectedCollateral.some(c => c.id === wallet.id && c.type === 'wallet')
+                  )
+                  .map(wallet => (
                     <button
                       key={wallet.id}
                       type="button"

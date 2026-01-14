@@ -7,10 +7,8 @@ import Button from '@/components/ui/Button';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import {
   Target,
-  Users,
   Star,
   BarChart3,
-  Wallet,
   Package,
   Briefcase,
   Heart,
@@ -18,7 +16,6 @@ import {
   TrendingUp,
   Clock,
   Plus,
-  ArrowRight,
 } from 'lucide-react';
 
 interface MobileDashboardSidebarProps {
@@ -37,7 +34,11 @@ interface MobileDashboardSidebarProps {
  * Mobile-optimized sidebar for dashboard
  * Provides quick access to all features with touch-friendly design
  */
-export function MobileDashboardSidebar({ stats, profileCompletion, profile }: MobileDashboardSidebarProps) {
+export function MobileDashboardSidebar({
+  stats,
+  profileCompletion,
+  profile,
+}: MobileDashboardSidebarProps) {
   const router = useRouter();
   const { totalProjects, totalDrafts, totalRaised, totalSupporters, primaryCurrency } = stats;
 
@@ -208,7 +209,10 @@ export function MobileDashboardSidebar({ stats, profileCompletion, profile }: Mo
               <div className="flex items-center justify-between">
                 <span className="text-sm text-gray-600">Success rate</span>
                 <span className="text-sm font-bold text-green-600">
-                  {totalProjects > 0 ? Math.round((totalProjects * 0.7) / totalProjects * 100) : 0}%
+                  {totalProjects > 0
+                    ? Math.round(((totalProjects * 0.7) / totalProjects) * 100)
+                    : 0}
+                  %
                 </span>
               </div>
               <Button
@@ -264,18 +268,3 @@ export function MobileDashboardSidebar({ stats, profileCompletion, profile }: Mo
 }
 
 export default MobileDashboardSidebar;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

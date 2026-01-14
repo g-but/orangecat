@@ -3,10 +3,7 @@
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Form } from '@/components/ui/form';
-import { Profile } from '@/types/profile';
-import { ProfileFormData } from '@/types/database';
 import ProfileWizard from './ProfileWizard';
-import { ProfileFieldType } from '@/lib/profile-guidance';
 import { useProfileEditor } from './hooks/useProfileEditor';
 import { ProfileImagesSection } from './ProfileImagesSection';
 import { ProfileBasicSection } from './sections/ProfileBasicSection';
@@ -110,7 +107,11 @@ export default function ModernProfileEditor({
               />
 
               {/* Contact Section */}
-              <ContactSection control={form.control} onFieldFocus={onFieldFocus} userEmail={userEmail} />
+              <ContactSection
+                control={form.control}
+                onFieldFocus={onFieldFocus}
+                userEmail={userEmail}
+              />
 
               {/* Preferences Section */}
               <PreferencesSection control={form.control} onFieldFocus={onFieldFocus} />
@@ -191,7 +192,11 @@ export default function ModernProfileEditor({
                 />
 
                 {/* Contact Section */}
-                <ContactSection control={form.control} onFieldFocus={onFieldFocus} userEmail={userEmail} />
+                <ContactSection
+                  control={form.control}
+                  onFieldFocus={onFieldFocus}
+                  userEmail={userEmail}
+                />
 
                 {/* Preferences Section */}
                 <PreferencesSection control={form.control} onFieldFocus={onFieldFocus} />

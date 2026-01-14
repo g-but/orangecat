@@ -11,14 +11,11 @@
 
 import { Users } from 'lucide-react';
 import { createGroupSchema, type CreateGroupSchemaType } from '@/services/groups/validation';
-import {
-  groupGuidanceContent,
-  groupDefaultGuidance,
-} from '@/lib/entity-guidance/group-guidance';
+import { groupGuidanceContent, groupDefaultGuidance } from '@/lib/entity-guidance/group-guidance';
 import type { FieldGroup } from '@/components/create/types';
 import { GROUP_TEMPLATES } from '@/components/create/templates/group-templates';
 import { createEntityConfig } from './base-config-factory';
-import { GROUP_LABELS, getGroupLabelsArray } from '@/config/group-labels';
+import { getGroupLabelsArray } from '@/config/group-labels';
 import { GOVERNANCE_PRESETS } from '@/config/governance-presets';
 
 // ==================== FIELD GROUPS ====================
@@ -27,14 +24,14 @@ const fieldGroups: FieldGroup[] = [
   {
     id: 'label',
     title: 'Group Type',
-    description: 'Labels influence defaults but don\'t restrict capabilities',
+    description: "Labels influence defaults but don't restrict capabilities",
     fields: [
       {
         name: 'label',
         label: 'Group Label *',
         type: 'select',
         required: true,
-        options: getGroupLabelsArray().map((label) => ({
+        options: getGroupLabelsArray().map(label => ({
           value: label.key,
           label: `${label.name} - ${label.description}`,
         })),
@@ -45,7 +42,7 @@ const fieldGroups: FieldGroup[] = [
   {
     id: 'basic',
     title: 'Basic Information',
-    description: 'Set up your group\'s foundation',
+    description: "Set up your group's foundation",
     fields: [
       {
         name: 'name',
@@ -59,7 +56,7 @@ const fieldGroups: FieldGroup[] = [
         name: 'description',
         label: 'Description',
         type: 'textarea',
-        placeholder: 'Describe your group\'s purpose and goals...',
+        placeholder: "Describe your group's purpose and goals...",
         rows: 4,
         colSpan: 2,
       },
@@ -149,7 +146,7 @@ export const groupConfig = createEntityConfig<CreateGroupSchemaType>({
   pageDescription: 'Start a new group, circle, or organization',
   formTitle: 'Create New Group',
   formDescription:
-    'Choose a label and configure your group. Labels influence defaults but don\'t restrict capabilities.',
+    "Choose a label and configure your group. Labels influence defaults but don't restrict capabilities.",
   fieldGroups,
   validationSchema: createGroupSchema,
   defaultValues,
@@ -163,4 +160,3 @@ export const groupConfig = createEntityConfig<CreateGroupSchemaType>({
     variant: 'info',
   },
 });
-

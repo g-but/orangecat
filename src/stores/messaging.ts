@@ -17,7 +17,7 @@
 import { create } from 'zustand';
 import { subscribeWithSelector } from 'zustand/middleware';
 import type { Conversation, Message } from '@/features/messaging/types';
-import { MESSAGE_STATUS, debugLog } from '@/features/messaging/lib/constants';
+import { debugLog } from '@/features/messaging/lib/constants';
 import type { ConnectionStatus } from '@/hooks/useRealtimeConnection';
 
 interface MessagingState {

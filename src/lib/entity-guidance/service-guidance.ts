@@ -17,7 +17,6 @@ import {
   Tag,
   Clock,
   MapPin,
-  Image,
   Link as LinkIcon,
   CheckCircle2,
   Users,
@@ -216,6 +215,3 @@ export const serviceDefaultGuidance: DefaultGuidance = {
   ],
   hint: '💡 Click on any field to get specific guidance',
 };
-
-
-

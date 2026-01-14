@@ -14,8 +14,11 @@ import { ArrowUpDown, Loader2, Target, Users, DollarSign } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { ProjectCard } from '@/components/entity/variants/ProjectCard';
 import ProfileCard from '@/components/ui/ProfileCard';
-import EntityCard from '@/components/entity/EntityCard';
-import { ProjectCardSkeleton, ProfileCardSkeleton, LoanCardSkeleton } from '@/components/ui/Skeleton';
+import {
+  ProjectCardSkeleton,
+  ProfileCardSkeleton,
+  LoanCardSkeleton,
+} from '@/components/ui/Skeleton';
 import ResultsSection from '@/components/discover/ResultsSection';
 import { LoanCard } from '@/components/entity/variants/LoanCard';
 import type { SearchFundingPage, SearchProfile } from '@/services/search';
@@ -63,9 +66,7 @@ export default function DiscoverResults({
         {/* Skeleton Grid */}
         <div
           className={`grid gap-6 ${
-            viewMode === 'grid'
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-              : 'grid-cols-1'
+            viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
           }`}
         >
           {activeTab === 'profiles' ? (
@@ -75,9 +76,7 @@ export default function DiscoverResults({
             ))
           ) : activeTab === 'projects' ? (
             // Show project skeletons
-            Array.from({ length: 6 }).map((_, index) => (
-              <ProjectCardSkeleton key={index} />
-            ))
+            Array.from({ length: 6 }).map((_, index) => <ProjectCardSkeleton key={index} />)
           ) : activeTab === 'loans' ? (
             // Show loan skeletons
             Array.from({ length: 6 }).map((_, index) => (
@@ -135,9 +134,7 @@ export default function DiscoverResults({
   }) => (
     <div
       className={`grid gap-6 ${
-        viewMode === 'grid'
-          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-          : 'grid-cols-1'
+        viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
       }`}
     >
       {items.map((item, index) => (
@@ -161,9 +158,7 @@ export default function DiscoverResults({
   const LoansGrid = ({ items }: { items: Loan[] }) => (
     <div
       className={`grid gap-6 ${
-        viewMode === 'grid'
-          ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
-          : 'grid-cols-1'
+        viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'
       }`}
     >
       {items.map((loan, index) => (
@@ -207,7 +202,8 @@ export default function DiscoverResults({
   // Tab-Specific Content
   if (activeTab === 'all') {
     // ALL TAB: Separated sections for projects, profiles, and loans
-    const hasMultipleSections = [projects.length, profiles.length, loans.length].filter(n => n > 0).length > 1;
+    const hasMultipleSections =
+      [projects.length, profiles.length, loans.length].filter(n => n > 0).length > 1;
     return (
       <div className="space-y-8">
         {resultsHeader}
@@ -287,4 +283,3 @@ export default function DiscoverResults({
     </>
   );
 }
-

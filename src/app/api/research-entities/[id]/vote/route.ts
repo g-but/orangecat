@@ -4,7 +4,6 @@ import {
   apiSuccess,
   apiNotFound,
   apiUnauthorized,
-  apiRateLimited,
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
@@ -19,16 +18,15 @@ function extractIdFromUrl(url: string): string {
 }
 
 // GET /api/research-entities/[id]/vote - Get voting results
-export const GET = compose(
-  withRateLimit('read')
-)(async (request: NextRequest) => {
+export const GET = compose(withRateLimit('read'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
 
     // Check if research entity exists and allows voting
-    const { data: entityData, error: entityError } = await (supabase
-      .from('research_entities') as any)
+    const { data: entityData, error: entityError } = await (
+      supabase.from('research_entities') as any
+    )
       .select('id, is_public, voting_enabled')
       .eq('id', id)
       .single();
@@ -45,7 +43,9 @@ export const GET = compose(
       return apiUnauthorized('Voting is not enabled for this research entity');
     }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     // Check access permissions
     if (!entity.is_public && !user) {
@@ -53,13 +53,14 @@ export const GET = compose(
     }
 
     // Get all votes for this entity
-    const { data: votesData, error } = await (supabase
-      .from('research_votes') as any)
+    const { data: votesData, error } = await (supabase.from('research_votes') as any)
       .select('*')
       .eq('research_entity_id', id);
     const votes = votesData as any[];
 
-    if (error) {throw error;}
+    if (error) {
+      throw error;
+    }
 
     // Aggregate voting results
     const voteSummary = {
@@ -79,7 +80,9 @@ export const GET = compose(
 
         // Check if this is the current user's vote
         if (user && vote.user_id === user.id) {
-          if (!voteSummary.user_vote) {voteSummary.user_vote = {};}
+          if (!voteSummary.user_vote) {
+            voteSummary.user_vote = {};
+          }
           voteSummary.user_vote[vote.vote_type] = vote.choice;
         }
       });
@@ -92,21 +95,23 @@ export const GET = compose(
 });
 
 // POST /api/research-entities/[id]/vote - Cast a vote
-export const POST = compose(
-  withRateLimit('write')
-)(async (request: NextRequest) => {
+export const POST = compose(withRateLimit('write'))(async (request: NextRequest) => {
   const id = extractIdFromUrl(request.url);
   try {
     const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
       return apiUnauthorized();
     }
 
     // Check if research entity exists and allows voting
-    const { data: entityData2, error: entityError } = await (supabase
-      .from('research_entities') as any)
+    const { data: entityData2, error: entityError } = await (
+      supabase.from('research_entities') as any
+    )
       .select('id, is_public, voting_enabled, contributions')
       .eq('id', id)
       .single();
@@ -151,29 +156,33 @@ export const POST = compose(
     }
 
     // Insert or update vote (UPSERT)
-    const { data: voteData, error } = await (supabase
-      .from('research_votes') as any)
-      .upsert({
-        research_entity_id: id,
-        user_id: user.id,
-        vote_type,
-        choice,
-        weight,
-      }, {
-        onConflict: 'research_entity_id,user_id,vote_type'
-      })
+    const { data: voteData, error } = await (supabase.from('research_votes') as any)
+      .upsert(
+        {
+          research_entity_id: id,
+          user_id: user.id,
+          vote_type,
+          choice,
+          weight,
+        },
+        {
+          onConflict: 'research_entity_id,user_id,vote_type',
+        }
+      )
       .select()
       .single();
     const vote = voteData as any;
 
-    if (error) {throw error;}
+    if (error) {
+      throw error;
+    }
 
     logger.info('Vote cast successfully', {
       researchEntityId: id,
       userId: user.id,
       voteType: vote_type,
       choice,
-      weight
+      weight,
     });
 
     return apiSuccess(vote);

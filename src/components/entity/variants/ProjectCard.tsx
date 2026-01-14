@@ -10,7 +10,6 @@
 
 'use client';
 
-import { useMemo } from 'react';
 import { EntityCard, EntityCardProps } from '@/components/entity/EntityCard';
 import { Badge } from '@/components/ui/badge';
 import { PROJECT_STATUSES } from '@/config/project-statuses';
@@ -19,7 +18,10 @@ import BTCAmountDisplay from '@/components/ui/BTCAmountDisplay';
 import type { SearchFundingPage } from '@/services/search';
 import type { CurrencyCode } from '@/config/currencies';
 
-interface ProjectCardProps extends Omit<EntityCardProps, 'id' | 'title' | 'headerSlot' | 'progressSlot' | 'metricsSlot' | 'footerSlot'> {
+interface ProjectCardProps extends Omit<
+  EntityCardProps,
+  'id' | 'title' | 'headerSlot' | 'progressSlot' | 'metricsSlot' | 'footerSlot'
+> {
   project: SearchFundingPage & {
     currency?: string;
     tags?: string[] | null;
@@ -30,21 +32,25 @@ interface ProjectCardProps extends Omit<EntityCardProps, 'id' | 'title' | 'heade
   showMetrics?: boolean;
 }
 
-export function ProjectCard({ project, showProgress = true, showMetrics = true, ...props }: ProjectCardProps) {
+export function ProjectCard({
+  project,
+  showProgress = true,
+  showMetrics = true,
+  ...props
+}: ProjectCardProps) {
   const goalAmount = project.goal_amount ?? 0;
   const currentAmount = project.raised_amount ?? 0;
   const projectCurrency = (project.currency || 'CHF') as CurrencyCode;
   const showProgressBar = showProgress && goalAmount > 0;
-  const progressPercentage = showProgressBar ? Math.min((currentAmount / goalAmount) * 100, 100) : 0;
+  const progressPercentage = showProgressBar
+    ? Math.min((currentAmount / goalAmount) * 100, 100)
+    : 0;
 
   // Status badge
   const status = project.status || 'draft';
-  const statusConfig = PROJECT_STATUSES[status as keyof typeof PROJECT_STATUSES] || PROJECT_STATUSES.draft;
-  const statusBadge = (
-    <Badge className={statusConfig.className}>
-      {statusConfig.label}
-    </Badge>
-  );
+  const statusConfig =
+    PROJECT_STATUSES[status as keyof typeof PROJECT_STATUSES] || PROJECT_STATUSES.draft;
+  const statusBadge = <Badge className={statusConfig.className}>{statusConfig.label}</Badge>;
 
   // Progress slot
   const progressSlot = showProgressBar ? (
@@ -119,5 +125,3 @@ export function ProjectCard({ project, showProgress = true, showMetrics = true, 
     />
   );
 }
-
-

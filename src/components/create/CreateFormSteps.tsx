@@ -10,11 +10,8 @@ import {
   ArrowRight,
   Target,
   ArrowLeft,
-  Upload,
   Image as ImageIcon,
-  X,
   Globe,
-  Zap,
   Users,
   Heart,
 } from 'lucide-react';

@@ -5,7 +5,6 @@ import { withRequestId } from '@/lib/api/withRequestId';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
-import { ProfileServerService } from '@/services/profile/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 // GET /api/health - Health check endpoint

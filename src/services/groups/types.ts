@@ -12,7 +12,12 @@
 // ==================== CONFIG-BASED TYPES (SSOT) ====================
 
 export type { GroupLabel, GroupVisibility } from '@/config/group-labels';
-export type { GovernancePreset, GroupRole, ActionPermission, RolePermissions } from '@/config/governance-presets';
+export type {
+  GovernancePreset,
+  GroupRole,
+  ActionPermission,
+  RolePermissions,
+} from '@/config/governance-presets';
 export type { GroupFeature } from '@/config/group-features';
 
 // ==================== CORE TYPES ====================
@@ -253,7 +258,7 @@ export interface CreateEventInput {
   requires_rsvp?: boolean;
 }
 
-export interface UpdateEventInput extends Partial<CreateEventInput> {}
+export type UpdateEventInput = Partial<CreateEventInput>;
 
 export interface EventsQuery {
   status?: 'upcoming' | 'past' | 'all';

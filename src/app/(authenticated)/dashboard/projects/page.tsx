@@ -62,13 +62,13 @@ export default function ProjectsDashboardPage() {
     page: favPage,
     total: favTotal,
     setPage: setFavPage,
-    refresh: refreshFavorites,
+    refresh: _refreshFavorites,
   } = useEntityList<ProjectListItem>({
     apiEndpoint: '/api/projects/favorites',
     userId: user?.id,
     limit: 12,
     enabled: !!user?.id && hydrated && !isLoading && activeTab === 'favorites',
-    transformResponse: (data) => {
+    transformResponse: data => {
       // Handle favorites API response format
       const items = data?.data?.data || data?.data || data?.items || [];
       const count = data?.data?.count || data?.count || data?.total || items.length;
@@ -95,12 +95,24 @@ export default function ProjectsDashboardPage() {
     // Apply status filter (only for my projects)
     if (activeTab === 'my-projects' && statusFilter !== 'all') {
       items = items.filter(p => {
-        if (!p) {return false;}
-        if (statusFilter === 'draft') {return p.isDraft;}
-        if (statusFilter === 'active') {return p.isActive;}
-        if (statusFilter === 'paused') {return p.isPaused;}
-        if (statusFilter === 'completed') {return p.status === 'completed';}
-        if (statusFilter === 'cancelled') {return p.status === 'cancelled';}
+        if (!p) {
+          return false;
+        }
+        if (statusFilter === 'draft') {
+          return p.isDraft;
+        }
+        if (statusFilter === 'active') {
+          return p.isActive;
+        }
+        if (statusFilter === 'paused') {
+          return p.isPaused;
+        }
+        if (statusFilter === 'completed') {
+          return p.status === 'completed';
+        }
+        if (statusFilter === 'cancelled') {
+          return p.status === 'cancelled';
+        }
         return true;
       });
     }
@@ -115,17 +127,21 @@ export default function ProjectsDashboardPage() {
   }, [user, hydrated, isLoading, router]);
 
   const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) {return;}
+    if (selectedIds.size === 0) {
+      return;
+    }
 
     const confirmed = window.confirm(
       `Are you sure you want to delete ${selectedIds.size} project${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.`
     );
 
-    if (!confirmed) {return;}
+    if (!confirmed) {
+      return;
+    }
 
     setIsDeleting(true);
     try {
-      const deletePromises = Array.from(selectedIds).map(async (id) => {
+      const deletePromises = Array.from(selectedIds).map(async id => {
         const response = await fetch(`/api/projects/${id}`, {
           method: 'DELETE',
         });
@@ -141,7 +157,9 @@ export default function ProjectsDashboardPage() {
       });
 
       await Promise.all(deletePromises);
-      toast.success(`Successfully deleted ${selectedIds.size} project${selectedIds.size > 1 ? 's' : ''}`);
+      toast.success(
+        `Successfully deleted ${selectedIds.size} project${selectedIds.size > 1 ? 's' : ''}`
+      );
       clearSelection();
       setShowSelection(false);
       await refresh();
@@ -170,15 +188,14 @@ export default function ProjectsDashboardPage() {
   const headerActions = (
     <div className="flex items-center gap-2">
       {activeTab === 'my-projects' && filteredProjects.length > 0 && (
-        <Button
-          onClick={() => setShowSelection(!showSelection)}
-          variant="outline"
-          size="sm"
-        >
+        <Button onClick={() => setShowSelection(!showSelection)} variant="outline" size="sm">
           {showSelection ? 'Cancel' : 'Select'}
         </Button>
       )}
-      <Button href={projectEntityConfig.createPath} className="bg-gradient-to-r from-orange-600 to-orange-700 w-full sm:w-auto">
+      <Button
+        href={projectEntityConfig.createPath}
+        className="bg-gradient-to-r from-orange-600 to-orange-700 w-full sm:w-auto"
+      >
         Create Project
       </Button>
     </div>
@@ -191,11 +208,15 @@ export default function ProjectsDashboardPage() {
         description="Manage your crowdfunding projects and track donations"
         headerActions={headerActions}
       >
-        <Tabs value={activeTab} onValueChange={(v) => {
-          setActiveTab(v as typeof activeTab);
-          setShowSelection(false);
-          clearSelection();
-        }} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={v => {
+            setActiveTab(v as typeof activeTab);
+            setShowSelection(false);
+            clearSelection();
+          }}
+          className="space-y-6"
+        >
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <TabsList className="grid w-full sm:w-auto grid-cols-2">
               <TabsTrigger value="my-projects" className="gap-2">
@@ -210,9 +231,7 @@ export default function ProjectsDashboardPage() {
                 <Heart className="h-4 w-4" />
                 <span className="hidden sm:inline">Favorites</span>
                 <span className="sm:hidden">Favs</span>
-                {favorites.length > 0 && (
-                  <span className="ml-1 text-xs">({favorites.length})</span>
-                )}
+                {favorites.length > 0 && <span className="ml-1 text-xs">({favorites.length})</span>}
               </TabsTrigger>
             </TabsList>
 
@@ -270,7 +289,10 @@ export default function ProjectsDashboardPage() {
                     <label className="flex items-center gap-2 text-sm text-gray-700">
                       <input
                         type="checkbox"
-                        checked={selectedIds.size === filteredProjects.length && filteredProjects.length > 0}
+                        checked={
+                          selectedIds.size === filteredProjects.length &&
+                          filteredProjects.length > 0
+                        }
                         onChange={() => toggleSelectAll(filteredProjects.map(p => p.id))}
                         className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                       />
@@ -289,7 +311,12 @@ export default function ProjectsDashboardPage() {
                   onToggleSelect={showSelection ? toggleSelect : undefined}
                   showSelection={showSelection}
                 />
-                <CommercePagination page={currentPage} limit={12} total={currentTotal} onPageChange={setCurrentPage} />
+                <CommercePagination
+                  page={currentPage}
+                  limit={12}
+                  total={currentTotal}
+                  onPageChange={setCurrentPage}
+                />
               </>
             )}
           </TabsContent>
@@ -311,7 +338,12 @@ export default function ProjectsDashboardPage() {
               }}
               gridCols={projectEntityConfig.gridCols}
             />
-            <CommercePagination page={favPage} limit={12} total={favTotal} onPageChange={setFavPage} />
+            <CommercePagination
+              page={favPage}
+              limit={12}
+              total={favTotal}
+              onPageChange={setFavPage}
+            />
           </TabsContent>
         </Tabs>
       </EntityListShell>

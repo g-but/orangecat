@@ -1,11 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Clock, Edit3, ArrowRight, X, FileText, Calendar, Target, AlertCircle } from 'lucide-react';
+import { Clock, Edit3, ArrowRight, X, FileText } from 'lucide-react';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { useProjectStore, Project, Campaign } from '@/stores/projectStore';
+import { useProjectStore, Campaign } from '@/stores/projectStore';
 import { formatDistanceToNow } from 'date-fns';
 
 interface DraftPromptProps {

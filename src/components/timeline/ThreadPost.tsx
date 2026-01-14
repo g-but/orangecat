@@ -3,7 +3,7 @@
 import React from 'react';
 import { TimelineDisplayEvent } from '@/types/timeline';
 import { PostCard } from './PostCard';
-import { ThreadLine, ThreadConnector } from './ThreadLine';
+import { ThreadConnector } from './ThreadLine';
 import { cn } from '@/lib/utils';
 
 interface ThreadPostProps {
@@ -111,6 +111,3 @@ export function ThreadView({
     </div>
   );
 }
-
-
-

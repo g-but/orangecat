@@ -1,14 +1,9 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import {
-  Plus,
-  Edit3,
-  MessageSquare,
-  LucideIcon,
-} from 'lucide-react';
+import { Plus, Edit3, MessageSquare, LucideIcon } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { useProjectStore } from '@/stores/projectStore';
 import { useDropdown } from '@/hooks/useDropdown';
@@ -180,19 +175,15 @@ const CREATE_OPTIONS = generateCreateOptions();
  * Dividers appear between category groups for visual separation
  */
 function shouldShowDivider(current: CreateOption, next: CreateOption | undefined): boolean {
-  if (!next) {return false;}
+  if (!next) {
+    return false;
+  }
   return current.category !== next.category;
 }
 
 // Export a specialized version for navigation/header use with dropdown
 export function HeaderCreateButton() {
-  const {
-    isOpen,
-    dropdownRef,
-    buttonRef,
-    toggle,
-    close,
-  } = useDropdown({
+  const { isOpen, dropdownRef, buttonRef, toggle, close } = useDropdown({
     closeOnRouteChange: true,
     keyboardNavigation: true,
     itemCount: CREATE_OPTIONS.length,
@@ -216,7 +207,12 @@ export function HeaderCreateButton() {
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
-        <Plus className={cn('w-5 h-5 sm:w-5 sm:h-5 transition-transform duration-200', isOpen && 'rotate-45')} />
+        <Plus
+          className={cn(
+            'w-5 h-5 sm:w-5 sm:h-5 transition-transform duration-200',
+            isOpen && 'rotate-45'
+          )}
+        />
       </button>
 
       {/* Dropdown Menu - Fixed positioning like UserProfileDropdown */}
@@ -225,7 +221,9 @@ export function HeaderCreateButton() {
           className="fixed z-50 rounded-xl shadow-xl bg-white border border-gray-100 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 origin-top-right overflow-hidden"
           style={{
             top: buttonRef.current ? buttonRef.current.getBoundingClientRect().bottom + 12 : 'auto',
-            right: buttonRef.current ? Math.max(16, window.innerWidth - buttonRef.current.getBoundingClientRect().right) : 'auto',
+            right: buttonRef.current
+              ? Math.max(16, window.innerWidth - buttonRef.current.getBoundingClientRect().right)
+              : 'auto',
             width: Math.min(320, window.innerWidth - 32),
           }}
           role="menu"
@@ -315,7 +313,9 @@ export function MobileCreateButton() {
                     <div className={cn('p-2.5 rounded-xl', option.bgColor)}>
                       <option.icon className={cn('w-5 h-5', option.color)} />
                     </div>
-                    <span className="text-xs font-medium text-gray-900 text-center">{option.name}</span>
+                    <span className="text-xs font-medium text-gray-900 text-center">
+                      {option.name}
+                    </span>
                   </Link>
                 </div>
               ))}

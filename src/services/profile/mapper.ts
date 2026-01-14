@@ -6,7 +6,7 @@
  * Last Modified Summary: Extracted from profileService.ts for modular architecture - handles schema mapping
  */
 
-import type { ScalableProfile, ScalableProfileFormData } from './types';
+import type { ScalableProfile } from './types';
 
 // =====================================================================
 // 🔄 SCHEMA MAPPING UTILITIES

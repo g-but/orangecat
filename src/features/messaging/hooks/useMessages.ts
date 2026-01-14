@@ -8,7 +8,7 @@
  * @module messaging/hooks/useMessages
  */
 
-import { useCallback, useEffect, useState, useRef, useMemo } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import { toast } from 'sonner';
 import supabase from '@/lib/supabase/browser';
 import type { Message, Conversation, Pagination } from '../types';
@@ -90,8 +90,9 @@ export function useMessages(
 
     setReadReceiptsLoading(true);
     try {
-      const { data: participants, error } = await (supabase
-        .from('conversation_participants') as any)
+      const { data: participants, error } = await (
+        supabase.from('conversation_participants') as any
+      )
         .select('user_id, last_read_at')
         .eq('conversation_id', conversationId)
         .eq('is_active', true);
@@ -202,8 +203,7 @@ export function useMessages(
     }
 
     try {
-      const { data: conv } = await (supabase
-        .from('conversation_details') as any)
+      const { data: conv } = await (supabase.from('conversation_details') as any)
         .select('*')
         .eq('id', conversationId)
         .maybeSingle();
@@ -228,8 +228,7 @@ export function useMessages(
       };
       setConversation(mappedConversation);
 
-      const { data: msgs } = await (supabase
-        .from('message_details') as any)
+      const { data: msgs } = await (supabase.from('message_details') as any)
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
@@ -557,7 +556,10 @@ export function useMessages(
     onEvent: useCallback(
       ({ new: newRecord }) => {
         if (newRecord && typeof newRecord === 'object') {
-          const { user_id, last_read_at } = newRecord as { user_id?: string; last_read_at?: string | null };
+          const { user_id, last_read_at } = newRecord as {
+            user_id?: string;
+            last_read_at?: string | null;
+          };
           if (user_id) {
             debugLog('[useMessages] Read receipt updated via real-time', {
               userId: user_id,

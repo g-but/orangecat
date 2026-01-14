@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Rocket, X, Loader2, ExternalLink } from 'lucide-react';
-import { ProjectTemplates, type ProjectTemplate } from '@/components/create/templates';
+import { ProjectTemplates } from '@/components/create/templates';
 import type { ProjectFieldType } from '@/lib/project-guidance';
 import { satoshisToBitcoin, bitcoinToSatoshis } from '@/services/currency';
 import ProjectMediaUpload from '@/components/project/ProjectMediaUpload';

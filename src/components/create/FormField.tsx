@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
-import type { FieldConfig, FormFieldProps } from './types';
+import type { FormFieldProps } from './types';
 import type { Currency } from '@/types/settings';
 
 // ==================== COMPONENT ====================
@@ -31,22 +31,9 @@ export function FormField({
   currency,
 }: FormFieldProps) {
   const userCurrency = useUserCurrency();
-  const {
-    name,
-    label,
-    type,
-    placeholder,
-    required,
-    options,
-    hint,
-    min,
-    max,
-    rows = 4,
-  } = config;
+  const { name, label, type, placeholder, required, options, hint, min, max, rows = 4 } = config;
 
-  const baseInputClass = error
-    ? 'border-red-500 focus:ring-red-500'
-    : 'border-gray-300';
+  const baseInputClass = error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300';
 
   const renderInput = () => {
     switch (type) {
@@ -55,7 +42,7 @@ export function FormField({
           <Textarea
             id={name}
             value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             placeholder={placeholder}
             rows={rows}
@@ -70,7 +57,7 @@ export function FormField({
             id={name}
             type="number"
             value={value || ''}
-            onChange={(e) => onChange(e.target.value ? parseInt(e.target.value) : null)}
+            onChange={e => onChange(e.target.value ? parseInt(e.target.value) : null)}
             onFocus={onFocus}
             placeholder={placeholder}
             min={min}
@@ -107,7 +94,7 @@ export function FormField({
           <select
             id={name}
             value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             disabled={disabled}
             className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:border-transparent transition-colors ${baseInputClass} ${
@@ -115,7 +102,7 @@ export function FormField({
             }`}
           >
             <option value="">Select {label.toLowerCase()}</option>
-            {options?.map((option) => (
+            {options?.map(option => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
@@ -126,25 +113,20 @@ export function FormField({
       case 'radio':
         return (
           <div className="space-y-2">
-            {options?.map((option) => (
-              <label
-                key={option.value}
-                className="flex items-start gap-3 cursor-pointer"
-              >
+            {options?.map(option => (
+              <label key={option.value} className="flex items-start gap-3 cursor-pointer">
                 <input
                   type="radio"
                   name={name}
                   value={option.value}
                   checked={value === option.value}
-                  onChange={(e) => onChange(e.target.value)}
+                  onChange={e => onChange(e.target.value)}
                   onFocus={onFocus}
                   disabled={disabled}
                   className="mt-1"
                 />
                 <div>
-                  <span className="text-sm font-medium text-gray-900">
-                    {option.label}
-                  </span>
+                  <span className="text-sm font-medium text-gray-900">{option.label}</span>
                   {option.description && (
                     <p className="text-xs text-gray-500">{option.description}</p>
                   )}
@@ -161,7 +143,7 @@ export function FormField({
               type="checkbox"
               id={name}
               checked={!!value}
-              onChange={(e) => onChange(e.target.checked)}
+              onChange={e => onChange(e.target.checked)}
               onFocus={onFocus}
               disabled={disabled}
               className="w-4 h-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
@@ -177,7 +159,7 @@ export function FormField({
             id={name}
             type={type}
             value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             placeholder={placeholder}
             disabled={disabled}
@@ -191,7 +173,7 @@ export function FormField({
             id={name}
             type="text"
             value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             placeholder={placeholder || 'bc1q... or 3... or 1...'}
             disabled={disabled}
@@ -205,10 +187,10 @@ export function FormField({
             id={name}
             type="text"
             value={Array.isArray(value) ? value.join(', ') : value || ''}
-            onChange={(e) => {
+            onChange={e => {
               const tags = e.target.value
                 .split(',')
-                .map((t) => t.trim())
+                .map(t => t.trim())
                 .filter(Boolean);
               onChange(tags);
             }}
@@ -226,7 +208,7 @@ export function FormField({
             id={name}
             type="text"
             value={value || ''}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             placeholder={placeholder}
             disabled={disabled}
@@ -248,19 +230,13 @@ export function FormField({
 
   return (
     <div>
-      <label
-        htmlFor={name}
-        className="block text-sm font-medium text-gray-700 mb-2"
-      >
+      <label htmlFor={name} className="block text-sm font-medium text-gray-700 mb-2">
         {label}
         {required && <span className="text-red-500 ml-1">*</span>}
       </label>
       {renderInput()}
-      {hint && !error && (
-        <p className="text-xs text-gray-500 mt-1">{hint}</p>
-      )}
+      {hint && !error && <p className="text-xs text-gray-500 mt-1">{hint}</p>}
       {error && <p className="text-red-600 text-sm mt-1">{error}</p>}
     </div>
   );
 }
-

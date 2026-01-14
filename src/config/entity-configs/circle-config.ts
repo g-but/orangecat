@@ -8,7 +8,7 @@
  * Last Modified Summary: Added advanced circle features and templates
  */
 
-import { Users, Heart, Briefcase, Zap, Target, Coins, MapPin } from 'lucide-react';
+import { Users } from 'lucide-react';
 import {
   circleGuidanceContent,
   circleDefaultGuidance,
@@ -77,19 +77,19 @@ const VISIBILITY_OPTIONS = [
     value: 'public',
     label: 'Public',
     description: 'Anyone can find and request to join',
-    icon: '🌐'
+    icon: '🌐',
   },
   {
     value: 'private',
     label: 'Private',
     description: 'Only invited members can join',
-    icon: '🔒'
+    icon: '🔒',
   },
   {
     value: 'hidden',
     label: 'Hidden',
     description: 'Invisible to non-members',
-    icon: '👻'
+    icon: '👻',
   },
 ];
 
@@ -98,19 +98,19 @@ const APPROVAL_OPTIONS = [
     value: 'auto',
     label: 'Auto-approve',
     description: 'Anyone meeting criteria joins instantly',
-    icon: '⚡'
+    icon: '⚡',
   },
   {
     value: 'manual',
     label: 'Manual approval',
     description: 'Admin reviews each request',
-    icon: '👀'
+    icon: '👀',
   },
   {
     value: 'invite',
     label: 'Invite-only',
     description: 'Only invited users can join',
-    icon: '✉️'
+    icon: '✉️',
   },
 ];
 
@@ -125,8 +125,8 @@ const CIRCLE_TEMPLATES = [
     suggestedSettings: {
       visibility: 'private',
       member_approval: 'invite',
-      wallet_purpose: 'Family emergency fund and shared expenses'
-    }
+      wallet_purpose: 'Family emergency fund and shared expenses',
+    },
   },
   {
     id: 'bitcoin-investors',
@@ -137,8 +137,8 @@ const CIRCLE_TEMPLATES = [
     suggestedSettings: {
       visibility: 'private',
       member_approval: 'manual',
-      wallet_purpose: 'Collective Bitcoin investments'
-    }
+      wallet_purpose: 'Collective Bitcoin investments',
+    },
   },
   {
     id: 'freelancer-network',
@@ -149,8 +149,8 @@ const CIRCLE_TEMPLATES = [
     suggestedSettings: {
       visibility: 'public',
       member_approval: 'auto',
-      max_members: 50
-    }
+      max_members: 50,
+    },
   },
   {
     id: 'neighborhood-aid',
@@ -161,8 +161,8 @@ const CIRCLE_TEMPLATES = [
     suggestedSettings: {
       visibility: 'public',
       member_approval: 'auto',
-      wallet_purpose: 'Community projects and mutual aid'
-    }
+      wallet_purpose: 'Community projects and mutual aid',
+    },
   },
   {
     id: 'skill-share',
@@ -172,9 +172,9 @@ const CIRCLE_TEMPLATES = [
     icon: '🎓',
     suggestedSettings: {
       visibility: 'public',
-      member_approval: 'auto'
-    }
-  }
+      member_approval: 'auto',
+    },
+  },
 ];
 
 // ==================== ENHANCED VALIDATION SCHEMA ====================
@@ -188,7 +188,7 @@ const fieldGroups: FieldGroup[] = [
   {
     id: 'basic',
     title: 'Circle Identity',
-    description: 'Define your circle\'s core identity and purpose',
+    description: "Define your circle's core identity and purpose",
     fields: [
       {
         name: 'name',
@@ -211,7 +211,7 @@ const fieldGroups: FieldGroup[] = [
         label: 'Category',
         type: 'select',
         required: true,
-        options: CIRCLE_CATEGORIES.map((cat) => ({ value: cat, label: cat })),
+        options: CIRCLE_CATEGORIES.map(cat => ({ value: cat, label: cat })),
       },
       {
         name: 'activity_level',

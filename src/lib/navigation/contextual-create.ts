@@ -8,7 +8,7 @@
  * based on the user's current location in the app.
  */
 
-import { ENTITY_REGISTRY, EntityType, EntityMetadata } from '@/config/entity-registry';
+import { ENTITY_REGISTRY, EntityType } from '@/config/entity-registry';
 
 export type CreateActionType = 'post' | 'entity' | 'menu';
 

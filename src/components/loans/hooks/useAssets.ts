@@ -9,7 +9,6 @@
  */
 
 import { useState, useEffect } from 'react';
-import { DEFAULT_CURRENCY } from '@/config/currencies';
 import type { AssetOption } from '../types';
 
 export function useAssets(enabled: boolean = true) {
@@ -18,7 +17,9 @@ export function useAssets(enabled: boolean = true) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!enabled) {return;}
+    if (!enabled) {
+      return;
+    }
 
     let cancelled = false;
 
@@ -84,5 +85,3 @@ export function useAssets(enabled: boolean = true) {
 
   return { assets, loading, error, refreshAssets };
 }
-
-

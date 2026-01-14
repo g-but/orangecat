@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import supabase from '@/lib/supabase/browser';
 import { offlineQueueService } from '@/lib/offline-queue';
 import { timelineService } from '@/services/timeline';
@@ -214,14 +214,16 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     try {
       const { data, error } = await supabase
         .from(getTableName('project'))
-        .select(`
+        .select(
+          `
           id, 
           title, 
           description, 
           status, 
           contributor_count,
           project_media(id, storage_path, position)
-        `)
+        `
+        )
         .eq('user_id', user.id)
         .neq('status', 'draft')
         .order('updated_at', { ascending: false })
@@ -327,8 +329,16 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         eventTimestamp: now,
         actor_data: {
           id: user.id,
-          display_name: user.user_metadata?.name || (typeof user.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : null) || 'You',
-          username: (typeof user.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : null) || user.id,
+          display_name:
+            user.user_metadata?.name ||
+            (typeof user.email === 'string' && user.email.includes('@')
+              ? user.email.split('@')[0]
+              : null) ||
+            'You',
+          username:
+            (typeof user.email === 'string' && user.email.includes('@')
+              ? user.email.split('@')[0]
+              : null) || user.id,
           avatar_url: user.user_metadata?.avatar_url,
         },
         like_count: 0,
@@ -572,8 +582,16 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
             eventTimestamp: new Date().toISOString(),
             actor_data: {
               id: user.id,
-              display_name: user.user_metadata?.name || (typeof user.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : null) || 'You',
-              username: (typeof user.email === 'string' && user.email.includes('@') ? user.email.split('@')[0] : null) || user.id,
+              display_name:
+                user.user_metadata?.name ||
+                (typeof user.email === 'string' && user.email.includes('@')
+                  ? user.email.split('@')[0]
+                  : null) ||
+                'You',
+              username:
+                (typeof user.email === 'string' && user.email.includes('@')
+                  ? user.email.split('@')[0]
+                  : null) || user.id,
               avatar_url: user.user_metadata?.avatar_url,
             },
             like_count: 0,

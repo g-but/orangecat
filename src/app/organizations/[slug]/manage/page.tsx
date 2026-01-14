@@ -11,10 +11,9 @@ import {
   Edit,
   Trash2,
   Eye,
-  EyeOff,
   CheckCircle,
   Clock,
-  AlertTriangle
+  AlertTriangle,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -36,9 +35,10 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
     id: slug,
     name: slug === 'bitbaum' ? 'BitBaum AG' : 'Martian Sovereignty Initiative',
     type: slug === 'bitbaum' ? 'Company' : 'Non-Profit',
-    description: slug === 'bitbaum'
-      ? 'Growing Bitcoin communities through transparent commerce'
-      : 'Raising Bitcoin to purchase sovereignty over Valles territory',
+    description:
+      slug === 'bitbaum'
+        ? 'Growing Bitcoin communities through transparent commerce'
+        : 'Raising Bitcoin to purchase sovereignty over Valles territory',
     treasury: slug === 'bitbaum' ? '₿ 50.25' : '₿ 245,000',
     stakeholders: slug === 'bitbaum' ? 25 : 156,
     transparencyScore: slug === 'bitbaum' ? 98 : 95,
@@ -46,11 +46,46 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
   };
 
   const stakeholders = [
-    { id: 1, name: 'Alex Chen', role: 'Founder', email: 'alex@bitbaum.com', votingWeight: 3.0, joinedAt: '2025-01-01' },
-    { id: 2, name: 'Maria Rodriguez', role: 'Founder', email: 'maria@bitbaum.com', votingWeight: 3.0, joinedAt: '2025-01-01' },
-    { id: 3, name: 'David Kim', role: 'Founder', email: 'david@bitbaum.com', votingWeight: 3.0, joinedAt: '2025-01-01' },
-    { id: 4, name: 'Sarah Johnson', role: 'Employee', email: 'sarah@bitbaum.com', votingWeight: 1.0, joinedAt: '2025-02-01' },
-    { id: 5, name: 'Mike Chen', role: 'Employee', email: 'mike@bitbaum.com', votingWeight: 1.0, joinedAt: '2025-02-15' },
+    {
+      id: 1,
+      name: 'Alex Chen',
+      role: 'Founder',
+      email: 'alex@bitbaum.com',
+      votingWeight: 3.0,
+      joinedAt: '2025-01-01',
+    },
+    {
+      id: 2,
+      name: 'Maria Rodriguez',
+      role: 'Founder',
+      email: 'maria@bitbaum.com',
+      votingWeight: 3.0,
+      joinedAt: '2025-01-01',
+    },
+    {
+      id: 3,
+      name: 'David Kim',
+      role: 'Founder',
+      email: 'david@bitbaum.com',
+      votingWeight: 3.0,
+      joinedAt: '2025-01-01',
+    },
+    {
+      id: 4,
+      name: 'Sarah Johnson',
+      role: 'Employee',
+      email: 'sarah@bitbaum.com',
+      votingWeight: 1.0,
+      joinedAt: '2025-02-01',
+    },
+    {
+      id: 5,
+      name: 'Mike Chen',
+      role: 'Employee',
+      email: 'mike@bitbaum.com',
+      votingWeight: 1.0,
+      joinedAt: '2025-02-15',
+    },
   ];
 
   const recentProposals = [
@@ -60,7 +95,7 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
       status: 'passed',
       votes: { yes: 18, no: 2, abstain: 0 },
       endDate: '2025-12-20',
-      createdBy: 'Alex Chen'
+      createdBy: 'Alex Chen',
     },
     {
       id: 2,
@@ -68,7 +103,7 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
       status: 'active',
       votes: { yes: 12, no: 3, abstain: 1 },
       endDate: '2025-12-25',
-      createdBy: 'Maria Rodriguez'
+      createdBy: 'Maria Rodriguez',
     },
     {
       id: 3,
@@ -76,8 +111,8 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
       status: 'passed',
       votes: { yes: 15, no: 0, abstain: 0 },
       endDate: '2025-12-18',
-      createdBy: 'David Kim'
-    }
+      createdBy: 'David Kim',
+    },
   ];
 
   const tabs = [
@@ -114,7 +149,7 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
       {/* Tabs */}
       <div className="border-b border-gray-200">
         <nav className="-mb-px flex space-x-8">
-          {tabs.map((tab) => (
+          {tabs.map(tab => (
             <a
               key={tab.id}
               href="#"
@@ -181,7 +216,9 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Transparency Score</p>
-              <p className="text-2xl font-semibold text-gray-900">{organization.transparencyScore}%</p>
+              <p className="text-2xl font-semibold text-gray-900">
+                {organization.transparencyScore}%
+              </p>
             </div>
           </div>
         </div>
@@ -238,7 +275,7 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
         </div>
 
         <div className="divide-y divide-gray-200">
-          {recentProposals.map((proposal) => (
+          {recentProposals.map(proposal => (
             <div key={proposal.id} className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -275,9 +312,7 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
                     )}
                   </div>
 
-                  <div className="text-sm text-gray-500">
-                    Ends {proposal.endDate}
-                  </div>
+                  <div className="text-sm text-gray-500">Ends {proposal.endDate}</div>
                 </div>
               </div>
             </div>
@@ -319,13 +354,16 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {stakeholders.slice(0, 5).map((stakeholder) => (
+              {stakeholders.slice(0, 5).map(stakeholder => (
                 <tr key={stakeholder.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-gray-600">
-                          {stakeholder.name.split(' ').map(n => n[0]).join('')}
+                          {stakeholder.name
+                            .split(' ')
+                            .map(n => n[0])
+                            .join('')}
                         </span>
                       </div>
                       <div className="ml-4">
@@ -335,11 +373,13 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      stakeholder.role === 'Founder'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        stakeholder.role === 'Founder'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}
+                    >
                       {stakeholder.role}
                     </span>
                   </td>
@@ -366,6 +406,3 @@ export default function ManageOrganizationPage({ params }: ManageOrganizationPag
     </div>
   );
 }
-
-
-

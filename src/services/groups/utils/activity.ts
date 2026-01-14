@@ -13,7 +13,6 @@ import { logger } from '@/utils/logger';
 import type { ActivityType } from '../types';
 import { TABLES } from '../constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
 
 // Type alias for any SupabaseClient (accepts any database schema)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
@@ -57,5 +56,3 @@ export async function logGroupActivity(
     // Don't throw - activity logging is non-critical
   }
 }
-
-

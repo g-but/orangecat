@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import {
   WalletFormData,
@@ -12,14 +12,12 @@ import { MAX_WALLETS_PER_ENTITY } from '@/lib/wallets/constants';
 import {
   logWalletError,
   handleSupabaseError,
-  createWalletErrorResponse,
   isTableNotFoundError,
 } from '@/lib/wallets/errorHandling';
 import { rateLimitWrite } from '@/lib/rate-limit';
 import {
   apiRateLimited,
   apiSuccess,
-  apiBadRequest,
   apiUnauthorized,
   apiError,
   apiCreated,
@@ -144,8 +142,7 @@ export async function POST(request: NextRequest) {
         return apiForbidden('Forbidden: Profile does not belong to this user');
       }
     } else if (body.project_id) {
-      const { data: project } = await (supabase
-        .from(getTableName('project')) as any)
+      const { data: project } = await (supabase.from(getTableName('project')) as any)
         .select('user_id')
         .eq('id', body.project_id)
         .single();
@@ -164,12 +161,9 @@ export async function POST(request: NextRequest) {
     // Double-check validation for security
     const addressValidation = validateAddressOrXpub(sanitized.address_or_xpub);
     if (!addressValidation.valid) {
-      return apiError(
-        addressValidation.error || 'Invalid address/xpub',
-        'INVALID_ADDRESS',
-        400,
-        { field: 'address_or_xpub' }
-      );
+      return apiError(addressValidation.error || 'Invalid address/xpub', 'INVALID_ADDRESS', 400, {
+        field: 'address_or_xpub',
+      });
     }
 
     // Check for duplicate address/xpub for this entity in the wallets table if it exists.
@@ -242,8 +236,7 @@ export async function POST(request: NextRequest) {
 
     // Try to create the wallet in the dedicated wallets table first
     try {
-      const { data: wallet, error } = await (supabase
-        .from(getTableName('wallet')) as any)
+      const { data: wallet, error } = await (supabase.from(getTableName('wallet')) as any)
         .insert({
           profile_id: body.profile_id || null,
           project_id: body.project_id || null,

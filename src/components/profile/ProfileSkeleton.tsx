@@ -1,7 +1,5 @@
 'use client';
 
-import { Card, CardContent, CardHeader } from '@/components/ui/Card';
-
 /**
  * Skeleton loader for profile wallets section
  */

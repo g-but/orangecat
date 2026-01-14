@@ -21,20 +21,12 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 import {
   Home,
   Users,
-  Rocket,
   Settings,
   User as UserIcon,
   MessageSquare,
   Compass,
   BookOpen,
   Globe,
-  Wallet,
-  Package,
-  Briefcase,
-  Heart,
-  Banknote,
-  CircleDot,
-  Building,
   Github,
   Twitter,
   FileText,
@@ -343,42 +335,42 @@ function generateUserMenuItems() {
       name: 'Groups',
       href: getEntityPath('group'),
       requiresAuth: true,
-      description: 'Manage Groups'
+      description: 'Manage Groups',
     },
     {
       name: 'Assets',
       href: getEntityPath('asset'),
       requiresAuth: true,
-      description: 'My Valuable Assets'
+      description: 'My Valuable Assets',
     },
     {
       name: 'Loans',
       href: getEntityPath('loan'),
       requiresAuth: true,
-      description: 'Peer-to-Peer Lending'
+      description: 'Peer-to-Peer Lending',
     },
     {
       name: 'Sell',
       href: getEntityPath('product'),
       requiresAuth: true,
-      description: 'Products & Services'
+      description: 'Products & Services',
     },
     {
       name: 'Raise',
       href: getEntityPath('project'),
       requiresAuth: true,
-      description: 'Projects & Causes'
+      description: 'Projects & Causes',
     },
     {
       name: 'Network',
       href: getEntityPath('group'),
       requiresAuth: true,
-      description: 'Groups, Events & People'
+      description: 'Groups, Events & People',
     },
     {
       name: 'Wallet',
       href: getEntityPath('wallet'),
-      requiresAuth: true
+      requiresAuth: true,
     },
 
     // Static items - not entity-based

@@ -15,18 +15,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ArrowLeftRight, Bitcoin, Info } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
-import {
-  Currency,
-  FiatCurrency,
-  CURRENCY_INFO,
-  ALL_CURRENCIES,
-  FIAT_CURRENCIES,
-} from '@/types/settings';
-import {
-  convert,
-  formatCurrency,
-  parseAmount,
-} from '@/services/currency';
+import { Currency, CURRENCY_INFO, ALL_CURRENCIES, FIAT_CURRENCIES } from '@/types/settings';
+import { convert, formatCurrency, parseAmount } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { getGoalExplanation, isBitcoinNativeCurrency } from '@/utils/currency-helpers';
 
@@ -117,7 +107,7 @@ export function CurrencyInput({
     if (!isUserEditing) {
       // Value is already in the input currency, just format it
       let formatted: string;
-      
+
       if (inputCurrency === 'BTC') {
         formatted = value.toFixed(8).replace(/\.?0+$/, '');
       } else if (inputCurrency === 'SATS') {
@@ -126,7 +116,7 @@ export function CurrencyInput({
         // For fiat currencies, format with 2 decimals
         formatted = value.toFixed(2);
       }
-      
+
       setLocalValue(formatted);
     }
   }, [value, inputCurrency, isUserEditing]);
@@ -168,9 +158,9 @@ export function CurrencyInput({
       const converted = convert(value, inputCurrency, newCurrency);
       onChange(converted);
     }
-    
+
     setInputCurrency(newCurrency);
-    
+
     // Notify parent component of currency change
     if (onCurrencyChange) {
       onCurrencyChange(newCurrency);
@@ -184,7 +174,7 @@ export function CurrencyInput({
     if (!showBreakdown || !value || value === 0) {
       return null;
     }
-    
+
     // Only show breakdown if user explicitly wants it
     // Convert to other currencies for display
     const otherCurrencies: Record<string, number> = {};
@@ -193,10 +183,10 @@ export function CurrencyInput({
         otherCurrencies[curr] = convert(value, inputCurrency, curr);
       }
     });
-    
+
     // Convert to BTC for display
     const btcValue = inputCurrency === 'BTC' ? value : convert(value, inputCurrency, 'BTC');
-    
+
     return {
       btc: btcValue,
       other: otherCurrencies,
@@ -255,7 +245,7 @@ export function CurrencyInput({
       {/* Hint or error */}
       {error && <p className="text-red-600 text-sm">{error}</p>}
       {hint && !error && <p className="text-xs text-gray-500">{hint}</p>}
-      
+
       {/* Currency-specific info hint */}
       {!error && !hint && value && value > 0 && (
         <div className="text-xs text-gray-500 mt-1">
@@ -271,7 +261,9 @@ export function CurrencyInput({
         <div className="mt-3 p-3 rounded-lg bg-gradient-to-br from-orange-50 to-amber-50 border border-orange-100">
           <div className="flex items-center gap-2 mb-2">
             <ArrowLeftRight className="w-4 h-4 text-orange-600" />
-            <span className="text-xs font-semibold text-gray-900">Equivalent in other currencies</span>
+            <span className="text-xs font-semibold text-gray-900">
+              Equivalent in other currencies
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 text-xs">
@@ -314,8 +306,10 @@ export function CurrencyInput({
           <div className="mt-2 pt-2 border-t border-orange-100 flex items-start gap-1">
             <Info className="w-3 h-3 text-orange-500 mt-0.5 flex-shrink-0" />
             <p className="text-[10px] text-gray-600">
-              All transactions settle in Bitcoin. Amounts shown are estimates based on current exchange rates.
-              {isBitcoinNativeCurrency(inputCurrency) && ' SATS shown for Bitcoin-native convenience.'}
+              All transactions settle in Bitcoin. Amounts shown are estimates based on current
+              exchange rates.
+              {isBitcoinNativeCurrency(inputCurrency) &&
+                ' SATS shown for Bitcoin-native convenience.'}
             </p>
           </div>
         </div>

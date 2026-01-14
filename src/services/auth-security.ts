@@ -1,198 +1,187 @@
 /**
  * AUTHENTICATION SECURITY SERVICE
- * 
+ *
  * Created: 2025-06-08
- * Last Modified: 2025-01-17  
+ * Last Modified: 2025-01-17
  * Last Modified Summary: Fixed duplicate client instance causing auth conflicts
  */
 
-import { createClient } from '@supabase/supabase-js'
-import supabaseClient from '@/lib/supabase/browser'
-import { 
-  AuthSecurity, 
-  SecurityMonitor, 
+import supabaseClient from '@/lib/supabase/browser';
+import {
+  AuthSecurity,
+  SecurityMonitor,
   SecureErrorHandler,
   InputSanitizer,
-  SecuritySchemas
-} from '@/utils/security'
+  SecuritySchemas,
+} from '@/utils/security';
 
 interface AuthResult {
-  success: boolean
-  user?: any
-  session?: any
-  error?: string
-  remainingAttempts?: number
+  success: boolean;
+  user?: any;
+  session?: any;
+  error?: string;
+  remainingAttempts?: number;
 }
 
 export class AuthSecurityService {
-  private supabase = supabaseClient
+  private supabase = supabaseClient;
 
-  async secureLogin(
-    email: string, 
-    password: string, 
-    ipAddress: string
-  ): Promise<AuthResult> {
+  async secureLogin(email: string, password: string, ipAddress: string): Promise<AuthResult> {
     try {
-      const sanitizedEmail = InputSanitizer.sanitizeEmail(email)
-      
+      const sanitizedEmail = InputSanitizer.sanitizeEmail(email);
+
       // Validate inputs
       const validation = SecuritySchemas.authData.safeParse({
         email: sanitizedEmail,
-        password
-      })
+        password,
+      });
 
       if (!validation.success) {
         SecurityMonitor.logEvent('login_failure', 'high', {
           reason: 'invalid_input',
-          ipAddress
-        })
+          ipAddress,
+        });
         return {
           success: false,
-          error: 'Invalid email or password format'
-        }
+          error: 'Invalid email or password format',
+        };
       }
 
       // Check account lockout
       if (AuthSecurity.isAccountLocked(sanitizedEmail)) {
-        const remainingAttempts = AuthSecurity.getRemainingAttempts(sanitizedEmail)
-        
+        const remainingAttempts = AuthSecurity.getRemainingAttempts(sanitizedEmail);
+
         SecurityMonitor.logEvent('account_locked', 'critical', {
           email: sanitizedEmail,
-          ipAddress
-        })
+          ipAddress,
+        });
 
         return {
           success: false,
           error: 'Account temporarily locked due to multiple failed attempts',
-          remainingAttempts
-        }
+          remainingAttempts,
+        };
       }
 
       // Attempt authentication
       const { data, error } = await this.supabase.auth.signInWithPassword({
         email: sanitizedEmail,
-        password
-      })
+        password,
+      });
 
       if (error || !data.user) {
         // Record failed attempt
-        AuthSecurity.recordFailedAttempt(sanitizedEmail)
-        
+        AuthSecurity.recordFailedAttempt(sanitizedEmail);
+
         SecurityMonitor.logEvent('login_failure', 'high', {
           reason: 'invalid_credentials',
           email: sanitizedEmail,
-          ipAddress
-        })
+          ipAddress,
+        });
 
-        const remainingAttempts = AuthSecurity.getRemainingAttempts(sanitizedEmail)
-        
+        const remainingAttempts = AuthSecurity.getRemainingAttempts(sanitizedEmail);
+
         return {
           success: false,
           error: 'Invalid email or password',
-          remainingAttempts
-        }
+          remainingAttempts,
+        };
       }
 
       // Clear failed attempts on successful login
-      AuthSecurity.clearFailedAttempts(sanitizedEmail)
+      AuthSecurity.clearFailedAttempts(sanitizedEmail);
 
       SecurityMonitor.logEvent('login_success', 'low', {
         userId: data.user.id,
-        ipAddress
-      })
+        ipAddress,
+      });
 
       return {
         success: true,
         user: data.user,
-        session: data.session
-      }
-
+        session: data.session,
+      };
     } catch (error) {
-      const sanitizedError = SecureErrorHandler.sanitizeErrorMessage(error)
-      SecureErrorHandler.logError(error, 'auth_login')
-      
+      const sanitizedError = SecureErrorHandler.sanitizeErrorMessage(error);
+      SecureErrorHandler.logError(error, 'auth_login');
+
       return {
         success: false,
-        error: sanitizedError
-      }
+        error: sanitizedError,
+      };
     }
   }
 
-  async secureSignup(
-    email: string,
-    password: string,
-    ipAddress: string
-  ): Promise<AuthResult> {
+  async secureSignup(email: string, password: string, ipAddress: string): Promise<AuthResult> {
     try {
-      const sanitizedEmail = InputSanitizer.sanitizeEmail(email)
-      
+      const sanitizedEmail = InputSanitizer.sanitizeEmail(email);
+
       // Validate inputs
       const validation = SecuritySchemas.authData.safeParse({
         email: sanitizedEmail,
-        password
-      })
+        password,
+      });
 
       if (!validation.success) {
         SecurityMonitor.logEvent('signup_failure', 'medium', {
           reason: 'invalid_input',
-          ipAddress
-        })
+          ipAddress,
+        });
         return {
           success: false,
-          error: 'Invalid email or password format'
-        }
+          error: 'Invalid email or password format',
+        };
       }
 
       // Check password strength
-      const passwordStrength = AuthSecurity.validatePasswordStrength(password)
+      const passwordStrength = AuthSecurity.validatePasswordStrength(password);
       if (!passwordStrength.valid) {
         SecurityMonitor.logEvent('signup_failure', 'medium', {
           reason: 'weak_password',
-          ipAddress
-        })
+          ipAddress,
+        });
         return {
           success: false,
-          error: `Password too weak: ${passwordStrength.feedback.join(', ')}`
-        }
+          error: `Password too weak: ${passwordStrength.feedback.join(', ')}`,
+        };
       }
 
       // Create account
       const { data, error } = await this.supabase.auth.signUp({
         email: sanitizedEmail,
-        password
-      })
+        password,
+      });
 
       if (error) {
         SecurityMonitor.logEvent('signup_failure', 'medium', {
           reason: 'creation_failed',
           error: error.message,
-          ipAddress
-        })
+          ipAddress,
+        });
         return {
           success: false,
-          error: SecureErrorHandler.sanitizeErrorMessage(error)
-        }
+          error: SecureErrorHandler.sanitizeErrorMessage(error),
+        };
       }
 
       SecurityMonitor.logEvent('signup_success', 'low', {
         userId: data.user?.id,
-        ipAddress
-      })
+        ipAddress,
+      });
 
       return {
         success: true,
         user: data.user,
-        session: data.session
-      }
-
+        session: data.session,
+      };
     } catch (error) {
-      const sanitizedError = SecureErrorHandler.sanitizeErrorMessage(error)
-      SecureErrorHandler.logError(error, 'auth_signup')
-      
+      const sanitizedError = SecureErrorHandler.sanitizeErrorMessage(error);
+      SecureErrorHandler.logError(error, 'auth_signup');
+
       return {
         success: false,
-        error: sanitizedError
-      }
+        error: sanitizedError,
+      };
     }
   }
 
@@ -203,70 +192,68 @@ export class AuthSecurityService {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // Validate password strength
-      const passwordStrength = AuthSecurity.validatePasswordStrength(newPassword)
-      
+      const passwordStrength = AuthSecurity.validatePasswordStrength(newPassword);
+
       if (!passwordStrength.valid) {
         SecurityMonitor.logEvent('password_change_failure', 'medium', {
           userId,
           reason: 'weak_password',
-          ipAddress
-        })
+          ipAddress,
+        });
 
         return {
           success: false,
-          error: `Password too weak: ${passwordStrength.feedback.join(', ')}`
-        }
+          error: `Password too weak: ${passwordStrength.feedback.join(', ')}`,
+        };
       }
 
       // Update password
       const { error } = await this.supabase.auth.updateUser({
-        password: newPassword
-      })
+        password: newPassword,
+      });
 
       if (error) {
         SecurityMonitor.logEvent('password_change_failure', 'medium', {
           userId,
           reason: 'update_failed',
-          ipAddress
-        })
+          ipAddress,
+        });
         return {
           success: false,
-          error: SecureErrorHandler.sanitizeErrorMessage(error)
-        }
+          error: SecureErrorHandler.sanitizeErrorMessage(error),
+        };
       }
 
       SecurityMonitor.logEvent('password_change_success', 'medium', {
         userId,
         strength_score: passwordStrength.score,
-        ipAddress
-      })
+        ipAddress,
+      });
 
-      return { success: true }
-
+      return { success: true };
     } catch (error) {
-      SecureErrorHandler.logError(error, 'auth_change_password', userId)
+      SecureErrorHandler.logError(error, 'auth_change_password', userId);
       return {
         success: false,
-        error: SecureErrorHandler.sanitizeErrorMessage(error)
-      }
+        error: SecureErrorHandler.sanitizeErrorMessage(error),
+      };
     }
   }
 
   async logout(ipAddress: string): Promise<{ success: boolean }> {
     try {
-      await this.supabase.auth.signOut()
-      
+      await this.supabase.auth.signOut();
+
       SecurityMonitor.logEvent('logout', 'low', {
-        ipAddress
-      })
+        ipAddress,
+      });
 
-      return { success: true }
-
+      return { success: true };
     } catch (error) {
-      SecureErrorHandler.logError(error, 'auth_logout')
-      return { success: false }
+      SecureErrorHandler.logError(error, 'auth_logout');
+      return { success: false };
     }
   }
 }
 
-export const authSecurityService = new AuthSecurityService() 
+export const authSecurityService = new AuthSecurityService();

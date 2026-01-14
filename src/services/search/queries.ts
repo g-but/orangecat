@@ -48,7 +48,9 @@ export async function searchProfiles(
         // Apply additional location filters if needed
         let results = data as any[];
         if (filters.country) {
-          results = results.filter((p: any) => p.location_country === filters.country!.toUpperCase());
+          results = results.filter(
+            (p: any) => p.location_country === filters.country!.toUpperCase()
+          );
         }
         if (filters.city) {
           const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
@@ -85,7 +87,9 @@ export async function searchProfiles(
         let results = data as any[];
         if (filters) {
           if (filters.country) {
-            results = results.filter((p: any) => p.location_country === filters.country!.toUpperCase());
+            results = results.filter(
+              (p: any) => p.location_country === filters.country!.toUpperCase()
+            );
           }
           if (filters.city) {
             const sanitizedCity = filters.city.replace(/[%_]/g, '\\$&');
@@ -157,8 +161,8 @@ export async function searchProfiles(
     name: p.name,
   }));
 
-        // Apply precise radius filtering if needed (Haversine formula)
-        // Note: This is fallback code - PostGIS RPC is prioritized above
+  // Apply precise radius filtering if needed (Haversine formula)
+  // Note: This is fallback code - PostGIS RPC is prioritized above
   if (filters?.radius_km && filters.lat !== undefined && filters.lng !== undefined) {
     results = results.filter(profile => {
       if (!profile.latitude || !profile.longitude) {
@@ -236,7 +240,7 @@ export async function searchFundingPages(
           results = results.filter((p: any) => filters.categories!.includes(p.category));
         }
         if (filters.hasGoal) {
-          results = results.filter((p: any) => p.goal_amount != null);
+          results = results.filter((p: any) => p.goal_amount !== null);
         }
         if (filters.minFunding !== undefined) {
           results = results.filter((p: any) => (p.raised_amount || 0) >= filters.minFunding!);
@@ -311,7 +315,7 @@ export async function searchFundingPages(
           } else {
             // Default: Show active and paused projects (public search statuses)
             results = results.filter((p: any) =>
-              PUBLIC_SEARCH_STATUSES.includes(p.status as typeof PUBLIC_SEARCH_STATUSES[number])
+              PUBLIC_SEARCH_STATUSES.includes(p.status as (typeof PUBLIC_SEARCH_STATUSES)[number])
             );
           }
 
@@ -319,7 +323,7 @@ export async function searchFundingPages(
             results = results.filter((p: any) => filters.categories!.includes(p.category));
           }
           if (filters.hasGoal) {
-            results = results.filter((p: any) => p.goal_amount != null);
+            results = results.filter((p: any) => p.goal_amount !== null);
           }
           if (filters.minFunding !== undefined) {
             results = results.filter((p: any) => (p.raised_amount || 0) >= filters.minFunding!);

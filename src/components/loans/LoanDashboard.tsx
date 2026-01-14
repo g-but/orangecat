@@ -5,7 +5,6 @@ import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
 import { LoanList } from './LoanList';
 import { LoanOffersList } from './LoanOffersList';
 import { CreateLoanDialog } from './CreateLoanDialog';
@@ -55,7 +54,6 @@ export default function LoanDashboard() {
       if (offersResult.success) {
         setMyOffers(offersResult.offers || []);
       }
-
     } catch (error) {
       logger.error('Failed to load dashboard data:', error);
       toast.error('Failed to load loans data');
@@ -74,7 +72,7 @@ export default function LoanDashboard() {
     return (
       <div className="space-y-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
+          {[1, 2, 3].map(i => (
             <Card key={i} className="animate-pulse">
               <CardHeader>
                 <div className="h-4 bg-gray-200 rounded w-3/4"></div>
@@ -176,9 +174,7 @@ export default function LoanDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>My Loan Offers</CardTitle>
-              <CardDescription>
-                Offers you've made on other people's loans
-              </CardDescription>
+              <CardDescription>Offers you've made on other people's loans</CardDescription>
             </CardHeader>
             <CardContent>
               {myOffers.length > 0 ? (

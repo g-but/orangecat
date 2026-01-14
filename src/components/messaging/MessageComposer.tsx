@@ -12,9 +12,12 @@ import supabase from '@/lib/supabase/browser';
 import type { Message } from '@/features/messaging/types';
 import { queueIfOffline, handleNetworkError } from '@/features/messaging/lib/offline-queue';
 import { MESSAGE_TYPES, debugLog, API_ROUTES } from '@/features/messaging/lib/constants';
-import { createOptimisticMessage, validateMessageContent } from '@/features/messaging/lib/message-utils';
+import {
+  createOptimisticMessage,
+  validateMessageContent,
+} from '@/features/messaging/lib/message-utils';
 import { useTypingIndicator } from '@/features/messaging/hooks/useTypingIndicator';
-import { useMessagingActors, type MessagingActor } from '@/features/messaging/hooks/useMessagingActors';
+import { useMessagingActors } from '@/features/messaging/hooks/useMessagingActors';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -32,7 +35,12 @@ interface MessageComposerProps {
   onMessageConfirmed?: (tempId: string, realMessage: Message) => void;
 }
 
-export default function MessageComposer({ conversationId, onMessageSent, onMessageFailed, onMessageConfirmed }: MessageComposerProps) {
+export default function MessageComposer({
+  conversationId,
+  onMessageSent,
+  onMessageFailed,
+  onMessageConfirmed,
+}: MessageComposerProps) {
   const { user, profile } = useAuth();
   const [content, setContent] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -44,7 +52,7 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
 
   // Determine which actor to use (default to personal actor)
   const selectedActor = selectedActorId
-    ? actors.find((a) => a.actor_id === selectedActorId)
+    ? actors.find(a => a.actor_id === selectedActorId)
     : personalActor;
 
   // Show "Send As" selector only if user has multiple actors
@@ -55,133 +63,160 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
     enabled: !!conversationId && !!user?.id,
   });
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
 
-    if (!content.trim() || isSending || !user) {
-      return;
-    }
+      if (!content.trim() || isSending || !user) {
+        return;
+      }
 
-    // Validate message content
-    const validation = validateMessageContent(content);
-    if (!validation.valid) {
-      toast.error(validation.error);
-      return;
-    }
+      // Validate message content
+      const validation = validateMessageContent(content);
+      if (!validation.valid) {
+        toast.error(validation.error);
+        return;
+      }
 
-    const messageContent = content.trim();
-    setIsSending(true);
+      const messageContent = content.trim();
+      setIsSending(true);
 
-    // Stop typing indicator when sending
-    stopTyping();
+      // Stop typing indicator when sending
+      stopTyping();
 
-    // Create optimistic message using shared utility
-    const optimisticMessage = createOptimisticMessage(
-      conversationId,
-      user.id,
-      messageContent,
-      {
+      // Create optimistic message using shared utility
+      const optimisticMessage = createOptimisticMessage(conversationId, user.id, messageContent, {
         id: user.id,
         username: profile?.username || 'you',
         name: profile?.name || 'You',
         avatar_url: profile?.avatar_url || null,
-      }
-    );
-
-    // Optimistically show the message immediately
-    onMessageSent(optimisticMessage);
-    setContent('');
-
-    // Reset textarea height
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-    }
-
-    const tempId = optimisticMessage.id;
-
-    // Queue if offline
-    if (await queueIfOffline({ conversationId, content: messageContent, messageType: MESSAGE_TYPES.TEXT, tempId }, user.id)) {
-      setIsSending(false);
-      return;
-    }
-
-    // Try to send immediately if online
-    debugLog('[MessageComposer] sending', { conversationId, tempId, userId: user.id });
-
-    try {
-      const response = await fetch(API_ROUTES.CONVERSATION(conversationId), {
-        method: 'POST',
-        credentials: 'include', // Ensure cookies are sent
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          content: messageContent,
-          messageType: MESSAGE_TYPES.TEXT,
-          // Include sender actor ID if sending as a different actor (e.g., group)
-          ...(selectedActor && !selectedActor.is_personal && { senderActorId: selectedActor.actor_id }),
-        }),
       });
 
-      debugLog('[MessageComposer] response status', response.status);
+      // Optimistically show the message immediately
+      onMessageSent(optimisticMessage);
+      setContent('');
 
-      if (!response.ok) {
-        // Attempt to queue on network failure
-        if (await handleNetworkError(new Error(`HTTP ${response.status}`), { conversationId, content: messageContent, messageType: MESSAGE_TYPES.TEXT, tempId }, user.id)) {
-          setIsSending(false);
-          return;
-        }
-
-        const errorData = await response.json().catch(() => ({} as Record<string, unknown>));
-        logger.error('[MessageComposer] API error:', errorData);
-        const desc = errorData.details || '';
-        toast.error(errorData.error || 'Failed to send message', {
-          description: typeof desc === 'string' ? desc : undefined,
-        });
-        onMessageFailed?.(tempId, errorData.error || desc);
-      } else {
-        // API returns { success: true, id: newId }
-        interface MessageResponse {
-          success?: boolean;
-          id?: string;
-        }
-        const data = await response.json().catch(() => null) as MessageResponse | null;
-        debugLog('[MessageComposer] success id', data?.id);
-
-        if (data?.id) {
-          // Fetch full message details from message_details view
-          try {
-            const { data: fullMessage } = await supabase
-              .from('message_details' as any)
-              .select('*')
-              .eq('id', data.id)
-              .single() as { data: Message | null };
-
-            if (fullMessage) {
-              debugLog('[MessageComposer] confirmed full message', fullMessage.id);
-              onMessageConfirmed?.(tempId, fullMessage);
-            } else {
-              debugLog('[MessageComposer] no full message returned from query');
-            }
-          } catch (err) {
-            logger.error('[MessageComposer] Failed to fetch message immediately:', err);
-          }
-        } else {
-          debugLog('[MessageComposer] no message ID returned from API');
-        }
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
       }
-    } catch (err) {
-      logger.error('[MessageComposer] Network error:', err);
-      if (await handleNetworkError(err, { conversationId, content: messageContent, messageType: MESSAGE_TYPES.TEXT, tempId }, user.id)) {
+
+      const tempId = optimisticMessage.id;
+
+      // Queue if offline
+      if (
+        await queueIfOffline(
+          { conversationId, content: messageContent, messageType: MESSAGE_TYPES.TEXT, tempId },
+          user.id
+        )
+      ) {
         setIsSending(false);
         return;
       }
-      toast.error('Network error. Please try again.');
-      onMessageFailed?.(tempId, 'Network error');
-    } finally {
-      setIsSending(false);
-    }
-  }, [content, isSending, user, profile, conversationId, stopTyping, onMessageSent, onMessageFailed, onMessageConfirmed, selectedActor]);
+
+      // Try to send immediately if online
+      debugLog('[MessageComposer] sending', { conversationId, tempId, userId: user.id });
+
+      try {
+        const response = await fetch(API_ROUTES.CONVERSATION(conversationId), {
+          method: 'POST',
+          credentials: 'include', // Ensure cookies are sent
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            content: messageContent,
+            messageType: MESSAGE_TYPES.TEXT,
+            // Include sender actor ID if sending as a different actor (e.g., group)
+            ...(selectedActor &&
+              !selectedActor.is_personal && { senderActorId: selectedActor.actor_id }),
+          }),
+        });
+
+        debugLog('[MessageComposer] response status', response.status);
+
+        if (!response.ok) {
+          // Attempt to queue on network failure
+          if (
+            await handleNetworkError(
+              new Error(`HTTP ${response.status}`),
+              { conversationId, content: messageContent, messageType: MESSAGE_TYPES.TEXT, tempId },
+              user.id
+            )
+          ) {
+            setIsSending(false);
+            return;
+          }
+
+          const errorData = await response.json().catch(() => ({}) as Record<string, unknown>);
+          logger.error('[MessageComposer] API error:', errorData);
+          const desc = errorData.details || '';
+          toast.error(errorData.error || 'Failed to send message', {
+            description: typeof desc === 'string' ? desc : undefined,
+          });
+          onMessageFailed?.(tempId, errorData.error || desc);
+        } else {
+          // API returns { success: true, id: newId }
+          interface MessageResponse {
+            success?: boolean;
+            id?: string;
+          }
+          const data = (await response.json().catch(() => null)) as MessageResponse | null;
+          debugLog('[MessageComposer] success id', data?.id);
+
+          if (data?.id) {
+            // Fetch full message details from message_details view
+            try {
+              const { data: fullMessage } = (await supabase
+                .from('message_details' as any)
+                .select('*')
+                .eq('id', data.id)
+                .single()) as { data: Message | null };
+
+              if (fullMessage) {
+                debugLog('[MessageComposer] confirmed full message', fullMessage.id);
+                onMessageConfirmed?.(tempId, fullMessage);
+              } else {
+                debugLog('[MessageComposer] no full message returned from query');
+              }
+            } catch (err) {
+              logger.error('[MessageComposer] Failed to fetch message immediately:', err);
+            }
+          } else {
+            debugLog('[MessageComposer] no message ID returned from API');
+          }
+        }
+      } catch (err) {
+        logger.error('[MessageComposer] Network error:', err);
+        if (
+          await handleNetworkError(
+            err,
+            { conversationId, content: messageContent, messageType: MESSAGE_TYPES.TEXT, tempId },
+            user.id
+          )
+        ) {
+          setIsSending(false);
+          return;
+        }
+        toast.error('Network error. Please try again.');
+        onMessageFailed?.(tempId, 'Network error');
+      } finally {
+        setIsSending(false);
+      }
+    },
+    [
+      content,
+      isSending,
+      user,
+      profile,
+      conversationId,
+      stopTyping,
+      onMessageSent,
+      onMessageFailed,
+      onMessageConfirmed,
+      selectedActor,
+    ]
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -190,23 +225,31 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
     }
   };
 
-  const handleTextareaChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setContent(e.target.value);
+  const handleTextareaChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setContent(e.target.value);
 
-    // Trigger typing indicator
-    if (e.target.value.trim()) {
-      startTyping();
-    }
+      // Trigger typing indicator
+      if (e.target.value.trim()) {
+        startTyping();
+      }
 
-    // Auto-resize textarea
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
-    }
-  }, [startTyping]);
+      // Auto-resize textarea
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+      }
+    },
+    [startTyping]
+  );
 
   return (
-    <div className="border-t border-gray-200 bg-white p-3 sm:p-4 pb-safe md:pb-4" style={{ paddingBottom: 'max(0.75rem, calc(0.75rem + env(safe-area-inset-bottom, 0px) + 4rem))' }}>
+    <div
+      className="border-t border-gray-200 bg-white p-3 sm:p-4 pb-safe md:pb-4"
+      style={{
+        paddingBottom: 'max(0.75rem, calc(0.75rem + env(safe-area-inset-bottom, 0px) + 4rem))',
+      }}
+    >
       {/* Send As indicator - shown when user has multiple actors */}
       {showActorSelector && selectedActor && (
         <div className="mb-2 flex items-center gap-2 text-xs text-gray-500">
@@ -239,7 +282,8 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
                   onClick={() => setSelectedActorId(null)}
                   className={cn(
                     'flex items-center gap-2 cursor-pointer',
-                    (!selectedActorId || selectedActorId === personalActor.actor_id) && 'bg-gray-100'
+                    (!selectedActorId || selectedActorId === personalActor.actor_id) &&
+                      'bg-gray-100'
                   )}
                 >
                   <Avatar className="h-6 w-6">
@@ -257,8 +301,10 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
               {groupActors.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-xs text-gray-500">Organizations</DropdownMenuLabel>
-                  {groupActors.map((actor) => (
+                  <DropdownMenuLabel className="text-xs text-gray-500">
+                    Organizations
+                  </DropdownMenuLabel>
+                  {groupActors.map(actor => (
                     <DropdownMenuItem
                       key={actor.actor_id}
                       onClick={() => setSelectedActorId(actor.actor_id)}
@@ -326,7 +372,7 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
             className="absolute right-1.5 sm:right-2 bottom-1.5 sm:bottom-2 p-1.5 sm:p-1 text-gray-400 hover:text-gray-600 flex-shrink-0 z-10"
             disabled={isSending}
             aria-label="Add emoji"
-            onClick={(e) => {
+            onClick={e => {
               e.preventDefault();
               // TODO: Open emoji picker
             }}
@@ -360,9 +406,18 @@ export default function MessageComposer({ conversationId, onMessageSent, onMessa
       {typingText && (
         <div className="mt-2 text-xs text-gray-500 flex items-center gap-1">
           <span className="inline-flex gap-0.5">
-            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-            <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+            <span
+              className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+              style={{ animationDelay: '0ms' }}
+            />
+            <span
+              className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+              style={{ animationDelay: '150ms' }}
+            />
+            <span
+              className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce"
+              style={{ animationDelay: '300ms' }}
+            />
           </span>
           <span>{typingText}</span>
         </div>

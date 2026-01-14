@@ -12,7 +12,7 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import type { GroupMember, AddMemberInput, UpdateMemberInput } from '@/types/group';
-import type { GroupMemberResponse, GroupMembersResponse } from '../types';
+import type { GroupMemberResponse } from '../types';
 import { TABLES } from '../constants';
 import { getCurrentUserId, isGroupMember, getUserRole } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
@@ -30,11 +30,10 @@ export async function joinGroup(groupId: string): Promise<{ success: boolean; er
 
     // Get group to check join policy
     // Cast to any to bypass Supabase type generation for tables not in generated types
-    const { data: group, error: groupError } = await (supabase
-      .from(TABLES.groups) as any)
+    const { data: group, error: groupError } = (await (supabase.from(TABLES.groups) as any)
       .select('is_public, visibility')
       .eq('id', groupId)
-      .single() as { data: { is_public: boolean; visibility: string } | null; error: any };
+      .single()) as { data: { is_public: boolean; visibility: string } | null; error: any };
 
     if (groupError || !group) {
       return { success: false, error: 'Group not found' };
@@ -146,8 +145,7 @@ export async function addMember(
     }
 
     // Add member
-    const { data, error } = await (supabase
-      .from(TABLES.group_members) as any)
+    const { data, error } = await (supabase.from(TABLES.group_members) as any)
       .insert({
         group_id: groupId,
         user_id: input.user_id,
@@ -195,13 +193,14 @@ export async function updateMember(
     // Build update payload
     const payload: Record<string, unknown> = {};
 
-    if (input.role !== undefined) {payload.role = input.role;}
+    if (input.role !== undefined) {
+      payload.role = input.role;
+    }
     if (input.permission_overrides !== undefined) {
       payload.permission_overrides = input.permission_overrides;
     }
 
-    const { data, error } = await (supabase
-      .from(TABLES.group_members) as any)
+    const { data, error } = await (supabase.from(TABLES.group_members) as any)
       .update(payload)
       .eq('group_id', groupId)
       .eq('user_id', memberId)
@@ -265,5 +264,3 @@ export async function removeMember(
     return { success: false, error: 'Failed to remove member' };
   }
 }
-
-

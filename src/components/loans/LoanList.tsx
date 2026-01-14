@@ -1,6 +1,6 @@
 'use client';
 
-import { Loan, LoanStats } from '@/types/loans';
+import { Loan } from '@/types/loans';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
@@ -55,7 +55,9 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
 
   const formatLoanAmount = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
     // Validate currency and fallback to platform default
-    const validCurrency = (CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY) as CurrencyCode;
+    const validCurrency = (
+      CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY
+    ) as CurrencyCode;
     return formatCurrency(amount, validCurrency);
   };
 

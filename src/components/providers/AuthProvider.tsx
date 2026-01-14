@@ -4,8 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useAuthStore } from '@/stores/auth';
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
-import { useMessagingService } from '@/hooks/useMessagingService';
-import type { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { offlineQueueService } from '@/lib/offline-queue';
 
 /**

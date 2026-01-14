@@ -41,7 +41,6 @@ import {
   FileText,
   TreePine,
   Lock,
-  Gift,
 } from 'lucide-react';
 import type { EntityTemplate } from '../types';
 import type { WishlistFormData, WishlistItemFormData } from '@/lib/validation';
@@ -80,7 +79,8 @@ const birthdayTemplates: WishlistTemplate[] = [
     defaults: {
       title: 'Milestone Birthday Celebration',
       type: 'birthday',
-      description: 'A special birthday deserves special gifts! Help me make this milestone memorable.',
+      description:
+        'A special birthday deserves special gifts! Help me make this milestone memorable.',
       visibility: 'public',
     },
   },
@@ -90,7 +90,7 @@ const birthdayTemplates: WishlistTemplate[] = [
     tagline: "Birthday wishlist for children's gifts",
     icon: React.createElement(Sparkles, { className: 'w-4 h-4' }),
     defaults: {
-      title: "Birthday Wishlist",
+      title: 'Birthday Wishlist',
       type: 'birthday',
       description: 'Gift ideas for the birthday celebration!',
       visibility: 'public',
@@ -224,7 +224,7 @@ const graduationTemplates: WishlistTemplate[] = [
     defaults: {
       title: 'Gap Year Fund',
       type: 'graduation',
-      description: "Taking time to explore the world before the next chapter. Join my adventure!",
+      description: 'Taking time to explore the world before the next chapter. Join my adventure!',
       visibility: 'public',
     },
   },
@@ -280,7 +280,8 @@ const charityTemplates: WishlistTemplate[] = [
     defaults: {
       title: 'Donate to Charity Instead',
       type: 'charity',
-      description: 'Instead of gifts for me, please consider donating to these causes I care about.',
+      description:
+        'Instead of gifts for me, please consider donating to these causes I care about.',
       visibility: 'public',
     },
   },
@@ -824,24 +825,24 @@ const externalItemTemplates: WishlistItemTemplate[] = [
 
 // All wishlist templates organized by category
 export const WISHLIST_TEMPLATE_CATEGORIES = {
-  'Birthday': birthdayTemplates,
+  Birthday: birthdayTemplates,
   'Wedding & Engagement': weddingTemplates,
   'Baby & Parenting': babyTemplates,
-  'Graduation': graduationTemplates,
-  'Housewarming': housewarmingTemplates,
-  'Charity': charityTemplates,
-  'Travel': travelTemplates,
-  'Personal': personalTemplates,
-  'General': generalTemplates,
+  Graduation: graduationTemplates,
+  Housewarming: housewarmingTemplates,
+  Charity: charityTemplates,
+  Travel: travelTemplates,
+  Personal: personalTemplates,
+  General: generalTemplates,
 } as const;
 
 // All item templates organized by category
 export const WISHLIST_ITEM_TEMPLATE_CATEGORIES = {
-  'Electronics': electronicsItemTemplates,
+  Electronics: electronicsItemTemplates,
   'Home & Kitchen': homeItemTemplates,
-  'Fashion': fashionItemTemplates,
-  'Experiences': experienceItemTemplates,
-  'Subscriptions': subscriptionItemTemplates,
+  Fashion: fashionItemTemplates,
+  Experiences: experienceItemTemplates,
+  Subscriptions: subscriptionItemTemplates,
   'Big Purchases': bigPurchaseItemTemplates,
   'External Items': externalItemTemplates,
 } as const;

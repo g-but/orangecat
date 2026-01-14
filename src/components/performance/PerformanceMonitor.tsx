@@ -1,49 +1,40 @@
 /**
  * REACT PERFORMANCE MONITOR COMPONENT
- * 
+ *
  * Real-time performance monitoring for Option B optimization:
  * - Component render times
  * - API response times
  * - Bundle loading metrics
  * - Memory usage tracking
  * - Performance alerts
- * 
+ *
  * Created: 2025-01-14
  * Last Modified: 2025-01-14
  * Last Modified Summary: Real-time performance monitoring for production optimization
  */
 
-'use client'
+'use client';
 
-import React, { useEffect, useState, useCallback } from 'react'
-import { performanceMonitor } from '@/services/performance/database-optimizer'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import { Badge } from '@/components/ui/badge'
-import { 
-  Activity, 
-  Clock, 
-  Database, 
-  Gauge, 
-  TrendingUp, 
-  AlertTriangle,
-  CheckCircle,
-  Zap
-} from 'lucide-react'
+import React, { useEffect, useState, useCallback } from 'react';
+import { performanceMonitor } from '@/services/performance/database-optimizer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/badge';
+import { Activity, Clock, Database, Gauge, AlertTriangle, CheckCircle, Zap } from 'lucide-react';
 
 // ==================== PERFORMANCE METRICS TYPES ====================
 
 interface PerformanceStats {
-  renderTime: number
-  apiResponseTime: number
-  bundleSize: number
-  memoryUsage: number
-  cacheHitRate: number
+  renderTime: number;
+  apiResponseTime: number;
+  bundleSize: number;
+  memoryUsage: number;
+  cacheHitRate: number;
 }
 
 interface PerformanceAlert {
-  type: 'warning' | 'error' | 'info'
-  message: string
-  timestamp: number
+  type: 'warning' | 'error' | 'info';
+  message: string;
+  timestamp: number;
 }
 
 // ==================== PERFORMANCE HOOKS ====================
@@ -53,37 +44,34 @@ interface PerformanceAlert {
  */
 function useRenderPerformance(componentName: string) {
   useEffect(() => {
-    const startTime = performance.now()
-    
+    const startTime = performance.now();
+
     return () => {
-      const renderTime = performance.now() - startTime
-      performanceMonitor.recordMetric(`component_render:${componentName}`, renderTime)
-    }
-  }, [componentName])
+      const renderTime = performance.now() - startTime;
+      performanceMonitor.recordMetric(`component_render:${componentName}`, renderTime);
+    };
+  }, [componentName]);
 }
 
 /**
  * Hook to track API performance
  */
 function useAPIPerformance() {
-  const trackAPI = useCallback(async (
-    name: string,
-    apiCall: () => Promise<any>
-  ): Promise<any> => {
-    const startTime = performance.now()
+  const trackAPI = useCallback(async (name: string, apiCall: () => Promise<any>): Promise<any> => {
+    const startTime = performance.now();
     try {
-      const result = await apiCall()
-      const responseTime = performance.now() - startTime
-      performanceMonitor.recordMetric(`api:${name}`, responseTime)
-      return result
+      const result = await apiCall();
+      const responseTime = performance.now() - startTime;
+      performanceMonitor.recordMetric(`api:${name}`, responseTime);
+      return result;
     } catch (error) {
-      const responseTime = performance.now() - startTime
-      performanceMonitor.recordError(`api:${name}`, error as Error, responseTime)
-      throw error
+      const responseTime = performance.now() - startTime;
+      performanceMonitor.recordError(`api:${name}`, error as Error, responseTime);
+      throw error;
     }
-  }, [])
+  }, []);
 
-  return { trackAPI }
+  return { trackAPI };
 }
 
 /**
@@ -91,10 +79,10 @@ function useAPIPerformance() {
  */
 function useMemoryMonitor() {
   const [memoryInfo, setMemoryInfo] = useState<{
-    used: number
-    total: number
-    percentage: number
-  } | null>(null)
+    used: number;
+    total: number;
+    percentage: number;
+  } | null>(null);
 
   useEffect(() => {
     const updateMemoryInfo = () => {
@@ -107,113 +95,118 @@ function useMemoryMonitor() {
       const performanceWithMemory = performance as Performance & { memory?: PerformanceMemory };
       if (performanceWithMemory.memory) {
         const memory = performanceWithMemory.memory;
-        const used = memory.usedJSHeapSize / 1024 / 1024 // MB
-        const total = memory.totalJSHeapSize / 1024 / 1024 // MB
-        const percentage = (used / total) * 100
+        const used = memory.usedJSHeapSize / 1024 / 1024; // MB
+        const total = memory.totalJSHeapSize / 1024 / 1024; // MB
+        const percentage = (used / total) * 100;
 
-        setMemoryInfo({ used, total, percentage })
-        performanceMonitor.recordMetric('memory_usage', used)
+        setMemoryInfo({ used, total, percentage });
+        performanceMonitor.recordMetric('memory_usage', used);
       }
-    }
+    };
 
-    updateMemoryInfo()
-    const interval = setInterval(updateMemoryInfo, 5000) // Update every 5 seconds
+    updateMemoryInfo();
+    const interval = setInterval(updateMemoryInfo, 5000); // Update every 5 seconds
 
-    return () => clearInterval(interval)
-  }, [])
+    return () => clearInterval(interval);
+  }, []);
 
-  return memoryInfo
+  return memoryInfo;
 }
 
 // ==================== PERFORMANCE MONITOR COMPONENT ====================
 
 interface PerformanceMonitorProps {
-  componentName?: string
-  showDetailed?: boolean
+  componentName?: string;
+  showDetailed?: boolean;
   alertThresholds?: {
-    renderTime: number
-    apiTime: number
-    memoryUsage: number
-  }
+    renderTime: number;
+    apiTime: number;
+    memoryUsage: number;
+  };
 }
 
-export function PerformanceMonitor({ 
+export function PerformanceMonitor({
   componentName = 'Unknown',
   showDetailed = false,
   alertThresholds = {
     renderTime: 100, // ms
     apiTime: 2000, // ms
-    memoryUsage: 100 // MB
-  }
+    memoryUsage: 100, // MB
+  },
 }: PerformanceMonitorProps) {
-  useRenderPerformance(componentName)
-  
+  useRenderPerformance(componentName);
+
   const [stats, setStats] = useState<PerformanceStats>({
     renderTime: 0,
     apiResponseTime: 0,
     bundleSize: 0,
     memoryUsage: 0,
-    cacheHitRate: 0
-  })
-  
-  const [alerts, setAlerts] = useState<PerformanceAlert[]>([])
-  const memoryInfo = useMemoryMonitor()
+    cacheHitRate: 0,
+  });
+
+  const [alerts, setAlerts] = useState<PerformanceAlert[]>([]);
+  const memoryInfo = useMemoryMonitor();
 
   // Update stats periodically
   useEffect(() => {
     const updateStats = () => {
-      const renderStats = performanceMonitor.getStats(`component_render:${componentName}`)
-      const apiStats = performanceMonitor.getStats('api')
-      const cacheStats = performanceMonitor.getStats('cache_hit')
-      
+      const renderStats = performanceMonitor.getStats(`component_render:${componentName}`);
+      const apiStats = performanceMonitor.getStats('api');
+      const cacheStats = performanceMonitor.getStats('cache_hit');
+
       const newStats: PerformanceStats = {
         renderTime: renderStats.avg,
         apiResponseTime: apiStats.avg,
         bundleSize: 0, // Would be calculated from build stats
         memoryUsage: memoryInfo?.used || 0,
-        cacheHitRate: cacheStats.count > 0 ? (cacheStats.count / (cacheStats.count + performanceMonitor.getStats('database_query').count)) * 100 : 0
-      }
+        cacheHitRate:
+          cacheStats.count > 0
+            ? (cacheStats.count /
+                (cacheStats.count + performanceMonitor.getStats('database_query').count)) *
+              100
+            : 0,
+      };
 
-      setStats(newStats)
+      setStats(newStats);
 
       // Check for performance alerts
-      const newAlerts: PerformanceAlert[] = []
-      
+      const newAlerts: PerformanceAlert[] = [];
+
       if (newStats.renderTime > alertThresholds.renderTime) {
         newAlerts.push({
           type: 'warning',
           message: `Slow render time: ${newStats.renderTime.toFixed(2)}ms`,
-          timestamp: Date.now()
-        })
+          timestamp: Date.now(),
+        });
       }
-      
+
       if (newStats.apiResponseTime > alertThresholds.apiTime) {
         newAlerts.push({
           type: 'error',
           message: `Slow API response: ${newStats.apiResponseTime.toFixed(2)}ms`,
-          timestamp: Date.now()
-        })
+          timestamp: Date.now(),
+        });
       }
-      
+
       if (newStats.memoryUsage > alertThresholds.memoryUsage) {
         newAlerts.push({
           type: 'warning',
           message: `High memory usage: ${newStats.memoryUsage.toFixed(2)}MB`,
-          timestamp: Date.now()
-        })
+          timestamp: Date.now(),
+        });
       }
 
-      setAlerts(prev => [...prev, ...newAlerts].slice(-5)) // Keep last 5 alerts
-    }
+      setAlerts(prev => [...prev, ...newAlerts].slice(-5)); // Keep last 5 alerts
+    };
 
-    updateStats()
-    const interval = setInterval(updateStats, 3000) // Update every 3 seconds
+    updateStats();
+    const interval = setInterval(updateStats, 3000); // Update every 3 seconds
 
-    return () => clearInterval(interval)
-  }, [componentName, alertThresholds, memoryInfo])
+    return () => clearInterval(interval);
+  }, [componentName, alertThresholds, memoryInfo]);
 
   if (!showDetailed) {
-    return null // Hide in production by default
+    return null; // Hide in production by default
   }
 
   return (
@@ -233,7 +226,9 @@ export function PerformanceMonitor({
               <Clock className="h-3 w-3" />
               Render
             </span>
-            <Badge variant={stats.renderTime > alertThresholds.renderTime ? 'destructive' : 'default'}>
+            <Badge
+              variant={stats.renderTime > alertThresholds.renderTime ? 'destructive' : 'default'}
+            >
               {stats.renderTime.toFixed(1)}ms
             </Badge>
           </div>
@@ -244,7 +239,9 @@ export function PerformanceMonitor({
               <Database className="h-3 w-3" />
               API
             </span>
-            <Badge variant={stats.apiResponseTime > alertThresholds.apiTime ? 'destructive' : 'default'}>
+            <Badge
+              variant={stats.apiResponseTime > alertThresholds.apiTime ? 'destructive' : 'default'}
+            >
               {stats.apiResponseTime.toFixed(1)}ms
             </Badge>
           </div>
@@ -256,7 +253,9 @@ export function PerformanceMonitor({
                 <Gauge className="h-3 w-3" />
                 Memory
               </span>
-              <Badge variant={memoryInfo.used > alertThresholds.memoryUsage ? 'destructive' : 'default'}>
+              <Badge
+                variant={memoryInfo.used > alertThresholds.memoryUsage ? 'destructive' : 'default'}
+              >
                 {memoryInfo.used.toFixed(1)}MB
               </Badge>
             </div>
@@ -291,7 +290,7 @@ export function PerformanceMonitor({
         </Card>
       )}
     </div>
-  )
+  );
 }
 
 // ==================== DEVELOPMENT PERFORMANCE MONITOR ====================
@@ -300,25 +299,25 @@ export function PerformanceMonitor({
  * Development-only performance monitor with detailed metrics
  */
 export function DevPerformanceMonitor() {
-  const isProduction = process.env.NODE_ENV === 'production'
-  const isDevelopment = process.env.NODE_ENV === 'development'
-  
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isDevelopment = process.env.NODE_ENV === 'development';
+
   // Only show in development or when explicitly enabled
   if (isProduction && !process.env.NEXT_PUBLIC_SHOW_PERFORMANCE_MONITOR) {
-    return null
+    return null;
   }
 
   return (
-    <PerformanceMonitor 
+    <PerformanceMonitor
       componentName="Application"
       showDetailed={isDevelopment || !!process.env.NEXT_PUBLIC_SHOW_PERFORMANCE_MONITOR}
       alertThresholds={{
         renderTime: 50,
         apiTime: 1000,
-        memoryUsage: 75
+        memoryUsage: 75,
       }}
     />
-  )
+  );
 }
 
 // ==================== PERFORMANCE PROVIDER ====================
@@ -327,7 +326,7 @@ export function DevPerformanceMonitor() {
  * Context provider for performance monitoring across the app
  */
 export const PerformanceProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { trackAPI } = useAPIPerformance()
+  const { trackAPI } = useAPIPerformance();
 
   // Add performance monitoring to window for debugging
   useEffect(() => {
@@ -344,20 +343,20 @@ export const PerformanceProvider: React.FC<{ children: React.ReactNode }> = ({ c
         trackAPI,
         clearMetrics: () => {
           // Clear metrics functionality could be added here
-        }
-      }
+        },
+      };
     }
-  }, [trackAPI])
+  }, [trackAPI]);
 
   return (
     <>
       {children}
       <DevPerformanceMonitor />
     </>
-  )
-}
+  );
+};
 
 // ==================== EXPORTS ====================
 
-export { useRenderPerformance, useAPIPerformance, useMemoryMonitor }
-export default PerformanceMonitor 
+export { useRenderPerformance, useAPIPerformance, useMemoryMonitor };
+export default PerformanceMonitor;

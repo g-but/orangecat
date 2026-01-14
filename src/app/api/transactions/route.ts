@@ -4,12 +4,7 @@ import { withRequestId } from '@/lib/api/withRequestId';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withZodBody } from '@/lib/api/withZod';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
-import {
-  apiSuccess,
-  apiNotFound,
-  apiValidationError,
-  handleApiError,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, apiNotFound, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 import { DATABASE_TABLES } from '@/config/database-tables';

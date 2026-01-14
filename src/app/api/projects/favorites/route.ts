@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiInternalError } from '@/lib/api/standardResponse';
@@ -16,8 +15,9 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     const user = request.user;
 
     // Get favorited project IDs
-    const { data: favorites, error: favoritesError } = await (supabase
-      .from('project_favorites') as any)
+    const { data: favorites, error: favoritesError } = await (
+      supabase.from('project_favorites') as any
+    )
       .select('project_id, created_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
@@ -36,8 +36,9 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
 
     // Get full project data for favorited projects
     const projectIds = favorites.map((f: any) => f.project_id);
-    const { data: projects, error: projectsError } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: projects, error: projectsError } = await (
+      supabase.from(getTableName('project')) as any
+    )
       .select(
         `
         id,
@@ -75,8 +76,9 @@ async function handleGetFavorites(request: AuthenticatedRequest) {
     const profilesMap = new Map<string, any>();
 
     if (userIds.length > 0) {
-      const { data: profiles, error: profilesError } = await (supabase
-        .from(DATABASE_TABLES.PROFILES) as any)
+      const { data: profiles, error: profilesError } = await (
+        supabase.from(DATABASE_TABLES.PROFILES) as any
+      )
         .select('id, username, name, avatar_url')
         .in('id', userIds);
 

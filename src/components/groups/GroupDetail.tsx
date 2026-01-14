@@ -19,17 +19,7 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Users,
-  Wallet,
-  Settings,
-  Globe,
-  Lock,
-  Eye,
-  Bitcoin,
-  Zap,
-  Calendar,
-} from 'lucide-react';
+import { Users, Settings, Globe, Lock, Eye, Bitcoin, Zap, Calendar } from 'lucide-react';
 import groupsService from '@/services/groups';
 import type { Group, GroupMember } from '@/types/group';
 import { GROUP_LABELS, type GroupLabel } from '@/config/group-labels';
@@ -92,7 +82,11 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
       if (user) {
         try {
           const { checkGroupPermission } = await import('@/services/groups/permissions');
-          const canCreate = await checkGroupPermission(groupResult.group.id, user.id, 'canCreateProposals');
+          const canCreate = await checkGroupPermission(
+            groupResult.group.id,
+            user.id,
+            'canCreateProposals'
+          );
           const canVotePerm = await checkGroupPermission(groupResult.group.id, user.id, 'canVote');
           setCanCreateProposal(canCreate);
           setCanVote(canVotePerm);
@@ -170,7 +164,7 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
               <>
                 <div className="text-gray-500">Tags</div>
                 <div className="flex flex-wrap gap-1">
-                  {group.tags.map((tag) => (
+                  {group.tags.map(tag => (
                     <Badge key={tag} variant="outline" className="text-xs">
                       {tag}
                     </Badge>
@@ -307,7 +301,7 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {labelConfig.suggestedFeatures.map((feature) => (
+                {labelConfig.suggestedFeatures.map(feature => (
                   <Badge key={feature} variant="outline">
                     {feature.replace('_', ' ')}
                   </Badge>
@@ -323,14 +317,22 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
       </TabsContent>
 
       <TabsContent value="wallets">
-        <GroupWallets groupId={group.id} groupSlug={group.slug} wallets={wallets} onUpdate={loadGroupData} />
+        <GroupWallets
+          groupId={group.id}
+          groupSlug={group.slug}
+          wallets={wallets}
+          onUpdate={loadGroupData}
+        />
       </TabsContent>
 
       <TabsContent value="events">
         <EventsList
           groupId={group.id}
           groupSlug={group.slug}
-          canCreateEvent={isOwner || members.some((m) => m.user_id === user?.id && ['founder', 'admin'].includes(m.role))}
+          canCreateEvent={
+            isOwner ||
+            members.some(m => m.user_id === user?.id && ['founder', 'admin'].includes(m.role))
+          }
         />
       </TabsContent>
 

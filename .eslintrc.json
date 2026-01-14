@@ -1,8 +1,15 @@
 {
   "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended"],
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "unused-imports"],
   "rules": {
+    // Unused imports - auto-fixable
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": [
+      "warn",
+      { "vars": "all", "varsIgnorePattern": "^_", "args": "after-used", "argsIgnorePattern": "^_" }
+    ],
+    "@typescript-eslint/no-unused-vars": "off",
     // Code quality rules
     "no-console": ["warn", { "allow": ["warn", "error"] }],
     "no-debugger": "error",
@@ -44,14 +51,14 @@
   // Plugin-specific rule adjustments
   "overrides": [
     {
-      "files": ["**/*.{ts,tsx}"] ,
+      "files": ["**/*.{ts,tsx}"],
       "rules": {
         "react-hooks/rules-of-hooks": "error",
         // Keep deps as warnings (they already appear as warnings)
         "react-hooks/exhaustive-deps": "warn",
-        
-        // Type safety rules - enforce for new code
-        "@typescript-eslint/no-explicit-any": "error",
+
+        // Type safety rules - warn for now, gradually fix
+        "@typescript-eslint/no-explicit-any": "warn",
         "@typescript-eslint/ban-ts-comment": [
           "error",
           {

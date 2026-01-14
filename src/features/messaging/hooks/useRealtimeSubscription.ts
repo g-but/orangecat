@@ -1,9 +1,9 @@
 /**
  * Unified Realtime Subscription Hook
- * 
+ *
  * Consolidates common realtime subscription patterns to eliminate DRY violations.
  * Provides a reusable pattern for subscribing to Supabase realtime changes.
- * 
+ *
  * Created: 2025-01-28
  * Last Modified: 2025-01-28
  * Last Modified Summary: Created unified hook to eliminate subscription logic duplication
@@ -13,7 +13,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 import supabase from '@/lib/supabase/browser';
-import { CHANNELS, TIMING, debugLog } from '../lib/constants';
+import { TIMING, debugLog } from '../lib/constants';
 
 export interface RealtimeSubscriptionConfig {
   /** Channel name (use CHANNELS constants) */
@@ -36,7 +36,7 @@ export interface RealtimeSubscriptionConfig {
 
 /**
  * Unified hook for realtime subscriptions
- * 
+ *
  * @example
  * ```tsx
  * useRealtimeSubscription({
@@ -159,6 +159,3 @@ export function useRealtimeSubscription(config: RealtimeSubscriptionConfig) {
     isSubscribed: isSetupRef.current && channelRef.current !== null,
   };
 }
-
-
-

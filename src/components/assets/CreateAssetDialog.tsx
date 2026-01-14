@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -43,6 +42,3 @@ export function CreateAssetDialog({ open, onOpenChange, onAssetCreated }: Create
     </Dialog>
   );
 }
-
-
-

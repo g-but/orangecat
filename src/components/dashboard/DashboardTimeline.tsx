@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { CardDescription, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import TimelineComponent from '@/components/timeline/TimelineComponent';
 import TimelineComposer from '@/components/timeline/TimelineComposer';

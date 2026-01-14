@@ -3,7 +3,6 @@ import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { projectSchema } from '@/lib/validation';
-import { createServerClient } from '@/lib/supabase/server';
 import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
 import { getPagination } from '@/lib/api/query';
 import { listProjectsPage, createProject } from '@/domain/projects/service';

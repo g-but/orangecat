@@ -16,9 +16,7 @@ import type { GroupResponse } from '../types';
 import { TABLES, getDefaultsForLabel } from '../constants';
 import { getCurrentUserId, generateSlug, ensureUniqueSlug } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
-import type { GroupLabel } from '@/config/group-labels';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
 
 // Type alias for any SupabaseClient (accepts any database schema)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
@@ -42,7 +40,8 @@ export async function createGroup(
     }
 
     // Generate slug if not provided
-    const slug = input.slug || (await ensureUniqueSlug(generateSlug(input.name), undefined, supabaseClient));
+    const slug =
+      input.slug || (await ensureUniqueSlug(generateSlug(input.name), undefined, supabaseClient));
 
     // Get config-based defaults for this label
     const label = input.label || 'circle';
@@ -67,8 +66,7 @@ export async function createGroup(
     };
 
     // Insert into groups table
-    const { data, error } = await (supabaseClient
-      .from(TABLES.groups) as any)
+    const { data, error } = await (supabaseClient.from(TABLES.groups) as any)
       .insert(payload)
       .select()
       .single();
@@ -102,7 +100,14 @@ export async function createGroup(
     }
 
     // Log activity
-    await logGroupActivity(data.id, currentUserId, 'created_group', 'Created the group', undefined, supabaseClient);
+    await logGroupActivity(
+      data.id,
+      currentUserId,
+      'created_group',
+      'Created the group',
+      undefined,
+      supabaseClient
+    );
 
     logger.info('Group created', { groupId: data.id, label }, 'Groups');
 
@@ -136,24 +141,47 @@ export async function updateGroup(
     // Build update payload
     const payload: Record<string, unknown> = {};
 
-    if (input.name !== undefined) {payload.name = input.name;}
+    if (input.name !== undefined) {
+      payload.name = input.name;
+    }
     if (input.slug !== undefined) {
       payload.slug = await ensureUniqueSlug(input.slug, groupId);
     }
-    if (input.description !== undefined) {payload.description = input.description;}
-    if (input.label !== undefined) {payload.label = input.label;}
-    if (input.tags !== undefined) {payload.tags = input.tags;}
-    if (input.avatar_url !== undefined) {payload.avatar_url = input.avatar_url;}
-    if (input.banner_url !== undefined) {payload.banner_url = input.banner_url;}
-    if (input.is_public !== undefined) {payload.is_public = input.is_public;}
-    if (input.visibility !== undefined) {payload.visibility = input.visibility;}
-    if (input.bitcoin_address !== undefined) {payload.bitcoin_address = input.bitcoin_address;}
-    if (input.lightning_address !== undefined) {payload.lightning_address = input.lightning_address;}
-    if (input.governance_preset !== undefined) {payload.governance_preset = input.governance_preset;}
-    if (input.voting_threshold !== undefined) {payload.voting_threshold = input.voting_threshold;}
+    if (input.description !== undefined) {
+      payload.description = input.description;
+    }
+    if (input.label !== undefined) {
+      payload.label = input.label;
+    }
+    if (input.tags !== undefined) {
+      payload.tags = input.tags;
+    }
+    if (input.avatar_url !== undefined) {
+      payload.avatar_url = input.avatar_url;
+    }
+    if (input.banner_url !== undefined) {
+      payload.banner_url = input.banner_url;
+    }
+    if (input.is_public !== undefined) {
+      payload.is_public = input.is_public;
+    }
+    if (input.visibility !== undefined) {
+      payload.visibility = input.visibility;
+    }
+    if (input.bitcoin_address !== undefined) {
+      payload.bitcoin_address = input.bitcoin_address;
+    }
+    if (input.lightning_address !== undefined) {
+      payload.lightning_address = input.lightning_address;
+    }
+    if (input.governance_preset !== undefined) {
+      payload.governance_preset = input.governance_preset;
+    }
+    if (input.voting_threshold !== undefined) {
+      payload.voting_threshold = input.voting_threshold;
+    }
 
-    const { data, error } = await (supabase
-      .from(TABLES.groups) as any)
+    const { data, error } = await (supabase.from(TABLES.groups) as any)
       .update(payload)
       .eq('id', groupId)
       .select()
@@ -185,7 +213,10 @@ export async function deleteGroup(groupId: string): Promise<{ success: boolean; 
     const { canPerformAction } = await import('../permissions/resolver');
     const permResult = await canPerformAction(userId, groupId, 'delete_group');
     if (!permResult.allowed) {
-      return { success: false, error: permResult.reason || 'Only group founders can delete groups' };
+      return {
+        success: false,
+        error: permResult.reason || 'Only group founders can delete groups',
+      };
     }
 
     const { error } = await (supabase.from(TABLES.groups) as any).delete().eq('id', groupId);
@@ -202,4 +233,3 @@ export async function deleteGroup(groupId: string): Promise<{ success: boolean; 
     return { success: false, error: 'Failed to delete group' };
   }
 }
-

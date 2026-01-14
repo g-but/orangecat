@@ -8,7 +8,7 @@
  * @module messaging/MessageView/MessageList
  */
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef } from 'react';
 import { ChevronUp, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import MessageItem, { shouldShowDateDivider, getDateDividerText } from './MessageItem';

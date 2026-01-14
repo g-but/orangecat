@@ -1,5 +1,4 @@
 import React from 'react';
-import Link from 'next/link';
 import { Metadata } from 'next';
 import {
   Wallet,
@@ -9,15 +8,15 @@ import {
   Shield,
   Clock,
   CheckCircle,
-  AlertTriangle,
   Plus,
   Send,
-  Download
+  Download,
 } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Organization Treasury - OrangeCat',
-  description: 'Manage your organization\'s multi-signature Bitcoin treasury with transparent governance.',
+  description:
+    "Manage your organization's multi-signature Bitcoin treasury with transparent governance.",
 };
 
 interface TreasuryPageProps {
@@ -36,7 +35,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
     multiSig: '3-of-5',
     signers: 5,
     pendingTransactions: 2,
-    monthlySpending: '₿ 8.5'
+    monthlySpending: '₿ 8.5',
   };
 
   const signers = [
@@ -44,7 +43,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
     { name: 'Maria Rodriguez', role: 'Founder', status: 'active', lastActive: '1 hour ago' },
     { name: 'David Kim', role: 'Founder', status: 'active', lastActive: '30 min ago' },
     { name: 'Sarah Johnson', role: 'Employee', status: 'active', lastActive: '4 hours ago' },
-    { name: 'Mike Chen', role: 'Employee', status: 'inactive', lastActive: '2 days ago' }
+    { name: 'Mike Chen', role: 'Employee', status: 'inactive', lastActive: '2 days ago' },
   ];
 
   const transactions = [
@@ -56,7 +55,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
       status: 'confirmed',
       date: '2025-12-20',
       confirmations: 6,
-      signers: '3/3'
+      signers: '3/3',
     },
     {
       id: 'tx-002',
@@ -66,7 +65,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
       status: 'confirmed',
       date: '2025-12-18',
       confirmations: 12,
-      signers: '3/3'
+      signers: '3/3',
     },
     {
       id: 'tx-003',
@@ -76,7 +75,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
       status: 'pending',
       date: '2025-12-15',
       confirmations: 0,
-      signers: '2/3'
+      signers: '2/3',
     },
     {
       id: 'tx-004',
@@ -86,15 +85,15 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
       status: 'confirmed',
       date: '2025-12-14',
       confirmations: 8,
-      signers: '3/3'
-    }
+      signers: '3/3',
+    },
   ];
 
   const spendingLimits = [
     { category: 'Operations', limit: '₿ 5.0', used: '₿ 2.1', period: 'Daily' },
     { category: 'Salaries', limit: '₿ 15.0', used: '₿ 12.8', period: 'Monthly' },
     { category: 'Investments', limit: '₿ 50.0', used: '₿ 0.0', period: 'Quarterly' },
-    { category: 'Legal', limit: '₿ 10.0', used: '₿ 3.2', period: 'Monthly' }
+    { category: 'Legal', limit: '₿ 10.0', used: '₿ 3.2', period: 'Monthly' },
   ];
 
   return (
@@ -176,7 +175,9 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">Authorized Signers</h2>
-          <p className="text-sm text-gray-600">Multi-signature wallet requires 3 of 5 signers for transactions</p>
+          <p className="text-sm text-gray-600">
+            Multi-signature wallet requires 3 of 5 signers for transactions
+          </p>
         </div>
 
         <div className="overflow-x-auto">
@@ -207,7 +208,10 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
                     <div className="flex items-center">
                       <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
                         <span className="text-sm font-medium text-gray-600">
-                          {signer.name.split(' ').map(n => n[0]).join('')}
+                          {signer.name
+                            .split(' ')
+                            .map(n => n[0])
+                            .join('')}
                         </span>
                       </div>
                       <div className="ml-4">
@@ -216,20 +220,24 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      signer.role === 'Founder'
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        signer.role === 'Founder'
+                          ? 'bg-purple-100 text-purple-800'
+                          : 'bg-blue-100 text-blue-800'
+                      }`}
+                    >
                       {signer.role}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      signer.status === 'active'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        signer.status === 'active'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
                       {signer.status}
                     </span>
                   </td>
@@ -237,12 +245,8 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
                     {signer.lastActive}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-orange-600 hover:text-orange-900 mr-4">
-                      Replace
-                    </button>
-                    <button className="text-red-600 hover:text-red-900">
-                      Remove
-                    </button>
+                    <button className="text-orange-600 hover:text-orange-900 mr-4">Replace</button>
+                    <button className="text-red-600 hover:text-red-900">Remove</button>
                   </td>
                 </tr>
               ))}
@@ -255,7 +259,9 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">Spending Limits</h2>
-          <p className="text-sm text-gray-600">Automated controls to prevent unauthorized spending</p>
+          <p className="text-sm text-gray-600">
+            Automated controls to prevent unauthorized spending
+          </p>
         </div>
 
         <div className="p-6">
@@ -269,19 +275,28 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
                   </div>
                   <div className="text-right">
                     <div className="text-sm text-gray-500">Used / Limit</div>
-                    <div className="font-medium">{limit.used} / {limit.limit}</div>
+                    <div className="font-medium">
+                      {limit.used} / {limit.limit}
+                    </div>
                   </div>
                 </div>
 
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-orange-600 h-2 rounded-full"
-                    style={{ width: `${(parseFloat(limit.used.replace('₿ ', '')) / parseFloat(limit.limit.replace('₿ ', ''))) * 100}%` }}
+                    style={{
+                      width: `${(parseFloat(limit.used.replace('₿ ', '')) / parseFloat(limit.limit.replace('₿ ', ''))) * 100}%`,
+                    }}
                   ></div>
                 </div>
 
                 <div className="mt-2 text-xs text-gray-500">
-                  {((parseFloat(limit.used.replace('₿ ', '')) / parseFloat(limit.limit.replace('₿ ', ''))) * 100).toFixed(1)}% utilized
+                  {(
+                    (parseFloat(limit.used.replace('₿ ', '')) /
+                      parseFloat(limit.limit.replace('₿ ', ''))) *
+                    100
+                  ).toFixed(1)}
+                  % utilized
                 </div>
               </div>
             ))}
@@ -293,7 +308,9 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">Transaction History</h2>
-          <p className="text-sm text-gray-600">All treasury transactions with multi-sig confirmations</p>
+          <p className="text-sm text-gray-600">
+            All treasury transactions with multi-sig confirmations
+          </p>
         </div>
 
         <div className="overflow-x-auto">
@@ -321,13 +338,15 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {transactions.map((tx) => (
+              {transactions.map(tx => (
                 <tr key={tx.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        tx.type === 'incoming' ? 'bg-green-100' : 'bg-red-100'
-                      }`}>
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          tx.type === 'incoming' ? 'bg-green-100' : 'bg-red-100'
+                        }`}
+                      >
                         {tx.type === 'incoming' ? (
                           <ArrowDownLeft className="w-4 h-4 text-green-600" />
                         ) : (
@@ -341,11 +360,13 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      tx.type === 'incoming'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        tx.type === 'incoming'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
                       {tx.type}
                     </span>
                   </td>
@@ -353,11 +374,13 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
                     {tx.amount}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                      tx.status === 'confirmed'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span
+                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                        tx.status === 'confirmed'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}
+                    >
                       {tx.status === 'confirmed' && <CheckCircle className="w-3 h-3 mr-1" />}
                       {tx.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
                       {tx.status}
@@ -366,9 +389,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {tx.signers}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {tx.date}
-                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.date}</td>
                 </tr>
               ))}
             </tbody>
@@ -409,6 +430,3 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
     </div>
   );
 }
-
-
-

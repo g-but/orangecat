@@ -7,10 +7,7 @@ import {
   Smartphone,
   Monitor,
   Globe,
-  Lock,
   Shield,
-  Zap,
-  Users,
   Eye,
   EyeOff,
   Star,
@@ -18,7 +15,6 @@ import {
   AlertTriangle,
   Download,
   ExternalLink,
-  TrendingUp,
   Award,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';

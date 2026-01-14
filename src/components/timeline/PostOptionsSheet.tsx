@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import BottomSheet from '@/components/ui/BottomSheet';
-import Button from '@/components/ui/Button';
 import { Globe, Lock, ChevronDown, Check } from 'lucide-react';
 import { usePostComposer } from '@/hooks/usePostComposerNew';
 

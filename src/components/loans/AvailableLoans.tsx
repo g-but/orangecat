@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
 import { Progress } from '@/components/ui/progress';
-import { DollarSign, Percent, Target, TrendingUp, User, MessageSquare } from 'lucide-react';
+import { Percent, Target, User, MessageSquare } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { MakeOfferDialog } from './MakeOfferDialog';
 import { formatCurrency } from '@/services/currency';
@@ -24,7 +24,9 @@ export function AvailableLoans({ loans, onOfferMade }: AvailableLoansProps) {
 
   const formatLoanAmount = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
     // Validate currency and fallback to platform default
-    const validCurrency = (CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY) as CurrencyCode;
+    const validCurrency = (
+      CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY
+    ) as CurrencyCode;
     return formatCurrency(amount, validCurrency);
   };
 

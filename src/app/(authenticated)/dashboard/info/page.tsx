@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
-import { useAuthStore } from '@/stores/auth';
 import Loading from '@/components/Loading';
 import { isLocationHidden, getLocationGroupLabel } from '@/lib/location-privacy';
 import { Profile } from '@/types/database';
@@ -18,23 +17,12 @@ import {
   Mail,
   Phone,
   Calendar,
-  Shield,
-  CheckCircle2,
   ExternalLink,
-  Twitter,
-  Github,
-  Instagram,
-  Facebook,
-  Linkedin,
-  Youtube,
-  Heart,
-  MessageCircle,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
 import { SocialLinksDisplay } from '@/components/profile/SocialLinksDisplay';
 import { SocialLink } from '@/types/social';
-import { normalizeSocialUrl } from '@/lib/utils';
 
 /**
  * Dashboard Info Page - VIEW MODE

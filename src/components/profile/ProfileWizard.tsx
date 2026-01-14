@@ -1,7 +1,7 @@
 'use client';
 import { logger } from '@/utils/logger';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -17,7 +17,6 @@ import {
   Star,
 } from 'lucide-react';
 import { LocationInput } from '@/components/ui/LocationInput';
-import { WalletManager } from '@/components/wallets/WalletManager';
 
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -35,7 +34,6 @@ import {
 import { Profile } from '@/types/profile';
 import { ProfileFormData } from '@/types/database';
 import { profileSchema } from '@/lib/validation';
-import { ProfileImagesSection } from './ProfileImagesSection';
 
 // Use the schema-inferred type for type safety
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -104,7 +102,11 @@ export default function ProfileWizard({
     resolver: zodResolver(profileSchema),
     mode: 'onChange',
     defaultValues: {
-      username: profile.username || (typeof userEmail === 'string' && userEmail.includes('@') ? userEmail.split('@')[0] : userEmail || ''),
+      username:
+        profile.username ||
+        (typeof userEmail === 'string' && userEmail.includes('@')
+          ? userEmail.split('@')[0]
+          : userEmail || ''),
       name: profile.name || '',
       bio: profile.bio || '',
       location_country: profile.location_country || '',

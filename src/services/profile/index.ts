@@ -1,13 +1,13 @@
 /**
  * PROFILE SERVICE - MODULAR ARCHITECTURE
- * 
+ *
  * Created: 2025-01-09
  * Last Modified: 2025-01-09
  * Last Modified Summary: ✅ REFACTORED from 808-line monolith to modular architecture - Option A Phase 1 Complete
- * 
+ *
  * BEFORE: 808 lines in single file (102% over 400-line limit)
  * AFTER: 6 focused modules with single responsibilities
- * 
+ *
  * Architecture Benefits:
  * - Single Responsibility Principle
  * - Better testability
@@ -21,7 +21,7 @@ export type {
   ScalableProfile,
   ScalableProfileFormData,
   ProfileAnalytics,
-  ProfileServiceResponse
+  ProfileServiceResponse,
 } from './types';
 
 // Export all modules
@@ -33,24 +33,30 @@ export { ProfileWriter } from './writer';
 import supabase from '@/lib/supabase/browser';
 import { ProfileReader } from './reader';
 import { ProfileWriter } from './writer';
-import type { ScalableProfile, ScalableProfileFormData, ProfileAnalytics, ProfileServiceResponse } from './types';
-import { logger } from '@/utils/logger';
+import type {
+  ScalableProfile,
+  ScalableProfileFormData,
+  ProfileAnalytics,
+  ProfileServiceResponse,
+} from './types';
 
 export class ProfileService {
   // =====================================================================
   // 📖 READ OPERATIONS
   // =====================================================================
-  
+
   static async getProfile(userId: string): Promise<ScalableProfile | null> {
     return ProfileReader.getProfile(userId);
   }
 
-  static async getProfiles(options: {
-    limit?: number;
-    offset?: number;
-    orderBy?: string;
-    orderDirection?: 'asc' | 'desc';
-  } = {}): Promise<ScalableProfile[]> {
+  static async getProfiles(
+    options: {
+      limit?: number;
+      offset?: number;
+      orderBy?: string;
+      orderDirection?: 'asc' | 'desc';
+    } = {}
+  ): Promise<ScalableProfile[]> {
     return ProfileReader.getProfiles(options);
   }
 
@@ -112,17 +118,17 @@ export class ProfileService {
 
   static async updatePassword(newPassword: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const result = await supabase.auth.updateUser({ password: newPassword })
+      const result = await supabase.auth.updateUser({ password: newPassword });
 
       if (result && result.error) {
-        return { success: false, error: result.error.message || String(result.error) }
+        return { success: false, error: result.error.message || String(result.error) };
       }
 
-      return { success: true }
+      return { success: true };
     } catch (err) {
       // Network/authentication or other runtime errors
-      const message = (err as Error)?.message || 'Unexpected error'
-      return { success: false, error: message }
+      const message = (err as Error)?.message || 'Unexpected error';
+      return { success: false, error: message };
     }
   }
-} 
+}

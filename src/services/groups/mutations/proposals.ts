@@ -4,7 +4,6 @@ import { TABLES } from '../constants';
 import { canPerformAction } from '../permissions/resolver';
 import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { getProposal } from '../queries/proposals';
-import { executeProposalAction } from '../execution';
 
 export interface CreateProposalInput {
   group_id: string;
@@ -22,7 +21,9 @@ export interface CreateProposalInput {
 export async function createProposal(input: CreateProposalInput) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) {return { success: false, error: 'Authentication required' };}
+    if (!userId) {
+      return { success: false, error: 'Authentication required' };
+    }
 
     const permResult = await canPerformAction(userId, input.group_id, 'create_proposal');
     if (!permResult.allowed) {
@@ -39,8 +40,7 @@ export async function createProposal(input: CreateProposalInput) {
       return { success: false, error: 'Description must be 5000 characters or less' };
     }
 
-    const { data, error } = await (supabase
-      .from(TABLES.group_proposals) as any)
+    const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
       .insert({
         group_id: input.group_id,
         proposer_id: userId,
@@ -73,7 +73,9 @@ export async function createProposal(input: CreateProposalInput) {
 export async function activateProposal(proposalId: string) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) {return { success: false, error: 'Authentication required' };}
+    if (!userId) {
+      return { success: false, error: 'Authentication required' };
+    }
 
     const proposalResult = await getProposal(proposalId);
     if (!proposalResult.success || !proposalResult.proposal) {
@@ -100,8 +102,7 @@ export async function activateProposal(proposalId: string) {
 
     const threshold = proposal.voting_threshold || 50;
 
-    const { data, error } = await (supabase
-      .from(TABLES.group_proposals) as any)
+    const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
       .update({
         status: 'active',
         voting_starts_at: votingStartsAt.toISOString(),
@@ -141,7 +142,9 @@ export async function updateProposal(
 ) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) {return { success: false, error: 'Authentication required' };}
+    if (!userId) {
+      return { success: false, error: 'Authentication required' };
+    }
 
     const proposalResult = await getProposal(proposalId);
     if (!proposalResult.success || !proposalResult.proposal) {
@@ -171,15 +174,16 @@ export async function updateProposal(
     ] as const;
 
     for (const key of fields) {
-      if ((updates as any)[key] !== undefined) {(payload as any)[key] = (updates as any)[key];}
+      if ((updates as any)[key] !== undefined) {
+        (payload as any)[key] = (updates as any)[key];
+      }
     }
 
     if (payload.title && payload.title.trim().length === 0) {
       return { success: false, error: 'Title is required' };
     }
 
-    const { data, error } = await (supabase
-      .from(TABLES.group_proposals) as any)
+    const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
       .update({ ...payload, updated_at: new Date().toISOString() })
       .eq('id', proposalId)
       .select()
@@ -200,7 +204,9 @@ export async function updateProposal(
 export async function deleteProposal(proposalId: string) {
   try {
     const userId = await getCurrentUserId();
-    if (!userId) {return { success: false, error: 'Authentication required' };}
+    if (!userId) {
+      return { success: false, error: 'Authentication required' };
+    }
 
     const proposalResult = await getProposal(proposalId);
     if (!proposalResult.success || !proposalResult.proposal) {
@@ -216,7 +222,9 @@ export async function deleteProposal(proposalId: string) {
       return { success: false, error: 'Only the proposer can delete the proposal' };
     }
 
-    const { error } = await (supabase.from(TABLES.group_proposals) as any).delete().eq('id', proposalId);
+    const { error } = await (supabase.from(TABLES.group_proposals) as any)
+      .delete()
+      .eq('id', proposalId);
     if (error) {
       logger.error('Failed to delete proposal', error, 'Groups');
       return { success: false, error: error.message };
@@ -228,4 +236,3 @@ export async function deleteProposal(proposalId: string) {
     return { success: false, error: 'Failed to delete proposal' };
   }
 }
-

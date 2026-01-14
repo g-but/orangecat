@@ -8,7 +8,7 @@
  * Last Modified Summary: Initial organization configuration
  */
 
-import { Building2, Users, Globe, Bitcoin } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import { organizationSchema, type OrganizationFormData } from '@/lib/validation';
 import {
   organizationGuidanceContent,
@@ -47,7 +47,11 @@ const fieldGroups: FieldGroup[] = [
         type: 'select',
         required: true,
         options: [
-          { value: 'community', label: 'Community', description: 'Grassroots community organization' },
+          {
+            value: 'community',
+            label: 'Community',
+            description: 'Grassroots community organization',
+          },
           { value: 'collective', label: 'Collective', description: 'Worker-owned cooperative' },
           { value: 'dao', label: 'DAO', description: 'Decentralized Autonomous Organization' },
           { value: 'company', label: 'Company', description: 'Traditional business structure' },
@@ -68,7 +72,7 @@ const fieldGroups: FieldGroup[] = [
         name: 'description',
         label: 'Description',
         type: 'textarea',
-        placeholder: 'Describe your organization\'s mission and activities...',
+        placeholder: "Describe your organization's mission and activities...",
         rows: 4,
         colSpan: 2,
         hint: 'What does your organization do? Who are your members?',
@@ -85,7 +89,7 @@ const fieldGroups: FieldGroup[] = [
         label: 'Website',
         type: 'url',
         placeholder: 'https://your-organization.com',
-        hint: 'Optional: Your organization\'s website URL',
+        hint: "Optional: Your organization's website URL",
       },
       {
         name: 'governance_model',
@@ -93,14 +97,34 @@ const fieldGroups: FieldGroup[] = [
         type: 'select',
         required: true,
         options: [
-          { value: 'hierarchical', label: 'Hierarchical', description: 'Traditional top-down structure' },
+          {
+            value: 'hierarchical',
+            label: 'Hierarchical',
+            description: 'Traditional top-down structure',
+          },
           { value: 'flat', label: 'Flat', description: 'Equal participation' },
           { value: 'democratic', label: 'Democratic', description: 'Voting-based decisions' },
           { value: 'consensus', label: 'Consensus', description: 'Unanimous agreement required' },
-          { value: 'liquid_democracy', label: 'Liquid Democracy', description: 'Delegated voting system' },
-          { value: 'quadratic_voting', label: 'Quadratic Voting', description: 'Cost-scaled voting' },
-          { value: 'stake_weighted', label: 'Stake Weighted', description: 'Voting power based on stake' },
-          { value: 'reputation_based', label: 'Reputation Based', description: 'Voting power based on reputation' },
+          {
+            value: 'liquid_democracy',
+            label: 'Liquid Democracy',
+            description: 'Delegated voting system',
+          },
+          {
+            value: 'quadratic_voting',
+            label: 'Quadratic Voting',
+            description: 'Cost-scaled voting',
+          },
+          {
+            value: 'stake_weighted',
+            label: 'Stake Weighted',
+            description: 'Voting power based on stake',
+          },
+          {
+            value: 'reputation_based',
+            label: 'Reputation Based',
+            description: 'Voting power based on reputation',
+          },
         ],
       },
     ],
@@ -134,7 +158,7 @@ const fieldGroups: FieldGroup[] = [
         label: 'Bitcoin Treasury Address',
         type: 'bitcoin_address',
         placeholder: 'bc1q... or 1...',
-        hint: 'Primary Bitcoin address for your organization\'s treasury',
+        hint: "Primary Bitcoin address for your organization's treasury",
       },
       {
         name: 'lightning_address',
@@ -168,9 +192,10 @@ export const organizationConfig: EntityConfig<OrganizationFormData> = {
 
   // UI configuration
   pageTitle: 'Create Organization',
-  pageDescription: 'Form a new Bitcoin-powered organization with governance and treasury management.',
+  pageDescription:
+    'Form a new Bitcoin-powered organization with governance and treasury management.',
   formTitle: 'Organization Details',
-  formDescription: 'Set up your organization\'s basic information',
+  formDescription: "Set up your organization's basic information",
 
   // Form configuration
   fieldGroups,
@@ -202,24 +227,3 @@ export const organizationConfig: EntityConfig<OrganizationFormData> = {
   // Success messaging
   successMessage: 'Organization created successfully!',
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

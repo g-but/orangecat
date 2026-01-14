@@ -1,7 +1,7 @@
 'use client';
 
 import { Control } from 'react-hook-form';
-import { User, Sparkles, Bitcoin, Zap, Globe } from 'lucide-react';
+import { Sparkles, Bitcoin, Zap, Globe } from 'lucide-react';
 import {
   FormControl,
   FormDescription,
@@ -16,12 +16,20 @@ import type { ProfileFormValues } from './types';
 
 // Extract only string/null keys from ProfileFormValues for text field usage
 // Use NonNullable to exclude undefined from the resulting union type
-type TextFieldKeys = NonNullable<{
-  [K in keyof ProfileFormValues]: ProfileFormValues[K] extends string | null | undefined ? K : never;
-}[keyof ProfileFormValues]>;
+type TextFieldKeys = NonNullable<
+  {
+    [K in keyof ProfileFormValues]: ProfileFormValues[K] extends string | null | undefined
+      ? K
+      : never;
+  }[keyof ProfileFormValues]
+>;
 
 // Define a more permissive type for the name prop to satisfy react-hook-form's FieldPath
-type TextFieldName = TextFieldKeys | `social_links.links.${number}.platform` | `social_links.links.${number}.label` | `social_links.links.${number}.value`;
+type TextFieldName =
+  | TextFieldKeys
+  | `social_links.links.${number}.platform`
+  | `social_links.links.${number}.label`
+  | `social_links.links.${number}.value`;
 
 interface BaseFieldProps {
   control: Control<ProfileFormValues>;
@@ -92,7 +100,9 @@ export function ProfileTextField({
             {showCharCount && maxLength && (
               <span
                 className={
-                  ((field.value as string)?.length ?? 0) > maxLength * 0.9 ? 'text-orange-500 font-semibold' : ''
+                  ((field.value as string)?.length ?? 0) > maxLength * 0.9
+                    ? 'text-orange-500 font-semibold'
+                    : ''
                 }
               >
                 {(field.value as string)?.length || 0}/{maxLength}
@@ -190,7 +200,9 @@ export function BioField({ control }: { control: Control<ProfileFormValues> }) {
           </FormControl>
           <FormDescription className="flex justify-between">
             <span>Share your awesome story with the community!</span>
-            <span className={(field.value?.length ?? 0) > 450 ? 'text-orange-500 font-semibold' : ''}>
+            <span
+              className={(field.value?.length ?? 0) > 450 ? 'text-orange-500 font-semibold' : ''}
+            >
               {field.value?.length ?? 0}/500
             </span>
           </FormDescription>
@@ -214,7 +226,12 @@ export function BitcoinAddressField({ control }: { control: Control<ProfileFormV
             Bitcoin Address
           </FormLabel>
           <FormControl>
-            <Input placeholder="bc1..." className="font-mono text-sm" {...field} value={field.value ?? ''} />
+            <Input
+              placeholder="bc1..."
+              className="font-mono text-sm"
+              {...field}
+              value={field.value ?? ''}
+            />
           </FormControl>
           <FormDescription className="text-xs text-gray-500">
             Your on-chain Bitcoin address (starts with bc1, 1, or 3)
@@ -239,7 +256,12 @@ export function LightningAddressField({ control }: { control: Control<ProfileFor
             Lightning Address
           </FormLabel>
           <FormControl>
-            <Input placeholder="you@getalby.com" className="font-mono text-sm" {...field} value={field.value ?? ''} />
+            <Input
+              placeholder="you@getalby.com"
+              className="font-mono text-sm"
+              {...field}
+              value={field.value ?? ''}
+            />
           </FormControl>
           <FormDescription className="text-xs text-gray-500">
             Your Lightning Network address (email format)
@@ -264,7 +286,11 @@ export function WebsiteField({ control }: { control: Control<ProfileFormValues> 
             Website
           </FormLabel>
           <FormControl>
-            <Input placeholder="orangecat.ch or https://your-website.com" {...field} value={field.value ?? ''} />
+            <Input
+              placeholder="orangecat.ch or https://your-website.com"
+              {...field}
+              value={field.value ?? ''}
+            />
           </FormControl>
           <FormDescription className="text-xs text-gray-500">
             Your personal website or portfolio

@@ -2,7 +2,7 @@
 
 import { ScalableProfile } from '@/types/database';
 import { Card, CardHeader, CardContent } from '@/components/ui/Card';
-import { User, MapPin, Globe, Calendar, Bitcoin, Zap, Mail, Phone } from 'lucide-react';
+import { User, Globe, Calendar, Mail, Phone } from 'lucide-react';
 import { SocialLinksDisplay } from './SocialLinksDisplay';
 import { SocialLink } from '@/types/social';
 

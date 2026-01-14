@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, ArrowLeft, Lightbulb } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 type TopicId = 'main' | 'evaluate' | 'profile' | 'project' | 'bitcoin';
 

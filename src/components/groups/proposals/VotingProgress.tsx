@@ -12,7 +12,7 @@
 
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { CheckCircle2, XCircle, Minus } from 'lucide-react';
+import { CheckCircle2, XCircle } from 'lucide-react';
 
 interface VotingProgressProps {
   votingResults: {
@@ -29,17 +29,19 @@ interface VotingProgressProps {
 
 export function VotingProgress({ votingResults, threshold, totalMembers }: VotingProgressProps) {
   // Calculate yes_percentage if not provided
-  const yesPercentage = votingResults.yes_percentage ??
+  const yesPercentage =
+    votingResults.yes_percentage ??
     (votingResults.total_voting_power > 0
       ? (votingResults.yes_votes / votingResults.total_voting_power) * 100
       : 0);
 
   // Calculate has_passed if not provided
-  const hasPassed = votingResults.has_passed ?? (yesPercentage >= threshold);
+  const hasPassed = votingResults.has_passed ?? yesPercentage >= threshold;
 
-  const noPercentage = votingResults.total_voting_power > 0
-    ? (votingResults.no_votes / votingResults.total_voting_power) * 100
-    : 0;
+  const noPercentage =
+    votingResults.total_voting_power > 0
+      ? (votingResults.no_votes / votingResults.total_voting_power) * 100
+      : 0;
 
   const participationRate = totalMembers
     ? (votingResults.total_voting_power / totalMembers) * 100
@@ -117,7 +119,8 @@ export function VotingProgress({ votingResults, threshold, totalMembers }: Votin
             </p>
           ) : (
             <p className="text-xs text-gray-500 mt-1">
-              Need {((threshold - yesPercentage) / 100) * votingResults.total_voting_power} more Yes votes
+              Need {((threshold - yesPercentage) / 100) * votingResults.total_voting_power} more Yes
+              votes
             </p>
           )}
         </div>
@@ -125,4 +128,3 @@ export function VotingProgress({ votingResults, threshold, totalMembers }: Votin
     </Card>
   );
 }
-

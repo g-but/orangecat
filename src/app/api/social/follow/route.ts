@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';

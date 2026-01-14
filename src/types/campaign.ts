@@ -1,15 +1,13 @@
 /**
  * Campaign Types - Proper TypeScript Definitions
- * 
+ *
  * Replaces 'any' types in Campaign services with proper type definitions
  * for form data, API responses, and project operations
- * 
+ *
  * Created: 2025-06-08
  * Last Modified: 2025-06-08
  * Last Modified Summary: Initial creation of Campaign types for TypeScript cleanup
  */
-
-import type { FormValue, SupabaseResponse } from '@/types/common'
 
 // ==================== CAMPAIGN FORM DATA ====================
 
@@ -19,42 +17,42 @@ import type { FormValue, SupabaseResponse } from '@/types/common'
  */
 export interface CampaignFormData {
   // Basic Information
-  title: string
-  description: string
-  category: string
-  
+  title: string;
+  description: string;
+  category: string;
+
   // Financial Details
-  goal: number
-  currency: 'BTC' | 'USD'
-  
+  goal: number;
+  currency: 'BTC' | 'USD';
+
   // Bitcoin Details
-  bitcoin_address?: string
-  
+  bitcoin_address?: string;
+
   // Media
-  image_url?: string
-  banner_url?: string
-  
+  image_url?: string;
+  banner_url?: string;
+
   // Campaign Settings
-  duration_days?: number
-  is_public: boolean
-  
+  duration_days?: number;
+  is_public: boolean;
+
   // Optional Fields
-  tags?: string[]
-  location?: string
-  website_url?: string
+  tags?: string[];
+  location?: string;
+  website_url?: string;
   social_links?: {
-    twitter?: string
-    facebook?: string
-    instagram?: string
-    linkedin?: string
-  }
-  
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+    linkedin?: string;
+  };
+
   // Rich Content
-  story?: string
-  
+  story?: string;
+
   // Metadata
-  created_at?: string
-  updated_at?: string
+  created_at?: string;
+  updated_at?: string;
 }
 
 /**
@@ -62,26 +60,26 @@ export interface CampaignFormData {
  * Replaces: draftData: any
  */
 export interface CampaignDraftData {
-  title?: string
-  description?: string
-  category?: string
-  categories?: string[] // Array format used in actual code
-  goal?: number
-  goal_amount?: number | string // Used in actual code
-  currency?: 'BTC' | 'USD'
-  bitcoin_address?: string
-  lightning_address?: string // Used in actual code
-  image_url?: string
-  banner_url?: string
-  duration_days?: number
-  is_public?: boolean
-  tags?: string[]
-  location?: string
-  website_url?: string
-  social_links?: CampaignFormData['social_links']
-  story?: string
-  current_step?: number
-  last_saved?: string
+  title?: string;
+  description?: string;
+  category?: string;
+  categories?: string[]; // Array format used in actual code
+  goal?: number;
+  goal_amount?: number | string; // Used in actual code
+  currency?: 'BTC' | 'USD';
+  bitcoin_address?: string;
+  lightning_address?: string; // Used in actual code
+  image_url?: string;
+  banner_url?: string;
+  duration_days?: number;
+  is_public?: boolean;
+  tags?: string[];
+  location?: string;
+  website_url?: string;
+  social_links?: CampaignFormData['social_links'];
+  story?: string;
+  current_step?: number;
+  last_saved?: string;
 }
 
 /**
@@ -90,13 +88,13 @@ export interface CampaignDraftData {
  */
 export function safeParseCampaignGoal(value: unknown): number | null {
   if (typeof value === 'number' && isFinite(value) && value > 0) {
-    return value
+    return value;
   }
   if (typeof value === 'string') {
-    const parsed = parseFloat(value)
+    const parsed = parseFloat(value);
     if (isFinite(parsed) && parsed > 0) {
-      return parsed
+      return parsed;
     }
   }
-  return null
+  return null;
 }

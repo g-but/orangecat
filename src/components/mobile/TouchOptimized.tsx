@@ -1,44 +1,44 @@
-'use client'
+'use client';
 
-import React, { useRef, useState, useCallback, useEffect } from 'react'
-import { cn } from '@/lib/utils'
+import React, { useRef, useState, useCallback } from 'react';
+import { cn } from '@/lib/utils';
 
 // =====================================================================
 // 🎯 TOUCH OPTIMIZED COMPONENT INTERFACES
 // =====================================================================
 
 interface TouchOptimizedProps {
-  children: React.ReactNode
-  className?: string
-  onTap?: (event: React.TouchEvent | React.MouseEvent) => void
-  onDoubleTap?: (event: React.TouchEvent | React.MouseEvent) => void
-  onLongPress?: (event: React.TouchEvent | React.MouseEvent) => void
-  onSwipeLeft?: () => void
-  onSwipeRight?: () => void
-  onSwipeUp?: () => void
-  onSwipeDown?: () => void
-  disabled?: boolean
-  ripple?: boolean
-  haptic?: boolean
-  longPressDelay?: number
-  swipeThreshold?: number
+  children: React.ReactNode;
+  className?: string;
+  onTap?: (event: React.TouchEvent | React.MouseEvent) => void;
+  onDoubleTap?: (event: React.TouchEvent | React.MouseEvent) => void;
+  onLongPress?: (event: React.TouchEvent | React.MouseEvent) => void;
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
+  onSwipeUp?: () => void;
+  onSwipeDown?: () => void;
+  disabled?: boolean;
+  ripple?: boolean;
+  haptic?: boolean;
+  longPressDelay?: number;
+  swipeThreshold?: number;
 }
 
 interface SwipeGestureProps {
-  children: React.ReactNode
-  onSwipeLeft?: () => void
-  onSwipeRight?: () => void
-  onSwipeUp?: () => void
-  onSwipeDown?: () => void
-  threshold?: number
-  className?: string
+  children: React.ReactNode;
+  onSwipeLeft?: () => void;
+  onSwipeRight?: () => void;
+  onSwipeUp?: () => void;
+  onSwipeDown?: () => void;
+  threshold?: number;
+  className?: string;
 }
 
 interface PullToRefreshProps {
-  children: React.ReactNode
-  onRefresh: () => Promise<void>
-  refreshThreshold?: number
-  className?: string
+  children: React.ReactNode;
+  onRefresh: () => Promise<void>;
+  refreshThreshold?: number;
+  className?: string;
 }
 
 // =====================================================================
@@ -49,14 +49,16 @@ interface PullToRefreshProps {
 function hapticFeedback(type: 'light' | 'medium' | 'heavy' = 'light') {
   if ('vibrate' in navigator) {
     // Android vibration
-    const patterns = { light: 10, medium: 50, heavy: 100 }
-    navigator.vibrate(patterns[type])
+    const patterns = { light: 10, medium: 50, heavy: 100 };
+    navigator.vibrate(patterns[type]);
   }
-  
+
   // iOS haptic feedback (if available)
   // TypeScript doesn't know about hapticFeedback, but it exists on some mobile browsers
   if ('hapticFeedback' in navigator) {
-    const nav = navigator as Navigator & { hapticFeedback?: (type: 'light' | 'medium' | 'heavy') => void };
+    const nav = navigator as Navigator & {
+      hapticFeedback?: (type: 'light' | 'medium' | 'heavy') => void;
+    };
     nav.hapticFeedback?.(type);
   }
 }
@@ -67,29 +69,31 @@ function isTouchDevice(): boolean {
     'ontouchstart' in window ||
     navigator.maxTouchPoints > 0 ||
     /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
-  )
+  );
 }
 
 // Visual ripple effect
 function createRipple(element: HTMLElement, event: React.TouchEvent | React.MouseEvent) {
-  const rect = element.getBoundingClientRect()
-  const ripple = document.createElement('span')
-  
-  const size = Math.max(rect.width, rect.height)
+  const rect = element.getBoundingClientRect();
+  const ripple = document.createElement('span');
+
+  const size = Math.max(rect.width, rect.height);
   // Get coordinates from either TouchEvent or MouseEvent
-  const clientX = 'touches' in event && event.touches.length > 0 
-    ? event.touches[0].clientX 
-    : 'clientX' in event 
-      ? event.clientX 
-      : 0;
-  const clientY = 'touches' in event && event.touches.length > 0 
-    ? event.touches[0].clientY 
-    : 'clientY' in event 
-      ? event.clientY 
-      : 0;
-  const x = clientX - rect.left - size / 2
-  const y = clientY - rect.top - size / 2
-  
+  const clientX =
+    'touches' in event && event.touches.length > 0
+      ? event.touches[0].clientX
+      : 'clientX' in event
+        ? event.clientX
+        : 0;
+  const clientY =
+    'touches' in event && event.touches.length > 0
+      ? event.touches[0].clientY
+      : 'clientY' in event
+        ? event.clientY
+        : 0;
+  const x = clientX - rect.left - size / 2;
+  const y = clientY - rect.top - size / 2;
+
   ripple.style.cssText = `
     position: absolute;
     border-radius: 50%;
@@ -101,28 +105,28 @@ function createRipple(element: HTMLElement, event: React.TouchEvent | React.Mous
     animation: ripple 0.6s ease-out;
     pointer-events: none;
     z-index: 1;
-  `
-  
+  `;
+
   // Add ripple animation CSS if not already present
   if (!document.getElementById('ripple-styles')) {
-    const styles = document.createElement('style')
-    styles.id = 'ripple-styles'
+    const styles = document.createElement('style');
+    styles.id = 'ripple-styles';
     styles.textContent = `
       @keyframes ripple {
         0% { transform: scale(0); opacity: 1; }
         100% { transform: scale(1); opacity: 0; }
       }
-    `
-    document.head.appendChild(styles)
+    `;
+    document.head.appendChild(styles);
   }
-  
-  element.style.position = 'relative'
-  element.style.overflow = 'hidden'
-  element.appendChild(ripple)
-  
+
+  element.style.position = 'relative';
+  element.style.overflow = 'hidden';
+  element.appendChild(ripple);
+
   setTimeout(() => {
-    ripple.remove()
-  }, 600)
+    ripple.remove();
+  }, 600);
 }
 
 // =====================================================================
@@ -145,113 +149,161 @@ export function TouchOptimized({
   longPressDelay = 500,
   swipeThreshold = 50,
 }: TouchOptimizedProps) {
-  const elementRef = useRef<HTMLDivElement>(null)
-  const [isPressed, setIsPressed] = useState(false)
-  const [lastTap, setLastTap] = useState<number>(0)
-  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null)
-  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null)
+  const elementRef = useRef<HTMLDivElement>(null);
+  const [isPressed, setIsPressed] = useState(false);
+  const [lastTap, setLastTap] = useState<number>(0);
+  const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+  const [touchStart, setTouchStart] = useState<{ x: number; y: number } | null>(null);
 
   // Handle touch start
-  const handleTouchStart = useCallback((event: React.TouchEvent) => {
-    if (disabled) {return}
-    
-    setIsPressed(true)
-    const touch = event.touches[0]
-    setTouchStart({ x: touch.clientX, y: touch.clientY })
-    
-    // Start long press timer
-    if (onLongPress) {
-      const timer = setTimeout(() => {
-        if (haptic) {hapticFeedback('medium')}
-        onLongPress(event)
-        setLongPressTimer(null)
-      }, longPressDelay)
-      setLongPressTimer(timer)
-    }
-  }, [disabled, onLongPress, haptic, longPressDelay])
+  const handleTouchStart = useCallback(
+    (event: React.TouchEvent) => {
+      if (disabled) {
+        return;
+      }
+
+      setIsPressed(true);
+      const touch = event.touches[0];
+      setTouchStart({ x: touch.clientX, y: touch.clientY });
+
+      // Start long press timer
+      if (onLongPress) {
+        const timer = setTimeout(() => {
+          if (haptic) {
+            hapticFeedback('medium');
+          }
+          onLongPress(event);
+          setLongPressTimer(null);
+        }, longPressDelay);
+        setLongPressTimer(timer);
+      }
+    },
+    [disabled, onLongPress, haptic, longPressDelay]
+  );
 
   // Handle touch end
-  const handleTouchEnd = useCallback((event: React.TouchEvent) => {
-    if (disabled) {return}
-    
-    setIsPressed(false)
-    
-    // Clear long press timer
-    if (longPressTimer) {
-      clearTimeout(longPressTimer)
-      setLongPressTimer(null)
-    }
-    
-    // Handle swipe gestures
-    if (touchStart) {
-      const touch = event.changedTouches[0]
-      const deltaX = touch.clientX - touchStart.x
-      const deltaY = touch.clientY - touchStart.y
-      
-      if (Math.abs(deltaX) > swipeThreshold || Math.abs(deltaY) > swipeThreshold) {
-        if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          // Horizontal swipe
-          if (deltaX > 0 && onSwipeRight) {
-            if (haptic) {hapticFeedback('light')}
-            onSwipeRight()
-          } else if (deltaX < 0 && onSwipeLeft) {
-            if (haptic) {hapticFeedback('light')}
-            onSwipeLeft()
+  const handleTouchEnd = useCallback(
+    (event: React.TouchEvent) => {
+      if (disabled) {
+        return;
+      }
+
+      setIsPressed(false);
+
+      // Clear long press timer
+      if (longPressTimer) {
+        clearTimeout(longPressTimer);
+        setLongPressTimer(null);
+      }
+
+      // Handle swipe gestures
+      if (touchStart) {
+        const touch = event.changedTouches[0];
+        const deltaX = touch.clientX - touchStart.x;
+        const deltaY = touch.clientY - touchStart.y;
+
+        if (Math.abs(deltaX) > swipeThreshold || Math.abs(deltaY) > swipeThreshold) {
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            // Horizontal swipe
+            if (deltaX > 0 && onSwipeRight) {
+              if (haptic) {
+                hapticFeedback('light');
+              }
+              onSwipeRight();
+            } else if (deltaX < 0 && onSwipeLeft) {
+              if (haptic) {
+                hapticFeedback('light');
+              }
+              onSwipeLeft();
+            }
+          } else {
+            // Vertical swipe
+            if (deltaY > 0 && onSwipeDown) {
+              if (haptic) {
+                hapticFeedback('light');
+              }
+              onSwipeDown();
+            } else if (deltaY < 0 && onSwipeUp) {
+              if (haptic) {
+                hapticFeedback('light');
+              }
+              onSwipeUp();
+            }
           }
-        } else {
-          // Vertical swipe
-          if (deltaY > 0 && onSwipeDown) {
-            if (haptic) {hapticFeedback('light')}
-            onSwipeDown()
-          } else if (deltaY < 0 && onSwipeUp) {
-            if (haptic) {hapticFeedback('light')}
-            onSwipeUp()
-          }
+          setTouchStart(null);
+          return;
         }
-        setTouchStart(null)
-        return
       }
-    }
-    
-    // Handle tap/double tap
-    const now = Date.now()
-    const timeDiff = now - lastTap
-    
-    if (timeDiff < 300 && onDoubleTap) {
-      // Double tap
-      if (haptic) {hapticFeedback('medium')}
-      onDoubleTap(event)
-      setLastTap(0)
-    } else if (onTap) {
-      // Single tap
-      if (haptic) {hapticFeedback('light')}
-      if (ripple && elementRef.current) {
-        createRipple(elementRef.current, event)
+
+      // Handle tap/double tap
+      const now = Date.now();
+      const timeDiff = now - lastTap;
+
+      if (timeDiff < 300 && onDoubleTap) {
+        // Double tap
+        if (haptic) {
+          hapticFeedback('medium');
+        }
+        onDoubleTap(event);
+        setLastTap(0);
+      } else if (onTap) {
+        // Single tap
+        if (haptic) {
+          hapticFeedback('light');
+        }
+        if (ripple && elementRef.current) {
+          createRipple(elementRef.current, event);
+        }
+        onTap(event);
+        setLastTap(now);
       }
-      onTap(event)
-      setLastTap(now)
-    }
-    
-    setTouchStart(null)
-  }, [disabled, longPressTimer, touchStart, swipeThreshold, onSwipeRight, onSwipeLeft, onSwipeDown, onSwipeUp, haptic, lastTap, onDoubleTap, onTap, ripple])
+
+      setTouchStart(null);
+    },
+    [
+      disabled,
+      longPressTimer,
+      touchStart,
+      swipeThreshold,
+      onSwipeRight,
+      onSwipeLeft,
+      onSwipeDown,
+      onSwipeUp,
+      haptic,
+      lastTap,
+      onDoubleTap,
+      onTap,
+      ripple,
+    ]
+  );
 
   // Handle mouse events for desktop
-  const handleMouseDown = useCallback((event: React.MouseEvent) => {
-    if (disabled || isTouchDevice()) {return}
-    setIsPressed(true)
-  }, [disabled])
-
-  const handleMouseUp = useCallback((event: React.MouseEvent) => {
-    if (disabled || isTouchDevice()) {return}
-    setIsPressed(false)
-    
-    if (onTap) {
-      if (ripple && elementRef.current) {
-        createRipple(elementRef.current, event)
+  const handleMouseDown = useCallback(
+    (event: React.MouseEvent) => {
+      if (disabled || isTouchDevice()) {
+        return;
       }
-      onTap(event)
-    }
-  }, [disabled, onTap, ripple])
+      setIsPressed(true);
+    },
+    [disabled]
+  );
+
+  const handleMouseUp = useCallback(
+    (event: React.MouseEvent) => {
+      if (disabled || isTouchDevice()) {
+        return;
+      }
+      setIsPressed(false);
+
+      if (onTap) {
+        if (ripple && elementRef.current) {
+          createRipple(elementRef.current, event);
+        }
+        onTap(event);
+      }
+    },
+    [disabled, onTap, ripple]
+  );
 
   return (
     <div
@@ -276,7 +328,7 @@ export function TouchOptimized({
     >
       {children}
     </div>
-  )
+  );
 }
 
 // =====================================================================
@@ -305,7 +357,7 @@ export function SwipeGesture({
     >
       {children}
     </TouchOptimized>
-  )
+  );
 }
 
 // =====================================================================
@@ -318,45 +370,50 @@ export function PullToRefresh({
   refreshThreshold = 80,
   className,
 }: PullToRefreshProps) {
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [pullDistance, setPullDistance] = useState(0)
-  const [startY, setStartY] = useState<number | null>(null)
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [pullDistance, setPullDistance] = useState(0);
+  const [startY, setStartY] = useState<number | null>(null);
 
   const handleTouchStart = useCallback((event: React.TouchEvent) => {
-    setStartY(event.touches[0].clientY)
-  }, [])
+    setStartY(event.touches[0].clientY);
+  }, []);
 
-  const handleTouchMove = useCallback((event: React.TouchEvent) => {
-    if (startY === null || isRefreshing) {return}
-    
-    const currentY = event.touches[0].clientY
-    const distance = currentY - startY
-    
-    // Only allow pull down when at top of scroll
-    if (distance > 0 && window.scrollY === 0) {
-      setPullDistance(Math.min(distance, refreshThreshold * 1.5))
-      event.preventDefault()
-    }
-  }, [startY, isRefreshing, refreshThreshold])
+  const handleTouchMove = useCallback(
+    (event: React.TouchEvent) => {
+      if (startY === null || isRefreshing) {
+        return;
+      }
+
+      const currentY = event.touches[0].clientY;
+      const distance = currentY - startY;
+
+      // Only allow pull down when at top of scroll
+      if (distance > 0 && window.scrollY === 0) {
+        setPullDistance(Math.min(distance, refreshThreshold * 1.5));
+        event.preventDefault();
+      }
+    },
+    [startY, isRefreshing, refreshThreshold]
+  );
 
   const handleTouchEnd = useCallback(async () => {
     if (pullDistance >= refreshThreshold && !isRefreshing) {
-      setIsRefreshing(true)
-      hapticFeedback('medium')
-      
+      setIsRefreshing(true);
+      hapticFeedback('medium');
+
       try {
-        await onRefresh()
+        await onRefresh();
       } finally {
-        setIsRefreshing(false)
-        setPullDistance(0)
+        setIsRefreshing(false);
+        setPullDistance(0);
       }
     } else {
-      setPullDistance(0)
+      setPullDistance(0);
     }
-    setStartY(null)
-  }, [pullDistance, refreshThreshold, isRefreshing, onRefresh])
+    setStartY(null);
+  }, [pullDistance, refreshThreshold, isRefreshing, onRefresh]);
 
-  const pullProgress = Math.min(pullDistance / refreshThreshold, 1)
+  const pullProgress = Math.min(pullDistance / refreshThreshold, 1);
 
   return (
     <div className={className}>
@@ -379,18 +436,24 @@ export function PullToRefresh({
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 14l-7 7m0 0l-7-7m7 7V3"
+              />
             </svg>
             <span className="text-sm font-medium">
-              {pullProgress >= 1 
-                ? isRefreshing ? 'Refreshing...' : 'Release to refresh'
-                : 'Pull to refresh'
-              }
+              {pullProgress >= 1
+                ? isRefreshing
+                  ? 'Refreshing...'
+                  : 'Release to refresh'
+                : 'Pull to refresh'}
             </span>
           </div>
         </div>
       )}
-      
+
       {/* Content */}
       <div
         onTouchStart={handleTouchStart}
@@ -404,7 +467,7 @@ export function PullToRefresh({
         {children}
       </div>
     </div>
-  )
+  );
 }
 
 // =====================================================================
@@ -414,4 +477,4 @@ export function PullToRefresh({
 export const MobileUtils = {
   isTouchDevice,
   hapticFeedback,
-} 
+};

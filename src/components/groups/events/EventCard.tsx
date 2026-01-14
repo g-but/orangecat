@@ -14,7 +14,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
 import { Calendar, MapPin, Users, Clock } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 import Link from 'next/link';
 import type { GroupEvent } from '@/services/groups/types';
 
@@ -36,7 +35,7 @@ export function EventCard({ event, groupSlug, onUpdate }: EventCardProps) {
   const startDate = new Date(event.starts_at);
   const endDate = event.ends_at ? new Date(event.ends_at) : null;
   const isPast = startDate < new Date();
-  const rsvpCount = event.rsvps?.filter((r) => r.status === 'going').length || 0;
+  const rsvpCount = event.rsvps?.filter(r => r.status === 'going').length || 0;
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -53,7 +52,8 @@ export function EventCard({ event, groupSlug, onUpdate }: EventCardProps) {
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <Calendar className="h-4 w-4" />
           <span>
-            {startDate.toLocaleDateString()} {startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {startDate.toLocaleDateString()}{' '}
+            {startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
 
@@ -61,7 +61,8 @@ export function EventCard({ event, groupSlug, onUpdate }: EventCardProps) {
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Clock className="h-4 w-4" />
             <span>
-              Ends: {endDate.toLocaleDateString()} {endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              Ends: {endDate.toLocaleDateString()}{' '}
+              {endDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </span>
           </div>
         )}

@@ -9,8 +9,8 @@
  * Last Modified Summary: Initial creation with comprehensive demo data
  */
 
-import type { Group, GroupMember, GroupRole } from '@/services/groups/types';
-import type { Loan, LoanOffer, LoanStatus, LoanOfferStatus } from '@/types/loans';
+import type { GroupRole } from '@/services/groups/types';
+import type { LoanStatus, LoanOfferStatus } from '@/types/loans';
 
 // ==================== USER DATA ====================
 

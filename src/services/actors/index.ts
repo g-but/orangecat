@@ -11,7 +11,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
-import type { Actor, ActorType } from './types/actor';
+import type { Actor } from './types/actor';
 
 /**
  * Get actor by ID
@@ -137,5 +137,3 @@ export async function getActorDisplayName(actorId: string): Promise<string> {
     return 'Unknown';
   }
 }
-
-
