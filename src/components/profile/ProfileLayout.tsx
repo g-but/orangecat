@@ -3,11 +3,9 @@ import { logger } from '@/utils/logger';
 
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { ScalableProfile, ProfileFormData, Project } from '@/types/database';
-import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import ProfileShare from '@/components/sharing/ProfileShare';
@@ -20,9 +18,6 @@ import ProfileInfoTab from '@/components/profile/ProfileInfoTab';
 import ProfileWalletsTab from '@/components/profile/ProfileWalletsTab';
 import ProfileEntityTab from '@/components/profile/ProfileEntityTab';
 import {
-  Bitcoin,
-  Zap,
-  Edit,
   Share2,
   Users,
   User,
@@ -244,28 +239,36 @@ export default function ProfileLayout({
       label: 'Products',
       icon: <Package className="w-4 h-4" />,
       badge: stats?.productCount,
-      content: <ProfileEntityTab profile={profile} entityType="product" isOwnProfile={isOwnProfile} />,
+      content: (
+        <ProfileEntityTab profile={profile} entityType="product" isOwnProfile={isOwnProfile} />
+      ),
     },
     {
       id: 'services',
       label: 'Services',
       icon: <Briefcase className="w-4 h-4" />,
       badge: stats?.serviceCount,
-      content: <ProfileEntityTab profile={profile} entityType="service" isOwnProfile={isOwnProfile} />,
+      content: (
+        <ProfileEntityTab profile={profile} entityType="service" isOwnProfile={isOwnProfile} />
+      ),
     },
     {
       id: 'causes',
       label: 'Causes',
       icon: <Heart className="w-4 h-4" />,
       badge: stats?.causeCount,
-      content: <ProfileEntityTab profile={profile} entityType="cause" isOwnProfile={isOwnProfile} />,
+      content: (
+        <ProfileEntityTab profile={profile} entityType="cause" isOwnProfile={isOwnProfile} />
+      ),
     },
     {
       id: 'events',
       label: 'Events',
       icon: <Calendar className="w-4 h-4" />,
       badge: stats?.eventCount,
-      content: <ProfileEntityTab profile={profile} entityType="event" isOwnProfile={isOwnProfile} />,
+      content: (
+        <ProfileEntityTab profile={profile} entityType="event" isOwnProfile={isOwnProfile} />
+      ),
     },
     {
       id: 'loans',
@@ -279,14 +282,18 @@ export default function ProfileLayout({
       label: 'Assets',
       icon: <Building className="w-4 h-4" />,
       badge: stats?.assetCount,
-      content: <ProfileEntityTab profile={profile} entityType="asset" isOwnProfile={isOwnProfile} />,
+      content: (
+        <ProfileEntityTab profile={profile} entityType="asset" isOwnProfile={isOwnProfile} />
+      ),
     },
     {
       id: 'ai-assistants',
       label: 'AI Assistants',
       icon: <Bot className="w-4 h-4" />,
       badge: stats?.aiAssistantCount,
-      content: <ProfileEntityTab profile={profile} entityType="ai_assistant" isOwnProfile={isOwnProfile} />,
+      content: (
+        <ProfileEntityTab profile={profile} entityType="ai_assistant" isOwnProfile={isOwnProfile} />
+      ),
     },
     {
       id: 'people',

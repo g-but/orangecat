@@ -1,12 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Building, Users, Heart, Zap, TreePine } from 'lucide-react';
+import { Building, Heart, Zap, TreePine } from 'lucide-react';
 import BitBaumLogo from '@/components/layout/BitBaumLogo';
 
 export const metadata: Metadata = {
   title: 'About OrangeCat - A BitBaum Company',
-  description: 'Learn about OrangeCat, the Bitcoin-native crowdfunding platform, and our parent company BitBaum.',
+  description:
+    'Learn about OrangeCat, the Bitcoin-native crowdfunding platform, and our parent company BitBaum.',
 };
 
 export default function AboutPage() {
@@ -31,7 +32,8 @@ export default function AboutPage() {
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Corporate Structure</h2>
           <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-            Like TikTok and ByteDance, OrangeCat is our consumer-facing product while BitBaum serves as our corporate parent company.
+            Like TikTok and ByteDance, OrangeCat is our consumer-facing product while BitBaum serves
+            as our corporate parent company.
           </p>
         </div>
 
@@ -43,7 +45,8 @@ export default function AboutPage() {
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">BitBaum AG</h3>
             <p className="text-gray-600 mb-6">
-              Our corporate parent company, focused on building the future of Bitcoin commerce through innovative products and services.
+              Our corporate parent company, focused on building the future of Bitcoin commerce
+              through innovative products and services.
             </p>
             <div className="flex justify-center space-x-4 mb-6">
               <div className="flex items-center text-sm text-gray-500">
@@ -74,7 +77,8 @@ export default function AboutPage() {
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">OrangeCat</h3>
             <p className="text-gray-600 mb-6">
-              Our flagship product - the friendly, approachable Bitcoin crowdfunding platform that users interact with every day.
+              Our flagship product - the friendly, approachable Bitcoin crowdfunding platform that
+              users interact with every day.
             </p>
             <div className="flex justify-center space-x-4 mb-6">
               <div className="flex items-center text-sm text-gray-500">
@@ -144,9 +148,7 @@ export default function AboutPage() {
       <div className="bg-gradient-to-r from-orange-500 to-tiffany-500">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-white mb-4">
-              Join Our Growing Community
-            </h2>
+            <h2 className="text-3xl font-bold text-white mb-4">Join Our Growing Community</h2>
             <p className="text-xl text-orange-100 mb-8">
               Start accepting Bitcoin donations today with OrangeCat.
             </p>

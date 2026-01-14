@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { MoreHorizontal, Edit2, Trash2, Eye, EyeOff } from 'lucide-react';
-import Button from '@/components/ui/Button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -82,7 +81,7 @@ export function EntityCardActions({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
             className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
             aria-label="Actions"
           >
@@ -91,10 +90,7 @@ export function EntityCardActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           {(editUrl || onEdit) && (
-            <DropdownMenuItem
-              onClick={editUrl ? undefined : handleEditClick}
-              asChild={!!editUrl}
-            >
+            <DropdownMenuItem onClick={editUrl ? undefined : handleEditClick} asChild={!!editUrl}>
               {editUrl ? (
                 <a href={editUrl} className="flex items-center">
                   <Edit2 className="mr-2 h-4 w-4" />
@@ -127,12 +123,10 @@ export function EntityCardActions({
               )}
             </DropdownMenuItem>
           )}
-          {onDelete && (editUrl || onEdit || onToggleVisibility) && (
-            <DropdownMenuSeparator />
-          )}
+          {onDelete && (editUrl || onEdit || onToggleVisibility) && <DropdownMenuSeparator />}
           {onDelete && (
             <DropdownMenuItem
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 setShowDeleteDialog(true);
               }}
@@ -149,18 +143,11 @@ export function EntityCardActions({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{deleteConfirmTitle}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {deleteConfirmDescription}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{deleteConfirmDescription}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-            >
+            <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
               {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>

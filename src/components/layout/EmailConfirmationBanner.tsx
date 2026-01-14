@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Mail, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { resendConfirmationEmail } from '@/services/supabase/auth';
@@ -36,7 +36,9 @@ export function EmailConfirmationBanner({
 
   // Check if already dismissed this session
   useEffect(() => {
-    if (typeof window === 'undefined') {return;}
+    if (typeof window === 'undefined') {
+      return;
+    }
 
     const dismissKey = `${DISMISS_KEY_PREFIX}${userId}`;
     const wasDismissed = sessionStorage.getItem(dismissKey) === 'true';
@@ -78,10 +80,7 @@ export function EmailConfirmationBanner({
 
   return (
     <div
-      className={cn(
-        'bg-amber-50 border-b border-amber-200',
-        className
-      )}
+      className={cn('bg-amber-50 border-b border-amber-200', className)}
       role="alert"
       aria-live="polite"
     >
@@ -89,7 +88,9 @@ export function EmailConfirmationBanner({
         <div className="flex items-center gap-2 min-w-0">
           <Mail className="w-4 h-4 text-amber-600 flex-shrink-0" aria-hidden="true" />
           <p className="text-sm text-amber-800">
-            <span className="hidden sm:inline">Please confirm your email to secure your account. </span>
+            <span className="hidden sm:inline">
+              Please confirm your email to secure your account.{' '}
+            </span>
             <span className="sm:hidden">Confirm your email. </span>
             <button
               onClick={handleResend}

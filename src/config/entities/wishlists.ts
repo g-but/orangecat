@@ -8,8 +8,6 @@
  * Last Modified Summary: Initial wishlist list configuration
  */
 
-import { Gift } from 'lucide-react';
-
 export interface WishlistListItem {
   id: string;
   title: string;

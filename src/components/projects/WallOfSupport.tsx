@@ -13,11 +13,10 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import DefaultAvatar from '@/components/ui/DefaultAvatar';
 import { Heart, MessageSquare, PenTool, Coins, Trash2 } from 'lucide-react';
 import type { ProjectSupportWithUser } from '@/services/projects/support/types';
 import projectSupportService from '@/services/projects/support';
-import { formatSats, getSupportTypeLabel, getReactionLabel } from '@/services/projects/support/helpers';
+import { formatSats, getSupportTypeLabel } from '@/services/projects/support/helpers';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
@@ -57,7 +56,7 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
     try {
       setDeletingId(supportId);
       const result = await projectSupportService.deleteProjectSupport(supportId);
-      
+
       if (result.success) {
         toast.success('Support removed');
         loadSupports(); // Reload list
@@ -120,12 +119,9 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          {supports.map((support) => {
+          {supports.map(support => {
             const displayName =
-              support.display_name ||
-              support.user?.name ||
-              support.user?.username ||
-              'Anonymous';
+              support.display_name || support.user?.name || support.user?.username || 'Anonymous';
             const avatarUrl = support.user?.avatar_url;
 
             return (
@@ -136,11 +132,7 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                   {avatarUrl ? (
-                    <img
-                      src={avatarUrl}
-                      alt={displayName}
-                      className="w-10 h-10 rounded-full"
-                    />
+                    <img src={avatarUrl} alt={displayName} className="w-10 h-10 rounded-full" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center border-2 border-orange-300">
                       {displayName.charAt(0).toUpperCase()}
@@ -201,5 +193,3 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
     </Card>
   );
 }
-
-

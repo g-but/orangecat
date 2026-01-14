@@ -17,7 +17,6 @@ import { useState, useRef, useEffect } from 'react';
 import { logger } from '@/utils/logger';
 import { Upload, X, Loader2, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import Button from '@/components/ui/Button';
 import supabaseBrowser from '@/lib/supabase/browser';
 
 interface MediaItem {
@@ -70,7 +69,12 @@ export default function ProjectMediaUpload({
       }
 
       // Derive public URLs
-      type MediaRow = { id: string; storage_path: string; position: number; alt_text?: string | null };
+      type MediaRow = {
+        id: string;
+        storage_path: string;
+        position: number;
+        alt_text?: string | null;
+      };
       const mediaWithUrls = ((data || []) as MediaRow[]).map(m => {
         const { data: urlData } = supabaseBrowser.storage
           .from('project-media')

@@ -1,12 +1,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { Metadata } from 'next';
-import { Building2, Users, Heart, Zap, TreePine, Target, Globe, Award } from 'lucide-react';
+import { Users, Heart, Zap, TreePine, Target, Award } from 'lucide-react';
 import BitBaumLogo from '@/components/layout/BitBaumLogo';
 
 export const metadata: Metadata = {
   title: 'About BitBaum - Growing Bitcoin Communities',
-  description: 'Learn about BitBaum, the corporate parent of OrangeCat, and our mission to build the future of Bitcoin commerce through threaded conversations and transparent transactions.',
+  description:
+    'Learn about BitBaum, the corporate parent of OrangeCat, and our mission to build the future of Bitcoin commerce through threaded conversations and transparent transactions.',
 };
 
 export default function BitBaumAboutPage() {
@@ -39,8 +40,8 @@ export default function BitBaumAboutPage() {
           <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
           <p className="text-lg text-gray-600 max-w-4xl mx-auto leading-relaxed">
             To inspire creativity, enrich lives, and grow interconnected communities through
-            Bitcoin-powered platforms that make commerce transparent, conversations meaningful,
-            and value creation accessible to everyone.
+            Bitcoin-powered platforms that make commerce transparent, conversations meaningful, and
+            value creation accessible to everyone.
           </p>
         </div>
 
@@ -49,7 +50,8 @@ export default function BitBaumAboutPage() {
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Brand Structure</h3>
             <p className="text-gray-600">
-              Like TikTok and ByteDance, we separate our consumer product from our corporate identity
+              Like TikTok and ByteDance, we separate our consumer product from our corporate
+              identity
             </p>
           </div>
 
@@ -61,13 +63,19 @@ export default function BitBaumAboutPage() {
               </div>
               <h4 className="text-xl font-semibold text-gray-900 mb-3">BitBaum AG</h4>
               <p className="text-gray-600 mb-4">
-                Corporate parent company focused on Bitcoin innovation, community building,
-                and creating platforms that empower creators and communities worldwide.
+                Corporate parent company focused on Bitcoin innovation, community building, and
+                creating platforms that empower creators and communities worldwide.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">Corporate</span>
-                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">Swiss-Based</span>
-                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">Innovation</span>
+                <span className="px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
+                  Corporate
+                </span>
+                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
+                  Swiss-Based
+                </span>
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                  Innovation
+                </span>
               </div>
             </div>
 
@@ -80,13 +88,19 @@ export default function BitBaumAboutPage() {
               </div>
               <h4 className="text-xl font-semibold text-gray-900 mb-3">OrangeCat</h4>
               <p className="text-gray-600 mb-4">
-                Our flagship consumer product - the friendly Bitcoin crowdfunding platform
-                where users create, connect, and transact in a threaded conversation ecosystem.
+                Our flagship consumer product - the friendly Bitcoin crowdfunding platform where
+                users create, connect, and transact in a threaded conversation ecosystem.
               </p>
               <div className="flex flex-wrap justify-center gap-2">
-                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">Consumer Product</span>
-                <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">Bitcoin Native</span>
-                <span className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm">Community</span>
+                <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                  Consumer Product
+                </span>
+                <span className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm">
+                  Bitcoin Native
+                </span>
+                <span className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm">
+                  Community
+                </span>
               </div>
             </div>
           </div>
@@ -102,7 +116,8 @@ export default function BitBaumAboutPage() {
               </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-2">Grow Together</h4>
               <p className="text-gray-600 text-sm">
-                Build interconnected communities where ideas branch and flourish like trees in a forest.
+                Build interconnected communities where ideas branch and flourish like trees in a
+                forest.
               </p>
             </div>
 
@@ -150,7 +165,9 @@ export default function BitBaumAboutPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900">Founded in Switzerland</h4>
-                  <p className="text-gray-600 text-sm">BitBaum AG established as a Swiss company committed to Bitcoin innovation.</p>
+                  <p className="text-gray-600 text-sm">
+                    BitBaum AG established as a Swiss company committed to Bitcoin innovation.
+                  </p>
                 </div>
               </div>
 
@@ -160,7 +177,9 @@ export default function BitBaumAboutPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900">OrangeCat Launch</h4>
-                  <p className="text-gray-600 text-sm">Released our flagship Bitcoin crowdfunding platform with threaded conversations.</p>
+                  <p className="text-gray-600 text-sm">
+                    Released our flagship Bitcoin crowdfunding platform with threaded conversations.
+                  </p>
                 </div>
               </div>
 
@@ -170,7 +189,9 @@ export default function BitBaumAboutPage() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-gray-900">Community Growth</h4>
-                  <p className="text-gray-600 text-sm">Thousands of creators and supporters building with Bitcoin.</p>
+                  <p className="text-gray-600 text-sm">
+                    Thousands of creators and supporters building with Bitcoin.
+                  </p>
                 </div>
               </div>
             </div>
@@ -182,17 +203,24 @@ export default function BitBaumAboutPage() {
             <div className="space-y-4">
               <div className="p-4 bg-orange-50 rounded-lg">
                 <h4 className="font-semibold text-orange-900 mb-2">Bitcoin Commerce Ecosystem</h4>
-                <p className="text-orange-700 text-sm">Build a suite of Bitcoin-native platforms for every aspect of commerce and community.</p>
+                <p className="text-orange-700 text-sm">
+                  Build a suite of Bitcoin-native platforms for every aspect of commerce and
+                  community.
+                </p>
               </div>
 
               <div className="p-4 bg-tiffany-50 rounded-lg">
                 <h4 className="font-semibold text-tiffany-900 mb-2">Threaded Intelligence</h4>
-                <p className="text-tiffany-700 text-sm">Create AI systems that understand conversation trees and community knowledge.</p>
+                <p className="text-tiffany-700 text-sm">
+                  Create AI systems that understand conversation trees and community knowledge.
+                </p>
               </div>
 
               <div className="p-4 bg-green-50 rounded-lg">
                 <h4 className="font-semibold text-green-900 mb-2">Global Communities</h4>
-                <p className="text-green-700 text-sm">Empower communities worldwide to organize, fund, and govern collectively.</p>
+                <p className="text-green-700 text-sm">
+                  Empower communities worldwide to organize, fund, and govern collectively.
+                </p>
               </div>
             </div>
           </div>
@@ -203,8 +231,8 @@ export default function BitBaumAboutPage() {
           <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Team</h3>
           <p className="text-gray-600 mb-6">
-            A passionate team of Bitcoin enthusiasts, developers, and community builders
-            working from Switzerland and around the world.
+            A passionate team of Bitcoin enthusiasts, developers, and community builders working
+            from Switzerland and around the world.
           </p>
           <Link
             href="/company/careers"
@@ -217,6 +245,3 @@ export default function BitBaumAboutPage() {
     </div>
   );
 }
-
-
-

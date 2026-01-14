@@ -1,11 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Filter, Search, X, Smartphone, Monitor, Globe, Shield, Lock, Users } from 'lucide-react';
+import { Filter, Search, X, Smartphone, Monitor, Globe, Shield } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { cn } from '@/lib/utils';
-import type { WalletProvider } from '@/data/walletProviders';
 
 export interface WalletFilters {
   type: string[];

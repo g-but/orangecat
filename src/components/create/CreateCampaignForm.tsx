@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import supabase from '@/lib/supabase/browser';
 import { toast } from 'sonner';
 import { CampaignStorageService } from '@/services/projects/projectStorageService';
-import { isValidBitcoinAddress, validateUrl } from '@/utils/validation';
+import { isValidBitcoinAddress } from '@/utils/validation';
 import { z } from 'zod';
 
 const projectFormSchema = z.object({
@@ -253,8 +253,7 @@ export default function CreateCampaignForm({
         currency: 'BTC',
       };
 
-      const { data, error: insertError } = await (supabase
-        .from('projects') as any)
+      const { data, error: insertError } = await (supabase.from('projects') as any)
         .insert([fundingPageData])
         .select()
         .single();

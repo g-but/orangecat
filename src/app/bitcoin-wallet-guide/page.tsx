@@ -1,43 +1,41 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { motion } from 'framer-motion'
-import { 
-  Bitcoin, 
-  Smartphone, 
-  Monitor, 
-  Shield, 
-  CheckCircle, 
-  ExternalLink, 
+import { useState } from 'react';
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import {
+  Bitcoin,
+  Smartphone,
+  Monitor,
+  Shield,
+  CheckCircle,
+  ExternalLink,
   ArrowLeft,
   Download,
   Globe,
-  Zap,
   Lock,
   Star,
   ChevronRight,
-  AlertTriangle
-} from 'lucide-react'
-import Button from '@/components/ui/Button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card'
-import { BitcoinBadge } from '@/components/ui/BitcoinBadge'
-import { componentColors, getColorClasses } from '@/lib/theme'
+  AlertTriangle,
+} from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { BitcoinBadge } from '@/components/ui/BitcoinBadge';
+import { componentColors } from '@/lib/theme';
 
 interface WalletOption {
-  id: string
-  name: string
-  type: 'mobile' | 'desktop' | 'browser' | 'hardware'
-  description: string
-  pros: string[]
-  cons: string[]
-  difficulty: 'beginner' | 'intermediate' | 'advanced'
-  logoUrl?: string
-  downloadUrl: string
-  supportedPlatforms: string[]
-  features: string[]
-  recommended?: boolean
+  id: string;
+  name: string;
+  type: 'mobile' | 'desktop' | 'browser' | 'hardware';
+  description: string;
+  pros: string[];
+  cons: string[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  logoUrl?: string;
+  downloadUrl: string;
+  supportedPlatforms: string[];
+  features: string[];
+  recommended?: boolean;
 }
 
 const walletOptions: WalletOption[] = [
@@ -51,17 +49,14 @@ const walletOptions: WalletOption[] = [
       'No additional downloads needed',
       'Self-custody - you control your keys',
       'Multi-chain support (Bitcoin, Ethereum, Solana)',
-      'Easy to use interface'
+      'Easy to use interface',
     ],
-    cons: [
-      'Only available in Brave browser',
-      'Relatively new compared to other wallets'
-    ],
+    cons: ['Only available in Brave browser', 'Relatively new compared to other wallets'],
     difficulty: 'beginner',
     downloadUrl: 'https://brave.com/',
     supportedPlatforms: ['Windows', 'macOS', 'Linux', 'iOS', 'Android'],
     features: ['Self-custody', 'Multi-chain', 'Browser integrated', 'Open source'],
-    recommended: true
+    recommended: true,
   },
   {
     id: 'blue-wallet',
@@ -73,38 +68,32 @@ const walletOptions: WalletOption[] = [
       'Lightning Network support',
       'Clean, intuitive interface',
       'Open source',
-      'Watch-only wallet support'
+      'Watch-only wallet support',
     ],
-    cons: [
-      'Mobile only',
-      'May be complex for absolute beginners'
-    ],
+    cons: ['Mobile only', 'May be complex for absolute beginners'],
     difficulty: 'beginner',
     downloadUrl: 'https://bluewallet.io/',
     supportedPlatforms: ['iOS', 'Android'],
-    features: ['Bitcoin-only', 'Lightning Network', 'Open source', 'Watch-only wallets']
+    features: ['Bitcoin-only', 'Lightning Network', 'Open source', 'Watch-only wallets'],
   },
   {
     id: 'exodus',
     name: 'Exodus',
     type: 'desktop',
-    description: 'User-friendly desktop wallet with beautiful design and multi-cryptocurrency support.',
+    description:
+      'User-friendly desktop wallet with beautiful design and multi-cryptocurrency support.',
     pros: [
       'Beautiful, intuitive interface',
       'Built-in exchange features',
       'Multi-cryptocurrency support',
       'Good customer support',
-      'Portfolio tracking'
+      'Portfolio tracking',
     ],
-    cons: [
-      'Not open source',
-      'Higher fees for built-in exchange',
-      'Less privacy-focused'
-    ],
+    cons: ['Not open source', 'Higher fees for built-in exchange', 'Less privacy-focused'],
     difficulty: 'beginner',
     downloadUrl: 'https://www.exodus.com/',
     supportedPlatforms: ['Windows', 'macOS', 'Linux', 'iOS', 'Android'],
-    features: ['Multi-crypto', 'Built-in exchange', 'Portfolio tracking', 'Mobile & desktop']
+    features: ['Multi-crypto', 'Built-in exchange', 'Portfolio tracking', 'Mobile & desktop'],
   },
   {
     id: 'electrum',
@@ -116,67 +105,76 @@ const walletOptions: WalletOption[] = [
       'Bitcoin-only focus',
       'Advanced features for power users',
       'Open source',
-      'Hardware wallet support'
+      'Hardware wallet support',
     ],
     cons: [
       'Interface can be intimidating for beginners',
       'No built-in exchange',
-      'Requires more technical knowledge'
+      'Requires more technical knowledge',
     ],
     difficulty: 'intermediate',
     downloadUrl: 'https://electrum.org/',
     supportedPlatforms: ['Windows', 'macOS', 'Linux', 'Android'],
-    features: ['Bitcoin-only', 'Lightweight', 'Hardware wallet support', 'Advanced features']
-  }
-]
+    features: ['Bitcoin-only', 'Lightweight', 'Hardware wallet support', 'Advanced features'],
+  },
+];
 
 const steps = [
   {
     title: 'Choose Your Wallet Type',
     description: 'Different wallets work better for different needs and experience levels.',
-    icon: Bitcoin
+    icon: Bitcoin,
   },
   {
     title: 'Download & Install',
     description: 'Get your chosen wallet from the official website or app store.',
-    icon: Download
+    icon: Download,
   },
   {
     title: 'Create Your Wallet',
     description: 'Follow the setup process and securely save your recovery phrase.',
-    icon: Shield
+    icon: Shield,
   },
   {
     title: 'Get Your Address',
     description: 'Copy your Bitcoin receiving address to use on OrangeCat.',
-    icon: CheckCircle
-  }
-]
+    icon: CheckCircle,
+  },
+];
 
 export default function BitcoinWalletGuidePage() {
-  const [selectedWallet, setSelectedWallet] = useState<string>('brave')
-  const [currentStep, setCurrentStep] = useState(0)
+  const [selectedWallet, setSelectedWallet] = useState<string>('brave');
+  const [currentStep, setCurrentStep] = useState(0);
 
-  const selectedWalletData = walletOptions.find(w => w.id === selectedWallet)
+  const selectedWalletData = walletOptions.find(w => w.id === selectedWallet);
 
   const getTypeIcon = (type: WalletOption['type']) => {
     switch (type) {
-      case 'mobile': return Smartphone
-      case 'desktop': return Monitor
-      case 'browser': return Globe
-      case 'hardware': return Lock
-      default: return Bitcoin
+      case 'mobile':
+        return Smartphone;
+      case 'desktop':
+        return Monitor;
+      case 'browser':
+        return Globe;
+      case 'hardware':
+        return Lock;
+      default:
+        return Bitcoin;
     }
-  }
+  };
 
   const getDifficultyColor = (difficulty: WalletOption['difficulty']) => {
     switch (difficulty) {
-      case 'beginner': return 'text-green-600 bg-green-50 border-green-200'
-      case 'intermediate': return 'text-yellow-600 bg-yellow-50 border-yellow-200'
-      case 'advanced': return 'text-red-600 bg-red-50 border-red-200'
-      default: return 'text-gray-600 bg-gray-50 border-gray-200'
+      case 'beginner':
+        return 'text-green-600 bg-green-50 border-green-200';
+      case 'intermediate':
+        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      case 'advanced':
+        return 'text-red-600 bg-red-50 border-red-200';
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200';
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-orange-50">
@@ -184,16 +182,14 @@ export default function BitcoinWalletGuidePage() {
       <div className="bg-white border-b border-orange-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <Link 
+            <Link
               href="/"
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               Back to OrangeCat
             </Link>
-            <BitcoinBadge variant="outline">
-              Bitcoin Wallet Guide
-            </BitcoinBadge>
+            <BitcoinBadge variant="outline">Bitcoin Wallet Guide</BitcoinBadge>
           </div>
         </div>
       </div>
@@ -205,7 +201,9 @@ export default function BitcoinWalletGuidePage() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className={`inline-flex items-center gap-3 p-4 rounded-2xl mb-6 ${componentColors.bitcoinElement.className}`}>
+          <div
+            className={`inline-flex items-center gap-3 p-4 rounded-2xl mb-6 ${componentColors.bitcoinElement.className}`}
+          >
             <Bitcoin className="w-12 h-12" />
             <div className="text-left">
               <h1 className="text-3xl md:text-4xl font-bold text-gray-900">
@@ -216,15 +214,16 @@ export default function BitcoinWalletGuidePage() {
               </p>
             </div>
           </div>
-          
+
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-3xl mx-auto">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="text-left">
                 <h3 className="font-semibold text-blue-900 mb-1">New to Bitcoin?</h3>
                 <p className="text-blue-800 text-sm">
-                  A Bitcoin wallet is like a digital bank account that lets you receive, store, and send Bitcoin. 
-                  You control your wallet completely - no bank or company can freeze your funds.
+                  A Bitcoin wallet is like a digital bank account that lets you receive, store, and
+                  send Bitcoin. You control your wallet completely - no bank or company can freeze
+                  your funds.
                 </p>
               </div>
             </div>
@@ -233,14 +232,12 @@ export default function BitcoinWalletGuidePage() {
 
         {/* Progress Steps */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
-            How to Get Started
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">How to Get Started</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {steps.map((step, index) => {
-              const Icon = step.icon
-              const isActive = index === currentStep
-              const isCompleted = index < currentStep
+              const Icon = step.icon;
+              const isActive = index === currentStep;
+              const isCompleted = index < currentStep;
 
               return (
                 <motion.div
@@ -249,21 +246,23 @@ export default function BitcoinWalletGuidePage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className={`text-center p-6 rounded-xl border-2 transition-all cursor-pointer ${
-                    isActive 
+                    isActive
                       ? componentColors.bitcoinElement.className + ' border-bitcoinOrange shadow-lg'
                       : isCompleted
-                      ? 'bg-green-50 border-green-200 text-green-800'
-                      : 'bg-white border-gray-200 hover:border-gray-300'
+                        ? 'bg-green-50 border-green-200 text-green-800'
+                        : 'bg-white border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => setCurrentStep(index)}
                 >
-                  <div className={`w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center ${
-                    isActive 
-                      ? 'bg-bitcoinOrange text-white'
-                      : isCompleted
-                      ? 'bg-green-500 text-white'
-                      : 'bg-gray-200 text-gray-600'
-                  }`}>
+                  <div
+                    className={`w-12 h-12 rounded-full mx-auto mb-4 flex items-center justify-center ${
+                      isActive
+                        ? 'bg-bitcoinOrange text-white'
+                        : isCompleted
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-200 text-gray-600'
+                    }`}
+                  >
                     {isCompleted ? (
                       <CheckCircle className="w-6 h-6" />
                     ) : (
@@ -273,7 +272,7 @@ export default function BitcoinWalletGuidePage() {
                   <h3 className="font-semibold mb-2">{step.title}</h3>
                   <p className="text-sm text-gray-600">{step.description}</p>
                 </motion.div>
-              )
+              );
             })}
           </div>
         </div>
@@ -282,14 +281,12 @@ export default function BitcoinWalletGuidePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Wallet Options */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Choose Your Wallet
-            </h2>
-            
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Wallet</h2>
+
             <div className="space-y-4">
-              {walletOptions.map((wallet) => {
-                const TypeIcon = getTypeIcon(wallet.type)
-                const isSelected = selectedWallet === wallet.id
+              {walletOptions.map(wallet => {
+                const TypeIcon = getTypeIcon(wallet.type);
+                const isSelected = selectedWallet === wallet.id;
 
                 return (
                   <motion.div
@@ -298,10 +295,10 @@ export default function BitcoinWalletGuidePage() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <Card 
+                    <Card
                       className={`cursor-pointer transition-all duration-200 ${
-                        isSelected 
-                          ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange shadow-lg' 
+                        isSelected
+                          ? 'ring-2 ring-bitcoinOrange border-bitcoinOrange shadow-lg'
                           : 'hover:shadow-md border-gray-200'
                       } ${wallet.recommended ? 'ring-1 ring-green-200 bg-green-50/30' : ''}`}
                       onClick={() => setSelectedWallet(wallet.id)}
@@ -309,12 +306,18 @@ export default function BitcoinWalletGuidePage() {
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className={`p-2 rounded-lg ${
-                              isSelected ? componentColors.bitcoinElement.className : 'bg-gray-100'
-                            }`}>
-                              <TypeIcon className={`w-5 h-5 ${
-                                isSelected ? 'text-bitcoinOrange' : 'text-gray-600'
-                              }`} />
+                            <div
+                              className={`p-2 rounded-lg ${
+                                isSelected
+                                  ? componentColors.bitcoinElement.className
+                                  : 'bg-gray-100'
+                              }`}
+                            >
+                              <TypeIcon
+                                className={`w-5 h-5 ${
+                                  isSelected ? 'text-bitcoinOrange' : 'text-gray-600'
+                                }`}
+                              />
                             </div>
                             <div>
                               <div className="flex items-center gap-2">
@@ -326,24 +329,27 @@ export default function BitcoinWalletGuidePage() {
                                   </div>
                                 )}
                               </div>
-                              <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(wallet.difficulty)}`}>
-                                {wallet.difficulty.charAt(0).toUpperCase() + wallet.difficulty.slice(1)}
+                              <div
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(wallet.difficulty)}`}
+                              >
+                                {wallet.difficulty.charAt(0).toUpperCase() +
+                                  wallet.difficulty.slice(1)}
                               </div>
                             </div>
                           </div>
-                          <ChevronRight className={`w-5 h-5 transition-transform ${
-                            isSelected ? 'rotate-90 text-bitcoinOrange' : 'text-gray-400'
-                          }`} />
+                          <ChevronRight
+                            className={`w-5 h-5 transition-transform ${
+                              isSelected ? 'rotate-90 text-bitcoinOrange' : 'text-gray-400'
+                            }`}
+                          />
                         </div>
                       </CardHeader>
-                      
+
                       <CardContent className="pt-0">
-                        <CardDescription className="mb-4">
-                          {wallet.description}
-                        </CardDescription>
-                        
+                        <CardDescription className="mb-4">{wallet.description}</CardDescription>
+
                         <div className="flex flex-wrap gap-2 mb-4">
-                          {wallet.features.map((feature) => (
+                          {wallet.features.map(feature => (
                             <span
                               key={feature}
                               className="px-2 py-1 bg-gray-100 text-gray-700 rounded-full text-xs"
@@ -359,7 +365,7 @@ export default function BitcoinWalletGuidePage() {
                       </CardContent>
                     </Card>
                   </motion.div>
-                )
+                );
               })}
             </div>
           </div>
@@ -379,11 +385,9 @@ export default function BitcoinWalletGuidePage() {
                       <Bitcoin className="w-5 h-5 text-bitcoinOrange" />
                       {selectedWalletData.name}
                     </CardTitle>
-                    <CardDescription>
-                      Detailed information and setup guide
-                    </CardDescription>
+                    <CardDescription>Detailed information and setup guide</CardDescription>
                   </CardHeader>
-                  
+
                   <CardContent className="space-y-6">
                     {/* Pros & Cons */}
                     <div>
@@ -433,7 +437,9 @@ export default function BitcoinWalletGuidePage() {
                         <div className="text-sm">
                           <strong className="text-red-800">Security Tip:</strong>
                           <p className="text-red-700 mt-1">
-                            Always download wallets from official websites. Save your recovery phrase in a safe place - it&apos;s the only way to recover your Bitcoin if you lose access to your wallet.
+                            Always download wallets from official websites. Save your recovery
+                            phrase in a safe place - it&apos;s the only way to recover your Bitcoin
+                            if you lose access to your wallet.
                           </p>
                         </div>
                       </div>
@@ -455,7 +461,7 @@ export default function BitcoinWalletGuidePage() {
           <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">
             Frequently Asked Questions
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
             <Card>
               <CardHeader>
@@ -463,8 +469,9 @@ export default function BitcoinWalletGuidePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 text-sm">
-                  Yes, when used properly. Bitcoin wallets use strong cryptography. The key is to choose a reputable wallet, 
-                  keep your recovery phrase secure, and never share your private keys with anyone.
+                  Yes, when used properly. Bitcoin wallets use strong cryptography. The key is to
+                  choose a reputable wallet, keep your recovery phrase secure, and never share your
+                  private keys with anyone.
                 </p>
               </CardContent>
             </Card>
@@ -475,8 +482,8 @@ export default function BitcoinWalletGuidePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 text-sm">
-                  No, creating a Bitcoin wallet is free. You only pay network fees when sending Bitcoin transactions. 
-                  Receiving Bitcoin is always free.
+                  No, creating a Bitcoin wallet is free. You only pay network fees when sending
+                  Bitcoin transactions. Receiving Bitcoin is always free.
                 </p>
               </CardContent>
             </Card>
@@ -487,20 +494,23 @@ export default function BitcoinWalletGuidePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 text-sm">
-                  If you lose your recovery phrase and can&apos;t access your wallet, your Bitcoin will be permanently lost. 
-                  This is why it&apos;s crucial to write it down and store it safely offline.
+                  If you lose your recovery phrase and can&apos;t access your wallet, your Bitcoin
+                  will be permanently lost. This is why it&apos;s crucial to write it down and store
+                  it safely offline.
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Can I use the same address multiple times?</CardTitle>
+                <CardTitle className="text-lg">
+                  Can I use the same address multiple times?
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-600 text-sm">
-                  Yes, you can reuse Bitcoin addresses, but it&apos;s better for privacy to generate a new address for each 
-                  transaction. Most modern wallets do this automatically.
+                  Yes, you can reuse Bitcoin addresses, but it&apos;s better for privacy to generate
+                  a new address for each transaction. Most modern wallets do this automatically.
                 </p>
               </CardContent>
             </Card>
@@ -514,15 +524,15 @@ export default function BitcoinWalletGuidePage() {
           transition={{ delay: 0.4 }}
           className="mt-16 text-center"
         >
-          <Card className={`max-w-2xl mx-auto ${componentColors.bitcoinElement.className} border-bitcoinOrange/30`}>
+          <Card
+            className={`max-w-2xl mx-auto ${componentColors.bitcoinElement.className} border-bitcoinOrange/30`}
+          >
             <CardContent className="p-8">
               <Bitcoin className="w-16 h-16 text-bitcoinOrange mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-4">
-                Ready to Get Started?
-              </h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-4">Ready to Get Started?</h2>
               <p className="text-gray-600 mb-6">
-                Once you have your Bitcoin wallet set up, you can add your Bitcoin address to your OrangeCat profile 
-                and start receiving donations for your projects and projects.
+                Once you have your Bitcoin wallet set up, you can add your Bitcoin address to your
+                OrangeCat profile and start receiving donations for your projects and projects.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button
@@ -547,5 +557,5 @@ export default function BitcoinWalletGuidePage() {
         </motion.div>
       </div>
     </div>
-  )
+  );
 }

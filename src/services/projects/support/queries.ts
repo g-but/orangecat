@@ -11,7 +11,6 @@
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import type {
-  ProjectSupport,
   ProjectSupportWithUser,
   ProjectSupportStats,
   SupportFilters,
@@ -210,5 +209,3 @@ export async function hasUserSupported(
     return false;
   }
 }
-
-

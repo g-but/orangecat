@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
-import { Users, Heart, Briefcase, Zap, Target, Coins, MapPin, Sparkles } from 'lucide-react';
+import { Users, Heart, Briefcase, Target, Coins, Sparkles } from 'lucide-react';
 import type { CircleTemplate } from '@/config/entity-configs/circle-config';
 
 import type { UserCircleFormData } from '@/lib/validation';

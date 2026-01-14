@@ -4,7 +4,6 @@ import { logger } from '@/utils/logger';
 
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import type { Conversation } from './types';
-import supabase from '@/lib/supabase/browser';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useMessagingStore } from '@/stores/messaging';
@@ -120,19 +119,27 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
         setConversations([]);
         return;
       }
-      const responseData = await res.json().catch(() => ({ success: false, data: { conversations: [] } }));
+      const responseData = await res
+        .json()
+        .catch(() => ({ success: false, data: { conversations: [] } }));
       debugLog('[useConversations] responseData', {
         success: responseData.success,
         hasData: !!responseData.data,
-        count: Array.isArray(responseData.data?.conversations) ? responseData.data.conversations.length : 
-               Array.isArray(responseData.conversations) ? responseData.conversations.length : 0,
+        count: Array.isArray(responseData.data?.conversations)
+          ? responseData.data.conversations.length
+          : Array.isArray(responseData.conversations)
+            ? responseData.conversations.length
+            : 0,
       });
 
       // Handle both response formats: apiSuccess format { success: true, data: { conversations: [...] } }
       // and legacy format { conversations: [...] }
       const conversations = (
-        Array.isArray(responseData.data?.conversations) ? responseData.data.conversations :
-        Array.isArray(responseData.conversations) ? responseData.conversations : []
+        Array.isArray(responseData.data?.conversations)
+          ? responseData.data.conversations
+          : Array.isArray(responseData.conversations)
+            ? responseData.conversations
+            : []
       ) as Conversation[];
       const uniqueConversations = Array.from(
         new Map(conversations.map((c: Conversation) => [c.id, c])).values()

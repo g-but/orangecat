@@ -10,9 +10,25 @@
  */
 
 import { logger } from '@/utils/logger';
-import { generateCacheKey, getCachedResult, setCachedResult, clearSearchCache } from './search/cache';
-import { calculateRelevanceScore, sortResults, getSearchFacets, clearFacetsCache } from './search/processors';
-import { searchProfiles, searchFundingPages, searchLoans, getSearchSuggestions, getTrending as getTrendingData } from './search/queries';
+import {
+  generateCacheKey,
+  getCachedResult,
+  setCachedResult,
+  clearSearchCache,
+} from './search/cache';
+import {
+  calculateRelevanceScore,
+  sortResults,
+  getSearchFacets,
+  clearFacetsCache,
+} from './search/processors';
+import {
+  searchProfiles,
+  searchFundingPages,
+  searchLoans,
+  getSearchSuggestions,
+  getTrending as getTrendingData,
+} from './search/queries';
 
 // Re-export all types from types module
 export type {
@@ -28,17 +44,7 @@ export type {
 } from './search/types';
 
 // Import types for internal use
-import type {
-  SearchResult,
-  SearchType,
-  SortOption,
-  SearchFilters,
-  SearchOptions,
-  SearchResponse,
-  SearchProfile,
-  SearchFundingPage,
-  SearchLoan,
-} from './search/types';
+import type { SearchResult, SearchOptions, SearchResponse } from './search/types';
 
 /**
  * Main search function - orchestrates all search operations

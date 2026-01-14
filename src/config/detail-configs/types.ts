@@ -11,25 +11,25 @@
  * Last Modified: 2026-01-05
  */
 
-import { ComponentType, ReactNode } from 'react';
+import { ComponentType } from 'react';
 import { LucideIcon } from 'lucide-react';
 import { EntityType } from '@/config/entity-registry';
 
 // ==================== SECTION TYPES ====================
 
 export type SectionType =
-  | 'header'           // Title, status, creator, actions
-  | 'hero'             // Banner/thumbnail hero image
-  | 'media-gallery'    // Image gallery with lightbox
-  | 'content'          // Rich text/description content
-  | 'metadata'         // Key-value pairs in styled grid
-  | 'progress'         // Funding/goal progress bar
-  | 'timeline'         // Activity/updates timeline
-  | 'payment'          // Bitcoin/Lightning payment info
-  | 'related'          // Related entities
-  | 'creator'          // Creator profile card
-  | 'share'            // Share/social actions
-  | 'custom';          // Custom component
+  | 'header' // Title, status, creator, actions
+  | 'hero' // Banner/thumbnail hero image
+  | 'media-gallery' // Image gallery with lightbox
+  | 'content' // Rich text/description content
+  | 'metadata' // Key-value pairs in styled grid
+  | 'progress' // Funding/goal progress bar
+  | 'timeline' // Activity/updates timeline
+  | 'payment' // Bitcoin/Lightning payment info
+  | 'related' // Related entities
+  | 'creator' // Creator profile card
+  | 'share' // Share/social actions
+  | 'custom'; // Custom component
 
 // ==================== BASE SECTION CONFIG ====================
 

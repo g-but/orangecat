@@ -1,11 +1,9 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Profile } from '@/types/profile';
 import {
   isValidBitcoinAddress,
   isValidLightningAddress,
-  isValidUsername,
   isValidBio,
   isValidUrl,
 } from '@/utils/validation';

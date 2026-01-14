@@ -1,16 +1,16 @@
 import { BitcoinTransaction, BitcoinWalletData } from '@/types/bitcoin/index';
-import type { 
-  MempoolAddressInfo, 
-  BlockstreamAddressInfo, 
-  MempoolTransaction, 
-  BlockstreamTransaction
+import type {
+  MempoolAddressInfo,
+  BlockstreamAddressInfo,
+  MempoolTransaction,
+  BlockstreamTransaction,
 } from '@/types/bitcoin';
-import { getErrorMessage, type CatchError } from '@/types/common';
+import { getErrorMessage } from '@/types/common';
 import { logger } from '@/utils/logger';
 
 /**
  * BITCOIN SERVICE - CLASS-BASED ARCHITECTURE WITH DEPENDENCY INJECTION
- * 
+ *
  * CRITICAL FOR FINANCIAL PLATFORM:
  * - Handles Bitcoin address validation and wallet data fetching
  * - Supports multiple API providers with fallback
@@ -27,7 +27,10 @@ interface APIProvider {
   addressEndpoint: (address: string) => string;
   txsEndpoint: (address: string) => string;
   processBalance: (data: MempoolAddressInfo | BlockstreamAddressInfo) => number;
-  processTransactions: (data: MempoolTransaction[] | BlockstreamTransaction[], address: string) => BitcoinTransaction[];
+  processTransactions: (
+    data: MempoolTransaction[] | BlockstreamTransaction[],
+    address: string
+  ) => BitcoinTransaction[];
 }
 
 // Types for fetch interface (for dependency injection)
@@ -49,9 +52,13 @@ export class BitcoinService {
 
   constructor(fetchImplementation?: FetchInterface) {
     // Only use global fetch if it's available and no implementation is provided
-    this.fetchFn = fetchImplementation || (typeof fetch !== 'undefined' ? fetch.bind(globalThis) : (() => {
-      throw new Error('Fetch implementation is required in this environment');
-    }) as FetchInterface);
+    this.fetchFn =
+      fetchImplementation ||
+      (typeof fetch !== 'undefined'
+        ? fetch.bind(globalThis)
+        : ((() => {
+            throw new Error('Fetch implementation is required in this environment');
+          }) as FetchInterface));
     this.providers = this.getAPIProviders();
   }
 
@@ -68,14 +75,17 @@ export class BitcoinService {
           }
           const funded = Number(data.chain_stats.funded_txo_sum) || 0;
           const spent = Number(data.chain_stats.spent_txo_sum) || 0;
-          
+
           // Sanitize numbers to prevent Infinity/NaN
           const sanitizedFunded = isFinite(funded) ? funded : 0;
           const sanitizedSpent = isFinite(spent) ? spent : 0;
-          
+
           return Math.max(0, sanitizedFunded - sanitizedSpent);
         },
-        processTransactions: (data: MempoolTransaction[], address: string): BitcoinTransaction[] => {
+        processTransactions: (
+          data: MempoolTransaction[],
+          address: string
+        ): BitcoinTransaction[] => {
           if (!Array.isArray(data)) {
             return [];
           }
@@ -83,10 +93,12 @@ export class BitcoinService {
             let txType: 'incoming' | 'outgoing' = 'incoming';
             let valueInSatoshis = 0;
 
-            const inputsFromAddress = tx.vin?.filter((input: any) => 
-              input.prevout && input.prevout.scriptpubkey_address === address) || [];
-            const outputsToAddress = tx.vout?.filter((output: any) => 
-              output.scriptpubkey_address === address) || [];
+            const inputsFromAddress =
+              tx.vin?.filter(
+                (input: any) => input.prevout && input.prevout.scriptpubkey_address === address
+              ) || [];
+            const outputsToAddress =
+              tx.vout?.filter((output: any) => output.scriptpubkey_address === address) || [];
 
             if (inputsFromAddress.length > 0) {
               txType = 'outgoing';
@@ -100,13 +112,17 @@ export class BitcoinService {
                 valueInSatoshis = amountSentToOthers;
               } else {
                 const totalValueFromInputs = inputsFromAddress.reduce(
-                  (sum: number, input: any) => sum + (Number(input.prevout?.value) || 0), 0);
+                  (sum: number, input: any) => sum + (Number(input.prevout?.value) || 0),
+                  0
+                );
                 valueInSatoshis = totalValueFromInputs;
               }
             } else if (outputsToAddress.length > 0) {
               txType = 'incoming';
               valueInSatoshis = outputsToAddress.reduce(
-                (sum: number, output: any) => sum + (Number(output.value) || 0), 0);
+                (sum: number, output: any) => sum + (Number(output.value) || 0),
+                0
+              );
             } else {
               valueInSatoshis = 0;
             }
@@ -114,7 +130,7 @@ export class BitcoinService {
             return {
               txid: tx.txid || 'unknown',
               value: valueInSatoshis / 100000000, // Convert satoshis to BTC
-              status: (tx.status?.confirmed) ? 'confirmed' : 'pending',
+              status: tx.status?.confirmed ? 'confirmed' : 'pending',
               timestamp: tx.status?.block_time ? tx.status.block_time * 1000 : Date.now(),
               type: txType,
             };
@@ -132,14 +148,17 @@ export class BitcoinService {
           }
           const funded = Number(data.chain_stats.funded_txo_sum) || 0;
           const spent = Number(data.chain_stats.spent_txo_sum) || 0;
-          
+
           // Sanitize numbers to prevent Infinity/NaN
           const sanitizedFunded = isFinite(funded) ? funded : 0;
           const sanitizedSpent = isFinite(spent) ? spent : 0;
-          
+
           return Math.max(0, sanitizedFunded - sanitizedSpent);
         },
-        processTransactions: (data: BlockstreamTransaction[], address: string): BitcoinTransaction[] => {
+        processTransactions: (
+          data: BlockstreamTransaction[],
+          address: string
+        ): BitcoinTransaction[] => {
           if (!Array.isArray(data)) {
             return [];
           }
@@ -147,10 +166,12 @@ export class BitcoinService {
             let txType: 'incoming' | 'outgoing' = 'incoming';
             let valueInSatoshis = 0;
 
-            const inputsFromAddress = tx.vin?.filter((input: any) => 
-              input.prevout && input.prevout.scriptpubkey_address === address) || [];
-            const outputsToAddress = tx.vout?.filter((output: any) => 
-              output.scriptpubkey_address === address) || [];
+            const inputsFromAddress =
+              tx.vin?.filter(
+                (input: any) => input.prevout && input.prevout.scriptpubkey_address === address
+              ) || [];
+            const outputsToAddress =
+              tx.vout?.filter((output: any) => output.scriptpubkey_address === address) || [];
 
             if (inputsFromAddress.length > 0) {
               txType = 'outgoing';
@@ -164,13 +185,17 @@ export class BitcoinService {
                 valueInSatoshis = amountSentToOthers;
               } else {
                 const totalValueFromInputs = inputsFromAddress.reduce(
-                  (sum: number, input: any) => sum + (Number(input.prevout?.value) || 0), 0);
+                  (sum: number, input: any) => sum + (Number(input.prevout?.value) || 0),
+                  0
+                );
                 valueInSatoshis = totalValueFromInputs;
               }
             } else if (outputsToAddress.length > 0) {
               txType = 'incoming';
               valueInSatoshis = outputsToAddress.reduce(
-                (sum: number, output: any) => sum + (Number(output.value) || 0), 0);
+                (sum: number, output: any) => sum + (Number(output.value) || 0),
+                0
+              );
             } else {
               valueInSatoshis = 0;
             }
@@ -178,7 +203,7 @@ export class BitcoinService {
             return {
               txid: tx.txid || 'unknown',
               value: valueInSatoshis / 100000000, // Convert satoshis to BTC
-              status: (tx.status?.confirmed) ? 'confirmed' : 'pending',
+              status: tx.status?.confirmed ? 'confirmed' : 'pending',
               timestamp: tx.status?.block_time ? tx.status.block_time * 1000 : Date.now(),
               type: txType,
             };
@@ -205,14 +230,16 @@ export class BitcoinService {
 
   // Clean Bitcoin address from URI if needed
   cleanBitcoinAddress(address: string): string {
-    if (!address) {return '';}
-    return address.startsWith('bitcoin:') 
-      ? address.split('?')[0].replace('bitcoin:', '')
-      : address;
+    if (!address) {
+      return '';
+    }
+    return address.startsWith('bitcoin:') ? address.split('?')[0].replace('bitcoin:', '') : address;
   }
 
   // Get balance for a Bitcoin address
-  async getBalance(address: string): Promise<{ confirmed: number; unconfirmed: number; total: number; error?: string }> {
+  async getBalance(
+    address: string
+  ): Promise<{ confirmed: number; unconfirmed: number; total: number; error?: string }> {
     try {
       const walletData = await this.fetchBitcoinWalletData(address);
       const confirmed = Number(walletData.balance) || 0;
@@ -220,14 +247,14 @@ export class BitcoinService {
       return {
         confirmed,
         unconfirmed,
-        total: confirmed + unconfirmed
+        total: confirmed + unconfirmed,
       };
     } catch (error: CatchError) {
       return {
         confirmed: 0,
         unconfirmed: 0,
         total: 0,
-        error: getErrorMessage(error)
+        error: getErrorMessage(error),
       };
     }
   }
@@ -246,54 +273,66 @@ export class BitcoinService {
   // Fetch wallet data with failover between different providers
   async fetchBitcoinWalletData(address: string): Promise<BitcoinWalletData> {
     const cleanAddress = this.cleanBitcoinAddress(address);
-    
+
     // Validate address before making API calls
     if (!cleanAddress) {
       throw new Error('Invalid or empty Bitcoin address');
     }
-    
+
     // Basic Bitcoin address validation
     const bitcoinAddressRegex = /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,87}$/;
     if (!bitcoinAddressRegex.test(cleanAddress)) {
       throw new Error('Invalid Bitcoin address format');
     }
-    
+
     let lastError: Error | null = null;
-    
+
     for (const provider of this.providers) {
       try {
         const addressUrl = `${provider.baseUrl}${provider.addressEndpoint(cleanAddress)}`;
         const addressResponse = await this.fetchWithTimeout(addressUrl, API_TIMEOUT_MS);
-        
+
         if (!addressResponse || !addressResponse.ok) {
           const errorText = addressResponse ? await addressResponse.text() : 'No response';
-          logger.warn(`API Error from ${provider.name} (Address - ${addressResponse?.status || 'unknown'}): ${errorText}`, undefined, 'Bitcoin');
-          lastError = new Error(`Provider ${provider.name} address fetch failed: ${addressResponse?.status || 'unknown'}`);
+          logger.warn(
+            `API Error from ${provider.name} (Address - ${addressResponse?.status || 'unknown'}): ${errorText}`,
+            undefined,
+            'Bitcoin'
+          );
+          lastError = new Error(
+            `Provider ${provider.name} address fetch failed: ${addressResponse?.status || 'unknown'}`
+          );
           continue;
         }
-        
+
         const addressData = await addressResponse.json();
         const balanceInSatoshis = provider.processBalance(addressData);
-        
+
         const txsUrl = `${provider.baseUrl}${provider.txsEndpoint(cleanAddress)}`;
         const txsResponse = await this.fetchWithTimeout(txsUrl, API_TIMEOUT_MS);
-        
+
         if (!txsResponse || !txsResponse.ok) {
           const errorText = txsResponse ? await txsResponse.text() : 'No response';
-          logger.warn(`API Error from ${provider.name} (Transactions - ${txsResponse?.status || 'unknown'}): ${errorText}`, undefined, 'Bitcoin');
-          lastError = new Error(`Provider ${provider.name} transactions fetch failed: ${txsResponse?.status || 'unknown'}`);
+          logger.warn(
+            `API Error from ${provider.name} (Transactions - ${txsResponse?.status || 'unknown'}): ${errorText}`,
+            undefined,
+            'Bitcoin'
+          );
+          lastError = new Error(
+            `Provider ${provider.name} transactions fetch failed: ${txsResponse?.status || 'unknown'}`
+          );
           continue;
         }
-        
+
         const txsData = await txsResponse.json();
         const transactions = provider.processTransactions(txsData, cleanAddress);
-        
+
         return {
           balance: balanceInSatoshis / 100000000, // Convert balance to BTC here
           address: cleanAddress,
           transactions,
           network: 'mainnet' as const,
-          lastUpdated: new Date().toISOString()
+          lastUpdated: new Date().toISOString(),
         };
       } catch (error: CatchError) {
         const errorMessage = getErrorMessage(error);
@@ -302,9 +341,16 @@ export class BitcoinService {
         // Continue to next provider
       }
     }
-    
-    logger.error(`Failed to fetch wallet data for ${cleanAddress} from all providers`, { error: getErrorMessage(lastError) }, 'Bitcoin');
-    throw lastError || new Error('Failed to fetch wallet data from any provider for address: ' + cleanAddress);
+
+    logger.error(
+      `Failed to fetch wallet data for ${cleanAddress} from all providers`,
+      { error: getErrorMessage(lastError) },
+      'Bitcoin'
+    );
+    throw (
+      lastError ||
+      new Error('Failed to fetch wallet data from any provider for address: ' + cleanAddress)
+    );
   }
 
   // Get mempool.space transaction URL
@@ -323,7 +369,8 @@ export const bitcoinService = BitcoinService.getInstance();
 
 // Legacy function exports for backward compatibility
 export const cleanBitcoinAddress = (address: string) => bitcoinService.cleanBitcoinAddress(address);
-export const fetchBitcoinWalletData = (address: string) => bitcoinService.fetchBitcoinWalletData(address);
+export const fetchBitcoinWalletData = (address: string) =>
+  bitcoinService.fetchBitcoinWalletData(address);
 export const getTransactionUrl = (txid: string) => bitcoinService.getTransactionUrl(txid);
 export const getAddressUrl = (address: string) => bitcoinService.getAddressUrl(address);
 
@@ -332,7 +379,7 @@ export const formatBtcValue = (value: number, decimals: number = 8): string => {
   if (typeof value !== 'number' || !isFinite(value)) {
     return '0.00000000';
   }
-  
+
   // Ensure we don't show more than 8 decimal places for BTC
   const clampedDecimals = Math.min(Math.max(0, decimals), 8);
   return value.toFixed(clampedDecimals);

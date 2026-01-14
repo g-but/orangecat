@@ -11,9 +11,7 @@
 
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/Input';
-import { ProfileFieldType } from '@/lib/profile-guidance';
-import { Control } from 'react-hook-form';
-import { ProfileFormValues, OnlinePresenceSectionProps } from '../types';
+import { OnlinePresenceSectionProps } from '../types';
 import { SocialLinksEditor } from '../SocialLinksEditor';
 import { MAX_SOCIAL_LINKS, PROFILE_SECTIONS, PROFILE_SECTION_DESCRIPTIONS } from '../constants';
 
@@ -55,7 +53,11 @@ export function OnlinePresenceSection({
       {/* Social Media & Links */}
       <div id="socialLinks" className="pt-4 mt-2 border-t border-gray-100">
         <div onFocus={() => onFieldFocus?.('socialLinks')} tabIndex={-1}>
-          <SocialLinksEditor links={socialLinks} onChange={setSocialLinks} maxLinks={MAX_SOCIAL_LINKS} />
+          <SocialLinksEditor
+            links={socialLinks}
+            onChange={setSocialLinks}
+            maxLinks={MAX_SOCIAL_LINKS}
+          />
         </div>
         <p className="text-xs text-gray-500 mt-3">
           💡 Want to add wallets? Manage them in{' '}
@@ -72,5 +74,3 @@ export function OnlinePresenceSection({
     </div>
   );
 }
-
-

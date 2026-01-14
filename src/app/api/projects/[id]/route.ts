@@ -1,11 +1,12 @@
-import { NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import { projectSchema } from '@/lib/validation';
-import { apiForbidden, apiNotFound } from '@/lib/api/standardResponse';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 import { createEntityCrudHandlers } from '@/lib/api/entityCrudHandler';
-import { createUpdatePayloadBuilder, commonFieldMappings, entityTransforms } from '@/lib/api/buildUpdatePayload';
+import {
+  createUpdatePayloadBuilder,
+  commonFieldMappings,
+  entityTransforms,
+} from '@/lib/api/buildUpdatePayload';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
@@ -62,17 +63,11 @@ async function postProcessProjectPut(
   userId: string,
   supabase: SupabaseClient
 ): Promise<void> {
-  await auditSuccess(
-    AUDIT_ACTIONS.PROJECT_CREATED,
-    userId,
-    'project',
-    project.id as string,
-    {
-      action: 'update',
-      updatedFields: Object.keys(project),
-      title: project.title as string,
-    }
-  );
+  await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, userId, 'project', project.id as string, {
+    action: 'update',
+    updatedFields: Object.keys(project),
+    title: project.title as string,
+  });
 }
 
 // Post-process DELETE: Audit logging
@@ -81,17 +76,11 @@ async function postProcessProjectDelete(
   userId: string,
   supabase: SupabaseClient
 ): Promise<void> {
-  await auditSuccess(
-    AUDIT_ACTIONS.PROJECT_CREATED,
-    userId,
-    'project',
-    project.id as string,
-    {
-      action: 'delete',
-      title: project.title as string,
-      category: project.category as string,
-    }
-  );
+  await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, userId, 'project', project.id as string, {
+    action: 'delete',
+    title: project.title as string,
+    category: project.category as string,
+  });
 }
 
 // Build update payload from validated project data

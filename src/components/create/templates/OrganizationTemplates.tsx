@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Network, Users, Briefcase, Heart, TrendingUp, Shield, Zap } from 'lucide-react';
 import type { OrganizationFormData } from '@/lib/validation';
 // transformOrganizationTemplate is now handled by CreateEntityWorkflow
 
@@ -38,8 +37,14 @@ export const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
       requires_approval: true,
       tags: ['dao', 'governance', 'blockchain'],
     },
-    benefits: ['Transparent governance', 'On-chain voting', 'Collective treasury', 'Global participation'],
-    useCase: 'Perfect for protocol communities, open-source projects, and decentralized initiatives requiring transparent governance.',
+    benefits: [
+      'Transparent governance',
+      'On-chain voting',
+      'Collective treasury',
+      'Global participation',
+    ],
+    useCase:
+      'Perfect for protocol communities, open-source projects, and decentralized initiatives requiring transparent governance.',
   },
   {
     id: 'nonprofit',
@@ -54,8 +59,14 @@ export const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
       requires_approval: true,
       tags: ['nonprofit', 'charity', 'transparency'],
     },
-    benefits: ['Transparent donations', 'Public accountability', 'Tax compliance', 'Community trust'],
-    useCase: 'Ideal for charitable foundations, educational institutions, and community service organizations.',
+    benefits: [
+      'Transparent donations',
+      'Public accountability',
+      'Tax compliance',
+      'Community trust',
+    ],
+    useCase:
+      'Ideal for charitable foundations, educational institutions, and community service organizations.',
   },
   {
     id: 'cooperative',
@@ -70,7 +81,12 @@ export const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
       requires_approval: true,
       tags: ['cooperative', 'worker-owned', 'democracy'],
     },
-    benefits: ['Democratic ownership', 'Profit sharing', 'Collective decision-making', 'Member equity'],
+    benefits: [
+      'Democratic ownership',
+      'Profit sharing',
+      'Collective decision-making',
+      'Member equity',
+    ],
     useCase: 'Great for businesses where workers want shared ownership and equal voting rights.',
   },
   {
@@ -87,7 +103,8 @@ export const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
       tags: ['investment', 'syndicate', 'bitcoin'],
     },
     benefits: ['Pooled capital', 'Shared research', 'Risk diversification', 'Collective expertise'],
-    useCase: 'Perfect for groups pooling resources for Bitcoin investments, real estate, or other assets.',
+    useCase:
+      'Perfect for groups pooling resources for Bitcoin investments, real estate, or other assets.',
   },
   {
     id: 'professional-guild',
@@ -102,8 +119,14 @@ export const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
       requires_approval: true,
       tags: ['guild', 'professional', 'standards'],
     },
-    benefits: ['Professional standards', 'Certification programs', 'Industry advocacy', 'Networking'],
-    useCase: 'Ideal for professional associations, trade guilds, and industry standards organizations.',
+    benefits: [
+      'Professional standards',
+      'Certification programs',
+      'Industry advocacy',
+      'Networking',
+    ],
+    useCase:
+      'Ideal for professional associations, trade guilds, and industry standards organizations.',
   },
   {
     id: 'community-collective',
@@ -118,8 +141,14 @@ export const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
       requires_approval: false,
       tags: ['community', 'local', 'grassroots'],
     },
-    benefits: ['Local impact', 'Grassroots organizing', 'Community empowerment', 'Flexible structure'],
-    useCase: 'Great for neighborhood associations, activist groups, and community organizing initiatives.',
+    benefits: [
+      'Local impact',
+      'Grassroots organizing',
+      'Community empowerment',
+      'Flexible structure',
+    ],
+    useCase:
+      'Great for neighborhood associations, activist groups, and community organizing initiatives.',
   },
   {
     id: 'startup-company',
@@ -135,7 +164,8 @@ export const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
       tags: ['startup', 'business', 'entrepreneurship'],
     },
     benefits: ['Structured operations', 'Clear roles', 'Investor relations', 'Scalable governance'],
-    useCase: 'Perfect for startups needing formal structure while maintaining flexibility for growth.',
+    useCase:
+      'Perfect for startups needing formal structure while maintaining flexibility for growth.',
   },
   {
     id: 'foundation',
@@ -163,21 +193,23 @@ export default function OrganizationTemplates({ onSelectTemplate }: Organization
     // Pass the template data directly - CreateEntityWorkflow handles transformation
     onSelectTemplate({
       type: template.type,
-      ...template.suggestedSettings
+      ...template.suggestedSettings,
     });
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Choose an Organization Template</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          Choose an Organization Template
+        </h3>
         <p className="text-sm text-gray-600">
           Start with a pre-configured template or create a custom organization from scratch.
         </p>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {ORGANIZATION_TEMPLATES.map((template) => (
+        {ORGANIZATION_TEMPLATES.map(template => (
           <Card
             key={template.id}
             className={`p-5 cursor-pointer transition-all hover:shadow-lg ${
@@ -186,7 +218,9 @@ export default function OrganizationTemplates({ onSelectTemplate }: Organization
             onClick={() => handleSelect(template)}
           >
             <div className="flex items-start gap-3 mb-3">
-              <div className={`w-12 h-12 ${template.color} rounded-lg flex items-center justify-center text-2xl flex-shrink-0`}>
+              <div
+                className={`w-12 h-12 ${template.color} rounded-lg flex items-center justify-center text-2xl flex-shrink-0`}
+              >
                 {template.icon}
               </div>
               <div className="flex-1 min-w-0">
@@ -219,7 +253,7 @@ export default function OrganizationTemplates({ onSelectTemplate }: Organization
               variant={selectedId === template.id ? 'primary' : 'outline'}
               size="sm"
               className="w-full"
-              onClick={(e) => {
+              onClick={e => {
                 e.stopPropagation();
                 handleSelect(template);
               }}
@@ -245,4 +279,3 @@ export default function OrganizationTemplates({ onSelectTemplate }: Organization
     </div>
   );
 }
-

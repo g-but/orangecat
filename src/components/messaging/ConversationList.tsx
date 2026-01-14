@@ -8,7 +8,6 @@ import AvatarLink from '@/components/ui/AvatarLink';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/useAuth';
 import { useConversations } from '@/features/messaging/hooks';
-import { toast } from 'sonner';
 import type { Conversation } from '@/features/messaging/types';
 
 interface ConversationListProps {

@@ -9,14 +9,22 @@
 
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { DollarSign, ArrowLeft, Percent, TrendingUp, User, Calendar, Clock, MessageSquare } from 'lucide-react';
+import {
+  DollarSign,
+  ArrowLeft,
+  Percent,
+  TrendingUp,
+  User,
+  Calendar,
+  Clock,
+  MessageSquare,
+} from 'lucide-react';
 import { createServerClient } from '@/lib/supabase/server';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import Button from '@/components/ui/Button';
 import { formatDistanceToNow, format } from 'date-fns';
-import type { Loan } from '@/types/loans';
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -49,7 +57,8 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
   // Fetch public loan with owner profile
   const { data: loanData, error } = await supabase
     .from('loans')
-    .select(`
+    .select(
+      `
       *,
       profiles:user_id (
         id,
@@ -57,7 +66,8 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
         name,
         avatar_url
       )
-    `)
+    `
+    )
     .eq('id', id)
     .eq('is_public', true)
     .single();
@@ -68,7 +78,12 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
   }
 
   const progress = calculateProgress(loan.original_amount, loan.remaining_balance);
-  const owner = loan.profiles as { id: string; username: string | null; name: string | null; avatar_url: string | null } | null;
+  const owner = loan.profiles as {
+    id: string;
+    username: string | null;
+    name: string | null;
+    avatar_url: string | null;
+  } | null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50/50 via-white to-tiffany-50/30">
@@ -242,9 +257,7 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">Negotiable</span>
-                  <span className="font-medium">
-                    {loan.is_negotiable ? 'Yes' : 'No'}
-                  </span>
+                  <span className="font-medium">{loan.is_negotiable ? 'Yes' : 'No'}</span>
                 </div>
                 {loan.minimum_offer_amount && (
                   <div className="flex items-center justify-between text-sm">
@@ -288,7 +301,9 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
                 {loan.updated_at && loan.updated_at !== loan.created_at && (
                   <div className="flex items-center gap-2 text-gray-600">
                     <Clock className="w-4 h-4" />
-                    <span>Updated {formatDistanceToNow(new Date(loan.updated_at), { addSuffix: true })}</span>
+                    <span>
+                      Updated {formatDistanceToNow(new Date(loan.updated_at), { addSuffix: true })}
+                    </span>
                   </div>
                 )}
               </CardContent>

@@ -1,10 +1,5 @@
-import {
-  getUserFundraisingStats,
-  getRecentDonationsCount,
-  FundraisingStats,
-} from '@/services/supabase/fundraising';
+import { getUserFundraisingStats, getRecentDonationsCount } from '@/services/supabase/fundraising';
 import { fetchBitcoinWalletData } from '@/services/bitcoin';
-import { demoProjects } from '@/data/dashboardConfigs';
 import { logger } from '@/utils/logger';
 
 // Types for our analytics system

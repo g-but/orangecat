@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from 'lucide-react';
 import { useToastStore, Toast as ToastType } from '@/hooks/useToast';
 

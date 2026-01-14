@@ -12,7 +12,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/Button';
 import { REACTION_EMOJIS, REACTION_LABELS } from '@/services/projects/support/constants';
 import type { ReactionEmoji } from '@/services/projects/support/types';
 
@@ -22,7 +21,11 @@ interface ReactionPickerProps {
   className?: string;
 }
 
-export function ReactionPicker({ onReactionSelect, disabled = false, className }: ReactionPickerProps) {
+export function ReactionPicker({
+  onReactionSelect,
+  disabled = false,
+  className,
+}: ReactionPickerProps) {
   const [selectedEmoji, setSelectedEmoji] = useState<ReactionEmoji | null>(null);
 
   const handleReaction = (emoji: ReactionEmoji) => {
@@ -32,7 +35,7 @@ export function ReactionPicker({ onReactionSelect, disabled = false, className }
 
   return (
     <div className={`flex items-center gap-2 ${className}`}>
-      {REACTION_EMOJIS.map((emoji) => (
+      {REACTION_EMOJIS.map(emoji => (
         <button
           key={emoji}
           onClick={() => handleReaction(emoji)}
@@ -53,5 +56,3 @@ export function ReactionPicker({ onReactionSelect, disabled = false, className }
     </div>
   );
 }
-
-

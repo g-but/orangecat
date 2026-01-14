@@ -16,7 +16,6 @@ import {
   DollarSign,
   Users,
   Shield,
-  Briefcase,
   Globe,
   Calendar,
   Percent,
@@ -43,8 +42,7 @@ export const proposalGuidanceContent: Record<NonNullable<ProposalFieldType>, Gui
   title: {
     icon: React.createElement(FileText, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Proposal Title',
-    description:
-      'Write a clear, concise title that summarizes what the proposal aims to achieve.',
+    description: 'Write a clear, concise title that summarizes what the proposal aims to achieve.',
     tips: [
       'Keep it under 60 characters for readability',
       'Be specific about the action or decision',
@@ -102,7 +100,7 @@ export const proposalGuidanceContent: Record<NonNullable<ProposalFieldType>, Gui
     icon: React.createElement(Percent, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Voting Threshold',
     description:
-      'The minimum percentage of yes votes required for the proposal to pass. Leave empty to use the group\'s default threshold.',
+      "The minimum percentage of yes votes required for the proposal to pass. Leave empty to use the group's default threshold.",
     tips: [
       'Lower threshold (e.g., 50%) = easier to pass',
       'Higher threshold (e.g., 75%) = requires more consensus',
@@ -193,7 +191,7 @@ export const proposalGuidanceContent: Record<NonNullable<ProposalFieldType>, Gui
     icon: React.createElement(Wallet, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Source Wallet',
     description:
-      'Optional: Specify which wallet to spend from. Leave empty to use the group\'s default treasury wallet.',
+      "Optional: Specify which wallet to spend from. Leave empty to use the group's default treasury wallet.",
     tips: [
       'Leave empty to use default treasury',
       'Specify if using a dedicated wallet',
@@ -235,4 +233,3 @@ export const proposalDefaultGuidance: DefaultGuidance = {
   ],
   hint: '💡 Click on any field to get specific guidance and examples',
 };
-

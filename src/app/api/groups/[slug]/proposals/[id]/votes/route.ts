@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { handleApiError, apiUnauthorized, apiSuccess } from '@/lib/api/standardResponse';
+import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { getProposalVotes } from '@/services/groups/queries/proposals';
 import { createServerClient } from '@/lib/supabase/server';
@@ -36,4 +36,3 @@ export async function GET(
     return handleApiError(error);
   }
 }
-

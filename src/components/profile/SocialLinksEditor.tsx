@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { SocialLink } from '@/types/social';
 import {
-  SOCIAL_PLATFORMS,
   getPlatformById,
   getPredefinedPlatforms,
   type SocialPlatformId,

@@ -1,11 +1,11 @@
 import React from 'react';
-import Link from 'next/link';
 import { Metadata } from 'next';
-import { Briefcase, Code, Users, Zap, Heart, Globe, Coffee, Target } from 'lucide-react';
+import { Briefcase, Users, Zap, Heart, Globe, Coffee } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Careers at BitBaum - Join Our Bitcoin Mission',
-  description: 'Work with us to build the future of Bitcoin commerce. Join BitBaum and help create platforms that empower communities worldwide.',
+  description:
+    'Work with us to build the future of Bitcoin commerce. Join BitBaum and help create platforms that empower communities worldwide.',
 };
 
 export default function CareersPage() {
@@ -15,7 +15,8 @@ export default function CareersPage() {
       department: 'Engineering',
       location: 'Remote / Switzerland',
       type: 'Full-time',
-      description: 'Build Bitcoin-native applications and smart contracts. Experience with Lightning Network preferred.',
+      description:
+        'Build Bitcoin-native applications and smart contracts. Experience with Lightning Network preferred.',
     },
     {
       title: 'Community Manager',
@@ -36,7 +37,8 @@ export default function CareersPage() {
       department: 'Engineering',
       location: 'Remote',
       type: 'Full-time',
-      description: 'Build developer tools, documentation, and community around our Bitcoin platforms.',
+      description:
+        'Build developer tools, documentation, and community around our Bitcoin platforms.',
     },
   ];
 
@@ -44,22 +46,26 @@ export default function CareersPage() {
     {
       icon: <Heart className="w-6 h-6" />,
       title: 'Bitcoin First',
-      description: 'We build everything with Bitcoin at its core, creating transparent and censorship-resistant platforms.',
+      description:
+        'We build everything with Bitcoin at its core, creating transparent and censorship-resistant platforms.',
     },
     {
       icon: <Users className="w-6 h-6" />,
       title: 'Community Driven',
-      description: 'Our success depends on the communities we serve. We listen, learn, and build together.',
+      description:
+        'Our success depends on the communities we serve. We listen, learn, and build together.',
     },
     {
       icon: <Zap className="w-6 h-6" />,
       title: 'Always Day 1',
-      description: 'We maintain an entrepreneurial mindset, staying agile and innovative in everything we do.',
+      description:
+        'We maintain an entrepreneurial mindset, staying agile and innovative in everything we do.',
     },
     {
       icon: <Globe className="w-6 h-6" />,
       title: 'Global Impact',
-      description: 'Our work empowers creators, communities, and individuals worldwide to thrive economically.',
+      description:
+        'Our work empowers creators, communities, and individuals worldwide to thrive economically.',
     },
   ];
 
@@ -125,7 +131,10 @@ export default function CareersPage() {
           {openPositions.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {openPositions.map((position, index) => (
-                <div key={index} className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div
+                  key={index}
+                  className="bg-white rounded-xl shadow-sm p-6 border border-gray-200"
+                >
                   <div className="flex justify-between items-start mb-4">
                     <div>
                       <h3 className="text-xl font-semibold text-gray-900 mb-1">{position.title}</h3>
@@ -152,9 +161,12 @@ export default function CareersPage() {
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Coffee className="w-8 h-8 text-gray-400" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Open Positions Right Now</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No Open Positions Right Now
+              </h3>
               <p className="text-gray-600 mb-6">
-                We're always growing! Send us your resume and we'll keep you in mind for future opportunities.
+                We're always growing! Send us your resume and we'll keep you in mind for future
+                opportunities.
               </p>
               <button className="px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
                 Send Your Resume
@@ -180,8 +192,8 @@ export default function CareersPage() {
 
           <div className="text-center">
             <p className="text-gray-600 mb-6">
-              We believe in compensating our team fairly with competitive salaries,
-              Bitcoin bonuses, and benefits that support work-life balance.
+              We believe in compensating our team fairly with competitive salaries, Bitcoin bonuses,
+              and benefits that support work-life balance.
             </p>
           </div>
         </div>
@@ -190,8 +202,8 @@ export default function CareersPage() {
         <div className="text-center">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Join Our Mission?</h2>
           <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Whether we have an open position or not, we'd love to hear from talented individuals
-            who share our passion for Bitcoin and community building.
+            Whether we have an open position or not, we'd love to hear from talented individuals who
+            share our passion for Bitcoin and community building.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -204,15 +216,12 @@ export default function CareersPage() {
           </div>
 
           <p className="text-sm text-gray-500 mt-6">
-            We are an equal opportunity employer and value diversity at our company.
-            We do not discriminate on the basis of race, religion, color, national origin,
-            gender, sexual orientation, age, marital status, veteran status, or disability status.
+            We are an equal opportunity employer and value diversity at our company. We do not
+            discriminate on the basis of race, religion, color, national origin, gender, sexual
+            orientation, age, marital status, veteran status, or disability status.
           </p>
         </div>
       </div>
     </div>
   );
 }
-
-
-

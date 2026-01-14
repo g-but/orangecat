@@ -5,7 +5,6 @@ import { MessageCircle, X, Send, Loader2, Bot, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './Button';
 import { Input } from './Input';
-import { Card } from './Card';
 
 interface Message {
   id: string;
@@ -311,6 +310,3 @@ export function LLMChat({
     </div>
   );
 }
-
-
-

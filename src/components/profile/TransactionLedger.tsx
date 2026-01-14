@@ -1,49 +1,51 @@
-'use client'
+'use client';
 
-import { motion } from 'framer-motion'
-import { ThumbsUp, ThumbsDown, MessageCircle, Bitcoin, ArrowUp, ArrowDown } from 'lucide-react'
-import { useState } from 'react'
-import { formatDistanceToNow } from 'date-fns'
+import { motion } from 'framer-motion';
+import { ThumbsUp, ThumbsDown, MessageCircle, ArrowUp, ArrowDown } from 'lucide-react';
+import { useState } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface Comment {
-  id: string
-  author: string
-  text: string
-  timestamp: string
+  id: string;
+  author: string;
+  text: string;
+  timestamp: string;
 }
 
 interface Transaction {
-  id: string
-  amount: number
-  timestamp: string
-  type: 'incoming' | 'outgoing'
-  explanation?: string
-  likes: number
-  dislikes: number
-  comments: Comment[]
+  id: string;
+  amount: number;
+  timestamp: string;
+  type: 'incoming' | 'outgoing';
+  explanation?: string;
+  likes: number;
+  dislikes: number;
+  comments: Comment[];
 }
 
 interface TransactionLedgerProps {
-  transactions: Transaction[]
+  transactions: Transaction[];
 }
 
 export function TransactionLedger({ transactions }: TransactionLedgerProps) {
-  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({})
-  const [activeReactions, setActiveReactions] = useState<Record<string, 'like' | 'dislike' | null>>({})
+  const [expandedComments, setExpandedComments] = useState<Record<string, boolean>>({});
+  const [activeReactions, setActiveReactions] = useState<Record<string, 'like' | 'dislike' | null>>(
+    {}
+  );
 
   const toggleComments = (transactionId: string) => {
     setExpandedComments(prev => ({
       ...prev,
-      [transactionId]: !prev[transactionId]
-    }))
-  }
+      [transactionId]: !prev[transactionId],
+    }));
+  };
 
   const handleReaction = (transactionId: string, type: 'like' | 'dislike') => {
     setActiveReactions(prev => ({
       ...prev,
-      [transactionId]: prev[transactionId] === type ? null : type
-    }))
-  }
+      [transactionId]: prev[transactionId] === type ? null : type,
+    }));
+  };
 
   return (
     <motion.div
@@ -52,9 +54,9 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
       transition={{ duration: 0.5, delay: 0.3 }}
     >
       <h2 className="text-2xl font-bold mb-6 text-center">Transaction History</h2>
-      
+
       <div className="space-y-4">
-        {transactions.map((transaction) => (
+        {transactions.map(transaction => (
           <motion.div
             key={transaction.id}
             initial={{ opacity: 0, y: 20 }}
@@ -64,9 +66,13 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
           >
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                  transaction.type === 'incoming' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                }`}>
+                <div
+                  className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                    transaction.type === 'incoming'
+                      ? 'bg-green-100 text-green-600'
+                      : 'bg-red-100 text-red-600'
+                  }`}
+                >
                   {transaction.type === 'incoming' ? (
                     <ArrowDown className="w-5 h-5" />
                   ) : (
@@ -82,12 +88,12 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
                   </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-4">
-                <button 
+                <button
                   className={`flex items-center gap-1 transition-colors ${
-                    activeReactions[transaction.id] === 'like' 
-                      ? 'text-tiffany' 
+                    activeReactions[transaction.id] === 'like'
+                      ? 'text-tiffany'
                       : 'text-slate-500 hover:text-tiffany'
                   }`}
                   onClick={() => handleReaction(transaction.id, 'like')}
@@ -95,10 +101,10 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
                   <ThumbsUp className="w-4 h-4" />
                   <span>{transaction.likes}</span>
                 </button>
-                <button 
+                <button
                   className={`flex items-center gap-1 transition-colors ${
-                    activeReactions[transaction.id] === 'dislike' 
-                      ? 'text-tiffany' 
+                    activeReactions[transaction.id] === 'dislike'
+                      ? 'text-tiffany'
                       : 'text-slate-500 hover:text-tiffany'
                   }`}
                   onClick={() => handleReaction(transaction.id, 'dislike')}
@@ -106,10 +112,10 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
                   <ThumbsDown className="w-4 h-4" />
                   <span>{transaction.dislikes}</span>
                 </button>
-                <button 
+                <button
                   className={`flex items-center gap-1 transition-colors ${
-                    expandedComments[transaction.id] 
-                      ? 'text-tiffany' 
+                    expandedComments[transaction.id]
+                      ? 'text-tiffany'
                       : 'text-slate-500 hover:text-tiffany'
                   }`}
                   onClick={() => toggleComments(transaction.id)}
@@ -129,7 +135,7 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
             {expandedComments[transaction.id] && (
               <div className="mt-4 space-y-3">
                 {transaction.comments.length > 0 ? (
-                  transaction.comments.map((comment) => (
+                  transaction.comments.map(comment => (
                     <div key={comment.id} className="pl-4 border-l-2 border-slate-200">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold">{comment.author}</span>
@@ -149,5 +155,5 @@ export function TransactionLedger({ transactions }: TransactionLedgerProps) {
         ))}
       </div>
     </motion.div>
-  )
-} 
+  );
+}

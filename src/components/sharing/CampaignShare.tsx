@@ -1,15 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import {
-  Share2,
-  X as XIcon,
-  Download,
-  QrCode,
-} from 'lucide-react';
+import { Share2, X as XIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { toast } from 'sonner';
 import { trackEvent } from '@/utils/monitoring';
 import ShareContent from './ShareContent';
 
@@ -26,7 +19,7 @@ interface CampaignShareProps {
 
 /**
  * CampaignShare Component
- * 
+ *
  * Wrapper around ShareContent for project/campaign-specific sharing.
  * Extends ShareContent with project-specific features (QR code, analytics).
  * DRY: Uses reusable ShareContent component.
@@ -41,7 +34,9 @@ export default function CampaignShare({
   className = '',
 }: CampaignShareProps) {
   // Construct the project URL
-  const projectUrl = currentUrl || `${typeof window !== 'undefined' ? window.location.origin : 'https://orangecat.ch'}/projects/${projectId}`;
+  const projectUrl =
+    currentUrl ||
+    `${typeof window !== 'undefined' ? window.location.origin : 'https://orangecat.ch'}/projects/${projectId}`;
 
   // Create optimized share text
   const shareTitle = `Support: ${projectTitle}`;

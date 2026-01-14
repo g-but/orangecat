@@ -11,9 +11,14 @@
 
 import { LocationInput } from '@/components/ui/LocationInput';
 import { Input } from '@/components/ui/Input';
-import { FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ProfileFieldType } from '@/lib/profile-guidance';
-import { LocationMode } from '@/lib/location-privacy';
+import {
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
 import { ProfileLocationSectionProps } from '../types';
 
 export function ProfileLocationSection({
@@ -151,5 +156,3 @@ export function ProfileLocationSection({
     </>
   );
 }
-
-

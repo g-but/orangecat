@@ -1,16 +1,14 @@
-'use client'
+'use client';
 
-import Card from '@/components/ui/Card'
-import { Code2, Database, Shield, Bitcoin, Zap, Building2, Globe } from 'lucide-react'
+import Card from '@/components/ui/Card';
+import { Code2, Database, Shield, Bitcoin, Building2, Globe } from 'lucide-react';
 
 export default function DocsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-tiffany-500">
-            Documentation
-          </h1>
+          <h1 className="text-4xl font-bold text-tiffany-500">Documentation</h1>
           <p className="mt-4 text-xl text-gray-600">
             Learn about OrangeCat&apos;s architecture, features, and how to use it
           </p>
@@ -71,21 +69,27 @@ export default function DocsPage() {
                     <Building2 className="h-5 w-5 text-tiffany-500 mr-3 mt-1" />
                     <div>
                       <span className="font-medium">Funding Pages</span>
-                      <p className="text-gray-600">Create and manage funding pages for individuals, organizations, and projects</p>
+                      <p className="text-gray-600">
+                        Create and manage funding pages for individuals, organizations, and projects
+                      </p>
                     </div>
                   </li>
                   <li className="flex items-start">
                     <Bitcoin className="h-5 w-5 text-orange-500 mr-3 mt-1" />
                     <div>
                       <span className="font-medium">Bitcoin Integration</span>
-                      <p className="text-gray-600">Support for both on-chain Bitcoin and Lightning Network payments</p>
+                      <p className="text-gray-600">
+                        Support for both on-chain Bitcoin and Lightning Network payments
+                      </p>
                     </div>
                   </li>
                   <li className="flex items-start">
                     <Shield className="h-5 w-5 text-tiffany-500 mr-3 mt-1" />
                     <div>
                       <span className="font-medium">Transparency</span>
-                      <p className="text-gray-600">Public funding history and real-time donation tracking</p>
+                      <p className="text-gray-600">
+                        Public funding history and real-time donation tracking
+                      </p>
                     </div>
                   </li>
                 </ul>
@@ -159,5 +163,5 @@ export default function DocsPage() {
         </Card>
       </div>
     </div>
-  )
-} 
+  );
+}

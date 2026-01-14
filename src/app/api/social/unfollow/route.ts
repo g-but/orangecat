@@ -1,13 +1,7 @@
-import { NextResponse } from 'next/server';
 import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
-import {
-  apiSuccess,
-  apiBadRequest,
-  apiInternalError,
-  apiRateLimited,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
 import { rateLimitSocial } from '@/lib/rate-limit';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';

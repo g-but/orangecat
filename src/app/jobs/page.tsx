@@ -16,7 +16,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Briefcase, MapPin, Clock, Building2, Loader2 } from 'lucide-react';
-import { ProposalCard } from '@/components/groups/proposals/ProposalCard';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -92,14 +91,12 @@ export default function JobsPage() {
           <CardContent className="py-12 text-center">
             <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 mb-2">No job postings available</p>
-            <p className="text-sm text-gray-400">
-              Check back later or create a group to post jobs
-            </p>
+            <p className="text-sm text-gray-400">Check back later or create a group to post jobs</p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {jobs.map((job) => (
+          {jobs.map(job => (
             <Card key={job.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -150,4 +147,3 @@ export default function JobsPage() {
     </div>
   );
 }
-

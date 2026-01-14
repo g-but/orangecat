@@ -17,7 +17,6 @@ import {
   Shield,
   Users,
   Baby,
-  Building2,
   Laptop,
   Brain,
   Flag,
@@ -208,5 +207,3 @@ export const CAUSE_TEMPLATES: EntityTemplate<UserCauseFormData>[] = [
     },
   },
 ];
-
-

@@ -6,12 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   DollarSign,
   MessageCircle,
-  Heart,
-  Share2,
   Target,
   TrendingUp,
   Users,
@@ -19,7 +16,6 @@ import {
   CheckCircle,
   Sparkles,
   Bitcoin,
-  Building,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ProfileService } from '@/services/profile';
@@ -65,9 +61,7 @@ export function OnboardingFlow() {
               <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span className="text-4xl">🐾</span>
               </div>
-              <h2 className="text-2xl font-bold mb-2">
-                Welcome to OrangeCat
-              </h2>
+              <h2 className="text-2xl font-bold mb-2">Welcome to OrangeCat</h2>
               <p className="text-muted-foreground">
                 The decentralized platform where Bitcoin meets community. Fund projects, access
                 peer-to-peer lending, and build with like-minded creators.
@@ -148,7 +142,8 @@ export function OnboardingFlow() {
             </div>
             <h3 className="text-2xl font-bold mb-2">Add Your Bitcoin Address</h3>
             <p className="text-muted-foreground">
-              Paste your Bitcoin wallet address so supporters can send you Bitcoin directly. You keep full control of your funds.
+              Paste your Bitcoin wallet address so supporters can send you Bitcoin directly. You
+              keep full control of your funds.
             </p>
           </div>
 
@@ -161,15 +156,22 @@ export function OnboardingFlow() {
                   <ul className="text-sm space-y-2 text-muted-foreground">
                     <li className="flex items-start gap-2">
                       <span className="text-orange-600 font-bold">1.</span>
-                      <span><strong>Get your address</strong> from your Bitcoin wallet (Muun, BlueWallet, Ledger, etc.)</span>
+                      <span>
+                        <strong>Get your address</strong> from your Bitcoin wallet (Muun,
+                        BlueWallet, Ledger, etc.)
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-orange-600 font-bold">2.</span>
-                      <span><strong>Paste it</strong> in your OrangeCat wallet settings</span>
+                      <span>
+                        <strong>Paste it</strong> in your OrangeCat wallet settings
+                      </span>
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="text-orange-600 font-bold">3.</span>
-                      <span><strong>Receive Bitcoin</strong> directly when your projects get funded</span>
+                      <span>
+                        <strong>Receive Bitcoin</strong> directly when your projects get funded
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -207,9 +209,12 @@ export function OnboardingFlow() {
             <div className="flex items-start gap-3">
               <Users className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-blue-900">Don't have a Bitcoin wallet yet?</p>
+                <p className="text-sm font-medium text-blue-900">
+                  Don't have a Bitcoin wallet yet?
+                </p>
                 <p className="text-xs text-blue-700 mt-1">
-                  No problem! You can skip this step and add your address later. We recommend <strong>Muun</strong> or <strong>BlueWallet</strong> for beginners.
+                  No problem! You can skip this step and add your address later. We recommend{' '}
+                  <strong>Muun</strong> or <strong>BlueWallet</strong> for beginners.
                 </p>
               </div>
             </div>
@@ -237,8 +242,10 @@ export function OnboardingFlow() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card className="border-orange-200 bg-orange-50 hover:border-orange-300 transition-colors cursor-pointer"
-                  onClick={() => router.push('/projects/create')}>
+            <Card
+              className="border-orange-200 bg-orange-50 hover:border-orange-300 transition-colors cursor-pointer"
+              onClick={() => router.push('/projects/create')}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Target className="h-5 w-5 text-orange-600" />
@@ -248,13 +255,16 @@ export function OnboardingFlow() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Share your idea with the community and start receiving Bitcoin donations. No fees, pure peer-to-peer funding.
+                  Share your idea with the community and start receiving Bitcoin donations. No fees,
+                  pure peer-to-peer funding.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-blue-200 bg-blue-50 hover:border-blue-300 transition-colors cursor-pointer"
-                  onClick={() => router.push('/discover')}>
+            <Card
+              className="border-blue-200 bg-blue-50 hover:border-blue-300 transition-colors cursor-pointer"
+              onClick={() => router.push('/discover')}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="h-5 w-5 text-blue-600" />
@@ -264,13 +274,16 @@ export function OnboardingFlow() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Browse innovative Bitcoin projects, support creators you believe in, and learn from the community.
+                  Browse innovative Bitcoin projects, support creators you believe in, and learn
+                  from the community.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-green-200 bg-green-50 hover:border-green-300 transition-colors cursor-pointer"
-                  onClick={() => router.push('/loans')}>
+            <Card
+              className="border-green-200 bg-green-50 hover:border-green-300 transition-colors cursor-pointer"
+              onClick={() => router.push('/loans')}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <DollarSign className="h-5 w-5 text-green-600" />
@@ -280,13 +293,16 @@ export function OnboardingFlow() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  See how community members are refinancing debt at better rates, or list your own loans.
+                  See how community members are refinancing debt at better rates, or list your own
+                  loans.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-purple-200 bg-purple-50 hover:border-purple-300 transition-colors cursor-pointer"
-                  onClick={() => router.push('/timeline')}>
+            <Card
+              className="border-purple-200 bg-purple-50 hover:border-purple-300 transition-colors cursor-pointer"
+              onClick={() => router.push('/timeline')}
+            >
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MessageCircle className="h-5 w-5 text-purple-600" />
@@ -296,7 +312,8 @@ export function OnboardingFlow() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Follow projects, engage in discussions, and build relationships with like-minded Bitcoin enthusiasts.
+                  Follow projects, engage in discussions, and build relationships with like-minded
+                  Bitcoin enthusiasts.
                 </p>
               </CardContent>
             </Card>
@@ -309,8 +326,9 @@ export function OnboardingFlow() {
                 <div>
                   <h4 className="font-semibold mb-2">Your OrangeCat Adventure Begins Now</h4>
                   <p className="text-sm text-muted-foreground mb-4">
-                    You've joined a community of Bitcoin innovators, creators, and lenders. Every project funded,
-                    every loan refinanced, and every connection made strengthens our decentralized future.
+                    You've joined a community of Bitcoin innovators, creators, and lenders. Every
+                    project funded, every loan refinanced, and every connection made strengthens our
+                    decentralized future.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     <Badge>🎯 Bitcoin-Powered</Badge>
@@ -366,7 +384,7 @@ export function OnboardingFlow() {
     setCompletingOnboarding(true);
     try {
       await ProfileService.fallbackProfileUpdate(user.id, {
-        onboarding_completed: true
+        onboarding_completed: true,
       });
       onboardingEvents.completed(user.id);
       toast.success('Welcome to OrangeCat! Your journey begins now.');

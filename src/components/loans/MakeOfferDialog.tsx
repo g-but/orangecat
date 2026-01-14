@@ -32,7 +32,6 @@ import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/badge';
 import { Loader2, Target, DollarSign, Percent, Calendar } from 'lucide-react';
 import { formatCurrency } from '@/services/currency';
 import { PLATFORM_DEFAULT_CURRENCY, CURRENCY_CODES } from '@/config/currencies';
@@ -41,23 +40,28 @@ import loansService from '@/services/loans';
 import { Loan, CreateLoanOfferRequest } from '@/types/loans';
 import { toast } from 'sonner';
 
-const offerSchema = z.object({
-  offer_type: z.enum(['refinance', 'payoff']),
-  offer_amount: z.number().min(0.01, 'Offer amount must be greater than 0'),
-  interest_rate: z.number().min(0).max(100).optional(),
-  term_months: z.number().min(1).max(360).optional(),
-  terms: z.string().optional(),
-  conditions: z.string().optional(),
-}).refine((data) => {
-  // If refinance offer, require interest rate and term
-  if (data.offer_type === 'refinance') {
-    return data.interest_rate !== undefined && data.term_months !== undefined;
-  }
-  return true;
-}, {
-  message: 'Refinance offers require interest rate and term',
-  path: ['interest_rate'],
-});
+const offerSchema = z
+  .object({
+    offer_type: z.enum(['refinance', 'payoff']),
+    offer_amount: z.number().min(0.01, 'Offer amount must be greater than 0'),
+    interest_rate: z.number().min(0).max(100).optional(),
+    term_months: z.number().min(1).max(360).optional(),
+    terms: z.string().optional(),
+    conditions: z.string().optional(),
+  })
+  .refine(
+    data => {
+      // If refinance offer, require interest rate and term
+      if (data.offer_type === 'refinance') {
+        return data.interest_rate !== undefined && data.term_months !== undefined;
+      }
+      return true;
+    },
+    {
+      message: 'Refinance offers require interest rate and term',
+      path: ['interest_rate'],
+    }
+  );
 
 type OfferFormData = z.infer<typeof offerSchema>;
 
@@ -68,7 +72,12 @@ interface MakeOfferDialogProps {
   onOfferSubmitted: () => void;
 }
 
-export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: MakeOfferDialogProps) {
+export function MakeOfferDialog({
+  loan,
+  open,
+  onOpenChange,
+  onOfferSubmitted,
+}: MakeOfferDialogProps) {
   const [loading, setLoading] = useState(false);
 
   const form = useForm<OfferFormData>({
@@ -85,7 +94,9 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
 
   const formatLoanCurrency = (amount: number, currency: string = PLATFORM_DEFAULT_CURRENCY) => {
     // Validate currency and fallback to platform default
-    const validCurrency = (CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY) as CurrencyCode;
+    const validCurrency = (
+      CURRENCY_CODES.includes(currency as CurrencyCode) ? currency : PLATFORM_DEFAULT_CURRENCY
+    ) as CurrencyCode;
     return formatCurrency(amount, validCurrency);
   };
 
@@ -136,7 +147,8 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
             Make an Offer
           </DialogTitle>
           <DialogDescription>
-            Submit an offer to help {loan.lender_name || 'this person'} refinance or pay off their loan
+            Submit an offer to help {loan.lender_name || 'this person'} refinance or pay off their
+            loan
           </DialogDescription>
         </DialogHeader>
 
@@ -180,12 +192,15 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="refinance">Refinance - Lower rate, better terms</SelectItem>
+                      <SelectItem value="refinance">
+                        Refinance - Lower rate, better terms
+                      </SelectItem>
                       <SelectItem value="payoff">Payoff - Pay off the loan completely</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription>
-                    Choose whether you want to refinance with better terms or pay off the loan entirely
+                    Choose whether you want to refinance with better terms or pay off the loan
+                    entirely
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -208,14 +223,13 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
                       step="0.01"
                       placeholder="Enter your offer amount"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                      onChange={e => field.onChange(parseFloat(e.target.value) || 0)}
                     />
                   </FormControl>
                   <FormDescription>
                     {watchOfferType === 'payoff'
                       ? 'Amount you would pay to completely pay off this loan'
-                      : 'Amount you would lend to refinance this loan'
-                    }
+                      : 'Amount you would lend to refinance this loan'}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -241,7 +255,7 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
                             step="0.01"
                             placeholder="12.50"
                             {...field}
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || undefined)}
+                            onChange={e => field.onChange(parseFloat(e.target.value) || undefined)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -265,7 +279,7 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
                             max="360"
                             placeholder="36"
                             {...field}
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            onChange={e => field.onChange(parseInt(e.target.value) || undefined)}
                           />
                         </FormControl>
                         <FormMessage />
@@ -291,9 +305,7 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Optional: Describe your specific terms
-                    </FormDescription>
+                    <FormDescription>Optional: Describe your specific terms</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -312,9 +324,7 @@ export function MakeOfferDialog({ loan, open, onOpenChange, onOfferSubmitted }: 
                         {...field}
                       />
                     </FormControl>
-                    <FormDescription>
-                      Optional: Special conditions or requirements
-                    </FormDescription>
+                    <FormDescription>Optional: Special conditions or requirements</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

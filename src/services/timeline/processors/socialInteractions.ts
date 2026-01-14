@@ -1,8 +1,8 @@
 /**
  * Timeline Social Interactions
- * 
+ *
  * Handles likes, dislikes, comments, and shares for timeline events.
- * 
+ *
  * Created: 2025-01-28
  * Last Modified: 2025-01-28
  * Last Modified Summary: Extracted social interaction logic from monolithic timeline service
@@ -12,7 +12,6 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { withApiRetry } from '@/utils/retry';
 import { DATABASE_TABLES } from '@/config/database-tables';
-import type { TimelineVisibility } from '@/types/timeline';
 
 /**
  * Get current user ID helper
@@ -37,99 +36,102 @@ export async function toggleLike(
   userId?: string
 ): Promise<{ success: boolean; liked: boolean; likeCount: number; error?: string }> {
   try {
-    return await withApiRetry(async () => {
-      const targetUserId = userId || (await getCurrentUserId());
-      if (!targetUserId) {
-        return { success: false, liked: false, likeCount: 0, error: 'Authentication required' };
-      }
-
-      // Check if user already liked this event
-      const { data: existingLike } = await supabase
-        .from(DATABASE_TABLES.TIMELINE_LIKES)
-        .select('id')
-        .eq('event_id', eventId)
-        .eq('user_id', targetUserId)
-        .single();
-
-      if (existingLike) {
-        // Unlike the event
-        try {
-          const { data, error } = await (supabase.rpc as any)('unlike_timeline_event', {
-            p_event_id: eventId,
-            p_user_id: targetUserId,
-          });
-
-          if (error) {
-            logger.error('Failed to unlike timeline event', error, 'Timeline');
-            return { success: false, liked: false, likeCount: 0, error: error.message };
-          }
-
-          return {
-            success: true,
-            liked: false,
-            likeCount: (data as any)?.like_count || 0,
-          };
-        } catch (dbError) {
-          logger.warn(
-            'Database function not available for unlike, using fallback',
-            dbError,
-            'Timeline'
-          );
-          const { error: delErr } = await supabase
-            .from(DATABASE_TABLES.TIMELINE_LIKES)
-            .delete()
-            .eq('event_id', eventId)
-            .eq('user_id', targetUserId);
-          if (delErr) {
-            logger.error('Fallback unlike failed', delErr, 'Timeline');
-            return { success: false, liked: false, likeCount: 0, error: delErr.message };
-          }
-          const { count } = await supabase
-            .from(DATABASE_TABLES.TIMELINE_LIKES)
-            .select('*', { count: 'exact', head: true })
-            .eq('event_id', eventId);
-          return { success: true, liked: false, likeCount: count || 0 };
+    return await withApiRetry(
+      async () => {
+        const targetUserId = userId || (await getCurrentUserId());
+        if (!targetUserId) {
+          return { success: false, liked: false, likeCount: 0, error: 'Authentication required' };
         }
-      } else {
-        // Like the event
-        try {
-          const { data, error } = await (supabase.rpc as any)('like_timeline_event', {
-            p_event_id: eventId,
-            p_user_id: targetUserId,
-          });
 
-          if (error) {
-            logger.error('Failed to like timeline event', error, 'Timeline');
-            return { success: false, liked: false, likeCount: 0, error: error.message };
-          }
+        // Check if user already liked this event
+        const { data: existingLike } = await supabase
+          .from(DATABASE_TABLES.TIMELINE_LIKES)
+          .select('id')
+          .eq('event_id', eventId)
+          .eq('user_id', targetUserId)
+          .single();
 
-          return {
-            success: true,
-            liked: true,
-            likeCount: (data as any)?.like_count || 0,
-          };
-        } catch (dbError) {
-          logger.warn(
-            'Database function not available for like, using fallback',
-            dbError,
-            'Timeline'
-          );
-          // Fallback: insert into timeline_likes and return new count
-          const { error: insertErr } = await supabase
-            .from(DATABASE_TABLES.TIMELINE_LIKES)
-            .insert({ event_id: eventId, user_id: targetUserId } as any);
-          if (insertErr) {
-            logger.error('Fallback like failed', insertErr, 'Timeline');
-            return { success: false, liked: false, likeCount: 0, error: insertErr.message };
+        if (existingLike) {
+          // Unlike the event
+          try {
+            const { data, error } = await (supabase.rpc as any)('unlike_timeline_event', {
+              p_event_id: eventId,
+              p_user_id: targetUserId,
+            });
+
+            if (error) {
+              logger.error('Failed to unlike timeline event', error, 'Timeline');
+              return { success: false, liked: false, likeCount: 0, error: error.message };
+            }
+
+            return {
+              success: true,
+              liked: false,
+              likeCount: (data as any)?.like_count || 0,
+            };
+          } catch (dbError) {
+            logger.warn(
+              'Database function not available for unlike, using fallback',
+              dbError,
+              'Timeline'
+            );
+            const { error: delErr } = await supabase
+              .from(DATABASE_TABLES.TIMELINE_LIKES)
+              .delete()
+              .eq('event_id', eventId)
+              .eq('user_id', targetUserId);
+            if (delErr) {
+              logger.error('Fallback unlike failed', delErr, 'Timeline');
+              return { success: false, liked: false, likeCount: 0, error: delErr.message };
+            }
+            const { count } = await supabase
+              .from(DATABASE_TABLES.TIMELINE_LIKES)
+              .select('*', { count: 'exact', head: true })
+              .eq('event_id', eventId);
+            return { success: true, liked: false, likeCount: count || 0 };
           }
-          const { count } = await supabase
-            .from(DATABASE_TABLES.TIMELINE_LIKES)
-            .select('*', { count: 'exact', head: true })
-            .eq('event_id', eventId);
-          return { success: true, liked: true, likeCount: count || 0 };
+        } else {
+          // Like the event
+          try {
+            const { data, error } = await (supabase.rpc as any)('like_timeline_event', {
+              p_event_id: eventId,
+              p_user_id: targetUserId,
+            });
+
+            if (error) {
+              logger.error('Failed to like timeline event', error, 'Timeline');
+              return { success: false, liked: false, likeCount: 0, error: error.message };
+            }
+
+            return {
+              success: true,
+              liked: true,
+              likeCount: (data as any)?.like_count || 0,
+            };
+          } catch (dbError) {
+            logger.warn(
+              'Database function not available for like, using fallback',
+              dbError,
+              'Timeline'
+            );
+            // Fallback: insert into timeline_likes and return new count
+            const { error: insertErr } = await supabase
+              .from(DATABASE_TABLES.TIMELINE_LIKES)
+              .insert({ event_id: eventId, user_id: targetUserId } as any);
+            if (insertErr) {
+              logger.error('Fallback like failed', insertErr, 'Timeline');
+              return { success: false, liked: false, likeCount: 0, error: insertErr.message };
+            }
+            const { count } = await supabase
+              .from(DATABASE_TABLES.TIMELINE_LIKES)
+              .select('*', { count: 'exact', head: true })
+              .eq('event_id', eventId);
+            return { success: true, liked: true, likeCount: count || 0 };
+          }
         }
-      }
-    }, { maxAttempts: 2 }); // Only retry once for likes to avoid spam
+      },
+      { maxAttempts: 2 }
+    ); // Only retry once for likes to avoid spam
   } catch (error) {
     logger.error('Error toggling like on timeline event', error, 'Timeline');
     return { success: false, liked: false, likeCount: 0, error: 'Internal server error' };
@@ -341,8 +343,7 @@ export async function updateComment(
         'Timeline'
       );
       // Fallback: update directly in timeline_comments table
-      const { error: updateErr } = await (supabase
-        .from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
+      const { error: updateErr } = await (supabase.from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
         .update({ content, updated_at: new Date().toISOString() })
         .eq('id', commentId)
         .eq('user_id', targetUserId);
@@ -398,8 +399,7 @@ export async function deleteComment(
     }
 
     // Fallback: soft delete by updating deleted_at timestamp
-    const { error: deleteErr } = await (supabase
-      .from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
+    const { error: deleteErr } = await (supabase.from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
       .update({
         deleted_at: new Date().toISOString(),
         content: '[deleted]',
@@ -423,7 +423,9 @@ export async function deleteComment(
 /**
  * Get like/comment counts for an event (fallback for feeds lacking counts)
  */
-export async function getEventCounts(eventId: string): Promise<{ likeCount: number; commentCount: number }> {
+export async function getEventCounts(
+  eventId: string
+): Promise<{ likeCount: number; commentCount: number }> {
   try {
     const [{ count: likeCount }, { count: commentCount }] = await Promise.all([
       supabase
@@ -445,7 +447,11 @@ export async function getEventCounts(eventId: string): Promise<{ likeCount: numb
 /**
  * Get comments for an event
  */
-export async function getEventComments(eventId: string, limit: number = 50, offset: number = 0): Promise<any[]> {
+export async function getEventComments(
+  eventId: string,
+  limit: number = 50,
+  offset: number = 0
+): Promise<any[]> {
   try {
     try {
       const { data, error } = await (supabase.rpc as any)('get_event_comments', {
@@ -583,4 +589,3 @@ export async function getCommentReplies(commentId: string, limit: number = 20): 
     return [];
   }
 }
-

@@ -11,7 +11,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import {
   Select,
@@ -106,7 +106,7 @@ export function EventsList({ groupId, groupSlug, canCreateEvent = false }: Event
       </div>
 
       <div className="flex items-center gap-4">
-        <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as EventStatusFilter)}>
+        <Select value={statusFilter} onValueChange={v => setStatusFilter(v as EventStatusFilter)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
@@ -140,7 +140,7 @@ export function EventsList({ groupId, groupSlug, canCreateEvent = false }: Event
         </Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((event) => (
+          {events.map(event => (
             <EventCard key={event.id} event={event} groupSlug={groupSlug} onUpdate={loadEvents} />
           ))}
         </div>

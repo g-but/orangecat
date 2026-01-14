@@ -27,9 +27,6 @@ import {
   Globe,
   Share2,
   MessageSquare,
-  TrendingUp,
-  Sparkles,
-  Target,
   Calendar,
 } from 'lucide-react';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
@@ -55,7 +52,9 @@ export const PROFILE_FIELDS = [
  * Calculate profile completion percentage
  */
 export function calculateProfileCompletion(profile: UserContext['profile']): number {
-  if (!profile) {return 0;}
+  if (!profile) {
+    return 0;
+  }
 
   const filledFields = PROFILE_FIELDS.filter(field => {
     const value = profile[field as keyof typeof profile];
@@ -84,7 +83,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     category: 'setup',
     action: { label: 'Set Username', href: '/dashboard/info/edit' },
     icon: Star,
-    condition: (ctx) => !ctx.profile.username,
+    condition: ctx => !ctx.profile.username,
   },
   {
     id: 'add-wallet',
@@ -94,7 +93,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     category: 'setup',
     action: { label: 'Manage Wallets', href: '/dashboard/wallets' },
     icon: Wallet,
-    condition: (ctx) => !ctx.hasWallet,
+    condition: ctx => !ctx.hasWallet,
   },
 
   // ==================== HIGH: Complete Profile ====================
@@ -106,7 +105,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     category: 'setup',
     action: { label: 'Add Bio', href: '/dashboard/info/edit' },
     icon: Edit3,
-    condition: (ctx) => !ctx.profile.bio && !!ctx.profile.username,
+    condition: ctx => !ctx.profile.bio && !!ctx.profile.username,
   },
   {
     id: 'add-avatar',
@@ -116,7 +115,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     category: 'setup',
     action: { label: 'Upload Photo', href: '/dashboard/info/edit' },
     icon: Star,
-    condition: (ctx) => !ctx.profile.avatar_url && !!ctx.profile.username,
+    condition: ctx => !ctx.profile.avatar_url && !!ctx.profile.username,
   },
 
   // ==================== HIGH: First Entity Creation ====================
@@ -129,10 +128,8 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     action: { label: 'Create Project', href: ENTITY_REGISTRY.project.createPath },
     icon: Rocket,
     relatedEntities: ['project'],
-    condition: (ctx) =>
-      ctx.hasWallet &&
-      ctx.profileCompletion >= 50 &&
-      (ctx.entityCounts.project ?? 0) === 0,
+    condition: ctx =>
+      ctx.hasWallet && ctx.profileCompletion >= 50 && (ctx.entityCounts.project ?? 0) === 0,
   },
   {
     id: 'create-first-product',
@@ -143,7 +140,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     action: { label: 'Create Product', href: ENTITY_REGISTRY.product.createPath },
     icon: Package,
     relatedEntities: ['product'],
-    condition: (ctx) =>
+    condition: ctx =>
       ctx.hasWallet &&
       ctx.profileCompletion >= 50 &&
       (ctx.entityCounts.product ?? 0) === 0 &&
@@ -158,7 +155,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     action: { label: 'Create Service', href: ENTITY_REGISTRY.service.createPath },
     icon: Briefcase,
     relatedEntities: ['service'],
-    condition: (ctx) =>
+    condition: ctx =>
       ctx.hasWallet &&
       ctx.profileCompletion >= 50 &&
       (ctx.entityCounts.service ?? 0) === 0 &&
@@ -175,9 +172,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     action: { label: 'Create Wishlist', href: ENTITY_REGISTRY.wishlist.createPath },
     icon: Gift,
     relatedEntities: ['wishlist'],
-    condition: (ctx) =>
-      ctx.profileCompletion >= 75 &&
-      (ctx.entityCounts.wishlist ?? 0) === 0,
+    condition: ctx => ctx.profileCompletion >= 75 && (ctx.entityCounts.wishlist ?? 0) === 0,
   },
   {
     id: 'add-wishlist-items',
@@ -187,9 +182,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     category: 'engage',
     action: { label: 'Add Items', href: '/dashboard/wishlists' },
     icon: Gift,
-    condition: (ctx) =>
-      (ctx.entityCounts.wishlist ?? 0) > 0 &&
-      ctx.wishlistItemCount === 0,
+    condition: ctx => (ctx.entityCounts.wishlist ?? 0) > 0 && ctx.wishlistItemCount === 0,
   },
   {
     id: 'create-cause',
@@ -200,7 +193,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     action: { label: 'Create Cause', href: ENTITY_REGISTRY.cause.createPath },
     icon: Heart,
     relatedEntities: ['cause'],
-    condition: (ctx) =>
+    condition: ctx =>
       ctx.profileCompletion === 100 &&
       (ctx.entityCounts.cause ?? 0) === 0 &&
       ctx.hasPublishedEntities,
@@ -213,9 +206,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     category: 'engage',
     action: { label: 'Explore Groups', href: '/discover?type=groups' },
     icon: Users,
-    condition: (ctx) =>
-      ctx.profileCompletion >= 75 &&
-      (ctx.entityCounts.group ?? 0) === 0,
+    condition: ctx => ctx.profileCompletion >= 75 && (ctx.entityCounts.group ?? 0) === 0,
   },
   {
     id: 'create-event',
@@ -226,7 +217,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     action: { label: 'Create Event', href: ENTITY_REGISTRY.event.createPath },
     icon: Calendar,
     relatedEntities: ['event'],
-    condition: (ctx) =>
+    condition: ctx =>
       ctx.profileCompletion === 100 &&
       (ctx.entityCounts.event ?? 0) === 0 &&
       ctx.hasPublishedEntities,
@@ -241,7 +232,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     category: 'grow',
     action: { label: 'Explore', href: '/discover' },
     icon: Globe,
-    condition: (ctx) => ctx.profileCompletion >= 50,
+    condition: ctx => ctx.profileCompletion >= 50,
   },
   {
     id: 'share-profile',
@@ -254,7 +245,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
       href: '/profile/me', // Will redirect to actual username
     },
     icon: Share2,
-    condition: (ctx) => ctx.profileCompletion === 100,
+    condition: ctx => ctx.profileCompletion === 100,
   },
   {
     id: 'find-collaborators',
@@ -264,9 +255,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     category: 'grow',
     action: { label: 'Find People', href: '/discover?type=people' },
     icon: Users,
-    condition: (ctx) =>
-      (ctx.entityCounts.project ?? 0) > 0 &&
-      ctx.hasPublishedEntities,
+    condition: ctx => (ctx.entityCounts.project ?? 0) > 0 && ctx.hasPublishedEntities,
   },
   {
     id: 'post-update',
@@ -276,7 +265,7 @@ export const TASK_DEFINITIONS: TaskDefinition[] = [
     category: 'engage',
     action: { label: 'Create Post', href: '/timeline/compose' },
     icon: MessageSquare,
-    condition: (ctx) =>
+    condition: ctx =>
       ctx.hasPublishedEntities &&
       (ctx.daysSinceLastActivity === null || ctx.daysSinceLastActivity > 7),
   },
@@ -293,23 +282,19 @@ export const SMART_QUESTIONS: SmartQuestion[] = [
     id: 'find-collaborators-q',
     question: 'You have projects live. Want to find collaborators?',
     action: { label: 'Find People', href: '/discover?type=people' },
-    condition: (ctx) =>
-      ctx.profileCompletion === 100 &&
-      (ctx.entityCounts.project ?? 0) > 0,
+    condition: ctx => ctx.profileCompletion === 100 && (ctx.entityCounts.project ?? 0) > 0,
   },
   {
     id: 'share-wishlist-q',
     question: 'Your wishlist has items. Share it with supporters?',
     action: { label: 'Share Wishlist', href: '/dashboard/wishlists' },
-    condition: (ctx) =>
-      ctx.profileCompletion === 100 &&
-      ctx.wishlistItemCount > 0,
+    condition: ctx => ctx.profileCompletion === 100 && ctx.wishlistItemCount > 0,
   },
   {
     id: 'update-supporters-q',
     question: "It's been a while since your last post. Update your supporters?",
     action: { label: 'Create Post', href: '/timeline/compose' },
-    condition: (ctx) =>
+    condition: ctx =>
       ctx.profileCompletion === 100 &&
       ctx.hasPublishedEntities &&
       ctx.daysSinceLastActivity !== null &&
@@ -319,24 +304,19 @@ export const SMART_QUESTIONS: SmartQuestion[] = [
     id: 'explore-funding-q',
     question: 'Ready to explore funding opportunities?',
     action: { label: 'Browse Projects', href: '/discover?type=projects' },
-    condition: (ctx) =>
-      ctx.profileCompletion === 100 &&
-      ctx.hasWallet &&
-      !ctx.hasPublishedEntities,
+    condition: ctx => ctx.profileCompletion === 100 && ctx.hasWallet && !ctx.hasPublishedEntities,
   },
   {
     id: 'grow-network-q',
     question: 'Want to grow your network? Join a group!',
     action: { label: 'Find Groups', href: '/discover?type=groups' },
-    condition: (ctx) =>
-      ctx.profileCompletion === 100 &&
-      (ctx.entityCounts.group ?? 0) === 0,
+    condition: ctx => ctx.profileCompletion === 100 && (ctx.entityCounts.group ?? 0) === 0,
   },
   {
     id: 'try-ai-q',
     question: 'Have you tried creating an AI assistant to monetize?',
     action: { label: 'Create AI Assistant', href: ENTITY_REGISTRY.ai_assistant.createPath },
-    condition: (ctx) =>
+    condition: ctx =>
       ctx.profileCompletion === 100 &&
       ctx.hasPublishedEntities &&
       (ctx.entityCounts.ai_assistant ?? 0) === 0,

@@ -21,7 +21,6 @@ import {
   Star,
   RefreshCw,
   Copy,
-  Check,
   ExternalLink,
   Wallet as WalletIcon,
 } from 'lucide-react';

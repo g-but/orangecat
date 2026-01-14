@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import CompactStoryCard from '@/components/home/CompactStoryCard';
 import { ArrowRight } from 'lucide-react';
@@ -27,7 +26,7 @@ const featuredStories = [
     result: '✓ Powered 5 homes in 3 months',
     quote: 'Posted photos and energy savings data. Everyone saw their support was working.',
     fullStory:
-      'My solar panel business needed $8,000 for our first inventory. I shared our business plan and how we\'d expand access to clean energy. Supporters sent Bitcoin, we bought panels, installed systems in 5 homes. I posted photos and energy savings data.',
+      "My solar panel business needed $8,000 for our first inventory. I shared our business plan and how we'd expand access to clean energy. Supporters sent Bitcoin, we bought panels, installed systems in 5 homes. I posted photos and energy savings data.",
     gradient: 'from-amber-50 to-orange-50',
   },
   {
@@ -37,9 +36,10 @@ const featuredStories = [
     location: 'Barcelona',
     goal: '$15,000 for lab equipment',
     result: '✓ Advanced research by 6 months',
-    quote: 'Shared lab photos, test results, and progress updates. Supporters saw the research happening.',
+    quote:
+      'Shared lab photos, test results, and progress updates. Supporters saw the research happening.',
     fullStory:
-      'My Parkinson\'s treatment research needed $15,000 for lab equipment. I explained the science, showed my credentials, and detailed how this could help millions. People sent Bitcoin directly. I shared lab photos, test results, and progress updates.',
+      "My Parkinson's treatment research needed $15,000 for lab equipment. I explained the science, showed my credentials, and detailed how this could help millions. People sent Bitcoin directly. I shared lab photos, test results, and progress updates.",
     gradient: 'from-red-50 to-pink-50',
   },
 ];
@@ -54,7 +54,8 @@ export default function ProofSection() {
             Real People. Real Projects. Real Transparency.
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-            Creators share their work, show how they use support, and build trust through transparency.
+            Creators share their work, show how they use support, and build trust through
+            transparency.
           </p>
         </div>
 
@@ -68,7 +69,8 @@ export default function ProofSection() {
         {/* CTA Row */}
         <div className="text-center space-y-3 sm:space-y-4">
           <p className="text-sm sm:text-base text-gray-600">
-            These are real stories from people using OrangeCat. No charities. No fees. No guessing where your help goes.
+            These are real stories from people using OrangeCat. No charities. No fees. No guessing
+            where your help goes.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Button size="lg" className="w-full sm:w-auto" href="/discover">

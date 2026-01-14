@@ -18,11 +18,7 @@
 
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import {
-  apiSuccess,
-  apiInternalError,
-  handleApiError,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
@@ -122,16 +118,21 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       // Use listEntitiesPage helper for commerce entities
       // Derive commerce table names from entity registry (SSOT)
       const commerceEntityTypes: EntityType[] = ['product', 'service', 'cause'];
-      const commerceTables = commerceEntityTypes.map(type => ENTITY_REGISTRY[type].tableName) as readonly string[];
+      const commerceTables = commerceEntityTypes.map(
+        type => ENTITY_REGISTRY[type].tableName
+      ) as readonly string[];
 
       if (useListHelper && commerceTables.includes(table)) {
-        const { items, total } = await listEntitiesPage(table as 'user_products' | 'user_services' | 'user_causes', {
-          limit,
-          offset,
-          category,
-          userId,
-          includeOwnDrafts,
-        });
+        const { items, total } = await listEntitiesPage(
+          table as 'user_products' | 'user_services' | 'user_causes',
+          {
+            limit,
+            offset,
+            category,
+            userId,
+            includeOwnDrafts,
+          }
+        );
 
         return apiSuccess(items, {
           page: calculatePage(offset, limit),
@@ -144,9 +145,7 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       }
 
       // Build custom query for entities that don't use listEntitiesPage
-      let query = supabase
-        .from(table)
-        .select(selectColumns, { count: 'exact' });
+      let query = supabase.from(table).select(selectColumns, { count: 'exact' });
 
       // Apply filters in correct order for RLS compatibility
       // When filtering by user_id (or custom userIdField), apply it first
@@ -170,7 +169,9 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       }
 
       // Apply standard filters
-      if (category) {query = query.eq('category', category);}
+      if (category) {
+        query = query.eq('category', category);
+      }
 
       // Apply ordering (use nullsLast to handle NULL values gracefully)
       query = query.order(orderBy, { ascending: orderDirection === 'asc', nullsFirst: false });
@@ -178,7 +179,9 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
       // Apply additional filters from config
       for (const [field, paramName] of Object.entries(additionalFilters)) {
         const value = getString(request.url, paramName);
-        if (value) {query = query.eq(field, value);}
+        if (value) {
+          query = query.eq(field, value);
+        }
       }
 
       // Apply pagination
@@ -195,7 +198,7 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
           details: error.details,
           hint: error.hint,
           userId,
-          includeOwnDrafts
+          includeOwnDrafts,
         });
         // Return empty array instead of error to prevent 500 (similar to loans API)
         return apiSuccess([], {
@@ -221,4 +224,3 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
     }
   });
 }
-

@@ -1,39 +1,30 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
-import { 
-  Zap, 
-  Copy, 
-  Check, 
-  Clock, 
-  AlertCircle, 
-  ExternalLink,
-  RefreshCw,
-  Loader2
-} from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import { toast } from 'sonner'
-import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay'
+import { useState, useEffect } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Zap, Copy, Check, ExternalLink } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import { toast } from 'sonner';
+import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 
 interface LightningPaymentProps {
-  recipientAddress: string
-  projectTitle: string
-  projectId: string
-  presetAmount?: number // in satoshis
-  onPaymentComplete?: (paymentHash: string) => void
-  onPaymentFailed?: (error: string) => void
-  className?: string
+  recipientAddress: string;
+  projectTitle: string;
+  projectId: string;
+  presetAmount?: number; // in satoshis
+  onPaymentComplete?: (paymentHash: string) => void;
+  onPaymentFailed?: (error: string) => void;
+  className?: string;
 }
 
 interface Invoice {
-  bolt11: string
-  paymentHash: string
-  expiresAt: Date
-  amount: number // satoshis
-  description: string
+  bolt11: string;
+  paymentHash: string;
+  expiresAt: Date;
+  amount: number; // satoshis
+  description: string;
 }
 
 export default function LightningPayment({
@@ -43,106 +34,111 @@ export default function LightningPayment({
   presetAmount,
   onPaymentComplete,
   onPaymentFailed,
-  className = ''
+  className = '',
 }: LightningPaymentProps) {
-  const [amount, setAmount] = useState(presetAmount?.toString() || '')
-  const [message, setMessage] = useState('')
-  const [invoice, setInvoice] = useState<Invoice | null>(null)
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [isChecking, setIsChecking] = useState(false)
-  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'checking' | 'paid' | 'expired' | 'failed'>('pending')
-  const [copied, setCopied] = useState(false)
-  const [timeLeft, setTimeLeft] = useState<number | null>(null)
+  const [amount, setAmount] = useState(presetAmount?.toString() || '');
+  const [message, setMessage] = useState('');
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<
+    'pending' | 'checking' | 'paid' | 'expired' | 'failed'
+  >('pending');
+  const [copied, setCopied] = useState(false);
+  const [timeLeft, setTimeLeft] = useState<number | null>(null);
 
   // Timer for invoice expiry
   useEffect(() => {
-    if (!invoice) {return}
-
-    const updateTimer = () => {
-      const now = new Date()
-      const timeRemaining = invoice.expiresAt.getTime() - now.getTime()
-      
-      if (timeRemaining <= 0) {
-        setPaymentStatus('expired')
-        setTimeLeft(0)
-        return
-      }
-      
-      setTimeLeft(Math.floor(timeRemaining / 1000))
+    if (!invoice) {
+      return;
     }
 
-    updateTimer()
-    const timer = setInterval(updateTimer, 1000)
-    
-    return () => clearInterval(timer)
-  }, [invoice])
+    const updateTimer = () => {
+      const now = new Date();
+      const timeRemaining = invoice.expiresAt.getTime() - now.getTime();
+
+      if (timeRemaining <= 0) {
+        setPaymentStatus('expired');
+        setTimeLeft(0);
+        return;
+      }
+
+      setTimeLeft(Math.floor(timeRemaining / 1000));
+    };
+
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
+
+    return () => clearInterval(timer);
+  }, [invoice]);
 
   const generateInvoice = async () => {
     if (!amount || parseInt(amount) <= 0) {
-      toast.error('Please enter a valid amount')
-      return
+      toast.error('Please enter a valid amount');
+      return;
     }
 
-    setIsGenerating(true)
-    
+    setIsGenerating(true);
+
     try {
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      const amountSats = parseInt(amount)
-      const description = `${projectTitle} - ${message || 'Lightning donation'}`
-      
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const amountSats = parseInt(amount);
+      const description = `${projectTitle} - ${message || 'Lightning donation'}`;
+
       // Development/Demo Implementation
       // In production, this would integrate with a Lightning service provider like:
       // - LND (Lightning Network Daemon)
       // - CLN (Core Lightning)
       // - LDK (Lightning Development Kit)
       // - Third-party services like Strike, OpenNode, or BTCPay Server
-      
+
       const demoInvoice: Invoice = {
         bolt11: `lnbc${amountSats}u1p${Math.random().toString(36).substr(2, 58)}`, // Demo format
         paymentHash: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes
         amount: amountSats,
-        description
-      }
-      
-      setInvoice(demoInvoice)
-      setPaymentStatus('pending')
-      toast.success('Demo Lightning invoice generated!')
-      
+        description,
+      };
+
+      setInvoice(demoInvoice);
+      setPaymentStatus('pending');
+      toast.success('Demo Lightning invoice generated!');
     } catch (error) {
-      toast.error('Failed to generate Lightning invoice')
+      toast.error('Failed to generate Lightning invoice');
     } finally {
-      setIsGenerating(false)
+      setIsGenerating(false);
     }
-  }
+  };
 
   const copyInvoice = async () => {
-    if (!invoice) {return}
-    
-    try {
-      await navigator.clipboard.writeText(invoice.bolt11)
-      setCopied(true)
-      toast.success('Invoice copied to clipboard!')
-      setTimeout(() => setCopied(false), 2000)
-    } catch (error) {
-      toast.error('Failed to copy invoice')
+    if (!invoice) {
+      return;
     }
-  }
+
+    try {
+      await navigator.clipboard.writeText(invoice.bolt11);
+      setCopied(true);
+      toast.success('Invoice copied to clipboard!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.error('Failed to copy invoice');
+    }
+  };
 
   const resetPayment = () => {
-    setInvoice(null)
-    setPaymentStatus('pending')
-    setIsChecking(false)
-    setTimeLeft(null)
-  }
+    setInvoice(null);
+    setPaymentStatus('pending');
+    setIsChecking(false);
+    setTimeLeft(null);
+  };
 
   const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
-  }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   if (paymentStatus === 'paid') {
     return (
@@ -155,8 +151,8 @@ export default function LightningPayment({
           <p className="text-gray-600 mb-4">
             Thank you for supporting {projectTitle} with your Lightning payment.
           </p>
-          <CurrencyDisplay 
-            amount={invoice!.amount} 
+          <CurrencyDisplay
+            amount={invoice!.amount}
             currency="SATS"
             className="text-lg font-semibold text-green-600"
           />
@@ -165,7 +161,7 @@ export default function LightningPayment({
           </Button>
         </CardContent>
       </Card>
-    )
+    );
   }
 
   return (
@@ -178,7 +174,7 @@ export default function LightningPayment({
             Experimental
           </span>
         </CardTitle>
-        
+
         {/* Development Notice - Enhanced */}
         <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 rounded-lg p-4 mt-2">
           <div className="flex items-start gap-3">
@@ -187,16 +183,38 @@ export default function LightningPayment({
             </div>
             <div>
               <div className="flex items-center">
-                <p className="text-sm font-semibold text-yellow-800 mb-1">⚡ Lightning Network - Coming Soon</p>
-                <a href="/faq" target="_blank" rel="noopener noreferrer" className="ml-2 text-yellow-800 hover:text-yellow-600">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.897-1.355 3.52-3.228 3.894v.001c-.61.126-1.022.686-1.022 1.314v.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-.747-.604-1.35-1.35-1.35h-.002c-.747 0-1.35.603-1.35 1.35v-.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-2.12-1.78-3.87-4-3.87-1.933 0-3.5 1.567-3.5 3.5 0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-.747-.604-1.35-1.35-1.35h-.002c-.747 0-1.35.603-1.35 1.35v.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228a1.35 1.35 0 0 0-1.35-1.35h-.002zM12 18h.01"></path></svg>
+                <p className="text-sm font-semibold text-yellow-800 mb-1">
+                  ⚡ Lightning Network - Coming Soon
+                </p>
+                <a
+                  href="/faq"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-2 text-yellow-800 hover:text-yellow-600"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.79 4 4 0 1.897-1.355 3.52-3.228 3.894v.001c-.61.126-1.022.686-1.022 1.314v.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-.747-.604-1.35-1.35-1.35h-.002c-.747 0-1.35.603-1.35 1.35v-.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-2.12-1.78-3.87-4-3.87-1.933 0-3.5 1.567-3.5 3.5 0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228c0-.747-.604-1.35-1.35-1.35h-.002c-.747 0-1.35.603-1.35 1.35v.228c0 .747.604 1.35 1.35 1.35h.002c.747 0 1.35-.603 1.35-1.35v-.228a1.35 1.35 0 0 0-1.35-1.35h-.002zM12 18h.01"
+                    ></path>
+                  </svg>
                 </a>
               </div>
               <p className="text-xs text-yellow-700 leading-relaxed mb-2">
-                Lightning payments are currently in development. This is a preview of the upcoming instant Bitcoin payment feature.
+                Lightning payments are currently in development. This is a preview of the upcoming
+                instant Bitcoin payment feature.
               </p>
               <p className="text-xs text-yellow-600">
-                <strong>For now, please use the Bitcoin address for donations.</strong> Lightning integration will be available in a future update.
+                <strong>For now, please use the Bitcoin address for donations.</strong> Lightning
+                integration will be available in a future update.
               </p>
             </div>
           </div>
@@ -207,20 +225,18 @@ export default function LightningPayment({
           // Invoice Generation Form
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Amount (sats)
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Amount (sats)</label>
               <Input
                 type="number"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={e => setAmount(e.target.value)}
                 placeholder="Enter amount in satoshis"
                 min="1"
                 className="font-mono"
                 disabled={true}
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Message (optional)
@@ -228,7 +244,7 @@ export default function LightningPayment({
               <Input
                 type="text"
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={e => setMessage(e.target.value)}
                 placeholder="Add a message with your payment"
                 maxLength={100}
                 disabled={true}
@@ -249,11 +265,7 @@ export default function LightningPayment({
               </div>
             </div>
 
-            <Button 
-              onClick={generateInvoice} 
-              disabled={true}
-              className="w-full"
-            >
+            <Button onClick={generateInvoice} disabled={true} className="w-full">
               {'Generate Lightning Invoice'}
             </Button>
           </div>
@@ -262,8 +274,8 @@ export default function LightningPayment({
           <div className="space-y-4">
             {/* Payment Amount */}
             <div className="text-center">
-              <CurrencyDisplay 
-                amount={invoice.amount} 
+              <CurrencyDisplay
+                amount={invoice.amount}
                 currency="SATS"
                 className="text-xl font-semibold"
               />
@@ -308,8 +320,8 @@ export default function LightningPayment({
 
             {/* Action Buttons */}
             <div className="flex gap-2">
-              <Button 
-                onClick={() => window.open(`lightning:${invoice.bolt11}`, '_blank')} 
+              <Button
+                onClick={() => window.open(`lightning:${invoice.bolt11}`, '_blank')}
                 className="flex-1"
                 disabled={paymentStatus === 'expired'}
               >
@@ -345,5 +357,5 @@ export default function LightningPayment({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

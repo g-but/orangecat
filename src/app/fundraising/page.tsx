@@ -1,81 +1,86 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/hooks/useAuth'
-import Card from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
-import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout'
-import { 
-  Handshake, 
-  Bitcoin, 
-  Zap, 
-  Users, 
-  Globe, 
-  ArrowRight, 
-  Check, 
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/hooks/useAuth';
+import Card from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
+import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout';
+import {
+  Bitcoin,
+  Zap,
+  Users,
+  Globe,
+  ArrowRight,
+  Check,
   BarChart3,
-  Heart,
-  Target,
   Shield,
-  TrendingUp
-} from 'lucide-react'
+  TrendingUp,
+} from 'lucide-react';
 
 export default function FundraisingPage() {
-  const router = useRouter()
-  const { user, session } = useAuth()
+  const router = useRouter();
+  const { user, session } = useAuth();
 
   const features = [
     {
       icon: Bitcoin,
       title: 'Bitcoin-Native',
-      description: 'Accept Bitcoin donations directly to your wallet with no intermediaries or platform fees'
+      description:
+        'Accept Bitcoin donations directly to your wallet with no intermediaries or platform fees',
     },
     {
       icon: Zap,
       title: 'Instant Setup',
-      description: 'Create your fundraising page in minutes and start receiving donations immediately'
+      description:
+        'Create your fundraising page in minutes and start receiving donations immediately',
     },
     {
       icon: Users,
       title: 'Global Reach',
-      description: 'Connect with Bitcoin supporters worldwide who want to fund your projects'
+      description: 'Connect with Bitcoin supporters worldwide who want to fund your projects',
     },
     {
       icon: Globe,
       title: 'No Limits',
-      description: 'Fund any project, from creative works to business ventures, with no restrictions'
+      description:
+        'Fund any project, from creative works to business ventures, with no restrictions',
     },
     {
       icon: BarChart3,
       title: 'Advanced Analytics',
-      description: 'Track your project performance with detailed insights and donor analytics'
+      description: 'Track your project performance with detailed insights and donor analytics',
     },
     {
       icon: Shield,
       title: 'Secure & Transparent',
-      description: 'All transactions are recorded on the Bitcoin blockchain for complete transparency'
-    }
-  ]
+      description:
+        'All transactions are recorded on the Bitcoin blockchain for complete transparency',
+    },
+  ];
 
   const useCases = [
     {
       category: 'Creative Projects',
-      examples: ['Art and Music', 'Writing and Books', 'Video Content', 'Podcasts']
+      examples: ['Art and Music', 'Writing and Books', 'Video Content', 'Podcasts'],
     },
     {
       category: 'Business Ventures',
-      examples: ['Startups', 'Product Development', 'Research', 'Innovation']
+      examples: ['Startups', 'Product Development', 'Research', 'Innovation'],
     },
     {
       category: 'Personal Goals',
-      examples: ['Education', 'Travel', 'Community Projects', 'Personal Development']
+      examples: ['Education', 'Travel', 'Community Projects', 'Personal Development'],
     },
     {
       category: 'Charitable Causes',
-      examples: ['Non-profit Organizations', 'Emergency Relief', 'Community Support', 'Social Impact']
-    }
-  ]
+      examples: [
+        'Non-profit Organizations',
+        'Emergency Relief',
+        'Community Support',
+        'Social Impact',
+      ],
+    },
+  ];
 
   const benefits = [
     'No platform fees - keep 100% of your donations',
@@ -83,20 +88,20 @@ export default function FundraisingPage() {
     'Global accessibility with no geographic restrictions',
     'Transparent blockchain-based transactions',
     'Professional project pages with customization',
-    'Built-in analytics and reporting tools'
-  ]
+    'Built-in analytics and reporting tools',
+  ];
 
   const handleGetStarted = () => {
     if (session) {
-      router.push('/projects/create')
+      router.push('/projects/create');
     } else {
-      router.push('/auth?mode=login&redirect=/projects/create')
+      router.push('/auth?mode=login&redirect=/projects/create');
     }
-  }
+  };
 
   const handleViewExamples = () => {
-    router.push('/browse')
-  }
+    router.push('/browse');
+  };
 
   return (
     <PageLayout>
@@ -188,21 +193,27 @@ export default function FundraisingPage() {
               <span className="text-2xl font-bold text-tiffany-600">1</span>
             </div>
             <h3 className="text-xl font-semibold mb-3">Create Your Page</h3>
-            <p className="text-gray-600">Set up your fundraising page with your story, goals, and Bitcoin address</p>
+            <p className="text-gray-600">
+              Set up your fundraising page with your story, goals, and Bitcoin address
+            </p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-tiffany-600">2</span>
             </div>
             <h3 className="text-xl font-semibold mb-3">Share & Promote</h3>
-            <p className="text-gray-600">Share your project with your network and the Bitcoin community</p>
+            <p className="text-gray-600">
+              Share your project with your network and the Bitcoin community
+            </p>
           </div>
           <div className="text-center">
             <div className="w-16 h-16 bg-tiffany-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-2xl font-bold text-tiffany-600">3</span>
             </div>
             <h3 className="text-xl font-semibold mb-3">Receive Donations</h3>
-            <p className="text-gray-600">Get Bitcoin donations directly to your wallet with instant notifications</p>
+            <p className="text-gray-600">
+              Get Bitcoin donations directly to your wallet with instant notifications
+            </p>
           </div>
         </div>
       </PageSection>
@@ -212,10 +223,11 @@ export default function FundraisingPage() {
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-6">Ready to Start Fundraising?</h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Join thousands of successful fundraisers who have raised millions in Bitcoin for their projects
+            Join thousands of successful fundraisers who have raised millions in Bitcoin for their
+            projects
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
+            <Button
               onClick={handleGetStarted}
               size="lg"
               className="bg-tiffany-500 hover:bg-tiffany-600 text-white"
@@ -223,16 +235,12 @@ export default function FundraisingPage() {
               Start Your Campaign
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button 
-              onClick={handleViewExamples}
-              variant="outline"
-              size="lg"
-            >
+            <Button onClick={handleViewExamples} variant="outline" size="lg">
               View Examples
             </Button>
           </div>
         </div>
       </PageSection>
     </PageLayout>
-  )
-} 
+  );
+}

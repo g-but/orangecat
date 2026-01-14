@@ -22,9 +22,7 @@ import {
   Shield,
   Heart,
   Users,
-  CheckCircle2,
   Home,
-  Eye,
   EyeOff,
   Coins,
 } from 'lucide-react';

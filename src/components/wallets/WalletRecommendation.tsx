@@ -1,21 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Bitcoin,
-  Shield,
-  Zap,
-  Clock,
-  Users,
-  TrendingUp,
-  Award,
-  CheckCircle,
-  AlertTriangle,
-  Star,
-  ExternalLink,
-  Download,
-} from 'lucide-react';
+import { Bitcoin, Award, CheckCircle, Star, ExternalLink, Download } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
@@ -223,7 +210,11 @@ export default function WalletRecommendation() {
                           checked={preferences.experience === option.value}
                           onChange={e => {
                             const value = e.target.value;
-                            if (value === 'beginner' || value === 'intermediate' || value === 'advanced') {
+                            if (
+                              value === 'beginner' ||
+                              value === 'intermediate' ||
+                              value === 'advanced'
+                            ) {
                               setPreferences(prev => ({
                                 ...prev,
                                 experience: value,

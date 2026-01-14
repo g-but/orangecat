@@ -10,7 +10,7 @@
 import type { Profile as AppProfile } from './profile';
 import type { Project as AppProject } from './project';
 import type { ProfileData } from '../lib/validation';
-import type { EntityStatus, EntityStatusWithCompleted, VisibilityLevel } from './common';
+import type { EntityStatus, VisibilityLevel } from './common';
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
@@ -1111,8 +1111,34 @@ export interface Database {
           user_id: string;
           title: string;
           description: string;
-          field: 'fundamental_physics' | 'mathematics' | 'computer_science' | 'biology' | 'chemistry' | 'neuroscience' | 'psychology' | 'economics' | 'philosophy' | 'engineering' | 'medicine' | 'environmental_science' | 'social_science' | 'artificial_intelligence' | 'blockchain_cryptography' | 'other';
-          methodology: 'theoretical' | 'experimental' | 'computational' | 'empirical' | 'qualitative' | 'mixed_methods' | 'meta_analysis' | 'survey' | 'case_study' | 'action_research';
+          field:
+            | 'fundamental_physics'
+            | 'mathematics'
+            | 'computer_science'
+            | 'biology'
+            | 'chemistry'
+            | 'neuroscience'
+            | 'psychology'
+            | 'economics'
+            | 'philosophy'
+            | 'engineering'
+            | 'medicine'
+            | 'environmental_science'
+            | 'social_science'
+            | 'artificial_intelligence'
+            | 'blockchain_cryptography'
+            | 'other';
+          methodology:
+            | 'theoretical'
+            | 'experimental'
+            | 'computational'
+            | 'empirical'
+            | 'qualitative'
+            | 'mixed_methods'
+            | 'meta_analysis'
+            | 'survey'
+            | 'case_study'
+            | 'action_research';
           expected_outcome: string;
           timeline: 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
           funding_goal_sats: number;
@@ -1155,8 +1181,34 @@ export interface Database {
           user_id: string;
           title: string;
           description: string;
-          field: 'fundamental_physics' | 'mathematics' | 'computer_science' | 'biology' | 'chemistry' | 'neuroscience' | 'psychology' | 'economics' | 'philosophy' | 'engineering' | 'medicine' | 'environmental_science' | 'social_science' | 'artificial_intelligence' | 'blockchain_cryptography' | 'other';
-          methodology: 'theoretical' | 'experimental' | 'computational' | 'empirical' | 'qualitative' | 'mixed_methods' | 'meta_analysis' | 'survey' | 'case_study' | 'action_research';
+          field:
+            | 'fundamental_physics'
+            | 'mathematics'
+            | 'computer_science'
+            | 'biology'
+            | 'chemistry'
+            | 'neuroscience'
+            | 'psychology'
+            | 'economics'
+            | 'philosophy'
+            | 'engineering'
+            | 'medicine'
+            | 'environmental_science'
+            | 'social_science'
+            | 'artificial_intelligence'
+            | 'blockchain_cryptography'
+            | 'other';
+          methodology:
+            | 'theoretical'
+            | 'experimental'
+            | 'computational'
+            | 'empirical'
+            | 'qualitative'
+            | 'mixed_methods'
+            | 'meta_analysis'
+            | 'survey'
+            | 'case_study'
+            | 'action_research';
           expected_outcome: string;
           timeline: 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
           funding_goal_sats: number;
@@ -1199,8 +1251,34 @@ export interface Database {
           user_id?: string;
           title?: string;
           description?: string;
-          field?: 'fundamental_physics' | 'mathematics' | 'computer_science' | 'biology' | 'chemistry' | 'neuroscience' | 'psychology' | 'economics' | 'philosophy' | 'engineering' | 'medicine' | 'environmental_science' | 'social_science' | 'artificial_intelligence' | 'blockchain_cryptography' | 'other';
-          methodology?: 'theoretical' | 'experimental' | 'computational' | 'empirical' | 'qualitative' | 'mixed_methods' | 'meta_analysis' | 'survey' | 'case_study' | 'action_research';
+          field?:
+            | 'fundamental_physics'
+            | 'mathematics'
+            | 'computer_science'
+            | 'biology'
+            | 'chemistry'
+            | 'neuroscience'
+            | 'psychology'
+            | 'economics'
+            | 'philosophy'
+            | 'engineering'
+            | 'medicine'
+            | 'environmental_science'
+            | 'social_science'
+            | 'artificial_intelligence'
+            | 'blockchain_cryptography'
+            | 'other';
+          methodology?:
+            | 'theoretical'
+            | 'experimental'
+            | 'computational'
+            | 'empirical'
+            | 'qualitative'
+            | 'mixed_methods'
+            | 'meta_analysis'
+            | 'survey'
+            | 'case_study'
+            | 'action_research';
           expected_outcome?: string;
           timeline?: 'short_term' | 'medium_term' | 'long_term' | 'ongoing' | 'indefinite';
           funding_goal_sats?: number;
@@ -2608,7 +2686,15 @@ export interface Database {
           id: string;
           user_id: string;
           actor_id: string | null;
-          event_type: 'post' | 'comment' | 'like' | 'follow' | 'project_created' | 'donation' | 'repost' | 'quote';
+          event_type:
+            | 'post'
+            | 'comment'
+            | 'like'
+            | 'follow'
+            | 'project_created'
+            | 'donation'
+            | 'repost'
+            | 'quote';
           content: string | null;
           metadata: Json;
           visibility: 'public' | 'followers' | 'private';
@@ -2623,7 +2709,15 @@ export interface Database {
           id?: string;
           user_id: string;
           actor_id?: string | null;
-          event_type: 'post' | 'comment' | 'like' | 'follow' | 'project_created' | 'donation' | 'repost' | 'quote';
+          event_type:
+            | 'post'
+            | 'comment'
+            | 'like'
+            | 'follow'
+            | 'project_created'
+            | 'donation'
+            | 'repost'
+            | 'quote';
           content?: string | null;
           metadata?: Json;
           visibility?: 'public' | 'followers' | 'private';
@@ -2638,7 +2732,15 @@ export interface Database {
           id?: string;
           user_id?: string;
           actor_id?: string | null;
-          event_type?: 'post' | 'comment' | 'like' | 'follow' | 'project_created' | 'donation' | 'repost' | 'quote';
+          event_type?:
+            | 'post'
+            | 'comment'
+            | 'like'
+            | 'follow'
+            | 'project_created'
+            | 'donation'
+            | 'repost'
+            | 'quote';
           content?: string | null;
           metadata?: Json;
           visibility?: 'public' | 'followers' | 'private';

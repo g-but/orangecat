@@ -12,7 +12,6 @@ import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
 import { TABLES } from '../constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Database } from '@/types/database';
 
 // Type alias for any SupabaseClient (accepts any database schema)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
@@ -58,8 +57,7 @@ export async function ensureUniqueSlug(
   let counter = 1;
 
   while (true) {
-    const { data } = await (supabaseClient
-      .from(TABLES.groups) as any)
+    const { data } = await (supabaseClient.from(TABLES.groups) as any)
       .select('id')
       .eq('slug', slug)
       .maybeSingle();
@@ -78,8 +76,7 @@ export async function ensureUniqueSlug(
  */
 export async function getUserGroupIds(userId: string): Promise<string[]> {
   try {
-    const { data } = await (supabase
-      .from(TABLES.group_members) as any)
+    const { data } = await (supabase.from(TABLES.group_members) as any)
       .select('group_id')
       .eq('user_id', userId);
 
@@ -95,8 +92,7 @@ export async function getUserGroupIds(userId: string): Promise<string[]> {
  */
 export async function isGroupMember(groupId: string, userId: string): Promise<boolean> {
   try {
-    const { data } = await (supabase
-      .from(TABLES.group_members) as any)
+    const { data } = await (supabase.from(TABLES.group_members) as any)
       .select('id')
       .eq('group_id', groupId)
       .eq('user_id', userId)
@@ -117,8 +113,7 @@ export async function getUserRole(
   userId: string
 ): Promise<'founder' | 'admin' | 'member' | null> {
   try {
-    const { data } = await (supabase
-      .from(TABLES.group_members) as any)
+    const { data } = await (supabase.from(TABLES.group_members) as any)
       .select('role')
       .eq('group_id', groupId)
       .eq('user_id', userId)
@@ -130,4 +125,3 @@ export async function getUserRole(
     return null;
   }
 }
-

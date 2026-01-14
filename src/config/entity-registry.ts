@@ -19,7 +19,20 @@
  * Last Modified Summary: Added category, priority, createActionLabel fields; fixed wallet path; added color mapping for Tailwind
  */
 
-import { LucideIcon, Package, Briefcase, Heart, Coins, Users, Rocket, Wallet, Building2, Building, Bot, Calendar, Gift } from 'lucide-react';
+import {
+  LucideIcon,
+  Package,
+  Briefcase,
+  Heart,
+  Coins,
+  Users,
+  Rocket,
+  Wallet,
+  Building,
+  Bot,
+  Calendar,
+  Gift,
+} from 'lucide-react';
 
 // ==================== ENTITY TYPES ====================
 
@@ -41,7 +54,7 @@ export const ENTITY_TYPES = [
   'wishlist',
 ] as const;
 
-export type EntityType = typeof ENTITY_TYPES[number];
+export type EntityType = (typeof ENTITY_TYPES)[number];
 
 // ==================== ENTITY CATEGORIES ====================
 
@@ -50,7 +63,12 @@ export type EntityType = typeof ENTITY_TYPES[number];
  */
 export type EntityCategory = 'gateway' | 'business' | 'community' | 'finance';
 
-export const ENTITY_CATEGORY_ORDER: EntityCategory[] = ['gateway', 'business', 'community', 'finance'];
+export const ENTITY_CATEGORY_ORDER: EntityCategory[] = [
+  'gateway',
+  'business',
+  'community',
+  'finance',
+];
 
 // ==================== ENTITY METADATA ====================
 
@@ -398,18 +416,16 @@ export function getUserIdField(type: EntityType): string {
  * Returns entities in the order they should appear in the dropdown
  */
 export function getEntitiesForCreateMenu(): EntityMetadata[] {
-  return ENTITY_TYPES
-    .map(type => ENTITY_REGISTRY[type])
-    .sort((a, b) => {
-      // First sort by category order
-      const categoryOrderA = ENTITY_CATEGORY_ORDER.indexOf(a.category);
-      const categoryOrderB = ENTITY_CATEGORY_ORDER.indexOf(b.category);
-      if (categoryOrderA !== categoryOrderB) {
-        return categoryOrderA - categoryOrderB;
-      }
-      // Then by priority within category
-      return a.createPriority - b.createPriority;
-    });
+  return ENTITY_TYPES.map(type => ENTITY_REGISTRY[type]).sort((a, b) => {
+    // First sort by category order
+    const categoryOrderA = ENTITY_CATEGORY_ORDER.indexOf(a.category);
+    const categoryOrderB = ENTITY_CATEGORY_ORDER.indexOf(b.category);
+    if (categoryOrderA !== categoryOrderB) {
+      return categoryOrderA - categoryOrderB;
+    }
+    // Then by priority within category
+    return a.createPriority - b.createPriority;
+  });
 }
 
 /**

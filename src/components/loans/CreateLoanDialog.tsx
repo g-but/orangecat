@@ -15,7 +15,7 @@ import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/Button';
 import { Loader2, DollarSign } from 'lucide-react';
 import loansService from '@/services/loans';
-import { CreateLoanRequest, Loan } from '@/types/loans';
+import { CreateLoanRequest } from '@/types/loans';
 import { toast } from 'sonner';
 import { LoanTemplates, type LoanTemplateData } from './LoanTemplates';
 import { CreateAssetDialog } from '../assets/CreateAssetDialog';
@@ -47,7 +47,11 @@ export function CreateLoanDialog({
   const [showCreateAsset, setShowCreateAsset] = useState(false);
 
   // Use custom hooks for data loading
-  const { categories, loading: categoriesLoading, error: categoriesError } = useLoanCategories(open);
+  const {
+    categories,
+    loading: categoriesLoading,
+    error: categoriesError,
+  } = useLoanCategories(open);
   const { assets, loading: assetsLoading, error: assetsError, refreshAssets } = useAssets(open);
 
   const form = useForm<LoanFormData>({

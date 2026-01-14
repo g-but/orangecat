@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { profileSchema, normalizeProfileData, type ProfileData } from '@/lib/validation';
+import { profileSchema, normalizeProfileData } from '@/lib/validation';
 import {
   apiSuccess,
   apiUnauthorized,
@@ -158,7 +158,9 @@ export async function PUT(request: NextRequest) {
     ];
 
     const dataToSave = Object.fromEntries(
-      Object.entries(validatedData as Record<string, unknown>).filter(([key]) => allowedFields.includes(key))
+      Object.entries(validatedData as Record<string, unknown>).filter(([key]) =>
+        allowedFields.includes(key)
+      )
     );
     logger.debug('Profile update data prepared', {
       userId: user.id,
@@ -167,8 +169,7 @@ export async function PUT(request: NextRequest) {
 
     // Use ProfileServerService for update (we'll need to add an update method)
     // For now, keeping direct update but this should be refactored to use service
-    const { data: profile, error } = await (supabase
-      .from(DATABASE_TABLES.PROFILES) as any)
+    const { data: profile, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
       .update({
         ...dataToSave,
         updated_at: new Date().toISOString(),

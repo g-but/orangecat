@@ -8,9 +8,13 @@
  * Last Modified: 2026-01-07
  */
 
-import { TASK_DEFINITIONS, SMART_QUESTIONS, CELEBRATION_MESSAGES, calculateProfileCompletion } from './tasks';
+import {
+  TASK_DEFINITIONS,
+  SMART_QUESTIONS,
+  CELEBRATION_MESSAGES,
+  calculateProfileCompletion,
+} from './tasks';
 import type {
-  TaskDefinition,
   RecommendedTask,
   UserContext,
   SmartQuestion,
@@ -61,12 +65,7 @@ export function getRecommendedTasks(
     includeCompleted?: boolean;
   } = {}
 ): RecommendedTask[] {
-  const {
-    limit = 10,
-    categories,
-    priorities,
-    includeCompleted = false,
-  } = options;
+  const { limit = 10, categories, priorities, includeCompleted = false } = options;
 
   // Filter tasks by condition
   let eligibleTasks = TASK_DEFINITIONS.filter(task => {
@@ -91,7 +90,9 @@ export function getRecommendedTasks(
   // Sort by priority, then category
   eligibleTasks.sort((a, b) => {
     const priorityDiff = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-    if (priorityDiff !== 0) {return priorityDiff;}
+    if (priorityDiff !== 0) {
+      return priorityDiff;
+    }
     return CATEGORY_ORDER[a.category] - CATEGORY_ORDER[b.category];
   });
 
@@ -119,13 +120,8 @@ export function getRecommendedTasks(
  * @param limit - Maximum questions to return
  * @returns List of applicable smart questions
  */
-export function getSmartQuestions(
-  context: UserContext,
-  limit: number = 3
-): SmartQuestion[] {
-  return SMART_QUESTIONS
-    .filter(q => q.condition(context))
-    .slice(0, limit);
+export function getSmartQuestions(context: UserContext, limit: number = 3): SmartQuestion[] {
+  return SMART_QUESTIONS.filter(q => q.condition(context)).slice(0, limit);
 }
 
 /**
@@ -170,7 +166,9 @@ export function getTaskCompletionPercentage(context: UserContext): number {
 
   const completedTasks = allTasks.filter(task => !task.condition(context));
 
-  if (allTasks.length === 0) {return 100;}
+  if (allTasks.length === 0) {
+    return 100;
+  }
 
   return Math.round((completedTasks.length / allTasks.length) * 100);
 }
@@ -192,9 +190,7 @@ export function getNextAction(context: UserContext): RecommendedTask | null {
  * @param context - User's current state
  * @returns Tasks grouped by category
  */
-export function getTasksByCategory(
-  context: UserContext
-): Record<TaskCategory, RecommendedTask[]> {
+export function getTasksByCategory(context: UserContext): Record<TaskCategory, RecommendedTask[]> {
   const allTasks = getRecommendedTasks(context, { limit: 50 });
 
   return {

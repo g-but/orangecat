@@ -14,7 +14,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/Button';
-import { ArrowLeft, Loader2, FileText, Clock, CheckCircle2, XCircle, User } from 'lucide-react';
+import { ArrowLeft, Loader2, Clock, User } from 'lucide-react';
 import { VotingProgress } from './VotingProgress';
 import { VoteButtons } from './VoteButtons';
 import { toast } from 'sonner';
@@ -78,13 +78,17 @@ export function ProposalDetail({
   };
 
   const loadUserVote = async () => {
-    if (!user) {return;}
+    if (!user) {
+      return;
+    }
     try {
       const response = await fetch(`/api/groups/${groupSlug}/proposals/${proposalId}/votes`);
       if (response.ok) {
         const data = await response.json();
         const votes = data.data?.votes || data.votes || [];
-        const myVote = votes.find((v: { voter_id: string; vote: string }) => v.voter_id === user.id);
+        const myVote = votes.find(
+          (v: { voter_id: string; vote: string }) => v.voter_id === user.id
+        );
         if (myVote) {
           setUserVote(myVote.vote);
         }
@@ -150,7 +154,6 @@ export function ProposalDetail({
     );
   }
 
-
   return (
     <div className="space-y-6">
       {/* Back Button */}
@@ -186,7 +189,8 @@ export function ProposalDetail({
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4" />
                 <span>
-                  Proposed by <span className="font-medium">{proposal.proposer.name || 'Unknown'}</span>
+                  Proposed by{' '}
+                  <span className="font-medium">{proposal.proposer.name || 'Unknown'}</span>
                 </span>
               </div>
             )}
@@ -200,7 +204,8 @@ export function ProposalDetail({
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-blue-500" />
                 <span>
-                  Voting ends {formatDistanceToNow(new Date(proposal.voting_ends_at), { addSuffix: true })}
+                  Voting ends{' '}
+                  {formatDistanceToNow(new Date(proposal.voting_ends_at), { addSuffix: true })}
                 </span>
               </div>
             )}
@@ -248,4 +253,3 @@ export function ProposalDetail({
     </div>
   );
 }
-

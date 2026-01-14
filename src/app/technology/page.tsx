@@ -1,16 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  Bitcoin,
-  Shield,
-  Zap,
-  Lock,
-  Globe,
-  Code,
-  Database,
-  Server,
-  CheckCircle,
-} from 'lucide-react';
+import { Bitcoin, Shield, Zap, Lock, Globe, Code, Server, CheckCircle } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Technology | OrangeCat',

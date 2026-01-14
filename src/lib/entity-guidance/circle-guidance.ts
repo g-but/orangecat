@@ -13,7 +13,6 @@ import React from 'react';
 import {
   Users,
   FileText,
-  Lock,
   Globe,
   Wallet,
   Target,
@@ -51,8 +50,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   name: {
     icon: React.createElement(Users, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Circle Name',
-    description:
-      'Give your circle a memorable name that reflects its purpose or community.',
+    description: 'Give your circle a memorable name that reflects its purpose or community.',
     tips: [
       'Keep it short and memorable (3-50 characters)',
       'Make it clear what the circle is about',
@@ -70,8 +68,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   description: {
     icon: React.createElement(FileText, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Description',
-    description:
-      'Explain what your circle is for, who should join, and what members can expect.',
+    description: 'Explain what your circle is for, who should join, and what members can expect.',
     tips: [
       'Start with the purpose of the circle',
       'Explain who the ideal members are',
@@ -87,8 +84,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   category: {
     icon: React.createElement(Tag, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Category',
-    description:
-      'Categorize your circle to help others find it and understand its purpose.',
+    description: 'Categorize your circle to help others find it and understand its purpose.',
     tips: [
       'Choose the category that best fits your circle',
       'Categories help with discoverability',
@@ -104,8 +100,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   visibility: {
     icon: React.createElement(Globe, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Visibility',
-    description:
-      'Control who can see and find your circle.',
+    description: 'Control who can see and find your circle.',
     tips: [
       'Public: Anyone can find and request to join',
       'Private: Only invited members can join',
@@ -122,8 +117,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   maxMembers: {
     icon: React.createElement(UserPlus, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Maximum Members',
-    description:
-      'Set a limit on how many people can join your circle.',
+    description: 'Set a limit on how many people can join your circle.',
     tips: [
       'Leave empty for unlimited members',
       'Smaller circles (5-20) are often more cohesive',
@@ -139,12 +133,11 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   bitcoinAddress: {
     icon: React.createElement(Wallet, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Circle Bitcoin Wallet',
-    description:
-      'Connect a Bitcoin wallet for the circle. Members can contribute to shared goals.',
+    description: 'Connect a Bitcoin wallet for the circle. Members can contribute to shared goals.',
     tips: [
       'Use a dedicated wallet for the circle',
       'Consider multi-signature for added security',
-      'This becomes the circle\'s shared treasury',
+      "This becomes the circle's shared treasury",
       'Members can donate or contribute to this wallet',
       'Keep the private key secure',
     ],
@@ -157,8 +150,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   walletPurpose: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Wallet Purpose',
-    description:
-      'Describe what the circle wallet will be used for.',
+    description: 'Describe what the circle wallet will be used for.',
     tips: [
       'Be specific about how funds will be used',
       'Members should understand before contributing',
@@ -174,8 +166,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   memberApproval: {
     icon: React.createElement(Shield, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Member Approval',
-    description:
-      'Choose how new members join your circle.',
+    description: 'Choose how new members join your circle.',
     tips: [
       'Auto-approve: Anyone meeting criteria joins instantly',
       'Manual approval: Admin reviews each request',
@@ -191,8 +182,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   locationRestricted: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Location Restrictions',
-    description:
-      'Limit circle membership to people within a specific geographic area.',
+    description: 'Limit circle membership to people within a specific geographic area.',
     tips: [
       'Great for local community circles',
       'Helps build stronger local connections',
@@ -209,8 +199,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   locationRadius: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Location Radius',
-    description:
-      'Set the maximum distance members can be from the circle center.',
+    description: 'Set the maximum distance members can be from the circle center.',
     tips: [
       'Small radius (5-10km): Very local communities',
       'Medium radius (20-50km): City or regional groups',
@@ -226,8 +215,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   contributionRequired: {
     icon: React.createElement(Coins, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Required Contributions',
-    description:
-      'Require members to contribute financially to participate.',
+    description: 'Require members to contribute financially to participate.',
     tips: [
       'Use for savings or investment circles',
       'Set reasonable amounts members can afford',
@@ -244,8 +232,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   contributionAmount: {
     icon: React.createElement(Coins, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Contribution Amount',
-    description:
-      'Set the required contribution amount for members.',
+    description: 'Set the required contribution amount for members.',
     tips: [
       'Amount should be sustainable for all members',
       'Consider different contribution tiers',
@@ -262,8 +249,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   activityLevel: {
     icon: React.createElement(Activity, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Activity Level',
-    description:
-      'Set expectations for how active your circle will be.',
+    description: 'Set expectations for how active your circle will be.',
     tips: [
       'Casual: Occasional check-ins and events',
       'Regular: Weekly discussions and monthly events',
@@ -280,8 +266,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   meetingFrequency: {
     icon: React.createElement(CheckCircle2, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Meeting Frequency',
-    description:
-      'How often does your circle meet or have scheduled activities?',
+    description: 'How often does your circle meet or have scheduled activities?',
     tips: [
       'None: Self-organized meetings and activities',
       'Weekly: Regular check-ins and coordination',
@@ -298,8 +283,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   enableProjects: {
     icon: React.createElement(CheckCircle2, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Project Collaboration',
-    description:
-      'Allow members to create and manage collaborative projects.',
+    description: 'Allow members to create and manage collaborative projects.',
     tips: [
       'Great for productive circles with shared goals',
       'Enables project tracking and milestone management',
@@ -316,8 +300,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   enableEvents: {
     icon: React.createElement(CheckCircle2, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Event Planning',
-    description:
-      'Allow members to organize events and gatherings.',
+    description: 'Allow members to organize events and gatherings.',
     tips: [
       'Essential for community and social circles',
       'Members can RSVP and coordinate logistics',
@@ -334,8 +317,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   enableDiscussions: {
     icon: React.createElement(CheckCircle2, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Discussion Forums',
-    description:
-      'Enable discussion topics and conversation threads.',
+    description: 'Enable discussion topics and conversation threads.',
     tips: [
       'Foundation for most circle communication',
       'Organize discussions by categories or topics',
@@ -352,8 +334,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
   requireMemberIntro: {
     icon: React.createElement(CheckCircle2, { className: 'w-5 h-5 text-purple-600' }),
     title: 'Member Introductions',
-    description:
-      'Require new members to introduce themselves when joining.',
+    description: 'Require new members to introduce themselves when joining.',
     tips: [
       'Helps build personal connections',
       'Allows members to share backgrounds and interests',
@@ -389,29 +370,3 @@ export const circleDefaultGuidance: DefaultGuidance = {
   ],
   hint: '💡 Click on any field to get specific guidance',
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

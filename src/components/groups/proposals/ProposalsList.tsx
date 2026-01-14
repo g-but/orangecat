@@ -11,9 +11,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -40,7 +39,11 @@ interface ProposalsListProps {
 
 type ProposalStatusFilter = 'all' | ProposalStatus;
 
-export function ProposalsList({ groupId, groupSlug, canCreateProposal = false }: ProposalsListProps) {
+export function ProposalsList({
+  groupId,
+  groupSlug,
+  canCreateProposal = false,
+}: ProposalsListProps) {
   const { user } = useAuth();
   const [proposals, setProposals] = useState<ProposalWithSlug[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,10 +71,12 @@ export function ProposalsList({ groupId, groupSlug, canCreateProposal = false }:
       const data = await response.json();
       if (data.success) {
         setProposals(
-          (data.data?.proposals || []).map((p: Proposal): ProposalWithSlug => ({
-            ...p,
-            groupSlug,
-          }))
+          (data.data?.proposals || []).map(
+            (p: Proposal): ProposalWithSlug => ({
+              ...p,
+              groupSlug,
+            })
+          )
         );
       } else {
         throw new Error(data.error || 'Failed to load proposals');
@@ -111,7 +116,10 @@ export function ProposalsList({ groupId, groupSlug, canCreateProposal = false }:
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as ProposalStatusFilter)}>
+          <Select
+            value={statusFilter}
+            onValueChange={value => setStatusFilter(value as ProposalStatusFilter)}
+          >
             <SelectTrigger className="w-[140px]">
               <SelectValue />
             </SelectTrigger>
@@ -141,7 +149,9 @@ export function ProposalsList({ groupId, groupSlug, canCreateProposal = false }:
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-500 mb-2">No proposals found</p>
             <p className="text-sm text-gray-400">
-              {statusFilter !== 'all' ? `No ${statusFilter} proposals` : 'Be the first to create a proposal'}
+              {statusFilter !== 'all'
+                ? `No ${statusFilter} proposals`
+                : 'Be the first to create a proposal'}
             </p>
             {canCreateProposal && user && (
               <Button onClick={() => setCreateDialogOpen(true)} className="mt-4">
@@ -153,7 +163,7 @@ export function ProposalsList({ groupId, groupSlug, canCreateProposal = false }:
         </Card>
       ) : (
         <div className="space-y-4">
-          {proposals.map((proposal) => (
+          {proposals.map(proposal => (
             <ProposalCard key={proposal.id} proposal={proposal} />
           ))}
         </div>
@@ -172,4 +182,3 @@ export function ProposalsList({ groupId, groupSlug, canCreateProposal = false }:
     </div>
   );
 }
-

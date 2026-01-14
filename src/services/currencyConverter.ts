@@ -9,7 +9,7 @@
  * - Provides reactive updates when BTC price changes
  */
 
-import { CURRENCY_CODES, type CurrencyCode } from '@/config/currencies';
+import { type CurrencyCode } from '@/config/currencies';
 import { logger } from '@/utils/logger';
 
 export interface ExchangeRates {

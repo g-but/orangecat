@@ -1,14 +1,11 @@
-import { Suspense } from 'react'
-import Card from '@/components/ui/Card'
-import { Calendar, Clock, Tag } from 'lucide-react'
-import Link from 'next/link'
-import { getPublishedPosts, getFeaturedPost, getAllTags } from '@/lib/blog'
-import BlogClientWrapper from '@/components/blog/BlogClientWrapper'
+import { Suspense } from 'react';
+import { getPublishedPosts, getFeaturedPost, getAllTags } from '@/lib/blog';
+import BlogClientWrapper from '@/components/blog/BlogClientWrapper';
 
 export default function BlogPage() {
-  const allPosts = getPublishedPosts()
-  const featuredPost = getFeaturedPost()
-  const allTags = getAllTags()
+  const allPosts = getPublishedPosts();
+  const featuredPost = getFeaturedPost();
+  const allTags = getAllTags();
 
   return (
     <div className="min-h-screen pt-20">
@@ -21,13 +18,9 @@ export default function BlogPage() {
         </div>
 
         <Suspense fallback={<div>Loading blog posts...</div>}>
-          <BlogClientWrapper 
-            posts={allPosts}
-            featuredPost={featuredPost}
-            tags={allTags}
-          />
+          <BlogClientWrapper posts={allPosts} featuredPost={featuredPost} tags={allTags} />
         </Suspense>
       </div>
     </div>
-  )
-} 
+  );
+}

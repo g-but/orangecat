@@ -1,54 +1,48 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { 
-  Bitcoin, 
-  BookOpen, 
-  Wallet, 
-  Shield, 
-  TrendingUp, 
-  Globe, 
-  Users, 
+import { useState } from 'react';
+import Link from 'next/link';
+import {
+  BookOpen,
+  Wallet,
+  Shield,
+  TrendingUp,
+  Globe,
   Zap,
   ExternalLink,
   ChevronRight,
-  Play,
-  Download,
-  Star,
   Clock,
   Target,
   Lightbulb,
-  Award,
-  ArrowRight
-} from 'lucide-react'
-import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
-import Button from '@/components/ui/Button'
+  ArrowRight,
+} from 'lucide-react';
+import { PageLayout, PageHeader, PageSection } from '@/components/layout/PageLayout';
+import { Card, CardContent } from '@/components/ui/Card';
+import Button from '@/components/ui/Button';
 
 interface LearningPath {
-  id: string
-  title: string
-  description: string
-  level: 'Beginner' | 'Intermediate' | 'Advanced'
-  duration: string
-  icon: React.ComponentType<any>
-  color: string
-  bgColor: string
-  lessons: number
-  href: string
-  status: 'available' | 'coming-soon'
+  id: string;
+  title: string;
+  description: string;
+  level: 'Beginner' | 'Intermediate' | 'Advanced';
+  duration: string;
+  icon: React.ComponentType<any>;
+  color: string;
+  bgColor: string;
+  lessons: number;
+  href: string;
+  status: 'available' | 'coming-soon';
 }
 
 interface Resource {
-  id: string
-  title: string
-  description: string
-  type: 'guide' | 'video' | 'tool' | 'external'
-  icon: React.ComponentType<any>
-  href: string
-  external?: boolean
-  featured?: boolean
+  id: string;
+  title: string;
+  description: string;
+  type: 'guide' | 'video' | 'tool' | 'external';
+  icon: React.ComponentType<any>;
+  href: string;
+  external?: boolean;
+  featured?: boolean;
 }
 
 const learningPaths: LearningPath[] = [
@@ -63,7 +57,7 @@ const learningPaths: LearningPath[] = [
     bgColor: 'bg-orange-50',
     lessons: 5,
     href: '/bitcoin-wallet-guide',
-    status: 'available'
+    status: 'available',
   },
   {
     id: 'basics',
@@ -76,7 +70,7 @@ const learningPaths: LearningPath[] = [
     bgColor: 'bg-blue-50',
     lessons: 8,
     href: '/study-bitcoin/basics',
-    status: 'coming-soon'
+    status: 'coming-soon',
   },
   {
     id: 'security',
@@ -89,12 +83,12 @@ const learningPaths: LearningPath[] = [
     bgColor: 'bg-green-50',
     lessons: 10,
     href: '/study-bitcoin/security',
-    status: 'coming-soon'
+    status: 'coming-soon',
   },
   {
     id: 'lightning',
     title: 'Lightning Network',
-    description: 'Understand Bitcoin\'s second layer for instant payments',
+    description: "Understand Bitcoin's second layer for instant payments",
     level: 'Intermediate',
     duration: '2-3 hours',
     icon: Zap,
@@ -102,9 +96,9 @@ const learningPaths: LearningPath[] = [
     bgColor: 'bg-yellow-50',
     lessons: 7,
     href: '/study-bitcoin/lightning',
-    status: 'coming-soon'
-  }
-]
+    status: 'coming-soon',
+  },
+];
 
 const quickResources: Resource[] = [
   {
@@ -114,16 +108,16 @@ const quickResources: Resource[] = [
     type: 'guide',
     icon: Wallet,
     href: '/bitcoin-wallet-guide',
-    featured: true
+    featured: true,
   },
   {
     id: 'bitcoin-whitepaper',
     title: 'Bitcoin Whitepaper',
-    description: 'Read Satoshi Nakamoto\'s original Bitcoin whitepaper',
+    description: "Read Satoshi Nakamoto's original Bitcoin whitepaper",
     type: 'external',
     icon: BookOpen,
     href: 'https://bitcoin.org/bitcoin.pdf',
-    external: true
+    external: true,
   },
   {
     id: 'bitcoin-org',
@@ -132,7 +126,7 @@ const quickResources: Resource[] = [
     type: 'external',
     icon: Globe,
     href: 'https://bitcoin.org',
-    external: true
+    external: true,
   },
   {
     id: 'mempool-explorer',
@@ -141,19 +135,20 @@ const quickResources: Resource[] = [
     type: 'tool',
     icon: TrendingUp,
     href: 'https://mempool.space',
-    external: true
-  }
-]
+    external: true,
+  },
+];
 
 export default function StudyBitcoinPage() {
-  const [selectedLevel, setSelectedLevel] = useState<string>('all')
+  const [selectedLevel, setSelectedLevel] = useState<string>('all');
 
-  const filteredPaths = selectedLevel === 'all' 
-    ? learningPaths 
-    : learningPaths.filter(path => path.level.toLowerCase() === selectedLevel)
+  const filteredPaths =
+    selectedLevel === 'all'
+      ? learningPaths
+      : learningPaths.filter(path => path.level.toLowerCase() === selectedLevel);
 
-  const featuredResources = quickResources.filter(resource => resource.featured)
-  const otherResources = quickResources.filter(resource => !resource.featured)
+  const featuredResources = quickResources.filter(resource => resource.featured);
+  const otherResources = quickResources.filter(resource => !resource.featured);
 
   return (
     <PageLayout maxWidth="7xl">
@@ -184,10 +179,13 @@ export default function StudyBitcoinPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {featuredResources.map((resource) => {
-            const Icon = resource.icon
+          {featuredResources.map(resource => {
+            const Icon = resource.icon;
             return (
-              <Card key={resource.id} className="group hover:shadow-lg transition-all duration-200 border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50">
+              <Card
+                key={resource.id}
+                className="group hover:shadow-lg transition-all duration-200 border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-amber-50"
+              >
                 <CardContent className="p-8">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center group-hover:bg-orange-200 transition-colors">
@@ -197,13 +195,13 @@ export default function StudyBitcoinPage() {
                       <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
                         {resource.title}
                       </h3>
-                      <p className="text-gray-600 mb-4 leading-relaxed">
-                        {resource.description}
-                      </p>
-                      <Link 
+                      <p className="text-gray-600 mb-4 leading-relaxed">{resource.description}</p>
+                      <Link
                         href={resource.href}
                         className="inline-flex items-center text-orange-600 font-medium hover:text-orange-700 transition-colors"
-                        {...(resource.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                        {...(resource.external
+                          ? { target: '_blank', rel: 'noopener noreferrer' }
+                          : {})}
                       >
                         Get Started
                         {resource.external ? (
@@ -216,7 +214,7 @@ export default function StudyBitcoinPage() {
                   </div>
                 </CardContent>
               </Card>
-            )
+            );
           })}
         </div>
       </PageSection>
@@ -231,7 +229,7 @@ export default function StudyBitcoinPage() {
 
           {/* Level Filter */}
           <div className="flex flex-wrap justify-center gap-2">
-            {['all', 'beginner', 'intermediate', 'advanced'].map((level) => (
+            {['all', 'beginner', 'intermediate', 'advanced'].map(level => (
               <button
                 key={level}
                 onClick={() => setSelectedLevel(level)}
@@ -248,23 +246,34 @@ export default function StudyBitcoinPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPaths.map((path) => {
-            const Icon = path.icon
+          {filteredPaths.map(path => {
+            const Icon = path.icon;
             return (
-              <Card key={path.id} className="group hover:shadow-lg transition-all duration-200 relative overflow-hidden">
-                <div className={`absolute top-0 left-0 right-0 h-1 ${path.bgColor.replace('bg-', 'bg-gradient-to-r from-').replace('-50', '-400 to-').replace('bg-gradient-to-r from-', 'bg-gradient-to-r from-').concat('-600')}`} />
-                
+              <Card
+                key={path.id}
+                className="group hover:shadow-lg transition-all duration-200 relative overflow-hidden"
+              >
+                <div
+                  className={`absolute top-0 left-0 right-0 h-1 ${path.bgColor.replace('bg-', 'bg-gradient-to-r from-').replace('-50', '-400 to-').replace('bg-gradient-to-r from-', 'bg-gradient-to-r from-').concat('-600')}`}
+                />
+
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`w-12 h-12 ${path.bgColor} rounded-xl flex items-center justify-center`}>
+                    <div
+                      className={`w-12 h-12 ${path.bgColor} rounded-xl flex items-center justify-center`}
+                    >
                       <Icon className={`w-6 h-6 ${path.color}`} />
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                        path.level === 'Beginner' ? 'bg-green-100 text-green-700' :
-                        path.level === 'Intermediate' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          path.level === 'Beginner'
+                            ? 'bg-green-100 text-green-700'
+                            : path.level === 'Intermediate'
+                              ? 'bg-yellow-100 text-yellow-700'
+                              : 'bg-red-100 text-red-700'
+                        }`}
+                      >
                         {path.level}
                       </span>
                       {path.status === 'coming-soon' && (
@@ -278,9 +287,7 @@ export default function StudyBitcoinPage() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-orange-600 transition-colors">
                     {path.title}
                   </h3>
-                  <p className="text-gray-600 mb-4 leading-relaxed">
-                    {path.description}
-                  </p>
+                  <p className="text-gray-600 mb-4 leading-relaxed">{path.description}</p>
 
                   <div className="flex items-center gap-4 text-sm text-gray-500 mb-6">
                     <div className="flex items-center gap-1">
@@ -293,7 +300,7 @@ export default function StudyBitcoinPage() {
                     </div>
                   </div>
 
-                  <Link 
+                  <Link
                     href={path.status === 'available' ? path.href : '#'}
                     className={`inline-flex items-center justify-center w-full px-4 py-2 rounded-lg font-medium transition-colors ${
                       path.status === 'available'
@@ -307,7 +314,7 @@ export default function StudyBitcoinPage() {
                   </Link>
                 </CardContent>
               </Card>
-            )
+            );
           })}
         </div>
       </PageSection>
@@ -322,8 +329,8 @@ export default function StudyBitcoinPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {otherResources.map((resource) => {
-            const Icon = resource.icon
+          {otherResources.map(resource => {
+            const Icon = resource.icon;
             return (
               <Card key={resource.id} className="group hover:shadow-md transition-all duration-200">
                 <CardContent className="p-6">
@@ -338,10 +345,12 @@ export default function StudyBitcoinPage() {
                       <p className="text-sm text-gray-600 mb-3 leading-relaxed">
                         {resource.description}
                       </p>
-                      <Link 
+                      <Link
                         href={resource.href}
                         className="inline-flex items-center text-sm text-orange-600 font-medium hover:text-orange-700 transition-colors"
-                        {...(resource.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                        {...(resource.external
+                          ? { target: '_blank', rel: 'noopener noreferrer' }
+                          : {})}
                       >
                         {resource.type === 'external' ? 'Visit' : 'Read'}
                         {resource.external ? (
@@ -354,7 +363,7 @@ export default function StudyBitcoinPage() {
                   </div>
                 </CardContent>
               </Card>
-            )
+            );
           })}
         </div>
       </PageSection>
@@ -373,25 +382,25 @@ export default function StudyBitcoinPage() {
             {
               icon: Shield,
               title: 'Financial Sovereignty',
-              description: 'Take control of your money without relying on traditional banks'
+              description: 'Take control of your money without relying on traditional banks',
             },
             {
               icon: Globe,
               title: 'Global Currency',
-              description: 'Send money anywhere in the world without borders or restrictions'
+              description: 'Send money anywhere in the world without borders or restrictions',
             },
             {
               icon: TrendingUp,
               title: 'Investment Opportunity',
-              description: 'Understand the potential of digital assets and blockchain technology'
+              description: 'Understand the potential of digital assets and blockchain technology',
             },
             {
               icon: Lightbulb,
               title: 'Future Technology',
-              description: 'Stay ahead of the curve in the evolving digital economy'
-            }
+              description: 'Stay ahead of the curve in the evolving digital economy',
+            },
           ].map((benefit, index) => {
-            const Icon = benefit.icon
+            const Icon = benefit.icon;
             return (
               <div key={index} className="text-center">
                 <div className="w-16 h-16 bg-orange-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -400,7 +409,7 @@ export default function StudyBitcoinPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">{benefit.title}</h3>
                 <p className="text-gray-600 leading-relaxed">{benefit.description}</p>
               </div>
-            )
+            );
           })}
         </div>
       </PageSection>
@@ -408,9 +417,12 @@ export default function StudyBitcoinPage() {
       {/* Call to Action */}
       <PageSection background="tiffany">
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Start Your Bitcoin Journey?</h2>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+            Ready to Start Your Bitcoin Journey?
+          </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-8">
-            Begin with our comprehensive wallet guide and take your first step into the world of Bitcoin
+            Begin with our comprehensive wallet guide and take your first step into the world of
+            Bitcoin
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button href="/bitcoin-wallet-guide" size="lg" className="min-h-[48px]">
@@ -425,5 +437,5 @@ export default function StudyBitcoinPage() {
         </div>
       </PageSection>
     </PageLayout>
-  )
-} 
+  );
+}

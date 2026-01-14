@@ -17,7 +17,6 @@ import {
   Shield,
   Globe,
   Eye,
-  EyeOff,
   Bitcoin,
   Zap,
   Building2,
@@ -41,8 +40,7 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
   name: {
     icon: React.createElement(Users, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Group Name',
-    description:
-      'Choose a clear, memorable name that represents your group\'s purpose and values.',
+    description: "Choose a clear, memorable name that represents your group's purpose and values.",
     tips: [
       'Keep it simple and easy to remember',
       'Avoid overly complex or confusing names',
@@ -61,8 +59,7 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
   description: {
     icon: React.createElement(FileText, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Group Description',
-    description:
-      'Clearly explain what your group does, who it serves, and why it exists.',
+    description: 'Clearly explain what your group does, who it serves, and why it exists.',
     tips: [
       'Start with your mission statement',
       'Explain who benefits from your work',
@@ -81,7 +78,7 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
     icon: React.createElement(Tag, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Group Label',
     description:
-      'Labels help categorize your group and set smart defaults. They don\'t restrict capabilities - you can enable any features regardless of label.',
+      "Labels help categorize your group and set smart defaults. They don't restrict capabilities - you can enable any features regardless of label.",
     tips: [
       'Circle: Informal groups of trusted people',
       'Network State: Digital-first nation or community',
@@ -103,8 +100,7 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
   governance_preset: {
     icon: React.createElement(Shield, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Governance Model',
-    description:
-      'Define how decisions are made and how power is distributed in your group.',
+    description: 'Define how decisions are made and how power is distributed in your group.',
     tips: [
       'Consensus: All members must agree (small, trusted groups)',
       'Democratic: Majority vote decides (most communities)',
@@ -121,8 +117,7 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
   visibility: {
     icon: React.createElement(Globe, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Visibility',
-    description:
-      'Control who can see your group\'s content and activities.',
+    description: "Control who can see your group's content and activities.",
     tips: [
       'Public: Anyone can see group content',
       'Members Only: Only members can see content',
@@ -139,8 +134,7 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
   is_public: {
     icon: React.createElement(Eye, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Listed in Directory',
-    description:
-      'Show this group in public group listings and search results.',
+    description: 'Show this group in public group listings and search results.',
     tips: [
       'Public groups appear in /groups discovery',
       'Helps others find and join your group',
@@ -156,14 +150,13 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
   bitcoin_address: {
     icon: React.createElement(Bitcoin, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Bitcoin Treasury Address',
-    description:
-      'Primary Bitcoin address for your group\'s treasury and financial operations.',
+    description: "Primary Bitcoin address for your group's treasury and financial operations.",
     tips: [
       'Use a multi-signature wallet for security',
       'Generate a fresh address for your group',
       'Consider hardware wallet security',
       'Keep private keys secure and backed up',
-      'This will be your group\'s main treasury',
+      "This will be your group's main treasury",
       'You can add more wallets later',
     ],
     examples: [
@@ -175,8 +168,7 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
   lightning_address: {
     icon: React.createElement(Zap, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Lightning Address',
-    description:
-      'Lightning Network address for instant, low-fee Bitcoin payments.',
+    description: 'Lightning Network address for instant, low-fee Bitcoin payments.',
     tips: [
       'Optional but recommended for modern payments',
       'Format: yourname@domain.com',
@@ -185,11 +177,7 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
       'Great for donations and small payments',
       'Can be added later if not ready now',
     ],
-    examples: [
-      'ossetia@ln.address',
-      'guild@lightning.gifts',
-      'makerspace@zbd.gg',
-    ],
+    examples: ['ossetia@ln.address', 'guild@lightning.gifts', 'makerspace@zbd.gg'],
   },
 };
 
@@ -221,4 +209,3 @@ export const groupDefaultGuidance: DefaultGuidance = {
   ],
   hint: '💡 Click on any field to get specific guidance and examples',
 };
-

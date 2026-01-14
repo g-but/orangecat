@@ -1,16 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
-  Search,
-  Filter,
   Copy,
   Check,
   Edit,
   Trash2,
-  ExternalLink,
   Bitcoin,
   Zap,
   Users,
@@ -18,18 +15,11 @@ import {
   Heart,
   Star,
   Clock,
-  AlertTriangle,
-  Shield,
-  Eye,
-  EyeOff,
-  Download,
-  Upload,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card from '@/components/ui/Card';
 import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
 
 export interface WalletAddress {
   id: string;

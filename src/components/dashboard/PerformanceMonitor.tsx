@@ -7,11 +7,9 @@ import {
   Activity,
   Database,
   Clock,
-  Zap,
   AlertTriangle,
   CheckCircle,
   RefreshCw,
-  Eye,
   EyeOff,
 } from 'lucide-react';
 import { useAnalytics } from '@/hooks/useAnalytics';

@@ -10,7 +10,7 @@
 
 import supabase from '@/lib/supabase/browser';
 import { logger } from '@/utils/logger';
-import { getCurrentUserId, isGroupMember, getUserRole } from '../utils/helpers';
+import { getCurrentUserId, isGroupMember } from '../utils/helpers';
 import { logGroupActivity } from '../utils/activity';
 import { canPerformAction } from '../permissions/resolver';
 
@@ -66,9 +66,7 @@ export interface InvitationsListResponse {
 /**
  * Create an invitation to join a group
  */
-export async function createInvitation(
-  input: CreateInvitationInput
-): Promise<InvitationResponse> {
+export async function createInvitation(input: CreateInvitationInput): Promise<InvitationResponse> {
   try {
     const userId = await getCurrentUserId();
     if (!userId) {
@@ -94,8 +92,7 @@ export async function createInvitation(
       }
 
       // Check for existing pending invitation
-      const { data: existing } = await (supabase
-        .from('group_invitations') as any)
+      const { data: existing } = await (supabase.from('group_invitations') as any)
         .select('id')
         .eq('group_id', input.group_id)
         .eq('user_id', input.user_id)
@@ -138,8 +135,7 @@ export async function createInvitation(
         .replace(/=/g, '');
     }
 
-    const { data: invData, error } = await (supabase
-      .from('group_invitations') as any)
+    const { data: invData, error } = await (supabase.from('group_invitations') as any)
       .insert(invitationData)
       .select()
       .single();
@@ -151,11 +147,7 @@ export async function createInvitation(
     }
 
     // Log activity
-    const targetDesc = input.user_id
-      ? 'a user'
-      : input.email
-        ? input.email
-        : 'a shareable link';
+    const targetDesc = input.user_id ? 'a user' : input.email ? input.email : 'a shareable link';
     await logGroupActivity(
       input.group_id,
       userId,
@@ -272,8 +264,9 @@ export async function acceptInvitationByToken(
     }
 
     // Find invitation by token
-    const { data: invitationData, error: findError } = await (supabase
-      .from('group_invitations') as any)
+    const { data: invitationData, error: findError } = await (
+      supabase.from('group_invitations') as any
+    )
       .select('id, group_id, status, expires_at')
       .eq('token', token)
       .eq('status', 'pending')
@@ -323,8 +316,9 @@ export async function revokeInvitation(
     }
 
     // Get invitation to check group
-    const { data: invitationData2, error: findError } = await (supabase
-      .from('group_invitations') as any)
+    const { data: invitationData2, error: findError } = await (
+      supabase.from('group_invitations') as any
+    )
       .select('group_id, status')
       .eq('id', invitationId)
       .single();
@@ -345,8 +339,7 @@ export async function revokeInvitation(
     }
 
     // Revoke
-    const { error } = await (supabase
-      .from('group_invitations') as any)
+    const { error } = await (supabase.from('group_invitations') as any)
       .update({ status: 'revoked' })
       .eq('id', invitationId);
 
