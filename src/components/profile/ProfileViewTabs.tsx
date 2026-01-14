@@ -105,7 +105,7 @@ export default function ProfileViewTabs({ tabs, defaultTab, className }: Profile
     }
 
     return () => {
-      const nav = navRef.current;
+      // Copy ref value to avoid stale closure
       if (nav) {
         nav.removeEventListener('scroll', updateScrollIndicators);
       }

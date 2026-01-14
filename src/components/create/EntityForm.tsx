@@ -184,7 +184,7 @@ export function EntityForm<T extends Record<string, any>>({
       // Scroll to top to show filled form
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
-    [config.defaultValues]
+    [initialFormData]
   );
 
   // Submit handler

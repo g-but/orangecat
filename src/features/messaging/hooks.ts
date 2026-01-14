@@ -157,7 +157,7 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
       setLoading(false);
       setRefreshing(false);
     }
-  }, [isAuthReady, user]);
+  }, [isAuthReady, user, setConversations]);
 
   // Initial load - always fetch for development
   useEffect(() => {
@@ -198,6 +198,7 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
       }
     };
     ensureSelected();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedConversationId]);
 
   // Realtime: use unified subscription hook

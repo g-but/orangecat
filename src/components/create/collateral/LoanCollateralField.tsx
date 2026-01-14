@@ -27,11 +27,12 @@ export function LoanCollateralField({
 }: LoanCollateralFieldProps) {
   const [collateral, setCollateral] = useState<CollateralItem[]>([]);
 
-  // Initialize from form data if present
+  // Initialize from form data if present (only on mount)
   useEffect(() => {
     if (formData.collateral && Array.isArray(formData.collateral)) {
       setCollateral(formData.collateral);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleCollateralChange = (items: CollateralItem[]) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Search,
@@ -105,6 +105,31 @@ export default function EnhancedSearchBar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const handleSearch = useCallback(
+    (searchQuery: string) => {
+      if (!searchQuery.trim()) {
+        return;
+      }
+
+      // Save to search history
+      if (user) {
+        const newHistory = [searchQuery, ...searchHistory.filter(h => h !== searchQuery)].slice(
+          0,
+          5
+        );
+        setSearchHistory(newHistory);
+        localStorage.setItem(`search-history-${user.id}`, JSON.stringify(newHistory));
+      }
+
+      // Navigate to search results
+      router.push(`/discover?q=${encodeURIComponent(searchQuery)}`);
+      setIsOpen(false);
+      setQuery('');
+      setFocusedIndex(-1);
+    },
+    [user, searchHistory, router]
+  );
+
   // Keyboard navigation
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
@@ -182,31 +207,13 @@ export default function EnhancedSearchBar({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, focusedIndex, query, suggestions, searchHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, focusedIndex, query, suggestions, searchHistory, handleSearch]);
 
   // Reset focused index when dropdown content changes
   useEffect(() => {
     setFocusedIndex(-1);
   }, [query, suggestions, searchHistory]);
-
-  const handleSearch = (searchQuery: string) => {
-    if (!searchQuery.trim()) {
-      return;
-    }
-
-    // Save to search history
-    if (user) {
-      const newHistory = [searchQuery, ...searchHistory.filter(h => h !== searchQuery)].slice(0, 5);
-      setSearchHistory(newHistory);
-      localStorage.setItem(`search-history-${user.id}`, JSON.stringify(newHistory));
-    }
-
-    // Navigate to search results
-    router.push(`/discover?q=${encodeURIComponent(searchQuery)}`);
-    setIsOpen(false);
-    setQuery('');
-    setFocusedIndex(-1);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

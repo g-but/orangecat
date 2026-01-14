@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import {
@@ -50,11 +50,7 @@ export function ProposalsList({
   const [statusFilter, setStatusFilter] = useState<ProposalStatusFilter>('all');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadProposals();
-  }, [groupId, statusFilter]);
-
-  const loadProposals = async () => {
+  const loadProposals = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -87,7 +83,11 @@ export function ProposalsList({
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupSlug, statusFilter]);
+
+  useEffect(() => {
+    loadProposals();
+  }, [groupId, statusFilter, loadProposals]);
 
   const handleProposalCreated = () => {
     loadProposals();

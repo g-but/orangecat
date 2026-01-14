@@ -445,5 +445,5 @@ export function useMessageSubscription(
         channelRef.current = null;
       }
     };
-  }, [conversationId, user?.id, enabled]); // Removed setupSubscription from deps to prevent re-runs on callback changes
+  }, [conversationId, user?.id, enabled, setupSubscription]);
 }

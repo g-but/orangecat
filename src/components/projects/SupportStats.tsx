@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Heart, MessageSquare, PenTool, Coins } from 'lucide-react';
 import type { ProjectSupportStats } from '@/services/projects/support/types';
@@ -27,11 +27,7 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
   const [stats, setStats] = useState<ProjectSupportStats | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadStats();
-  }, [projectId]);
-
-  const loadStats = async () => {
+  const loadStats = useCallback(async () => {
     try {
       setLoading(true);
       const result = await projectSupportService.getProjectSupportStats(projectId);
@@ -43,7 +39,11 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  useEffect(() => {
+    loadStats();
+  }, [loadStats]);
 
   if (loading || !stats) {
     return null; // Don't show anything while loading
@@ -71,9 +71,7 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
             <div className="flex items-center justify-center mb-2">
               <PenTool className="h-5 w-5 text-blue-600" />
             </div>
-            <div className="text-2xl font-bold text-blue-600">
-              {stats.total_signatures}
-            </div>
+            <div className="text-2xl font-bold text-blue-600">{stats.total_signatures}</div>
             <div className="text-sm text-gray-500">Signatures</div>
           </div>
 
@@ -82,9 +80,7 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
             <div className="flex items-center justify-center mb-2">
               <MessageSquare className="h-5 w-5 text-green-600" />
             </div>
-            <div className="text-2xl font-bold text-green-600">
-              {stats.total_messages}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{stats.total_messages}</div>
             <div className="text-sm text-gray-500">Messages</div>
           </div>
 
@@ -93,9 +89,7 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
             <div className="flex items-center justify-center mb-2">
               <Heart className="h-5 w-5 text-red-600" />
             </div>
-            <div className="text-2xl font-bold text-red-600">
-              {stats.total_reactions}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{stats.total_reactions}</div>
             <div className="text-sm text-gray-500">Reactions</div>
           </div>
         </div>
@@ -110,4 +104,3 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
     </Card>
   );
 }
-

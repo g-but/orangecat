@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
@@ -24,11 +24,11 @@ import loansService from '@/services/loans';
 
 /**
  * Loans Dashboard Page
- * 
+ *
  * Refactored to use modular entity components for consistency with other entity pages.
  * Maintains tabs functionality (My Loans, Available Loans, My Offers) while using
  * EntityListShell and EntityList for the "My Loans" tab.
- * 
+ *
  * Created: 2025-01-30
  * Last Modified: 2025-12-31
  * Last Modified Summary: Refactored to use modular EntityList pattern, removed non-actionable stats cards
@@ -65,7 +65,7 @@ export default function LoansPage() {
   // Memoize loans to prevent unnecessary re-renders
   const memoizedLoans = useMemo(() => myLoans, [myLoans]);
 
-  const loadOffers = async () => {
+  const loadOffers = useCallback(async () => {
     try {
       const offersResult = await loansService.getUserOffers();
       if (offersResult.success) {
@@ -74,9 +74,9 @@ export default function LoansPage() {
     } catch (error) {
       logger.error('Failed to load offers', { error }, 'LoansPage');
     }
-  };
+  }, []);
 
-  const loadAvailableLoans = async () => {
+  const loadAvailableLoans = useCallback(async () => {
     try {
       const availableResult = await loansService.getAvailableLoans(undefined, {
         pageSize: availablePageSize,
@@ -89,7 +89,7 @@ export default function LoansPage() {
     } catch (error) {
       logger.error('Failed to load available loans', { error }, 'LoansPage');
     }
-  };
+  }, [availablePage, availablePageSize]);
 
   // Load offers and available loans when their tabs are active
   useEffect(() => {
@@ -99,7 +99,7 @@ export default function LoansPage() {
     if (activeTab === 'available' && user?.id) {
       loadAvailableLoans();
     }
-  }, [activeTab, user?.id]);
+  }, [activeTab, user?.id, loadOffers, loadAvailableLoans]);
 
   useEffect(() => {
     if (hydrated && !isLoading && !user) {
@@ -108,17 +108,21 @@ export default function LoansPage() {
   }, [user, hydrated, isLoading, router]);
 
   const handleBulkDelete = async () => {
-    if (selectedIds.size === 0) {return;}
+    if (selectedIds.size === 0) {
+      return;
+    }
 
     const confirmed = window.confirm(
       `Are you sure you want to delete ${selectedIds.size} loan${selectedIds.size > 1 ? 's' : ''}? This action cannot be undone.`
     );
 
-    if (!confirmed) {return;}
+    if (!confirmed) {
+      return;
+    }
 
     setIsDeleting(true);
     try {
-      const deletePromises = Array.from(selectedIds).map(async (id) => {
+      const deletePromises = Array.from(selectedIds).map(async id => {
         const response = await fetch(`/api/loans/${id}`, {
           method: 'DELETE',
         });
@@ -134,7 +138,9 @@ export default function LoansPage() {
       });
 
       await Promise.all(deletePromises);
-      toast.success(`Successfully deleted ${selectedIds.size} loan${selectedIds.size > 1 ? 's' : ''}`);
+      toast.success(
+        `Successfully deleted ${selectedIds.size} loan${selectedIds.size > 1 ? 's' : ''}`
+      );
       clearSelection();
       await refresh();
     } catch (error) {
@@ -164,15 +170,14 @@ export default function LoansPage() {
   const headerActions = (
     <div className="flex items-center gap-2">
       {activeTab === 'my-loans' && memoizedLoans.length > 0 && (
-        <Button
-          onClick={() => setShowSelection(!showSelection)}
-          variant="outline"
-          size="sm"
-        >
+        <Button onClick={() => setShowSelection(!showSelection)} variant="outline" size="sm">
           {showSelection ? 'Cancel' : 'Select'}
         </Button>
       )}
-      <Button href={loanEntityConfig.createPath} className="bg-gradient-to-r from-tiffany-600 to-tiffany-700 w-full sm:w-auto">
+      <Button
+        href={loanEntityConfig.createPath}
+        className="bg-gradient-to-r from-tiffany-600 to-tiffany-700 w-full sm:w-auto"
+      >
         Add Loan
       </Button>
     </div>
@@ -185,14 +190,18 @@ export default function LoansPage() {
         description="Manage your loans, discover refinancing opportunities, and participate in peer-to-peer lending"
         headerActions={headerActions}
       >
-        <Tabs value={activeTab} onValueChange={(v) => {
-          setActiveTab(v as typeof activeTab);
-          // Clear selection when switching tabs
-          if (v !== 'my-loans') {
-            clearSelection();
-            setShowSelection(false);
-          }
-        }} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={v => {
+            setActiveTab(v as typeof activeTab);
+            // Clear selection when switching tabs
+            if (v !== 'my-loans') {
+              clearSelection();
+              setShowSelection(false);
+            }
+          }}
+          className="space-y-6"
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="my-loans" className="gap-2">
               <DollarSign className="h-4 w-4" />
@@ -214,9 +223,7 @@ export default function LoansPage() {
               <TrendingUp className="h-4 w-4" />
               <span className="hidden sm:inline">My Offers</span>
               <span className="sm:hidden">Offers</span>
-              {myOffers.length > 0 && (
-                <span className="ml-1 text-xs">({myOffers.length})</span>
-              )}
+              {myOffers.length > 0 && <span className="ml-1 text-xs">({myOffers.length})</span>}
             </TabsTrigger>
           </TabsList>
 
@@ -230,7 +237,9 @@ export default function LoansPage() {
                     <label className="flex items-center gap-2 text-sm text-gray-700">
                       <input
                         type="checkbox"
-                        checked={selectedIds.size === memoizedLoans.length && memoizedLoans.length > 0}
+                        checked={
+                          selectedIds.size === memoizedLoans.length && memoizedLoans.length > 0
+                        }
                         onChange={() => toggleSelectAll(memoizedLoans.map(l => l.id))}
                         className="h-4 w-4 rounded border-gray-300 text-tiffany-600 focus:ring-tiffany-500"
                       />
@@ -257,10 +266,13 @@ export default function LoansPage() {
           <TabsContent value="available" className="space-y-6">
             {availableLoans.length > 0 ? (
               <>
-                <AvailableLoans loans={availableLoans} onOfferMade={() => {
-                  loadAvailableLoans();
-                  loadOffers();
-                }} />
+                <AvailableLoans
+                  loans={availableLoans}
+                  onOfferMade={() => {
+                    loadAvailableLoans();
+                    loadOffers();
+                  }}
+                />
                 <CommercePagination
                   page={availablePage}
                   limit={availablePageSize}
@@ -289,10 +301,7 @@ export default function LoansPage() {
                 <p className="text-muted-foreground mb-4">
                   Browse available loans to make your first refinancing offer
                 </p>
-                <Button
-                  onClick={() => setActiveTab('available')}
-                  variant="outline"
-                >
+                <Button onClick={() => setActiveTab('available')} variant="outline">
                   Browse Available Loans
                 </Button>
               </div>

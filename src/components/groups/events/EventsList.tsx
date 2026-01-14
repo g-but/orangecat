@@ -10,7 +10,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import {
@@ -43,11 +43,7 @@ export function EventsList({ groupId, groupSlug, canCreateEvent = false }: Event
   const [statusFilter, setStatusFilter] = useState<EventStatusFilter>('upcoming');
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadEvents();
-  }, [groupId, statusFilter]);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
@@ -73,7 +69,11 @@ export function EventsList({ groupId, groupSlug, canCreateEvent = false }: Event
     } finally {
       setLoading(false);
     }
-  };
+  }, [groupSlug, statusFilter]);
+
+  useEffect(() => {
+    loadEvents();
+  }, [groupId, statusFilter, loadEvents]);
 
   const handleEventCreated = () => {
     setCreateDialogOpen(false);

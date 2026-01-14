@@ -309,7 +309,8 @@ export function useRealtimeConnection(
         channelRef.current = null;
       }
     };
-  }, [enabled, stopHeartbeat]); // Removed setupConnection from deps to prevent re-runs
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, stopHeartbeat]); // setupConnection intentionally omitted to prevent re-runs
 
   // Monitor browser online/offline events
   useEffect(() => {

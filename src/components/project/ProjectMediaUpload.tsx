@@ -13,7 +13,7 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { logger } from '@/utils/logger';
 import { Upload, X, Loader2, AlertCircle, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
@@ -50,12 +50,7 @@ export default function ProjectMediaUpload({
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Load existing media
-  useEffect(() => {
-    loadMedia();
-  }, [projectId]);
-
-  const loadMedia = async () => {
+  const loadMedia = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabaseBrowser
@@ -89,7 +84,12 @@ export default function ProjectMediaUpload({
     } finally {
       setLoading(false);
     }
-  };
+  }, [projectId]);
+
+  // Load existing media
+  useEffect(() => {
+    loadMedia();
+  }, [loadMedia]);
 
   const validateFile = (file: File): string | null => {
     // Check file type

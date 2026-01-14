@@ -6,7 +6,15 @@ import { useAuth } from '@/hooks/useAuth';
 
 export interface Notification {
   id: string;
-  type: 'follow' | 'payment' | 'project_funded' | 'message' | 'comment' | 'like' | 'mention' | 'system';
+  type:
+    | 'follow'
+    | 'payment'
+    | 'project_funded'
+    | 'message'
+    | 'comment'
+    | 'like'
+    | 'mention'
+    | 'system';
   title: string;
   message: string | null;
   action_url: string | null;
@@ -67,7 +75,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
   // Fetch notifications
   const fetchNotifications = useCallback(
     async (reset = false) => {
-      if (!user) {return;}
+      if (!user) {
+        return;
+      }
 
       try {
         setIsLoading(true);
@@ -91,8 +101,8 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
           setNotifications(data.data.notifications);
           setOffset(limit);
         } else {
-          setNotifications((prev) => [...prev, ...data.data.notifications]);
-          setOffset((prev) => prev + limit);
+          setNotifications(prev => [...prev, ...data.data.notifications]);
+          setOffset(prev => prev + limit);
         }
         setTotal(data.data.total);
       } catch (err) {
@@ -106,7 +116,9 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
 
   // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
-    if (!user) {return;}
+    if (!user) {
+      return;
+    }
 
     try {
       const response = await fetch('/api/notifications/unread');
@@ -126,11 +138,13 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       fetchNotifications(true);
       fetchUnreadCount();
     }
-  }, [user, filter]);
+  }, [user, filter, fetchNotifications, fetchUnreadCount]);
 
   // Real-time subscription
   useEffect(() => {
-    if (!user || !realtime) {return;}
+    if (!user || !realtime) {
+      return;
+    }
 
     const supabase = createBrowserClient();
 
@@ -144,11 +158,11 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
           table: 'notifications',
           filter: `recipient_user_id=eq.${user.id}`,
         },
-        (payload) => {
+        payload => {
           // Add new notification to the top
-          setNotifications((prev) => [payload.new as Notification, ...prev]);
-          setUnreadCount((prev) => prev + 1);
-          setTotal((prev) => prev + 1);
+          setNotifications(prev => [payload.new as Notification, ...prev]);
+          setUnreadCount(prev => prev + 1);
+          setTotal(prev => prev + 1);
         }
       )
       .on(
@@ -159,10 +173,10 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
           table: 'notifications',
           filter: `recipient_user_id=eq.${user.id}`,
         },
-        (payload) => {
+        payload => {
           // Update notification in list
-          setNotifications((prev) =>
-            prev.map((n) => (n.id === payload.new.id ? { ...n, ...payload.new } : n))
+          setNotifications(prev =>
+            prev.map(n => (n.id === payload.new.id ? { ...n, ...payload.new } : n))
           );
           // Recalculate unread count
           fetchUnreadCount();
@@ -176,10 +190,10 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
           table: 'notifications',
           filter: `recipient_user_id=eq.${user.id}`,
         },
-        (payload) => {
+        payload => {
           // Remove notification from list
-          setNotifications((prev) => prev.filter((n) => n.id !== payload.old.id));
-          setTotal((prev) => prev - 1);
+          setNotifications(prev => prev.filter(n => n.id !== payload.old.id));
+          setTotal(prev => prev - 1);
           fetchUnreadCount();
         }
       )
@@ -192,52 +206,48 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
 
   // Load more
   const loadMore = useCallback(async () => {
-    if (isLoading || notifications.length >= total) {return;}
+    if (isLoading || notifications.length >= total) {
+      return;
+    }
     await fetchNotifications(false);
   }, [isLoading, notifications.length, total, fetchNotifications]);
 
   // Mark as read
-  const markAsRead = useCallback(
-    async (id: string | string[] | 'all') => {
-      try {
-        const body =
-          id === 'all'
-            ? { all: true }
-            : Array.isArray(id)
-              ? { ids: id }
-              : { id };
+  const markAsRead = useCallback(async (id: string | string[] | 'all') => {
+    try {
+      const body = id === 'all' ? { all: true } : Array.isArray(id) ? { ids: id } : { id };
 
-        const response = await fetch('/api/notifications/read', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
+      const response = await fetch('/api/notifications/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
 
-        const data = await response.json();
-        if (!data.success) {throw new Error(data.error);}
-
-        // Update local state
-        if (id === 'all') {
-          setNotifications((prev) =>
-            prev.map((n) => ({ ...n, read: true, read_at: new Date().toISOString() }))
-          );
-          setUnreadCount(0);
-        } else {
-          const ids = Array.isArray(id) ? id : [id];
-          setNotifications((prev) =>
-            prev.map((n) =>
-              ids.includes(n.id) ? { ...n, read: true, read_at: new Date().toISOString() } : n
-            )
-          );
-          setUnreadCount((prev) => Math.max(0, prev - ids.length));
-        }
-      } catch (err) {
-        console.error('Failed to mark as read:', err);
-        throw err;
+      const data = await response.json();
+      if (!data.success) {
+        throw new Error(data.error);
       }
-    },
-    []
-  );
+
+      // Update local state
+      if (id === 'all') {
+        setNotifications(prev =>
+          prev.map(n => ({ ...n, read: true, read_at: new Date().toISOString() }))
+        );
+        setUnreadCount(0);
+      } else {
+        const ids = Array.isArray(id) ? id : [id];
+        setNotifications(prev =>
+          prev.map(n =>
+            ids.includes(n.id) ? { ...n, read: true, read_at: new Date().toISOString() } : n
+          )
+        );
+        setUnreadCount(prev => Math.max(0, prev - ids.length));
+      }
+    } catch (err) {
+      console.error('Failed to mark as read:', err);
+      throw err;
+    }
+  }, []);
 
   // Delete notification
   const deleteNotification = useCallback(async (id: string) => {
@@ -247,17 +257,19 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       });
 
       const data = await response.json();
-      if (!data.success) {throw new Error(data.error);}
+      if (!data.success) {
+        throw new Error(data.error);
+      }
 
       // Update local state
-      setNotifications((prev) => {
-        const notification = prev.find((n) => n.id === id);
+      setNotifications(prev => {
+        const notification = prev.find(n => n.id === id);
         if (notification && !notification.read) {
-          setUnreadCount((c) => Math.max(0, c - 1));
+          setUnreadCount(c => Math.max(0, c - 1));
         }
-        return prev.filter((n) => n.id !== id);
+        return prev.filter(n => n.id !== id);
       });
-      setTotal((prev) => prev - 1);
+      setTotal(prev => prev - 1);
     } catch (err) {
       console.error('Failed to delete notification:', err);
       throw err;
@@ -272,11 +284,13 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       });
 
       const data = await response.json();
-      if (!data.success) {throw new Error(data.error);}
+      if (!data.success) {
+        throw new Error(data.error);
+      }
 
       // Update local state
-      setNotifications((prev) => prev.filter((n) => !n.read));
-      setTotal((prev) => prev - (data.data.deleted || 0));
+      setNotifications(prev => prev.filter(n => !n.read));
+      setTotal(prev => prev - (data.data.deleted || 0));
     } catch (err) {
       console.error('Failed to clear read notifications:', err);
       throw err;
