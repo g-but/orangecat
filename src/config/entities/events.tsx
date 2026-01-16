@@ -104,7 +104,7 @@ export const eventEntityConfig: EntityConfig<Event> = {
       try {
         const date = new Date(event.start_date);
         metadataParts.push(date.toLocaleDateString());
-      } catch (e) {
+      } catch {
         // Ignore date parsing errors
       }
     }

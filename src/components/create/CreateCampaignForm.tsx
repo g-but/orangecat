@@ -45,8 +45,8 @@ interface CreateCampaignFormProps {
 export default function CreateCampaignForm({
   currentStep,
   setCurrentStep,
-  onPreviewToggle,
-  showPreview,
+  onPreviewToggle: _onPreviewToggle,
+  showPreview: _showPreview,
 }: CreateCampaignFormProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -95,7 +95,7 @@ export default function CreateCampaignForm({
         setFormData(draftData.formData);
         setCurrentStep(draftData.currentStep);
         toast.info('Draft loaded');
-      } catch (error) {
+      } catch {
         // Silently handle parsing errors
       }
     }
@@ -168,7 +168,7 @@ export default function CreateCampaignForm({
       setTimeout(() => {
         setUploadProgress(prev => ({ ...prev, [type]: 0 }));
       }, 1000);
-    } catch (error) {
+    } catch {
       toast.error('Upload failed');
     } finally {
       setIsUploading(false);

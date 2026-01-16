@@ -4,12 +4,12 @@ import { cookies } from 'next/headers'
 import { logger } from '@/utils/logger'
 
 // This is a server-side API route that handles sign out
-export async function POST(request: Request) {
+export async function POST(_request: Request) {
   try {
     const supabase = await createServerClient()
-    
+
     // Get the current user before signing out
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user: _user } } = await supabase.auth.getUser()
     
     // Sign out using Supabase
     const { error } = await supabase.auth.signOut()
@@ -31,10 +31,10 @@ export async function POST(request: Request) {
     })
 
     // Create response
-    const response = NextResponse.json({ 
-      success: true, 
+    const response = NextResponse.json({
+      success: true,
       message: 'Successfully signed out',
-      user: user?.id || null
+      user: _user?.id || null
     })
 
     // Also clear cookies in the response headers

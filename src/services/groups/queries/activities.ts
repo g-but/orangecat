@@ -35,6 +35,7 @@ export async function getGroupActivities(
       }
     } else {
       // Check if group is public
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: group } = await (supabase
         .from(TABLES.groups) as any)
         .select('is_public')
@@ -51,6 +52,7 @@ export async function getGroupActivities(
     // TODO: Create group_activities table or use alternative activity tracking
     // Note: group_activities table may not exist - check if it does
     // For now, return empty result if table doesn't exist
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let dbQuery = (supabase
       .from('group_activities') as any)
       .select('*', { count: 'exact' })

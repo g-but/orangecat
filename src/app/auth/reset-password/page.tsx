@@ -90,8 +90,9 @@ export default function ResetPasswordPage() {
       }
 
       setStep('success')
-    } catch (error: any) {
-      setError(error.message || 'Failed to reset password. Please try again.')
+    } catch (error: unknown) {
+      const catchError = error as { message?: string };
+      setError(catchError.message || 'Failed to reset password. Please try again.')
     } finally {
       setIsLoading(false)
     }

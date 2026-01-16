@@ -150,5 +150,6 @@ export const DEBUG = process.env.NODE_ENV === 'development';
 
 /** Conditional logger that only logs in development */
 export const debugLog = DEBUG
-  ? (...args: unknown[]) => console.log('[Messaging]', ...args)
+  ? // eslint-disable-next-line no-console -- Intentional dev-only debug logging
+    (...args: unknown[]) => console.log('[Messaging]', ...args)
   : () => {};

@@ -27,10 +27,10 @@ interface GroupWalletsProps {
   onUpdate?: () => void;
 }
 
-export function GroupWallets({ groupId, groupSlug, wallets, onUpdate }: GroupWalletsProps) {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [creating, setCreating] = useState(false);
+export function GroupWallets({ groupId: _groupId, groupSlug, wallets, onUpdate }: GroupWalletsProps) {
+  const { user: _user } = useAuth();
+  const _router = useRouter();
+  const [_creating, setCreating] = useState(false);
   const [refreshing, setRefreshing] = useState<string | null>(null);
 
   const handleRefreshBalance = async (walletId: string) => {

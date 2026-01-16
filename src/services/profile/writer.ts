@@ -82,6 +82,7 @@ export class ProfileWriter {
       };
 
       // Update in database
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .update(updateData)
@@ -205,6 +206,7 @@ export class ProfileWriter {
       // Map to database format
       const updateData = ProfileMapper.mapProfileToDatabase(updatedProfile);
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .update(updateData)
@@ -245,6 +247,7 @@ export class ProfileWriter {
 
       logProfile('deleteProfile', { userId })
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .delete()
@@ -269,14 +272,15 @@ export class ProfileWriter {
    */
   static async fallbackUpdate(
     userId: string,
-    updates: Record<string, any>
-  ): Promise<ProfileServiceResponse<any>> {
+    updates: Record<string, unknown>
+  ): Promise<ProfileServiceResponse<unknown>> {
     if (!userId?.trim()) {
       return { success: false, error: 'User ID is required' }
     }
 
     try {
       // Prefer Postgres function for atomic profile update when available
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)('update_profile', {
         profile_data: updates
       })

@@ -39,7 +39,7 @@ export interface ScalableProfile extends Omit<Profile, 'social_links' | 'verific
   // Bitcoin-native features
   bitcoin_public_key: string | null;
   lightning_node_id: string | null;
-  payment_preferences: Record<string, any> | null;
+  payment_preferences: Record<string, unknown> | null;
   bitcoin_balance: number | null;
   lightning_balance: number | null;
 
@@ -66,11 +66,11 @@ export interface ScalableProfile extends Omit<Profile, 'social_links' | 'verific
   // Extensibility (JSON fields)
   // Note: social_links is inherited from Profile with type { links: Array<{...}> } | null
   // We override it to allow both the structured format and flexible Record for backward compatibility
-  social_links: { links: Array<{ platform: string; label?: string; value: string }> } | Record<string, any> | null;
-  preferences: Record<string, any> | null;
-  metadata: Record<string, any> | null;
-  verification_data: Record<string, any> | null;
-  privacy_settings: Record<string, any> | null;
+  social_links: { links: Array<{ platform: string; label?: string; value: string }> } | Record<string, unknown> | null;
+  preferences: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+  verification_data: Record<string, unknown> | null;
+  privacy_settings: Record<string, unknown> | null;
 }
 
 export interface ScalableProfileFormData extends Omit<ProfileFormData, 'social_links' | 'currency'> {
@@ -83,10 +83,10 @@ export interface ScalableProfileFormData extends Omit<ProfileFormData, 'social_l
   currency?: string;
   bitcoin_public_key?: string;
   lightning_node_id?: string;
-  payment_preferences?: Record<string, any>;
-  social_links?: Record<string, any>;
-  preferences?: Record<string, any>;
-  privacy_settings?: Record<string, any>;
+  payment_preferences?: Record<string, unknown>;
+  social_links?: Record<string, unknown>;
+  preferences?: Record<string, unknown>;
+  privacy_settings?: Record<string, unknown>;
 }
 
 export interface ProfileAnalytics {
@@ -96,7 +96,7 @@ export interface ProfileAnalytics {
   total_donated?: number;
 }
 
-export interface ProfileServiceResponse<T = any> {
+export interface ProfileServiceResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

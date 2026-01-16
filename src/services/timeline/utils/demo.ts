@@ -11,11 +11,14 @@
 /**
  * Generate demo timeline events for testing UI when database is not available
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getDemoTimelineEvents(userId: string): any[] {
   const now = new Date();
 
   // Get user-created posts from localStorage
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const storedPosts = JSON.parse(localStorage.getItem('mock_timeline_posts') || '[]').filter(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (post: any) => post.actor_id === userId
   ); // Only show user's own posts
 

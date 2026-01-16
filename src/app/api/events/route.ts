@@ -44,6 +44,7 @@ export const POST = createEntityPostHandler({
     // Get user's preferred currency from profile (SSOT)
     let userCurrency = PLATFORM_DEFAULT_CURRENCY;
     const { data: profile } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.PROFILES) as any)
       .select(COLUMNS.profiles.CURRENCY)
       .eq(COLUMNS.profiles.ID, userId)
@@ -86,7 +87,19 @@ export const POST = createEntityPostHandler({
     if (cleaned.currency && !CURRENCY_CODES.includes(cleaned.currency as typeof CURRENCY_CODES[number])) {
       throw new Error(`Invalid currency: ${cleaned.currency}. Must be one of: ${CURRENCY_CODES.join(', ')}`);
     }
-    
+
+    // Map schema field names to database column names
+    // Schema uses: ticket_price, funding_goal
+    // Database uses: ticket_price_sats, funding_goal_sats
+    if ('ticket_price' in cleaned) {
+      cleaned.ticket_price_sats = cleaned.ticket_price;
+      delete cleaned.ticket_price;
+    }
+    if ('funding_goal' in cleaned) {
+      cleaned.funding_goal_sats = cleaned.funding_goal;
+      delete cleaned.funding_goal;
+    }
+
     return cleaned;
   },
   defaultFields: {

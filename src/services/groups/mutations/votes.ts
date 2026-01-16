@@ -36,7 +36,9 @@ export async function castVote(input: CastVoteInput) {
       return { success: false, error: 'Voting has ended' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_votes) as any)
       .upsert(
         {
@@ -78,10 +80,14 @@ export async function checkAndResolveProposal(proposalId: string): Promise<void>
     const votes = votesResult.votes;
 
     const yesVotes = votes
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((v: any) => v.vote === 'yes')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .reduce((sum: number, v: any) => sum + Number(v.voting_power || 1), 0);
     const noVotes = votes
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((v: any) => v.vote === 'no')
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .reduce((sum: number, v: any) => sum + Number(v.voting_power || 1), 0);
     const totalVotedPower = yesVotes + noVotes;
 
@@ -95,7 +101,9 @@ export async function checkAndResolveProposal(proposalId: string): Promise<void>
       const newStatus: 'passed' | 'failed' = yesPercentage >= threshold ? 'passed' : 'failed';
 
       // Single update; accept idempotency (if already updated, harmless)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_proposals) as any)
         .update({ status: newStatus, updated_at: new Date().toISOString() })
         .eq('id', proposalId);

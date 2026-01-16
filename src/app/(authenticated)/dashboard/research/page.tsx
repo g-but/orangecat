@@ -25,7 +25,7 @@ export default function ResearchDashboard() {
 
   const fetchResearchEntities = async () => {
     try {
-      const response = await fetch('/api/research-entities');
+      const response = await fetch('/api/research');
       if (response.ok) {
         const data = await response.json();
         setEntities(data.data || []);

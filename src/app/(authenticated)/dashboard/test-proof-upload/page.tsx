@@ -11,6 +11,7 @@ import { ProofUploadForm } from '@/components/wishlist/ProofUploadForm';
 
 export default function TestProofUploadPage() {
   const handleSuccess = (proof: unknown) => {
+    // eslint-disable-next-line no-console -- Test page uses console for debugging
     console.log('Proof uploaded successfully:', proof);
     alert('Proof uploaded successfully! Check console for details.');
   };

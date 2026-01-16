@@ -87,7 +87,7 @@ export class ProfileStorageService {
       }
 
       // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
+      const { data: _data, error } = await supabase.storage
         .from(this.BUCKET_NAME)
         .upload(fileName, file, {
           cacheControl: '31536000', // 1 year

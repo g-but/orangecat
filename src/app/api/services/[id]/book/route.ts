@@ -52,6 +52,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Verify service exists and is active
     const { data: service, error: serviceError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('service')) as any)
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
@@ -64,6 +65,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Get customer's actor
     const { data: customerActor } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('actors') as any)
       .select('id')
       .eq('user_id', user.id)

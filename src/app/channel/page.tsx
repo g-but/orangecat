@@ -161,7 +161,7 @@ export default function ChannelComingSoonPage() {
           }, {
             title: 'Phase 3 — Monetize',
             desc: 'Paywalled content, subscriptions, revenue splits, creator tools.',
-          }].map((item, idx) => (
+          }].map((item, _idx) => (
             <Card key={item.title}>
               <CardContent className="p-5">
                 <div className="flex items-start gap-3">

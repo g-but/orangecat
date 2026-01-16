@@ -47,6 +47,7 @@ export interface SocialTimelineProps {
   // Inline composer
   showInlineComposer?: boolean;
   allowProjectSelection?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onOptimisticUpdate?: (event: any) => void; // For immediate UI feedback on posts
 }
 
@@ -74,6 +75,7 @@ export default function SocialTimeline({
   const { user, isLoading, hydrated } = useAuth();
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
   const [timelineFeed, setTimelineFeed] = useState<TimelineFeedResponse | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [optimisticEvents, setOptimisticEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +87,7 @@ export default function SocialTimeline({
 
   // Handle optimistic event updates
   const handleOptimisticUpdate = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (event: any) => {
       setOptimisticEvents(prev => [event, ...prev]);
       onOptimisticUpdate?.(event);
@@ -188,6 +191,7 @@ export default function SocialTimeline({
 
   // Handle timeline event updates
   const handleEventUpdate = useCallback(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (eventId: string, updates: any) => {
       if (!timelineFeed) {
         return;

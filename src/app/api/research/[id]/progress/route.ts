@@ -15,11 +15,11 @@ import { rateLimitWrite } from '@/lib/rate-limit';
 // Helper to extract ID from URL
 function extractIdFromUrl(url: string): string {
   const segments = new URL(url).pathname.split('/');
-  const idx = segments.findIndex(s => s === 'research-entities');
+  const idx = segments.findIndex(s => s === 'research');
   return segments[idx + 1] || '';
 }
 
-// GET /api/research-entities/[id]/progress - Get progress updates
+// GET /api/research/[id]/progress - Get progress updates
 export const GET = compose(
   withRateLimit('read')
 )(async (request: NextRequest) => {
@@ -29,6 +29,7 @@ export const GET = compose(
 
     // Check if research entity exists and is accessible
     const { data: entity, error: entityError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('research_entities') as any)
       .select('id, user_id, is_public')
       .eq('id', id)
@@ -50,6 +51,7 @@ export const GET = compose(
 
     // Get progress updates
     const { data: updates, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('research_progress_updates') as any)
       .select('*')
       .eq('research_entity_id', id)
@@ -63,7 +65,7 @@ export const GET = compose(
   }
 });
 
-// POST /api/research-entities/[id]/progress - Create progress update
+// POST /api/research/[id]/progress - Create progress update
 export const POST = compose(
   withRateLimit('write')
 )(async (request: NextRequest) => {
@@ -78,6 +80,7 @@ export const POST = compose(
 
     // Check if user owns this research entity
     const { data: entity, error: entityError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('research_entities') as any)
       .select('id, user_id, transparency_level')
       .eq('id', id)
@@ -109,6 +112,7 @@ export const POST = compose(
 
     // Create progress update
     const { data: update, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('research_progress_updates') as any)
       .insert({
         research_entity_id: id,
@@ -126,6 +130,7 @@ export const POST = compose(
 
     // Update research entity metrics if milestone achieved
     if (milestone_achieved) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.rpc as any)('increment_research_completion', {
         research_entity_id: id,
         percentage_increase: 10 // Assume 10% progress per milestone

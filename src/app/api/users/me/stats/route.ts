@@ -21,6 +21,36 @@ import {
 } from '@/services/recommendations';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
+// Local types for database query results (not in generated types)
+interface ProfileRecord {
+  id: string;
+  username: string | null;
+  name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  bitcoin_address: string | null;
+  lightning_address: string | null;
+  website: string | null;
+  location: string | null;
+  preferred_currency: string | null;
+}
+
+interface ActorRecord {
+  id: string;
+}
+
+interface WishlistRecord {
+  id: string;
+}
+
+interface ProjectRecord {
+  updated_at: string;
+}
+
+// Type-safe wrapper for untyped tables
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UntypedTable = any;
+
 /**
  * GET /api/users/me/stats
  *
@@ -32,7 +62,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
  * - Recommended tasks
  * - Smart questions (if profile complete)
  */
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const supabase = await createServerClient();
     const {
@@ -45,25 +75,23 @@ export async function GET(request: NextRequest) {
     }
 
     // Get profile
-    const { data: profileData, error: profileError } = await (
-      supabase.from(DATABASE_TABLES.PROFILES) as any
-    )
+    const { data: profileData, error: profileError } = await (supabase.from(DATABASE_TABLES.PROFILES) as UntypedTable)
       .select('*')
       .eq('id', user.id)
       .single();
-    const profile = profileData as any;
+    const profile = profileData as ProfileRecord | null;
 
     if (profileError || !profile) {
       return apiUnauthorized('Profile not found');
     }
 
     // Get actor ID for entity queries
-    const { data: actorData } = await (supabase.from('actors') as any)
+    const { data: actorData } = await (supabase.from('actors') as UntypedTable)
       .select('id')
       .eq('user_id', user.id)
       .eq('actor_type', 'user')
       .single();
-    const actor = actorData as any;
+    const actor = actorData as ActorRecord | null;
 
     const actorId = actor?.id;
 
@@ -75,7 +103,7 @@ export async function GET(request: NextRequest) {
 
         try {
           // Build query based on user ID field type
-          let query = (supabase.from(meta.tableName) as any).select('id', {
+          let query = (supabase.from(meta.tableName) as UntypedTable).select('id', {
             count: 'exact',
             head: true,
           });
@@ -112,7 +140,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Check wallet status
-    const { count: walletCount } = await (supabase.from('wallets') as any)
+    const { count: walletCount } = await (supabase.from('wallets') as UntypedTable)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id);
 
@@ -122,14 +150,14 @@ export async function GET(request: NextRequest) {
     // Get wishlist item count (separate from wishlist count)
     let wishlistItemCount = 0;
     if (actorId && (entityCounts.wishlist ?? 0) > 0) {
-      const { data: wishlistsData } = await (supabase.from('wishlists') as any)
+      const { data: wishlistsData } = await (supabase.from('wishlists') as UntypedTable)
         .select('id')
         .eq('actor_id', actorId);
-      const wishlists = wishlistsData as any[];
+      const wishlists = wishlistsData as WishlistRecord[] | null;
 
       if (wishlists && wishlists.length > 0) {
         const wishlistIds = wishlists.map(w => w.id);
-        const { count: itemCount } = await (supabase.from('wishlist_items') as any)
+        const { count: itemCount } = await (supabase.from('wishlist_items') as UntypedTable)
           .select('id', { count: 'exact', head: true })
           .in('wishlist_id', wishlistIds);
 
@@ -143,13 +171,13 @@ export async function GET(request: NextRequest) {
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
     // Check most recent project update
-    const { data: recentProjectData } = await (supabase.from('projects') as any)
+    const { data: recentProjectData } = await (supabase.from('projects') as UntypedTable)
       .select('updated_at')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(1)
       .single();
-    const recentProject = recentProjectData as any;
+    const recentProject = recentProjectData as ProjectRecord | null;
 
     if (recentProject?.updated_at) {
       const lastUpdate = new Date(recentProject.updated_at);
@@ -161,7 +189,7 @@ export async function GET(request: NextRequest) {
 
     // Check for published entities
     let hasPublishedEntities = false;
-    const { count: publishedCount } = await (supabase.from('projects') as any)
+    const { count: publishedCount } = await (supabase.from('projects') as UntypedTable)
       .select('id', { count: 'exact', head: true })
       .eq('user_id', user.id)
       .eq('status', 'active');

@@ -11,6 +11,7 @@ export interface CreateProposalInput {
   description?: string;
   proposal_type?: string;
   action_type?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   action_data?: Record<string, any>;
   voting_threshold?: number;
   voting_starts_at?: string;
@@ -40,6 +41,7 @@ export async function createProposal(input: CreateProposalInput) {
       return { success: false, error: 'Description must be 5000 characters or less' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
       .insert({
         group_id: input.group_id,
@@ -102,6 +104,7 @@ export async function activateProposal(proposalId: string) {
 
     const threshold = proposal.voting_threshold || 50;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
       .update({
         status: 'active',
@@ -133,6 +136,7 @@ export async function updateProposal(
     description: string;
     proposal_type: string;
     action_type: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     action_data: Record<string, any>;
     voting_threshold: number;
     voting_starts_at: string;
@@ -160,6 +164,7 @@ export async function updateProposal(
       return { success: false, error: 'Only the proposer can update the proposal' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const payload: Record<string, any> = {};
     const fields = [
       'title',
@@ -174,7 +179,9 @@ export async function updateProposal(
     ] as const;
 
     for (const key of fields) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       if ((updates as any)[key] !== undefined) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (payload as any)[key] = (updates as any)[key];
       }
     }
@@ -183,6 +190,7 @@ export async function updateProposal(
       return { success: false, error: 'Title is required' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from(TABLES.group_proposals) as any)
       .update({ ...payload, updated_at: new Date().toISOString() })
       .eq('id', proposalId)
@@ -222,6 +230,7 @@ export async function deleteProposal(proposalId: string) {
       return { success: false, error: 'Only the proposer can delete the proposal' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from(TABLES.group_proposals) as any)
       .delete()
       .eq('id', proposalId);

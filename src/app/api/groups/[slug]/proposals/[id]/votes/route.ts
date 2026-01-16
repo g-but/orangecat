@@ -12,17 +12,17 @@ import { createServerClient } from '@/lib/supabase/server';
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { slug: string; id: string } }
+  { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
     const supabase = await createServerClient();
     const {
-      data: { user },
+      data: { user: _user },
     } = await supabase.auth.getUser();
 
     // Optional auth - public proposals can be viewed by anyone
     // But votes are only visible to members
-    const { id } = params;
+    const { id } = await params;
     const result = await getProposalVotes(id);
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 404 });

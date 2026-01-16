@@ -41,7 +41,7 @@ export function FormField({
         return (
           <Textarea
             id={name}
-            value={value || ''}
+            value={(value as string) || ''}
             onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             placeholder={placeholder}
@@ -56,12 +56,13 @@ export function FormField({
           <Input
             id={name}
             type="number"
-            value={value || ''}
-            onChange={e => onChange(e.target.value ? parseInt(e.target.value) : null)}
+            value={(value as string | number) ?? ''}
+            onChange={e => onChange(e.target.value ? parseFloat(e.target.value) : null)}
             onFocus={onFocus}
             placeholder={placeholder}
             min={min}
             max={max}
+            step={config.step}
             disabled={disabled}
             className={baseInputClass}
           />
@@ -73,7 +74,7 @@ export function FormField({
         return (
           <CurrencyInput
             id={name}
-            value={value || null}
+            value={(value as number | null) ?? null}
             currency={currentCurrency}
             onChange={onChange}
             onCurrencyChange={onCurrencyChange}
@@ -93,7 +94,7 @@ export function FormField({
         return (
           <select
             id={name}
-            value={value || ''}
+            value={(value as string) || ''}
             onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             disabled={disabled}
@@ -158,7 +159,7 @@ export function FormField({
           <Input
             id={name}
             type={type}
-            value={value || ''}
+            value={(value as string) || ''}
             onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             placeholder={placeholder}
@@ -172,7 +173,7 @@ export function FormField({
           <Input
             id={name}
             type="text"
-            value={value || ''}
+            value={(value as string) || ''}
             onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             placeholder={placeholder || 'bc1q... or 3... or 1...'}
@@ -186,7 +187,7 @@ export function FormField({
           <Input
             id={name}
             type="text"
-            value={Array.isArray(value) ? value.join(', ') : value || ''}
+            value={Array.isArray(value) ? (value as string[]).join(', ') : (value as string) || ''}
             onChange={e => {
               const tags = e.target.value
                 .split(',')
@@ -207,7 +208,7 @@ export function FormField({
           <Input
             id={name}
             type="text"
-            value={value || ''}
+            value={(value as string) || ''}
             onChange={e => onChange(e.target.value)}
             onFocus={onFocus}
             placeholder={placeholder}

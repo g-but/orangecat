@@ -28,7 +28,7 @@ import { validateOneOfIds, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { getTableName } from '@/config/entity-registry';
 
-type SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
+type _SupabaseClient = Awaited<ReturnType<typeof createServerClient>>;
 
 // GET /api/wallets?profile_id=xxx OR ?project_id=xxx
 export async function GET(request: NextRequest) {
@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
         return apiForbidden('Forbidden: Profile does not belong to this user');
       }
     } else if (body.project_id) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: project } = await (supabase.from(getTableName('project')) as any)
         .select('user_id')
         .eq('id', body.project_id)
@@ -236,6 +237,7 @@ export async function POST(request: NextRequest) {
 
     // Try to create the wallet in the dedicated wallets table first
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: wallet, error } = await (supabase.from(getTableName('wallet')) as any)
         .insert({
           profile_id: body.profile_id || null,

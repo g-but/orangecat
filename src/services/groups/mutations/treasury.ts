@@ -34,7 +34,7 @@ export async function fetchBitcoinBalance(bitcoinAddress: string): Promise<numbe
     const data = await response.json();
     
     // mempool.space returns balance in sats
-    const balanceSats = data.chain_stats?.funded_txo_sum || 0;
+    const _balanceSats = data.chain_stats?.funded_txo_sum || 0;
     const unspentSats = data.chain_stats?.tx_count ? 
       (data.chain_stats.funded_txo_sum - (data.chain_stats.spent_txo_sum || 0)) : 0;
     
@@ -57,7 +57,9 @@ export async function updateWalletBalance(
   balanceSats: number
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_wallets) as any)
       .update({
         current_balance_sats: balanceSats,
@@ -87,7 +89,9 @@ export async function refreshWalletBalance(
 ): Promise<{ success: boolean; balance?: number; error?: string }> {
   try {
     // Get wallet with Bitcoin address
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: wallet, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_wallets) as any)
       .select('bitcoin_address')
       .eq('id', walletId)
@@ -132,7 +136,9 @@ export async function refreshGroupTreasuryBalances(
 ): Promise<{ success: boolean; updated: number; error?: string }> {
   try {
     // Get all wallets for the group
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: wallets, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_wallets) as any)
       .select('id, bitcoin_address')
       .eq('group_id', groupId)

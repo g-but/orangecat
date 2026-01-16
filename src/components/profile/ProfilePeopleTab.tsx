@@ -67,7 +67,9 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
 
           if (!followingError && followingData) {
             const followingProfiles = followingData
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .map((item: any) => item.profiles)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .filter((p: any) => p !== null);
             setFollowing(followingProfiles);
           }
@@ -91,7 +93,9 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
 
           if (!followersError && followersData) {
             const followerProfiles = followersData
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .map((item: any) => item.profiles)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .filter((p: any) => p !== null);
             setFollowers(followerProfiles);
           }
@@ -104,7 +108,9 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             if (followingData.success && followingData.data && followingData.data.data) {
               // Extract profiles from nested structure
               const followingProfiles = followingData.data.data
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .map((item: any) => item.profiles)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .filter((p: any) => p !== null);
               setFollowing(followingProfiles);
             }
@@ -117,7 +123,9 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
             if (followersData.success && followersData.data && followersData.data.data) {
               // Extract profiles from nested structure
               const followerProfiles = followersData.data.data
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .map((item: any) => item.profiles)
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .filter((p: any) => p !== null);
               setFollowers(followerProfiles);
             }

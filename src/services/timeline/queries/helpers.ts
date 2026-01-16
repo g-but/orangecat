@@ -32,11 +32,12 @@ export async function getCurrentUserId(): Promise<string | null> {
 /**
  * Helper to transform enriched view events to display events
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function transformEnrichedEventToDisplay(event: any): TimelineDisplayEvent {
   const timelineEvent = mapDbEventToTimelineEvent(event);
 
   // Omit eventType and eventSubtype as TimelineDisplayEvent extends Omit<TimelineEvent, 'eventType' | 'eventSubtype'>
-  const { eventType, eventSubtype, ...eventWithoutTypes } = timelineEvent;
+  const { eventType: _eventType, eventSubtype: _eventSubtype, ...eventWithoutTypes } = timelineEvent;
 
   return {
     ...eventWithoutTypes,

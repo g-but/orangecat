@@ -57,7 +57,7 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
   // Try to get pathname from hook, fallback to prop or '/'
   const hookPathname = usePathname();
   const pathname = propPathname || hookPathname || '/';
-  const routeContext = getRouteContext(pathname);
+  const _routeContext = getRouteContext(pathname);
 
   // Get contextual content based on the route
   const getContextualContent = (pathname: string) => {

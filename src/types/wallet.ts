@@ -314,6 +314,7 @@ export function isValidBitcoinAddress(
   network: 'mainnet' | 'testnet' = 'mainnet'
 ): boolean {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return validateBitcoinAddress(address, network as any);
   } catch {
     return false;

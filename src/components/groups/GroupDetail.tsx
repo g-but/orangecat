@@ -46,7 +46,7 @@ export function GroupDetail({ groupSlug }: GroupDetailProps) {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [canCreateProposal, setCanCreateProposal] = useState(false);
-  const [canVote, setCanVote] = useState(false);
+  const [_canVote, setCanVote] = useState(false);
 
   const loadGroupData = useCallback(async () => {
     try {

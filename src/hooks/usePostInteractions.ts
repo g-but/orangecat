@@ -137,6 +137,7 @@ export function usePostInteractions({
       try {
         const result = await timelineService.shareEvent(
           event.id,
+          undefined, // userId - will be fetched from current auth
           shareText?.trim() || 'Shared from timeline',
           'public'
         );

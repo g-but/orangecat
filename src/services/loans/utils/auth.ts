@@ -17,7 +17,7 @@ export async function getCurrentUserId(): Promise<string | null> {
       data: { user },
     } = await supabase.auth.getUser();
     return user?.id || null;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

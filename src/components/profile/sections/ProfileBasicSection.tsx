@@ -28,7 +28,9 @@ interface ProfileBasicSectionProps {
   setLocationGroupLabel: (value: string) => void;
   form: {
     control: Control<ProfileFormValues>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setValue: (name: keyof ProfileFormValues, value: any) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     register: (name: keyof ProfileFormValues) => any;
   };
 }

@@ -7,6 +7,7 @@ import { offlineQueueEvents } from '@/lib/offline-queue-events';
 import { useAuth } from '@/hooks/useAuth';
 
 interface OfflineQueueState {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   queuedPosts: any[];
   isOnline: boolean;
   queueLength: number;
@@ -19,6 +20,7 @@ interface OfflineQueueState {
  * Provides real-time updates on queue length and online status.
  */
 export function useOfflineQueue(): OfflineQueueState {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [queuedPosts, setQueuedPosts] = useState<any[]>([]);
   const [isOnline, setIsOnline] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);

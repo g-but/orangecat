@@ -22,9 +22,9 @@ function useThrottledLog(logFn: () => void, delay: number = 10000) {
 export function useRequireAuth() {
   // IMPORTANT: Keep all hooks in the exact same order
   const { user, session, profile, isLoading, hydrated } = useAuthStore();
-  const [isConsistent, setIsConsistent] = useState(true);
+  const [_isConsistent, setIsConsistent] = useState(true);
   const router = useRouter();
-  const pathname = usePathname();
+  const _pathname = usePathname();
   const [checkedAuth, setCheckedAuth] = useState(false);
 
   // Simplified consistency check - allow transitional states
@@ -78,7 +78,7 @@ export function useRequireAuth() {
 export function useRedirectIfAuthenticated() {
   // IMPORTANT: Keep all hooks in the exact same order
   const { user, session, isLoading, hydrated, profile } = useAuthStore();
-  const [isConsistent, setIsConsistent] = useState(true);
+  const [_isConsistent, setIsConsistent] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -134,7 +134,7 @@ export function useRedirectIfAuthenticated() {
 export function useAuth() {
   // IMPORTANT: Keep all hooks in the exact same order
   const authState = useAuthStore();
-  const [isConsistent, setIsConsistent] = useState(true);
+  const [_isConsistent, setIsConsistent] = useState(true);
   const router = useRouter(); // Always declare this hook third
   const lastLoggedState = useRef<string>('');
 
@@ -142,14 +142,14 @@ export function useAuth() {
   const throttledLog = useThrottledLog(() => {
     if (process.env.NODE_ENV === 'development') {
       // Create a signature of the current state to avoid duplicate logs
-      const stateSignature = `${!!authState.user}-${!!authState.session}-${!!authState.profile}-${authState.isLoading}-${authState.hydrated}-${isConsistent}`;
+      const stateSignature = `${!!authState.user}-${!!authState.session}-${!!authState.profile}-${authState.isLoading}-${authState.hydrated}-${_isConsistent}`;
 
       // Only log if state signature has changed significantly
       if (stateSignature !== lastLoggedState.current) {
         // Only log when there's a meaningful state change
         const isSignificantChange =
           authState.hydrated &&
-          (!authState.isLoading || !isConsistent || (authState.user && authState.session));
+          (!authState.isLoading || !_isConsistent || (authState.user && authState.session));
 
         if (isSignificantChange) {
           logger.debug('Significant auth state change', {
@@ -158,7 +158,7 @@ export function useAuth() {
             hasProfile: !!authState.profile,
             isLoading: authState.isLoading,
             hydrated: authState.hydrated,
-            isConsistent,
+            isConsistent: _isConsistent,
             stateChange: lastLoggedState.current
               ? `${lastLoggedState.current} → ${stateSignature}`
               : 'initial',
@@ -210,7 +210,7 @@ export function useAuth() {
       // Only call throttled log for critical state changes
       const shouldLog =
         !authState.isLoading &&
-        (!isConsistent || (authState.user && authState.session && authState.profile));
+        (!_isConsistent || (authState.user && authState.session && authState.profile));
 
       if (shouldLog) {
         throttledLog();
@@ -222,7 +222,7 @@ export function useAuth() {
     authState.profile,
     authState.isLoading,
     authState.hydrated,
-    isConsistent,
+    _isConsistent,
     throttledLog,
   ]);
 
@@ -263,7 +263,7 @@ export function useAuth() {
   return {
     ...authState,
     isAuthenticated,
-    isConsistent,
+    isConsistent: _isConsistent,
     fixInconsistentState,
   };
 }

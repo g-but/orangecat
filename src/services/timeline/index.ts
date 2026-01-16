@@ -68,8 +68,8 @@ import {
 import { getDemoTimelineEvents } from './utils/demo';
 
 class TimelineService {
-  private readonly DEFAULT_PAGE_SIZE = 20;
-  private readonly MAX_PAGE_SIZE = 100;
+  private readonly _DEFAULT_PAGE_SIZE = 20;
+  private readonly _MAX_PAGE_SIZE = 100;
 
   // ==================== EVENT CREATION ====================
 
@@ -288,10 +288,11 @@ class TimelineService {
    */
   async shareEvent(
     originalEventId: string,
+    userId?: string,
     shareText?: string,
     visibility: TimelineVisibility = 'public'
   ): Promise<{ success: boolean; shareCount: number; error?: string }> {
-    return shareEvent(originalEventId, shareText, visibility);
+    return shareEvent(originalEventId, userId, shareText, visibility);
   }
 
   /**
@@ -300,9 +301,10 @@ class TimelineService {
   async addComment(
     eventId: string,
     content: string,
-    parentCommentId?: string
+    parentCommentId?: string,
+    userId?: string
   ): Promise<{ success: boolean; commentId?: string; commentCount: number; error?: string }> {
-    return addEventComment(eventId, content, parentCommentId);
+    return addEventComment(eventId, content, parentCommentId, userId);
   }
 
   /**
@@ -315,6 +317,7 @@ class TimelineService {
   /**
    * Get comments for an event
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getEventComments(eventId: string, limit: number = 50, offset: number = 0): Promise<any[]> {
     return getEventComments(eventId, limit, offset);
   }
@@ -340,6 +343,7 @@ class TimelineService {
   /**
    * Get replies to a comment
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   async getCommentReplies(commentId: string, limit: number = 20): Promise<any[]> {
     return getCommentReplies(commentId, limit);
   }

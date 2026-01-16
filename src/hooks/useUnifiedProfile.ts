@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/hooks/useAuth'
 import { Profile } from '@/types/database'
 import { ProfileData } from '@/lib/validation'
@@ -29,7 +28,6 @@ export function useUnifiedProfile({
   initialProfile,
   autoFetch = true
 }: UseUnifiedProfileProps = {}): UseUnifiedProfileReturn {
-  const router = useRouter()
   const { user, profile: currentUserProfile } = useAuth()
   
   // State

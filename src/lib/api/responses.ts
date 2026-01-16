@@ -45,6 +45,7 @@ export const HttpStatus = {
 interface ErrorResponseData {
   error: string
   type?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
   timestamp?: string
   requestId?: string
@@ -52,8 +53,10 @@ interface ErrorResponseData {
 
 interface SuccessResponseData {
   success?: boolean
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any
   message?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta?: any
   timestamp?: string
 }
@@ -65,6 +68,7 @@ export function createErrorResponse(
   message: string,
   status: number,
   type?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse {
   const responseData: ErrorResponseData = {
@@ -82,9 +86,11 @@ export function createErrorResponse(
  * Create standardized success response
  */
 export function createSuccessResponse(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any,
   status: number = HttpStatus.OK,
   message?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta?: any
 ): NextResponse {
   const responseData: SuccessResponseData = {
@@ -115,6 +121,7 @@ export const ApiResponses = {
   ),
 
   // Validation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   validationError: (message: string, details?: any) => createErrorResponse(
     message,
     HttpStatus.BAD_REQUEST,
@@ -174,12 +181,14 @@ export const ApiResponses = {
   ),
 
   // Success responses
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   success: (data?: any, message?: string) => createSuccessResponse(
     data,
     HttpStatus.OK,
     message
   ),
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   created: (data?: any, message?: string) => createSuccessResponse(
     data,
     HttpStatus.CREATED,
@@ -204,6 +213,7 @@ export async function withErrorHandling<T>(
 ): Promise<T | NextResponse> {
   try {
     return await operation()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     logger.error('API operation failed', { error: error?.message, stack: error?.stack }, 'API')
     

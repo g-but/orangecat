@@ -34,6 +34,7 @@ async function handleToggleFavorite(
 
     // Verify project exists
     const { data: project, error: projectError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .select('id, user_id, title')
       .eq('id', projectId)
@@ -46,6 +47,7 @@ async function handleToggleFavorite(
 
     // Check if already favorited
     const { data: existingFavorite, error: favoriteCheckError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('project_favorites') as any)
       .select('id')
       .eq('user_id', user.id)
@@ -70,6 +72,7 @@ async function handleToggleFavorite(
         });
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: insertError } = await (supabase.from('project_favorites') as any).insert({
         user_id: user.id,
         project_id: projectId,
@@ -105,6 +108,7 @@ async function handleToggleFavorite(
       }
 
       const { error: deleteError } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('project_favorites') as any)
         .delete()
         .eq('user_id', user.id)
@@ -164,6 +168,7 @@ async function handleGetFavoriteStatus(
     const user = request.user;
 
     const { data: favorite, error: favoriteError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('project_favorites') as any)
       .select('id')
       .eq('user_id', user.id)

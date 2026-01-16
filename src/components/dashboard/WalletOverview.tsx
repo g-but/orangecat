@@ -24,7 +24,7 @@ interface WalletOverviewProps {
 }
 
 // Transaction status formatting
-const getTransactionStatus = (status: string, timestamp: number) => {
+const getTransactionStatus = (status: string, _timestamp: number) => {
   if (status === 'confirmed') {
     return { label: 'Confirmed', color: 'text-green-600', bgColor: 'bg-green-100' };
   }

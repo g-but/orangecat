@@ -32,6 +32,7 @@ export async function GET(
     if (isEmail) {
       // Try to find profile by email field first (if it exists in profiles table)
       const { data: profileByEmail, error: emailError } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
         .eq('email', trimmedIdentifier)
@@ -74,6 +75,7 @@ export async function GET(
             // Now fetch the profile by user ID
             if (userId) {
               const { data: profileById, error: profileError } = await (supabase
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 .from(DATABASE_TABLES.PROFILES) as any)
                 .select('*')
                 .eq('id', userId)
@@ -99,6 +101,7 @@ export async function GET(
     } else {
       // Look up by username
       const { data: profileByUsername, error: usernameError } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
         .eq('username', trimmedIdentifier)
@@ -117,6 +120,7 @@ export async function GET(
 
     // Calculate project count
     const { count: projectCount } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .select('*', { count: 'exact', head: true })
       .eq('user_id', userId || profile.id)

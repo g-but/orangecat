@@ -1,17 +1,20 @@
 import type { NextRequest } from 'next/server';
 import type { NextResponse } from 'next/server';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Handler<Ctx = any> = (
   req: NextRequest,
   ctx: Ctx
 ) => Promise<NextResponse> | NextResponse;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type Middleware<Ctx = any> = (
   req: NextRequest,
   ctx: Ctx,
   next: Handler<Ctx>
 ) => Promise<NextResponse> | NextResponse;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function compose<Ctx = any>(...middlewares: Middleware<Ctx>[]) {
   return function wrap(handler: Handler<Ctx>): Handler<Ctx> {
     return async function composed(req: NextRequest, ctx: Ctx): Promise<NextResponse> {

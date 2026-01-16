@@ -36,7 +36,7 @@ export async function signIn(email: string, password: string) {
 /**
  * @deprecated Use signUp({ email, password, emailRedirectTo? }) from @/services/supabase/auth instead
  */
-export async function signUp(email: string, password: string, metadata?: any) {
+export async function signUp(email: string, password: string, _metadata?: any) {
   const result = await authSignUp({
     email,
     password,

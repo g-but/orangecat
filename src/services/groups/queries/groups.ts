@@ -30,6 +30,7 @@ export async function getGroup(identifier: string, bySlug: boolean = false): Pro
   try {
     const userId = await getCurrentUserId();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = (supabase.from(TABLES.groups) as any).select('*');
 
     if (bySlug) {
@@ -83,6 +84,7 @@ export async function getUserGroups(
     }
 
     // Get user's group IDs from group_members
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: memberships } = await (supabase
       .from('group_members') as any)
       .select('group_id')
@@ -94,6 +96,7 @@ export async function getUserGroups(
 
     const groupIds = memberships.map((m: { group_id: string }) => m.group_id);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let dbQuery = (supabase
       .from(TABLES.groups) as any)
       .select('*', { count: 'exact' })
@@ -144,8 +147,9 @@ export async function getAvailableGroups(
   pagination?: { page?: number; pageSize?: number }
 ): Promise<GroupsListResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const _userId = await getCurrentUserId();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let dbQuery = (supabase.from(TABLES.groups) as any).select('*', { count: 'exact' }).eq('is_public', true);
 
     // Apply filters
@@ -235,8 +239,9 @@ export async function searchGroups(
   pagination?: { page?: number; pageSize?: number }
 ): Promise<GroupsListResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const _userId = await getCurrentUserId();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let dbQuery = (supabase
       .from(TABLES.groups) as any)
       .select('*', { count: 'exact' })

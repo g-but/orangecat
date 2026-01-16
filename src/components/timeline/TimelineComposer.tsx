@@ -33,7 +33,9 @@ export interface TimelineComposerProps {
   targetOwnerType?: 'profile' | 'project';
   targetOwnerName?: string;
   allowProjectSelection?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onPostCreated?: (event?: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onOptimisticUpdate?: (event: any) => void;
   onCancel?: () => void;
   placeholder?: string;

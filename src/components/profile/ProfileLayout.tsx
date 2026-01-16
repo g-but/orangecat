@@ -75,11 +75,11 @@ interface ProfileLayoutProps {
 
 export default function ProfileLayout({
   profile,
-  projects,
+  projects: _projects,
   stats,
-  mode = 'view',
+  mode: _mode = 'view',
   onSave,
-  onModeChange,
+  onModeChange: _onModeChange,
   className,
 }: ProfileLayoutProps) {
   const { user } = useAuth();

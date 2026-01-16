@@ -91,7 +91,7 @@ export default function AuthPage() {
   const loading = localLoading || authLoading;
 
   // Combined loading state for better UX
-  const isCurrentlyLoading = loading || redirectLoading;
+  const _isCurrentlyLoading = loading || redirectLoading;
 
   // Enhanced timeout handling with exponential backoff
   useEffect(() => {

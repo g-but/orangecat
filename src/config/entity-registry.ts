@@ -50,7 +50,7 @@ export const ENTITY_TYPES = [
   'asset',
   'loan',
   'event',
-  'research_entity',
+  'research',
   'wishlist',
 ] as const;
 
@@ -291,22 +291,22 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
   },
 
   // ==================== RESEARCH (DeSci ecosystem) ====================
-  research_entity: {
-    type: 'research_entity',
-    name: 'Research Entity',
-    namePlural: 'Research Entities',
-    tableName: 'research_entities',
+  research: {
+    type: 'research',
+    name: 'Research',
+    namePlural: 'Research',
+    tableName: 'research_entities', // Database table name (unchanged for compatibility)
     userIdField: 'user_id',
     icon: Bot,
     colorTheme: 'purple',
     basePath: '/dashboard/research',
     createPath: '/dashboard/research/create',
-    apiEndpoint: '/api/research-entities',
+    apiEndpoint: '/api/research',
     hasTemplates: true,
-    description: 'Independent research projects with decentralized funding',
-    createActionLabel: 'Start a research project',
-    category: 'business', // Research as business innovation
-    createPriority: 2,
+    description: 'Independent research topics with decentralized funding (e.g., Dark Matter, Climate Science)',
+    createActionLabel: 'Fund a research topic',
+    category: 'business',
+    createPriority: 6,
   },
 
   // ==================== PERSONAL (Wishlists & Registries) ====================
@@ -322,10 +322,10 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createPath: '/dashboard/wishlists/create',
     apiEndpoint: '/api/wishlists',
     hasTemplates: true,
-    description: 'Personal registries for crowdfunding gifts, needs, and wants',
-    createActionLabel: 'Create a wishlist or registry',
-    category: 'community',
-    createPriority: 2,
+    description: 'List items you want - others can buy them for you',
+    createActionLabel: 'Create a wishlist',
+    category: 'business',
+    createPriority: 7,
   },
 };
 

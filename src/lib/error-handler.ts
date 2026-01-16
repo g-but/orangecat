@@ -392,7 +392,7 @@ export function setupGlobalErrorHandlers(): void {
 
   // Handle unhandled promise rejections
   process.on('unhandledRejection', (reason, promise) => {
-    const error = reason instanceof Error ? reason : new Error(String(reason))
+    const _error = reason instanceof Error ? reason : new Error(String(reason))
     errorHandler.handle(new AppError(
       'Unhandled promise rejection',
       'UNHANDLED_PROMISE_REJECTION',

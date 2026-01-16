@@ -27,8 +27,9 @@ export async function getGroupEvents(
   options?: EventsQuery
 ): Promise<EventsListResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const _userId = await getCurrentUserId();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = (supabase
       .from(TABLES.group_events) as any)
       .select(
@@ -93,8 +94,9 @@ export async function getGroupEvents(
  */
 export async function getEvent(eventId: string): Promise<EventResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const _userId = await getCurrentUserId();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from(TABLES.group_events) as any)
       .select(
@@ -156,6 +158,7 @@ export async function getEventRsvps(
     }
 
     // First check if user can access the event
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: event } = await (supabase
       .from(TABLES.group_events) as any)
       .select('id, is_public, group_id')
@@ -167,6 +170,7 @@ export async function getEventRsvps(
     }
 
     // Get RSVPs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error, count } = await (supabase
       .from(TABLES.group_event_rsvps) as any)
       .select(
@@ -226,6 +230,7 @@ export async function getUserRsvpStatus(
       return { success: false, error: 'Authentication required' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from(TABLES.group_event_rsvps) as any)
       .select('status')

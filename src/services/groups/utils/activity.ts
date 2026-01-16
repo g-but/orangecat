@@ -15,6 +15,7 @@ import { TABLES } from '../constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Type alias for any SupabaseClient (accepts any database schema)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
@@ -39,6 +40,7 @@ export async function logGroupActivity(
 ): Promise<void> {
   try {
     const supabaseClient = client || supabase;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabaseClient.from(TABLES.group_activities) as any).insert({
       group_id: groupId,
       user_id: userId,

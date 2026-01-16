@@ -142,7 +142,8 @@ export default function ProfileOverviewTab({
             typeof profile.social_links === 'object' &&
             'links' in profile.social_links &&
             profile.social_links.links &&
-            profile.social_links.links.length > 0 ? (
+            Array.isArray(profile.social_links.links) &&
+            (profile.social_links.links as SocialLink[]).length > 0 ? (
               <SocialLinksDisplay
                 links={profile.social_links.links as SocialLink[]}
                 compact={true}

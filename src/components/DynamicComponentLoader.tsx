@@ -17,6 +17,7 @@ import Loading from '@/components/Loading';
  * @param fallback - Optional custom loading component
  * @returns Component wrapped with Suspense and lazy loading
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function createDynamicComponent<T extends ComponentType<any>>(
   importFunc: () => Promise<{ default: T }>,
   fallback?: React.ReactNode
@@ -88,6 +89,7 @@ export const DynamicAdvancedSearch = createDynamicComponent(
 /**
  * Utility for preloading components on user interaction
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const preloadComponent = (importFunc: () => Promise<any>) => {
   // Only preload in browser environment
   if (typeof window !== 'undefined') {
@@ -111,9 +113,10 @@ export const preloadComponent = (importFunc: () => Promise<any>) => {
 /**
  * Hook for intersection-based component loading
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useLazyComponent<T extends ComponentType<any>>(
   importFunc: () => Promise<{ default: T }>,
-  threshold = 0.1
+  _threshold = 0.1
 ) {
   const LazyComponent = lazy(importFunc);
 
@@ -123,7 +126,7 @@ export function useLazyComponent<T extends ComponentType<any>>(
       rootMargin?: string;
     }
   ) {
-    const { fallback, rootMargin = '50px', ...componentProps } = props;
+    const { fallback, rootMargin: _rootMargin = '50px', ...componentProps } = props;
 
     return (
       <Suspense fallback={fallback || <Loading />}>

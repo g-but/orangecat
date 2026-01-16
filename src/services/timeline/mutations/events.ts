@@ -94,6 +94,7 @@ export async function createEventWithVisibility(
 
     // Use database function to create post with visibility contexts
     // The function returns JSONB, so we need to parse it
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)('create_post_with_visibility', {
       p_event_type: request.eventType || 'post_created',
       p_actor_id: actorId,
@@ -137,6 +138,7 @@ export async function createEventWithVisibility(
     }
 
     // Parse the JSONB response
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let result: any;
     if (typeof data === 'string') {
       try {
@@ -170,11 +172,13 @@ export async function createEventWithVisibility(
     }
 
     // Fetch the created event
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData, error: fetchError } = await (supabase
       .from(TIMELINE_TABLES.EVENTS) as any)
       .select('*')
       .eq('id', postId)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const event = eventData as any;
 
     if (fetchError) {
@@ -191,6 +195,7 @@ export async function createEventWithVisibility(
         visibility_count: result.visibility_count || 0,
       },
     };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     logger.error('Error creating post with visibility', { error, request }, 'Timeline');
 
@@ -275,6 +280,7 @@ export async function createEvent(request: CreateTimelineEventRequest): Promise<
     let eventId: string;
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)('create_timeline_event', eventData);
 
       if (error) {
@@ -289,11 +295,13 @@ export async function createEvent(request: CreateTimelineEventRequest): Promise<
     }
 
     // Fetch the created event (only if database function succeeded)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData2, error: fetchError } = await (supabase
       .from(TIMELINE_TABLES.EVENTS) as any)
       .select('*')
       .eq('id', eventId)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const event = eventData2 as any;
 
     if (fetchError) {
@@ -323,11 +331,13 @@ export async function createProjectEvent(
   additionalData?: Partial<CreateTimelineEventRequest>
 ): Promise<TimelineEventResponse> {
   // Get project details
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: projectData } = await (supabase
     .from(getTableName('project')) as any)
     .select('title, description, goal_amount, currency')
     .eq('id', projectId)
     .single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const project = projectData as any;
 
   if (!project) {
@@ -368,25 +378,31 @@ export async function createTransactionEvent(
   eventType: 'donation_received' | 'donation_sent' = 'donation_received'
 ): Promise<TimelineEventResponse> {
   // Get transaction and project details
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: transactionData } = await (supabase
     .from(DATABASE_TABLES.TRANSACTIONS) as any)
     .select('*')
     .eq('id', transactionId)
     .single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const transaction = transactionData as any;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: projectData } = await (supabase
     .from(getTableName('project')) as any)
     .select('title')
     .eq('id', projectId)
     .single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const project = projectData as any;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: donorData } = await (supabase
     .from(DATABASE_TABLES.PROFILES) as any)
     .select('username, display_name')
     .eq('id', donorId)
     .single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const donor = donorData as any;
 
   if (!transaction || !project) {
@@ -435,9 +451,11 @@ export async function createQuoteReply(
   content: string,
   quotedContent: string,
   visibility: TimelineVisibility = 'public',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getEventById?: (eventId: string) => Promise<{ success: boolean; event?: any; error?: string }>
 ): Promise<TimelineEventResponse> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await (supabase.rpc as any)('create_quote_reply', {
       p_parent_event_id: parentPostId,
       p_actor_id: actorId,
@@ -465,11 +483,13 @@ export async function createQuoteReply(
     }
 
     // Fallback: fetch directly
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData, error: fetchError } = await (supabase
       .from(TIMELINE_TABLES.EVENTS) as any)
       .select('*')
       .eq('id', result.data)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const event = eventData as any;
 
     if (fetchError || !event) {
@@ -493,10 +513,12 @@ export async function updateEvent(
     title?: string;
     description?: string;
     visibility?: TimelineVisibility;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata?: Record<string, any>;
   }
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {};
 
     if (updates.title !== undefined) {
@@ -517,6 +539,7 @@ export async function updateEvent(
 
     updateData.updated_at = new Date().toISOString();
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from(TIMELINE_TABLES.EVENTS) as any).update(updateData).eq('id', eventId);
 
     if (error) {
@@ -547,6 +570,7 @@ export async function updateEventVisibility(
  */
 export async function deleteEvent(eventId: string, reason?: string): Promise<boolean> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)('soft_delete_timeline_event', {
       event_id: eventId,
       reason,
@@ -570,18 +594,25 @@ export async function deleteEvent(eventId: string, reason?: string): Promise<boo
  */
 export async function shareEvent(
   originalEventId: string,
+  userId?: string,
   shareText?: string,
   visibility: TimelineVisibility = 'public'
 ): Promise<{ success: boolean; shareCount: number; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { success: false, shareCount: 0, error: 'Authentication required' };
+    // Get user ID if not provided
+    let actorId = userId;
+    if (!actorId) {
+      const fetchedUserId = await getCurrentUserId();
+      if (!fetchedUserId) {
+        return { success: false, shareCount: 0, error: 'Authentication required' };
+      }
+      actorId = fetchedUserId;
     }
 
     // Create a share event referencing the original
     const fallback = await createEvent({
       eventType: 'post_shared',
+      actorId,
       subjectType: 'profile',
       title: 'Shared a post',
       description: shareText || 'Shared from timeline',
@@ -594,6 +625,7 @@ export async function shareEvent(
     }
     
     // Attempt to count share events referencing this original
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { count } = await (supabase
       .from(TIMELINE_TABLES.EVENTS) as any)
       .select('id', { count: 'exact', head: true })

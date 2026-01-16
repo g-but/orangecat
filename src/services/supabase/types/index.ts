@@ -144,23 +144,23 @@ export interface CreateUpdateOptions {
 
 export interface StorageItem {
   key: string
-  value: any
+  value: unknown
 }
 
 export interface AuthStorage {
-  getItem: (key: string) => any
-  setItem: (key: string, value: any) => void
+  getItem: (key: string) => unknown
+  setItem: (key: string, value: unknown) => void
   removeItem: (key: string) => void
 }
 
 // ==================== UTILITY TYPES ====================
 
-export interface DatabaseResponse<T = any> {
+export interface DatabaseResponse<T = unknown> {
   data: T | null
   error: Error | null
 }
 
-export interface DatabaseListResponse<T = any> {
+export interface DatabaseListResponse<T = unknown> {
   data: T[]
   error: Error | null
 }
@@ -190,32 +190,32 @@ export interface SupabaseError extends Error {
 
 export interface ValidationError extends Error {
   field?: string
-  value?: any
+  value?: unknown
 }
 
 // ==================== TYPE GUARDS ====================
 
-export function isAuthError(error: any): error is AuthError {
-  return error && typeof error.message === 'string'
+export function isAuthError(error: unknown): error is AuthError {
+  return error !== null && typeof error === 'object' && 'message' in error && typeof (error as AuthError).message === 'string'
 }
 
-export function isSupabaseError(error: any): error is SupabaseError {
-  return error && typeof error.message === 'string' && 'code' in error
+export function isSupabaseError(error: unknown): error is SupabaseError {
+  return error !== null && typeof error === 'object' && 'message' in error && typeof (error as SupabaseError).message === 'string' && 'code' in error
 }
 
-export function isValidProfile(data: any): data is Profile {
-  return data && 
-         typeof data.id === 'string' &&
-         typeof data.created_at === 'string' &&
-         typeof data.updated_at === 'string'
+export function isValidProfile(data: unknown): data is Profile {
+  return data !== null && typeof data === 'object' &&
+         'id' in data && typeof (data as Profile).id === 'string' &&
+         'created_at' in data && typeof (data as Profile).created_at === 'string' &&
+         'updated_at' in data && typeof (data as Profile).updated_at === 'string'
 }
 
-export function isValidFundingPage(data: any): data is FundingPage {
-  return data &&
-         typeof data.id === 'string' &&
-         typeof data.user_id === 'string' &&
-         typeof data.title === 'string' &&
-         typeof data.created_at === 'string'
+export function isValidFundingPage(data: unknown): data is FundingPage {
+  return data !== null && typeof data === 'object' &&
+         'id' in data && typeof (data as FundingPage).id === 'string' &&
+         'user_id' in data && typeof (data as FundingPage).user_id === 'string' &&
+         'title' in data && typeof (data as FundingPage).title === 'string' &&
+         'created_at' in data && typeof (data as FundingPage).created_at === 'string'
 }
 
 // ==================== EXPORT ALL TYPES ====================

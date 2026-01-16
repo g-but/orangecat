@@ -132,6 +132,7 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
                 {/* Avatar */}
                 <div className="flex-shrink-0">
                   {avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element -- Dynamic supporter avatar
                     <img src={avatarUrl} alt={displayName} className="w-10 h-10 rounded-full" />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center border-2 border-orange-300">

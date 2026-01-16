@@ -20,7 +20,7 @@ interface LoanOffersListProps {
   onOfferUpdated?: () => void;
 }
 
-export function LoanOffersList({ offers, onOfferUpdated }: LoanOffersListProps) {
+export function LoanOffersList({ offers, onOfferUpdated: _onOfferUpdated }: LoanOffersListProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-800';

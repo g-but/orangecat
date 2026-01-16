@@ -50,6 +50,7 @@ export function validateCreateGroupRequest(
   // Label validation
   if (!request.label) {
     errors.push({ field: 'label', message: 'Group label is required' });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } else if (!validLabels.includes(request.label as any)) {
     errors.push({ field: 'label', message: `Label must be one of: ${validLabels.join(', ')}` });
   }
@@ -57,6 +58,7 @@ export function validateCreateGroupRequest(
   // Governance preset validation
   if (
     request.governance_preset &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     !validGovernancePresets.includes(request.governance_preset as any)
   ) {
     errors.push({
@@ -66,6 +68,7 @@ export function validateCreateGroupRequest(
   }
 
   // Visibility validation
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (request.visibility && !validVisibilities.includes(request.visibility as any)) {
     errors.push({
       field: 'visibility',
@@ -100,6 +103,7 @@ export function validateUpdateGroupRequest(
   }
 
   // Label validation (if provided)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   if (request.label !== undefined && !validLabels.includes(request.label as any)) {
     errors.push({ field: 'label', message: `Label must be one of: ${validLabels.join(', ')}` });
   }
@@ -107,6 +111,7 @@ export function validateUpdateGroupRequest(
   // Governance preset validation (if provided)
   if (
     request.governance_preset !== undefined &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     !validGovernancePresets.includes(request.governance_preset as any)
   ) {
     errors.push({
@@ -118,6 +123,7 @@ export function validateUpdateGroupRequest(
   // Visibility validation (if provided)
   if (
     request.visibility !== undefined &&
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     !validVisibilities.includes(request.visibility as any)
   ) {
     errors.push({

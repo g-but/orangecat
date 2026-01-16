@@ -10,6 +10,7 @@ export interface CreateCauseInput {
   currency?: 'SATS' | 'BTC' | 'USD' | 'EUR' | 'CHF';
   bitcoin_address?: string | null;
   lightning_address?: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   distribution_rules?: any;
 }
 
@@ -33,6 +34,7 @@ export async function createCause(userId: string, input: CreateCauseInput) {
     status: 'active', // Always create as active
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase
     .from(getTableName('cause')) as any)
     .insert(payload)
@@ -50,6 +52,7 @@ export async function createCause(userId: string, input: CreateCauseInput) {
 export async function updateCause(id: string, userId: string, input: UpdateCauseInput) {
   const supabase = await createServerClient();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase
     .from(getTableName('cause')) as any)
     .update(input)

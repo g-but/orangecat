@@ -17,7 +17,7 @@ interface ProjectTimelineProps {
 export default function ProjectTimeline({
   projectId,
   projectTitle,
-  isOwner,
+  isOwner: _isOwner,
 }: ProjectTimelineProps) {
   const { user } = useAuth();
   const [showComposer, setShowComposer] = useState(false);

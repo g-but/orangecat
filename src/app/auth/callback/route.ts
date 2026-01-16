@@ -20,7 +20,7 @@ export async function GET(request: Request) {
 
       // Successfully authenticated, redirect to dashboard with welcome experience
       return NextResponse.redirect(`${requestUrl.origin}${next}`)
-    } catch (error) {
+    } catch {
       return NextResponse.redirect(
         `${requestUrl.origin}/auth?error=${encodeURIComponent('An unexpected error occurred during authentication')}`
       )

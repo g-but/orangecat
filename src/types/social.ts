@@ -11,7 +11,7 @@
  */
 
 import type { ScalableProfile } from '@/services/profileService';
-import { Project } from './project';
+import type { Project } from './project';
 import type { SocialPlatformId } from '@/lib/social-platforms';
 
 // MembershipRole type (previously imported from ./organization which doesn't exist)
@@ -378,9 +378,11 @@ export interface OrganizationApplication {
   id: string;
   organization_id: string;
   applicant_id: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   application_data: Record<string, any>;
   status: ApplicationStatus;
   message?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   responses: Record<string, any>;
   reviewed_by?: string;
   reviewed_at?: string;
@@ -392,6 +394,7 @@ export interface OrganizationApplication {
 
 export interface ApplicationFormData {
   message?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   responses: Record<string, any>;
   bio?: string;
   motivation?: string;
@@ -432,7 +435,9 @@ export interface OrganizationInvitation {
   message?: string;
   invitation_token: string;
   status: InvitationStatus;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   permissions: Record<string, any>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: Record<string, any>;
   created_at: string;
   updated_at: string;
@@ -447,6 +452,7 @@ export interface InvitationFormData {
   title?: string;
   message?: string;
   expires_in_days?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   permissions?: Record<string, any>;
 }
 
@@ -503,6 +509,7 @@ export interface BitcoinCollaboration {
   funding_page_id?: string;
   status: CollaborationStatus;
   payment_deadline?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   collaboration_data: Record<string, any>;
   created_at: string;
   updated_at: string;

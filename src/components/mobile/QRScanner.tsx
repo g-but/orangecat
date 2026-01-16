@@ -90,7 +90,7 @@ export function QRScanner({
           onScan(scanResult.data);
         }
       }
-    } catch (_error) {
+    } catch {
       // Silently fail - QR detection may fail on many frames
     }
   }, [acceptedFormats, onScan, stopScanning]);
@@ -183,7 +183,7 @@ export function QRScanner({
         advanced: [{ torch: !flashEnabled }] as any[],
       });
       setFlashEnabled(!flashEnabled);
-    } catch (error) {
+    } catch {
       // Silently fail if torch is not supported
     }
   };
@@ -207,7 +207,7 @@ export function QRScanner({
             onScan(scanResult.data);
           }
         }
-      } catch (error) {
+      } catch {
         setError('Failed to scan image. Please try again.');
       }
     };
@@ -326,14 +326,14 @@ export function QRScanner({
 // =====================================================================
 
 // Mock QR detection function (replace with actual QR library)
-async function detectQRCode(imageData: ImageData): Promise<string | null> {
+async function detectQRCode(_imageData: ImageData): Promise<string | null> {
   // This would use a library like qr-scanner or jsQR
   // For now, return null to simulate no QR found
   return null;
 }
 
 // Scan uploaded image for QR code
-async function scanImageForQR(imageUrl: string): Promise<string | null> {
+async function scanImageForQR(_imageUrl: string): Promise<string | null> {
   // This would process the uploaded image
   // For now, return null
   return null;

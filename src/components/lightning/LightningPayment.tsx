@@ -28,19 +28,19 @@ interface Invoice {
 }
 
 export default function LightningPayment({
-  recipientAddress,
+  recipientAddress: _recipientAddress,
   projectTitle,
-  projectId,
+  projectId: _projectId,
   presetAmount,
-  onPaymentComplete,
-  onPaymentFailed,
+  onPaymentComplete: _onPaymentComplete,
+  onPaymentFailed: _onPaymentFailed,
   className = '',
 }: LightningPaymentProps) {
   const [amount, setAmount] = useState(presetAmount?.toString() || '');
   const [message, setMessage] = useState('');
   const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [isChecking, setIsChecking] = useState(false);
+  const [_isGenerating, setIsGenerating] = useState(false);
+  const [_isChecking, _setIsChecking] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<
     'pending' | 'checking' | 'paid' | 'expired' | 'failed'
   >('pending');
@@ -105,7 +105,7 @@ export default function LightningPayment({
       setInvoice(demoInvoice);
       setPaymentStatus('pending');
       toast.success('Demo Lightning invoice generated!');
-    } catch (error) {
+    } catch {
       toast.error('Failed to generate Lightning invoice');
     } finally {
       setIsGenerating(false);
@@ -122,7 +122,7 @@ export default function LightningPayment({
       setCopied(true);
       toast.success('Invoice copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy invoice');
     }
   };
@@ -130,7 +130,7 @@ export default function LightningPayment({
   const resetPayment = () => {
     setInvoice(null);
     setPaymentStatus('pending');
-    setIsChecking(false);
+    _setIsChecking(false);
     setTimeLeft(null);
   };
 

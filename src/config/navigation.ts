@@ -66,26 +66,37 @@ export interface NavItem {
 }
 
 /**
+ * Header navigation configuration
+ *
+ * SSOT for all header navigation items.
+ * Organized by authentication state.
+ */
+export const headerNavigationConfig = {
+  /** Navigation for authenticated users */
+  authenticated: [
+    { name: 'Dashboard', href: '/dashboard' },
+    { name: 'Discover', href: '/discover' },
+    { name: 'Community', href: '/community' },
+  ] as const,
+
+  /** Navigation for unauthenticated users */
+  unauthenticated: [
+    { name: 'Discover', href: '/discover' },
+    { name: 'Community', href: '/community' },
+    { name: 'About', href: '/about' },
+  ] as const,
+} as const;
+
+/**
  * Get navigation items based on authentication state for header
  *
  * @param user - Supabase User object or null
  * @returns Array of navigation items appropriate for the auth state
  */
 export function getHeaderNavigationItems(user: SupabaseUser | null): NavigationItem[] {
-  if (user) {
-    return [
-      { name: 'Dashboard', href: '/dashboard' },
-      { name: 'Discover', href: '/discover' },
-      { name: 'Community', href: '/community' },
-    ];
-  }
-
-  // Simplified navigation for logged-out users - mobile-first approach
-  return [
-    { name: 'Discover', href: '/discover' },
-    { name: 'Community', href: '/community' },
-    { name: 'About', href: '/about' },
-  ];
+  return user
+    ? [...headerNavigationConfig.authenticated]
+    : [...headerNavigationConfig.unauthenticated];
 }
 
 /**

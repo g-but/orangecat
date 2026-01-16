@@ -279,7 +279,7 @@ export function TouchOptimized({
 
   // Handle mouse events for desktop
   const handleMouseDown = useCallback(
-    (event: React.MouseEvent) => {
+    (_event: React.MouseEvent) => {
       if (disabled || isTouchDevice()) {
         return;
       }

@@ -37,7 +37,7 @@ interface EventsListProps {
 type EventStatusFilter = 'all' | 'upcoming' | 'past';
 
 export function EventsList({ groupId, groupSlug, canCreateEvent = false }: EventsListProps) {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [events, setEvents] = useState<GroupEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<EventStatusFilter>('upcoming');

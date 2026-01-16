@@ -91,6 +91,7 @@ export function getUniqueCategories(
  * Type guard to check if an object has category and tags properties
  */
 export function hasCategoryAndTags(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   obj: any
 ): obj is { category?: string | null; tags?: string[] | null } {
   return obj !== null && typeof obj === 'object' && ('category' in obj || 'tags' in obj);

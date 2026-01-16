@@ -38,6 +38,7 @@ export async function createLoan(request: CreateLoanRequest): Promise<LoanRespon
     }
 
     const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('loan')) as any)
       .insert({
         ...request,
@@ -71,6 +72,7 @@ export async function updateLoan(loanId: string, request: UpdateLoanRequest): Pr
     }
 
     const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('loan')) as any)
       .update(request)
       .eq('id', loanId)
@@ -102,6 +104,7 @@ export async function deleteLoan(loanId: string): Promise<{ success: boolean; er
     }
 
     const { error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('loan')) as any)
       .delete()
       .eq('id', loanId)
@@ -157,6 +160,7 @@ export async function createObligationLoan(params: {
     };
 
     const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('loan')) as any)
       .insert({
         ...newLoan,

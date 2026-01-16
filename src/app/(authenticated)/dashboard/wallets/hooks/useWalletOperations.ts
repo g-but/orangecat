@@ -342,7 +342,7 @@ export function useWalletOperations({
       try {
         const responseData = await response.json();
         updatedWallet = responseData.wallet || responseData;
-      } catch (jsonError) {
+      } catch {
         throw new Error('Invalid response from server');
       }
 

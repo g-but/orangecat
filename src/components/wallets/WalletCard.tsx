@@ -85,7 +85,7 @@ const getCustodyColor = (custody: WalletProvider['custody']) => {
 };
 
 export function WalletCard({ wallet, isExpanded, onToggle, className }: WalletCardProps) {
-  const [showDetails, setShowDetails] = useState(false);
+  const [_showDetails, _setShowDetails] = useState(false);
 
   const TypeIcon = getTypeIcon(wallet.type);
 

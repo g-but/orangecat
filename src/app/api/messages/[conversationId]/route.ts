@@ -40,6 +40,7 @@ const sendMessageSchema = z.object({
   messageType: z
     .enum([MESSAGE_TYPES.TEXT, MESSAGE_TYPES.IMAGE, MESSAGE_TYPES.FILE, MESSAGE_TYPES.SYSTEM])
     .default(MESSAGE_TYPES.TEXT),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata: z.record(z.any()).optional(),
   senderActorId: z.string().uuid().optional(), // Optional: send as specific actor
 });
@@ -71,6 +72,7 @@ export const GET = withAuth(
 
       // Verify user is a participant
       const { data: participant, error: partError } = await (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
       )
         .select('user_id, last_read_at, is_active')
@@ -80,6 +82,7 @@ export const GET = withAuth(
         .maybeSingle();
 
       if (partError || !participant) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: convExists } = await (admin.from(DATABASE_TABLES.CONVERSATIONS) as any)
           .select('id')
           .eq('id', conversationId)
@@ -101,6 +104,7 @@ export const GET = withAuth(
 
       // Get conversation info
       const { data: conv, error: convError } = await (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         admin.from(DATABASE_TABLES.CONVERSATIONS) as any
       )
         .select('*')
@@ -113,6 +117,7 @@ export const GET = withAuth(
 
       // Fetch participants
       const { data: participants } = await (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
       )
         .select(
@@ -128,6 +133,7 @@ export const GET = withAuth(
         .eq('conversation_id', conversationId);
 
       // Format participants
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const formattedParticipants = (participants || []).map((p: any) => ({
         user_id: p.user_id,
         username: p.profiles?.username || '',
@@ -140,9 +146,11 @@ export const GET = withAuth(
       }));
 
       // Calculate unread count
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const userParticipant = formattedParticipants.find((p: any) => p.user_id === user.id);
       let unreadCount = 0;
       if (userParticipant?.last_read_at) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { count } = await (admin.from(DATABASE_TABLES.MESSAGES) as any)
           .select('*', { count: 'exact', head: true })
           .eq('conversation_id', conversationId)
@@ -219,6 +227,7 @@ export const POST = withAuth(
 
       // Check membership (with auto-reactivation for soft-deleted participants)
       const { data: participantMaybe, error: partError } = await (
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any
       )
         .select('user_id, is_active')
@@ -242,6 +251,7 @@ export const POST = withAuth(
           is_active: true,
           last_read_at: new Date().toISOString(),
         };
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await (admin.from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
           .update(updateData)
           .eq('conversation_id', conversationId)

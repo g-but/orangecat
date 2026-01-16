@@ -13,6 +13,7 @@ export function withZodBody<T>(schema: ZodSchema<T>): Middleware<ZodContext<T>> 
       const parsed = schema.parse(json);
       ctx.body = parsed;
       return next(req, ctx);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       // Zod errors include .errors array
       const details = err?.errors || err?.message;

@@ -21,12 +21,14 @@ export class ProductionConsole {
   /**
    * Safe logging that uses proper logger in production
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static log(...args: any[]): void {
     if (this.isProduction) {
       // In production, use proper logger instead of console.log
       logger.info('Console output', { args }, 'Console')
     } else {
       // In development, allow console.log
+      // eslint-disable-next-line no-console
       console.log(...args)
     }
   }
@@ -34,10 +36,12 @@ export class ProductionConsole {
   /**
    * Safe warning that uses proper logger in production
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static warn(...args: any[]): void {
     if (this.isProduction) {
       logger.warn('Console warning', { args }, 'Console')
     } else {
+      // eslint-disable-next-line no-console
       console.warn(...args)
     }
   }
@@ -45,6 +49,7 @@ export class ProductionConsole {
   /**
    * Safe error logging (always use proper logger)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static error(...args: any[]): void {
     logger.error('Console error', { args }, 'Console')
   }
@@ -148,8 +153,10 @@ export const SafeConsole = {
   /**
    * Development-only logging
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   dev: (...args: any[]) => {
     if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
       console.log('[DEV]', ...args)
     }
   },
@@ -157,6 +164,7 @@ export const SafeConsole = {
   /**
    * Performance logging (safe for production)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   perf: (message: string, data?: any) => {
     logger.info(`Performance: ${message}`, data, 'Performance')
   },
@@ -164,6 +172,7 @@ export const SafeConsole = {
   /**
    * Security event logging (always use proper logger)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   security: (message: string, data?: any) => {
     logger.warn(`Security: ${message}`, data, 'Security')
   },
@@ -171,6 +180,7 @@ export const SafeConsole = {
   /**
    * Audit trail logging (always use proper logger)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   audit: (message: string, data?: any) => {
     logger.info(`Audit: ${message}`, data, 'Audit')
   }

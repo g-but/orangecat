@@ -1,19 +1,29 @@
 // Store original console methods before they get overridden
 const originalConsole = {
+  // eslint-disable-next-line no-console
   log: console.log.bind(console),
+  // eslint-disable-next-line no-console
   error: console.error.bind(console),
+  // eslint-disable-next-line no-console
   warn: console.warn.bind(console),
+  // eslint-disable-next-line no-console
   info: console.info.bind(console),
+  // eslint-disable-next-line no-console
   debug: console.debug.bind(console)
 };
 
 // Function to restore original console methods
 export function restoreConsole() {
   if (typeof window !== 'undefined') {
+    // eslint-disable-next-line no-console
     console.log = originalConsole.log;
+    // eslint-disable-next-line no-console
     console.error = originalConsole.error;
+    // eslint-disable-next-line no-console
     console.warn = originalConsole.warn;
+    // eslint-disable-next-line no-console
     console.info = originalConsole.info;
+    // eslint-disable-next-line no-console
     console.debug = originalConsole.debug;
   }
 }
@@ -60,10 +70,13 @@ export function safeLog(...args: EventHandlerArgs) {
 // Function to check if console has been overridden
 export function isConsoleOverridden(): boolean {
   if (typeof window === 'undefined') {return false;}
-  
+
   // Check if console.log has been replaced with something else
-  return console.log.toString().includes('overrideMethod') || 
+  // eslint-disable-next-line no-console
+  return console.log.toString().includes('overrideMethod') ||
+         // eslint-disable-next-line no-console
          console.log.toString().includes('hook.js') ||
+         // eslint-disable-next-line no-console
          console.log.toString().length < 50; // Original console.log is quite long
 }
 

@@ -84,7 +84,7 @@ export default function CreateResearchEntity() {
 
   // Impact
   const [impactAreas, setImpactAreas] = useState<ImpactArea[]>([]);
-  const [targetAudience, setTargetAudience] = useState<string[]>([]);
+  const [targetAudience, _setTargetAudience] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState(true);
 
   const addTeamMember = () => {
@@ -98,35 +98,35 @@ export default function CreateResearchEntity() {
     setTeamMembers(teamMembers.filter((_, i) => i !== index));
   };
 
-  const updateTeamMember = (index: number, field: keyof TeamMember, value: any) => {
+  const updateTeamMember = (index: number, field: keyof TeamMember, value: TeamMember[keyof TeamMember]) => {
     const updated = [...teamMembers];
     updated[index] = { ...updated[index], [field]: value };
     setTeamMembers(updated);
   };
 
-  const addResourceNeed = () => {
+  const _addResourceNeed = () => {
     setResourceNeeds([...resourceNeeds, { type: 'compute', priority: 'medium' }]);
   };
 
-  const removeResourceNeed = (index: number) => {
+  const _removeResourceNeed = (index: number) => {
     setResourceNeeds(resourceNeeds.filter((_, i) => i !== index));
   };
 
-  const updateResourceNeed = (index: number, field: keyof ResourceNeed, value: any) => {
+  const _updateResourceNeed = (index: number, field: keyof ResourceNeed, value: ResourceNeed[keyof ResourceNeed]) => {
     const updated = [...resourceNeeds];
     updated[index] = { ...updated[index], [field]: value };
     setResourceNeeds(updated);
   };
 
-  const addImpactArea = () => {
+  const _addImpactArea = () => {
     setImpactAreas([...impactAreas, { area: 'scientific_understanding' }]);
   };
 
-  const removeImpactArea = (index: number) => {
+  const _removeImpactArea = (index: number) => {
     setImpactAreas(impactAreas.filter((_, i) => i !== index));
   };
 
-  const updateImpactArea = (index: number, field: keyof ImpactArea, value: any) => {
+  const _updateImpactArea = (index: number, field: keyof ImpactArea, value: ImpactArea[keyof ImpactArea]) => {
     const updated = [...impactAreas];
     updated[index] = { ...updated[index], [field]: value };
     setImpactAreas(updated);
@@ -158,7 +158,7 @@ export default function CreateResearchEntity() {
         is_public: isPublic,
       };
 
-      const response = await fetch('/api/research-entities', {
+      const response = await fetch('/api/research', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -238,12 +238,21 @@ export default function CreateResearchEntity() {
                     <SelectValue placeholder="Select field" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="fundamental_physics">Fundamental Physics</SelectItem>
+                    <SelectItem value="mathematics">Mathematics</SelectItem>
                     <SelectItem value="computer_science">Computer Science</SelectItem>
                     <SelectItem value="biology">Biology</SelectItem>
-                    <SelectItem value="physics">Physics</SelectItem>
-                    <SelectItem value="medicine">Medicine</SelectItem>
+                    <SelectItem value="chemistry">Chemistry</SelectItem>
+                    <SelectItem value="neuroscience">Neuroscience</SelectItem>
+                    <SelectItem value="psychology">Psychology</SelectItem>
+                    <SelectItem value="economics">Economics</SelectItem>
+                    <SelectItem value="philosophy">Philosophy</SelectItem>
                     <SelectItem value="engineering">Engineering</SelectItem>
+                    <SelectItem value="medicine">Medicine</SelectItem>
+                    <SelectItem value="environmental_science">Environmental Science</SelectItem>
+                    <SelectItem value="social_science">Social Science</SelectItem>
                     <SelectItem value="artificial_intelligence">Artificial Intelligence</SelectItem>
+                    <SelectItem value="blockchain_cryptography">Blockchain & Cryptography</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -256,10 +265,16 @@ export default function CreateResearchEntity() {
                     <SelectValue placeholder="Select methodology" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="theoretical">Theoretical</SelectItem>
-                    <SelectItem value="experimental">Experimental</SelectItem>
-                    <SelectItem value="computational">Computational</SelectItem>
-                    <SelectItem value="empirical">Empirical</SelectItem>
+                    <SelectItem value="theoretical">Theoretical Research</SelectItem>
+                    <SelectItem value="experimental">Experimental Research</SelectItem>
+                    <SelectItem value="computational">Computational Research</SelectItem>
+                    <SelectItem value="empirical">Empirical Research</SelectItem>
+                    <SelectItem value="qualitative">Qualitative Research</SelectItem>
+                    <SelectItem value="mixed_methods">Mixed Methods</SelectItem>
+                    <SelectItem value="meta_analysis">Meta-Analysis</SelectItem>
+                    <SelectItem value="survey">Survey Research</SelectItem>
+                    <SelectItem value="case_study">Case Study</SelectItem>
+                    <SelectItem value="action_research">Action Research</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -289,6 +304,7 @@ export default function CreateResearchEntity() {
                   <SelectItem value="medium_term">Medium-term (6-18 months)</SelectItem>
                   <SelectItem value="long_term">Long-term (1-3 years)</SelectItem>
                   <SelectItem value="ongoing">Ongoing Research</SelectItem>
+                  <SelectItem value="indefinite">Indefinite/Exploratory</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -323,10 +339,11 @@ export default function CreateResearchEntity() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="donation">Donation-based</SelectItem>
-                    <SelectItem value="subscription">Subscription</SelectItem>
-                    <SelectItem value="milestone">Milestone-based</SelectItem>
-                    <SelectItem value="royalty">Royalty-share</SelectItem>
+                    <SelectItem value="donation">Donation-based (pure support)</SelectItem>
+                    <SelectItem value="subscription">Subscription (ongoing support)</SelectItem>
+                    <SelectItem value="milestone">Milestone-based (progress payments)</SelectItem>
+                    <SelectItem value="royalty">Royalty-share (revenue sharing)</SelectItem>
+                    <SelectItem value="hybrid">Hybrid (multiple models)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -446,10 +463,11 @@ export default function CreateResearchEntity() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="biweekly">Bi-weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="milestone">Milestone-based</SelectItem>
+                    <SelectItem value="weekly">Weekly Updates</SelectItem>
+                    <SelectItem value="biweekly">Bi-weekly Updates</SelectItem>
+                    <SelectItem value="monthly">Monthly Updates</SelectItem>
+                    <SelectItem value="milestone">Milestone-based Updates</SelectItem>
+                    <SelectItem value="as_needed">As-needed Updates</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

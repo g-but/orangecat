@@ -33,7 +33,7 @@ export type SectionType =
 
 // ==================== BASE SECTION CONFIG ====================
 
-export interface BaseSectionConfig {
+export interface BaseSectionConfig<T = unknown> {
   /** Unique identifier for this section */
   id: string;
   /** Type of section to render */
@@ -41,14 +41,14 @@ export interface BaseSectionConfig {
   /** Optional title to display above section */
   title?: string;
   /** Conditional rendering based on entity data */
-  showWhen?: (entity: any) => boolean;
+  showWhen?: (entity: T) => boolean;
   /** Additional CSS classes */
   className?: string;
 }
 
 // ==================== HEADER SECTION ====================
 
-export interface HeaderSectionConfig extends BaseSectionConfig {
+export interface HeaderSectionConfig<T = unknown> extends BaseSectionConfig<T> {
   type: 'header';
   /** Show status badge */
   showStatus?: boolean;
@@ -66,10 +66,10 @@ export interface HeaderSectionConfig extends BaseSectionConfig {
     custom?: Array<{
       label: string;
       icon?: LucideIcon;
-      href?: (entity: any) => string;
-      onClick?: (entity: any) => void;
+      href?: (entity: T) => string;
+      onClick?: (entity: T) => void;
       variant?: 'default' | 'primary' | 'secondary' | 'destructive';
-      showWhen?: (entity: any, isOwner: boolean) => boolean;
+      showWhen?: (entity: T, isOwner: boolean) => boolean;
     }>;
   };
 }
@@ -104,7 +104,7 @@ export interface MediaGallerySectionConfig extends BaseSectionConfig {
 
 // ==================== CONTENT SECTION ====================
 
-export interface ContentFieldConfig {
+export interface ContentFieldConfig<T = unknown> {
   /** Field name on entity */
   field: string;
   /** Display label */
@@ -114,7 +114,7 @@ export interface ContentFieldConfig {
   /** Optional icon */
   icon?: LucideIcon;
   /** Conditional rendering */
-  showWhen?: (entity: any) => boolean;
+  showWhen?: (entity: T) => boolean;
 }
 
 export interface ContentSectionConfig extends BaseSectionConfig {
@@ -127,7 +127,7 @@ export interface ContentSectionConfig extends BaseSectionConfig {
 
 // ==================== METADATA SECTION ====================
 
-export interface MetadataItemConfig {
+export interface MetadataItemConfig<T = unknown> {
   /** Field name on entity */
   field: string;
   /** Display label */
@@ -137,9 +137,9 @@ export interface MetadataItemConfig {
   /** Optional icon */
   icon?: LucideIcon;
   /** Conditional rendering */
-  showWhen?: (entity: any) => boolean;
+  showWhen?: (entity: T) => boolean;
   /** Link URL (can reference entity fields) */
-  linkTo?: (entity: any) => string;
+  linkTo?: (entity: T) => string;
 }
 
 export interface MetadataSectionConfig extends BaseSectionConfig {
@@ -242,11 +242,11 @@ export interface ShareSectionConfig extends BaseSectionConfig {
 
 // ==================== CUSTOM SECTION ====================
 
-export interface CustomSectionConfig extends BaseSectionConfig {
+export interface CustomSectionConfig<T = unknown> extends BaseSectionConfig<T> {
   type: 'custom';
   /** Custom component to render */
   component: ComponentType<{
-    entity: any;
+    entity: T;
     isOwner: boolean;
     userCurrency?: string;
   }>;
@@ -285,7 +285,7 @@ export interface LayoutConfig {
 
 // ==================== SEO CONFIG ====================
 
-export interface SeoConfig<T = any> {
+export interface SeoConfig<T = unknown> {
   /** Template for page title */
   titleTemplate?: (entity: T) => string;
   /** Field to use for meta description */
@@ -293,7 +293,7 @@ export interface SeoConfig<T = any> {
   /** Field to use for OG image */
   imageField?: string;
   /** Generate JSON-LD structured data */
-  generateStructuredData?: (entity: T, creator?: any) => Record<string, any>;
+  generateStructuredData?: (entity: T, creator?: unknown) => Record<string, unknown>;
 }
 
 // ==================== PERMISSIONS CONFIG ====================
@@ -307,7 +307,7 @@ export interface PermissionsConfig {
 
 // ==================== MAIN DETAIL PAGE CONFIG ====================
 
-export interface DetailPageConfig<T = any> {
+export interface DetailPageConfig<T = unknown> {
   /** Entity type this config is for */
   entityType: EntityType;
   /** Display name for the entity */
@@ -339,7 +339,7 @@ export interface DetailPageConfig<T = any> {
 // ==================== HELPER TYPES ====================
 
 /** Props passed to the EntityDetailRenderer */
-export interface EntityDetailRendererProps<T = any> {
+export interface EntityDetailRendererProps<T = unknown> {
   /** The entity data to render */
   entity: T;
   /** Detail page configuration */
@@ -349,11 +349,11 @@ export interface EntityDetailRendererProps<T = any> {
   /** User's preferred currency */
   userCurrency?: string;
   /** Creator/owner profile data */
-  creator?: any;
+  creator?: unknown;
 }
 
 /** Props passed to individual section components */
-export interface SectionRendererProps<T = any> {
+export interface SectionRendererProps<T = unknown> {
   /** Section configuration */
   config: SectionConfig;
   /** The entity data */
@@ -363,5 +363,5 @@ export interface SectionRendererProps<T = any> {
   /** User's preferred currency */
   userCurrency?: string;
   /** Creator/owner profile data */
-  creator?: any;
+  creator?: unknown;
 }

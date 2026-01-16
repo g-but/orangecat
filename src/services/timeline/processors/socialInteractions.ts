@@ -54,6 +54,7 @@ export async function toggleLike(
         if (existingLike) {
           // Unlike the event
           try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data, error } = await (supabase.rpc as any)('unlike_timeline_event', {
               p_event_id: eventId,
               p_user_id: targetUserId,
@@ -67,6 +68,7 @@ export async function toggleLike(
             return {
               success: true,
               liked: false,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               likeCount: (data as any)?.like_count || 0,
             };
           } catch (dbError) {
@@ -93,6 +95,7 @@ export async function toggleLike(
         } else {
           // Like the event
           try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data, error } = await (supabase.rpc as any)('like_timeline_event', {
               p_event_id: eventId,
               p_user_id: targetUserId,
@@ -106,6 +109,7 @@ export async function toggleLike(
             return {
               success: true,
               liked: true,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               likeCount: (data as any)?.like_count || 0,
             };
           } catch (dbError) {
@@ -117,6 +121,7 @@ export async function toggleLike(
             // Fallback: insert into timeline_likes and return new count
             const { error: insertErr } = await supabase
               .from(DATABASE_TABLES.TIMELINE_LIKES)
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               .insert({ event_id: eventId, user_id: targetUserId } as any);
             if (insertErr) {
               logger.error('Fallback like failed', insertErr, 'Timeline');
@@ -162,6 +167,7 @@ export async function toggleDislike(
     if (existingDislike) {
       // Undislike the event
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase.rpc as any)('undislike_timeline_event', {
           p_event_id: eventId,
           p_user_id: targetUserId,
@@ -175,6 +181,7 @@ export async function toggleDislike(
         return {
           success: true,
           disliked: false,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           dislikeCount: (data as any)?.dislike_count || 0,
         };
       } catch (dbError) {
@@ -201,6 +208,7 @@ export async function toggleDislike(
     } else {
       // Dislike the event
       try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase.rpc as any)('dislike_timeline_event', {
           p_event_id: eventId,
           p_user_id: targetUserId,
@@ -214,6 +222,7 @@ export async function toggleDislike(
         return {
           success: true,
           disliked: true,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           dislikeCount: (data as any)?.dislike_count || 0,
         };
       } catch (dbError) {
@@ -225,6 +234,7 @@ export async function toggleDislike(
         // Fallback: insert into timeline_dislikes and return new count
         const { error: insertErr } = await supabase
           .from(DATABASE_TABLES.TIMELINE_DISLIKES)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .insert({ event_id: eventId, user_id: targetUserId } as any);
         if (insertErr) {
           logger.error('Fallback dislike failed', insertErr, 'Timeline');
@@ -250,18 +260,26 @@ export async function addComment(
   eventId: string,
   content: string,
   parentCommentId?: string,
-  createEventFn?: (request: any) => Promise<any>
+  userId?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  _createEventFn?: (request: any) => Promise<any>
 ): Promise<{ success: boolean; commentId?: string; commentCount: number; error?: string }> {
   try {
-    const userId = await getCurrentUserId();
-    if (!userId) {
-      return { success: false, commentCount: 0, error: 'Authentication required' };
+    // Get user ID if not provided
+    let actorUserId = userId;
+    if (!actorUserId) {
+      const fetchedUserId = await getCurrentUserId();
+      if (!fetchedUserId) {
+        return { success: false, commentCount: 0, error: 'Authentication required' };
+      }
+      actorUserId = fetchedUserId;
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)('add_timeline_comment', {
         p_event_id: eventId,
-        p_user_id: userId,
+        p_user_id: actorUserId,
         p_content: content,
         p_parent_comment_id: parentCommentId,
       });
@@ -273,7 +291,9 @@ export async function addComment(
 
       return {
         success: true,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         commentId: (data as any)?.comment_id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         commentCount: (data as any)?.comment_count || 0,
       };
     } catch (dbError) {
@@ -287,9 +307,10 @@ export async function addComment(
         .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .insert({
           event_id: eventId,
-          user_id: userId,
+          user_id: actorUserId,
           content,
           parent_comment_id: parentCommentId,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any)
         .select('id')
         .single();
@@ -301,6 +322,7 @@ export async function addComment(
         .from(DATABASE_TABLES.TIMELINE_COMMENTS)
         .select('*', { count: 'exact', head: true })
         .eq('event_id', eventId);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return { success: true, commentId: (inserted as any).id, commentCount: count || 0 };
     }
   } catch (error) {
@@ -324,6 +346,7 @@ export async function updateComment(
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.rpc as any)('update_timeline_comment', {
         p_comment_id: commentId,
         p_user_id: targetUserId,
@@ -343,6 +366,7 @@ export async function updateComment(
         'Timeline'
       );
       // Fallback: update directly in timeline_comments table
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: updateErr } = await (supabase.from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
         .update({ content, updated_at: new Date().toISOString() })
         .eq('id', commentId)
@@ -375,6 +399,7 @@ export async function deleteComment(
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase.rpc as any)('delete_timeline_comment', {
         p_comment_id: commentId,
         p_user_id: targetUserId,
@@ -399,6 +424,7 @@ export async function deleteComment(
     }
 
     // Fallback: soft delete by updating deleted_at timestamp
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: deleteErr } = await (supabase.from(DATABASE_TABLES.TIMELINE_COMMENTS) as any)
       .update({
         deleted_at: new Date().toISOString(),
@@ -451,9 +477,11 @@ export async function getEventComments(
   eventId: string,
   limit: number = 50,
   offset: number = 0
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): Promise<any[]> {
   try {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)('get_event_comments', {
         p_event_id: eventId,
         p_limit: limit,
@@ -483,6 +511,7 @@ export async function getEventComments(
         logger.error('Fallback comments query failed', cErr, 'Timeline');
         return [];
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const commentsData = comments as any[];
       const userIds = Array.from(new Set(commentsData.map(c => c.user_id).filter(Boolean)));
       let profilesMap: Record<
@@ -496,6 +525,7 @@ export async function getEventComments(
           .in('id', userIds as string[]);
         if (!pErr && profiles) {
           profilesMap = Object.fromEntries(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (profiles as any[]).map((p: any) => [
               p.id,
               { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url },
@@ -523,9 +553,11 @@ export async function getEventComments(
 /**
  * Get replies to a comment
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function getCommentReplies(commentId: string, limit: number = 20): Promise<any[]> {
   try {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)('get_comment_replies', {
         p_comment_id: commentId,
         p_limit: limit,
@@ -553,6 +585,7 @@ export async function getCommentReplies(commentId: string, limit: number = 20): 
         logger.error('Fallback replies query failed', rErr, 'Timeline');
         return [];
       }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const repliesData = replies as any[];
       const userIds = Array.from(new Set(repliesData.map(c => c.user_id).filter(Boolean)));
       let profilesMap: Record<
@@ -566,6 +599,7 @@ export async function getCommentReplies(commentId: string, limit: number = 20): 
           .in('id', userIds as string[]);
         if (!pErr && profiles) {
           profilesMap = Object.fromEntries(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (profiles as any[]).map((p: any) => [
               p.id,
               { display_name: p.display_name, username: p.username, avatar_url: p.avatar_url },

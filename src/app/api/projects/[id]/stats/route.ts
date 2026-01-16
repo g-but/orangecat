@@ -15,6 +15,7 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
 
     // Get project details
     const { data: projectData, error: projectError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .select(
         `
@@ -33,6 +34,7 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
       )
       .eq('id', projectId)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const project = projectData as any;
 
     if (projectError || !project) {
@@ -66,12 +68,14 @@ export const GET = withOptionalAuth(async (req, { params }: { params: Promise<{ 
     const dailyFundingRate = project.raised_amount / daysSinceCreation;
 
     // Get project category and related projects
-    const { data: relatedProjectsData, error: relatedError } = await (supabase
+    const { data: relatedProjectsData, error: _relatedError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .select('id, title, raised_amount')
       .eq('category', project.category || '')
       .neq('id', projectId)
       .limit(5);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const relatedProjects = relatedProjectsData as any[];
 
     const categoryRank = relatedProjects?.length || 0;

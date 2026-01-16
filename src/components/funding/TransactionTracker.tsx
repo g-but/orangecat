@@ -18,7 +18,7 @@ export default function TransactionTracker({
   isOwner,
   onBalanceUpdate,
 }: TransactionTrackerProps) {
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

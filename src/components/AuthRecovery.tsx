@@ -61,7 +61,7 @@ export default function AuthRecovery({ error, email, onRetry, onClearError }: Au
         onClearError();
         window.location.reload();
       }, 2000);
-    } catch (error) {
+    } catch {
       setRecoveryMessage('Failed to clear authentication state. Please refresh the page manually.');
     } finally {
       setIsRecovering(false);
@@ -90,7 +90,7 @@ export default function AuthRecovery({ error, email, onRetry, onClearError }: Au
           'Password reset email sent! Check your inbox and follow the instructions.'
         );
       }
-    } catch (error) {
+    } catch {
       setRecoveryMessage('Failed to send password reset email. Please try again.');
     } finally {
       setIsRecovering(false);

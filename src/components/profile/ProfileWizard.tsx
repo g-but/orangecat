@@ -87,15 +87,15 @@ const STEPS = [
 
 export default function ProfileWizard({
   profile,
-  userId,
+  userId: _userId,
   userEmail,
   onSave,
   onCancel,
 }: ProfileWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [bannerPreview, setBannerPreview] = useState<string | null>(null);
+  const [_avatarPreview, _setAvatarPreview] = useState<string | null>(null);
+  const [_bannerPreview, _setBannerPreview] = useState<string | null>(null);
 
   // Form setup
   const form = useForm<ProfileFormValues>({

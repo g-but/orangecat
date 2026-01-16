@@ -29,6 +29,7 @@ export interface Project {
   updated_at: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapProjectRow(row: any): Project {
   return {
     ...row,
@@ -45,6 +46,7 @@ export interface ProjectMedia {
   created_at: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function getMediaUrl(supabase: any, storagePath: string): string {
   const { data } = supabase.storage.from('project-media').getPublicUrl(storagePath);
   return data.publicUrl;

@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS public.events (
   
   -- Pricing & Funding
   ticket_price_sats bigint,
-  currency text DEFAULT 'SATS' CHECK (currency IN ('SATS', 'BTC')),
+  currency text DEFAULT 'SATS' CHECK (currency IN ('USD', 'EUR', 'CHF', 'BTC', 'SATS')),
   is_free boolean DEFAULT false,
   funding_goal_sats bigint, -- Optional funding goal for event costs
   bitcoin_address text,

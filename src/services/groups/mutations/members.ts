@@ -30,9 +30,11 @@ export async function joinGroup(groupId: string): Promise<{ success: boolean; er
 
     // Get group to check join policy
     // Cast to any to bypass Supabase type generation for tables not in generated types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: group, error: groupError } = (await (supabase.from(TABLES.groups) as any)
       .select('is_public, visibility')
       .eq('id', groupId)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .single()) as { data: { is_public: boolean; visibility: string } | null; error: any };
 
     if (groupError || !group) {
@@ -51,6 +53,7 @@ export async function joinGroup(groupId: string): Promise<{ success: boolean; er
     }
 
     // Create membership
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: insertError } = await (supabase.from(TABLES.group_members) as any).insert({
       group_id: groupId,
       user_id: userId,
@@ -145,6 +148,7 @@ export async function addMember(
     }
 
     // Add member
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from(TABLES.group_members) as any)
       .insert({
         group_id: groupId,
@@ -200,6 +204,7 @@ export async function updateMember(
       payload.permission_overrides = input.permission_overrides;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from(TABLES.group_members) as any)
       .update(payload)
       .eq('group_id', groupId)

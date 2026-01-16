@@ -22,7 +22,7 @@ interface TransparencyScoreData {
   calculatedAt: string
 }
 
-interface ProfileCompletion {
+interface _ProfileCompletion {
   username: boolean
   displayName: boolean
   avatar: boolean

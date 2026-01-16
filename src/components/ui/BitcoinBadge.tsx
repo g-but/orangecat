@@ -26,7 +26,7 @@ export const BitcoinBadge: React.FC<BitcoinBadgeProps> = ({
   size = 'md',
   className,
 }) => {
-  const baseClasses = componentColors.bitcoinElement.className;
+  const _baseClasses = componentColors.bitcoinElement.className;
   
   const variantClasses = {
     default: 'bg-bitcoinOrange/10 text-bitcoinOrange border-bitcoinOrange/20',

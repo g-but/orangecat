@@ -32,7 +32,9 @@ export interface ModernProfileEditorProps {
 export interface ProfileLocationSectionProps {
   form: {
     control: Control<ProfileFormValues>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setValue: (name: keyof ProfileFormValues, value: any) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     register: (name: keyof ProfileFormValues) => any;
   };
   onFieldFocus?: (field: ProfileFieldType) => void;
@@ -50,7 +52,9 @@ export interface ProfileBasicSectionProps {
   locationGroupLabel: string;
   setLocationGroupLabel: (value: string) => void;
   form: {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setValue: (name: keyof ProfileFormValues, value: any) => void;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     register: (name: keyof ProfileFormValues) => any;
   };
 }

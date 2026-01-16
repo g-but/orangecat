@@ -182,7 +182,7 @@ export function WalletManager({
                   try {
                     await onDelete?.(walletToDelete.id);
                     setWalletToDelete(null);
-                  } catch (error) {
+                  } catch {
                     // Error is already handled by parent component
                   } finally {
                     setIsDeleting(false);
@@ -283,7 +283,7 @@ function WalletCard({
                   try {
                     await onUpdate({ is_primary: true });
                     toast.success(`${wallet.label} is now your primary wallet`);
-                  } catch (error) {
+                  } catch {
                     toast.error('Failed to set primary wallet');
                   }
                 }}
@@ -369,7 +369,7 @@ function WalletCard({
               try {
                 await navigator.clipboard.writeText(wallet.address_or_xpub);
                 toast.success('Copied to clipboard!');
-              } catch (error) {
+              } catch {
                 toast.error('Failed to copy to clipboard');
               }
             }}

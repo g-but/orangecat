@@ -33,6 +33,7 @@ export async function enforcePermission(
   action: string
 ): Promise<EnforcePermissionResult> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result: PermissionResult = await canPerformAction(userId, groupId, action as any);
 
     if (result.allowed) {

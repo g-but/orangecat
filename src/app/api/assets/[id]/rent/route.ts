@@ -51,8 +51,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const endsAt = new Date(ends_at);
 
     // Verify asset exists and is for rent
-    const { data: assetData, error: assetError } = await (supabase
-      .from(DATABASE_TABLES.USER_ASSETS) as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: assetData, error: assetError } = await (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
       .select(
         'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats, currency'
       )
@@ -60,6 +60,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       .eq('status', 'active')
       .eq('is_for_rent', true)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const asset = assetData as any;
 
     if (assetError || !asset) {
@@ -70,11 +71,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get customer's actor
-    const { data: customerActorData } = await (supabase
-      .from('actors') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: customerActorData } = await (supabase.from('actors') as any)
       .select('id')
       .eq('user_id', user.id)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const customerActor = customerActorData as any;
 
     if (!customerActor) {
@@ -126,6 +128,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const depositSats = asset.requires_deposit ? asset.deposit_amount_sats || 0 : 0;
 
     // Create the booking
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingService = createBookingService(supabase as any);
     const bookingResult = await bookingService.createBooking({
       bookableType: 'asset',

@@ -30,6 +30,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     if (all) {
       // Mark all notifications as read
       const { error, count } = await (admin
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('notifications') as any)
         .update({ read: true, read_at: now })
         .eq('recipient_user_id', user.id)
@@ -41,6 +42,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     } else if (id) {
       // Mark single notification as read
       const { error } = await (admin
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('notifications') as any)
         .update({ read: true, read_at: now })
         .eq('id', id)
@@ -52,6 +54,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
     } else if (ids && Array.isArray(ids) && ids.length > 0) {
       // Mark multiple notifications as read
       const { error, count } = await (admin
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('notifications') as any)
         .update({ read: true, read_at: now })
         .in('id', ids)

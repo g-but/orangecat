@@ -25,7 +25,7 @@ export default function ProfileShare({
   profileBio = '',
   currentUrl,
   onClose,
-  variant = 'dropdown',
+  variant: _variant = 'dropdown',
   className = '',
 }: ProfileShareProps) {
   // Construct the profile URL

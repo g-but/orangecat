@@ -22,6 +22,7 @@ export const POST = withAuth(async (
 
     // Verify user is a participant
     const { data: participant, error: partError } = await (admin
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
       .select('*')
       .eq('conversation_id', conversationId)
@@ -39,6 +40,7 @@ export const POST = withAuth(async (
       last_read_at: new Date().toISOString(),
     };
     const { error: readError } = await (admin
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.CONVERSATION_PARTICIPANTS) as any)
       .update(updateData)
       .eq('conversation_id', conversationId)

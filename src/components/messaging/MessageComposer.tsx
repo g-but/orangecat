@@ -167,6 +167,7 @@ export default function MessageComposer({
           if (data?.id) {
             // Fetch full message details from message_details view
             try {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const { data: fullMessage } = (await supabase
                 .from('message_details' as any)
                 .select('*')

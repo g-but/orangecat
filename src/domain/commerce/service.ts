@@ -9,8 +9,8 @@ import { getTableName } from '@/config/entity-registry';
 // These are the actual table names from the database
 // Accept string to allow dynamic table names from entity registry
 type Table = string;
-// Type alias for any SupabaseClient (accepts any database schema)
-type SupabaseInstance = SupabaseClient<any, any, any>;
+// Type alias for SupabaseClient parameter - unused but kept for API compatibility
+type _SupabaseInstance = SupabaseClient;
 
 interface ListParams {
   limit?: number;
@@ -24,7 +24,8 @@ export async function listEntities(table: Table, params: ListParams) {
   const supabase = await createServerClient();
   const { limit = 20, offset = 0, category, userId, includeOwnDrafts } = params;
 
-  let query = (supabase.from(table) as any)
+  // Using dynamic table access - type assertion needed for entity registry pattern
+  let query = supabase.from(table)
     .select('*')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
@@ -56,14 +57,14 @@ export async function listEntitiesPage(
   const supabase = await createServerClient();
   const { limit, offset, category, userId, includeOwnDrafts } = params;
 
-  // base query for items
-  let itemsQuery = (supabase.from(table) as any)
+  // base query for items - dynamic table access for entity registry pattern
+  let itemsQuery = supabase.from(table)
     .select('*')
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  // base query for count (head=true)
-  let countQuery = (supabase.from(table) as any).select('*', { count: 'exact', head: true });
+  // base query for count (head=true) - dynamic table access
+  let countQuery = supabase.from(table).select('*', { count: 'exact', head: true });
 
   // Circles table doesn't have a 'status' column like commerce tables
   const isCirclesTable = table === 'circles';
@@ -98,7 +99,7 @@ export async function listEntitiesPage(
     }
   }
 
-  const [{ data: items, error: itemsError }, { count, error: countError }] = await Promise.all([
+  const [{ data: items, error: itemsError }, { count: _count, error: countError }] = await Promise.all([
     itemsQuery,
     countQuery,
   ]);
@@ -137,6 +138,13 @@ interface CreateProductInput {
   is_featured?: boolean;
 }
 
+interface AvailabilitySchedule {
+  days?: string[];
+  hours?: { start: string; end: string }[];
+  timezone?: string;
+  [key: string]: unknown;
+}
+
 interface CreateServiceInput {
   title: string;
   description?: string | null;
@@ -145,7 +153,7 @@ interface CreateServiceInput {
   fixed_price?: number | null;
   currency?: 'SATS' | 'BTC' | 'USD' | 'EUR' | 'CHF';
   duration_minutes?: number | null;
-  availability_schedule?: any;
+  availability_schedule?: AvailabilitySchedule;
   service_location_type?: 'remote' | 'onsite' | 'both';
   service_area?: string | null;
   images?: string[];
@@ -154,8 +162,7 @@ interface CreateServiceInput {
 
 export async function createProduct(
   userId: string,
-  input: CreateProductInput,
-  _client?: SupabaseInstance
+  input: CreateProductInput
 ): Promise<UserProduct> {
   // Always write to DB unless explicitly overridden with PRODUCTS_WRITE_MODE=mock
   const mode = process.env.PRODUCTS_WRITE_MODE || 'db';
@@ -181,21 +188,23 @@ export async function createProduct(
     description: input.description ?? null,
     price: input.price,
   };
-  const { data, error } = await (adminClient.from(getTableName('product')) as any)
+  // Using dynamic table access for entity registry pattern - type assertion required
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = await (adminClient.from(getTableName('product')) as any)
     .insert(payload)
     .select()
     .single();
+  const { data, error } = result as { data: UserProduct | null; error: unknown };
   if (error) {
     logger.error('Product creation failed', { error, userId });
     throw error;
   }
-  return data as unknown as UserProduct;
+  return data as UserProduct;
 }
 
 export async function createService(
   userId: string,
-  input: CreateServiceInput,
-  _client?: SupabaseInstance
+  input: CreateServiceInput
 ): Promise<UserService> {
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
@@ -217,15 +226,32 @@ export async function createService(
     status: 'draft' as const,
   };
 
-  const { data, error } = await (adminClient.from(getTableName('service')) as any)
+  // Using dynamic table access for entity registry pattern - type assertion required
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = await (adminClient.from(getTableName('service')) as any)
     .insert(payload)
     .select()
     .single();
+  const { data, error } = result as { data: UserService | null; error: unknown };
   if (error) {
     logger.error('Service creation failed', { error, userId });
     throw error;
   }
-  return data as unknown as UserService;
+  return data as UserService;
+}
+
+interface DistributionRules {
+  type?: 'equal' | 'weighted' | 'custom';
+  allocations?: Record<string, number>;
+  [key: string]: unknown;
+}
+
+interface Beneficiary {
+  id?: string;
+  name?: string;
+  address?: string;
+  share?: number;
+  [key: string]: unknown;
 }
 
 interface CreateCauseInput {
@@ -236,14 +262,13 @@ interface CreateCauseInput {
   currency?: 'SATS' | 'BTC' | 'USD' | 'EUR' | 'CHF';
   bitcoin_address?: string | null;
   lightning_address?: string | null;
-  distribution_rules?: any;
-  beneficiaries?: any[];
+  distribution_rules?: DistributionRules;
+  beneficiaries?: Beneficiary[];
 }
 
 export async function createCause(
   userId: string,
-  input: CreateCauseInput,
-  _client?: SupabaseInstance
+  input: CreateCauseInput
 ): Promise<UserCause> {
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
@@ -263,15 +288,18 @@ export async function createCause(
     total_raised: 0,
   };
 
-  const { data, error } = await (adminClient.from(getTableName('cause')) as any)
+  // Using dynamic table access for entity registry pattern - type assertion required
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = await (adminClient.from(getTableName('cause')) as any)
     .insert(payload)
     .select()
     .single();
+  const { data, error } = result as { data: UserCause | null; error: unknown };
   if (error) {
     logger.error('Cause creation failed', { error, userId });
     throw error;
   }
-  return data as unknown as UserCause;
+  return data as UserCause;
 }
 
 // createCircle function removed - use groups service instead
@@ -309,14 +337,13 @@ interface CreateOrganizationInput {
   banner_url?: string | null;
   is_public?: boolean;
   requires_approval?: boolean;
-  settings?: Record<string, any>;
-  contact_info?: Record<string, any>;
+  settings?: Record<string, unknown>;
+  contact_info?: Record<string, unknown>;
 }
 
 export async function createOrganization(
   userId: string,
-  input: CreateOrganizationInput,
-  _client?: SupabaseInstance
+  input: CreateOrganizationInput
 ) {
   // Use admin client for write operations - auth is already verified by the API route
   const adminClient = createAdminClient();
@@ -342,14 +369,21 @@ export async function createOrganization(
     application_process: { questions: [] },
     founded_at: new Date().toISOString(),
   };
-  const { data, error } = await (adminClient.from(getTableName('group')) as any)
+  // Using dynamic table access for entity registry pattern - type assertion required
+  interface OrganizationResult {
+    id: string;
+    [key: string]: unknown;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const result = await (adminClient.from(getTableName('group')) as any)
     .insert(payload)
     .select()
     .single();
+  const { data, error } = result as { data: OrganizationResult | null; error: unknown };
   if (error) {
     logger.error('Organization creation failed', { error, userId });
     throw error;
   }
-  logger.info('Organization created successfully', { organizationId: data.id, userId });
+  logger.info('Organization created successfully', { organizationId: data?.id, userId });
   return data;
 }

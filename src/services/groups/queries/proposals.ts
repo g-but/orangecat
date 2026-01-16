@@ -55,6 +55,7 @@ export interface VoteData {
 
 export async function getProposal(proposalId: string): Promise<ProposalResponse> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from(TABLES.group_proposals) as any)
       .select(`
@@ -120,6 +121,7 @@ export async function getProposalVotes(
   proposalId: string
 ): Promise<{ success: boolean; votes?: ProposalVote[]; error?: string }> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from(TABLES.group_votes) as any)
       .select('*')
@@ -151,6 +153,7 @@ export async function getGroupProposals(
     const offset = options?.offset || 0;
     const status = options?.status || 'all';
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = (supabase
       .from(TABLES.group_proposals) as any)
       .select(
@@ -238,6 +241,7 @@ export async function getPublicJobPostings(options?: {
     const limit = Math.min(options?.limit || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = options?.offset || 0;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const query = (supabase
       .from(TABLES.group_proposals) as any)
       .select(

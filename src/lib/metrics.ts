@@ -78,7 +78,7 @@ export async function getMetricsRegistry() {
     ;(globalThis as typeof globalThis & { __oc_metrics?: MetricsStore }).__oc_metrics = metricsStore
     initialized = true
     return { prom: promClient, registry }
-  } catch (e) {
+  } catch {
     // Metrics not available
     initialized = false
     return { prom: null, registry: null }

@@ -184,8 +184,10 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Export for manual validation
-export default {
+const envValidation = {
   validate: validateEnvironment,
   assert: assertValidEnvironment,
   info: getEnvironmentInfo,
 };
+
+export default envValidation;

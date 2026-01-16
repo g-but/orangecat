@@ -6,7 +6,7 @@ import { createServerClient } from '@/lib/supabase/server';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string; id: string } }
+  { params }: { params: Promise<{ slug: string; id: string }> }
 ) {
   try {
     const supabase = await createServerClient();
@@ -16,10 +16,11 @@ export async function POST(
     } = await supabase.auth.getUser();
     if (authError || !user) {return apiUnauthorized();}
 
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const result = await castVote({ proposal_id: id, vote: body.vote });
     if (!result.success) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return NextResponse.json({ error: (result as any).error }, { status: 400 });
     }
     return apiSuccess(result.vote);

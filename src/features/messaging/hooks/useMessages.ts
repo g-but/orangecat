@@ -72,7 +72,7 @@ export function useMessages(
     new Map()
   );
   const participantReadTimesRef = useRef<Map<string, Date | null>>(participantReadTimes);
-  const [readReceiptsLoading, setReadReceiptsLoading] = useState(false);
+  const [_readReceiptsLoading, setReadReceiptsLoading] = useState(false);
   const [readReceiptsError, setReadReceiptsError] = useState(false);
 
   // Keep a ref in sync so our callbacks can stay stable
@@ -470,7 +470,7 @@ export function useMessages(
           }
         });
 
-        const uniquePrev = Array.from(messageMap.values());
+        const _uniquePrev = Array.from(messageMap.values());
         const messageWithStatus = applyReadStatus([message])[0];
 
         // Check if message already exists

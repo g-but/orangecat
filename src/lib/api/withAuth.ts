@@ -6,6 +6,7 @@ import { logger } from '@/utils/logger'
 import { apiUnauthorized, apiInternalError } from './standardResponse'
 
 // Type alias for any SupabaseClient (accepts any database schema)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
@@ -167,7 +168,7 @@ export function withRole<TContext = Record<string, unknown>>(
  * Extract authenticated user from request (for use in compose middleware)
  * Returns null if not authenticated
  */
-export async function getAuthUser(req: NextRequest): Promise<AuthContext | null> {
+export async function getAuthUser(_req: NextRequest): Promise<AuthContext | null> {
   try {
     const supabase = await createServerClient()
     const { data: { user }, error } = await supabase.auth.getUser()

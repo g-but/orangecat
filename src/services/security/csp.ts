@@ -12,7 +12,7 @@ import { AuthenticationSecurity } from './authentication';
 
 export class ContentSecurityPolicy {
   static getHeaders(): Record<string, string> {
-    const nonce = AuthenticationSecurity.generateSecureToken(16);
+    const _nonce = AuthenticationSecurity.generateSecureToken(16);
 
     return {
       'Content-Security-Policy': [

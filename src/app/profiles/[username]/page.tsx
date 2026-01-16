@@ -33,6 +33,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         .select('username')
         .eq('id', user.id)
         .single();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const userProfile = userProfileData as any;
 
       targetUsername = userProfile?.username || user.id;
@@ -51,6 +52,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     .eq('username', targetUsername)
     .single();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const profile = profileData as any;
   if (!profile) {
     return {
@@ -120,6 +122,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
       .select('username')
       .eq('id', user.id)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const userProfile = userProfileData as any;
 
     targetUsername = userProfile?.username || user.id;
@@ -131,6 +134,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     .select('*')
     .eq('username', targetUsername)
     .single();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const profile = profileData as any;
 
   if (profileError || !profile) {
@@ -161,6 +165,7 @@ export default async function PublicProfilePage({ params }: PageProps) {
     .neq('status', 'draft') // Exclude drafts from public profile
     .neq('show_on_profile', false) // Respect user's visibility preference (null = true by default)
     .order('created_at', { ascending: false });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const projects = projectsData as any[] | null;
 
   // Fetch follower count
@@ -179,17 +184,20 @@ export default async function PublicProfilePage({ params }: PageProps) {
   let walletCount = 0;
   try {
     // Use the get_entity_wallets function to get active wallets for this profile
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: walletData } = await (supabase.rpc as any)('get_entity_wallets', {
       p_entity_type: 'profile',
       p_entity_id: profile.id,
     });
     walletCount = walletData
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ? (walletData as any[]).filter((w: { is_active: boolean }) => w.is_active).length
       : 0;
   } catch {
     // Fallback: try querying wallet_ownerships table directly
     try {
       const { count } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('wallet_ownerships') as any)
         .select('*', { count: 'exact', head: true })
         .eq('owner_type', 'profile')

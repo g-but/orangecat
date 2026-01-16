@@ -19,6 +19,7 @@ import { logGroupActivity } from '../utils/activity';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Type alias for any SupabaseClient (accepts any database schema)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
@@ -66,6 +67,7 @@ export async function createGroup(
     };
 
     // Insert into groups table
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabaseClient.from(TABLES.groups) as any)
       .insert(payload)
       .select()
@@ -77,6 +79,7 @@ export async function createGroup(
     }
 
     // Add creator as founder in group_members
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: memberError } = await (supabaseClient.from(TABLES.group_members) as any).insert({
       group_id: data.id,
       user_id: currentUserId,
@@ -96,6 +99,7 @@ export async function createGroup(
         enabled_by: currentUserId,
       }));
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabaseClient.from(TABLES.group_features) as any).insert(featureInserts);
     }
 
@@ -181,6 +185,7 @@ export async function updateGroup(
       payload.voting_threshold = input.voting_threshold;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.from(TABLES.groups) as any)
       .update(payload)
       .eq('id', groupId)
@@ -219,6 +224,7 @@ export async function deleteGroup(groupId: string): Promise<{ success: boolean; 
       };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from(TABLES.groups) as any).delete().eq('id', groupId);
 
     if (error) {

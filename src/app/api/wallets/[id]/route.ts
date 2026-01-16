@@ -38,10 +38,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Fetch wallet with ownership info
     const { data: walletData, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wallets') as any)
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const wallet = walletData as any;
 
     if (fetchError || !wallet) {
@@ -66,6 +68,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return apiForbidden('You do not have permission to update this wallet');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: any = {};
 
     // Validate and update fields
@@ -123,6 +126,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
         // Unset all other wallets as primary
         await (supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .from('wallets') as any)
           .update({ is_primary: false })
           .eq('is_active', true)
@@ -135,6 +139,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Update wallet
     const { data: updatedWallet, error: updateError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wallets') as any)
       .update(updates)
       .eq('id', id)
@@ -186,10 +191,12 @@ export async function DELETE(
 
     // Fetch wallet with ownership info
     const { data: walletData2, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wallets') as any)
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const wallet = walletData2 as any;
 
     if (fetchError || !wallet) {
@@ -220,6 +227,7 @@ export async function DELETE(
 
     // Soft delete
     const { error: deleteError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wallets') as any)
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', id);

@@ -44,7 +44,7 @@ export default function CampaignShare({
     projectDescription || `Check out this amazing Bitcoin fundraising project: ${projectTitle}`;
 
   // Track share events for analytics
-  const trackShareEvent = (platform: string) => {
+  const _trackShareEvent = (platform: string) => {
     trackEvent(`project_share_${platform}`, { projectId, projectTitle });
   };
 

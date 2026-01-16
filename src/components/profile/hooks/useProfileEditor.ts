@@ -73,7 +73,7 @@ export function useProfileEditor({
   userEmail,
   onSave,
   onCancel,
-  onFieldFocus,
+  onFieldFocus: _onFieldFocus,
 }: UseProfileEditorOptions): UseProfileEditorReturn {
   const [isSaving, setIsSaving] = useState(false);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);

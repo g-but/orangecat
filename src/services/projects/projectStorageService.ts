@@ -96,7 +96,7 @@ export class CampaignStorageService {
       }
 
       // Upload to Supabase Storage
-      const { data, error } = await supabase.storage.from(this.BUCKET_NAME).upload(fileName, file, {
+      const { data: _data, error } = await supabase.storage.from(this.BUCKET_NAME).upload(fileName, file, {
         cacheControl: '31536000', // 1 year
         upsert: true, // Replace if exists
       });

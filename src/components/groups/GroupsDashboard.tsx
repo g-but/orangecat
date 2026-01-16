@@ -74,8 +74,8 @@ export function GroupsDashboard() {
   }
 
   // Calculate stats by label type
-  const countByLabel = (groups: Group[], label: GroupLabel) =>
-    groups.filter((g) => g.label === label).length;
+  const _countByLabel = (_groups: Group[], _label: GroupLabel) =>
+    _groups.filter((g) => g.label === _label).length;
 
   // Informal groups (circles, families)
   const informalCount = myGroups.filter((g) =>

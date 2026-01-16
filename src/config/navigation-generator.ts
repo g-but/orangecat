@@ -25,7 +25,7 @@ interface CategoryToSectionMap {
   collapsible: boolean;
 }
 
-const CATEGORY_TO_SECTION: CategoryToSectionMap[] = [
+const _CATEGORY_TO_SECTION: CategoryToSectionMap[] = [
   {
     category: 'gateway',
     sectionId: 'wallet',

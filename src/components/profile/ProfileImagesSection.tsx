@@ -38,6 +38,7 @@ export function ProfileImagesSection({
           onClick={() => bannerInputRef.current?.click()}
         >
           {bannerPreview || profile.banner_url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Dynamic banner preview
             <img
               src={bannerPreview || profile.banner_url || ''}
               alt="Banner"
@@ -68,6 +69,7 @@ export function ProfileImagesSection({
           onClick={() => avatarInputRef.current?.click()}
         >
           {avatarPreview || profile.avatar_url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- Dynamic avatar preview
             <img
               src={avatarPreview || profile.avatar_url || ''}
               alt="Avatar"

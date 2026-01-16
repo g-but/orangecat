@@ -137,6 +137,7 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
             !compact && (
               <div className="flex-shrink-0">
                 {profile?.avatar_url || user?.user_metadata?.avatar_url ? (
+                  // eslint-disable-next-line @next/next/no-img-element -- Dynamic user avatar with onError fallback
                   <img
                     src={profile?.avatar_url || user?.user_metadata?.avatar_url || ''}
                     alt={user?.user_metadata?.name || 'User avatar'}

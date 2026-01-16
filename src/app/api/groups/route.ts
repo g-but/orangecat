@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
 
     // Build query filters
     const query = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       ...(type && { type: type as any }),
       ...(category && { category }),
       ...(isPublic !== null && { is_public: isPublic === 'true' }),

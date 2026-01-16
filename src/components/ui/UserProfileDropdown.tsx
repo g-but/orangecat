@@ -35,7 +35,7 @@ export default function UserProfileDropdown({
   className = '',
 }: UserProfileDropdownProps) {
   const router = useRouter();
-  const { user, profile, session, signOut, isAuthenticated } = useAuth();
+  const { user, profile, session, signOut, isAuthenticated: _isAuthenticated } = useAuth();
 
   // ✅ FIXED: Call useAuthStore at component top level, not conditionally
   const { fetchProfile } = useAuthStore();
@@ -88,7 +88,7 @@ export default function UserProfileDropdown({
         { userId: user?.id || session?.user?.id },
         'UserProfileDropdown'
       );
-      fetchProfile().catch(error => {});
+      fetchProfile().catch(_error => {});
     }
   }, [user, session, profile, fetchProfile]);
 

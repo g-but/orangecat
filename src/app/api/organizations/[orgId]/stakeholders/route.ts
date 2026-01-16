@@ -7,6 +7,28 @@ import {
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 
+// Type definitions for Supabase tables not in generated types
+interface GroupRow {
+  id: string;
+  is_public: boolean;
+}
+
+interface GroupMemberRow {
+  id: string;
+  user_id: string;
+  group_id: string;
+  role: string;
+  permission_overrides?: string[] | null;
+  joined_at?: string;
+  profiles?: {
+    id: string;
+    display_name: string | null;
+    avatar_url: string | null;
+    transparency_score?: number | null;
+    bio?: string | null;
+  } | null;
+}
+
 export const GET = withOptionalAuth(async (
   req,
   { params }: { params: Promise<{ id: string }> }
@@ -17,26 +39,26 @@ export const GET = withOptionalAuth(async (
     const supabase = await createServerClient();
 
     // Check access permissions
-    const { data: member } = await (supabase
-      .from('group_members') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: member } = await (supabase.from('group_members') as any)
       .select('user_id')
       .eq('group_id', organizationId)
       .eq('user_id', user?.id || '')
-      .maybeSingle();
+      .maybeSingle() as { data: GroupMemberRow | null };
 
-    const { data: group } = await (supabase
-      .from('groups') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: group } = await (supabase.from('groups') as any)
       .select('is_public')
       .eq('id', organizationId)
-      .single();
+      .single() as { data: GroupRow | null };
 
     if (!group?.is_public && !member) {
       return apiForbidden('Access denied');
     }
 
     // Get members with profile information
-    const { data: members, error } = await (supabase
-      .from('group_members') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: members, error } = await (supabase.from('group_members') as any)
       .select(`
         *,
         profiles (
@@ -48,7 +70,7 @@ export const GET = withOptionalAuth(async (
         )
       `)
       .eq('group_id', organizationId)
-      .order('joined_at', { ascending: false });
+      .order('joined_at', { ascending: false }) as { data: GroupMemberRow[] | null; error: Error | null };
 
     if (error) {
       logger.error('Stakeholders fetch error', { error, organizationId }, 'Organizations');
@@ -56,8 +78,7 @@ export const GET = withOptionalAuth(async (
     }
 
     // Map group_members to stakeholders format for backward compatibility
-    // Map role to role_type for compatibility
-    const stakeholders = members?.map((m: any) => ({
+    const stakeholders = members?.map((m) => ({
       ...m,
       role_type: m.role,
       organization_id: m.group_id,
@@ -66,18 +87,11 @@ export const GET = withOptionalAuth(async (
       permissions: m.permission_overrides || [],
     })) || [];
 
-    // Group by role type (map new roles to old role types)
-    const roleToRoleType: Record<string, string> = {
-      founder: 'founder',
-      admin: 'employee', // Map admin to employee for backward compatibility
-      member: 'shareholder', // Map member to shareholder for backward compatibility
-    };
-
     const groupedStakeholders = {
-      founders: stakeholders.filter((s: any) => s.role === 'founder') || [],
-      employees: stakeholders.filter((s: any) => s.role === 'admin') || [],
-      contractors: stakeholders.filter((s: any) => s.role === 'admin') || [], // Map admin to contractors too
-      shareholders: stakeholders.filter((s: any) => s.role === 'member') || [],
+      founders: stakeholders.filter((s) => s.role === 'founder') || [],
+      employees: stakeholders.filter((s) => s.role === 'admin') || [],
+      contractors: stakeholders.filter((s) => s.role === 'admin') || [], // Map admin to contractors too
+      shareholders: stakeholders.filter((s) => s.role === 'member') || [],
       lenders: [] as typeof stakeholders, // No lenders in new system
       donors: [] as typeof stakeholders, // No donors in new system
     };
@@ -131,13 +145,13 @@ export const POST = withAuth(async (
     const supabase = await createServerClient();
 
     // Check if user is a founder or admin (only founders/admins can manage members)
-    const { data: member2 } = await (supabase
-      .from('group_members') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: member2 } = await (supabase.from('group_members') as any)
       .select('role')
       .eq('group_id', organizationId)
       .eq('user_id', user.id)
       .in('role', ['founder', 'admin'])
-      .maybeSingle();
+      .maybeSingle() as { data: GroupMemberRow | null };
 
     if (!member2) {
       return apiForbidden('Only founders and admins can manage members');
@@ -159,9 +173,11 @@ export const POST = withAuth(async (
     const {
       user_id,
       role_type,
-      voting_weight,
+      // voting_weight and equity_percentage are validated but not used in current schema
+      // as group_members doesn't have these fields
+      voting_weight: _voting_weight,
       permissions,
-      equity_percentage,
+      equity_percentage: _equity_percentage,
     } = validation.data;
 
     // Map old role_type to new role
@@ -177,12 +193,12 @@ export const POST = withAuth(async (
     const role = roleTypeToRole[role_type] || 'member';
 
     // Check if user is already a member
-    const { data: existingMember } = await (supabase
-      .from('group_members') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existingMember } = await (supabase.from('group_members') as any)
       .select('id')
       .eq('group_id', organizationId)
       .eq('user_id', user_id)
-      .maybeSingle();
+      .maybeSingle() as { data: { id: string } | null };
 
     if (existingMember) {
       return apiConflict('User is already a member of this group');
@@ -196,8 +212,8 @@ export const POST = withAuth(async (
       permission_overrides: permissions && permissions.length > 0 ? permissions : null,
     };
 
-    const { data: newMember, error: insertError } = await (supabase
-      .from('group_members') as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: newMember, error: insertError } = await (supabase.from('group_members') as any)
       .insert(memberData)
       .select(`
         *,
@@ -206,7 +222,7 @@ export const POST = withAuth(async (
           avatar_url
         )
       `)
-      .single();
+      .single() as { data: GroupMemberRow | null; error: Error | null };
 
     if (insertError) {
       logger.error('Member addition error', { error: insertError, organizationId, userId: user.id }, 'Groups');
@@ -214,14 +230,14 @@ export const POST = withAuth(async (
     }
 
     // Map back to stakeholder format for backward compatibility
-    const newStakeholder = {
+    const newStakeholder = newMember ? {
       ...newMember,
       role_type: newMember.role,
       organization_id: newMember.group_id,
       voting_weight: 1.0,
       equity_percentage: null,
       permissions: newMember.permission_overrides || [],
-    };
+    } : null;
 
     return apiCreated(newStakeholder);
   } catch (error) {

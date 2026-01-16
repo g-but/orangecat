@@ -31,7 +31,7 @@ const MobileBottomNav = React.memo(function MobileBottomNav() {
   }
 
   // Don't show on auth pages or specific routes that shouldn't have bottom nav
-  const routeContext = getRouteContext(pathname);
+  const _routeContext = getRouteContext(pathname);
   const hiddenRoutes = [
     ...ROUTE_CONTEXTS.auth,
     '/settings',

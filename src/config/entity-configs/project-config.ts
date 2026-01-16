@@ -56,20 +56,7 @@ const fieldGroups: FieldGroup[] = [
         label: 'Funding Goal',
         type: 'currency',
         placeholder: '10000',
-        hint: 'Optional: Set a funding target for your project',
-      },
-      {
-        name: 'currency',
-        label: 'Currency',
-        type: 'select',
-        options: [
-          { value: 'CHF', label: 'Swiss Franc (CHF)' },
-          { value: 'USD', label: 'US Dollar (USD)' },
-          { value: 'EUR', label: 'Euro (EUR)' },
-          { value: 'BTC', label: 'Bitcoin (BTC)' },
-          { value: 'SATS', label: 'Satoshis (SATS)' },
-        ],
-        hint: 'Choose your preferred currency for funding',
+        hint: 'Optional: Set a funding target for your project. Currency selector is included in this field.',
       },
       {
         name: 'funding_purpose',

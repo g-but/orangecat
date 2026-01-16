@@ -33,6 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingService = createBookingService(supabase as any);
     const booking = await bookingService.getBooking(id);
 
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify user has access (is customer or provider)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: actors } = await (supabase.from('actors') as any).select('id').eq('user_id', user.id);
 
     const actorIds = actors?.map((a: { id: string }) => a.id) || [];
@@ -89,9 +91,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     const { action, reason } = result.data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingService = createBookingService(supabase as any);
 
     // Get user's actor IDs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: actors } = await (supabase.from('actors') as any).select('id').eq('user_id', user.id);
 
     const actorIds = actors?.map((a: { id: string }) => a.id) || [];
@@ -173,6 +177,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     const url = new URL(request.url);
     const reason = url.searchParams.get('reason') || undefined;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingService = createBookingService(supabase as any);
     const result = await bookingService.cancelBooking(id, user.id, reason);
 

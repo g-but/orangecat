@@ -39,8 +39,9 @@ export default function ForgotPasswordPage() {
       }
 
       setStep('success')
-    } catch (error: any) {
-      setError(error.message || 'Failed to send password reset email')
+    } catch (error: unknown) {
+      const catchError = error as { message?: string };
+      setError(catchError.message || 'Failed to send password reset email')
       setStep('error')
     } finally {
       setIsLoading(false)

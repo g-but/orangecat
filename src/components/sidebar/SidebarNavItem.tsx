@@ -54,8 +54,8 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
     isActive
       ? `${SIDEBAR_COLORS.ACTIVE_BACKGROUND} ${SIDEBAR_COLORS.ACTIVE_TEXT} shadow-sm border ${SIDEBAR_COLORS.ACTIVE_BORDER}`
       : item.comingSoon
-        ? `text-gray-500 ${SIDEBAR_COLORS.HOVER_BACKGROUND} hover:text-gray-700`
-        : `${SIDEBAR_COLORS.TEXT_PRIMARY} ${SIDEBAR_COLORS.HOVER_BACKGROUND} hover:text-gray-900`,
+        ? `text-gray-600 ${SIDEBAR_COLORS.HOVER_BACKGROUND} hover:text-gray-800` // Improved contrast
+        : `text-gray-700 ${SIDEBAR_COLORS.HOVER_BACKGROUND} hover:text-gray-900`, // Improved contrast
   ].join(' ');
 
   const iconClasses = [
@@ -63,8 +63,8 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
     isActive
       ? 'text-tiffany-600'
       : item.comingSoon
-        ? 'text-gray-400 group-hover:text-gray-500'
-        : 'text-gray-400 group-hover:text-gray-600',
+        ? 'text-gray-500 group-hover:text-gray-600' // Improved contrast for accessibility
+        : 'text-gray-500 group-hover:text-gray-700', // Improved contrast: gray-500 meets WCAG AA (4.5:1)
   ].join(' ');
 
   return (

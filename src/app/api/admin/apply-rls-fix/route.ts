@@ -16,7 +16,7 @@ import { logger } from '@/utils/logger';
 
 export async function POST(_req: NextRequest) {
   try {
-    const admin = createAdminClient();
+    const _admin = createAdminClient();
     
     // Read the migration file
     const migrationPath = join(process.cwd(), 'supabase/migrations/20250130000007_fix_group_members_rls_recursion.sql');

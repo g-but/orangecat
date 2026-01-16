@@ -9,11 +9,12 @@ import { createServerClient } from '@/lib/supabase/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     const { searchParams } = request.nextUrl;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const status = (searchParams.get('status') || 'all') as any;
     const proposalType = searchParams.get('proposal_type') || undefined;
     const limit = parseInt(searchParams.get('limit') || '20', 10);
@@ -54,10 +55,10 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string } }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
-    const { slug } = params;
+    const { slug } = await params;
     const supabase = await createServerClient();
     const {
       data: { user },

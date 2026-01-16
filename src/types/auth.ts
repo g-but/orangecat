@@ -12,6 +12,7 @@ export interface AuthUser {
 
 export interface AuthState {
   user: AuthUser | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   session: any | null
   isLoading: boolean
   error: string | null

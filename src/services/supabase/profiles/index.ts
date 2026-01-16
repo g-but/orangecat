@@ -38,6 +38,7 @@ export async function getProfile(userId: string): Promise<ProfileResponse> {
   try {
     logProfile('Fetching profile', { userId })
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from(DATABASE_TABLES.PROFILES) as any)
       .select('*')
@@ -110,6 +111,7 @@ export async function updateProfile(
       updated_at: new Date().toISOString()
     }
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from(DATABASE_TABLES.PROFILES) as any)
       .update(updateData)
@@ -197,6 +199,7 @@ export async function createProfile(
       updated_at: new Date().toISOString()
     }
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from(DATABASE_TABLES.PROFILES) as any)
       .insert(newProfile)
@@ -257,7 +260,8 @@ export async function isUsernameAvailable(username: string): Promise<boolean> {
   try {
     logProfile('Checking username availability', { username })
     
-    const { data, error } = await (supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: _data, error } = await (supabase
       .from(DATABASE_TABLES.PROFILES) as any)
       .select('id')
       .eq('username', username)
@@ -308,6 +312,7 @@ export async function getProfileByUsername(username: string): Promise<ProfileRes
   try {
     logProfile('Fetching profile by username', { username })
     
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from(DATABASE_TABLES.PROFILES) as any)
       .select('*')

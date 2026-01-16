@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Verify the wishlist item exists and user has access
     const { data: wishlistItem, error: itemError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wishlist_items') as any)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', validationResult.data.wishlist_item_id)
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
 
     // Create the proof
     const { data: proof, error: proofError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wishlist_fulfillment_proofs') as any)
       .insert({
         wishlist_item_id: validationResult.data.wishlist_item_id,

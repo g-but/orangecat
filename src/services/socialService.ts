@@ -15,9 +15,48 @@ import type { SearchResult, SearchFilters, EmptyStateContent, Organization, Soci
 // STUB SERVICES - Replacing missing module imports
 // =====================================================================
 
+// Stub types for services
+interface PersonStub {
+  id: string
+  username?: string
+  name?: string
+  bio?: string
+  avatar_url?: string
+  verification_status?: string
+  location?: string
+  created_at?: string
+}
+
+interface OrganizationStub {
+  id: string
+  name: string
+  description?: string
+  logo_url?: string
+  member_count?: number
+  location?: string
+  created_at?: string
+}
+
+interface CollaborationStub {
+  id: string
+  name?: string
+  [key: string]: unknown
+}
+
+interface CreateOrganizationInput {
+  name: string
+  description?: string
+  [key: string]: unknown
+}
+
+interface CreateCollaborationInput {
+  name: string
+  [key: string]: unknown
+}
+
 // Stub PeopleService
 export const PeopleService = {
-  async searchPeople(filters: { query?: string; limit?: number; offset?: number }): Promise<any[]> {
+  async searchPeople(filters: { query?: string; limit?: number; offset?: number }): Promise<PersonStub[]> {
     logger.warn('PeopleService.searchPeople is a stub', filters, 'Social')
     return []
   },
@@ -44,7 +83,7 @@ export const PeopleService = {
     logger.warn('PeopleService.sendConnectionRequest is a stub', { targetUserId }, 'Social')
     return { success: false }
   },
-  async getConnections(userId: string): Promise<any[]> {
+  async getConnections(userId: string): Promise<PersonStub[]> {
     logger.warn('PeopleService.getConnections is a stub', { userId }, 'Social')
     return []
   },
@@ -56,15 +95,15 @@ export const PeopleService = {
 
 // Stub OrganizationService
 export const OrganizationService = {
-  async searchOrganizations(filters: { query?: string; limit?: number; offset?: number }): Promise<any[]> {
+  async searchOrganizations(filters: { query?: string; limit?: number; offset?: number }): Promise<OrganizationStub[]> {
     logger.warn('OrganizationService.searchOrganizations is a stub', filters, 'Social')
     return []
   },
-  async createOrganization(data: any): Promise<{ success: boolean; data?: any }> {
+  async createOrganization(data: CreateOrganizationInput): Promise<{ success: boolean; data?: OrganizationStub }> {
     logger.warn('OrganizationService.createOrganization is a stub', data, 'Social')
     return { success: false }
   },
-  async getUserOrganizations(userId: string): Promise<any[]> {
+  async getUserOrganizations(userId: string): Promise<OrganizationStub[]> {
     logger.warn('OrganizationService.getUserOrganizations is a stub', { userId }, 'Social')
     return []
   },
@@ -76,11 +115,11 @@ export const OrganizationService = {
 
 // Stub BitcoinCollaborationService
 export const BitcoinCollaborationService = {
-  async createCollaboration(data: any): Promise<{ success: boolean; data?: any }> {
+  async createCollaboration(data: CreateCollaborationInput): Promise<{ success: boolean; data?: CollaborationStub }> {
     logger.warn('BitcoinCollaborationService.createCollaboration is a stub', data, 'Social')
     return { success: false }
   },
-  async getUserCollaborations(userId: string): Promise<any[]> {
+  async getUserCollaborations(userId: string): Promise<CollaborationStub[]> {
     logger.warn('BitcoinCollaborationService.getUserCollaborations is a stub', { userId }, 'Social')
     return []
   },
@@ -117,7 +156,7 @@ export class SearchService {
           offset
         })
 
-        people.forEach((person: any) => {
+        people.forEach((person) => {
           const result: SearchResult = {
             type: 'person',
             id: person.id,
@@ -127,7 +166,8 @@ export class SearchService {
             verification_status: person.verification_status || undefined,
             location: person.location || undefined,
             created_at: person.created_at || new Date().toISOString(),
-            data: person,
+            // PersonStub is a simplified type for stub services - cast to expected type
+            data: person as unknown as SearchResult['data'],
           }
           results.push(result)
         })
@@ -141,7 +181,7 @@ export class SearchService {
           offset
         })
 
-        organizations.forEach((org: any) => {
+        organizations.forEach((org) => {
           const result: SearchResult = {
             type: 'organization',
             id: org.id,

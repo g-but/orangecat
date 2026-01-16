@@ -17,7 +17,7 @@ type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
-type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+type _ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 
 /**
  * Server-side profile service functions

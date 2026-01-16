@@ -35,7 +35,9 @@ export async function createGroupWallet(
       return { success: false, error: 'Insufficient permissions' };
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_wallets) as any)
       .insert({
         group_id: request.group_id,
@@ -97,11 +99,14 @@ export async function updateGroupWallet(
     }
 
     // Get wallet to check group_id
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: walletData } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_wallets) as any)
       .select('group_id')
       .eq('id', walletId)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const wallet = walletData as any;
 
     if (!wallet) {
@@ -124,6 +129,7 @@ export async function updateGroupWallet(
     if (request.required_signatures !== undefined) {payload.required_signatures = request.required_signatures;}
     if (request.is_active !== undefined) {payload.is_active = request.is_active;}
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from(TABLES.group_wallets) as any).update(payload).eq('id', walletId);
 
     if (error) {

@@ -18,6 +18,41 @@ interface RouteParams {
   params: Promise<{ itemId: string }>;
 }
 
+interface WishlistItem {
+  id: string;
+  wishlist_id: string;
+  wishlists: { actor_id: string } | { actor_id: string }[];
+}
+
+interface Profile {
+  id: string;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
+interface Proof {
+  id: string;
+  wishlist_item_id: string;
+  user_id: string;
+  proof_type: string;
+  description: string | null;
+  image_url: string | null;
+  transaction_id: string | null;
+  created_at: string;
+  profiles: Profile | null;
+}
+
+interface Feedback {
+  id: string;
+  fulfillment_proof_id: string;
+  user_id: string;
+  feedback_type: string;
+  comment: string | null;
+  created_at: string;
+  profiles: Profile | null;
+}
+
 // GET /api/wishlists/items/[itemId]/proofs - Get all proofs for a wishlist item
 export async function GET(
   request: NextRequest,
@@ -30,12 +65,12 @@ export async function GET(
     const { data: { user } } = await supabase.auth.getUser();
 
     // Verify the wishlist item exists
-    const { data: wishlistItemData, error: itemError } = await (supabase
-      .from('wishlist_items') as any)
+    const { data: wishlistItemData, error: itemError } = await supabase
+      .from('wishlist_items')
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', itemId)
       .single();
-    const wishlistItem = wishlistItemData as any;
+    const wishlistItem = wishlistItemData as WishlistItem | null;
 
     if (itemError || !wishlistItem) {
       return NextResponse.json(
@@ -45,8 +80,8 @@ export async function GET(
     }
 
     // Get all proofs for this item
-    const { data: proofsData, error: proofsError } = await (supabase
-      .from('wishlist_fulfillment_proofs') as any)
+    const { data: proofsData, error: proofsError } = await supabase
+      .from('wishlist_fulfillment_proofs')
       .select(`
         id,
         wishlist_item_id,
@@ -65,7 +100,7 @@ export async function GET(
       `)
       .eq('wishlist_item_id', itemId)
       .order('created_at', { ascending: false });
-    const proofs = proofsData as any[];
+    const proofs = (proofsData ?? []) as Proof[];
 
     if (proofsError) {
       logger.error('Failed to fetch wishlist proofs', {
@@ -79,12 +114,12 @@ export async function GET(
     }
 
     // Get feedback for each proof
-    const proofIds = proofs?.map(p => p.id) || [];
-    let feedbackMap: Record<string, any[]> = {};
+    const proofIds = proofs.map(p => p.id);
+    let feedbackMap: Record<string, Feedback[]> = {};
 
     if (proofIds.length > 0) {
-      const { data: feedbackData, error: feedbackError } = await (supabase
-        .from('wishlist_feedback') as any)
+      const { data: feedbackData, error: feedbackError } = await supabase
+        .from('wishlist_feedback')
         .select(`
           id,
           fulfillment_proof_id,
@@ -100,11 +135,11 @@ export async function GET(
           )
         `)
         .in('fulfillment_proof_id', proofIds);
-      const feedback = feedbackData as any[];
+      const feedback = (feedbackData ?? []) as Feedback[];
 
       if (!feedbackError && feedback) {
         // Group feedback by proof_id
-        feedbackMap = feedback.reduce((acc: Record<string, any[]>, f: any) => {
+        feedbackMap = feedback.reduce((acc: Record<string, Feedback[]>, f: Feedback) => {
           if (f.fulfillment_proof_id) {
             if (!acc[f.fulfillment_proof_id]) {
               acc[f.fulfillment_proof_id] = [];
@@ -112,16 +147,16 @@ export async function GET(
             acc[f.fulfillment_proof_id].push(f);
           }
           return acc;
-        }, {} as Record<string, any[]>);
+        }, {} as Record<string, Feedback[]>);
       }
     }
 
     // Combine proofs with their feedback
-    const proofsWithFeedback = proofs?.map(proof => {
-      const feedback = feedbackMap[proof.id] || [];
-      const likes = feedback.filter(f => f.feedback_type === 'like').length;
-      const dislikes = feedback.filter(f => f.feedback_type === 'dislike').length;
-      const userFeedback = user ? feedback.find(f => f.user_id === user.id) : null;
+    const proofsWithFeedback = proofs.map(proof => {
+      const proofFeedback = feedbackMap[proof.id] || [];
+      const likes = proofFeedback.filter(f => f.feedback_type === 'like').length;
+      const dislikes = proofFeedback.filter(f => f.feedback_type === 'dislike').length;
+      const userFeedback = user ? proofFeedback.find(f => f.user_id === user.id) : null;
 
       return {
         id: proof.id,
@@ -142,7 +177,7 @@ export async function GET(
           } : null,
         },
       };
-    }) || [];
+    });
 
     // Check if current user can add proofs (must be wishlist owner)
     const wishlist = Array.isArray(wishlistItem.wishlists) ? wishlistItem.wishlists[0] : wishlistItem.wishlists;

@@ -11,14 +11,37 @@ import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { convertToBtc } from '@/services/currency';
 
+interface ResearchEntity {
+  id: string;
+  is_public: boolean;
+  user_id: string;
+  funding_goal?: number;
+  funding_goal_currency?: string;
+  funding_raised_btc?: number;
+  status?: string;
+}
+
+interface Contribution {
+  id: string;
+  research_entity_id: string;
+  user_id: string | null;
+  amount_btc: number;
+  funding_model: string;
+  message?: string;
+  anonymous: boolean;
+  lightning_invoice?: string;
+  status: string;
+  created_at: string;
+}
+
 // Helper to extract ID from URL
 function extractIdFromUrl(url: string): string {
   const segments = new URL(url).pathname.split('/');
-  const idx = segments.findIndex(s => s === 'research-entities');
+  const idx = segments.findIndex(s => s === 'research');
   return segments[idx + 1] || '';
 }
 
-// GET /api/research-entities/[id]/contribute - Get contribution history
+// GET /api/research/[id]/contribute - Get contribution history
 export const GET = compose(
   withRateLimit('read')
 )(async (request: NextRequest) => {
@@ -27,12 +50,12 @@ export const GET = compose(
     const supabase = await createServerClient();
 
     // Check if research entity exists
-    const { data: entityData, error: entityError } = await (supabase
-      .from('research_entities') as any)
+    const { data: entityData, error: entityError } = await supabase
+      .from('research_entities')
       .select('id, is_public, user_id')
       .eq('id', id)
       .single();
-    const entity = entityData as any;
+    const entity = entityData as ResearchEntity | null;
 
     if (entityError) {
       if (entityError.code === 'PGRST116') {
@@ -46,19 +69,23 @@ export const GET = compose(
     } = await supabase.auth.getUser();
 
     // Only owners and contributors can see full contribution details
-    const canSeeDetails =
-      user &&
-      (user.id === entity.user_id ||
-        (await (supabase
-          .from('research_contributions') as any)
+    let canSeeDetails = false;
+    if (user && entity) {
+      if (user.id === entity.user_id) {
+        canSeeDetails = true;
+      } else {
+        const { data: userContributions } = await supabase
+          .from('research_contributions')
           .select('id')
           .eq('research_entity_id', id)
           .eq('user_id', user.id)
-          .limit(1)
-          .then(({ data }: any) => data && data.length > 0)));
+          .limit(1);
+        canSeeDetails = !!(userContributions && userContributions.length > 0);
+      }
+    }
 
-    let query = (supabase
-      .from('research_contributions') as any)
+    let query = supabase
+      .from('research_contributions')
       .select(canSeeDetails ? '*' : 'id, amount_btc, funding_model, anonymous, status, created_at')
       .eq('research_entity_id', id)
       .order('created_at', { ascending: false });
@@ -69,7 +96,7 @@ export const GET = compose(
     }
 
     const { data: contributionsData, error } = await query;
-    const contributions = contributionsData as any[];
+    const contributions = (contributionsData ?? []) as Contribution[];
 
     if (error) {
       throw error;
@@ -77,16 +104,16 @@ export const GET = compose(
 
     // Calculate contribution statistics
     const stats = {
-      total_contributors: contributions?.length || 0,
-      total_amount_btc: contributions?.reduce((sum, c) => sum + c.amount_btc, 0) || 0,
-      average_contribution: contributions?.length
+      total_contributors: contributions.length,
+      total_amount_btc: contributions.reduce((sum, c) => sum + c.amount_btc, 0),
+      average_contribution: contributions.length
         ? contributions.reduce((sum, c) => sum + c.amount_btc, 0) / contributions.length
         : 0,
       funding_sources: {} as Record<string, number>,
     };
 
     // Count funding sources
-    contributions?.forEach(contribution => {
+    contributions.forEach(contribution => {
       stats.funding_sources[contribution.funding_model] =
         (stats.funding_sources[contribution.funding_model] || 0) + contribution.amount_btc;
     });
@@ -100,7 +127,7 @@ export const GET = compose(
   }
 });
 
-// POST /api/research-entities/[id]/contribute - Make a contribution
+// POST /api/research/[id]/contribute - Make a contribution
 export const POST = compose(
   withRateLimit('write')
 )(async (request: NextRequest) => {
@@ -112,12 +139,12 @@ export const POST = compose(
     } = await supabase.auth.getUser();
 
     // Check if research entity exists and accepts contributions
-    const { data: entityData2, error: entityError } = await (supabase
-      .from('research_entities') as any)
+    const { data: entityData2, error: entityError } = await supabase
+      .from('research_entities')
       .select('id, is_public, funding_goal, funding_goal_currency, funding_raised_btc, status')
       .eq('id', id)
       .single();
-    const entity = entityData2 as any;
+    const entity = entityData2 as ResearchEntity | null;
 
     if (entityError) {
       if (entityError.code === 'PGRST116') {
@@ -126,7 +153,7 @@ export const POST = compose(
       throw entityError;
     }
 
-    if (!entity.is_public) {
+    if (!entity || !entity.is_public) {
       return apiUnauthorized('Cannot contribute to private research entities');
     }
 
@@ -170,7 +197,7 @@ export const POST = compose(
     };
 
     const { data: contribution, error } = await (supabase
-      .from('research_contributions') as any)
+      .from('research_contributions') as ReturnType<typeof supabase.from>)
       .insert(contributionData)
       .select()
       .single();
@@ -179,15 +206,17 @@ export const POST = compose(
       throw error;
     }
 
+    const contributionResult = contribution as Contribution | null;
+
     // Update research entity funding total
-    await (supabase.rpc as any)('update_research_funding', {
+    await (supabase.rpc as unknown as (name: string, params: Record<string, unknown>) => Promise<unknown>)('update_research_funding', {
       research_entity_id: id,
       amount_btc: amountBtc,
     });
 
     logger.info('Research contribution created', {
       researchEntityId: id,
-      contributionId: contribution.id,
+      contributionId: contributionResult?.id,
       amountBtc,
       anonymous,
       userId: user?.id,
@@ -195,7 +224,7 @@ export const POST = compose(
 
     return apiSuccess(
       {
-        contribution,
+        contribution: contributionResult,
         lightning_invoice: invoice,
         message:
           'Contribution recorded. Please pay the Lightning invoice to complete the transaction.',

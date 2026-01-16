@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import { isLocationHidden, getLocationGroupLabel } from '@/lib/location-privacy';
 import { Profile } from '@/types/database';
+import Image from 'next/image';
 import {
   Info,
   Edit,
@@ -157,9 +158,11 @@ export default function DashboardInfoPage() {
                   {/* Avatar */}
                   <div className="flex-shrink-0 mx-auto sm:mx-0">
                     {profile.avatar_url ? (
-                      <img
+                      <Image
                         src={profile.avatar_url}
                         alt={profile.name || profile.username || 'Profile'}
+                        width={96}
+                        height={96}
                         className="w-24 h-24 sm:w-20 sm:h-20 rounded-full object-cover border-4 border-white shadow-lg"
                       />
                     ) : (

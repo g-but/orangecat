@@ -62,6 +62,7 @@ export class ProfileService {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
@@ -106,6 +107,7 @@ export class ProfileService {
         updated_at: new Date().toISOString()
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .update(updateData)
@@ -147,6 +149,7 @@ export class ProfileService {
         updated_at: new Date().toISOString()
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .insert(newProfile)
@@ -177,6 +180,7 @@ export class ProfileService {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
@@ -210,6 +214,7 @@ export class ProfileService {
     }
 
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
@@ -239,7 +244,8 @@ export class DatabaseService {
    */
   static async testConnection(): Promise<ServiceResponse<boolean>> {
     try {
-      const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: _data, error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .select('id')
         .limit(1)
@@ -262,7 +268,8 @@ export class DatabaseService {
   static async checkSchema(): Promise<ServiceResponse<boolean>> {
     try {
       // Test expected columns exist
-      const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: _data, error } = await (supabase
         .from(DATABASE_TABLES.PROFILES) as any)
         .select('id, username, name, bio, avatar_url, banner_url, website, bitcoin_address, lightning_address, created_at, updated_at')
         .limit(1)

@@ -44,6 +44,7 @@ export async function DELETE(
 
     // Get the proof and verify ownership
     const { data: proof, error: proofError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wishlist_fulfillment_proofs') as any)
       .select('id, user_id, wishlist_item_id')
       .eq('id', proofId)
@@ -66,6 +67,7 @@ export async function DELETE(
 
     // Delete the proof
     const { error: deleteError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wishlist_fulfillment_proofs') as any)
       .delete()
       .eq('id', proofId);
@@ -84,6 +86,7 @@ export async function DELETE(
 
     // Also delete any associated feedback
     const { error: feedbackDeleteError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wishlist_feedback') as any)
       .delete()
       .eq('fulfillment_proof_id', proofId);

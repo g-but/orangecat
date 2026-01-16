@@ -44,7 +44,7 @@ export function deduplicateCrossPosts(events: TimelineDisplayEvent[]): TimelineD
 
   // Process grouped events
   const deduplicatedEvents: TimelineDisplayEvent[] = [];
-  eventGroups.forEach((group, mainPostId) => {
+  eventGroups.forEach((group, _mainPostId) => {
     // Find the main post (the one without cross_posted_from_main flag)
     const mainPost = group.find(e => !e.metadata?.cross_posted_from_main);
 
@@ -87,10 +87,14 @@ export function deduplicateCrossPosts(events: TimelineDisplayEvent[]): TimelineD
  * @returns Filtered optimistic events that haven't been replaced
  */
 export function filterOptimisticEvents(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   optimisticEvents: any[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   realEvents: any[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
 ): any[] {
   return optimisticEvents.filter(optEvent =>
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     !realEvents.some((realEvent: any) => {
       // Match by content and timestamp (simple heuristic)
       return realEvent.description === optEvent.description &&

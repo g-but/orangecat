@@ -364,8 +364,21 @@ export function OnboardingFlow() {
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = async () => {
     onboardingEvents.skipped(currentStep, user?.id);
+
+    // Mark onboarding as completed so user doesn't see it again
+    if (user?.id) {
+      try {
+        await ProfileService.fallbackProfileUpdate(user.id, {
+          onboarding_completed: true,
+        });
+      } catch (error) {
+        console.error('Failed to mark onboarding as skipped:', error);
+        // Continue anyway - analytics event was sent
+      }
+    }
+
     router.push('/dashboard?welcome=true');
   };
 

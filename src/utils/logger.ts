@@ -18,6 +18,7 @@ interface LogEntry {
   timestamp: string
   level: LogLevel
   message: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data?: any
   source?: string
 }
@@ -60,6 +61,7 @@ class Logger {
     return LOG_LEVELS[level] >= LOG_LEVELS[LOGGER_CONFIG.activeLevel as LogLevel]
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private formatLogEntry(level: LogLevel, message: string, data?: any, source?: string): LogEntry {
     return {
       timestamp: new Date().toISOString(),
@@ -78,6 +80,7 @@ class Logger {
       // Send to proper logging service in production
       // For now, use console for critical errors only
       if (level === 'error') {
+        // eslint-disable-next-line no-console
         console.error(JSON.stringify(entry))
       }
       return
@@ -90,57 +93,70 @@ class Logger {
 
     switch (level) {
       case 'debug':
+        // eslint-disable-next-line no-console
         console.debug(prefix + sourceInfo + ':', message, payload)
         return
       case 'info':
+        // eslint-disable-next-line no-console
         console.info(prefix + sourceInfo + ':', message, payload)
         return
       case 'warn':
+        // eslint-disable-next-line no-console
         console.warn(prefix + sourceInfo + ':', message, payload)
         return
       case 'error':
+        // eslint-disable-next-line no-console
         console.error(prefix + sourceInfo + ':', message, payload)
         return
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debug(message: string, data?: any, source?: string): void {
     if (!this.shouldLog('debug')) {return}
     this.output(this.formatLogEntry('debug', message, data, source))
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   info(message: string, data?: any, source?: string): void {
     if (!this.shouldLog('info')) {return}
     this.output(this.formatLogEntry('info', message, data, source))
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   warn(message: string, data?: any, source?: string): void {
     if (!this.shouldLog('warn')) {return}
     this.output(this.formatLogEntry('warn', message, data, source))
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error(message: string, data?: any, source?: string): void {
     if (!this.shouldLog('error')) {return}
     this.output(this.formatLogEntry('error', message, data, source))
   }
 
   // Specialized logging methods
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase(message: string, data?: any): void {
     this.info(`[Supabase] ${message}`, data, 'supabase')
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   auth(message: string, data?: any): void {
     this.info(`[Auth] ${message}`, data, 'auth')
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   api(message: string, data?: any): void {
     this.info(`[API] ${message}`, data, 'api')
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   database(message: string, data?: any): void {
     this.info(`[Database] ${message}`, data, 'database')
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   performance(message: string, data?: any): void {
     this.debug(`[Performance] ${message}`, data, 'performance')
   }
@@ -160,6 +176,7 @@ export const logger = new Logger()
  * Migration helper to replace console.log calls
  * Use this to gradually replace console.log throughout the codebase
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function safeLog(message: string, data?: any, level: LogLevel = 'debug'): void {
   logger[level](message, data)
 }
@@ -196,6 +213,7 @@ export function logTiming(operation: string, startTime: number): void {
 /**
  * @deprecated Use logger.auth() instead
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logAuth(message: string, data?: any): void {
   logger.auth(message, data)
 }
@@ -203,6 +221,7 @@ export function logAuth(message: string, data?: any): void {
 /**
  * @deprecated Use logger.supabase() instead
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logSupabase(message: string, data?: any): void {
   logger.supabase(message, data)
 }
@@ -210,6 +229,7 @@ export function logSupabase(message: string, data?: any): void {
 /**
  * @deprecated Use logger.info() or logger.debug() instead
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function logProfile(message: string, data?: any): void {
   logger.info(`[Profile] ${message}`, data)
 }

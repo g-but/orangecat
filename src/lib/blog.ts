@@ -71,7 +71,7 @@ export function getBlogPost(slug: string): BlogPost | null {
       published: data.published !== false,
       content
     }
-  } catch (error) {
+  } catch {
     return null
   }
 }
@@ -175,7 +175,7 @@ export function saveBlogPost(slug: string, content: string): boolean {
     const fullPath = path.join(BLOG_POSTS_PATH, `${slug}.mdx`)
     fs.writeFileSync(fullPath, content, 'utf8')
     return true
-  } catch (error) {
+  } catch {
     return false
   }
 } 

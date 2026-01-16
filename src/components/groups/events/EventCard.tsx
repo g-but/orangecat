@@ -31,7 +31,7 @@ interface EventCardProps {
   onUpdate?: () => void;
 }
 
-export function EventCard({ event, groupSlug, onUpdate }: EventCardProps) {
+export function EventCard({ event, groupSlug, onUpdate: _onUpdate }: EventCardProps) {
   const startDate = new Date(event.starts_at);
   const endDate = event.ends_at ? new Date(event.ends_at) : null;
   const isPast = startDate < new Date();

@@ -303,7 +303,7 @@ export function MobileCreateButton() {
             <div className="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-4 px-2">Create New</h3>
             <div className="grid grid-cols-3 gap-2">
-              {CREATE_OPTIONS.map((option, index) => (
+              {CREATE_OPTIONS.map((option, _index) => (
                 <div key={option.name} className="contents">
                   <Link
                     href={option.href}

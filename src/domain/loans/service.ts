@@ -53,7 +53,7 @@ export async function createLoan(
   const client = supabase || (await createServerClient());
 
   // Extract collateral (will be handled separately)
-  const { collateral, ...loanInput } = input;
+  const { collateral: _collateral, ...loanInput } = input;
 
   // Map form fields to database columns
   // Handle both new schema (original_amount) and legacy schema (amount_sats)
@@ -95,6 +95,7 @@ export async function createLoan(
     status: 'active',
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (client.from(getTableName('loan')) as any).insert(payload).select().single();
   if (error) {
     logger.error('Failed to create loan', {
@@ -111,7 +112,7 @@ export async function createLoan(
   }
 
   // Handle collateral separately if provided
-  if (collateral && Array.isArray(collateral) && collateral.length > 0 && data?.id) {
+  if (_collateral && Array.isArray(_collateral) && _collateral.length > 0 && data?.id) {
     // Collateral will be handled via separate API endpoint
     // For now, we just create the loan without collateral
     // TODO: Create loan_collateral entries via /api/loan-collateral endpoint

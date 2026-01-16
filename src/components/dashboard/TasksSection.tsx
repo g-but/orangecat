@@ -34,7 +34,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { useAuth } from '@/hooks/useAuth';
 import { useRecommendations } from '@/hooks/useRecommendations';
 import { SmartQuestionsPanel } from './SmartQuestionsPanel';
+import { TASK_DEFINITIONS } from '@/services/recommendations/tasks';
 import type { RecommendedTask, TaskPriority } from '@/services/recommendations/types';
+import type { LucideIcon } from 'lucide-react';
+
+// Build a lookup map from task ID to icon (since icons can't be serialized via API)
+const TASK_ICON_MAP: Record<string, LucideIcon> = Object.fromEntries(
+  TASK_DEFINITIONS.map(task => [task.id, task.icon])
+);
 
 interface TasksSectionProps {
   className?: string;
@@ -250,7 +257,8 @@ function TaskCard({
   onComplete: () => void;
   isCompleted: boolean;
 }) {
-  const IconComponent = task.icon;
+  // Look up icon from the map since icons can't be serialized via API
+  const IconComponent = TASK_ICON_MAP[task.id] || Target;
 
   return (
     <div

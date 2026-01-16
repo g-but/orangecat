@@ -237,6 +237,7 @@ export default function NewConversationModal({
                     }
                   }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic user avatar */}
                   <img
                     src={p.avatar_url || '/default-avatar.svg'}
                     alt={p.name || p.username || 'User'}

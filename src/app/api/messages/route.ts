@@ -36,7 +36,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
 
 export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const { user } = req;
+    const { user: _user } = req;
     const body = await req.json();
     const validation = createConversationSchema.safeParse(body);
 

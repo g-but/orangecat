@@ -20,6 +20,32 @@ import {
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 
+// Type definitions for Supabase tables not in generated types
+interface GroupRow {
+  id: string;
+  name?: string;
+}
+
+interface GroupMemberRow {
+  id: string;
+  role: string;
+}
+
+interface GroupInvitationRow {
+  id: string;
+  group_id: string;
+  user_id?: string | null;
+  email?: string | null;
+  role: string;
+  status: string;
+  token?: string | null;
+  expires_at: string;
+  invited_by: string;
+  message?: string | null;
+  inviter?: { name: string | null; avatar_url: string | null } | null;
+  invitee?: { name: string | null; avatar_url: string | null } | null;
+}
+
 // Validation schema for creating invitations
 const createInvitationSchema = z
   .object({
@@ -47,23 +73,23 @@ export const GET = withAuth(
       const { searchParams } = new URL(req.url);
 
       // Get group by slug
-      const { data: groupData, error: groupError } = await (supabase.from('groups') as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: group, error: groupError } = await (supabase.from('groups') as any)
         .select('id')
         .eq('slug', slug)
-        .single();
-      const group = groupData as any;
+        .single() as { data: GroupRow | null; error: Error | null };
 
       if (groupError || !group) {
         return apiNotFound('Group not found');
       }
 
       // Check if user is admin/founder
-      const { data: membershipData } = await (supabase.from('group_members') as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: membership } = await (supabase.from('group_members') as any)
         .select('role')
         .eq('group_id', group.id)
         .eq('user_id', user.id)
-        .maybeSingle();
-      const membership = membershipData as any;
+        .maybeSingle() as { data: GroupMemberRow | null };
 
       if (!membership || !['founder', 'admin'].includes(membership.role)) {
         return apiForbidden('Only admins can view invitations');
@@ -75,6 +101,7 @@ export const GET = withAuth(
       const offset = Math.max(parseInt(searchParams.get('offset') || '0', 10) || 0, 0);
 
       // Build query
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let query = (supabase.from('group_invitations') as any)
         .select(
           `
@@ -98,8 +125,11 @@ export const GET = withAuth(
         query = query.eq('status', status);
       }
 
-      const { data: invitationsData, count, error } = await query;
-      const invitations = invitationsData as any[];
+      const { data: invitations, count, error } = await query as {
+        data: GroupInvitationRow[] | null;
+        count: number | null;
+        error: Error | null;
+      };
 
       if (error) {
         logger.error('Failed to fetch invitations', { error, groupId: group.id }, 'Groups');
@@ -130,23 +160,23 @@ export const POST = withAuth(
       const supabase = await createServerClient();
 
       // Get group by slug
-      const { data: groupData2, error: groupError } = await (supabase.from('groups') as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: group, error: groupError } = await (supabase.from('groups') as any)
         .select('id, name')
         .eq('slug', slug)
-        .single();
-      const group = groupData2 as any;
+        .single() as { data: GroupRow | null; error: Error | null };
 
       if (groupError || !group) {
         return apiNotFound('Group not found');
       }
 
       // Check if user is admin/founder
-      const { data: membershipData2 } = await (supabase.from('group_members') as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: membership } = await (supabase.from('group_members') as any)
         .select('role')
         .eq('group_id', group.id)
         .eq('user_id', user.id)
-        .maybeSingle();
-      const membership = membershipData2 as any;
+        .maybeSingle() as { data: GroupMemberRow | null };
 
       if (!membership || !['founder', 'admin'].includes(membership.role)) {
         return apiForbidden('Only admins can create invitations');
@@ -169,23 +199,25 @@ export const POST = withAuth(
 
       // If inviting a specific user, check if already a member
       if (user_id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: existingMember } = await (supabase.from('group_members') as any)
           .select('id')
           .eq('group_id', group.id)
           .eq('user_id', user_id)
-          .maybeSingle();
+          .maybeSingle() as { data: { id: string } | null };
 
         if (existingMember) {
           return apiValidationError('User is already a member of this group');
         }
 
         // Check for existing pending invitation
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: existingInvite } = await (supabase.from('group_invitations') as any)
           .select('id')
           .eq('group_id', group.id)
           .eq('user_id', user_id)
           .eq('status', 'pending')
-          .maybeSingle();
+          .maybeSingle() as { data: { id: string } | null };
 
         if (existingInvite) {
           return apiValidationError('User already has a pending invitation');
@@ -224,15 +256,13 @@ export const POST = withAuth(
       }
 
       // Create invitation
-      const { data: invitationData2, error: insertError } = await (
-        supabase.from('group_invitations') as any
-      )
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: invitation, error: insertError } = await (supabase.from('group_invitations') as any)
         .insert(invitationData)
         .select()
-        .single();
-      const invitation = invitationData2 as any;
+        .single() as { data: GroupInvitationRow | null; error: Error | null };
 
-      if (insertError) {
+      if (insertError || !invitation) {
         logger.error(
           'Failed to create invitation',
           { error: insertError, groupId: group.id },

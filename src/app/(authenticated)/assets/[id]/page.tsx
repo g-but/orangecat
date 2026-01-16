@@ -31,6 +31,7 @@ export default function EditAssetPage() {
         if (!cancelled) {
           setInitialValues(json.data);
         }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (e: any) {
         if (!cancelled) {
           setError(e?.message || 'Failed to load asset');

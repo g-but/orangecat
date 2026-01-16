@@ -10,7 +10,7 @@ interface ProfileProgressProps {
 }
 
 export function ProfileProgress({ percentage, className }: ProfileProgressProps) {
-  const getCompletionMessage = () => {
+  const _getCompletionMessage = () => {
     if (percentage === 100) {
       return "Amazing profile! You're all set! 🌟"
     }

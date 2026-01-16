@@ -21,8 +21,9 @@ const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(({ className, ...pr
 Avatar.displayName = 'Avatar';
 
 const AvatarImage = React.forwardRef<HTMLImageElement, AvatarImageProps>(
-  ({ className, ...props }, ref) => (
-    <img ref={ref} className={cn('aspect-square h-full w-full', className)} {...props} />
+  ({ className, alt = '', ...props }, ref) => (
+    // eslint-disable-next-line @next/next/no-img-element -- Avatar images are dynamic user content
+    <img ref={ref} alt={alt} className={cn('aspect-square h-full w-full', className)} {...props} />
   )
 );
 AvatarImage.displayName = 'AvatarImage';

@@ -41,6 +41,7 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
 
     // Fetch project to ensure it exists and is viewable
     const { data: project, error: projectError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .select('id, status')
       .eq('id', projectId)
@@ -58,6 +59,7 @@ export const GET = withOptionalAuth(async (req, { params }: RouteParams) => {
 
     // Fetch recent updates (limit to 10 most recent)
     const { data: updates, error: updatesError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('project_updates') as any)
       .select('id, project_id, type, title, content, amount_btc, created_at')
       .eq('project_id', projectId)

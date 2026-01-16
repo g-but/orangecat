@@ -50,7 +50,7 @@ export function LocationInput({
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [detectedCountry, setDetectedCountry] = useState<string>('');
+  const [_detectedCountry, setDetectedCountry] = useState<string>('');
 
   const inputRef = useRef<HTMLInputElement>(null);
   const suggestionsRef = useRef<HTMLDivElement>(null);

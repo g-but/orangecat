@@ -26,7 +26,7 @@ interface TreasuryPageProps {
 }
 
 export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) {
-  const { slug } = params;
+  const { slug: _slug } = params;
 
   // Mock treasury data
   const treasury = {

@@ -22,6 +22,7 @@ async function getOrgSlugById(id: string): Promise<string | null> {
   const supabase = await createServerClient();
 
   const { data: org } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('groups') as any)
     .select('slug')
     .eq('id', id)

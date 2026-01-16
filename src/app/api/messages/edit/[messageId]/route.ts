@@ -53,6 +53,7 @@ export const PATCH = withAuth(async (
 
     // Verify user is the sender of this message
     const { data: message, error: messageError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.MESSAGES) as any)
       .select('id, sender_id, conversation_id, is_deleted')
       .eq('id', messageId)
@@ -72,6 +73,7 @@ export const PATCH = withAuth(async (
 
     // Update message content and set edited_at
     const { data: updatedMessage, error: updateError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.MESSAGES) as any)
       .update({
         content,

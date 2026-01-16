@@ -130,7 +130,7 @@ export class QueryAnalyzer {
     const recommendations: string[] = []
 
     // Common patterns that usually need indexes
-    const commonPatterns = [
+    const _commonPatterns = [
       {
         table: 'projects',
         columns: ['status', 'created_at'],
@@ -160,7 +160,7 @@ export class QueryAnalyzer {
   }
 
   private async findLargeTables(): Promise<string[]> {
-    const recommendations: string[] = []
+    const _recommendations: string[] = []
 
     // Common large tables that might need optimization
     const largeTables = [
@@ -181,7 +181,7 @@ export class QueryAnalyzer {
    * Create a database function to track slow queries (requires admin access)
    */
   static async createSlowQueryTrackingFunction() {
-    const functionSQL = `
+    const _functionSQL = `
       CREATE OR REPLACE FUNCTION track_slow_queries()
       RETURNS TRIGGER AS $$
       BEGIN

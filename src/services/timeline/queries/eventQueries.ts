@@ -182,6 +182,7 @@ export async function getThreadPosts(threadId: string): Promise<{
   error?: string;
 }> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const result = await (supabase.rpc as any)('get_thread_posts', {
       p_thread_id: threadId,
       p_limit: 50,

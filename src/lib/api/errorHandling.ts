@@ -61,6 +61,7 @@ export class ApiError extends Error {
   public readonly code: ErrorCode
   public readonly statusCode: number
   public readonly correlationId: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public readonly details?: Record<string, any>
   public readonly timestamp: string
 
@@ -70,6 +71,7 @@ export class ApiError extends Error {
     statusCode: number,
     options?: {
       correlationId?: string
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       details?: Record<string, any>
       cause?: Error
     }
@@ -329,6 +331,7 @@ export async function withErrorHandling<T>(
 /**
  * Type guard to check if response is an error response
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isErrorResponse(response: any): response is ApiErrorResponse {
   return response && response.error && response.error.code && response.error.message
 }

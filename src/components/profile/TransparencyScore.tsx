@@ -40,7 +40,7 @@ export function TransparencyScore({ profile }: TransparencyScoreProps) {
         const transparencyData = profileToTransparencyData(profile);
         const result = await calculateTransparencyScore(transparencyData)
         setScore(result.score)
-      } catch (error) {
+      } catch {
       } finally {
         setLoading(false)
       }

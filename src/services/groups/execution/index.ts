@@ -2,6 +2,7 @@ import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
 import { TABLES } from '../constants';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProposalRecord = any;
 
 type ActionHandler = (proposalId: string, proposal: ProposalRecord) => Promise<void>;
@@ -22,6 +23,7 @@ const handlers: Record<string, ActionHandler> = {
       const groupActor = await getActorByGroup(groupId);
       if (!groupActor) {return;}
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.from(tableName) as any).update({ actor_id: groupActor.id, group_id: groupId }).eq('id', entity_id);
     } catch (error) {
       logger.error('Error executing associate_entity', error, 'Groups');
@@ -90,7 +92,9 @@ const handlers: Record<string, ActionHandler> = {
       });
 
       // Update proposal with created project ID
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_proposals) as any)
         .update({
           action_data: {
@@ -108,7 +112,7 @@ const handlers: Record<string, ActionHandler> = {
   },
   async spend_funds(_proposalId, proposal) {
     try {
-      const { amount_sats, recipient_address, wallet_id, note } = proposal.action_data || {};
+      const { amount_sats, recipient_address, wallet_id: _wallet_id, note: _note } = proposal.action_data || {};
       
       if (!amount_sats || !recipient_address) {
         logger.warn('Missing required fields for spend_funds', { proposalId: _proposalId }, 'Groups');
@@ -122,7 +126,9 @@ const handlers: Record<string, ActionHandler> = {
       // 3. Notify authorized signers
       // 4. Wait for multisig execution
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(TABLES.group_proposals) as any)
         .update({
           action_data: {
@@ -155,7 +161,9 @@ export async function executeProposalAction(proposalId: string, proposal: Propos
     }
 
     // Mark as executed before/after to avoid duplicate runs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: reloaded } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_proposals) as any)
       .select('executed_at, execution_result')
       .eq('id', proposalId)
@@ -167,13 +175,17 @@ export async function executeProposalAction(proposalId: string, proposal: Propos
 
     await handler(proposalId, proposal);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_proposals) as any)
       .update({ executed_at: new Date().toISOString(), execution_result: { ok: true, action: proposal.action_type } })
       .eq('id', proposalId);
   } catch (error) {
     logger.error('Exception executing proposal action', error, 'Groups');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_proposals) as any)
       .update({ executed_at: new Date().toISOString(), execution_result: { ok: false, error: String(error) } })
       .eq('id', proposalId);

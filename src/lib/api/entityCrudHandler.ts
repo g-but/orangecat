@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Type alias for any SupabaseClient (accepts any database schema)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { ZodSchema, ZodError } from 'zod';
 import { createServerClient } from '@/lib/supabase/server';
@@ -151,8 +152,8 @@ export function createGetHandler(config: EntityHandlerConfig) {
 
       const entityId = params.id;
 
-      let query = (supabase
-        .from(table) as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let query = (supabase.from(table) as any)
         .select('*')
         .eq('id', entityId);
 
@@ -183,6 +184,7 @@ export function createGetHandler(config: EntityHandlerConfig) {
 
       // Custom authorization check
       if (checkGetAccess) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const authError = await checkGetAccess(entity, userId, supabase as any);
         if (authError) {return authError;}
       }
@@ -190,6 +192,7 @@ export function createGetHandler(config: EntityHandlerConfig) {
       // Post-process entity (add computed fields, etc.)
       let processedEntity = entity;
       if (postProcessGet) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         processedEntity = await postProcessGet(entity, userId, supabase as any);
       }
 
@@ -258,11 +261,12 @@ export function createPutHandler(config: EntityHandlerConfig) {
       const entityId = params.id;
 
       // Check if entity exists
-      const { data: existingData, error: fetchError } = await (supabase
-        .from(table) as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingData, error: fetchError } = await (supabase.from(table) as any)
         .select('*')
         .eq('id', entityId)
         .single();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const existing = existingData as any;
 
       if (fetchError || !existing) {
@@ -271,6 +275,7 @@ export function createPutHandler(config: EntityHandlerConfig) {
 
       // Custom authorization check (if provided, use it; otherwise use default ownership check)
       if (checkPutAccess) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const authError = await checkPutAccess(existing, user.id, supabase as any);
         if (authError) {return authError;}
       } else {
@@ -304,8 +309,8 @@ export function createPutHandler(config: EntityHandlerConfig) {
         updated_at: new Date().toISOString(),
       };
 
-      const { data: entity, error } = await (supabase
-        .from(table) as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: entity, error } = await (supabase.from(table) as any)
         .update(updatePayload)
         .eq('id', entityId)
         .select('*')
@@ -323,6 +328,7 @@ export function createPutHandler(config: EntityHandlerConfig) {
 
       // Post-process (audit logging, etc.)
       if (postProcessPut) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await postProcessPut(entity, user.id, supabase as any);
       }
 
@@ -362,7 +368,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
   const table = tableName ?? meta.tableName;
 
   return async function DELETE(
-    request: NextRequest,
+    _request: NextRequest,
     { params }: EntityRouteParams
   ) {
     try {
@@ -379,11 +385,12 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
       const entityId = params.id;
 
       // Check if entity exists
-      const { data: existingData2, error: fetchError } = await (supabase
-        .from(table) as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: existingData2, error: fetchError } = await (supabase.from(table) as any)
         .select('*')
         .eq('id', entityId)
         .single();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const existing = existingData2 as any;
 
       if (fetchError || !existing) {
@@ -392,6 +399,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
 
       // Custom authorization check (if provided, use it; otherwise use default ownership check)
       if (checkDeleteAccess) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const authError = await checkDeleteAccess(existing, user.id, supabase as any);
         if (authError) {return authError;}
       } else {
@@ -404,11 +412,12 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
 
       // Pre-delete hook (cleanup operations)
       if (preDelete) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await preDelete(existing, user.id, supabase as any);
       }
 
-      const { error } = await (supabase
-        .from(table) as any)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase.from(table) as any)
         .delete()
         .eq('id', entityId);
 
@@ -424,6 +433,7 @@ export function createDeleteHandler(config: EntityHandlerConfig) {
 
       // Post-process (audit logging, etc.)
       if (postProcessDelete) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         await postProcessDelete(existing, user.id, supabase as any);
       }
 

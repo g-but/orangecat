@@ -126,6 +126,7 @@ export interface CircleActivity {
   related_project_id?: string;
   related_loan_id?: string;
   related_amount_sats?: number;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
   created_at: string;
 }

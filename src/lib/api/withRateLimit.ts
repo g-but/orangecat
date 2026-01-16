@@ -10,6 +10,7 @@ interface ContextWithUser {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withRateLimit(mode: Mode = 'read'): Middleware<any> {
   return async (req, ctx, next) => {
     let result: RateLimitResult

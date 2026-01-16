@@ -21,7 +21,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Save } from 'lucide-react';
 import { ZodError } from 'zod';
 import { toast } from 'sonner';
 
@@ -35,8 +35,34 @@ import { FormField } from './FormField';
 import { GuidancePanel } from './GuidancePanel';
 import { TemplatePicker } from './templates/TemplatePicker';
 import type { EntityConfig, FormState, EntityTemplate } from './types';
+import { logger } from '@/utils/logger';
+
+// ==================== HELPERS ====================
+
+/**
+ * Format a timestamp as relative time (e.g., "2 minutes ago", "1 hour ago")
+ */
+function formatRelativeTime(timestamp: string): string {
+  const now = Date.now();
+  const then = new Date(timestamp).getTime();
+  const seconds = Math.floor((now - then) / 1000);
+
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} minute${Math.floor(seconds / 60) > 1 ? 's' : ''} ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hour${Math.floor(seconds / 3600) > 1 ? 's' : ''} ago`;
+  return `${Math.floor(seconds / 86400)} day${Math.floor(seconds / 86400) > 1 ? 's' : ''} ago`;
+}
 
 // ==================== COMPONENT ====================
+
+interface WizardMode {
+  currentStep: number;
+  totalSteps: number;
+  visibleFields: string[];
+  onNext?: () => void;
+  onPrevious?: () => void;
+  onSkip?: () => void;
+}
 
 interface EntityFormProps<T extends Record<string, any>> {
   config: EntityConfig<T>;
@@ -45,6 +71,7 @@ interface EntityFormProps<T extends Record<string, any>> {
   onError?: (error: string) => void;
   mode?: 'create' | 'edit';
   entityId?: string;
+  wizardMode?: WizardMode;
 }
 
 export function EntityForm<T extends Record<string, any>>({
@@ -54,6 +81,7 @@ export function EntityForm<T extends Record<string, any>>({
   onError,
   mode = 'create',
   entityId,
+  wizardMode,
 }: EntityFormProps<T>) {
   const { user, isLoading: authLoading, hydrated } = useAuth();
   const router = useRouter();
@@ -86,6 +114,9 @@ export function EntityForm<T extends Record<string, any>>({
     activeField: null,
   });
 
+  // Draft persistence state
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
   // Allow callers to re-prefill the form (e.g., templates)
   useEffect(() => {
     setFormState(prev => ({
@@ -97,6 +128,67 @@ export function EntityForm<T extends Record<string, any>>({
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialValues, config.defaultValues]);
+
+  // Load draft on mount (only in create mode, not edit mode)
+  useEffect(() => {
+    if (mode === 'edit' || !user?.id) return;
+
+    const draftKey = `${config.type}-draft-${user.id}`;
+    const savedDraft = localStorage.getItem(draftKey);
+
+    if (savedDraft) {
+      try {
+        const { formData, savedAt } = JSON.parse(savedDraft);
+        const age = Date.now() - new Date(savedAt).getTime();
+
+        // Expire drafts after 7 days
+        if (age < 7 * 24 * 60 * 60 * 1000) {
+          setFormState(prev => ({ ...prev, data: { ...prev.data, ...formData } }));
+          const relativeTime = formatRelativeTime(savedAt);
+          toast.info(`Draft loaded from ${relativeTime}`, {
+            description: 'Your previous work has been restored',
+            duration: 4000,
+          });
+          setLastSavedAt(new Date(savedAt));
+        } else {
+          // Remove expired draft
+          localStorage.removeItem(draftKey);
+        }
+      } catch (error) {
+        logger.error('Failed to parse draft:', error);
+        localStorage.removeItem(draftKey);
+      }
+    }
+  }, [config.type, user?.id, mode]);
+
+  // Auto-save draft every 10 seconds (only in create mode)
+  useEffect(() => {
+    if (mode === 'edit' || !user?.id) return;
+
+    const interval = setInterval(() => {
+      // Check if there's meaningful content to save
+      const hasContent = Object.values(formState.data).some(v => {
+        if (typeof v === 'string') return v.trim().length > 0;
+        if (Array.isArray(v)) return v.length > 0;
+        return v !== null && v !== undefined;
+      });
+
+      if (!hasContent) return;
+
+      const draftKey = `${config.type}-draft-${user.id}`;
+      const savedAt = new Date().toISOString();
+      localStorage.setItem(
+        draftKey,
+        JSON.stringify({
+          formData: formState.data,
+          savedAt,
+        })
+      );
+      setLastSavedAt(new Date(savedAt));
+    }, 10000); // 10 seconds
+
+    return () => clearInterval(interval);
+  }, [formState.data, config.type, user?.id, mode]);
 
   // Color theme mapping
   const themeColors = useMemo(
@@ -192,24 +284,24 @@ export function EntityForm<T extends Record<string, any>>({
     async (e: React.FormEvent) => {
       e.preventDefault();
 
-      console.log('EntityForm: handleSubmit called for', config.name);
-      console.log('EntityForm: form data before validation:', formState.data);
-      console.log('EntityForm: default values:', config.defaultValues);
+      logger.debug('EntityForm: handleSubmit called for', { entity: config.name }, 'EntityForm');
+      logger.debug('EntityForm: form data before validation:', { data: formState.data }, 'EntityForm');
+      logger.debug('EntityForm: default values:', { defaults: config.defaultValues }, 'EntityForm');
 
       try {
         setFormState(prev => ({ ...prev, isSubmitting: true, errors: {} }));
 
         // Merge form data with defaults to ensure all required fields are present
         const dataToValidate = { ...config.defaultValues, ...formState.data };
-        console.log('EntityForm: merged data for validation:', dataToValidate);
-        console.log('EntityForm: start_date in merged data:', dataToValidate.start_date);
-        console.log('EntityForm: start_date type:', typeof dataToValidate.start_date);
+        logger.debug('EntityForm: merged data for validation:', { data: dataToValidate }, 'EntityForm');
+        logger.debug('EntityForm: start_date in merged data:', { start_date: dataToValidate.start_date }, 'EntityForm');
+        logger.debug('EntityForm: start_date type:', { type: typeof dataToValidate.start_date }, 'EntityForm');
 
         // Validate with Zod
         const validatedData = config.validationSchema.parse(dataToValidate);
-        console.log('EntityForm: validation passed, validated data:', validatedData);
-        console.log('EntityForm: start_date in validated data:', validatedData.start_date);
-        console.log('EntityForm: data being sent to API:', JSON.stringify(validatedData, null, 2));
+        logger.debug('EntityForm: validation passed', { data: validatedData }, 'EntityForm');
+        logger.debug('EntityForm: start_date in validated data:', { start_date: validatedData.start_date }, 'EntityForm');
+        logger.debug('EntityForm: data being sent to API:', { data: validatedData }, 'EntityForm');
 
         // API call
         const url =
@@ -244,7 +336,7 @@ export function EntityForm<T extends Record<string, any>>({
             } else if (errorData.error) {
               errorMessage = JSON.stringify(errorData.error);
             }
-          } catch (e) {
+          } catch {
             // If response isn't JSON, get text
             try {
               const responseClone = response.clone();
@@ -259,6 +351,12 @@ export function EntityForm<T extends Record<string, any>>({
         }
 
         const result = await response.json();
+
+        // Clear draft on successful create
+        if (mode === 'create' && user?.id) {
+          const draftKey = `${config.type}-draft-${user.id}`;
+          localStorage.removeItem(draftKey);
+        }
 
         // Show success toast
         toast.success(`${config.name} ${mode === 'create' ? 'created' : 'updated'} successfully!`, {
@@ -352,6 +450,29 @@ export function EntityForm<T extends Record<string, any>>({
     [formState.data]
   );
 
+  // Filter field groups and fields based on wizard mode
+  const visibleFieldGroups = useMemo(() => {
+    if (!wizardMode) {
+      return config.fieldGroups;
+    }
+
+    // In wizard mode, filter to only show fields in visibleFields
+    return config.fieldGroups
+      .map(group => {
+        if (!group.fields) return group;
+
+        const filteredFields = group.fields.filter(field =>
+          wizardMode.visibleFields.includes(field.name)
+        );
+
+        return {
+          ...group,
+          fields: filteredFields,
+        };
+      })
+      .filter(group => !group.fields || group.fields.length > 0); // Remove empty groups
+  }, [config.fieldGroups, wizardMode]);
+
   // Loading state
   if (!hydrated || authLoading) {
     return <Loading fullScreen message="Loading..." />;
@@ -365,27 +486,29 @@ export function EntityForm<T extends Record<string, any>>({
 
   return (
     <div
-      className={`min-h-screen bg-gradient-to-br ${theme.bg} via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8`}
+      className={wizardMode ? '' : `min-h-screen bg-gradient-to-br ${theme.bg} via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8`}
     >
-      {/* Header */}
-      <div className="mb-6">
-        <Link
-          href={config.backUrl}
-          className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to {config.namePlural}
-        </Link>
-        <div className="flex items-center gap-3">
-          <Icon className={`w-8 h-8 text-${config.colorTheme}-600`} />
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              {mode === 'create' ? 'Create' : 'Edit'} {config.name}
-            </h1>
-            <p className="text-gray-600 mt-1">{config.pageDescription}</p>
+      {/* Header - Hidden in wizard mode */}
+      {!wizardMode && (
+        <div className="mb-6">
+          <Link
+            href={config.backUrl}
+            className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to {config.namePlural}
+          </Link>
+          <div className="flex items-center gap-3">
+            <Icon className={`w-8 h-8 text-${config.colorTheme}-600`} />
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                {mode === 'create' ? 'Create' : 'Edit'} {config.name}
+              </h1>
+              <p className="text-gray-600 mt-1">{config.pageDescription}</p>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Two-Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -403,7 +526,7 @@ export function EntityForm<T extends Record<string, any>>({
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Render Field Groups */}
-                {config.fieldGroups.map(group => {
+                {visibleFieldGroups.map(group => {
                   // Skip hidden groups based on conditionalOn
                   if (!isGroupVisible(group)) {
                     return null;
@@ -518,8 +641,8 @@ export function EntityForm<T extends Record<string, any>>({
                   </div>
                 )}
 
-                {/* Template Examples - Show at bottom of form after all fields */}
-                {config.templates && config.templates.length > 0 && mode === 'create' && (
+                {/* Template Examples - Show at bottom of form after all fields (hidden in wizard mode) */}
+                {config.templates && config.templates.length > 0 && mode === 'create' && !wizardMode && (
                   <div className="mt-8 pt-8 border-t border-gray-200">
                     <TemplatePicker
                       label={config.namePlural}
@@ -530,35 +653,85 @@ export function EntityForm<T extends Record<string, any>>({
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-4 pt-6 border-t">
-                  <Button
-                    type="submit"
-                    disabled={formState.isSubmitting}
-                    className={`bg-gradient-to-r ${theme.gradient}`}
-                  >
-                    {formState.isSubmitting
-                      ? `${mode === 'create' ? 'Creating' : 'Saving'}...`
-                      : `${mode === 'create' ? 'Create' : 'Save'} ${config.name}`}
-                  </Button>
-                  <Link href={config.backUrl}>
-                    <Button variant="outline" disabled={formState.isSubmitting}>
-                      Cancel
-                    </Button>
-                  </Link>
+                <div className="pt-6 border-t space-y-3">
+                  {/* Draft save indicator */}
+                  {mode === 'create' && lastSavedAt && !wizardMode && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Save className="h-3.5 w-3.5" />
+                      <span>Draft saved {formatRelativeTime(lastSavedAt.toISOString())}</span>
+                    </div>
+                  )}
+
+                  {wizardMode ? (
+                    /* Wizard navigation - controlled by wizard */
+                    <div className="flex justify-between">
+                      {wizardMode.onPrevious && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={wizardMode.onPrevious}
+                          disabled={formState.isSubmitting}
+                        >
+                          Previous
+                        </Button>
+                      )}
+                      <div className="flex gap-3 ml-auto">
+                        {wizardMode.onSkip && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            onClick={wizardMode.onSkip}
+                            disabled={formState.isSubmitting}
+                          >
+                            Skip
+                          </Button>
+                        )}
+                        {wizardMode.onNext && (
+                          <Button
+                            type="button"
+                            onClick={wizardMode.onNext}
+                            disabled={formState.isSubmitting}
+                          >
+                            Next
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    /* Standard form actions */
+                    <div className="flex gap-4">
+                      <Button
+                        type="submit"
+                        disabled={formState.isSubmitting}
+                        className={`bg-gradient-to-r ${theme.gradient}`}
+                      >
+                        {formState.isSubmitting
+                          ? `${mode === 'create' ? 'Creating' : 'Saving'}...`
+                          : `${mode === 'create' ? 'Create' : 'Save'} ${config.name}`}
+                      </Button>
+                      <Link href={config.backUrl}>
+                        <Button variant="outline" disabled={formState.isSubmitting}>
+                          Cancel
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </form>
             </CardContent>
           </Card>
         </div>
 
-        {/* Guidance Sidebar */}
-        <div className="lg:col-span-1">
-          <GuidancePanel
-            activeField={formState.activeField}
-            guidanceContent={config.guidanceContent}
-            defaultGuidance={config.defaultGuidance}
-          />
-        </div>
+        {/* Guidance Sidebar - Hidden in wizard mode */}
+        {!wizardMode && (
+          <div className="lg:col-span-1">
+            <GuidancePanel
+              activeField={formState.activeField}
+              guidanceContent={config.guidanceContent}
+              defaultGuidance={config.defaultGuidance}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

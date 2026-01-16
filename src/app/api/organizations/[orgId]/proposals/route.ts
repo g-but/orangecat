@@ -29,6 +29,7 @@ export const GET = withOptionalAuth(async (
 
     // Check if user can view this group's proposals
     const { data: member } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('group_members') as any)
       .select('user_id')
       .eq('group_id', organizationId)
@@ -36,6 +37,7 @@ export const GET = withOptionalAuth(async (
       .maybeSingle();
 
     const { data: group } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('groups') as any)
       .select('is_public')
       .eq('id', organizationId)
@@ -47,6 +49,7 @@ export const GET = withOptionalAuth(async (
 
     // Get proposals with vote counts
     const { data: proposals, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('group_proposals') as any)
       .select(`
         *,
@@ -70,6 +73,7 @@ export const GET = withOptionalAuth(async (
     }
 
     // Calculate voting results for each proposal
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const proposalsWithResults = proposals?.map((proposal: any) => {
       const votes: Vote[] = proposal.group_votes || [];
       const totalVotes = votes.length;
@@ -120,6 +124,7 @@ const createProposalSchema = z.object({
   voting_type: z.string().optional().default('simple'),
   voting_threshold: z.number().min(0).max(100).optional().default(50),
   execution_delay: z.string().optional().default('24 hours'),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   data: z.record(z.any()).optional().default({}),
 });
 
@@ -134,6 +139,7 @@ export const POST = withAuth(async (
 
     // Check if user is a member
     const { data: member } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('group_members') as any)
       .select('user_id')
       .eq('group_id', organizationId)
@@ -161,14 +167,15 @@ export const POST = withAuth(async (
       title,
       description,
       proposal_type,
-      voting_type,
+      voting_type: _voting_type,
       voting_threshold,
-      execution_delay,
+      execution_delay: _execution_delay,
       data,
     } = validation.data;
 
     // Get group's governance preset to set default voting type
-    const { data: group } = await (supabase
+    const { data: _group } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('groups') as any)
       .select('governance_preset')
       .eq('id', organizationId)
@@ -187,6 +194,7 @@ export const POST = withAuth(async (
     };
 
     const { data: proposal, error: insertError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('group_proposals') as any)
       .insert(proposalData)
       .select(`

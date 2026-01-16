@@ -23,6 +23,7 @@ export const POST = createEntityPostHandler({
   entityType: 'loan',
   schema: loanSchema,
   createEntity: async (userId, data, supabase) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return await createLoan(userId, data as any, supabase);
   },
 });

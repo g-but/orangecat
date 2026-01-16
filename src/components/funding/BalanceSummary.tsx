@@ -23,7 +23,7 @@ export default function BalanceSummary({
     }).format(amount);
   };
 
-  const getPercentageChange = (current: number, previous: number) => {
+  const _getPercentageChange = (current: number, previous: number) => {
     if (previous === 0) {
       return 100;
     }
