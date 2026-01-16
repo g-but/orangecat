@@ -12,7 +12,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import DefaultAvatar from '@/components/ui/DefaultAvatar';
@@ -28,22 +28,21 @@ interface SidebarUserProfileProps {
 export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarUserProfileProps) {
   const [avatarError, setAvatarError] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   if (!profile) {
     return null;
   }
 
   // Use actual username URL for better UX and SEO, fallback to /profiles/me if no username
-  const profileUrl = profile.username
-    ? `/profiles/${profile.username}`
-    : '/profiles/me';
+  const profileUrl = profile.username ? `/profiles/${profile.username}` : '/profiles/me';
 
   const displayName = profile.name || profile.username || 'User';
   const username = profile.username || 'username';
 
   return (
     <div
-      className="relative px-2 py-3 border-b border-gray-100 flex-shrink-0"
+      className="relative px-2 py-3 border-b border-gray-100 flex-shrink-0 overflow-visible"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -89,11 +88,13 @@ export function SidebarUserProfile({ profile, isExpanded, onNavigate }: SidebarU
         )}
       </Link>
 
-      {/* Flyout Tooltip - Desktop only */}
-      <FlyoutTooltip isVisible={!isExpanded && isHovered}>
-        <p className="font-medium">{displayName}</p>
-        <p className="text-xs text-gray-400">@{username}</p>
-      </FlyoutTooltip>
+      {/* Flyout Tooltip - Desktop only, appears on hover */}
+      {!isExpanded && isHovered && (
+        <FlyoutTooltip isVisible={true} targetElement={profileRef.current}>
+          <p className="font-medium">{displayName}</p>
+          <p className="text-xs text-gray-400">@{username}</p>
+        </FlyoutTooltip>
+      )}
     </div>
   );
 }

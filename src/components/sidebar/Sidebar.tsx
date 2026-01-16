@@ -25,12 +25,10 @@ import type { Profile } from '@/types/database';
 import { navigationLabels } from '@/config/navigation';
 import { useIsDesktop } from '@/hooks/useMediaQuery';
 import {
-  SIDEBAR_WIDTHS,
   SIDEBAR_Z_INDEX,
   SIDEBAR_TRANSITIONS,
   SIDEBAR_COLORS,
   SIDEBAR_SPACING,
-  SIDEBAR_BREAKPOINTS,
 } from '@/constants/sidebar';
 
 interface SidebarProps {
@@ -105,58 +103,61 @@ export function Sidebar({
             top: 'calc(4rem + env(safe-area-inset-top, 0px))',
           }}
         >
-          <div className="flex flex-col h-full min-w-0">
-          {/* User Profile Section */}
-          {user && profile && (
-            <SidebarUserProfile
-              profile={profile}
+          {/* Wrapper to ensure tooltips can overflow */}
+          <div className="flex flex-col h-full min-w-0 overflow-visible">
+            {/* User Profile Section */}
+            {user && profile && (
+              <SidebarUserProfile
+                profile={profile}
+                isExpanded={isExpanded}
+                onNavigate={handleNavigate}
+              />
+            )}
+
+            {/* Navigation Sections */}
+            <SidebarNavigation
+              sections={sections}
+              bottomItems={bottomItems}
               isExpanded={isExpanded}
+              collapsedSections={navigationState.collapsedSections}
+              isItemActive={isItemActive}
+              toggleSection={toggleSection}
               onNavigate={handleNavigate}
             />
-          )}
 
-          {/* Navigation Sections */}
-          <SidebarNavigation
-            sections={sections}
-            bottomItems={bottomItems}
-            isExpanded={isExpanded}
-            collapsedSections={navigationState.collapsedSections}
-            isItemActive={isItemActive}
-            toggleSection={toggleSection}
-            onNavigate={handleNavigate}
-          />
-
-          {/* Toggle Button - Desktop only (expands to full drawer) */}
-          <div className={`border-t border-gray-100 px-3 py-2 hidden lg:block mt-auto`}>
-            <button
-              onClick={toggleSidebar}
-              className="w-full flex items-center justify-center p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-colors duration-200"
-              aria-label={
-                navigationState.isSidebarOpen
-                  ? navigationLabels.SIDEBAR_COLLAPSE
-                  : navigationLabels.SIDEBAR_EXPAND
-              }
-            >
-              <Menu className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Mobile Close Button */}
-          {navigationState.isSidebarOpen && (
-            <div className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 lg:hidden mt-auto`}>
+            {/* Toggle Button - Desktop only (expands to full drawer) */}
+            <div className={`border-t border-gray-100 px-3 py-2 hidden lg:block mt-auto`}>
               <button
                 onClick={toggleSidebar}
-                className="w-full flex items-center gap-3 p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-colors duration-200"
-                aria-label={navigationLabels.SIDEBAR_COLLAPSE}
+                className="w-full flex items-center justify-center p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-colors duration-200"
+                aria-label={
+                  navigationState.isSidebarOpen
+                    ? navigationLabels.SIDEBAR_COLLAPSE
+                    : navigationLabels.SIDEBAR_EXPAND
+                }
               >
-                <X className="h-5 w-5" />
-                <span>Close menu</span>
+                <Menu className="h-5 w-5" />
               </button>
             </div>
-          )}
-        </div>
-      </aside>
-    </FocusLock>
+
+            {/* Mobile Close Button */}
+            {navigationState.isSidebarOpen && (
+              <div
+                className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 lg:hidden mt-auto`}
+              >
+                <button
+                  onClick={toggleSidebar}
+                  className="w-full flex items-center gap-3 p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-colors duration-200"
+                  aria-label={navigationLabels.SIDEBAR_COLLAPSE}
+                >
+                  <X className="h-5 w-5" />
+                  <span>Close menu</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </aside>
+      </FocusLock>
     </>
   );
 }
