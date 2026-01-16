@@ -16,7 +16,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import type { NavItem } from '@/hooks/useNavigation';
 import { navigationLabels } from '@/config/navigation';
@@ -40,6 +40,7 @@ interface SidebarNavItemProps {
  */
 export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: SidebarNavItemProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const itemRef = useRef<HTMLDivElement>(null);
   const showMessagesBadge = item.href === '/messages';
   // Always call hooks unconditionally to follow Rules of Hooks
   const unreadCount = useUnreadCount();
@@ -69,7 +70,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
 
   return (
     <div
-      className="relative"
+      className="relative overflow-visible"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -127,29 +128,29 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
         )}
       </Link>
 
-      {/* Flyout Tooltip - Desktop only, appears on hover */}
-      <FlyoutTooltip isVisible={!isExpanded && isHovered}>
-        <div className="flex items-center gap-2">
-          <span className="font-medium">{item.name}</span>
+      {/* Flyout Tooltip - Desktop only, appears on hover to the right of icon */}
+      {!isExpanded && isHovered && (
+        <FlyoutTooltip isVisible={true} targetElement={itemRef.current}>
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{item.name}</span>
 
-          {/* Show badges in tooltip */}
-          {item.comingSoon && (
-            <span className="text-xs bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded">
-              Soon
-            </span>
-          )}
-          {item.badge && !item.comingSoon && (
-            <span className="text-xs bg-orange-500 text-white px-1.5 py-0.5 rounded font-medium">
-              {item.badge}
-            </span>
-          )}
-          {showMessagesBadge && count > 0 && (
-            <span className="text-xs bg-sky-500 text-white px-1.5 py-0.5 rounded font-medium">
-              {count > 99 ? '99+' : count}
-            </span>
-          )}
-        </div>
-      </FlyoutTooltip>
+            {/* Show badges in tooltip */}
+            {item.comingSoon && (
+              <span className="text-xs bg-gray-700 text-gray-300 px-1.5 py-0.5 rounded">Soon</span>
+            )}
+            {item.badge && !item.comingSoon && (
+              <span className="text-xs bg-orange-500 text-white px-1.5 py-0.5 rounded font-medium">
+                {item.badge}
+              </span>
+            )}
+            {showMessagesBadge && count > 0 && (
+              <span className="text-xs bg-sky-500 text-white px-1.5 py-0.5 rounded font-medium">
+                {count > 99 ? '99+' : count}
+              </span>
+            )}
+          </div>
+        </FlyoutTooltip>
+      )}
     </div>
   );
 }

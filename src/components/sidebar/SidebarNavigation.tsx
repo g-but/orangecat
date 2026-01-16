@@ -40,7 +40,7 @@ export function SidebarNavigation({
     <>
       {/* Navigation Sections */}
       <nav
-        className="flex-1 py-3 space-y-4 overflow-y-auto overflow-x-visible"
+        className="flex-1 py-3 space-y-4 overflow-y-auto overflow-x-visible relative"
         aria-label={navigationLabels.MAIN_NAVIGATION}
       >
         {sections.map(section => {
@@ -48,41 +48,37 @@ export function SidebarNavigation({
           const hasActiveItem = section.items.some(item => item.href && isItemActive(item.href));
 
           return (
-            <div key={section.id} className="space-y-1">
-              {/* Section Divider - Only on desktop for visual separation */}
+            <div key={section.id} className="space-y-1 overflow-visible">
+              {/* Section Divider - Only on desktop for visual separation between icon groups */}
               {!isExpanded && section.id !== sections[0].id && (
                 <div className="mx-2 my-2 border-t border-gray-200" />
               )}
 
-              {/* Section Header - Always visible, styled differently for desktop vs mobile */}
-              <div className="flex items-center justify-between px-3 mb-1">
-                <h3
-                  className={`font-semibold uppercase tracking-wider ${
-                    isExpanded
-                      ? 'text-xs text-gray-500' // Mobile: normal size and contrast
-                      : 'text-[10px] text-gray-400' // Desktop: smaller and more subtle
-                  }`}
-                >
-                  {section.title}
-                </h3>
-                {section.collapsible && isExpanded && (
-                  <button
-                    onClick={() => toggleSection(section.id)}
-                    className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
-                    aria-label={`${navigationLabels.SECTION_TOGGLE} ${section.title}`}
-                  >
-                    {isCollapsed ? (
-                      <ChevronRight className="w-4 h-4 text-gray-400" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-400" />
-                    )}
-                  </button>
-                )}
-              </div>
+              {/* Section Header - Hidden on desktop (icons only), visible on mobile (expanded) */}
+              {isExpanded && (
+                <div className="flex items-center justify-between px-3 mb-1">
+                  <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-500">
+                    {section.title}
+                  </h3>
+                  {section.collapsible && (
+                    <button
+                      onClick={() => toggleSection(section.id)}
+                      className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+                      aria-label={`${navigationLabels.SECTION_TOGGLE} ${section.title}`}
+                    >
+                      {isCollapsed ? (
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4 text-gray-400" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Section Items - always show on desktop, respect collapse on mobile */}
               {(!isExpanded || !section.collapsible || !isCollapsed || hasActiveItem) && (
-                <div className={`space-y-1 ${isExpanded ? 'px-2' : ''}`}>
+                <div className={`space-y-1 overflow-visible ${isExpanded ? 'px-2' : ''}`}>
                   {section.items.map(item => (
                     <SidebarNavItem
                       key={item.name}
