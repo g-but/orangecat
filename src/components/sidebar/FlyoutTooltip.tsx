@@ -30,31 +30,44 @@ export function FlyoutTooltip({ isVisible, children, targetElement }: FlyoutTool
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
 
   useEffect(() => {
-    if (!isVisible || !targetElement) {
+    if (!isVisible) {
       setPosition(null);
       return;
     }
 
-    const updatePosition = () => {
-      const rect = targetElement.getBoundingClientRect();
-      setPosition({
-        top: rect.top + rect.height / 2,
-        left: rect.right + 8, // 8px margin from sidebar edge
-      });
-    };
+    // Wait a tick for ref to be available
+    const timer = setTimeout(() => {
+      if (!targetElement) {
+        setPosition(null);
+        return;
+      }
 
-    updatePosition();
-    const handleScroll = () => updatePosition();
-    const handleResize = () => updatePosition();
+      const updatePosition = () => {
+        if (!targetElement) {
+          return;
+        }
+        const rect = targetElement.getBoundingClientRect();
+        setPosition({
+          top: rect.top + rect.height / 2,
+          left: rect.right + 8, // 8px margin from sidebar edge
+        });
+      };
 
-    // Listen to scroll on all ancestors
-    window.addEventListener('scroll', handleScroll, true);
-    window.addEventListener('resize', handleResize);
+      updatePosition();
+      const handleScroll = () => updatePosition();
+      const handleResize = () => updatePosition();
 
-    return () => {
-      window.removeEventListener('scroll', handleScroll, true);
-      window.removeEventListener('resize', handleResize);
-    };
+      // Listen to scroll on all ancestors
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('resize', handleResize);
+      };
+    }, 0);
+
+    return () => clearTimeout(timer);
   }, [isVisible, targetElement]);
 
   if (!isVisible || !position) {
