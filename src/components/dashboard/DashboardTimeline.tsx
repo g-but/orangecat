@@ -36,7 +36,7 @@ export function DashboardTimeline({
   const router = useRouter();
 
   return (
-    <main className="lg:col-span-9 space-y-4">
+    <div className="space-y-4">
       {/* Composer surface matches timeline UI */}
       <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
         <TimelineComposer
@@ -116,7 +116,7 @@ export function DashboardTimeline({
           )}
         </div>
       </div>
-    </main>
+    </div>
   );
 }
 
