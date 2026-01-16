@@ -60,6 +60,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Fetch current project
     const { data: existingProject, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .select('id, user_id, status')
       .eq('id', id)
@@ -87,6 +88,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     // Update status
     const { data: project, error: updateError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .update({
         status: normalizedStatus,

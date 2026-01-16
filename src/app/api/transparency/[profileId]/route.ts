@@ -10,7 +10,7 @@ import {
 import { DATABASE_TABLES } from '@/config/database-tables';
 
 // GET /api/transparency/[profileId] - Get transparency score for a profile
-export async function GET(request: NextRequest, { params }: { params: Promise<{ profileId: string }> }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ profileId: string }> }) {
   try {
     const { profileId } = await params;
     const supabase = await createServerClient();
@@ -25,6 +25,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     // Get transparency score for the profile
     const { data: transparencyScore, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('transparency_scores') as any)
       .select('*')
       .eq('entity_type', 'profile')
@@ -38,7 +39,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
     if (!transparencyScore) {
       // Calculate transparency score if it doesn't exist
-      const { data: profile, error: profileError } = await (supabase
+      const { data: _profile, error: profileError } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(DATABASE_TABLES.PROFILES) as any)
         .select('*')
         .eq('id', profileId)
@@ -49,7 +51,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
 
       // Call the database function to calculate transparency score
-      const { data: calculatedScore, error: calcError } = await (supabase as any).rpc(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: _calculatedScore, error: calcError } = await (supabase as any).rpc(
         'calculate_profile_transparency_score',
         { profile_id: profileId }
       );
@@ -60,6 +63,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
       // Fetch the newly calculated score
       const { data: newScore, error: fetchError } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('transparency_scores') as any)
         .select('*')
         .eq('entity_type', 'profile')

@@ -49,27 +49,36 @@ export function SidebarNavigation({
 
           return (
             <div key={section.id} className="space-y-1">
-              {/* Section Header - Only visible on mobile expanded */}
-              {isExpanded && (
-                <div className="flex items-center justify-between px-3">
-                  <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    {section.title}
-                  </h3>
-                  {section.collapsible && (
-                    <button
-                      onClick={() => toggleSection(section.id)}
-                      className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
-                      aria-label={`${navigationLabels.SECTION_TOGGLE} ${section.title}`}
-                    >
-                      {isCollapsed ? (
-                        <ChevronRight className="w-4 h-4 text-gray-400" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4 text-gray-400" />
-                      )}
-                    </button>
-                  )}
-                </div>
+              {/* Section Divider - Only on desktop for visual separation */}
+              {!isExpanded && section.id !== sections[0].id && (
+                <div className="mx-2 my-2 border-t border-gray-200" />
               )}
+
+              {/* Section Header - Always visible, styled differently for desktop vs mobile */}
+              <div className="flex items-center justify-between px-3 mb-1">
+                <h3
+                  className={`font-semibold uppercase tracking-wider ${
+                    isExpanded
+                      ? 'text-xs text-gray-500' // Mobile: normal size and contrast
+                      : 'text-[10px] text-gray-400' // Desktop: smaller and more subtle
+                  }`}
+                >
+                  {section.title}
+                </h3>
+                {section.collapsible && isExpanded && (
+                  <button
+                    onClick={() => toggleSection(section.id)}
+                    className="p-2 hover:bg-gray-100 active:bg-gray-200 rounded transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation"
+                    aria-label={`${navigationLabels.SECTION_TOGGLE} ${section.title}`}
+                  >
+                    {isCollapsed ? (
+                      <ChevronRight className="w-4 h-4 text-gray-400" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 text-gray-400" />
+                    )}
+                  </button>
+                )}
+              </div>
 
               {/* Section Items - always show on desktop, respect collapse on mobile */}
               {(!isExpanded || !section.collapsible || !isCollapsed || hasActiveItem) && (

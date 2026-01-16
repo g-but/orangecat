@@ -3,7 +3,7 @@ import { logger } from '@/utils/logger';
 import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiError } from '@/lib/api/standardResponse';
 
-export const POST = async (request: NextRequest) => {
+export const POST = async (_request: NextRequest) => {
   try {
     logger.info('🔧 Applying RLS policy fixes via API route...');
     
@@ -69,24 +69,25 @@ export const POST = async (request: NextRequest) => {
       
       try {
         // Execute raw SQL using the service client
-        const { error } = await supabase.from('_supabase_policies').select('*').limit(0);
-        
+        const { error: _error } = await supabase.from('_supabase_policies').select('*').limit(0);
+
         // Since we can't execute DDL directly, let's try a different approach
         // We'll use the fact that we have service role access to bypass RLS temporarily
-        
+
         // For now, just log that we're attempting the fix
-        results.push({ 
-          statement: i + 1, 
+        results.push({
+          statement: i + 1,
           sql: sql,
           status: 'attempted'
         });
-        
-      } catch (e) {
-        results.push({ 
-          statement: i + 1, 
+
+      } catch (e: unknown) {
+        const catchError = e as { message?: string };
+        results.push({
+          statement: i + 1,
           sql: sql,
-          status: 'error', 
-          error: e.message 
+          status: 'error',
+          error: catchError.message
         });
       }
     }
@@ -107,6 +108,7 @@ export const POST = async (request: NextRequest) => {
     
     const { getTableName } = await import('@/config/entity-registry');
     const { data: serviceData, error: serviceError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('service')) as any)
       .insert(testService)
       .select()

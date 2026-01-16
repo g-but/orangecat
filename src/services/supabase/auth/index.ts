@@ -27,7 +27,7 @@ import { isAuthError } from '../types'
  * @param operation - The auth operation that failed (for context)
  * @returns Standardized AuthError with enhanced messaging
  */
-const handleAuthError = (error: any, operation: string): AuthError => {
+const handleAuthError = (error: any, _operation: string): AuthError => {
   if (error.name === 'AbortError' || error.message?.includes('timeout')) {
     return {
       name: 'TimeoutError',
@@ -494,7 +494,7 @@ export async function getCurrentUserId(): Promise<string | null> {
 // ==================== EXPORTS ====================
 
 // Export all functions as a default object for backwards compatibility
-export default {
+const authService = {
   signIn,
   signUp,
   signOut,
@@ -508,6 +508,8 @@ export default {
   resendConfirmationEmail,
   isAuthError
 }
+
+export default authService
 
 export {
   type AuthResponse,

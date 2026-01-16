@@ -35,7 +35,7 @@ function TimelineContent() {
   const [showComposer, setShowComposer] = useState(false);
 
   // Use global composer if available, otherwise fall back to query param
-  const isComposerOpen = isGlobalComposerOpen || showComposer;
+  const _isComposerOpen = isGlobalComposerOpen || showComposer;
 
   // Detect ?compose=true in URL and open X-style composer (fallback for direct navigation)
   useEffect(() => {

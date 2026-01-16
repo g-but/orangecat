@@ -33,7 +33,7 @@ export function BulkActionsToolbar({
   totalCount,
   isProcessing,
   onSelectAll,
-  onClearSelection,
+  onClearSelection: _onClearSelection,
   onExitSelectionMode,
   onBulkDelete,
   onBulkVisibilityChange,

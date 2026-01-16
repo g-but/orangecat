@@ -212,7 +212,7 @@ function HeaderNavDropdown({ item, isActive }: HeaderNavDropdownProps) {
 
       {isOpen && (
         <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-50">
-          {item.children?.map((child, index) => {
+          {item.children?.map((child, _index) => {
             // Skip children without href
             if (!child.href) {
               return null;

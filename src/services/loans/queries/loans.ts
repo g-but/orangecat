@@ -148,6 +148,7 @@ export async function getAvailableLoans(
     const pageSize = Math.min(pagination?.pageSize || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = pagination?.offset || 0;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)('get_available_loans', {
       p_user_id: userId || null,
       p_limit: pageSize,
@@ -159,6 +160,7 @@ export async function getAvailableLoans(
 
       // Fallback query
       let dbQuery = (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(getTableName('loan')) as any)
         .select(
           `

@@ -19,7 +19,7 @@ import { getTableName } from '@/config/entity-registry';
 
 // ==================== QUERY CACHE SYSTEM ====================
 
-interface CacheEntry<T = any> {
+interface CacheEntry<T = unknown> {
   data: T;
   timestamp: number;
   ttl: number;
@@ -106,12 +106,12 @@ const queryCache = new QueryCache();
 // ==================== REQUEST DEDUPLICATION ====================
 
 class RequestDeduplicator {
-  private pendingRequests = new Map<string, Promise<any>>();
+  private pendingRequests = new Map<string, Promise<unknown>>();
 
   async deduplicate<T>(key: string, fn: () => Promise<T>): Promise<T> {
     // If request is already pending, return the existing promise
     if (this.pendingRequests.has(key)) {
-      return this.pendingRequests.get(key)!;
+      return this.pendingRequests.get(key) as Promise<T>;
     }
 
     // Execute the request and cache the promise
@@ -136,7 +136,7 @@ const requestDeduplicator = new RequestDeduplicator();
 // ==================== PARALLEL QUERY EXECUTOR ====================
 
 class ParallelQueryExecutor {
-  async executeParallel<T extends Record<string, any>>(
+  async executeParallel<T extends Record<string, unknown>>(
     queries: Record<keyof T, () => Promise<T[keyof T]>>
   ): Promise<T> {
     const startTime = performance.now();
@@ -182,14 +182,14 @@ interface PerformanceMetric {
   name: string;
   value: number;
   timestamp: number;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 class DatabasePerformanceMonitor {
   private metrics: PerformanceMetric[] = [];
   private maxMetrics = 1000;
 
-  recordMetric(name: string, value: number, metadata?: Record<string, any>): void {
+  recordMetric(name: string, value: number, metadata?: Record<string, unknown>): void {
     this.metrics.push({
       name,
       value,
@@ -302,7 +302,7 @@ export class DatabaseOptimizer {
   /**
    * Execute multiple queries in parallel
    */
-  async parallelQueries<T extends Record<string, any>>(
+  async parallelQueries<T extends Record<string, unknown>>(
     queries: Record<keyof T, () => Promise<T[keyof T]>>
   ): Promise<T> {
     return parallelExecutor.executeParallel(queries);

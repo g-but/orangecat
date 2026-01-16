@@ -28,8 +28,8 @@ import type { FeedbackButtonsProps } from './types';
 const MIN_DISLIKE_COMMENT_LENGTH = 10;
 
 export function FeedbackButtons({
-  proofId,
-  wishlistItemId,
+  proofId: _proofId,
+  wishlistItemId: _wishlistItemId,
   likes,
   dislikes,
   userFeedback,

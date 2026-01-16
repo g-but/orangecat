@@ -153,7 +153,7 @@ export default function ModernProjectCard({
     return project.profiles?.avatar_url || null;
   }, [project.profiles?.avatar_url]);
 
-  const ownerInitial = ownerName ? ownerName.charAt(0).toUpperCase() : 'P';
+  const _ownerInitial = ownerName ? ownerName.charAt(0).toUpperCase() : 'P';
   const creatorProfileUrl = ownerUsername ? ROUTES.PROFILE.VIEW(ownerUsername) : null;
   const statusBadge = getStatusBadge(project.status || 'draft');
 
@@ -171,7 +171,7 @@ export default function ModernProjectCard({
           const result = await response.json();
           setIsLiked(result.isFavorited || false);
         }
-      } catch (error) {
+      } catch {
         // Silently fail - favorite status is optional
       }
     };
@@ -200,7 +200,7 @@ export default function ModernProjectCard({
 
       const result = await response.json();
       setIsLiked(result.isFavorited);
-    } catch (error) {
+    } catch {
       // Silently fail - user can try again
     } finally {
       setIsTogglingFavorite(false);

@@ -13,7 +13,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 // Post-process GET: Fetch profile and add to response
 async function postProcessProjectGet(
   project: Record<string, unknown>,
-  userId: string | null,
+  _userId: string | null,
   supabase: SupabaseClient
 ): Promise<Record<string, unknown>> {
   let profile = null;
@@ -61,7 +61,7 @@ async function postProcessProjectGet(
 async function postProcessProjectPut(
   project: Record<string, unknown>,
   userId: string,
-  supabase: SupabaseClient
+  _supabase: SupabaseClient
 ): Promise<void> {
   await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, userId, 'project', project.id as string, {
     action: 'update',
@@ -74,7 +74,7 @@ async function postProcessProjectPut(
 async function postProcessProjectDelete(
   project: Record<string, unknown>,
   userId: string,
-  supabase: SupabaseClient
+  _supabase: SupabaseClient
 ): Promise<void> {
   await auditSuccess(AUDIT_ACTIONS.PROJECT_CREATED, userId, 'project', project.id as string, {
     action: 'delete',

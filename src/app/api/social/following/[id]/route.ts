@@ -5,6 +5,28 @@ import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
+// Types for following data
+interface FollowRecord {
+  following_id: string;
+  created_at: string;
+}
+
+interface FollowingProfile {
+  id: string;
+  username: string | null;
+  name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  bitcoin_address: string | null;
+  lightning_address: string | null;
+}
+
+interface FollowingWithProfile {
+  following_id: string;
+  created_at: string;
+  profiles: FollowingProfile | null;
+}
+
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
@@ -29,11 +51,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       error: followsError,
       count,
     } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.FOLLOWS) as any)
       .select('following_id, created_at', { count: 'exact' })
       .eq('follower_id', id)
       .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .range(offset, offset + limit - 1) as { data: FollowRecord[] | null; error: { message: string } | null; count: number | null };
 
     if (followsError) {
       logger.error('Failed to fetch follows', { userId: id, error: followsError.message });
@@ -41,14 +64,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     }
 
     // Then fetch profiles for each following_id
-    const followingIds = (follows || []).map((f: any) => f.following_id);
-    let following: any[] = [];
+    const followingIds = (follows || []).map((f) => f.following_id);
+    let following: FollowingWithProfile[] = [];
 
     if (followingIds.length > 0) {
       const { data: profiles, error: profilesError } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(DATABASE_TABLES.PROFILES) as any)
         .select('id, username, name, avatar_url, bio, bitcoin_address, lightning_address')
-        .in('id', followingIds);
+        .in('id', followingIds) as { data: FollowingProfile[] | null; error: { message: string } | null };
 
       if (profilesError) {
         logger.error('Failed to fetch following profiles', {
@@ -60,8 +84,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       }
 
       // Combine follows with profiles
-      following = (follows || []).map((follow: any) => {
-        const profile = profiles?.find((p: any) => p.id === follow.following_id);
+      following = (follows || []).map((follow) => {
+        const profile = profiles?.find((p) => p.id === follow.following_id);
         return {
           following_id: follow.following_id,
           created_at: follow.created_at,

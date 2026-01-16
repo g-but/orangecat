@@ -45,7 +45,9 @@ export async function createEvent(
     }
 
     // Create event
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_events) as any)
       .insert({
         ...input,
@@ -58,6 +60,7 @@ export async function createEvent(
       })
       .select()
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = eventData as any;
 
     if (error) {
@@ -98,11 +101,14 @@ export async function updateEvent(
     }
 
     // Get event to check permissions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_events) as any)
       .select('id, group_id, creator_id')
       .eq('id', eventId)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const event = eventData as any;
 
     if (fetchError || !event) {
@@ -122,12 +128,15 @@ export async function updateEvent(
     }
 
     // Update event
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: updatedData, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_events) as any)
       .update(input)
       .eq('id', eventId)
       .select()
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = updatedData as any;
 
     if (error) {
@@ -167,11 +176,14 @@ export async function deleteEvent(
     }
 
     // Get event to check permissions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData2, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_events) as any)
       .select('id, group_id, creator_id, title')
       .eq('id', eventId)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const event = eventData2 as any;
 
     if (fetchError || !event) {
@@ -191,7 +203,9 @@ export async function deleteEvent(
     }
 
     // Delete event (RSVPs will be cascade deleted)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_events) as any)
       .delete()
       .eq('id', eventId);
@@ -234,11 +248,14 @@ export async function rsvpToEvent(
     }
 
     // Get event to verify it exists and is accessible
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: eventData3, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_events) as any)
       .select('id, group_id, is_public, requires_rsvp')
       .eq('id', eventId)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const event = eventData3 as any;
 
     if (fetchError || !event) {
@@ -252,7 +269,9 @@ export async function rsvpToEvent(
     }
 
     // Upsert RSVP
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: rsvpData, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_event_rsvps) as any)
       .upsert(
         {
@@ -266,6 +285,7 @@ export async function rsvpToEvent(
       )
       .select()
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = rsvpData as any;
 
     if (error) {

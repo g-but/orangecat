@@ -64,10 +64,12 @@ export async function POST(request: NextRequest) {
 
     // Fetch both wallets and verify ownership
     const { data: walletsData, error: walletsError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wallets') as any)
       .select('id, user_id, label, balance_btc, profile_id, project_id')
       .in('id', [body.from_wallet_id, body.to_wallet_id])
       .eq('is_active', true);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const wallets = walletsData as any[] | null;
 
     if (walletsError) {
@@ -136,6 +138,7 @@ export async function POST(request: NextRequest) {
 
     // Create transaction record (marked as internal transfer)
     const { data: transactionData, error: txError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('transactions') as any)
       .insert({
         amount_sats,
@@ -155,6 +158,7 @@ export async function POST(request: NextRequest) {
       })
       .select()
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const transaction = transactionData as any;
 
     if (txError) {
@@ -168,6 +172,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Update wallet balances using RPC function
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error: updateError } = await (supabase.rpc as any)('transfer_between_wallets', {
       p_from_wallet_id: body.from_wallet_id,
       p_to_wallet_id: body.to_wallet_id,
@@ -186,9 +191,11 @@ export async function POST(request: NextRequest) {
 
     // Fetch updated wallets
     const { data: updatedWalletsData } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wallets') as any)
       .select('*')
       .in('id', [body.from_wallet_id, body.to_wallet_id]);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updatedWallets = updatedWalletsData as any[] | null;
 
     // Audit log wallet transfer

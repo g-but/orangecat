@@ -345,7 +345,7 @@ export function Step3({ formData, formErrors, handleChange, nextStep, prevStep }
 // Step 4: Media & Launch
 export function Step4({
   formData,
-  formErrors,
+  formErrors: _formErrors,
   handleFileUpload,
   handleDrop,
   handleDragOver,
@@ -381,6 +381,7 @@ export function Step4({
               >
                 {formData.banner_url ? (
                   <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic banner preview */}
                     <img
                       src={formData.banner_url}
                       alt="Banner"

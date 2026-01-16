@@ -13,7 +13,7 @@ interface ThreadLineProps {
  * Visual thread line component for X-like thread visualization
  * Shows connecting lines between posts in a thread
  */
-export function ThreadLine({ depth = 1, isLast = false, className }: ThreadLineProps) {
+export function ThreadLine({ depth = 1, isLast: _isLast = false, className }: ThreadLineProps) {
   // Don't show thread line for root posts (depth 0)
   if (depth === 0) {
     return null;

@@ -75,7 +75,7 @@ export function validateOneOfIds(
   ids: Record<string, string | null | undefined>,
   errorMessage?: string
 ): ApiValidationResult & { id?: string; type?: string } {
-  const entries = Object.entries(ids).filter(([_, value]) => value);
+  const entries = Object.entries(ids).filter(([_key, value]) => value);
 
   if (entries.length === 0) {
     return {
@@ -191,6 +191,7 @@ export function validateBitcoinAddressParam(
  * @returns Boolean indicating ownership
  */
 export async function validateEntityOwnership(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   userId: string,
   entityType: 'profile' | 'project',

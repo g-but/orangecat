@@ -41,7 +41,7 @@ export function PostCard({
   onUpdate,
   onDelete,
   compact = false,
-  showMetrics = true,
+  showMetrics: _showMetrics = true,
   onReplyCreated,
   showThreading = true,
   onShowThread,

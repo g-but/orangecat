@@ -3,7 +3,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiUnauthorized } from '@/lib/api/standardResponse';
 import { getTableName } from '@/config/entity-registry';
 
-export const POST = async (request: NextRequest) => {
+export const POST = async (_request: NextRequest) => {
   try {
     const supabase = await createServerClient();
 
@@ -20,9 +20,9 @@ export const POST = async (request: NextRequest) => {
       authenticated: boolean;
       userId: string;
       userEmail: string | undefined;
-      tableCheck: { success: boolean; error?: string; data?: any } | null;
+      tableCheck: { success: boolean; error?: string; data?: unknown } | null;
       policyCheck: { success: boolean; error?: string } | null;
-      serviceCreation: { success: boolean; error?: string; code?: string; details?: any; data?: any } | null;
+      serviceCreation: { success: boolean; error?: string; code?: string; details?: unknown; data?: unknown } | null;
     } = {
       authenticated: true,
       userId: user.id,
@@ -35,6 +35,7 @@ export const POST = async (request: NextRequest) => {
     // Test table access
     try {
       const { data, error } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(tableName) as any)
         .select('count')
         .limit(1);
@@ -59,6 +60,7 @@ export const POST = async (request: NextRequest) => {
 
     try {
       const { data, error } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(tableName) as any)
         .insert(testService)
         .select()

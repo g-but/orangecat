@@ -32,6 +32,7 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
       const rpcArgs: Database['public']['Functions']['get_total_unread_count']['Args'] = {
         p_user_id: user.id,
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: totalCount, error: rpcError } = await (admin.rpc('get_total_unread_count', rpcArgs as any) as any);
 
       if (!rpcError && typeof totalCount === 'number') {
@@ -88,8 +89,10 @@ export const GET = withAuth(async (req: AuthenticatedRequest) => {
         // Optimized batch query for conversations with read time
         // Use a single aggregated query instead of fetching all messages
         if (conversationsWithReadTime.length > 0) {
-          const conversationIds = conversationsWithReadTime.map(c => c.id);
-          const readTimeMap = new Map(conversationsWithReadTime.map(c => [c.id, c.lastReadAt]));
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const _conversationIds = conversationsWithReadTime.map(c => c.id);
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const _readTimeMap = new Map(conversationsWithReadTime.map(c => [c.id, c.lastReadAt]));
 
           // For each conversation, count unread messages in a single query
           // This is still N queries but much faster than fetching all message data

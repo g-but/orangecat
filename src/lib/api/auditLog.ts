@@ -77,6 +77,7 @@ export interface AuditLogEntry {
   userId: string | null;
   entityType?: 'profile' | 'project' | 'wallet' | 'post' | 'donation' | 'other';
   entityId?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
   ipAddress?: string;
   userAgent?: string;
@@ -104,6 +105,7 @@ export async function auditLog(entry: AuditLogEntry): Promise<void> {
     const supabase = await createServerClient();
 
     // Create audit log entry in database
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('audit_logs') as any).insert({
       action: entry.action,
       user_id: entry.userId,
@@ -147,6 +149,7 @@ export async function auditSuccess(
   userId: string,
   entityType?: AuditLogEntry['entityType'],
   entityId?: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>
 ): Promise<void> {
   return auditLog({
@@ -166,6 +169,7 @@ export async function auditFailure(
   action: AuditAction,
   userId: string | null,
   errorMessage: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>
 ): Promise<void> {
   return auditLog({

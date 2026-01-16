@@ -81,6 +81,7 @@ export const useProjectStore = create<ProjectState>((set, get) => ({
         throw error;
       }
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const projects: Project[] = (data || []).map((project: any) => ({
         ...project,
         // Map database fields to FundingPage interface

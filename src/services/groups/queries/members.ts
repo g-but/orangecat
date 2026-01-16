@@ -34,11 +34,13 @@ export async function getGroupMembers(
       }
     } else {
       // Check if group is public
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: groupData } = await (supabase
         .from(TABLES.groups) as any)
         .select('is_public')
         .eq('id', groupId)
         .single();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const group = groupData as any;
 
       if (!group?.is_public) {
@@ -47,6 +49,7 @@ export async function getGroupMembers(
     }
 
     // Build query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = (supabase
       .from(TABLES.group_members) as any)
       .select(
@@ -79,12 +82,15 @@ export async function getGroupMembers(
 
     // Transform to GroupMemberDetail format
     const members: GroupMemberDetail[] =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       data?.map((member: any) => ({
         id: member.id,
         group_id: member.group_id,
         user_id: member.user_id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         role: member.role as any,
         role_type: member.role, // Map role to role_type for compatibility
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         status: 'active' as any,
         joined_at: member.joined_at,
         invited_by: member.invited_by || null,
@@ -121,6 +127,7 @@ export async function getGroupMember(
       }
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from(TABLES.group_members) as any)
       .select(
@@ -151,8 +158,10 @@ export async function getGroupMember(
       id: data.id,
       group_id: data.group_id,
       user_id: data.user_id,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       role: data.role as any,
       role_type: data.role, // Map role to role_type for compatibility
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       status: 'active' as any,
       joined_at: data.joined_at,
       invited_by: data.invited_by || null,

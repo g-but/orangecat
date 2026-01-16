@@ -20,6 +20,29 @@ import {
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 
+// Local types for database query results (not in generated types)
+interface GroupRecord {
+  id: string;
+}
+
+interface EventRecord {
+  id: string;
+  group_id: string;
+  creator_id: string;
+  is_public: boolean;
+  title?: string;
+  [key: string]: unknown;
+}
+
+interface MembershipRecord {
+  id?: string;
+  role: string;
+}
+
+// Type-safe wrapper for untyped tables
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type UntypedTable = any;
+
 // Validation schema for updating events
 const updateEventSchema = z.object({
   title: z.string().min(1).max(200).optional(),
@@ -49,19 +72,18 @@ export const GET = withAuth(async (
     const supabase = await createServerClient();
 
     // Get group by slug
-    const { data: group, error: groupError } = await (supabase
-      .from('groups') as any)
+    const { data: groupData, error: groupError } = await (supabase.from('groups') as UntypedTable)
       .select('id')
       .eq('slug', slug)
       .single();
+    const group = groupData as GroupRecord | null;
 
     if (groupError || !group) {
       return apiNotFound('Group not found');
     }
 
     // Get event
-    const { data: event, error: eventError } = await (supabase
-      .from('group_events') as any)
+    const { data: eventData, error: eventError } = await (supabase.from('group_events') as UntypedTable)
       .select(
         `
         *,
@@ -92,6 +114,7 @@ export const GET = withAuth(async (
       .eq('id', eventId)
       .eq('group_id', group.id)
       .single();
+    const event = eventData as EventRecord | null;
 
     if (eventError || !event) {
       return apiNotFound('Event not found');
@@ -99,12 +122,12 @@ export const GET = withAuth(async (
 
     // Check if user can view (public or member)
     if (!event.is_public) {
-      const { data: membership } = await (supabase
-        .from('group_members') as any)
+      const { data: membershipData } = await (supabase.from('group_members') as UntypedTable)
         .select('id')
         .eq('group_id', group.id)
         .eq('user_id', user.id)
         .maybeSingle();
+      const membership = membershipData as MembershipRecord | null;
 
       if (!membership) {
         return apiForbidden('This event is private');
@@ -132,23 +155,23 @@ export const PUT = withAuth(async (
     const supabase = await createServerClient();
 
     // Get group by slug
-    const { data: group2, error: groupError } = await (supabase
-      .from('groups') as any)
+    const { data: groupData2, error: groupError } = await (supabase.from('groups') as UntypedTable)
       .select('id')
       .eq('slug', slug)
       .single();
+    const group2 = groupData2 as GroupRecord | null;
 
     if (groupError || !group2) {
       return apiNotFound('Group not found');
     }
 
     // Get event
-    const { data: event2, error: eventError } = await (supabase
-      .from('group_events') as any)
+    const { data: eventData2, error: eventError } = await (supabase.from('group_events') as UntypedTable)
       .select('id, group_id, creator_id')
       .eq('id', eventId)
       .eq('group_id', group2.id)
       .single();
+    const event2 = eventData2 as EventRecord | null;
 
     if (eventError || !event2) {
       return apiNotFound('Event not found');
@@ -156,12 +179,12 @@ export const PUT = withAuth(async (
 
     // Check permissions (creator or admin)
     const isCreator = event2.creator_id === user.id;
-    const { data: membership2 } = await (supabase
-      .from('group_members') as any)
+    const { data: membershipData2 } = await (supabase.from('group_members') as UntypedTable)
       .select('role')
       .eq('group_id', group2.id)
       .eq('user_id', user.id)
       .maybeSingle();
+    const membership2 = membershipData2 as MembershipRecord | null;
 
     const isAdmin = membership2 && ['founder', 'admin'].includes(membership2.role);
 
@@ -183,8 +206,7 @@ export const PUT = withAuth(async (
     }
 
     // Update event
-    const { data: updatedEvent, error: updateError } = await (supabase
-      .from('group_events') as any)
+    const { data: updatedEvent, error: updateError } = await (supabase.from('group_events') as UntypedTable)
       .update(validation.data)
       .eq('id', eventId)
       .select()
@@ -216,23 +238,23 @@ export const DELETE = withAuth(async (
     const supabase = await createServerClient();
 
     // Get group by slug
-    const { data: group3, error: groupError } = await (supabase
-      .from('groups') as any)
+    const { data: groupData3, error: groupError } = await (supabase.from('groups') as UntypedTable)
       .select('id')
       .eq('slug', slug)
       .single();
+    const group3 = groupData3 as GroupRecord | null;
 
     if (groupError || !group3) {
       return apiNotFound('Group not found');
     }
 
     // Get event
-    const { data: event3, error: eventError } = await (supabase
-      .from('group_events') as any)
+    const { data: eventData3, error: eventError } = await (supabase.from('group_events') as UntypedTable)
       .select('id, group_id, creator_id, title')
       .eq('id', eventId)
       .eq('group_id', group3.id)
       .single();
+    const event3 = eventData3 as EventRecord | null;
 
     if (eventError || !event3) {
       return apiNotFound('Event not found');
@@ -240,12 +262,12 @@ export const DELETE = withAuth(async (
 
     // Check permissions (creator or admin)
     const isCreator3 = event3.creator_id === user.id;
-    const { data: membership3 } = await (supabase
-      .from('group_members') as any)
+    const { data: membershipData3 } = await (supabase.from('group_members') as UntypedTable)
       .select('role')
       .eq('group_id', group3.id)
       .eq('user_id', user.id)
       .maybeSingle();
+    const membership3 = membershipData3 as MembershipRecord | null;
 
     const isAdmin3 = membership3 && ['founder', 'admin'].includes(membership3.role);
 
@@ -254,8 +276,7 @@ export const DELETE = withAuth(async (
     }
 
     // Delete event (RSVPs will be cascade deleted)
-    const { error: deleteError } = await (supabase
-      .from('group_events') as any)
+    const { error: deleteError } = await (supabase.from('group_events') as UntypedTable)
       .delete()
       .eq('id', eventId);
 

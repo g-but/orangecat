@@ -19,7 +19,7 @@ import {
 
 export default function FundraisingPage() {
   const router = useRouter();
-  const { user, session } = useAuth();
+  const { user: _user, session } = useAuth();
 
   const features = [
     {

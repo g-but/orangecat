@@ -34,11 +34,11 @@ type AnalysisResult = {
 
 export default function IntelligentOnboarding() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [userDescription, setUserDescription] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [_isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 

@@ -14,6 +14,7 @@ import { logger } from '@/utils/logger';
 // TYPES
 // =====================================================================
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface ApiSuccessResponse<T = any> {
   success: true;
   data: T;
@@ -30,6 +31,7 @@ export interface ApiErrorResponse {
   error: {
     code: string;
     message: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     details?: any;
   };
   metadata?: {
@@ -37,6 +39,7 @@ export interface ApiErrorResponse {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type ApiResponse<T = any> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 // =====================================================================
@@ -158,6 +161,7 @@ export function apiError(
   message: string,
   code: string = 'INTERNAL_ERROR',
   status: number = 500,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse<ApiErrorResponse> {
   const response: ApiErrorResponse = {
@@ -183,6 +187,7 @@ export function apiError(
  */
 export function apiBadRequest(
   message: string = 'Bad request',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'BAD_REQUEST', 400, details);
@@ -193,6 +198,7 @@ export function apiBadRequest(
  */
 export function apiUnauthorized(
   message: string = 'Unauthorized',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'UNAUTHORIZED', 401, details);
@@ -203,6 +209,7 @@ export function apiUnauthorized(
  */
 export function apiForbidden(
   message: string = 'Forbidden',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'FORBIDDEN', 403, details);
@@ -213,6 +220,7 @@ export function apiForbidden(
  */
 export function apiNotFound(
   message: string = 'Not found',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'NOT_FOUND', 404, details);
@@ -223,6 +231,7 @@ export function apiNotFound(
  */
 export function apiConflict(
   message: string = 'Conflict',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'CONFLICT', 409, details);
@@ -233,6 +242,7 @@ export function apiConflict(
  */
 export function apiValidationError(
   message: string = 'Validation failed',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'VALIDATION_ERROR', 422, details);
@@ -259,6 +269,7 @@ export function apiRateLimited(
  */
 export function apiInternalError(
   message: string = 'Internal server error',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'INTERNAL_ERROR', 500, details);
@@ -269,6 +280,7 @@ export function apiInternalError(
  */
 export function apiServiceUnavailable(
   message: string = 'Service unavailable',
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   details?: any
 ): NextResponse<ApiErrorResponse> {
   return apiError(message, 'SERVICE_UNAVAILABLE', 503, details);
@@ -281,6 +293,7 @@ export function apiServiceUnavailable(
 /**
  * Handle standard Supabase errors and convert to API responses
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function handleSupabaseError(error: any): NextResponse<ApiErrorResponse> {
   logger.error('Supabase error', error);
 
@@ -314,9 +327,11 @@ export function handleSupabaseError(error: any): NextResponse<ApiErrorResponse> 
 /**
  * Handle validation errors (Zod)
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function handleValidationError(error: any): NextResponse<ApiErrorResponse> {
   if (error.errors && Array.isArray(error.errors)) {
     return apiValidationError('Validation failed', {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       fields: error.errors.map((err: any) => ({
         field: err.path?.join('.'),
         message: err.message,
@@ -330,6 +345,7 @@ export function handleValidationError(error: any): NextResponse<ApiErrorResponse
 /**
  * Catch-all error handler
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function handleApiError(error: any): NextResponse<ApiErrorResponse> {
   // Validation errors (Zod)
   if (error.name === 'ZodError') {

@@ -55,7 +55,7 @@ export default function ExperimentalBanner({
       if (dismissed) {
         setIsVisible(false);
       }
-    } catch (error) {
+    } catch {
       // Storage not available, show banner
     }
   }, [storageKey, storageValue, storageType]);
@@ -64,7 +64,7 @@ export default function ExperimentalBanner({
     try {
       const storage = storageType === 'session' ? sessionStorage : localStorage;
       storage.setItem(storageKey, storageValue);
-    } catch (error) {
+    } catch {
       // Storage not available, just hide for this session
     }
     setIsVisible(false);

@@ -56,7 +56,7 @@ export function ProfileTextField({
   placeholder,
   description,
   icon,
-  iconColor = 'text-orange-500',
+  iconColor: _iconColor = 'text-orange-500',
   className = '',
   type = 'input',
   maxLength,

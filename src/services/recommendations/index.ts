@@ -65,7 +65,7 @@ export function getRecommendedTasks(
     includeCompleted?: boolean;
   } = {}
 ): RecommendedTask[] {
-  const { limit = 10, categories, priorities, includeCompleted = false } = options;
+  const { limit = 10, categories, priorities, includeCompleted: _includeCompleted = false } = options;
 
   // Filter tasks by condition
   let eligibleTasks = TASK_DEFINITIONS.filter(task => {

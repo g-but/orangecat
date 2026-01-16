@@ -26,7 +26,7 @@ interface MetricPoint {
 
 interface ErrorEvent {
   error: Error
-  context: Record<string, any>
+  context: Record<string, unknown>
   timestamp: number
   severity: 'low' | 'medium' | 'high' | 'critical'
 }
@@ -86,7 +86,7 @@ export class ApplicationMonitor {
   /**
    * Record an error event
    */
-  recordError(error: Error, context: Record<string, any> = {}, severity: ErrorEvent['severity'] = 'medium'): void {
+  recordError(error: Error, context: Record<string, unknown> = {}, severity: ErrorEvent['severity'] = 'medium'): void {
     const errorEvent: ErrorEvent = {
       error,
       context,
@@ -144,8 +144,8 @@ export class ApplicationMonitor {
   /**
    * Get current metrics summary
    */
-  getMetricsSummary(): Record<string, any> {
-    const summary: Record<string, any> = {}
+  getMetricsSummary(): Record<string, unknown> {
+    const summary: Record<string, unknown> = {}
 
     // Process metrics
     for (const [name, points] of this.metrics) {
@@ -173,7 +173,7 @@ export class ApplicationMonitor {
   /**
    * Get error summary
    */
-  getErrorSummary(): Record<string, any> {
+  getErrorSummary(): Record<string, unknown> {
     const recentErrors = this.errors.filter(e => Date.now() - e.timestamp < 3600000) // Last hour
 
     const summary = {
@@ -198,7 +198,7 @@ export class ApplicationMonitor {
   /**
    * Get performance summary
    */
-  getPerformanceSummary(): Record<string, any> {
+  getPerformanceSummary(): Record<string, unknown> {
     const recentPerformance = this.performanceLogs.filter(
       p => Date.now() - p.timestamp < 300000 // Last 5 minutes
     )
@@ -235,10 +235,22 @@ export class ApplicationMonitor {
   /**
    * Get comprehensive health check
    */
-  async getHealthCheck(): Promise<Record<string, any>> {
+  async getHealthCheck(): Promise<Record<string, unknown>> {
     const metrics = this.getMetricsSummary()
-    const errors = this.getErrorSummary()
-    const performance = this.getPerformanceSummary()
+    const errors = this.getErrorSummary() as {
+      total: number
+      bySeverity: { critical: number; high: number; medium: number; low: number }
+      recentErrors: Array<{ message: string; severity: string; timestamp: number; context?: unknown }>
+    }
+    const performance = this.getPerformanceSummary() as {
+      totalRequests?: number
+      averageDuration?: number
+      slowRequests?: number
+      slowRequestsPercentage?: number
+      byStatusCode?: Record<number, number>
+      topSlowEndpoints?: Array<{ endpoint: string; method: string; duration: number; statusCode: number }>
+      message?: string
+    }
 
     // Calculate overall health score (0-100)
     let healthScore = 100
@@ -255,10 +267,10 @@ export class ApplicationMonitor {
     }
 
     // Deduct points for performance issues
-    if (performance.slowRequestsPercentage > 10) {
+    if (performance.slowRequestsPercentage && performance.slowRequestsPercentage > 10) {
       healthScore -= 15
     }
-    if (performance.averageDuration > 500) {
+    if (performance.averageDuration && performance.averageDuration > 500) {
       healthScore -= 10
     }
 
@@ -281,7 +293,7 @@ export class ApplicationMonitor {
   /**
    * Alert for critical errors
    */
-  private alertCriticalError(error: Error, context: Record<string, any>): void {
+  private alertCriticalError(error: Error, context: Record<string, unknown>): void {
     // In production, this would send alerts to:
     // - Slack/Discord channels
     // - Email notifications
@@ -301,7 +313,7 @@ export class ApplicationMonitor {
   /**
    * Export monitoring data for external analysis
    */
-  exportData(): Record<string, any> {
+  exportData(): Record<string, unknown> {
     return {
       metrics: Object.fromEntries(this.metrics),
       errors: this.errors,
@@ -340,7 +352,7 @@ export function recordMetric(name: string, value: number, tags?: Record<string, 
   applicationMonitor.recordMetric(name, value, tags)
 }
 
-export function recordError(error: Error, context?: Record<string, any>, severity?: ErrorEvent['severity']): void {
+export function recordError(error: Error, context?: Record<string, unknown>, severity?: ErrorEvent['severity']): void {
   applicationMonitor.recordError(error, context, severity)
 }
 
@@ -348,6 +360,6 @@ export function recordApiPerformance(metric: PerformanceMetric): void {
   applicationMonitor.recordApiPerformance(metric)
 }
 
-export function getHealthCheck(): Promise<Record<string, any>> {
+export function getHealthCheck(): Promise<Record<string, unknown>> {
   return applicationMonitor.getHealthCheck()
 }

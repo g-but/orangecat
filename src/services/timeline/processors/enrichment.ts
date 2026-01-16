@@ -37,6 +37,7 @@ export async function getActorInfo(actorId: string): Promise<{
   avatar?: string;
   type: TimelineActorType;
 }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: profile } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
     .select('id, name, username, avatar_url')
     .eq('id', actorId)
@@ -60,6 +61,7 @@ export async function getSubjectInfo(
 ): Promise<{ id: string; name: string; type: TimelineSubjectType; url?: string }> {
   switch (type) {
     case 'project':
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: project } = await (supabase.from(getTableName('project')) as any)
         .select('title')
         .eq('id', id)
@@ -71,6 +73,7 @@ export async function getSubjectInfo(
         url: `/projects/${id}`,
       };
     case 'profile':
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: profile } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
         .select('name, username')
         .eq('id', id)

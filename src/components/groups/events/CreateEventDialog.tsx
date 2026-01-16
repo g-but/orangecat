@@ -72,7 +72,7 @@ interface CreateEventDialogProps {
 export function CreateEventDialog({
   open,
   onClose,
-  groupId,
+  groupId: _groupId,
   groupSlug,
   onSuccess,
 }: CreateEventDialogProps) {

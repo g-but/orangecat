@@ -92,6 +92,7 @@ export async function createInvitation(input: CreateInvitationInput): Promise<In
       }
 
       // Check for existing pending invitation
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: existing } = await (supabase.from('group_invitations') as any)
         .select('id')
         .eq('group_id', input.group_id)
@@ -135,10 +136,12 @@ export async function createInvitation(input: CreateInvitationInput): Promise<In
         .replace(/=/g, '');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: invData, error } = await (supabase.from('group_invitations') as any)
       .insert(invitationData)
       .select()
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const data = invData as any;
 
     if (error) {
@@ -189,6 +192,7 @@ export async function acceptInvitation(
     }
 
     // Use the database function for atomic operation
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)('accept_group_invitation', {
       invitation_id: invitationId,
     });
@@ -229,6 +233,7 @@ export async function declineInvitation(
     }
 
     // Use the database function
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)('decline_group_invitation', {
       invitation_id: invitationId,
     });
@@ -264,13 +269,16 @@ export async function acceptInvitationByToken(
     }
 
     // Find invitation by token
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: invitationData, error: findError } = await (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       supabase.from('group_invitations') as any
     )
       .select('id, group_id, status, expires_at')
       .eq('token', token)
       .eq('status', 'pending')
       .maybeSingle();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const invitation = invitationData as any;
 
     if (findError) {
@@ -316,12 +324,15 @@ export async function revokeInvitation(
     }
 
     // Get invitation to check group
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: invitationData2, error: findError } = await (
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       supabase.from('group_invitations') as any
     )
       .select('group_id, status')
       .eq('id', invitationId)
       .single();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const invitation = invitationData2 as any;
 
     if (findError || !invitation) {
@@ -339,6 +350,7 @@ export async function revokeInvitation(
     }
 
     // Revoke
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase.from('group_invitations') as any)
       .update({ status: 'revoked' })
       .eq('id', invitationId);

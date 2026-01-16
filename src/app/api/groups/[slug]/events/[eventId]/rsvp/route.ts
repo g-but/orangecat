@@ -38,6 +38,7 @@ export const POST = withAuth(async (
 
     // Get group by slug
     const { data: group, error: groupError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('groups') as any)
       .select('id')
       .eq('slug', slug)
@@ -49,6 +50,7 @@ export const POST = withAuth(async (
 
     // Get event
     const { data: event, error: eventError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('group_events') as any)
       .select('id, group_id, is_public, requires_rsvp')
       .eq('id', eventId)
@@ -62,6 +64,7 @@ export const POST = withAuth(async (
     // Check if user can access the event (public or member)
     if (!event.is_public) {
       const { data: membership } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('group_members') as any)
         .select('id')
         .eq('group_id', group.id)
@@ -88,6 +91,7 @@ export const POST = withAuth(async (
 
     // Upsert RSVP
     const { data: rsvp, error: rsvpError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('group_event_rsvps') as any)
       .upsert(
         {

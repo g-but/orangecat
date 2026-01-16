@@ -39,6 +39,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const { data: project } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .select('user_id')
       .eq('id', projectId)
@@ -60,6 +61,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Check current media count - use fresh query to avoid stale data
     const { count, error: countError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('project_media') as any)
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId);
@@ -82,10 +84,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Find the first available position (0, 1, or 2)
     // Get all existing positions
     const { data: existing } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('project_media') as any)
       .select('position')
       .eq('project_id', projectId);
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const existingPositions = (existing || []).map((m: any) => m.position).sort((a: number, b: number) => a - b);
 
     // Find first available position (0, 1, or 2)
@@ -103,6 +107,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const { data: media, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('project_media') as any)
       .insert({ project_id: projectId, storage_path: path, position: nextPosition, alt_text })
       .select()

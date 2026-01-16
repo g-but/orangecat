@@ -96,6 +96,7 @@ export default function PeoplePage() {
                 profile: {
                   id: (profileData as Profile).id || item.following_id || '',
                   username: (profileData as Profile).username,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   name: (profileData as Profile).name || (profileData as any).display_name || null,
                   avatar_url: (profileData as Profile).avatar_url,
                   bio: (profileData as Profile).bio,
@@ -143,6 +144,7 @@ export default function PeoplePage() {
                 profile: {
                   id: (profileData as Profile).id || item.follower_id || '',
                   username: (profileData as Profile).username,
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   name: (profileData as Profile).name || (profileData as any).display_name || null,
                   avatar_url: (profileData as Profile).avatar_url,
                   bio: (profileData as Profile).bio,
@@ -161,6 +163,7 @@ export default function PeoplePage() {
         const allData = await allRes.json();
         if (allData.success) {
           const arr = Array.isArray(allData.data?.data) ? allData.data.data : [];
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const transformed: Connection[] = arr.map((p: any) => ({
             profile: {
               id: p.id,

@@ -44,7 +44,7 @@ export const GET = compose(
 export const POST = createEntityPostHandler({
   entityType: 'wishlist',
   schema: wishlistSchema,
-  createEntity: async (userId, data, supabase) => {
+  createEntity: async (userId, data, _supabase) => {
     return await createWishlist(userId, data);
   },
 });

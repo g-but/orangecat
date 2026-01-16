@@ -167,7 +167,7 @@ export function CurrencyInput({
     }
   };
 
-  const currencyInfo = CURRENCY_INFO[inputCurrency];
+  const _currencyInfo = CURRENCY_INFO[inputCurrency];
 
   // Calculate breakdown only if showBreakdown is true AND user prefers SATS
   const breakdown = useMemo(() => {
@@ -329,7 +329,7 @@ interface CurrencyDisplayProps {
 export function CurrencyDisplay({
   amount,
   currency,
-  showBreakdown = false,
+  showBreakdown: _showBreakdown = false,
   className = '',
 }: CurrencyDisplayProps) {
   return (

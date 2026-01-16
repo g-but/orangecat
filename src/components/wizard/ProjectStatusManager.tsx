@@ -24,7 +24,7 @@ interface ProjectStatusManagerProps {
 }
 
 export default function ProjectStatusManager({
-  projectId,
+  projectId: _projectId,
   currentStatus,
   isUpdating,
   onStatusChange,

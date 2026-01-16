@@ -27,7 +27,7 @@ export async function getLoanOffers(
   pagination?: Pagination
 ): Promise<LoanOffersListResponse> {
   try {
-    const userId = await getCurrentUserId();
+    const _userId = await getCurrentUserId();
 
     let dbQuery = supabase
       .from('loan_offers')

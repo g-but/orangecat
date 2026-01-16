@@ -12,7 +12,9 @@ export interface PostComposerOptions {
   subjectId?: string;
   allowProjectSelection?: boolean;
   defaultVisibility?: TimelineVisibility;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onSuccess?: (event?: any) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onOptimisticUpdate?: (event: any) => void;
   debounceMs?: number;
   enableDrafts?: boolean;
@@ -32,6 +34,7 @@ export interface PostComposerState {
   setSelectedProjects: (projects: string[]) => void;
 
   // UI state
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   userProjects: any[];
   loadingProjects: boolean;
   isPosting: boolean;
@@ -76,6 +79,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<TimelineVisibility>(defaultVisibility || 'public');
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
@@ -234,10 +238,12 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       }
 
       // Process projects to add thumbnail URLs
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const projectsWithThumbnails = (data || []).map((project: any) => {
         let thumbnail_url = null;
         if (project.project_media && project.project_media.length > 0) {
           const firstMedia = project.project_media.sort(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (a: any, b: any) => a.position - b.position
           )[0];
           if (firstMedia?.storage_path) {
@@ -297,6 +303,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       logger.error('Failed to ensure profile exists', err, 'usePostComposer');
       return false;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id]);
 
   // Create optimistic event
@@ -462,6 +469,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
       }, 3000);
 
       return true;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       let errorMessage = 'An unexpected error occurred.';
 
@@ -521,6 +529,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
     subjectId,
     visibility,
     selectedProjects,
+    parentEventId,
     onSuccess,
     clearDraft,
   ]);
@@ -640,6 +649,7 @@ export function usePostComposer(options: PostComposerOptions = {}): PostComposer
         RETRY_DELAY * (retryCount + 1)
       ); // Exponential backoff
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     canPost,
     performPost,

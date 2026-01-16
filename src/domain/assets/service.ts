@@ -58,6 +58,7 @@ export async function createAsset(userId: string, input: AssetInput) {
     status: 'draft' as const,
     public_visibility: false,
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase
     .from(getTableName('asset')) as any)
     .insert([insertPayload])

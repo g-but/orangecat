@@ -15,7 +15,7 @@ import {
 import { useSearchSuggestions } from '@/hooks/useSearch';
 import { useAuth } from '@/hooks/useAuth';
 
-interface SearchResult {
+interface _SearchResult {
   id: string;
   type: 'profile' | 'project' | 'trending';
   title: string;
@@ -287,6 +287,7 @@ export default function EnhancedSearchBar({
           aria-haspopup="listbox"
           role="combobox"
           aria-autocomplete="list"
+          aria-controls="search-results-listbox"
         />
         <div className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 flex items-center text-xs text-gray-400">
           <kbd className="hidden sm:inline-flex px-1.5 py-0.5 bg-gray-100 rounded border text-xs">

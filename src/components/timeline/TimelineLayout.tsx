@@ -12,6 +12,7 @@ export interface TimelineLayoutProps {
   gradientVia: string;
   gradientTo: string;
   feed: TimelineFeedResponse;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onEventUpdate: (eventId: string, updates: any) => void;
   onLoadMore: () => void;
   stats?: {

@@ -26,7 +26,7 @@ export async function GET(
   try {
     const { id: projectId } = await params;
     const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: { user: _user } } = await supabase.auth.getUser();
 
     const searchParams = request.nextUrl.searchParams;
     

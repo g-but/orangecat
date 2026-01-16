@@ -75,6 +75,7 @@ export async function getUserPendingInvitations(): Promise<UserInvitationsRespon
     }
 
     // Use the database function for optimized query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase.rpc as any)('get_user_pending_invitations', {
       user_uuid: userId,
     });
@@ -116,6 +117,7 @@ export async function getUserInvitationCount(): Promise<number> {
       return 0;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { count, error } = await (supabase
       .from('group_invitations') as any)
       .select('*', { count: 'exact', head: true })
@@ -165,6 +167,7 @@ export async function getGroupInvitations(
     const status = options?.status || 'all';
 
     // Build query
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = (supabase
       .from('group_invitations') as any)
       .select(
@@ -254,6 +257,7 @@ export async function getInvitationByToken(
   error?: string;
 }> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data, error } = await (supabase
       .from('group_invitations') as any)
       .select(
@@ -291,6 +295,7 @@ export async function getInvitationByToken(
     const inviter = data.inviter as { name?: string } | null;
 
     // Get member count
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { count: memberCount } = await (supabase
       .from('group_members') as any)
       .select('*', { count: 'exact', head: true })

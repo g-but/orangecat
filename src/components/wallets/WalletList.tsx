@@ -9,7 +9,7 @@ interface WalletListProps {
   onTransfer?: (wallet: Wallet) => void;
 }
 
-export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) {
+export function WalletList({ wallets, onRefresh: _onRefresh, onTransfer }: WalletListProps) {
   const [expandedWalletId, setExpandedWalletId] = useState<string | null>(null);
 
   // Assume BTC price for now (in production, fetch from API)
@@ -35,7 +35,7 @@ export function WalletList({ wallets, onRefresh, onTransfer }: WalletListProps) 
   const renderWalletCard = (wallet: Wallet) => {
     const isExpanded = expandedWalletId === wallet.id;
     const behaviorInfo = getWalletBehaviorInfo(wallet.behavior_type);
-    const usdValue = wallet.balance_btc * BTC_PRICE_USD;
+    const _usdValue = wallet.balance_btc * BTC_PRICE_USD;
 
     return (
       <div

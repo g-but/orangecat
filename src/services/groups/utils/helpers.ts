@@ -14,6 +14,7 @@ import { TABLES } from '../constants';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 // Type alias for any SupabaseClient (accepts any database schema)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 
 /**
@@ -57,6 +58,7 @@ export async function ensureUniqueSlug(
   let counter = 1;
 
   while (true) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabaseClient.from(TABLES.groups) as any)
       .select('id')
       .eq('slug', slug)
@@ -76,6 +78,7 @@ export async function ensureUniqueSlug(
  */
 export async function getUserGroupIds(userId: string): Promise<string[]> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase.from(TABLES.group_members) as any)
       .select('group_id')
       .eq('user_id', userId);
@@ -92,6 +95,7 @@ export async function getUserGroupIds(userId: string): Promise<string[]> {
  */
 export async function isGroupMember(groupId: string, userId: string): Promise<boolean> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase.from(TABLES.group_members) as any)
       .select('id')
       .eq('group_id', groupId)
@@ -113,6 +117,7 @@ export async function getUserRole(
   userId: string
 ): Promise<'founder' | 'admin' | 'member' | null> {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data } = await (supabase.from(TABLES.group_members) as any)
       .select('role')
       .eq('group_id', groupId)

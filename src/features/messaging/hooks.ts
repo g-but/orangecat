@@ -18,8 +18,8 @@ export function useConversations(searchQuery: string, selectedConversationId?: s
   const {
     conversations,
     setConversations,
-    setLoading: setStoreLoading,
-    setError: setStoreError,
+    setLoading: _setStoreLoading,
+    setError: _setStoreError,
   } = useMessagingStore();
 
   debugLog('[useConversations] state', {

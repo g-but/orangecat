@@ -56,6 +56,7 @@ export async function POST(_req: NextRequest) {
     }
 
     // Apply each migration sequentially for clearer error reporting
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const results: Array<{ file: string; status: number; ok: boolean; body: any }> = []
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
@@ -80,6 +81,7 @@ export async function POST(_req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, results })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     return NextResponse.json({ error: error?.message || 'Internal error' }, { status: 500 })
   }

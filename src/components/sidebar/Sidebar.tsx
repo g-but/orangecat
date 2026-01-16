@@ -17,11 +17,13 @@
 'use client';
 
 import { Menu, X } from 'lucide-react';
+import FocusLock from 'react-focus-lock';
 import { SidebarUserProfile } from './SidebarUserProfile';
 import { SidebarNavigation } from './SidebarNavigation';
 import type { NavSection, NavItem } from '@/hooks/useNavigation';
 import type { Profile } from '@/types/database';
 import { navigationLabels } from '@/config/navigation';
+import { useIsDesktop } from '@/hooks/useMediaQuery';
 import {
   SIDEBAR_WIDTHS,
   SIDEBAR_Z_INDEX,
@@ -66,7 +68,8 @@ export function Sidebar({
 
   // Desktop: Always fixed w-16 (icons only with flyout tooltips)
   // Mobile: w-64 full-width drawer when open
-  const isDesktop = typeof window !== 'undefined' && window.innerWidth >= SIDEBAR_BREAKPOINTS.DESKTOP_BREAKPOINT;
+  // Using useIsDesktop hook (SSR-safe, reactive to window resizing)
+  const isDesktop = useIsDesktop();
 
   // Desktop sidebar is always visible at fixed width
   // Mobile sidebar slides in/out
@@ -89,15 +92,20 @@ export function Sidebar({
         />
       )}
 
-      <aside
-        className={`fixed bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg border-r ${SIDEBAR_COLORS.BORDER} ${sidebarTranslate} overflow-y-auto overflow-x-visible transition-transform ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} ${SIDEBAR_WIDTHS.EXPANDED} lg:${SIDEBAR_WIDTHS.COLLAPSED}`}
-        style={{
-          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-          paddingLeft: 'env(safe-area-inset-left, 0px)',
-          top: 'calc(4rem + env(safe-area-inset-top, 0px))',
-        }}
-      >
-        <div className="flex flex-col h-full min-w-0">
+      {/* Focus trap for mobile drawer (accessibility) */}
+      {/* Disabled on desktop where sidebar is always visible */}
+      <FocusLock disabled={!navigationState.isSidebarOpen || isDesktop}>
+        {/* NOTE: Using literal class names w-64 and lg:w-16 instead of template interpolation
+            because Tailwind JIT can't detect dynamically generated responsive classes like lg:${SIDEBAR_WIDTHS.COLLAPSED} */}
+        <aside
+          className={`fixed bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg border-r ${SIDEBAR_COLORS.BORDER} ${sidebarTranslate} overflow-y-auto overflow-x-visible transition-transform ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} w-64 lg:w-16`}
+          style={{
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+            paddingLeft: 'env(safe-area-inset-left, 0px)',
+            top: 'calc(4rem + env(safe-area-inset-top, 0px))',
+          }}
+        >
+          <div className="flex flex-col h-full min-w-0">
           {/* User Profile Section */}
           {user && profile && (
             <SidebarUserProfile
@@ -148,6 +156,7 @@ export function Sidebar({
           )}
         </div>
       </aside>
+    </FocusLock>
     </>
   );
 }

@@ -82,6 +82,7 @@ export function initAnalytics() {
       break;
     default:
       if (isDev) {
+        // eslint-disable-next-line no-console -- Intentional dev-only analytics logging
         console.log('📊 Analytics initialized (console mode)');
       }
   }
@@ -116,6 +117,7 @@ export function trackEvent(event: AnalyticsEvent, properties?: AnalyticsProperti
     default:
       // Console logging for development
       if (isDev) {
+        // eslint-disable-next-line no-console -- Intentional dev-only analytics logging
         console.log(`📊 [${event}]`, enrichedProperties);
       }
   }
@@ -151,6 +153,7 @@ export function identifyUser(properties: UserProperties) {
       break;
     default:
       if (isDev) {
+        // eslint-disable-next-line no-console -- Intentional dev-only analytics logging
         console.log('📊 User identified:', properties);
       }
   }

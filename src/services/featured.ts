@@ -2,7 +2,30 @@ import supabase from '@/lib/supabase/browser'
 import { logger } from '@/utils/logger'
 import { getTableName } from '@/config/entity-registry'
 
-export type FeaturedType = 
+// Raw project data from database with joined profile
+interface RawFeaturedProject {
+  id: string
+  title: string
+  description: string
+  goal_amount: number
+  total_funding: number
+  contributor_count: number
+  is_active: boolean
+  featured_image_url?: string | null
+  slug?: string | null
+  created_at: string
+  profiles: {
+    username: string
+    name?: string | null
+    avatar_url?: string | null
+  } | Array<{
+    username: string
+    name?: string | null
+    avatar_url?: string | null
+  }>
+}
+
+export type FeaturedType =
   | 'trending' 
   | 'staff_pick' 
   | 'community_choice' 
@@ -18,8 +41,8 @@ export interface FeaturedCampaign {
   total_funding: number
   contributor_count: number
   is_active: boolean
-  featured_image_url?: string
-  slug?: string
+  featured_image_url?: string | null
+  slug?: string | null
   created_at: string
   end_date?: string
   featured_type: FeaturedType
@@ -27,8 +50,8 @@ export interface FeaturedCampaign {
   featured_until?: string
   profiles?: {
     username: string
-    name?: string
-    avatar_url?: string
+    name?: string | null
+    avatar_url?: string | null
   }
 }
 
@@ -37,8 +60,8 @@ export async function getFeaturedProjects(limit: number = 6): Promise<FeaturedCa
   try {
     // For now, we'll simulate featured projects by getting high-performing projects
     // In the future, this would query a dedicated featured_projects table
-    const { data: projectsData, error } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: projectsData, error } = await supabase
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
@@ -48,14 +71,14 @@ export async function getFeaturedProjects(limit: number = 6): Promise<FeaturedCa
       .eq('is_active', true)
       .order('total_funding', { ascending: false })
       .limit(limit)
-    const projects = projectsData as any[] | null
+    const projects = projectsData as RawFeaturedProject[] | null
 
     if (error) {throw error}
 
     // Transform to featured projects with simulated featured types
-    const featuredProjects: FeaturedCampaign[] = (projects || []).map((project: any, index: number) => {
+    const featuredProjects: FeaturedCampaign[] = (projects || []).map((project, index) => {
       const progress = project.goal_amount ? (project.total_funding / project.goal_amount) * 100 : 0
-      
+
       // Determine featured type based on project characteristics
       let featured_type: FeaturedType = 'featured'
       if (progress >= 80) {
@@ -88,8 +111,8 @@ export async function getFeaturedProjects(limit: number = 6): Promise<FeaturedCa
 // Get trending projects (subset of featured)
 export async function getTrendingProjects(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
-    const { data: projectsData, error } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: projectsData, error } = await supabase
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
@@ -99,11 +122,11 @@ export async function getTrendingProjects(limit: number = 3): Promise<FeaturedCa
       .eq('is_active', true)
       .order('contributor_count', { ascending: false })
       .limit(limit)
-    const projects = projectsData as any[] | null
+    const projects = projectsData as RawFeaturedProject[] | null
 
     if (error) {throw error}
 
-    return (projects || []).map((project: any, index: number) => ({
+    return (projects || []).map((project, index) => ({
       ...project,
       featured_type: 'trending' as FeaturedType,
       featured_priority: index + 1,
@@ -119,8 +142,8 @@ export async function getTrendingProjects(limit: number = 3): Promise<FeaturedCa
 export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
     // For now, get projects with good descriptions and images
-    const { data: projectsData, error } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: projectsData, error } = await supabase
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
@@ -132,11 +155,11 @@ export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign
       .not('description', 'is', null)
       .order('created_at', { ascending: false })
       .limit(limit)
-    const projects = projectsData as any[] | null
+    const projects = projectsData as RawFeaturedProject[] | null
 
     if (error) {throw error}
 
-    return (projects || []).map((project: any, index: number) => ({
+    return (projects || []).map((project, index) => ({
       ...project,
       featured_type: 'staff_pick' as FeaturedType,
       featured_priority: index + 1,
@@ -151,8 +174,8 @@ export async function getStaffPicks(limit: number = 3): Promise<FeaturedCampaign
 // Get nearly funded projects
 export async function getNearlyFundedProjects(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
-    const { data: projectsData, error } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: projectsData, error } = await supabase
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
@@ -163,19 +186,19 @@ export async function getNearlyFundedProjects(limit: number = 3): Promise<Featur
       .not('goal_amount', 'is', null)
       .order('total_funding', { ascending: false })
       .limit(20) // Get more to filter
-    const projects = projectsData as any[] | null
+    const projects = projectsData as RawFeaturedProject[] | null
 
     if (error) {throw error}
 
     // Filter for projects that are 70%+ funded
     const nearlyFunded = (projects || [])
-      .filter((project: any) => {
+      .filter((project) => {
         const progress = project.goal_amount ? (project.total_funding / project.goal_amount) * 100 : 0
         return progress >= 70 && progress < 100
       })
       .slice(0, limit)
 
-    return nearlyFunded.map((project: any, index: number) => ({
+    return nearlyFunded.map((project, index) => ({
       ...project,
       featured_type: 'nearly_funded' as FeaturedType,
       featured_priority: index + 1,
@@ -191,8 +214,8 @@ export async function getNearlyFundedProjects(limit: number = 3): Promise<Featur
 export async function getNewAndNoteworthy(limit: number = 3): Promise<FeaturedCampaign[]> {
   try {
     // Get recent projects with some traction
-    const { data: projectsData, error } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: projectsData, error } = await supabase
+      .from(getTableName('project'))
       .select(`
         id, title, description, goal_amount, total_funding, contributor_count,
         is_active, featured_image_url, slug, created_at,
@@ -204,11 +227,11 @@ export async function getNewAndNoteworthy(limit: number = 3): Promise<FeaturedCa
       .gt('contributor_count', 0) // Has at least some supporters
       .order('created_at', { ascending: false })
       .limit(limit)
-    const projects = projectsData as any[] | null
+    const projects = projectsData as RawFeaturedProject[] | null
 
     if (error) {throw error}
 
-    return (projects || []).map((project: any, index: number) => ({
+    return (projects || []).map((project, index) => ({
       ...project,
       featured_type: 'new_and_noteworthy' as FeaturedType,
       featured_priority: index + 1,

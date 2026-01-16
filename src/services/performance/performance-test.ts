@@ -162,12 +162,12 @@ async function testLazyLoading(): Promise<PerformanceTestResult[]> {
     const startTime = performance.now();
 
     // First load - should actually load the module
-    const initiative = await loadInitiative('demo-initiative');
+    const _initiative = await loadInitiative('demo-initiative');
     const firstLoadTime = performance.now() - startTime;
 
     // Second load - should use cache
     const cacheStartTime = performance.now();
-    const cachedInitiative = await loadInitiative('demo-initiative');
+    const _cachedInitiative = await loadInitiative('demo-initiative');
     const cacheLoadTime = performance.now() - cacheStartTime;
 
     results.push({
@@ -304,7 +304,7 @@ export async function runPerformanceTests(): Promise<PerformanceTestSuite> {
   const cacheHitRatio = cacheHits / allTests.length;
 
   // Get performance monitor stats
-  const performanceStats = dbOptimizer.getPerformanceStats();
+  const _performanceStats = dbOptimizer.getPerformanceStats();
 
   const results: PerformanceTestSuite = {
     databaseOptimization: databaseTests,
@@ -331,8 +331,8 @@ export async function runPerformanceTests(): Promise<PerformanceTestSuite> {
   // Log detailed results
   // REMOVED: console.log statement
   allTests.forEach(test => {
-    const status = test.success ? '✅' : '❌';
-    const cacheStatus = test.cacheHit ? '⚡' : '';
+    const _status = test.success ? '✅' : '❌';
+    const _cacheStatus = test.cacheHit ? '⚡' : '';
     // REMOVED: console.log statement
     if (test.error) {
       // REMOVED: console.log statement
@@ -345,7 +345,7 @@ export async function runPerformanceTests(): Promise<PerformanceTestSuite> {
 // ==================== BENCHMARK UTILITIES ====================
 
 export function logPerformanceStats() {
-  const stats = dbOptimizer.getPerformanceStats();
+  const _stats = dbOptimizer.getPerformanceStats();
   // REMOVED: console.log statement
   // REMOVED: console.log statement
   // REMOVED: console.log statement

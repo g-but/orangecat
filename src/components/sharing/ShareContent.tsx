@@ -152,7 +152,7 @@ export default function ShareContent({
           onClose();
         }
       }, 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy URL');
     }
   };

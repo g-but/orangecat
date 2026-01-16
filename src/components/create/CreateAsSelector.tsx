@@ -24,6 +24,24 @@ import supabase from '@/lib/supabase/browser';
 import { cn } from '@/lib/utils';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
+interface GroupData {
+  id: string;
+  name: string;
+  slug: string;
+  label: GroupLabel;
+  avatar_url?: string | null;
+}
+
+interface GroupMembershipRow {
+  role: string;
+  groups: GroupData | null;
+}
+
+interface ProfileRow {
+  avatar_url?: string;
+  username?: string;
+}
+
 interface UserGroup {
   id: string;
   name: string;
@@ -61,12 +79,12 @@ export function CreateAsSelector({
           data: { user: authUser },
         } = await supabase.auth.getUser();
         if (authUser) {
-          // Get user profile
-          const { data: profile } = await (supabase
-            .from(DATABASE_TABLES.PROFILES) as any)
+          // Get user profile - using type assertion for dynamic table access
+          const { data: profile } = (await supabase
+            .from(DATABASE_TABLES.PROFILES)
             .select('avatar_url, username')
             .eq('id', authUser.id)
-            .single();
+            .single()) as { data: ProfileRow | null; error: unknown };
 
           setUser({
             id: authUser.id,
@@ -83,9 +101,9 @@ export function CreateAsSelector({
     }
 
     async function loadUserGroups(uid: string) {
-      // Try new groups table first
-      const { data: groupMemberships } = await (supabase
-        .from(DATABASE_TABLES.GROUP_MEMBERS) as any)
+      // Try new groups table first - using type assertion for dynamic table access
+      const { data: groupMemberships } = (await supabase
+        .from(DATABASE_TABLES.GROUP_MEMBERS)
         .select(
           `
           role,
@@ -98,17 +116,17 @@ export function CreateAsSelector({
           )
         `
         )
-        .eq('user_id', uid);
+        .eq('user_id', uid)) as { data: GroupMembershipRow[] | null; error: unknown };
 
       if (groupMemberships && groupMemberships.length > 0) {
         const userGroups: UserGroup[] = groupMemberships
-          .filter((m: any) => m.groups)
-          .map((m: any) => ({
-            id: (m.groups as any).id,
-            name: (m.groups as any).name,
-            slug: (m.groups as any).slug,
-            label: (m.groups as any).label as GroupLabel,
-            avatar_url: (m.groups as any).avatar_url,
+          .filter((m: GroupMembershipRow) => m.groups)
+          .map((m: GroupMembershipRow) => ({
+            id: m.groups!.id,
+            name: m.groups!.name,
+            slug: m.groups!.slug,
+            label: m.groups!.label,
+            avatar_url: m.groups!.avatar_url,
             role: m.role,
           }));
         setGroups(userGroups);
@@ -249,21 +267,21 @@ export function useUserGroups(userId?: string) {
         return;
       }
 
-      // Try new groups table
-      const { data: groupMemberships } = await (supabase
-        .from(DATABASE_TABLES.GROUP_MEMBERS) as any)
+      // Try new groups table - using type assertion for dynamic table access
+      const { data: groupMemberships } = (await supabase
+        .from(DATABASE_TABLES.GROUP_MEMBERS)
         .select('role, groups(id, name, slug, label, avatar_url)')
-        .eq('user_id', uid);
+        .eq('user_id', uid)) as { data: GroupMembershipRow[] | null; error: unknown };
 
       if (groupMemberships && groupMemberships.length > 0) {
         const userGroups: UserGroup[] = groupMemberships
-          .filter((m: any) => m.groups)
-          .map((m: any) => ({
-            id: (m.groups as any).id,
-            name: (m.groups as any).name,
-            slug: (m.groups as any).slug,
-            label: (m.groups as any).label as GroupLabel,
-            avatar_url: (m.groups as any).avatar_url,
+          .filter((m: GroupMembershipRow) => m.groups)
+          .map((m: GroupMembershipRow) => ({
+            id: m.groups!.id,
+            name: m.groups!.name,
+            slug: m.groups!.slug,
+            label: m.groups!.label,
+            avatar_url: m.groups!.avatar_url,
             role: m.role,
           }));
         setGroups(userGroups);

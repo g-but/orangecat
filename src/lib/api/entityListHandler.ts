@@ -76,7 +76,7 @@ export function createEntityListHandler(config: EntityListHandlerConfig) {
     entityType,
     tableName,
     publicStatuses = ['active'],
-    draftStatuses = ['draft', 'active'],
+    draftStatuses: _draftStatuses = ['draft', 'active'],
     orderBy = 'created_at',
     orderDirection = 'desc',
     additionalFilters = {},

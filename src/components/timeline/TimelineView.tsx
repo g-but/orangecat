@@ -48,6 +48,7 @@ export interface TimelineViewProps {
 
   // Callbacks
   onPostCreated?: () => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onOptimisticEvent?: (event: any) => void; // Add optimistic event to UI immediately
 }
 
@@ -75,7 +76,7 @@ export default function TimelineView({
   const [error, setError] = useState<string | null>(null);
 
   // Handle optimistic event updates
-  const handleOptimisticEvent = useCallback(
+  const _handleOptimisticEvent = useCallback(
     (event: TimelineDisplayEvent) => {
       // Add optimistic event to the beginning of the list
       setOptimisticEvents(prev => [event, ...prev]);
@@ -85,7 +86,7 @@ export default function TimelineView({
   );
 
   // Remove optimistic event when real event arrives
-  const removeOptimisticEvent = useCallback((optimisticId: string) => {
+  const _removeOptimisticEvent = useCallback((optimisticId: string) => {
     setOptimisticEvents(prev => prev.filter(event => event.id !== optimisticId));
   }, []);
 

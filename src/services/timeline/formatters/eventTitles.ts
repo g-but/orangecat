@@ -16,7 +16,7 @@ import type { TimelineEventType } from '@/types/timeline';
 export function generateProjectEventTitle(
   eventType: TimelineEventType,
   projectTitle: string,
-  additionalData?: unknown
+  _additionalData?: unknown
 ): string {
   switch (eventType) {
     case 'project_created':
@@ -40,7 +40,7 @@ export function generateProjectEventTitle(
 export function generateProjectEventDescription(
   eventType: TimelineEventType,
   project: { title: string; goal_amount?: number; currency?: string },
-  additionalData?: unknown
+  _additionalData?: unknown
 ): string {
   switch (eventType) {
     case 'project_created':

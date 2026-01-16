@@ -56,8 +56,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify asset exists and is for rent
-    const { data: asset, error: assetError } = await (supabase
-      .from(DATABASE_TABLES.USER_ASSETS) as any)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: asset, error: assetError } = await (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
       .select(
         'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats'
       )
@@ -73,6 +73,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingService = createBookingService(supabase as any);
     const availability = await bookingService.getAssetAvailability(assetId, startDate, endDate);
 

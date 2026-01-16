@@ -37,7 +37,7 @@ export default function MessagePanel({
   useRealtimeManager();
 
   // Use centralized messaging store
-  const { conversations, currentConversationId, setCurrentConversation, setConversations } =
+  const { conversations: _conversations, currentConversationId, setCurrentConversation, setConversations: _setConversations } =
     useMessagingStore();
 
   // Track if auth is truly ready (hydrated + not loading + has checked user)
@@ -52,7 +52,7 @@ export default function MessagePanel({
   const [activeTab, setActiveTab] = useState<'all' | 'requests'>('all');
   const [convSelectionMode, setConvSelectionMode] = useState(false);
   const [selectedConvIds, setSelectedConvIds] = useState<Set<string>>(new Set());
-  const [selectedMessageIds, setSelectedMessageIds] = useState<Set<string>>(new Set());
+  const [_selectedMessageIds, _setSelectedMessageIds] = useState<Set<string>>(new Set());
   const [refreshSignal, setRefreshSignal] = useState(0);
 
   const toggleConvSelect = (id: string) => {

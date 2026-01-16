@@ -42,14 +42,14 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
         break;
 
       case 'share':
-        result = await timelineService.shareEvent(eventId, shareText, visibility);
+        result = await timelineService.shareEvent(eventId, user.id, shareText, visibility);
         break;
 
       case 'comment':
         if (!content?.trim()) {
           return apiValidationError('Comment content is required');
         }
-        result = await timelineService.addComment(eventId, content.trim(), parentCommentId);
+        result = await timelineService.addComment(eventId, content.trim(), parentCommentId, user.id);
         break;
 
       default:
@@ -69,7 +69,7 @@ export const POST = withAuth(async (req: AuthenticatedRequest) => {
 
 export const GET = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const { user } = req;
+    const { user: _user } = req;
     const { searchParams } = new URL(req.url);
     const action = searchParams.get('action');
     const eventId = searchParams.get('eventId');

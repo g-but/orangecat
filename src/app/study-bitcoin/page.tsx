@@ -26,6 +26,7 @@ interface LearningPath {
   description: string;
   level: 'Beginner' | 'Intermediate' | 'Advanced';
   duration: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: React.ComponentType<any>;
   color: string;
   bgColor: string;
@@ -39,6 +40,7 @@ interface Resource {
   title: string;
   description: string;
   type: 'guide' | 'video' | 'tool' | 'external';
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   icon: React.ComponentType<any>;
   href: string;
   external?: boolean;

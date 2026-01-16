@@ -24,6 +24,7 @@ export async function createPayment(
     }
 
     const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('loan_payments') as any)
       .insert({
         ...request,
@@ -57,6 +58,7 @@ export async function completePayment(
     }
 
     const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('loan_payments') as any)
       .update({
         status: 'completed',

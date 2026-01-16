@@ -24,7 +24,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   feed,
   onEventUpdate,
   onLoadMore,
-  showFilters = true,
+  showFilters: _showFilters = true,
   compact = false,
   enableMultiSelect = false,
 }) => {
@@ -39,7 +39,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
 
   // Use centralized selection hook (DRY)
   const {
-    selectedIds,
+    selectedIds: _selectedIds,
     isSelectionMode,
     isProcessing,
     toggleSelectionMode,
@@ -50,7 +50,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
     bulkDelete,
     bulkSetVisibility,
     selectedCount,
-    canPerformBulkAction,
+    canPerformBulkAction: _canPerformBulkAction,
   } = usePostSelection({
     onPostsDeleted: (deletedIds) => {
       // Remove deleted events from local state

@@ -77,7 +77,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
       } else {
         toast.error(result.error || 'Failed to update visibility');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update visibility');
     }
   };
@@ -100,7 +100,7 @@ export function LoanList({ loans, onLoanUpdated }: LoanListProps) {
       } else {
         toast.error(result.error || 'Failed to delete loan');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to delete loan');
     }
   };

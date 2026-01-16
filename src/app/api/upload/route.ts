@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
 
     // Upload to Supabase Storage
     const fileBuffer = await file.arrayBuffer();
-    const { data, error: uploadError } = await supabase.storage
+    const { data: _data, error: uploadError } = await supabase.storage
       .from('avatars') // Use the existing avatars bucket
       .upload(filePath, fileBuffer, {
         contentType: file.type,

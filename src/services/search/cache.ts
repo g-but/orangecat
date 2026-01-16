@@ -24,7 +24,7 @@ interface CacheEntry {
 const searchCache = new Map<string, CacheEntry>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const MAX_CACHE_SIZE = 100; // Maximum number of cached entries
-const MAX_CACHE_MEMORY = 10 * 1024 * 1024; // 10MB max cache size
+const _MAX_CACHE_MEMORY = 10 * 1024 * 1024; // 10MB max cache size
 
 // ==================== CACHE UTILITIES ====================
 

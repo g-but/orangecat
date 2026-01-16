@@ -71,13 +71,9 @@ export default function DashboardPage() {
   const [timelineError, setTimelineError] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(false);
 
-  // ==================== EFFECTS ====================
-
   // Hydration effect
   useEffect(() => {
-    if (hydrated) {
-      setLocalLoading(false);
-    }
+    if (hydrated) setLocalLoading(false);
   }, [hydrated]);
 
   // Load projects when user is available
@@ -91,9 +87,7 @@ export default function DashboardPage() {
 
   // Load timeline feed
   useEffect(() => {
-    if (user?.id && hydrated) {
-      loadTimelineFeed(user.id);
-    }
+    if (user?.id && hydrated) loadTimelineFeed(user.id);
   }, [user?.id, hydrated]);
 
   // Check welcome state
@@ -132,16 +126,12 @@ export default function DashboardPage() {
 
   // Auth redirect
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+    if (typeof window === 'undefined') return;
     if (hydrated && !isLoading && !user && !hasRedirected) {
       setHasRedirected(true);
       router.push('/auth');
     }
   }, [user, hydrated, isLoading, router, hasRedirected]);
-
-  // ==================== HELPERS ====================
 
   const loadTimelineFeed = async (userId: string) => {
     setTimelineLoading(true);
@@ -157,15 +147,12 @@ export default function DashboardPage() {
     }
   };
 
-  // ==================== MEMOIZED VALUES ====================
-
+  // Memoized values
   const safeProjects = useMemo(() => (Array.isArray(projects) ? projects : []), [projects]);
   const safeDrafts = useMemo(() => (Array.isArray(drafts) ? drafts : []), [drafts]);
   const stats = useMemo(() => getStats(), [getStats]);
   const totalProjects = stats.totalProjects;
   const totalDrafts = safeDrafts.length;
-
-  // Currency calculations
   const fundingByCurrency = useMemo(
     () =>
       safeProjects.reduce(
@@ -211,16 +198,11 @@ export default function DashboardPage() {
   const hasAnyDraft = useMemo(() => safeDrafts.length > 0, [safeDrafts]);
 
   const hasTimelineActivity = useMemo(() => {
-    const feed = timelineFeed as unknown as {
-      events?: unknown[];
-      items?: unknown[];
-      data?: unknown[];
-    };
+    const feed = timelineFeed as unknown as { events?: unknown[]; items?: unknown[]; data?: unknown[] };
     return Boolean(feed?.events?.length || feed?.items?.length || feed?.data?.length);
   }, [timelineFeed]);
 
-  // ==================== LOADING STATES ====================
-
+  // Loading states
   if (!hydrated || localLoading) {
     return <Loading fullScreen message="Loading your account..." />;
   }
@@ -248,11 +230,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
-  // ==================== RENDER ====================
+  if (!user) return null;
 
   const sidebarStats = {
     totalProjects,
@@ -264,18 +242,9 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-8">
-      {/* Header */}
       <DashboardHeader profile={profile} totalProjects={totalProjects} totalDrafts={totalDrafts} />
-
-      {/* Welcome for new users */}
-      {showWelcome && (
-        <DashboardWelcome profile={profile} onDismiss={() => setShowWelcome(false)} />
-      )}
-
-      {/* Invite CTA */}
+      {showWelcome && <DashboardWelcome profile={profile} onDismiss={() => setShowWelcome(false)} />}
       <DashboardInviteCTA profile={profile} userId={user.id} />
-
-      {/* Journey section */}
       <DashboardJourney
         profileCompletion={profileCompletion}
         hasBitcoinAddress={hasBitcoinAddress}
@@ -285,36 +254,25 @@ export default function DashboardPage() {
         hasTimelineActivity={hasTimelineActivity}
       />
 
-      {/* Main content */}
       <div className="space-y-6">
         {/* Mobile sidebar */}
         <div className="block lg:hidden">
-          <MobileDashboardSidebar
-            stats={sidebarStats}
-            profileCompletion={profileCompletion}
-            profile={profile}
-          />
+          <MobileDashboardSidebar stats={sidebarStats} profileCompletion={profileCompletion} profile={profile} />
         </div>
-
         {/* Desktop layout */}
         <div className="hidden lg:grid lg:grid-cols-12 gap-6">
           <DashboardSidebar stats={sidebarStats} profileCompletion={profileCompletion} />
           <DashboardTimeline
-            timelineFeed={timelineFeed}
-            isLoading={timelineLoading}
-            error={timelineError}
+            timelineFeed={timelineFeed} isLoading={timelineLoading} error={timelineError}
             onRefresh={() => user?.id && loadTimelineFeed(user.id)}
             onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
             userId={user?.id}
           />
         </div>
-
         {/* Mobile timeline */}
         <div className="block lg:hidden">
           <DashboardTimeline
-            timelineFeed={timelineFeed}
-            isLoading={timelineLoading}
-            error={timelineError}
+            timelineFeed={timelineFeed} isLoading={timelineLoading} error={timelineError}
             onRefresh={() => user?.id && loadTimelineFeed(user.id)}
             onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
             userId={user?.id}
@@ -322,10 +280,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Projects section */}
       <DashboardProjects projects={safeProjects} />
-
-      {/* Quick actions */}
       <DashboardQuickActions hasProjects={safeProjects.length > 0} />
     </div>
   );

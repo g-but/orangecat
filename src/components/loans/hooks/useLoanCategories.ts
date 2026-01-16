@@ -34,7 +34,7 @@ export function useLoanCategories(enabled: boolean = true) {
             setError(result.error || 'Failed to load categories');
           }
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setError('Failed to load categories');
         }

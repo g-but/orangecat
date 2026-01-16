@@ -244,8 +244,7 @@ export function ratesNeedRefresh(): boolean {
 /**
  * Parse user input to number, handling locale-specific formatting
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function parseAmount(input: string, locale: string = 'en-US'): number | null {
+export function parseAmount(input: string, _locale: string = 'en-US'): number | null {
   if (!input || input.trim() === '') {
     return null;
   }

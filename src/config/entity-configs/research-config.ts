@@ -49,13 +49,13 @@ export const researchEntitySchema = z.object({
   is_public: z.boolean().optional(),
 });
 
-export const researchEntityConfig: EntityConfig<ResearchEntity> = {
-  entityType: 'research_entity',
-  name: 'Research Entity',
-  namePlural: 'Research Entities',
-  displayName: 'Research Entity',
-  displayNamePlural: 'Research Entities',
-  description: 'Independent research projects with their own funding and governance',
+export const researchConfig: EntityConfig<ResearchEntity> = {
+  entityType: 'research',
+  name: 'Research',
+  namePlural: 'Research',
+  displayName: 'Research',
+  displayNamePlural: 'Research',
+  description: 'Independent research topics with decentralized funding (e.g., Dark Matter, Climate Science)',
   icon: '🔬',
   color: '#8B5CF6', // Purple for research
   colorTheme: 'purple',

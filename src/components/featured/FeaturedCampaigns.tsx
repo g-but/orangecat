@@ -47,7 +47,7 @@ export default function FeaturedProjects({
       setError(null);
       const data = await getFeaturedProjects(limit);
       setProjects(data);
-    } catch (err: any) {
+    } catch {
       setError('Failed to load featured projects');
     } finally {
       setLoading(false);

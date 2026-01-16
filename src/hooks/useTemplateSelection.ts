@@ -37,6 +37,7 @@ import type { EntityConfig, EntityTemplate, UseTemplateSelectionReturn } from '@
  * @param config - The entity configuration object
  * @returns Template selection state and handlers
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function useTemplateSelection<T extends Record<string, any>>(
   config: EntityConfig<T>
 ): UseTemplateSelectionReturn<T> {

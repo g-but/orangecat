@@ -13,6 +13,21 @@ import {
   CampaignFormData,
   DraftQuery,
 } from './types';
+
+// Type for remote draft record from database
+interface RemoteDraftRecord {
+  id: string;
+  user_id: string;
+  title: string;
+  form_data: Partial<CampaignFormData>;
+  current_step: number;
+  version: number;
+  metadata: Record<string, unknown>;
+  last_modified_at: string;
+  client_id: string;
+  session_id: string;
+  created_at?: string;
+}
 import { logger } from '@/utils/logger';
 import supabase from '@/lib/supabase/browser';
 
@@ -103,7 +118,7 @@ export class DraftEngine {
   async updateField(
     draftId: string,
     field: keyof CampaignFormData,
-    value: any,
+    value: CampaignFormData[keyof CampaignFormData],
     debounceMs = 500
   ): Promise<void> {
     const draft = this.drafts.get(draftId);
@@ -121,7 +136,7 @@ export class DraftEngine {
       metadata: {
         ...draft.metadata,
         wordCount:
-          field === 'description' ? this.calculateWordCount(value) : draft.metadata.wordCount,
+          field === 'description' ? this.calculateWordCount(String(value)) : draft.metadata.wordCount,
         completionPercentage: this.calculateCompletion({ ...draft.formData, [field]: value }),
       },
     };
@@ -158,10 +173,11 @@ export class DraftEngine {
     try {
       const supabaseClient = this.supabase;
       // Check for remote changes
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: remoteDraft, error } = await (supabaseClient.from('project_drafts') as any)
         .select('*')
         .eq('id', draftId)
-        .single();
+        .single() as { data: RemoteDraftRecord | null; error: { code?: string; message: string } | null };
 
       if (error && error.code !== 'PGRST116') {
         throw error;
@@ -195,6 +211,7 @@ export class DraftEngine {
         session_id: this.sessionId,
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error: syncError } = await (supabase.from('project_drafts') as any).upsert(syncData);
 
       if (syncError) {
@@ -252,7 +269,7 @@ export class DraftEngine {
    */
   private async resolveConflicts(
     localDraft: DraftState,
-    remoteDraft: any,
+    remoteDraft: RemoteDraftRecord,
     conflicts: DraftConflict[]
   ): Promise<DraftState> {
     const resolved = { ...localDraft };
@@ -269,7 +286,8 @@ export class DraftEngine {
         resolution = conflict.localValue > 0 ? 'local' : 'remote';
       } else {
         // Default to most recent
-        resolution = localDraft.lastModifiedAt > remoteDraft.last_modified_at ? 'local' : 'remote';
+        const remoteTimestamp = new Date(remoteDraft.last_modified_at).getTime();
+        resolution = localDraft.lastModifiedAt > remoteTimestamp ? 'local' : 'remote';
       }
 
       if (resolution === 'remote') {
@@ -354,7 +372,7 @@ export class DraftEngine {
   /**
    * PRIVATE HELPER METHODS
    */
-  private detectConflicts(local: DraftState, remote: any): DraftConflict[] {
+  private detectConflicts(local: DraftState, remote: RemoteDraftRecord): DraftConflict[] {
     const conflicts: DraftConflict[] = [];
     const fields: (keyof CampaignFormData)[] = [
       'title',
@@ -398,7 +416,7 @@ export class DraftEngine {
   private debounce(func: Function, wait: number) {
     const timeouts = new Map<string, NodeJS.Timeout>();
 
-    return (key: string, ...args: any[]) => {
+    return (key: string, ...args: unknown[]) => {
       const existingTimeout = timeouts.get(key);
       if (existingTimeout) {
         clearTimeout(existingTimeout);
@@ -430,6 +448,7 @@ export class DraftEngine {
     this.eventStore.push(event);
 
     // Persist to database for audit trail
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (this.supabase.from('draft_events') as any).insert({
       id: event.id,
       draft_id: event.draftId,

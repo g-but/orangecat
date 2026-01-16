@@ -1,13 +1,17 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface JsonResult<T = any> {
   success: boolean
   data?: T
   error?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function jsonFetch<T = any>(url: string, init?: RequestInit): Promise<JsonResult<T>> {
   const res = await fetch(url, init)
   const contentType = res.headers.get('content-type') || ''
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let body: any = null
   try {
     if (contentType.includes('application/json')) {
@@ -16,7 +20,7 @@ export async function jsonFetch<T = any>(url: string, init?: RequestInit): Promi
       const text = await res.text()
       body = { text }
     }
-  } catch (e) {
+  } catch {
     body = { error: 'Invalid server response' }
   }
 

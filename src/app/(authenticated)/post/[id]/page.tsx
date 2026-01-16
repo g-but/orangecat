@@ -217,7 +217,7 @@ export default function PostPage() {
         {/* Parent posts (conversation context) */}
         {parentPosts.length > 0 && (
           <div className="relative">
-            {parentPosts.map((parent, index) => (
+            {parentPosts.map((parent, _index) => (
               <div key={parent.id} className="relative">
                 {/* Thread line connecting posts */}
                 <div

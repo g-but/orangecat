@@ -85,7 +85,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
           setShouldAutoScroll(true);
           setTimeout(() => refreshReadReceipts(), TIMING.READ_RECEIPT_RECALC_DELAY_MS);
         }
-      } catch (err) {
+      } catch {
         // Realtime will handle it
       }
     },
@@ -197,7 +197,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
           handleNewMessage(full as Message);
         }
       }
-    } catch (e) {
+    } catch {
       toast.error('Network error while editing');
     } finally {
       closeMenu();
@@ -222,7 +222,7 @@ export default function MessageView({ conversationId, onBack }: MessageViewProps
       } else {
         removeMessage(msg.id);
       }
-    } catch (e) {
+    } catch {
       toast.error('Network error while deleting');
     } finally {
       closeMenu();

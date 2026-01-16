@@ -112,7 +112,7 @@ export function usePostSelection(options: UsePostSelectionOptions = {}): UsePost
   }, [selectedIds]);
 
   // Bulk delete operation with optimistic updates
-  const bulkDelete = useCallback(async (events: TimelineDisplayEvent[]): Promise<BulkOperationResult> => {
+  const bulkDelete = useCallback(async (_events: TimelineDisplayEvent[]): Promise<BulkOperationResult> => {
     if (selectedIds.size === 0) {
       return { success: true, successCount: 0, failureCount: 0, failedIds: [] };
     }
@@ -182,7 +182,7 @@ export function usePostSelection(options: UsePostSelectionOptions = {}): UsePost
 
   // Bulk visibility change operation
   const bulkSetVisibility = useCallback(async (
-    events: TimelineDisplayEvent[],
+    _events: TimelineDisplayEvent[],
     visibility: TimelineVisibility
   ): Promise<BulkOperationResult> => {
     if (selectedIds.size === 0) {

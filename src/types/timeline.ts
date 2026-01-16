@@ -158,6 +158,7 @@ export interface TimelineEvent {
   updatedAt: string;
 
   // Metadata
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
   tags?: string[];
 
@@ -202,6 +203,7 @@ export interface TimelineEmbed {
   url: string;
   title?: string;
   thumbnail?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
@@ -416,6 +418,7 @@ export interface CreateTimelineEventRequest {
   quantity?: number;
   visibility?: TimelineVisibility;
   isFeatured?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
   tags?: string[];
   parentEventId?: string;
@@ -429,6 +432,7 @@ export interface TimelineEventResponse {
   success: boolean;
   event?: TimelineEvent | TimelineDisplayEvent;
   error?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
@@ -497,6 +501,7 @@ export interface TimelineEventDb
   event_timestamp: string;
   created_at: string;
   updated_at: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
   tags?: string[];
   parent_event_id?: string;

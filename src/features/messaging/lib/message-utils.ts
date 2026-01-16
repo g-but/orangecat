@@ -14,7 +14,7 @@ import { MESSAGE_STATUS, type MessageStatus } from './constants';
 // MESSAGE STATUS CALCULATION
 // =============================================================================
 
-interface ParticipantReadTime {
+interface _ParticipantReadTime {
   userId: string;
   lastReadAt: Date | null;
 }

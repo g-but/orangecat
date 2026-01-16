@@ -39,7 +39,7 @@ export function ProjectSupportButton({
 }: ProjectSupportButtonProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [stats, setStats] = useState<ProjectSupportStats | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [_loading, setLoading] = useState(false);
 
   const loadStats = useCallback(async () => {
     try {

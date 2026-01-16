@@ -13,7 +13,7 @@ export const GET = createEntityListHandler({
 export const POST = createEntityPostHandler({
   entityType: 'product',
   schema: userProductSchema,
-  createEntity: async (userId, data, supabase) => {
-    return await createProduct(userId, data as { title: string; price: number; [key: string]: unknown }, supabase);
+  createEntity: async (userId, data, _supabase) => {
+    return await createProduct(userId, data as { title: string; price: number; [key: string]: unknown });
   },
 });

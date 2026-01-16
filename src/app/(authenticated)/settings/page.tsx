@@ -83,6 +83,7 @@ export default function SettingsPage() {
       const { error } = await supabase.auth.updateUser({ email: formData.email })
       if (error) {throw error}
       toast.success('Confirmation email sent! Please check your inbox.')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.message || 'Failed to update email.')
     } finally {
@@ -116,6 +117,7 @@ export default function SettingsPage() {
         toast.success('Password updated successfully!')
         setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }))
       }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.message || 'An unexpected error occurred.')
     } finally {
@@ -145,6 +147,7 @@ export default function SettingsPage() {
       toast.success('Account deleted. You will be signed out.')
       await signOut()
       router.push('/')
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       toast.error(error.message || 'Failed to delete account.')
     } finally {

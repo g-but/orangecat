@@ -25,7 +25,7 @@ interface GroupCardProps {
 export function GroupCard({ group, onClick, className }: GroupCardProps) {
   // Get label config from SSOT
   const labelConfig = GROUP_LABELS[group.label as GroupLabel];
-  const Icon = labelConfig?.icon || Users;
+  const _Icon = labelConfig?.icon || Users;
 
   // Build metadata - use member_count from GroupWithRelations if available
   const memberCount = 'member_count' in group ? group.member_count : undefined;

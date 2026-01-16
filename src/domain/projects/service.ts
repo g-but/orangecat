@@ -27,6 +27,7 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
   }
 
   // Fetch profiles separately for better error handling
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const userIds = [...new Set((data || []).map((p: any) => p.user_id).filter(Boolean))];
   const profilesMap = new Map();
   
@@ -37,12 +38,14 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
       .in('id', userIds);
     
     if (!profilesError && profiles) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       profiles.forEach((profile: any) => {
         profilesMap.set(profile.id, profile);
       });
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items = (data || []).map((project: any) => ({
     ...project,
     raised_amount: project.raised_amount ?? 0,
@@ -67,6 +70,7 @@ export async function listProjectsPage(limit: number, offset: number, userId?: s
   return { items, total: count || 0 };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function createProject(userId: string, payload: any) {
   const supabase = await createServerClient();
   const insertPayload = {
@@ -84,6 +88,7 @@ export async function createProject(userId: string, payload: any) {
     status: 'draft' as const,
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase
     .from(getTableName('project')) as any)
     .insert(insertPayload)

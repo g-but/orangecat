@@ -29,6 +29,7 @@ export async function createLoanOffer(
 
     // Use database function if available
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)('create_loan_offer', {
         p_loan_id: request.loan_id,
         p_offerer_id: userId,
@@ -50,6 +51,7 @@ export async function createLoanOffer(
 
       // Get the created offer
       const { data: offer, error: fetchError } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('loan_offers') as any)
         .select()
         .eq('id', data.offer_id)
@@ -66,6 +68,7 @@ export async function createLoanOffer(
 
       // Fallback: direct insert
       const { data, error } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('loan_offers') as any)
         .insert({
           ...request,
@@ -101,6 +104,7 @@ export async function updateLoanOffer(
     }
 
     const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('loan_offers') as any)
       .update(request)
       .eq('id', offerId)
@@ -126,7 +130,7 @@ export async function updateLoanOffer(
 export async function respondToOffer(
   offerId: string,
   accept: boolean,
-  notes?: string
+  _notes?: string
 ): Promise<LoanOfferResponse> {
   try {
     const userId = await getCurrentUserId();
@@ -136,6 +140,7 @@ export async function respondToOffer(
 
     // Verify user owns the loan
     const { data: offer, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('loan_offers') as any)
       .select(`
         *,
@@ -165,6 +170,7 @@ export async function respondToOffer(
     }
 
     const { data, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('loan_offers') as any)
       .update(updateData)
       .eq('id', offerId)

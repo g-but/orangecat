@@ -52,7 +52,7 @@ export function LoanOffersDialog({
       } else {
         toast.error(result.error || 'Failed to load offers');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to load offers');
     } finally {
       setLoading(false);
@@ -85,7 +85,7 @@ export function LoanOffersDialog({
       } else {
         toast.error(result.error || 'Failed to update offer');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to update offer');
     } finally {
       setActioningId(null);

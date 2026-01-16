@@ -83,6 +83,7 @@ export async function createFileUploadHandler(config: FileUploadConfig) {
         securityValidated: true
       })
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       logger.error(`${config.logPrefix} Upload error:`, { error: error.message }, 'Security')
       return NextResponse.json({ error: 'Upload failed' }, { status: 500 })

@@ -88,6 +88,66 @@ export interface RawSearchFundingPage {
   }>;
 }
 
+// Raw profile from database queries
+export interface RawSearchProfile {
+  id: string;
+  username: string | null;
+  name: string | null;
+  bio: string | null;
+  avatar_url: string | null;
+  created_at: string;
+  location_country?: string | null;
+  location_city?: string | null;
+  location_zip?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+}
+
+// Raw project from database queries
+export interface RawSearchProject {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  bitcoin_address: string | null;
+  category: string | null;
+  status: string;
+  goal_amount: number | null;
+  raised_amount: number | null;
+  currency?: string | null;
+  created_at: string;
+  updated_at: string;
+  cover_image_url?: string | null;
+}
+
+// Raw loan from database queries
+export interface RawSearchLoan {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  loan_category_id: string | null;
+  original_amount: number;
+  remaining_balance: number;
+  interest_rate: number | null;
+  monthly_payment: number | null;
+  currency: string;
+  status: string;
+  loan_type?: 'new_request' | 'existing_loan';
+  is_public: boolean;
+  is_negotiable: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+// Profile reference for joined data
+export interface ProfileReference {
+  id: string;
+  username: string | null;
+  name: string | null;
+  avatar_url: string | null;
+}
+
 export type SearchResult = {
   type: 'profile' | 'project' | 'loan';
   data: SearchProfile | SearchFundingPage | SearchLoan;

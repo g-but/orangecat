@@ -23,7 +23,7 @@ type ViewMode = 'grid' | 'list';
 export default function DiscoverPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user: _user } = useAuth();
 
   // Initialize state from URL params
   const initialSearchTerm = searchParams?.get('search') || '';
@@ -47,11 +47,11 @@ export default function DiscoverPage() {
   const {
     query: searchTerm,
     setQuery: setSearchTerm,
-    searchType,
+    searchType: _searchType,
     setSearchType,
     sortBy,
     setSortBy,
-    filters,
+    filters: _filters,
     setFilters,
     results: searchResults,
     loading,
@@ -93,7 +93,7 @@ export default function DiscoverPage() {
   // Total counts from database (for stats display)
   const [totalProjectsCount, setTotalProjectsCount] = useState(0);
   const [totalProfilesCount, setTotalProfilesCount] = useState(0);
-  const [totalLoansCount, setTotalLoansCount] = useState(0);
+  const [_totalLoansCount, setTotalLoansCount] = useState(0);
 
   // Loans data (fetched separately since useSearch doesn't support loans yet)
   const [loans, setLoans] = useState<Loan[]>([]);

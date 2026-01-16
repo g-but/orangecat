@@ -3,28 +3,16 @@
 /**
  * CREATE PROJECT PAGE
  *
- * Uses the unified CreateEntityWorkflow component for maximum modularity and DRY principles.
- * Leverages existing modular architecture: EntityForm + TemplateSelection + Workflow management.
+ * Uses the new ProjectCreationWizard for progressive disclosure and improved UX.
+ * 4-step guided flow: Template → Basic Info → Funding Details → Advanced Options
  *
  * Created: 2025-12-03
- * Last Modified: 2025-12-31
- * Last Modified Summary: Moved to /dashboard/projects/create for path consistency
+ * Last Modified: 2026-01-16
+ * Last Modified Summary: Updated to use ProjectCreationWizard for better UX
  */
 
-import { CreateEntityWorkflow } from '@/components/create';
-import { projectConfig } from '@/config/entity-configs';
-import { ProjectTemplates } from '@/components/create/templates';
+import { ProjectCreationWizard } from '@/components/create/ProjectCreationWizard';
 
 export default function CreateProjectPage() {
-  return (
-    <CreateEntityWorkflow
-      config={projectConfig}
-      TemplateComponent={ProjectTemplates}
-      pageHeader={{
-        title: 'Create Project',
-        description: 'Start a fundraising project and accept Bitcoin donations.'
-      }}
-      showTemplatesByDefault={false}
-    />
-  );
+  return <ProjectCreationWizard />;
 }

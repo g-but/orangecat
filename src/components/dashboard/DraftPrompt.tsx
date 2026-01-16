@@ -39,7 +39,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
     }
   };
 
-  const getCompletionPercentage = (draft: Campaign) => {
+  const _getCompletionPercentage = (draft: Campaign) => {
     let completed = 0;
     const total = 6; // title, description, goal, category, bitcoin_address, website
 

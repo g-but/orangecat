@@ -11,6 +11,7 @@ import {
 } from '@/services/search'
 
 // Custom debounce function to avoid lodash dependency
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function debounce<T extends (...args: any[]) => any>(
   func: T,
   delay: number
@@ -150,6 +151,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
       setHasMore(response.hasMore)
       setCurrentOffset(offset + response.results.length)
       
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to perform search')
     } finally {
@@ -173,7 +175,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchReturn {
     try {
       const newSuggestions = await getSearchSuggestions(searchQuery, 5)
       setSuggestions(newSuggestions)
-    } catch (err) {
+    } catch {
       setSuggestions([])
     }
   }, [])
@@ -266,7 +268,7 @@ export function useSearchSuggestions(query: string, enabled: boolean = true): Us
         // Use real database suggestions from search service
         const realSuggestions = await getSearchSuggestions(searchQuery, 5)
         setSuggestions(realSuggestions)
-      } catch (err) {
+      } catch {
         setError('Failed to fetch suggestions')
         setSuggestions([])
       } finally {
@@ -304,6 +306,7 @@ export function useTrending() {
     try {
       const response = await getTrending()
       setTrending(response.results)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       setError(err.message || 'Failed to load trending content')
     } finally {
@@ -362,6 +365,7 @@ export function useSearchFilters() {
     sortBy: 'relevance' as 'relevance' | 'recent' | 'popular' | 'funding'
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateFilter = (key: keyof typeof filters, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }))
   }

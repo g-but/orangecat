@@ -77,7 +77,9 @@ export async function checkGroupPermission(
 
   try {
     // Get group and membership
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: group } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.groups) as any)
       .select('is_public, governance_preset')
       .eq('id', groupId)
@@ -88,7 +90,9 @@ export async function checkGroupPermission(
     }
 
     // Get membership
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: membership } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_members) as any)
       .select('role, permission_overrides')
       .eq('group_id', groupId)
@@ -155,7 +159,9 @@ export async function getGroupPermissions(
 
   try {
     // Get group and membership
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: group2 } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.groups) as any)
       .select('is_public, governance_preset')
       .eq('id', groupId)
@@ -166,7 +172,9 @@ export async function getGroupPermissions(
     }
 
     // Get membership
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: membership2 } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(TABLES.group_members) as any)
       .select('role, permission_overrides')
       .eq('group_id', groupId)
@@ -222,7 +230,7 @@ export async function getGroupPermissions(
     if (membership2.permission_overrides) {
       for (const [key, value] of Object.entries(membership2.permission_overrides)) {
         // Find the permission key for this action
-        const permKey = Object.entries(PERMISSION_TO_ACTION).find(([_, v]) => v === key)?.[0] as GroupPermissionKey | undefined;
+        const permKey = Object.entries(PERMISSION_TO_ACTION).find(([_k, v]) => v === key)?.[0] as GroupPermissionKey | undefined;
         if (permKey && permKey in permissions) {
           permissions[permKey] = value === 'allow';
         }

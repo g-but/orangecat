@@ -96,8 +96,8 @@ export interface FieldGroup {
   fields?: FieldConfig[];
   /** Custom component to render instead of fields (for complex components like collateral) */
   customComponent?: ComponentType<{
-    formData: Record<string, any>;
-    onFieldChange: (field: string, value: any) => void;
+    formData: Record<string, unknown>;
+    onFieldChange: (field: string, value: unknown) => void;
     disabled?: boolean;
   }>;
   /** Conditional display based on another field's value */
@@ -138,9 +138,10 @@ export interface DefaultGuidance {
 
 // ==================== ENTITY CONFIGURATION ====================
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface EntityConfig<T extends Record<string, any> = Record<string, any>> {
   /** Entity type identifier */
-  type: 'product' | 'service' | 'cause' | 'loan' | 'circle' | 'project' | 'asset' | 'organization' | 'ai_assistant' | 'event' | 'group' | 'wishlist' | 'research_entity';
+  type: 'product' | 'service' | 'cause' | 'loan' | 'circle' | 'project' | 'asset' | 'organization' | 'ai_assistant' | 'event' | 'group' | 'wishlist' | 'research';
   /** Display name (singular) */
   name: string;
   /** Display name (plural) */
@@ -198,7 +199,7 @@ export interface FormState<T> {
 }
 
 export interface FormActions<T> {
-  setFieldValue: (field: keyof T, value: any) => void;
+  setFieldValue: (field: keyof T, value: T[keyof T]) => void;
   setActiveField: (field: string | null) => void;
   submit: () => Promise<void>;
   reset: () => void;
@@ -206,6 +207,7 @@ export interface FormActions<T> {
 
 // ==================== COMPONENT PROPS ====================
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface EntityFormProps<T extends Record<string, any>> {
   config: EntityConfig<T>;
   initialValues?: Partial<T>;
@@ -217,9 +219,9 @@ export interface EntityFormProps<T extends Record<string, any>> {
 
 export interface FormFieldProps {
   config: FieldConfig;
-  value: any;
+  value: unknown;
   error?: string;
-  onChange: (value: any) => void;
+  onChange: (value: unknown) => void;
   onFocus: () => void;
   /** Optional callback when currency changes (for currency input fields) */
   onCurrencyChange?: (currency: string) => void;
@@ -246,6 +248,7 @@ export interface GuidancePanelProps {
  *
  * Note: Use `defaults` (not `data`) to store the prefill values.
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface EntityTemplate<T extends Record<string, any> = Record<string, any>> {
   /** Unique identifier for the template */
   id: string;
@@ -278,7 +281,7 @@ export interface TemplatePickerProps<T extends EntityTemplate> {
 /**
  * Return type for useTemplateSelection hook
  */
-export interface UseTemplateSelectionReturn<T extends Record<string, any>> {
+export interface UseTemplateSelectionReturn<T extends Record<string, unknown>> {
   /** Current template values (empty object if none selected) */
   templateValues: Partial<T>;
   /** Config with merged default values */

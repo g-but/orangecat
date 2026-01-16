@@ -17,10 +17,10 @@ interface EntityEditPageProps<T = any> {
 }
 
 export function EntityEditPage<T = any>({
-  entity,
+  entity: _entity,
   config,
   backUrl,
-  successUrl,
+  successUrl: _successUrl,
   children,
   title,
   description,

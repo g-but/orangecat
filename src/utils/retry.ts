@@ -8,12 +8,14 @@ export interface RetryOptions {
   maxDelay?: number;
   backoffFactor?: number;
   jitter?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   retryCondition?: (error: any) => boolean;
 }
 
 /**
  * Default retry condition - retries on network errors and 5xx status codes
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function isRetryableError(error: any): boolean {
   // Network errors
   if (!error) {
@@ -79,6 +81,7 @@ function calculateDelay(attempt: number, options: RetryOptions): number {
 export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
   const { maxAttempts = 3, retryCondition = isRetryableError } = options;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let lastError: any;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {

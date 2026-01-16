@@ -20,6 +20,29 @@ import { logger } from '@/utils/logger';
 
 const API_TIMEOUT_MS = 10000; // 10 seconds timeout for API calls
 
+// Transaction input/output types for processing
+interface TransactionInput {
+  prevout?: {
+    scriptpubkey_address?: string;
+    value?: number;
+  };
+}
+
+interface TransactionOutput {
+  scriptpubkey_address?: string;
+  value?: number;
+}
+
+interface RawTransaction {
+  txid?: string;
+  vin?: TransactionInput[];
+  vout?: TransactionOutput[];
+  status?: {
+    confirmed?: boolean;
+    block_time?: number;
+  };
+}
+
 // Types for provider configuration
 interface APIProvider {
   name: string;
@@ -89,16 +112,17 @@ export class BitcoinService {
           if (!Array.isArray(data)) {
             return [];
           }
-          return data.slice(0, 10).map((tx: any): BitcoinTransaction => {
+          return data.slice(0, 10).map((rawTx): BitcoinTransaction => {
+            const tx = rawTx as unknown as RawTransaction;
             let txType: 'incoming' | 'outgoing' = 'incoming';
             let valueInSatoshis = 0;
 
             const inputsFromAddress =
               tx.vin?.filter(
-                (input: any) => input.prevout && input.prevout.scriptpubkey_address === address
+                (input: TransactionInput) => input.prevout && input.prevout.scriptpubkey_address === address
               ) || [];
             const outputsToAddress =
-              tx.vout?.filter((output: any) => output.scriptpubkey_address === address) || [];
+              tx.vout?.filter((output: TransactionOutput) => output.scriptpubkey_address === address) || [];
 
             if (inputsFromAddress.length > 0) {
               txType = 'outgoing';
@@ -112,7 +136,7 @@ export class BitcoinService {
                 valueInSatoshis = amountSentToOthers;
               } else {
                 const totalValueFromInputs = inputsFromAddress.reduce(
-                  (sum: number, input: any) => sum + (Number(input.prevout?.value) || 0),
+                  (sum: number, input: TransactionInput) => sum + (Number(input.prevout?.value) || 0),
                   0
                 );
                 valueInSatoshis = totalValueFromInputs;
@@ -120,7 +144,7 @@ export class BitcoinService {
             } else if (outputsToAddress.length > 0) {
               txType = 'incoming';
               valueInSatoshis = outputsToAddress.reduce(
-                (sum: number, output: any) => sum + (Number(output.value) || 0),
+                (sum: number, output: TransactionOutput) => sum + (Number(output.value) || 0),
                 0
               );
             } else {
@@ -162,16 +186,17 @@ export class BitcoinService {
           if (!Array.isArray(data)) {
             return [];
           }
-          return data.slice(0, 10).map((tx: any): BitcoinTransaction => {
+          return data.slice(0, 10).map((rawTx): BitcoinTransaction => {
+            const tx = rawTx as unknown as RawTransaction;
             let txType: 'incoming' | 'outgoing' = 'incoming';
             let valueInSatoshis = 0;
 
             const inputsFromAddress =
               tx.vin?.filter(
-                (input: any) => input.prevout && input.prevout.scriptpubkey_address === address
+                (input: TransactionInput) => input.prevout && input.prevout.scriptpubkey_address === address
               ) || [];
             const outputsToAddress =
-              tx.vout?.filter((output: any) => output.scriptpubkey_address === address) || [];
+              tx.vout?.filter((output: TransactionOutput) => output.scriptpubkey_address === address) || [];
 
             if (inputsFromAddress.length > 0) {
               txType = 'outgoing';
@@ -185,7 +210,7 @@ export class BitcoinService {
                 valueInSatoshis = amountSentToOthers;
               } else {
                 const totalValueFromInputs = inputsFromAddress.reduce(
-                  (sum: number, input: any) => sum + (Number(input.prevout?.value) || 0),
+                  (sum: number, input: TransactionInput) => sum + (Number(input.prevout?.value) || 0),
                   0
                 );
                 valueInSatoshis = totalValueFromInputs;
@@ -193,7 +218,7 @@ export class BitcoinService {
             } else if (outputsToAddress.length > 0) {
               txType = 'incoming';
               valueInSatoshis = outputsToAddress.reduce(
-                (sum: number, output: any) => sum + (Number(output.value) || 0),
+                (sum: number, output: TransactionOutput) => sum + (Number(output.value) || 0),
                 0
               );
             } else {

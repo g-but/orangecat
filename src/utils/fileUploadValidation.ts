@@ -135,6 +135,7 @@ export class FileUploadValidator {
     buffer: Buffer, 
     config: FileUploadConfig,
     format: 'webp' | 'jpeg' = 'webp'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   ): Promise<{ buffer: Buffer; metadata: any }> {
     try {
       const processed = await sharp(buffer)

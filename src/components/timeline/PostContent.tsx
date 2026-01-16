@@ -37,7 +37,7 @@ export function PostContent({ event }: PostContentProps) {
   const displayContent = getDisplayContent();
 
   // Threads-like: never show separate titles; keep posts conversational
-  const shouldShowTitle = false;
+  const _shouldShowTitle = false;
 
   return (
     <div className="space-y-2">
@@ -104,6 +104,7 @@ export function PostContent({ event }: PostContentProps) {
                 href={`/profiles/${originalAuthor.username}`}
                 className="flex-shrink-0"
               >
+                {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic user avatar */}
                 <img
                   src={originalAuthor.avatar}
                   alt={originalAuthor.name}
@@ -151,6 +152,7 @@ export function PostContent({ event }: PostContentProps) {
           <div className="p-3 sm:p-4 space-y-2">
             <div className="flex items-start gap-3">
               <Link href={`/profiles/${originalAuthor.username}`} className="flex-shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element -- Dynamic user avatar */}
                 <img src={originalAuthor.avatar} alt={originalAuthor.name} className="w-9 h-9 rounded-full" />
               </Link>
               <div className="flex-1 min-w-0">

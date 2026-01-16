@@ -72,6 +72,7 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
     .eq('is_public', true)
     .single();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loan = loanData as any;
   if (error || !loan) {
     notFound();
@@ -220,6 +221,7 @@ export default async function PublicLoanDetailPage({ params }: PageProps) {
                     className="flex items-center gap-3 hover:bg-gray-50 -m-2 p-2 rounded-lg transition-colors"
                   >
                     {owner.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- Dynamic user avatar
                       <img
                         src={owner.avatar_url}
                         alt={owner.name || owner.username || 'User'}

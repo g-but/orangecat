@@ -12,8 +12,8 @@ interface DashboardLayoutProps {
   profile: Profile | null;
 }
 
-export default function DashboardLayout({ children, user, profile }: DashboardLayoutProps) {
-  const router = useRouter();
+export default function DashboardLayout({ children, user: _user, profile }: DashboardLayoutProps) {
+  const _router = useRouter();
 
   return (
     <div className="w-full">

@@ -40,6 +40,7 @@ export async function getUserFeed(
     const offset = (page - 1) * limit;
 
     // Build filter conditions
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let query = (supabase.rpc as any)('get_user_timeline_feed', {
       p_user_id: userId,
       p_limit: limit,
@@ -137,6 +138,7 @@ export async function getFollowedUsersFeed(
 
     // Get list of followed user IDs
     const { data: follows, error: followsError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('user_follows') as any)
       .select('followed_user_id')
       .eq('follower_id', currentUserId)
@@ -147,6 +149,7 @@ export async function getFollowedUsersFeed(
       throw followsError;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const followedUserIds = (follows as any[])?.map((f: any) => f.followed_user_id) || [];
 
     if (followedUserIds.length === 0) {
@@ -235,6 +238,7 @@ export async function getEnrichedUserFeed(
   userId: string,
   filters?: Partial<TimelineFilters>,
   pagination?: Partial<TimelinePagination>,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   getDemoTimelineEvents?: (userId: string) => any[]
 ): Promise<TimelineFeedResponse> {
   try {
@@ -242,6 +246,7 @@ export async function getEnrichedUserFeed(
     const limit = Math.min(pagination?.limit || DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE);
     const offset = (page - 1) * limit;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let events: any[] = [];
     let totalEvents = 0;
 
@@ -250,6 +255,7 @@ export async function getEnrichedUserFeed(
         data: enrichedEvents,
         error,
         count,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } = await (supabase.rpc as any)('get_enriched_timeline_feed', {
         p_user_id: userId,
         p_limit: limit,
@@ -264,6 +270,7 @@ export async function getEnrichedUserFeed(
         );
 
         // Fallback to basic timeline feed if enriched version isn't available
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: basicEvents, error: basicError } = await (supabase.rpc as any)(
           'get_user_timeline_feed',
           {
@@ -283,6 +290,7 @@ export async function getEnrichedUserFeed(
           totalEvents = 0;
         } else {
           // Convert basic events to enriched format
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           events = ((basicEvents || []) as any[]).map((event: any) => ({
             ...event,
             like_count: 0,
@@ -316,6 +324,7 @@ export async function getEnrichedUserFeed(
 
     // Transform to display events with social data
     const displayEvents = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (events || []).map(async (event: any) => {
         const timelineEvent = mapDbEventToTimelineEvent(event);
 
@@ -329,7 +338,7 @@ export async function getEnrichedUserFeed(
           : undefined;
 
         // Omit eventType and eventSubtype as TimelineDisplayEvent extends Omit<TimelineEvent, 'eventType' | 'eventSubtype'>
-        const { eventType: _, eventSubtype: __, ...eventWithoutTypes } = timelineEvent;
+        const { eventType: _eventType, eventSubtype: _eventSubtype, ...eventWithoutTypes } = timelineEvent;
 
         return {
           ...eventWithoutTypes,

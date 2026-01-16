@@ -73,7 +73,7 @@ export async function POST(
     }
 
     const { slug } = await params;
-    const body = await request.json();
+    const _body = await request.json();
 
     // Get group first
     const groupResult = await groupsService.getGroup(slug, true);

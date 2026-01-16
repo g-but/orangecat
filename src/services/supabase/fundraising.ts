@@ -3,6 +3,27 @@ import supabase from '@/lib/supabase/browser';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { getTableName } from '@/config/entity-registry';
 
+// Raw database types
+interface RawProject {
+  id: string;
+  user_id: string;
+  title: string;
+  status?: string;
+  is_public?: boolean;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+interface RawTransaction {
+  amount_sats?: number;
+  from_entity_id?: string;
+  to_entity_id?: string;
+  from_entity_type?: string;
+  user_id?: string;
+  amount?: number;
+  [key: string]: unknown;
+}
+
 export interface FundraisingStats {
   totalProjects: number;
   totalRaised: number;
@@ -26,8 +47,8 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
   try {
     // Use centralized supabase client
     // Get user's projects (both as creator and through organizations)
-    const { data: ownedProjects, error: ownedError } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: ownedProjects, error: ownedError } = await supabase
+      .from(getTableName('project'))
       .select('*')
       .eq('user_id', userId);
 
@@ -36,21 +57,21 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
     }
 
     // Organizations removed in MVP - only use user's own projects
-    const uniqueProjects = ownedProjects || [];
+    const uniqueProjects = (ownedProjects as RawProject[] | null) || [];
 
     // Get transactions for these projects to calculate stats
-    const projectIds = uniqueProjects.map((p: { id: string }) => p.id);
+    const projectIds = uniqueProjects.map((p) => p.id);
     let totalRaised = 0;
     let totalSupporters = 0;
 
     if (projectIds.length > 0) {
       // Build OR filter for multiple project IDs
-      const projectFilters = projectIds.map((id: string) => `to_entity_id.eq.${id}`).join(',');
+      const projectFilters = projectIds.map((id) => `to_entity_id.eq.${id}`).join(',');
 
       // Only query transactions if we have valid project IDs
       if (projectFilters) {
-        const { data: transactions, error: transactionsError } = await (supabase
-          .from(DATABASE_TABLES.TRANSACTIONS) as any)
+        const { data: transactions, error: transactionsError } = await supabase
+          .from(DATABASE_TABLES.TRANSACTIONS)
           .select('amount_sats, from_entity_id, to_entity_id, from_entity_type')
           .eq('to_entity_type', 'project')
           .or(projectFilters)
@@ -60,19 +81,19 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
           throw transactionsError;
         }
 
-        totalRaised = transactions?.reduce((sum: number, t: { amount_sats?: number }) => sum + (t.amount_sats || 0), 0) || 0;
+        const txList = (transactions as RawTransaction[] | null) || [];
+        totalRaised = txList.reduce((sum, t) => sum + (t.amount_sats || 0), 0);
 
         // Count unique donors (from_entity_id where from_entity_type = 'profile')
         const uniqueDonors = new Set(
-          transactions?.filter((t: { from_entity_type?: string }) => t.from_entity_type === 'profile').map((t: { from_entity_id?: string }) => t.from_entity_id) ||
-            []
+          txList.filter((t) => t.from_entity_type === 'profile').map((t) => t.from_entity_id)
         );
         totalSupporters = uniqueDonors.size;
       }
     }
 
     const totalProjects = uniqueProjects.length;
-    const activeProjects = uniqueProjects.filter((p: { status?: string }) => p.status === 'active').length;
+    const activeProjects = uniqueProjects.filter((p) => p.status === 'active').length;
 
     return {
       totalProjects,
@@ -103,8 +124,8 @@ export async function getUserFundraisingActivity(
     const activities: FundraisingActivity[] = [];
 
     // Get user's funding pages
-    const { data: pages, error: pagesError } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: pages, error: pagesError } = await supabase
+      .from(getTableName('project'))
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -113,12 +134,21 @@ export async function getUserFundraisingActivity(
       throw pagesError;
     }
 
-    const pageIds = pages?.map((page: any) => page.id) || [];
+    const projectList = (pages as RawProject[] | null) || [];
+    const pageIds = projectList.map((page) => page.id);
 
     // Get recent transactions
     if (pageIds.length > 0) {
-      const { data: transactions, error: transactionsError } = await (supabase
-        .from(DATABASE_TABLES.TRANSACTIONS) as any)
+      interface TransactionWithProject {
+        created_at: string;
+        amount: number;
+        projects: {
+          title: string;
+        };
+      }
+
+      const { data: transactions, error: transactionsError } = await supabase
+        .from(DATABASE_TABLES.TRANSACTIONS)
         .select(
           `
           *,
@@ -130,13 +160,6 @@ export async function getUserFundraisingActivity(
         .order('created_at', { ascending: false })
         .limit(limit);
 
-      interface TransactionWithProject {
-        created_at: string;
-        amount: number;
-        projects: {
-          title: string;
-        };
-      }
       if (!transactionsError && transactions) {
         (transactions as TransactionWithProject[]).forEach(transaction => {
           const timeDiff = Date.now() - new Date(transaction.created_at).getTime();
@@ -155,7 +178,7 @@ export async function getUserFundraisingActivity(
     }
 
     // Add project creation activities
-    pages?.slice(0, 3).forEach((page: { created_at: string; title: string }) => {
+    projectList.slice(0, 3).forEach((page) => {
       const timeDiff = Date.now() - new Date(page.created_at).getTime();
       const timeAgo = formatTimeAgo(timeDiff);
 
@@ -178,11 +201,11 @@ export async function getUserFundraisingActivity(
 /**
  * Get all projects for a user (both owned and through organizations)
  */
-export async function getUserProjects(userId: string): Promise<any[]> {
+export async function getUserProjects(userId: string): Promise<RawProject[]> {
   try {
     // Get user's projects (both as creator and through organizations)
-    const { data: ownedProjects, error: ownedError } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: ownedProjects, error: ownedError } = await supabase
+      .from(getTableName('project'))
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
@@ -192,7 +215,7 @@ export async function getUserProjects(userId: string): Promise<any[]> {
     }
 
     // Organizations removed in MVP - only return user's own projects
-    return ownedProjects || [];
+    return (ownedProjects as RawProject[] | null) || [];
   } catch (error) {
     logger.error('Error fetching projects', error, 'Fundraising');
     return [];
@@ -202,11 +225,11 @@ export async function getUserProjects(userId: string): Promise<any[]> {
 /**
  * Get a single project by ID
  */
-export async function getProject(projectId: string): Promise<any | null> {
+export async function getProject(projectId: string): Promise<RawProject | null> {
   try {
     // Use centralized supabase client
-    const { data, error } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data, error } = await supabase
+      .from(getTableName('project'))
       .select('*')
       .eq('id', projectId)
       .single();
@@ -218,7 +241,7 @@ export async function getProject(projectId: string): Promise<any | null> {
       }
       throw error;
     }
-    return data;
+    return data as RawProject;
   } catch (error) {
     logger.error('Error fetching project', error, 'Fundraising');
     return null;
@@ -232,8 +255,8 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
   try {
     // Use centralized supabase client
     // Get all funding pages
-    const { data: pages2, error: pagesError } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: pages2, error: pagesError } = await supabase
+      .from(getTableName('project'))
       .select('*')
       .eq('is_public', true);
 
@@ -242,8 +265,8 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
     }
 
     // Get all confirmed transactions
-    const { data: transactions2, error: transactionsError } = await (supabase
-      .from('transactions') as any)
+    const { data: transactions2, error: transactionsError } = await supabase
+      .from('transactions')
       .select('user_id, amount')
       .eq('status', 'confirmed');
 
@@ -251,14 +274,17 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
       throw transactionsError;
     }
 
-    const totalProjects = pages2?.length || 0;
+    const projectList = (pages2 as RawProject[] | null) || [];
+    const txList = (transactions2 as RawTransaction[] | null) || [];
+
+    const totalProjects = projectList.length;
     // Current schema doesn't have is_active, so assume all public pages are active
-    const activeProjects = pages2?.filter((page: any) => page.is_public).length || 0;
+    const activeProjects = projectList.filter((page) => page.is_public).length;
     // Current schema doesn't have total_funding, so use 0 for now
     const totalRaised = 0;
 
     // Count unique supporters
-    const uniqueSupporters = new Set(transactions2?.map((t: any) => t.user_id) || []);
+    const uniqueSupporters = new Set(txList.map((t) => t.user_id));
     const totalSupporters = uniqueSupporters.size;
 
     return {
@@ -287,8 +313,8 @@ export async function getRecentDonationsCount(userId: string): Promise<number> {
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     // Get user's funding pages
-    const { data: pages3, error: pagesError } = await (supabase
-      .from(getTableName('project')) as any)
+    const { data: pages3, error: pagesError } = await supabase
+      .from(getTableName('project'))
       .select('id')
       .eq('user_id', userId);
 
@@ -299,11 +325,11 @@ export async function getRecentDonationsCount(userId: string): Promise<number> {
       return 0;
     }
 
-    const pageIds = pages3.map((page: any) => page.id);
+    const pageIds = (pages3 as Array<{ id: string }>).map((page) => page.id);
 
     // Count transactions this month
-    const { count, error: transactionsError } = await (supabase
-      .from('transactions') as any)
+    const { count, error: transactionsError } = await supabase
+      .from('transactions')
       .select('*', { count: 'exact', head: true })
       .in('funding_page_id', pageIds)
       .eq('status', 'confirmed')

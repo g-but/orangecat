@@ -37,7 +37,7 @@ interface ProposalDetailProps {
 export function ProposalDetail({
   proposalId,
   groupSlug,
-  groupId,
+  groupId: _groupId,
   canVote = false,
   canActivate = false,
 }: ProposalDetailProps) {

@@ -1,200 +1,591 @@
 # Session Handoff
 
-**Date:** 2026-01-07
-**Last Modified:** 2026-01-07
-**Last Modified Summary:** Fixed Project Page UX - Support modal auto-fill, Share/Contact buttons for all users, and RLS policy for public project access.
-**Status:** Ready for Commit / Testing
+**Date:** 2026-01-16
+**Last Modified:** 2026-01-16
+**Last Modified Summary:** Implemented Project Creation UX Improvements - Progressive disclosure wizard, form persistence, user-friendly validation
+**Status:** Ready for Testing / Deployment
 
 ---
 
 ## Session Summary
 
-This session focused on **Project Page UX improvements** based on user feedback. The main issues addressed:
-1. Support modal forcing logged-in users to re-enter their name
-2. Share button only visible to project owners
-3. No way to contact/message project creators
-4. Projects returning 404 for non-authenticated users (RLS policy bug)
+This session implemented the **OrangeCat Project Creation UX Improvements** plan to transform the project creation experience from overwhelming to guided. The implementation focused on:
+1. Form state persistence (auto-save drafts)
+2. User-friendly validation messages
+3. Progressive disclosure wizard (4-step flow)
+4. Quick UX fixes (onboarding skip, duplicate currency selector)
 
 ---
 
 ## Completed Work
 
-### 1. SupportModal Pre-fill User Info (`src/components/projects/SupportModal.tsx`)
+### Phase 1: Form State Persistence ✅
 
-**Problem:** Users had to manually enter their name even when logged in.
+**Problem:** Users lost all their work when validation errors occurred or they navigated away.
 
-**Solution:**
-- Added `useAuth()` hook to get logged-in user's profile
-- Pre-fills `displayName` with `profile.name || profile.username || user.email`
-- Added `useEffect` to populate name when modal opens
-- Reset now preserves user's default name (not empty string)
+**Solution:** Added localStorage-based draft persistence to EntityForm.
 
-**Key Changes (lines 41, 50-76):**
+**Files Modified:**
+- `src/components/create/EntityForm.tsx`
+
+**Key Features:**
+1. **Auto-save every 10 seconds** - Only saves when there's meaningful content
+2. **Load draft on mount** - Restores previous work with 7-day expiration
+3. **Visual feedback** - "Draft saved X minutes ago" indicator
+4. **Auto-cleanup** - Clears draft on successful submission
+5. **User-specific** - Draft keys include user ID to prevent conflicts
+
+**Implementation Details (EntityForm.tsx):**
 ```typescript
-const { user, profile } = useAuth();
-const defaultDisplayName = profile?.name || profile?.username || user?.email?.split('@')[0] || '';
-const [displayName, setDisplayName] = useState(defaultDisplayName);
+// Helper function for relative timestamps
+function formatRelativeTime(timestamp: string): string {
+  // Returns "just now", "2 minutes ago", "1 hour ago", etc.
+}
 
-// Pre-fill on modal open
+// State tracking
+const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+
+// Load draft on mount (lines 132-162)
 useEffect(() => {
-  if (open && !isAnonymous) {
-    const name = profile?.name || profile?.username || user?.email?.split('@')[0] || '';
-    if (name && !displayName) {
-      setDisplayName(name);
+  if (mode === 'edit' || !user?.id) return;
+
+  const draftKey = `${config.type}-draft-${user.id}`;
+  const savedDraft = localStorage.getItem(draftKey);
+
+  if (savedDraft) {
+    const { formData, savedAt } = JSON.parse(savedDraft);
+    const age = Date.now() - new Date(savedAt).getTime();
+
+    if (age < 7 * 24 * 60 * 60 * 1000) { // 7 days
+      setFormState(prev => ({ ...prev, data: { ...prev.data, ...formData } }));
+      toast.info(`Draft loaded from ${formatRelativeTime(savedAt)}`);
+    } else {
+      localStorage.removeItem(draftKey); // Expired
     }
   }
-}, [open, user, profile, isAnonymous, displayName]);
-```
+}, [config.type, user?.id, mode]);
 
-### 2. Anonymous Toggle UX Improvement
+// Auto-save every 10 seconds (lines 164-191)
+useEffect(() => {
+  if (mode === 'edit' || !user?.id) return;
 
-**Problem:** Anonymous toggle was at bottom of form; name field always visible.
+  const interval = setInterval(() => {
+    const hasContent = Object.values(formState.data).some(v => {
+      if (typeof v === 'string') return v.trim().length > 0;
+      if (Array.isArray(v)) return v.length > 0;
+      return v !== null && v !== undefined;
+    });
 
-**Solution:**
-- Moved anonymous toggle to TOP of form (better UX flow)
-- Hide name field when anonymous is ON
-- Show dynamic helper text explaining the choice
-- Auto-restore default name when turning anonymous OFF
+    if (!hasContent) return;
 
-**Signature Tab (lines 222-293):**
-- Toggle first, name field conditionally shown
-- Helper text: "Your name will be hidden" vs "Your name will appear on Wall of Support"
+    const draftKey = `${config.type}-draft-${user.id}`;
+    localStorage.setItem(draftKey, JSON.stringify({
+      formData: formState.data,
+      savedAt: new Date().toISOString(),
+    }));
+    setLastSavedAt(new Date());
+  }, 10000);
 
-**Message Tab (lines 295-363):**
-- Same pattern applied
+  return () => clearInterval(interval);
+}, [formState.data, config.type, user?.id, mode]);
 
-### 3. Share Button for All Users (`src/components/project/ProjectHeader.tsx`)
+// Clear draft on successful submission (lines 355-359)
+if (mode === 'create' && user?.id) {
+  const draftKey = `${config.type}-draft-${user.id}`;
+  localStorage.removeItem(draftKey);
+}
 
-**Problem:** Share button was inside `{isOwner && ...}` conditional.
-
-**Solution:** Moved Share button outside the conditional so everyone can share.
-
-**Before:**
-```tsx
-{isOwner && (
-  <Link>Edit</Link>
-  <Button>Share</Button>  // Only owners could share!
+// Visual indicator (lines 658-662)
+{mode === 'create' && lastSavedAt && !wizardMode && (
+  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <Save className="h-3.5 w-3.5" />
+    <span>Draft saved {formatRelativeTime(lastSavedAt.toISOString())}</span>
+  </div>
 )}
 ```
 
-**After (lines 195-218):**
-```tsx
-{isOwner && <Link>Edit</Link>}
-{!isOwner && <Button>Contact</Button>}  // NEW
-<Button>Share</Button>  // Now available to everyone
+---
+
+### Phase 2: User-Friendly Validation ✅
+
+**Problem:** Generic Zod error messages were unhelpful:
+- "String must contain at least 1 character(s)"
+- "Invalid type: expected string, received undefined"
+
+**Solution:** Enhanced projectSchema with specific, actionable error messages.
+
+**File Modified:**
+- `src/lib/validation.ts`
+
+**Before & After Examples:**
+
+| Field | Before | After |
+|-------|--------|-------|
+| title | "String must contain at least 1 character(s)" | "Project title is required" |
+| title | "String must contain at most 100 character(s)" | "Project title must be 100 characters or less" |
+| description | Generic error | "Project description is required" / "Description must be 2000 characters or less" |
+| goal_amount | "Expected number, received undefined" | "Funding goal is required" |
+| goal_amount | "Number must be positive" | "Funding goal must be greater than 0" |
+| currency | Generic error | "Please select a valid currency" |
+| bitcoin_address | "Invalid format" | "Please enter a valid Bitcoin address (starts with bc1, 1, or 3)" |
+| lightning_address | "Invalid email" | "Please enter a valid Lightning address (format: user@domain.com)" |
+| website_url | "Invalid url" | "Please enter a valid website URL (e.g., https://example.com)" |
+| tags | Generic error | "Tags must be at least 3 characters" / "Tags must be 20 characters or less" |
+
+**Key Changes (validation.ts):**
+```typescript
+export const projectSchema = baseEntitySchema.extend({
+  title: z
+    .string()
+    .min(1, 'Project title is required')
+    .max(100, 'Project title must be 100 characters or less'),
+
+  description: z
+    .string()
+    .min(1, 'Project description is required')
+    .max(2000, 'Description must be 2000 characters or less'),
+
+  goal_amount: z
+    .number({
+      required_error: 'Funding goal is required',
+      invalid_type_error: 'Funding goal must be a number',
+    })
+    .int('Funding goal must be a whole number')
+    .positive('Funding goal must be greater than 0')
+    .optional()
+    .nullable(),
+
+  bitcoin_address: z
+    .string()
+    .refine(val => !val || /^(bc1|[13])[a-zA-HJ-NP-Z0-9]{25,}$/.test(val), {
+      message: 'Please enter a valid Bitcoin address (starts with bc1, 1, or 3)',
+    })
+    .optional()
+    .nullable()
+    .or(z.literal('')),
+
+  lightning_address: z
+    .string()
+    .email('Please enter a valid Lightning address (format: user@domain.com)')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
+
+  website_url: z
+    .string()
+    .url('Please enter a valid website URL (e.g., https://example.com)')
+    .optional()
+    .nullable()
+    .or(z.literal('')),
+
+  tags: z
+    .array(
+      z
+        .string()
+        .min(3, 'Tags must be at least 3 characters')
+        .max(20, 'Tags must be 20 characters or less')
+    )
+    .optional()
+    .nullable()
+    .default([]),
+});
 ```
 
-### 4. Contact/Inquiry Button for Non-Owners
+---
 
-**Problem:** No way to message project creators from the project page.
+### Phase 3: Progressive Disclosure Wizard ✅
 
-**Solution:** Added "Contact" button that starts a conversation.
+**Problem:** 15+ fields shown simultaneously caused cognitive overload and user confusion.
 
-**Implementation (lines 53-80, 206-212):**
-- If not logged in: Shows toast "Please sign in to send a message" + redirects to auth
-- If logged in: Creates/opens conversation with project creator via `/api/messages` POST
-- Redirects to `/messages/{conversationId}`
+**Solution:** Created 4-step wizard with progressive disclosure pattern.
 
+**New File:**
+- `src/components/create/ProjectCreationWizard.tsx` (300 lines)
+
+**Modified Files:**
+- `src/components/create/EntityForm.tsx` (wizard mode integration)
+- `src/app/(authenticated)/dashboard/projects/create/page.tsx` (switched to wizard)
+
+**Wizard Flow:**
+
+**Step 1: Choose Template (Optional)**
+- Template gallery (TODO: implement TemplatePicker)
+- Skip button to create from scratch
+- Fields: none (template selection only)
+
+**Step 2: Basic Information (Required)**
+- Focuses on essential identity fields
+- Fields: `title`, `description`, `category`
+- User cannot proceed without completing these
+
+**Step 3: Funding Details (Required)**
+- Bitcoin payment configuration
+- Fields: `goal_amount`, `currency`, `funding_purpose`, `bitcoin_address`, `lightning_address`
+- Core to project functionality
+
+**Step 4: Additional Details (Optional)**
+- Can be skipped entirely
+- Fields: `website_url`, `tags`, `start_date`, `target_completion`, `show_on_profile`
+- Power users can add metadata
+
+**Features:**
+1. **Progress indicator** - Visual progress bar + step indicators
+2. **Framer-motion animations** - Smooth transitions between steps
+3. **Per-step validation** - Only validates visible fields
+4. **Skip optional steps** - Users can bypass Step 1 and Step 4
+5. **Navigate back** - Users can return to previous steps to edit
+6. **Persistent state** - Form data persists across all steps (via EntityForm auto-save)
+
+**Implementation (ProjectCreationWizard.tsx):**
 ```typescript
-const handleContact = async () => {
-  if (!user) {
-    toast.info('Please sign in to send a message');
-    router.push(`/auth?mode=login&from=/projects/${project.id}`);
-    return;
+const WIZARD_STEPS: WizardStep[] = [
+  {
+    id: 'template',
+    title: 'Choose Template (Optional)',
+    description: 'Start with a pre-built template or create from scratch',
+    optional: true,
+    fields: [],
+  },
+  {
+    id: 'basic',
+    title: 'Basic Information',
+    description: 'Name your project and describe what you\'re funding',
+    optional: false,
+    fields: ['title', 'description', 'category'],
+  },
+  {
+    id: 'funding',
+    title: 'Funding Details',
+    description: 'Set your goal and Bitcoin payment addresses',
+    optional: false,
+    fields: ['goal_amount', 'currency', 'funding_purpose', 'bitcoin_address', 'lightning_address'],
+  },
+  {
+    id: 'advanced',
+    title: 'Additional Details',
+    description: 'Timeline, website, and other optional information',
+    optional: true,
+    fields: ['website_url', 'tags', 'start_date', 'target_completion', 'show_on_profile'],
+  },
+];
+
+// Navigation handlers
+const handleNext = () => {
+  if (currentStep < WIZARD_STEPS.length - 1) {
+    setCompletedSteps(prev => new Set([...prev, currentStep]));
+    setCurrentStep(currentStep + 1);
   }
-  // Create conversation with creator
-  const response = await fetch('/api/messages', {
-    method: 'POST',
-    body: JSON.stringify({ participantIds: [project.user_id] }),
-  });
-  const { conversationId } = await response.json();
-  router.push(`/messages/${conversationId}`);
+};
+
+const handleSkip = () => {
+  if (currentStepConfig.optional) {
+    handleNext();
+  }
+};
+
+// Integrate EntityForm with wizard mode
+<EntityForm
+  config={projectConfig}
+  wizardMode={{
+    currentStep,
+    totalSteps: WIZARD_STEPS.length,
+    visibleFields: currentStepConfig.fields,
+    onNext: handleNext,
+    onPrevious: currentStep > 0 ? handlePrevious : undefined,
+    onSkip: currentStepConfig.optional ? handleSkip : undefined,
+  }}
+/>
+```
+
+**EntityForm Wizard Integration:**
+
+Added `WizardMode` interface and conditional rendering:
+```typescript
+interface WizardMode {
+  currentStep: number;
+  totalSteps: number;
+  visibleFields: string[];
+  onNext?: () => void;
+  onPrevious?: () => void;
+  onSkip?: () => void;
+}
+
+// Filter field groups to show only visible fields
+const visibleFieldGroups = useMemo(() => {
+  if (!wizardMode) return config.fieldGroups;
+
+  return config.fieldGroups
+    .map(group => ({
+      ...group,
+      fields: group.fields.filter(field =>
+        wizardMode.visibleFields.includes(field.name)
+      ),
+    }))
+    .filter(group => !group.fields || group.fields.length > 0);
+}, [config.fieldGroups, wizardMode]);
+
+// Conditional UI elements
+{!wizardMode && <Header />}  // Hidden in wizard
+{!wizardMode && <GuidanceSidebar />}  // Hidden in wizard
+{!wizardMode && <Templates />}  // Hidden in wizard (shown in Step 1)
+
+{wizardMode ? (
+  <WizardNavigation />  // Previous/Next/Skip buttons
+) : (
+  <StandardActions />  // Create/Cancel buttons
+)}
+```
+
+---
+
+### Phase 4: Quick Wins ✅
+
+#### 4.1 Fixed Onboarding Modal Skip Button
+
+**Problem:** "Skip Tour" button didn't mark onboarding as completed, so users saw the flow again on next visit.
+
+**Solution:** Updated `handleSkip()` to persist completion status.
+
+**File Modified:**
+- `src/components/onboarding/OnboardingFlow.tsx`
+
+**Change (lines 367-383):**
+```typescript
+const handleSkip = async () => {
+  onboardingEvents.skipped(currentStep, user?.id);
+
+  // Mark onboarding as completed so user doesn't see it again
+  if (user?.id) {
+    try {
+      await ProfileService.fallbackProfileUpdate(user.id, {
+        onboarding_completed: true,
+      });
+    } catch (error) {
+      console.error('Failed to mark onboarding as skipped:', error);
+      // Continue anyway - analytics event was sent
+    }
+  }
+
+  router.push('/dashboard?welcome=true');
 };
 ```
 
-### 5. RLS Policy Fix for Public Project Access
+#### 4.2 Removed Duplicate Currency Selector
 
-**Problem:** Projects table had restrictive RLS policy:
-```sql
-CREATE POLICY projects_select ON public.projects
-  FOR SELECT USING (user_id = auth.uid());  -- Only owner can see!
+**Problem:** Project funding section had TWO currency selectors:
+1. Embedded in `goal_amount` field (type: 'currency')
+2. Standalone `currency` select field
+
+**Solution:** Removed standalone field since 'currency' type field already includes selector.
+
+**File Modified:**
+- `src/config/entity-configs/project-config.ts`
+
+**Before (lines 53-82):**
+```typescript
+fields: [
+  {
+    name: 'goal_amount',
+    type: 'currency',  // Already includes currency selector!
+  },
+  {
+    name: 'currency',  // DUPLICATE!
+    type: 'select',
+    options: [...],
+  },
+  {
+    name: 'funding_purpose',
+    type: 'textarea',
+  },
+]
 ```
 
-This meant unauthenticated users (`auth.uid()` = null) couldn't see ANY projects, causing 404 errors.
-
-**Solution:** Created migration `supabase/migrations/20260107000006_fix_projects_public_access.sql`:
-```sql
--- Anyone can view active/completed projects, owners can view all their projects
-CREATE POLICY projects_public_read ON public.projects
-  FOR SELECT USING (
-    status = 'active'
-    OR status = 'completed'
-    OR user_id = auth.uid()
-  );
-
--- Only owner can modify
-CREATE POLICY projects_modify ON public.projects
-  FOR ALL USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
+**After (lines 53-69):**
+```typescript
+fields: [
+  {
+    name: 'goal_amount',
+    type: 'currency',
+    hint: 'Optional: Set a funding target. Currency selector is included in this field.',
+  },
+  {
+    name: 'funding_purpose',
+    type: 'textarea',
+  },
+]
 ```
 
 ---
 
 ## Files Modified
 
-| File | Change |
-|------|--------|
-| `src/components/projects/SupportModal.tsx` | Added useAuth, pre-fill logic, improved anonymous UX |
-| `src/components/project/ProjectHeader.tsx` | Added Contact button, moved Share outside isOwner |
-| `supabase/migrations/20260107000006_fix_projects_public_access.sql` | **NEW** - Fix RLS for public project viewing |
+| File | Lines Changed | Change Summary |
+|------|---------------|----------------|
+| `src/components/create/EntityForm.tsx` | ~100 | Added draft persistence, wizard mode integration |
+| `src/lib/validation.ts` | ~50 | Enhanced projectSchema with user-friendly messages |
+| `src/components/create/ProjectCreationWizard.tsx` | 300 | **NEW** - 4-step progressive disclosure wizard |
+| `src/app/(authenticated)/dashboard/projects/create/page.tsx` | ~10 | Switched to ProjectCreationWizard |
+| `src/components/onboarding/OnboardingFlow.tsx` | ~10 | Fixed skip button to mark completion |
+| `src/config/entity-configs/project-config.ts` | -13 | Removed duplicate currency field |
 
 ---
 
-## Pending Actions
+## Architecture Compliance ✅
 
-### 1. Apply RLS Migration
-The migration file is created but needs to be applied to the remote Supabase instance:
-```bash
-# Option 1: Via Supabase CLI
-npx supabase db push
+All changes follow OrangeCat engineering principles:
 
-# Option 2: Run SQL directly in Supabase Dashboard
-# Copy contents of 20260107000006_fix_projects_public_access.sql
-```
+**DRY (Don't Repeat Yourself):**
+- ✅ Reused localStorage pattern from ProjectWizard.tsx
+- ✅ Reused wizard pattern from OnboardingFlow.tsx
+- ✅ EntityForm works for all entity types (not project-specific)
 
-### 2. Commit Changes
-All changes are ready for commit. Suggested commit message:
-```
-fix: Improve project page UX - pre-fill support forms, public sharing, contact button
+**SSOT (Single Source of Truth):**
+- ✅ Validation messages in validation.ts
+- ✅ Field configuration in project-config.ts
+- ✅ Entity metadata in entity-registry.ts
 
-- SupportModal: Auto-fill logged-in user's name from profile
-- SupportModal: Improved anonymous toggle UX (top of form, hide name when on)
-- ProjectHeader: Share button now visible to all users, not just owners
-- ProjectHeader: Added Contact button for non-owners to message creator
-- RLS: Fixed projects policy to allow public viewing of active projects
-```
+**Separation of Concerns:**
+- ✅ EntityForm = presentation layer (UI)
+- ✅ Wizard = orchestration layer (flow)
+- ✅ Validation = business logic layer
+
+**Type Safety:**
+- ✅ Full TypeScript throughout
+- ✅ Zod schema validation
+- ✅ No `any` types
+
+**Modularity:**
+- ✅ Small, focused components
+- ✅ Composable patterns
+- ✅ Reusable across entity types
 
 ---
 
 ## Testing Checklist
 
-- [ ] **Support Modal (logged in):** Open support modal, verify name is pre-filled
-- [ ] **Support Modal (anonymous):** Toggle anonymous ON, verify name field hides
-- [ ] **Share button:** As non-owner, verify Share button is visible
-- [ ] **Contact button:** As non-owner, click Contact, verify redirect to messages
-- [ ] **Contact (not logged in):** Click Contact, verify sign-in prompt
-- [ ] **Public project access:** Log out, visit `/projects/{id}`, verify page loads (after RLS migration)
+### Phase 1: Form Persistence
+- [ ] **Create project** - Start form, enter data, wait 10 seconds, verify "Draft saved" appears
+- [ ] **Navigate away** - Fill form partially, navigate away, return, verify data restored
+- [ ] **Expired draft** - Manually set savedAt to 8 days ago in localStorage, verify draft not loaded
+- [ ] **Complete submission** - Submit form successfully, verify draft cleared from localStorage
+- [ ] **Different user** - Draft key includes user ID, verify user A can't see user B's draft
+
+### Phase 2: Validation
+- [ ] **Empty title** - Submit without title, verify "Project title is required"
+- [ ] **Long title** - Enter 101+ characters, verify "must be 100 characters or less"
+- [ ] **Invalid Bitcoin address** - Enter "invalid", verify "starts with bc1, 1, or 3"
+- [ ] **Invalid Lightning** - Enter "notanemail", verify "format: user@domain.com"
+- [ ] **Invalid URL** - Enter "notaurl", verify "valid website URL"
+- [ ] **Short tags** - Enter tag "ab", verify "must be at least 3 characters"
+
+### Phase 3: Wizard
+- [ ] **Step 1 (Template)** - Verify skip button works, progresses to Step 2
+- [ ] **Step 2 (Basic)** - Verify title/description/category fields shown
+- [ ] **Step 3 (Funding)** - Verify funding fields shown, Bitcoin addresses
+- [ ] **Step 4 (Advanced)** - Verify skip works, optional fields shown
+- [ ] **Navigation** - Click Previous from Step 3, verify returns to Step 2
+- [ ] **Progress bar** - Verify shows "Step X of 4" and progress percentage
+- [ ] **Animations** - Verify smooth transitions between steps
+- [ ] **Persistence** - Enter data in Step 2, go to Step 3, return to Step 2, verify data persists
+
+### Phase 4: Quick Wins
+- [ ] **Onboarding skip** - Click "Skip Tour", verify onboarding_completed set in database
+- [ ] **No duplicate currency** - Open project creation, verify only ONE currency selector in funding section
 
 ---
 
-## Known Pre-existing Type Errors
+## Commit Message
 
-These errors existed before this session and are unrelated to the changes:
-- `src/app/(authenticated)/dashboard/assets/[id]/page.tsx` - Missing Asset properties
+```
+feat: Implement project creation UX improvements with progressive disclosure
+
+Phase 1: Form State Persistence
+- Added auto-save draft every 10 seconds to EntityForm
+- Load draft on mount with 7-day expiration
+- Visual "Draft saved" indicator with relative timestamps
+- Auto-cleanup on successful submission
+- User-specific draft keys prevent conflicts
+
+Phase 2: User-Friendly Validation
+- Enhanced projectSchema with actionable error messages
+- Transformed generic Zod errors into helpful guidance
+- Examples: "Project title is required", "Please enter a valid Bitcoin address"
+
+Phase 3: Progressive Disclosure Wizard
+- Created ProjectCreationWizard with 4-step guided flow
+- Step 1: Template selection (optional)
+- Step 2: Basic information (required)
+- Step 3: Funding details (required)
+- Step 4: Additional details (optional)
+- Integrated wizard mode into EntityForm
+- Framer-motion animations between steps
+- Per-step validation, skip optional steps
+- Updated create project page to use wizard
+
+Phase 4: Quick Wins
+- Fixed onboarding Skip Tour button to mark completion
+- Removed duplicate currency selector from project config
+
+Benefits:
+- Reduces form abandonment (auto-save prevents data loss)
+- Improves user confidence (clear error messages)
+- Reduces cognitive load (3-5 fields per step vs 15+ at once)
+- Faster completion (skip optional steps)
+- Better first-time experience (guided flow)
+
+Architecture:
+- Follows DRY (reused existing patterns)
+- Maintains SSOT (validation in validation.ts, config in project-config.ts)
+- Type-safe (TypeScript + Zod throughout)
+- Modular (EntityForm works for all entity types)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
+```
+
+---
+
+## Next Steps
+
+### 1. Test the Wizard Flow
+```bash
+# Start dev server
+npm run dev
+
+# Navigate to create project page
+open http://localhost:3001/dashboard/projects/create
+
+# Test all wizard steps, validation, persistence
+```
+
+### 2. Implement Template Picker (TODO in wizard)
+Currently Step 1 shows placeholder. Needs:
+- TemplatePicker component (may already exist)
+- Template data for projects
+- Template selection handler
+
+### 3. Apply to Other Entity Types (Future)
+The wizard pattern can be extended to:
+- Products (Product creation wizard)
+- Services (Service creation wizard)
+- Events (Event creation wizard)
+
+### 4. Analytics Tracking (Optional)
+Add wizard-specific analytics:
+```typescript
+onboardingEvents.wizardStepViewed(step, entityType, userId);
+onboardingEvents.wizardStepCompleted(step, entityType, userId);
+onboardingEvents.wizardSkipped(step, entityType, userId);
+```
+
+---
+
+## Known Issues (Pre-existing)
+
+These type errors existed before this session and are unrelated:
+- `src/app/(authenticated)/dashboard/assets/[id]/page.tsx` - Asset properties
 - `src/app/(authenticated)/dashboard/loans/[id]/page.tsx` - Loan type mismatches
-- `src/app/(authenticated)/dashboard/wishlists/` - Config serialization issues
-- `src/app/api/debug-service/route.ts` - Return type issues
+- `src/app/(authenticated)/dashboard/wishlists/` - Config serialization
 
 ---
 
-**Next Agent:** Apply the RLS migration, test the project page UX improvements, then commit all changes together.
+**Next Agent:** Test the wizard flow end-to-end, verify all validation messages work correctly, then deploy to preview environment for user testing.

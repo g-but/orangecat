@@ -35,6 +35,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     const { data: project, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .select(
         'id, user_id, bitcoin_address, bitcoin_balance_btc, bitcoin_balance_updated_at, title'
@@ -107,6 +108,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Update project balance
     const { error: updateError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(getTableName('project')) as any)
       .update({
         bitcoin_balance_btc: balance.balance_btc,

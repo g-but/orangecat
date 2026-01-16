@@ -46,12 +46,13 @@ export const GET = withAuth(async (
 ) => {
   try {
     const { slug } = await params;
-    const { user } = req;
+    const { user: _user } = req;
     const supabase = await createServerClient();
     const { searchParams } = new URL(req.url);
 
     // Get group by slug
     const { data: group, error: groupError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('groups') as any)
       .select('id')
       .eq('slug', slug)
@@ -69,6 +70,7 @@ export const GET = withAuth(async (
 
     // Build query
     let query = (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('group_events') as any)
       .select(
         `
@@ -140,6 +142,7 @@ export const POST = withAuth(async (
 
     // Get group by slug
     const { data: group, error: groupError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('groups') as any)
       .select('id, name')
       .eq('slug', slug)
@@ -151,6 +154,7 @@ export const POST = withAuth(async (
 
     // Check if user is a member
     const { data: membership } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('group_members') as any)
       .select('role')
       .eq('group_id', group.id)
@@ -187,6 +191,7 @@ export const POST = withAuth(async (
 
     // Create event
     const { data: event, error: insertError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('group_events') as any)
       .insert(eventData)
       .select()
@@ -199,6 +204,7 @@ export const POST = withAuth(async (
 
     // Get creator profile
     const { data: creatorProfile } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.PROFILES) as any)
       .select('id, name, avatar_url')
       .eq('id', user.id)

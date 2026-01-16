@@ -11,7 +11,7 @@ import { DATABASE_TABLES } from '@/config/database-tables';
 export const GET = compose(
   withRequestId(),
   withRateLimit('read')
-)(async (request: NextRequest) => {
+)(async (_request: NextRequest) => {
   try {
     const supabase = await createServerClient();
 

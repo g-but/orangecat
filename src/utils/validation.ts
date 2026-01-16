@@ -261,6 +261,7 @@ export { isValidPassword } from '@/lib/validation/password';
  * @returns boolean indicating if error is an AuthError
  */
 export function isAuthError(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error: any
 ): error is { message: string; name?: string; status?: number } {
   return error && typeof error === 'object' && 'message' in error;

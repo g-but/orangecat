@@ -66,7 +66,9 @@ export async function canPerformAction(
 
   try {
     // Get group from groups table
-    const { data: group, error: groupError } = await (supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: group, error: _groupError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('groups') as any)
       .select('governance_preset, voting_threshold')
       .eq('id', groupId)
@@ -83,7 +85,9 @@ export async function canPerformAction(
       };
 
       // Get membership from group_members
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data: member } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('group_members') as any)
         .select('role, permission_overrides')
         .eq('group_id', groupId)

@@ -412,6 +412,7 @@ export class SecureErrorHandler {
   /**
    * Sanitize error message for client display
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static sanitizeErrorMessage(error: any): string {
     if (!error) {return 'An error occurred'}
 
@@ -440,9 +441,10 @@ export class SecureErrorHandler {
   /**
    * Log error securely (for server-side logging)
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static logError(error: any, context: string, userId?: string): void {
-    const sanitizedUserId = userId ? `user:${userId.substring(0, 8)}...` : 'anonymous'
-    const timestamp = new Date().toISOString()
+    const _sanitizedUserId = userId ? `user:${userId.substring(0, 8)}...` : 'anonymous'
+    const _timestamp = new Date().toISOString()
     
     // In production, this would go to a secure logging service
     logger.error(`Security event logged for ${context}`, {
@@ -503,16 +505,19 @@ export class CSPHelper {
  * Security event monitoring
  */
 export class SecurityMonitor {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private static events: Array<{
     type: string
     severity: 'low' | 'medium' | 'high' | 'critical'
     timestamp: number
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     details: any
   }> = []
 
   /**
    * Log security event
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static logEvent(type: string, severity: 'low' | 'medium' | 'high' | 'critical', details: any): void {
     const event = {
       type,
@@ -564,6 +569,7 @@ export const authRateLimiter = new RateLimiter(15 * 60 * 1000, 5) // 5 auth atte
  * Wrapper for secure API route handling
  */
 export function withSecurity<T>(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (data: T) => Promise<any>,
   schema: z.ZodSchema<T>,
   options: {

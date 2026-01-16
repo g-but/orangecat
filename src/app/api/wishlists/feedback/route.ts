@@ -38,6 +38,7 @@ export async function POST(request: NextRequest) {
 
     // Verify the wishlist item exists
     const { data: wishlistItem, error: itemError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wishlist_items') as any)
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', validationResult.data.wishlist_item_id)
@@ -62,6 +63,7 @@ export async function POST(request: NextRequest) {
     // If feedback is associated with a proof, verify it exists
     if (validationResult.data.fulfillment_proof_id) {
       const { data: proof, error: proofError } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from('wishlist_fulfillment_proofs') as any)
         .select('id, wishlist_item_id')
         .eq('id', validationResult.data.fulfillment_proof_id)
@@ -78,6 +80,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user already provided feedback for this proof/item combination
     const existingFeedbackQuery = (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wishlist_feedback') as any)
       .select('id, feedback_type')
       .eq('user_id', user.id)
@@ -113,6 +116,7 @@ export async function POST(request: NextRequest) {
       } else {
         // Update existing feedback (allow changing like to dislike or vice versa)
         const { data: updatedFeedback, error: updateError } = await (supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .from('wishlist_feedback') as any)
           .update({
             feedback_type: validationResult.data.feedback_type,
@@ -150,6 +154,7 @@ export async function POST(request: NextRequest) {
 
     // Create new feedback
     const { data: feedback, error: feedbackError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wishlist_feedback') as any)
       .insert({
         wishlist_item_id: validationResult.data.wishlist_item_id,

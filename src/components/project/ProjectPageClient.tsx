@@ -16,9 +16,9 @@ const ProjectSummaryRail = dynamic(() => import('@/components/project/ProjectSum
 const ProjectHeader = dynamic(() => import('@/components/project/ProjectHeader'));
 const ProjectContent = dynamic(() => import('@/components/project/ProjectContent'));
 const ProjectTimeline = dynamic(() => import('@/components/project/ProjectTimeline'));
-const ProjectSupportButton = dynamic(() => import('@/components/projects/ProjectSupportButton').then(m => ({ default: m.ProjectSupportButton })));
-const WallOfSupport = dynamic(() => import('@/components/projects/WallOfSupport').then(m => ({ default: m.WallOfSupport })));
-const SupportStats = dynamic(() => import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats })));
+const _ProjectSupportButton = dynamic(() => import('@/components/projects/ProjectSupportButton').then(m => ({ default: m.ProjectSupportButton })));
+const _WallOfSupport = dynamic(() => import('@/components/projects/WallOfSupport').then(m => ({ default: m.WallOfSupport })));
+const _SupportStats = dynamic(() => import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats })));
 
 interface Project {
   id: string;

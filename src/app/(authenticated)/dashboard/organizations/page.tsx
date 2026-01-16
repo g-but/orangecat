@@ -52,6 +52,7 @@ export default function OrganizationsDashboardPage() {
     transformResponse: (data) => {
       const orgs = data.organizations || data.items || [];
       return {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         items: orgs.map((org: any) => toOrganizationEntity(org)),
         total: data.count || data.total || orgs.length,
       };

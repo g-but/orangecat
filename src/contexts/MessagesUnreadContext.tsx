@@ -15,6 +15,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
 import { useRealtimeSubscription } from '@/features/messaging/hooks/useRealtimeSubscription';
+import { logger } from '@/utils/logger';
 
 interface MessagesUnreadContextType {
   count: number;
@@ -73,7 +74,7 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
 
       // If unauthorized, try to sync the session from localStorage
       if (res.status === 401) {
-        console.log('Unread count: Got 401, trying to sync session...');
+        logger.debug('Unread count: Got 401, trying to sync session...', {}, 'MessagesUnreadContext');
         try {
           // Get session from Supabase client
           const {
@@ -90,7 +91,7 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
             });
 
             if (syncRes.ok) {
-              console.log('Session synced successfully, retrying unread count...');
+              logger.debug('Session synced successfully, retrying unread count...', {}, 'MessagesUnreadContext');
               // Retry the original request
               res = await fetch('/api/messages/unread-count', {
                 credentials: 'same-origin',
@@ -99,7 +100,7 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
             }
           }
         } catch (syncError) {
-          console.error('Failed to sync session:', syncError);
+          logger.error('Failed to sync session:', { error: syncError }, 'MessagesUnreadContext');
         }
       }
 
@@ -109,7 +110,7 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
       const data = await res.json();
       setCount(data.count || 0);
     } catch (error) {
-      console.error('Failed to fetch unread count:', error);
+      logger.error('Failed to fetch unread count:', { error }, 'MessagesUnreadContext');
       // Don't update count on error to avoid flickering
     } finally {
       setLoading(false);
@@ -165,7 +166,7 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
       ({ new: newRecord }) => {
         // Only refresh if last_read_at changed (marking as read)
         if (newRecord?.last_read_at && debouncedFetchRef.current) {
-          console.log('[MessagesUnreadContext] Conversation marked as read, refreshing count');
+          logger.debug('Conversation marked as read, refreshing count', {}, 'MessagesUnreadContext');
           debouncedFetchRef.current();
         }
       },
@@ -202,7 +203,7 @@ export function MessagesUnreadProvider({ children }: { children: React.ReactNode
       const elapsed = Date.now() - lastFetchRef.current;
       if (elapsed > 30000) {
         // 30 seconds
-        console.log('[MessagesUnreadContext] Periodic refresh (backup)');
+        logger.debug('Periodic refresh (backup)', {}, 'MessagesUnreadContext');
         fetchUnread();
       }
     }, 30000); // 30 seconds

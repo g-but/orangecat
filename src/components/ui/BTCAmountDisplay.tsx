@@ -49,7 +49,7 @@ export default function BTCAmountDisplay({
           setBtcAmount(currencyConverter.formatBTC(btc));
           setIsLoading(false);
         }
-      } catch (error) {
+      } catch {
         if (mounted) {
           setBtcAmount('');
           setIsLoading(false);

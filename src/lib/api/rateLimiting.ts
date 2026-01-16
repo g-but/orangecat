@@ -130,7 +130,7 @@ function generateRateLimitKey(
     correlationId?: string
   }
 ): string {
-  const { userId, ip, correlationId } = identifiers
+  const { userId, ip, correlationId: _correlationId } = identifiers
 
   switch (strategy) {
     case 'ip':
@@ -266,11 +266,14 @@ export async function checkRateLimit(
 /**
  * Create a rate-limited API handler wrapper
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withRateLimit<T extends any[]>(
   operation: string,
   config: RateLimitConfig,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   handler: (...args: T) => Promise<any>
 ) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return async function rateLimitedHandler(...args: T): Promise<any> {
     // Extract identifiers from request (first argument should be request)
     const request = args[0]
@@ -404,13 +407,17 @@ export async function resetRateLimits(
  * Pre-configured rate limiters for common operations
  */
 export const RateLimiters = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   profileUpdate: (handler: any) => withRateLimit('profile_update', RATE_LIMIT_CONFIGS.profile_update, handler),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   fundingCreate: (handler: any) => withRateLimit('funding_create', RATE_LIMIT_CONFIGS.funding_create, handler),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   apiGeneral: (handler: any) => withRateLimit('api_general', RATE_LIMIT_CONFIGS.api_general, handler),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   authAttempt: (handler: any) => withRateLimit('auth_attempt', RATE_LIMIT_CONFIGS.auth_attempt, handler),
 }
 
-export default {
+const rateLimitingModule = {
   checkRateLimit,
   withRateLimit,
   getRateLimitStatus,
@@ -418,3 +425,5 @@ export default {
   RateLimiters,
   RateLimitError
 }
+
+export default rateLimitingModule

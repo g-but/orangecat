@@ -11,7 +11,7 @@ interface RoleManagementProps {
 }
 
 export default function RoleManagement({ children, requiredRole = 'user' }: RoleManagementProps) {
-  const { user, profile, isLoading } = useAuth()
+  const { user, profile: _profile, isLoading } = useAuth()
   const router = useRouter()
   
   // Check if user is admin based on email domain - you can adjust this logic

@@ -39,7 +39,7 @@ interface OnboardingStep {
 export default function WalletOnboarding() {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
-  const [walletAddress, setWalletAddress] = useState('');
+  const [_walletAddress, _setWalletAddress] = useState('');
 
   const steps: OnboardingStep[] = [
     {

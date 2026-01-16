@@ -33,6 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Verify assistant exists
     const { data: assistant, error: assistantError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.AI_ASSISTANTS) as any)
       .select('id, average_rating, total_ratings')
       .eq('id', assistantId)
@@ -44,6 +45,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Build query
     let query = (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
       .select(
         `
@@ -84,6 +86,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Get rating distribution
     const { data: distribution } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
       .select('rating')
       .eq('assistant_id', assistantId);
@@ -106,6 +109,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     let userRating = null;
     if (user) {
       const { data: myRating } = await (supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
         .select('id, rating, review, created_at')
         .eq('assistant_id', assistantId)

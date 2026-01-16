@@ -23,8 +23,8 @@ import {
 } from 'lucide-react';
 
 export default function EventsPage() {
-  const router = useRouter();
-  const { user, session } = useAuth();
+  const _router = useRouter();
+  const { user: _user, session } = useAuth();
 
   const features = [
     {
@@ -113,14 +113,14 @@ export default function EventsPage() {
 
   const handleGetStarted = () => {
     if (session) {
-      router.push('/events/create');
+      _router.push('/events/create');
     } else {
-      router.push('/auth?mode=login&redirect=/events/create');
+      _router.push('/auth?mode=login&redirect=/events/create');
     }
   };
 
   const handleViewDemo = () => {
-    router.push('/demo/events');
+    _router.push('/demo/events');
   };
 
   return (

@@ -139,6 +139,7 @@ const fieldGroups: FieldGroup[] = [
         placeholder: '0.7',
         min: 0,
         max: 2,
+        step: 0.1,
         colSpan: 1,
         hint: '0 = deterministic, 2 = creative. Default: 0.7',
       },

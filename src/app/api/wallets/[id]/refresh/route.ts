@@ -114,6 +114,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Get wallet
     const { data: wallet, error: fetchError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wallets') as any)
       .select('*')
       .eq('id', id)
@@ -207,6 +208,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Update wallet balance
     const { data: updatedWallet, error: updateError } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from('wallets') as any)
       .update({
         balance_btc: totalBalanceBtc,

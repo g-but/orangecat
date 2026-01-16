@@ -169,6 +169,7 @@ export async function PUT(request: NextRequest) {
 
     // Use ProfileServerService for update (we'll need to add an update method)
     // For now, keeping direct update but this should be refactored to use service
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: profile, error } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
       .update({
         ...dataToSave,

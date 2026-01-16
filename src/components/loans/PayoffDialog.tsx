@@ -100,7 +100,7 @@ export function PayoffDialog({ loan, offer, open, onOpenChange, onRecorded }: Pa
       onRecorded?.();
       onOpenChange(false);
       form.reset();
-    } catch (error) {
+    } catch {
       toast.error('Failed to record payoff');
     } finally {
       setLoading(false);

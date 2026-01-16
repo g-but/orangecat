@@ -11,7 +11,7 @@ interface PostMetricsProps {
 export function PostMetrics({ event }: PostMetricsProps) {
   // Calculate metrics
   const likesCount = event.likesCount || 0;
-  const dislikesCount = event.dislikesCount || 0;
+  const _dislikesCount = event.dislikesCount || 0;
   const commentsCount = event.commentsCount || 0;
   const repostsCount = event.repostsCount || 0;
   const sharesCount = event.sharesCount || 0;

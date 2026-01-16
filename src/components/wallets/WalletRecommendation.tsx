@@ -80,14 +80,14 @@ export default function WalletRecommendation() {
       .map(wallet => {
         let score = 0;
         const reasons: string[] = [];
-        const pros: string[] = [];
-        const cons: string[] = [];
+        const _pros: string[] = [];
+        const _cons: string[] = [];
 
         // Experience level scoring
         if (preferences.experience === 'beginner' && wallet.difficulty === 'beginner') {
           score += 30;
           reasons.push('Perfect for beginners');
-          pros.push('Easy to use interface');
+          _pros.push('Easy to use interface');
         } else if (
           preferences.experience === 'intermediate' &&
           wallet.difficulty === 'intermediate'
@@ -103,7 +103,7 @@ export default function WalletRecommendation() {
         if (preferences.privacy === 'high' && wallet.privacyLevel === 'high') {
           score += 25;
           reasons.push('High privacy protection');
-          pros.push('Strong privacy features');
+          _pros.push('Strong privacy features');
         } else if (preferences.privacy === 'medium' && wallet.privacyLevel === 'medium') {
           score += 20;
           reasons.push('Good balance of privacy and usability');
@@ -114,9 +114,9 @@ export default function WalletRecommendation() {
           score += 20;
           reasons.push(`Matches your ${wallet.custody} preference`);
           if (wallet.custody === 'self-custody') {
-            pros.push('You control your private keys');
+            _pros.push('You control your private keys');
           } else {
-            pros.push('Convenient custodial service');
+            _pros.push('Convenient custodial service');
           }
         }
 

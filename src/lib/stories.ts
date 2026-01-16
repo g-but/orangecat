@@ -77,7 +77,7 @@ export function getStory(id: string): Story | null {
       results: data.results || [],
       testimonial: data.testimonial || ''
     }
-  } catch (error) {
+  } catch {
     return null
   }
 }

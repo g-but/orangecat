@@ -15,6 +15,7 @@ import { useAuth } from './useAuth';
  * Last Modified Summary: Initial creation of reusable entity list hook
  */
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UseEntityListOptions<T = any> {
   apiEndpoint: string;
   userId?: string;
@@ -25,6 +26,7 @@ export interface UseEntityListOptions<T = any> {
    * Optional transform function to convert API response to expected format.
    * Useful when API returns data in a different structure.
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transformResponse?: (data: any) => { items: T[]; total: number };
 }
 

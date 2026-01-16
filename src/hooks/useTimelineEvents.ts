@@ -151,6 +151,7 @@ export const useTimelineEvents = () => {
 
   // Helper functions to dispatch events from other parts of the app
   return {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dispatchProjectCreated: (projectId: string, projectData: any) => {
       window.dispatchEvent(
         new CustomEvent('project-created', {
@@ -173,6 +174,7 @@ export const useTimelineEvents = () => {
       );
     },
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dispatchProfileUpdated: (changes: Record<string, any>) => {
       window.dispatchEvent(
         new CustomEvent('profile-updated', {
@@ -181,6 +183,7 @@ export const useTimelineEvents = () => {
       );
     },
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     dispatchUserFollowed: (followedUserId: string, followedUserData?: any) => {
       window.dispatchEvent(
         new CustomEvent('user-followed', {

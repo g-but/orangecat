@@ -44,6 +44,7 @@ export const GET = compose(
     // Build query with user info for discovery page
     const tableName = getTableName('ai_assistant');
     let itemsQuery = (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(tableName) as any)
       .select(`
         *,
@@ -57,6 +58,7 @@ export const GET = compose(
       .range(offset, offset + limit - 1);
 
     let countQuery = (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(tableName) as any)
       .select('*', { count: 'exact', head: true });
 
@@ -153,6 +155,7 @@ export const POST = compose(
     // Create the AI assistant
     const tableName = getTableName('ai_assistant');
     const { data: assistant, error } = await (supabase
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .from(tableName) as any)
       .insert({
         user_id: user.id,

@@ -65,6 +65,7 @@ export function useComments({ eventId }: UseCommentsProps): UseCommentsReturn {
     setIsLoadingComments(true);
     try {
       const eventComments = await timelineService.getEventComments(eventId, 10);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const normalized = (eventComments || []).map((c: any) => ({
         id: c.id,
         content: c.content,
