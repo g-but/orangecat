@@ -1,5 +1,20 @@
 'use client';
 
+/**
+ * DASHBOARD PAGE - Economic Activity Management View
+ *
+ * Purpose: Private management view of user's economic activity (projects, timeline, stats)
+ * Design Principles:
+ * - Focus on economic activity (projects + timeline) as primary content
+ * - Clear visual hierarchy
+ * - Responsive design (mobile-first, no duplicate code)
+ * - Follows DRY, SSOT, Separation of Concerns
+ *
+ * Created: 2025-12-03
+ * Last Modified: 2026-01-16
+ * Last Modified Summary: Complete redesign - proper hierarchy, responsive, follows engineering principles
+ */
+
 import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -10,11 +25,10 @@ import { TimelineFeedResponse } from '@/types/timeline';
 import { useTimelineEvents } from '@/hooks/useTimelineEvents';
 import { logger } from '@/utils/logger';
 import Loading from '@/components/Loading';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { toast } from 'sonner';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
-// Extracted dashboard sections
+// Dashboard sections - modular components
 import {
   DashboardHeader,
   DashboardWelcome,
@@ -31,17 +45,6 @@ const DashboardSidebar = dynamic(
     ssr: false,
     loading: () => (
       <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse h-80" />
-    ),
-  }
-);
-
-const MobileDashboardSidebar = dynamic(
-  () =>
-    import('@/components/dashboard/MobileDashboardSidebar').then(mod => mod.MobileDashboardSidebar),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse h-48" />
     ),
   }
 );
@@ -83,7 +86,6 @@ export default function DashboardPage() {
     if (user?.id && hydrated) {
       loadProjects(user.id)
         .then(() => {
-          // Log after projects are loaded from store
           const currentProjects = useProjectStore.getState().projects;
           logger.debug(
             'Projects loaded successfully',
@@ -118,21 +120,15 @@ export default function DashboardPage() {
       const onboardingComplete = (profile as { onboarding_completed?: boolean })
         .onboarding_completed;
 
-      // Only show welcome if:
-      // 1. URL param explicitly requests it (welcome=true or confirmed=true)
-      // 2. User completed onboarding but hasn't seen welcome yet
-      // 3. AND user hasn't previously dismissed it
       if (
         !hasSeenWelcome &&
         (isWelcome || isEmailConfirmed || (onboardingComplete && !hasSeenWelcome))
       ) {
         setShowWelcome(true);
-        // Don't auto-save here - let user dismiss it explicitly
         if (isEmailConfirmed) {
           toast.success('Email confirmed! Welcome to OrangeCat 🎉', { duration: 5000 });
         }
       } else {
-        // If user has seen/dismissed it, don't show again
         setShowWelcome(false);
       }
     }
@@ -255,19 +251,12 @@ export default function DashboardPage() {
 
   if (authError && user) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
-        <Card className="border-red-200">
-          <CardHeader className="bg-red-50">
-            <CardTitle>Error Loading Dashboard</CardTitle>
-            <CardDescription>{authError}</CardDescription>
-          </CardHeader>
-          <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground mb-4">
-              There was an issue loading your dashboard. Please try refreshing.
-            </p>
-          </CardContent>
-        </Card>
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6">Dashboard</h1>
+        <div className="border border-red-200 rounded-lg bg-red-50 p-6">
+          <h2 className="text-lg font-semibold text-red-900 mb-2">Error Loading Dashboard</h2>
+          <p className="text-sm text-red-700">{authError}</p>
+        </div>
       </div>
     );
   }
@@ -285,67 +274,74 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-8">
-      <DashboardHeader profile={profile} totalProjects={totalProjects} totalDrafts={totalDrafts} />
-      {showWelcome && (
-        <DashboardWelcome
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
+      {/* Container with max-width and responsive padding */}
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 pb-20 sm:pb-8">
+        {/* Header Section */}
+        <DashboardHeader
           profile={profile}
-          onDismiss={() => {
-            setShowWelcome(false);
-            // Persist dismissal to localStorage so it doesn't show again
-            if (user?.id) {
-              const welcomeKey = `orangecat-welcome-shown-${user.id}`;
-              localStorage.setItem(welcomeKey, 'true');
-            }
-          }}
+          totalProjects={totalProjects}
+          totalDrafts={totalDrafts}
         />
-      )}
-      <DashboardInviteCTA profile={profile} userId={user.id} />
-      <DashboardJourney
-        profileCompletion={profileCompletion}
-        hasBitcoinAddress={hasBitcoinAddress}
-        hasProjects={safeProjects.length > 0}
-        hasAnyDraft={hasAnyDraft}
-        totalDrafts={totalDrafts}
-        hasTimelineActivity={hasTimelineActivity}
-      />
 
-      <div className="space-y-6">
-        {/* Mobile sidebar */}
-        <div className="block lg:hidden">
-          <MobileDashboardSidebar
-            stats={sidebarStats}
-            profileCompletion={profileCompletion}
+        {/* Welcome Banner (conditional) */}
+        {showWelcome && (
+          <DashboardWelcome
             profile={profile}
+            onDismiss={() => {
+              setShowWelcome(false);
+              if (user?.id) {
+                const welcomeKey = `orangecat-welcome-shown-${user.id}`;
+                localStorage.setItem(welcomeKey, 'true');
+              }
+            }}
           />
+        )}
+
+        {/* Getting Started Section (only if incomplete) */}
+        {(profileCompletion < 100 || !hasBitcoinAddress || !hasProjects || hasAnyDraft) && (
+          <DashboardJourney
+            profileCompletion={profileCompletion}
+            hasBitcoinAddress={hasBitcoinAddress}
+            hasProjects={safeProjects.length > 0}
+            hasAnyDraft={hasAnyDraft}
+            totalDrafts={totalDrafts}
+            hasTimelineActivity={hasTimelineActivity}
+          />
+        )}
+
+        {/* Primary Content: Economic Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Sidebar - Stats & Actions (desktop only, mobile shows inline) */}
+          <aside className="lg:col-span-3 space-y-6">
+            <div className="lg:sticky lg:top-20 space-y-6">
+              <DashboardSidebar stats={sidebarStats} profileCompletion={profileCompletion} />
+            </div>
+          </aside>
+
+          {/* Main Content: Timeline + Projects */}
+          <main className="lg:col-span-9 space-y-6">
+            {/* Timeline - User's activity feed */}
+            <DashboardTimeline
+              timelineFeed={timelineFeed}
+              isLoading={timelineLoading}
+              error={timelineError}
+              onRefresh={() => user?.id && loadTimelineFeed(user.id)}
+              onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
+              userId={user?.id}
+            />
+
+            {/* Projects - User's economic activity */}
+            <DashboardProjects projects={safeProjects} />
+          </main>
         </div>
-        {/* Desktop layout */}
-        <div className="hidden lg:grid lg:grid-cols-12 gap-6">
-          <DashboardSidebar stats={sidebarStats} profileCompletion={profileCompletion} />
-          <DashboardTimeline
-            timelineFeed={timelineFeed}
-            isLoading={timelineLoading}
-            error={timelineError}
-            onRefresh={() => user?.id && loadTimelineFeed(user.id)}
-            onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
-            userId={user?.id}
-          />
-        </div>
-        {/* Mobile timeline */}
-        <div className="block lg:hidden">
-          <DashboardTimeline
-            timelineFeed={timelineFeed}
-            isLoading={timelineLoading}
-            error={timelineError}
-            onRefresh={() => user?.id && loadTimelineFeed(user.id)}
-            onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
-            userId={user?.id}
-          />
+
+        {/* Secondary Actions (bottom) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <DashboardInviteCTA profile={profile} userId={user.id} />
+          <DashboardQuickActions hasProjects={safeProjects.length > 0} />
         </div>
       </div>
-
-      <DashboardProjects projects={safeProjects} />
-      <DashboardQuickActions hasProjects={safeProjects.length > 0} />
     </div>
   );
 }
