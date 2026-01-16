@@ -57,23 +57,30 @@ const WIZARD_STEPS: WizardStep[] = [
   {
     id: 'basic',
     title: 'Basic Information',
-    description: 'Name your project and describe what you\'re funding',
+    description: "Name your project and describe what you're funding",
     optional: false,
-    fields: ['title', 'description', 'category'],
+    fields: ['title', 'description'],
   },
   {
     id: 'funding',
     title: 'Funding Details',
     description: 'Set your goal and Bitcoin payment addresses',
     optional: false,
-    fields: ['goal_amount', 'currency', 'funding_purpose', 'bitcoin_address', 'lightning_address'],
+    fields: ['goal_amount', 'funding_purpose', 'bitcoin_address', 'lightning_address'],
   },
   {
     id: 'advanced',
     title: 'Additional Details',
     description: 'Timeline, website, and other optional information',
     optional: true,
-    fields: ['website_url', 'tags', 'start_date', 'target_completion', 'show_on_profile'],
+    fields: [
+      'website_url',
+      'category',
+      'tags',
+      'start_date',
+      'target_completion',
+      'show_on_profile',
+    ],
   },
 ];
 
@@ -111,12 +118,15 @@ export function ProjectCreationWizard({
     }
   }, [currentStepConfig.optional, handleNext]);
 
-  const handleStepClick = useCallback((stepIndex: number) => {
-    // Allow jumping to completed steps or current step
-    if (stepIndex <= currentStep || completedSteps.has(stepIndex)) {
-      setCurrentStep(stepIndex);
-    }
-  }, [currentStep, completedSteps]);
+  const handleStepClick = useCallback(
+    (stepIndex: number) => {
+      // Allow jumping to completed steps or current step
+      if (stepIndex <= currentStep || completedSteps.has(stepIndex)) {
+        setCurrentStep(stepIndex);
+      }
+    },
+    [currentStep, completedSteps]
+  );
 
   const handleCancel = useCallback(() => {
     if (onCancel) {
@@ -167,7 +177,9 @@ export function ProjectCreationWizard({
           </span>
           <div className="flex items-center gap-2">
             {currentStepConfig.optional && (
-              <Badge variant="secondary" className="text-xs">Optional</Badge>
+              <Badge variant="secondary" className="text-xs">
+                Optional
+              </Badge>
             )}
           </div>
         </div>
@@ -231,7 +243,9 @@ export function ProjectCreationWizard({
             <Card className="mb-6">
               <CardHeader>
                 <div className="flex items-center gap-3">
-                  {currentStepConfig.id === 'template' && <Sparkles className="h-6 w-6 text-orange-500" />}
+                  {currentStepConfig.id === 'template' && (
+                    <Sparkles className="h-6 w-6 text-orange-500" />
+                  )}
                   <div>
                     <CardTitle>{currentStepConfig.title}</CardTitle>
                     <CardDescription>{currentStepConfig.description}</CardDescription>
@@ -272,11 +286,7 @@ export function ProjectCreationWizard({
 
         {/* Navigation */}
         <div className="flex justify-between items-center">
-          <Button
-            variant="outline"
-            onClick={handlePrevious}
-            disabled={currentStep === 0}
-          >
+          <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Previous
           </Button>
