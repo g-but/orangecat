@@ -189,15 +189,17 @@ The dashboard design had critical issues:
 
 ## ✅ Testing Checklist
 
-- [ ] Mobile viewport (< 640px) - layout stacks correctly
-- [ ] Tablet viewport (640px - 1024px) - proper spacing
-- [ ] Desktop viewport (> 1024px) - sidebar + main content
-- [ ] Timeline loads and displays correctly
-- [ ] Projects load and display correctly
-- [ ] Welcome banner dismisses and persists
-- [ ] Getting Started section shows/hides based on completion
-- [ ] No horizontal scrolling on any viewport
-- [ ] Touch targets are adequate (44x44px minimum)
+- [x] Mobile viewport (< 640px) - layout stacks correctly, mobile sidebar shows above content
+- [x] Tablet viewport (640px - 1024px) - proper spacing, mobile sidebar still shown
+- [x] Desktop viewport (> 1024px) - sidebar + main content in grid
+- [x] Timeline loads and displays correctly
+- [x] Projects load and display correctly
+- [x] Welcome banner dismisses and persists
+- [x] Getting Started section shows/hides based on completion
+- [x] No horizontal scrolling on any viewport
+- [x] Touch targets are adequate (44x44px minimum)
+- [x] Mobile sidebar shows stats above main content
+- [x] Desktop sidebar is sticky and properly positioned
 
 ---
 
