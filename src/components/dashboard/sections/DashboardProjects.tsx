@@ -21,59 +21,105 @@ interface DashboardProjectsProps {
 }
 
 /**
- * DashboardProjects - My Projects section for desktop
- * Uses ENTITY_REGISTRY for entity-related routes
+ * DashboardProjects - My Projects section
+ *
+ * Displays user's economic activity (projects) to reflect them as an economic agent.
+ * Visible on all screen sizes - dashboard is a management view, not just desktop.
+ * Uses ENTITY_REGISTRY for entity-related routes (SSOT principle).
  */
 export function DashboardProjects({ projects }: DashboardProjectsProps) {
+  // Show projects section even if empty - helps user understand their economic activity state
+  // But provide helpful empty state if no projects exist
   if (projects.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="hidden lg:block">
+    return (
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>My Projects</CardTitle>
-              <CardDescription>My Bitcoin fundraising projects</CardDescription>
+              <CardDescription>Your Bitcoin fundraising projects</CardDescription>
             </div>
-            <Link href={ENTITY_REGISTRY.project.basePath}>
-              <Button variant="outline" size="sm">
+            <Link href={ENTITY_REGISTRY.project.createPath}>
+              <Button size="sm" className="bg-gradient-to-r from-orange-500 to-orange-600">
                 <BarChart3 className="w-4 h-4 mr-2" />
-                View All
+                Create Project
               </Button>
             </Link>
           </div>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
-          <div className="grid gap-4">
-            {projects.slice(0, 3).map(project => (
-              <ProjectCard
-                key={project.id}
-                href={`/projects/${project.id}`}
-                project={
-                  {
-                    ...project,
-                    id: project.id,
-                    title: project.title,
-                    raised_amount: project.total_funding || 0,
-                    goal_amount: project.goal_amount || 0,
-                    status: project.isDraft
-                      ? 'draft'
-                      : project.isPaused
-                        ? 'paused'
-                        : project.isActive
-                          ? 'active'
-                          : 'draft',
-                  } as Parameters<typeof ProjectCard>[0]['project']
-                }
-              />
-            ))}
+          <div className="text-center py-8 text-gray-500">
+            <BarChart3 className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <p className="text-sm mb-2">No projects yet</p>
+            <p className="text-xs text-gray-400 mb-4">
+              Start your Bitcoin crowdfunding journey by creating your first project
+            </p>
+            <Link href={ENTITY_REGISTRY.project.createPath}>
+              <Button variant="outline" size="sm">
+                Create Your First Project
+              </Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
-    </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>My Projects</CardTitle>
+            <CardDescription>
+              Your Bitcoin fundraising projects ({projects.length}{' '}
+              {projects.length === 1 ? 'project' : 'projects'})
+            </CardDescription>
+          </div>
+          <Link href={ENTITY_REGISTRY.project.basePath}>
+            <Button variant="outline" size="sm">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              View All
+            </Button>
+          </Link>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 sm:p-6">
+        <div className="grid gap-4">
+          {projects.slice(0, 3).map(project => (
+            <ProjectCard
+              key={project.id}
+              href={`/projects/${project.id}`}
+              project={
+                {
+                  ...project,
+                  id: project.id,
+                  title: project.title,
+                  raised_amount: project.total_funding || 0,
+                  goal_amount: project.goal_amount || 0,
+                  status: project.isDraft
+                    ? 'draft'
+                    : project.isPaused
+                      ? 'paused'
+                      : project.isActive
+                        ? 'active'
+                        : 'draft',
+                } as Parameters<typeof ProjectCard>[0]['project']
+              }
+            />
+          ))}
+        </div>
+        {projects.length > 3 && (
+          <div className="mt-4 text-center">
+            <Link href={ENTITY_REGISTRY.project.basePath}>
+              <Button variant="outline" size="sm">
+                View {projects.length - 3} more {projects.length - 3 === 1 ? 'project' : 'projects'}
+              </Button>
+            </Link>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 

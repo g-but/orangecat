@@ -73,39 +73,67 @@ export default function DashboardPage() {
 
   // Hydration effect
   useEffect(() => {
-    if (hydrated) setLocalLoading(false);
+    if (hydrated) {
+      setLocalLoading(false);
+    }
   }, [hydrated]);
 
-  // Load projects when user is available
+  // Load projects when user is available - critical for showing economic activity
   useEffect(() => {
     if (user?.id && hydrated) {
-      loadProjects(user.id).catch(error => {
-        logger.error('Failed to load projects in dashboard', { error }, 'Dashboard');
-      });
+      loadProjects(user.id)
+        .then(() => {
+          // Log after projects are loaded from store
+          const currentProjects = useProjectStore.getState().projects;
+          logger.debug(
+            'Projects loaded successfully',
+            { userId: user.id, projectCount: currentProjects.length },
+            'Dashboard'
+          );
+        })
+        .catch(error => {
+          logger.error(
+            'Failed to load projects in dashboard',
+            { error, userId: user.id },
+            'Dashboard'
+          );
+        });
     }
   }, [user?.id, hydrated, loadProjects]);
 
   // Load timeline feed
   useEffect(() => {
-    if (user?.id && hydrated) loadTimelineFeed(user.id);
+    if (user?.id && hydrated) {
+      loadTimelineFeed(user.id);
+    }
   }, [user?.id, hydrated]);
 
-  // Check welcome state
+  // Check welcome state - only show if not previously dismissed
   useEffect(() => {
     if (profile && hydrated && !localLoading && user?.id) {
       const isWelcome = searchParams?.get('welcome') === 'true';
       const isEmailConfirmed = searchParams?.get('confirmed') === 'true';
       const welcomeKey = `orangecat-welcome-shown-${user.id}`;
-      const hasSeenWelcome = localStorage.getItem(welcomeKey);
+      const hasSeenWelcome = localStorage.getItem(welcomeKey) === 'true';
       const onboardingComplete = (profile as { onboarding_completed?: boolean })
         .onboarding_completed;
 
-      if (isWelcome || isEmailConfirmed || (onboardingComplete && !hasSeenWelcome)) {
+      // Only show welcome if:
+      // 1. URL param explicitly requests it (welcome=true or confirmed=true)
+      // 2. User completed onboarding but hasn't seen welcome yet
+      // 3. AND user hasn't previously dismissed it
+      if (
+        !hasSeenWelcome &&
+        (isWelcome || isEmailConfirmed || (onboardingComplete && !hasSeenWelcome))
+      ) {
         setShowWelcome(true);
-        localStorage.setItem(welcomeKey, 'true');
+        // Don't auto-save here - let user dismiss it explicitly
         if (isEmailConfirmed) {
           toast.success('Email confirmed! Welcome to OrangeCat 🎉', { duration: 5000 });
         }
+      } else {
+        // If user has seen/dismissed it, don't show again
+        setShowWelcome(false);
       }
     }
   }, [profile, hydrated, localLoading, searchParams, user?.id]);
@@ -126,7 +154,9 @@ export default function DashboardPage() {
 
   // Auth redirect
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') {
+      return;
+    }
     if (hydrated && !isLoading && !user && !hasRedirected) {
       setHasRedirected(true);
       router.push('/auth');
@@ -139,8 +169,16 @@ export default function DashboardPage() {
     try {
       const feed = await timelineService.getEnrichedUserFeed(userId);
       setTimelineFeed(feed);
+      logger.debug(
+        'Timeline feed loaded successfully',
+        {
+          userId,
+          eventCount: feed?.events?.length || 0,
+        },
+        'Dashboard'
+      );
     } catch (error) {
-      logger.error('Failed to load timeline feed', error, 'Dashboard');
+      logger.error('Failed to load timeline feed', { error, userId }, 'Dashboard');
       setTimelineError('Failed to load timeline');
     } finally {
       setTimelineLoading(false);
@@ -198,7 +236,11 @@ export default function DashboardPage() {
   const hasAnyDraft = useMemo(() => safeDrafts.length > 0, [safeDrafts]);
 
   const hasTimelineActivity = useMemo(() => {
-    const feed = timelineFeed as unknown as { events?: unknown[]; items?: unknown[]; data?: unknown[] };
+    const feed = timelineFeed as unknown as {
+      events?: unknown[];
+      items?: unknown[];
+      data?: unknown[];
+    };
     return Boolean(feed?.events?.length || feed?.items?.length || feed?.data?.length);
   }, [timelineFeed]);
 
@@ -230,7 +272,9 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return null;
+  }
 
   const sidebarStats = {
     totalProjects,
@@ -243,7 +287,19 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-8">
       <DashboardHeader profile={profile} totalProjects={totalProjects} totalDrafts={totalDrafts} />
-      {showWelcome && <DashboardWelcome profile={profile} onDismiss={() => setShowWelcome(false)} />}
+      {showWelcome && (
+        <DashboardWelcome
+          profile={profile}
+          onDismiss={() => {
+            setShowWelcome(false);
+            // Persist dismissal to localStorage so it doesn't show again
+            if (user?.id) {
+              const welcomeKey = `orangecat-welcome-shown-${user.id}`;
+              localStorage.setItem(welcomeKey, 'true');
+            }
+          }}
+        />
+      )}
       <DashboardInviteCTA profile={profile} userId={user.id} />
       <DashboardJourney
         profileCompletion={profileCompletion}
@@ -257,13 +313,19 @@ export default function DashboardPage() {
       <div className="space-y-6">
         {/* Mobile sidebar */}
         <div className="block lg:hidden">
-          <MobileDashboardSidebar stats={sidebarStats} profileCompletion={profileCompletion} profile={profile} />
+          <MobileDashboardSidebar
+            stats={sidebarStats}
+            profileCompletion={profileCompletion}
+            profile={profile}
+          />
         </div>
         {/* Desktop layout */}
         <div className="hidden lg:grid lg:grid-cols-12 gap-6">
           <DashboardSidebar stats={sidebarStats} profileCompletion={profileCompletion} />
           <DashboardTimeline
-            timelineFeed={timelineFeed} isLoading={timelineLoading} error={timelineError}
+            timelineFeed={timelineFeed}
+            isLoading={timelineLoading}
+            error={timelineError}
             onRefresh={() => user?.id && loadTimelineFeed(user.id)}
             onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
             userId={user?.id}
@@ -272,7 +334,9 @@ export default function DashboardPage() {
         {/* Mobile timeline */}
         <div className="block lg:hidden">
           <DashboardTimeline
-            timelineFeed={timelineFeed} isLoading={timelineLoading} error={timelineError}
+            timelineFeed={timelineFeed}
+            isLoading={timelineLoading}
+            error={timelineError}
             onRefresh={() => user?.id && loadTimelineFeed(user.id)}
             onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
             userId={user?.id}
