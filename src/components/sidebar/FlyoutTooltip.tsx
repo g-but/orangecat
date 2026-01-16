@@ -35,6 +35,8 @@ export function FlyoutTooltip({ isVisible, children, targetElement }: FlyoutTool
       return;
     }
 
+    let cleanup: (() => void) | undefined;
+
     // Wait a tick for ref to be available
     const timer = setTimeout(() => {
       if (!targetElement) {
@@ -61,13 +63,18 @@ export function FlyoutTooltip({ isVisible, children, targetElement }: FlyoutTool
       window.addEventListener('scroll', handleScroll, true);
       window.addEventListener('resize', handleResize);
 
-      return () => {
+      cleanup = () => {
         window.removeEventListener('scroll', handleScroll, true);
         window.removeEventListener('resize', handleResize);
       };
     }, 0);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      if (cleanup) {
+        cleanup();
+      }
+    };
   }, [isVisible, targetElement]);
 
   if (!isVisible || !position) {
