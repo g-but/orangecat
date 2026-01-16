@@ -49,6 +49,17 @@ const DashboardSidebar = dynamic(
   }
 );
 
+const MobileDashboardSidebar = dynamic(
+  () =>
+    import('@/components/dashboard/MobileDashboardSidebar').then(mod => mod.MobileDashboardSidebar),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse h-48" />
+    ),
+  }
+);
+
 const DashboardTimeline = dynamic(
   () => import('@/components/dashboard/DashboardTimeline').then(mod => mod.DashboardTimeline),
   {
@@ -311,29 +322,41 @@ export default function DashboardPage() {
         )}
 
         {/* Primary Content: Economic Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Sidebar - Stats & Actions (desktop only, mobile shows inline) */}
-          <aside className="lg:col-span-3 space-y-6">
-            <div className="lg:sticky lg:top-20 space-y-6">
-              <DashboardSidebar stats={sidebarStats} profileCompletion={profileCompletion} />
-            </div>
-          </aside>
-
-          {/* Main Content: Timeline + Projects */}
-          <main className="lg:col-span-9 space-y-6">
-            {/* Timeline - User's activity feed */}
-            <DashboardTimeline
-              timelineFeed={timelineFeed}
-              isLoading={timelineLoading}
-              error={timelineError}
-              onRefresh={() => user?.id && loadTimelineFeed(user.id)}
-              onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
-              userId={user?.id}
+        <div className="space-y-6">
+          {/* Mobile Sidebar - Stats shown above content on mobile */}
+          <div className="lg:hidden">
+            <MobileDashboardSidebar
+              stats={sidebarStats}
+              profileCompletion={profileCompletion}
+              profile={profile}
             />
+          </div>
 
-            {/* Projects - User's economic activity */}
-            <DashboardProjects projects={safeProjects} />
-          </main>
+          {/* Desktop Layout: Sidebar + Main Content */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Sidebar - Stats & Actions (desktop only) */}
+            <aside className="hidden lg:block lg:col-span-3">
+              <div className="lg:sticky lg:top-20 space-y-6">
+                <DashboardSidebar stats={sidebarStats} profileCompletion={profileCompletion} />
+              </div>
+            </aside>
+
+            {/* Main Content: Timeline + Projects */}
+            <main className="lg:col-span-9 space-y-6">
+              {/* Timeline - User's activity feed */}
+              <DashboardTimeline
+                timelineFeed={timelineFeed}
+                isLoading={timelineLoading}
+                error={timelineError}
+                onRefresh={() => user?.id && loadTimelineFeed(user.id)}
+                onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
+                userId={user?.id}
+              />
+
+              {/* Projects - User's economic activity */}
+              <DashboardProjects projects={safeProjects} />
+            </main>
+          </div>
         </div>
 
         {/* Secondary Actions (bottom) */}
