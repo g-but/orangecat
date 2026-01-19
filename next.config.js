@@ -78,6 +78,53 @@ const nextConfig = {
   // Generate ETags for better caching (disabled in dev to prevent stale content)
   generateEtags: process.env.NODE_ENV === 'production',
 
+  // Redirects for common auth URLs
+  async redirects() {
+    return [
+      // Auth redirects - common patterns to canonical /auth page
+      {
+        source: '/login',
+        destination: '/auth?mode=login',
+        permanent: true,
+      },
+      {
+        source: '/signin',
+        destination: '/auth?mode=login',
+        permanent: true,
+      },
+      {
+        source: '/register',
+        destination: '/auth?mode=register',
+        permanent: true,
+      },
+      {
+        source: '/signup',
+        destination: '/auth?mode=register',
+        permanent: true,
+      },
+      {
+        source: '/auth/signin',
+        destination: '/auth?mode=login',
+        permanent: true,
+      },
+      {
+        source: '/auth/signup',
+        destination: '/auth?mode=register',
+        permanent: true,
+      },
+      {
+        source: '/auth/login',
+        destination: '/auth?mode=login',
+        permanent: true,
+      },
+      {
+        source: '/auth/register',
+        destination: '/auth?mode=register',
+        permanent: true,
+      },
+    ];
+  },
+
   // Enhanced headers for performance
   async headers() {
     const isDevelopment = process.env.NODE_ENV !== 'production';
