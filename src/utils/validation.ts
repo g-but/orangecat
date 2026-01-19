@@ -30,8 +30,14 @@ const BITCOIN_ADDRESS_PATTERNS = {
   testnetBech32: /^tb1[a-z0-9]{8,87}$/,
 };
 
-// Lightning Network invoice validation
-const LIGHTNING_INVOICE_PATTERN = /^lnbc[a-z0-9]+$/i;
+// Lightning Network invoice validation (BOLT11 format: lnbc...)
+const LIGHTNING_INVOICE_PATTERN = /^ln(bc|tb|tbs|bcrt)[0-9]+[munp]?[a-z0-9]+$/i;
+
+// Lightning Address validation (LNURL-pay format: username@domain.com)
+// Follows the same format as email but used for Lightning payments
+// Examples: satoshi@getalby.com, user@wallet.orangecat.app
+const LIGHTNING_ADDRESS_PATTERN =
+  /^[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/;
 
 // Email validation pattern
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -91,16 +97,39 @@ export function isValidBitcoinAddress(address: string, allowTestnet: boolean = f
 }
 
 /**
- * Validate Lightning Network invoice
- * @param invoice - Lightning invoice to validate
+ * Validate Lightning Network invoice (BOLT11 format)
+ * @param invoice - Lightning invoice to validate (e.g., lnbc1...)
  * @returns boolean indicating if invoice is valid
  */
-export function isValidLightningAddress(invoice: string): boolean {
+export function isValidLightningInvoice(invoice: string): boolean {
   if (!invoice || typeof invoice !== 'string') {
     return false;
   }
 
   return LIGHTNING_INVOICE_PATTERN.test(invoice.trim());
+}
+
+/**
+ * Validate Lightning Address format (LNURL-pay)
+ *
+ * Lightning addresses look like email addresses but are used for receiving
+ * Lightning payments. Format: username@domain.com
+ *
+ * Valid examples:
+ * - satoshi@getalby.com
+ * - user@wallet.orangecat.app
+ * - test_user@strike.me
+ *
+ * @param address - Lightning address to validate
+ * @returns boolean indicating if address is valid
+ */
+export function isValidLightningAddress(address: string): boolean {
+  if (!address || typeof address !== 'string') {
+    return false;
+  }
+
+  // Lightning addresses are case-insensitive
+  return LIGHTNING_ADDRESS_PATTERN.test(address.trim().toLowerCase());
 }
 
 /**
@@ -246,7 +275,7 @@ export function isValidBio(bio: string): boolean {
 
 /**
  * @deprecated Use isValidPassword() from @/lib/validation/password instead.
- * 
+ *
  * This function is deprecated in favor of centralized password validation.
  * Re-exported for backward compatibility.
  *
@@ -271,6 +300,7 @@ export function isAuthError(
 export {
   isValidBitcoinAddress as validateBitcoinAddress,
   isValidLightningAddress as validateLightningAddress,
+  isValidLightningInvoice as validateLightningInvoice,
   isValidEmail as validateEmail,
   isValidUsername as validateUsername,
   isValidUrl as validateUrl,
