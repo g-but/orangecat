@@ -3,6 +3,146 @@ import DOMPurify from 'dompurify';
 import { validatePhoneNumber, normalizePhoneNumber } from './phone-validation';
 import { CURRENCY_CODES } from '@/config/currencies';
 
+/**
+ * Lightning Address Validation
+ *
+ * Lightning addresses follow the format: username@domain.tld
+ * They are NOT emails but use a similar format for LNURL-pay.
+ *
+ * Valid examples:
+ * - satoshi@walletofsatoshi.com
+ * - user@getalby.com
+ * - myname@ln.tips
+ * - test_user@strike.me
+ *
+ * Rules:
+ * - Username: alphanumeric, underscore, hyphen, dot (no leading/trailing dots)
+ * - Domain: valid domain format with at least one dot
+ * - Case-insensitive
+ */
+const LIGHTNING_ADDRESS_REGEX =
+  /^[a-zA-Z0-9][a-zA-Z0-9._-]*[a-zA-Z0-9]?@[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9-]*[a-zA-Z0-9])?)+$/;
+
+/**
+ * Validates a Lightning address format
+ * @param address - The Lightning address to validate
+ * @returns true if valid, false otherwise
+ */
+export function isValidLightningAddress(address: string): boolean {
+  if (!address || typeof address !== 'string') {
+    return false;
+  }
+  // Lightning addresses are case-insensitive
+  return LIGHTNING_ADDRESS_REGEX.test(address.toLowerCase());
+}
+
+/**
+ * Zod schema for Lightning address validation
+ * Use this in any schema that accepts Lightning addresses
+ */
+export const lightningAddressSchema = z
+  .string()
+  .max(200, 'Lightning address is too long')
+  .refine(
+    val => !val || val.trim() === '' || isValidLightningAddress(val),
+    'Please enter a valid Lightning address (format: username@domain.com)'
+  )
+  .optional()
+  .nullable()
+  .or(z.literal(''));
+
+/**
+ * Currency Precision Utilities
+ *
+ * CRITICAL: All monetary values should be stored as integers to avoid
+ * floating-point precision errors.
+ *
+ * - Bitcoin: Store in satoshis (1 BTC = 100,000,000 sats)
+ * - Fiat: Store in smallest unit (cents, centimes, etc.)
+ *
+ * This ensures accurate calculations without rounding errors.
+ */
+
+/**
+ * Schema for satoshi amounts (Bitcoin's smallest unit)
+ * Always stored as positive integers
+ */
+export const satoshiAmountSchema = z
+  .number()
+  .int('Amount must be a whole number of satoshis')
+  .positive('Amount must be positive')
+  .max(2100000000000000, 'Amount exceeds maximum Bitcoin supply');
+
+/**
+ * Optional satoshi amount schema
+ */
+export const optionalSatoshiAmountSchema = satoshiAmountSchema.optional().nullable();
+
+/**
+ * Schema for fiat amounts stored as cents (smallest unit)
+ * Allows storage without precision loss
+ */
+export const centsAmountSchema = z
+  .number()
+  .int('Amount must be a whole number (cents)')
+  .nonnegative('Amount cannot be negative');
+
+/**
+ * Generic price schema that can be in sats or cents depending on currency
+ * Use with a currency field to determine interpretation
+ */
+export const priceSchema = z.number().positive('Price must be positive');
+
+/**
+ * Integer price schema for when you want to ensure no decimals
+ * Use for sats or cents storage
+ */
+export const integerPriceSchema = z
+  .number()
+  .int('Price must be a whole number')
+  .positive('Price must be positive');
+
+/**
+ * Helper to convert a decimal fiat amount to cents
+ * @param amount - Amount in dollars/francs/etc.
+ * @returns Amount in cents
+ */
+export function toCents(amount: number): number {
+  return Math.round(amount * 100);
+}
+
+/**
+ * Helper to convert cents to decimal fiat amount
+ * @param cents - Amount in cents
+ * @returns Amount in dollars/francs/etc.
+ */
+export function fromCents(cents: number): number {
+  return cents / 100;
+}
+
+/**
+ * Validate and normalize a price value for storage
+ * Converts to integer representation based on currency
+ *
+ * @param amount - The raw price amount
+ * @param currency - The currency code (SATS, USD, CHF, etc.)
+ * @returns Integer representation for storage
+ */
+export function normalizePrice(amount: number, currency: string): number {
+  const upperCurrency = currency.toUpperCase();
+
+  if (upperCurrency === 'SATS' || upperCurrency === 'BTC') {
+    // For Bitcoin, amount is already in sats (or convert from BTC)
+    if (upperCurrency === 'BTC') {
+      return Math.round(amount * 100000000); // Convert BTC to sats
+    }
+    return Math.round(amount); // Ensure integer
+  }
+
+  // For fiat currencies, convert to cents
+  return Math.round(amount * 100);
+}
+
 // Profile validation
 // Note: Server-side normalizes empty strings to undefined before validation
 // Username is optional (can be set during registration/profile update)
@@ -123,9 +263,12 @@ export const projectSchema = z.object({
     .positive('Funding goal must be greater than 0')
     .optional()
     .nullable(),
-  currency: z.enum(CURRENCY_CODES, {
-    errorMap: () => ({ message: 'Please select a valid currency' }),
-  }).optional().nullable(),
+  currency: z
+    .enum(CURRENCY_CODES, {
+      errorMap: () => ({ message: 'Please select a valid currency' }),
+    })
+    .optional()
+    .nullable(),
   funding_purpose: z
     .string()
     .max(500, 'Funding purpose must be 500 characters or less')
@@ -139,12 +282,7 @@ export const projectSchema = z.object({
     .optional()
     .nullable()
     .or(z.literal('')),
-  lightning_address: z
-    .string()
-    .email('Please enter a valid Lightning address (format: user@domain.com)')
-    .optional()
-    .nullable()
-    .or(z.literal('')),
+  lightning_address: lightningAddressSchema,
   website_url: z
     .string()
     .url('Please enter a valid website URL (e.g., https://example.com)')
@@ -307,6 +445,10 @@ export function normalizeProfileData(data: unknown): ProfileData {
 export const userProductSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
   description: z.string().max(1000).optional().nullable().or(z.literal('')),
+  // Price interpretation depends on currency:
+  // - SATS: Integer value in satoshis (e.g., 100000 = 100,000 sats)
+  // - Fiat: Decimal value in currency units (e.g., 9.99 = $9.99)
+  // For best precision with fiat, consider storing in cents and converting for display
   price: z.number().positive('Price must be positive'),
   currency: z.enum(CURRENCY_CODES).optional(),
   product_type: z.enum(['physical', 'digital', 'service']).default('physical'),
@@ -386,7 +528,7 @@ export const userCauseSchema = z.object({
   goal_amount: z.number().positive().optional().nullable(),
   currency: z.enum(CURRENCY_CODES).optional(),
   bitcoin_address: z.string().optional().nullable().or(z.literal('')),
-  lightning_address: z.string().optional().nullable().or(z.literal('')),
+  lightning_address: lightningAddressSchema,
   distribution_rules: z.any().optional(), // JSON object for distribution rules
   beneficiaries: z.array(z.any()).optional().default([]), // Array of beneficiary objects
   status: z.enum(['draft', 'active', 'completed', 'paused']).default('draft'),
@@ -441,7 +583,7 @@ export const aiAssistantSchema = z.object({
   is_featured: z.boolean().default(false),
 
   // Bitcoin Payment Info
-  lightning_address: z.string().optional().nullable().or(z.literal('')),
+  lightning_address: lightningAddressSchema,
   bitcoin_address: z.string().optional().nullable().or(z.literal('')),
 });
 
@@ -500,7 +642,7 @@ export const organizationSchema = z.object({
     ])
     .default('hierarchical'),
   treasury_address: z.string().max(255).optional().nullable().or(z.literal('')),
-  lightning_address: z.string().max(255).optional().nullable().or(z.literal('')),
+  lightning_address: lightningAddressSchema,
   avatar_url: z.string().url().optional().nullable().or(z.literal('')),
   banner_url: z.string().url().optional().nullable().or(z.literal('')),
   is_public: z.boolean().default(true),
@@ -569,7 +711,7 @@ export const loanSchema = z.object({
   remaining_balance: z.number().positive('Balance must be greater than 0'),
   interest_rate: z.number().min(0).max(100).optional().nullable(),
   bitcoin_address: z.string().optional().nullable().or(z.literal('')),
-  lightning_address: z.string().optional().nullable().or(z.literal('')),
+  lightning_address: lightningAddressSchema,
   fulfillment_type: z.enum(['manual', 'automatic']).default('manual'),
   currency: z.string().optional(),
 
@@ -666,7 +808,7 @@ export const eventSchema = z
     is_free: z.boolean().default(false),
     funding_goal: z.number().positive().optional().nullable(),
     bitcoin_address: z.string().optional().nullable().or(z.literal('')),
-    lightning_address: z.string().optional().nullable().or(z.literal('')),
+    lightning_address: lightningAddressSchema,
 
     // Media
     images: z.array(z.string().url()).optional().default([]),
@@ -716,17 +858,19 @@ export const wishlistSchema = z.object({
     .min(3, 'Title must be at least 3 characters')
     .max(100, 'Title must be at most 100 characters'),
   description: z.string().max(1000).optional().nullable().or(z.literal('')),
-  type: z.enum([
-    'birthday',
-    'wedding',
-    'baby_shower',
-    'graduation',
-    'housewarming',
-    'charity',
-    'travel',
-    'personal',
-    'general',
-  ]).default('general'),
+  type: z
+    .enum([
+      'birthday',
+      'wedding',
+      'baby_shower',
+      'graduation',
+      'housewarming',
+      'charity',
+      'travel',
+      'personal',
+      'general',
+    ])
+    .default('general'),
   visibility: z.enum(['public', 'unlisted', 'private']).default('public'),
   event_date: z.string().or(z.date()).optional().nullable(),
   cover_image_url: z.string().url().optional().nullable().or(z.literal('')),
@@ -775,23 +919,22 @@ export const wishlistContributionSchema = z.object({
 export const wishlistFulfillmentProofSchema = z.object({
   wishlist_item_id: z.string().uuid(),
   proof_type: z.enum(['receipt', 'screenshot', 'transaction', 'comment']),
-  description: z
-    .string()
-    .min(10, 'Description must be at least 10 characters')
-    .max(1000),
+  description: z.string().min(10, 'Description must be at least 10 characters').max(1000),
   image_url: z.string().url().optional().nullable(),
   transaction_id: z.string().max(100).optional().nullable(),
 });
 
-export const wishlistFeedbackSchema = z.object({
-  wishlist_item_id: z.string().uuid(),
-  fulfillment_proof_id: z.string().uuid().optional().nullable(),
-  feedback_type: z.enum(['like', 'dislike']),
-  comment: z.string().max(500).optional().nullable(),
-}).refine(
-  (data) => data.feedback_type !== 'dislike' || (data.comment && data.comment.length >= 10),
-  { message: 'Dislikes require a comment of at least 10 characters', path: ['comment'] }
-);
+export const wishlistFeedbackSchema = z
+  .object({
+    wishlist_item_id: z.string().uuid(),
+    fulfillment_proof_id: z.string().uuid().optional().nullable(),
+    feedback_type: z.enum(['like', 'dislike']),
+    comment: z.string().max(500).optional().nullable(),
+  })
+  .refine(data => data.feedback_type !== 'dislike' || (data.comment && data.comment.length >= 10), {
+    message: 'Dislikes require a comment of at least 10 characters',
+    path: ['comment'],
+  });
 
 export type ProfileData = z.infer<typeof profileSchema>;
 export type ProjectData = z.infer<typeof projectSchema>;
