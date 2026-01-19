@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Link from 'next/link';
 import {
   Bitcoin,
   ArrowRight,
@@ -20,8 +19,11 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Loading from '@/components/Loading';
 import { useAuth, useRedirectIfAuthenticated } from '@/hooks/useAuth';
-import { resetPassword } from '@/services/supabase/auth';
+import { resetPassword, getMFAAssuranceLevel } from '@/services/supabase/auth';
 import { registrationEvents, trackEvent } from '@/lib/analytics';
+import { TurnstileCaptcha } from '@/components/auth/TurnstileCaptcha';
+import { PasswordStrengthIndicator } from '@/components/auth/PasswordStrengthIndicator';
+import { MFAVerify } from '@/components/auth/MFAVerify';
 
 // Normalize unknown error values to a user-friendly string
 function getReadableError(
@@ -86,6 +88,29 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [showMFAVerify, setShowMFAVerify] = useState(false);
+
+  // CAPTCHA state
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  const captchaEnabled = !!turnstileSiteKey;
+
+  // CAPTCHA handlers
+  const handleCaptchaSuccess = useCallback((token: string) => {
+    setCaptchaToken(token);
+    setError(null);
+  }, []);
+
+  const handleCaptchaError = useCallback((err: string) => {
+    setCaptchaToken(null);
+    setError(err);
+  }, []);
+
+  const handleCaptchaExpire = useCallback(() => {
+    setCaptchaToken(null);
+  }, []);
 
   // Combined loading state
   const loading = localLoading || authLoading;
@@ -141,6 +166,25 @@ export default function AuthPage() {
         if (!passwordValidation.valid) {
           throw new Error(passwordValidation.errors[0] || 'Password does not meet requirements');
         }
+
+        // Verify CAPTCHA for registration
+        if (captchaEnabled && !captchaToken) {
+          throw new Error('Please complete the CAPTCHA verification');
+        }
+
+        // Verify CAPTCHA token server-side
+        if (captchaEnabled && captchaToken) {
+          const captchaResponse = await fetch('/api/auth/verify-captcha', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: captchaToken }),
+          });
+          const captchaResult = await captchaResponse.json();
+          if (!captchaResult.success) {
+            setCaptchaToken(null); // Reset CAPTCHA on failure
+            throw new Error(captchaResult.error || 'CAPTCHA verification failed');
+          }
+        }
       }
 
       const result =
@@ -174,8 +218,25 @@ export default function AuthPage() {
           'Registration successful! Please check your email to verify your account before signing in.'
         );
         setFormData({ email: '', password: '', confirmPassword: '' });
+        setCaptchaToken(null); // Reset CAPTCHA on successful registration
         setMode('login');
       } else if (result.data && result.data.user) {
+        // Check if MFA is required
+        if (mode === 'login') {
+          const mfaResult = await getMFAAssuranceLevel();
+
+          // If user needs to complete MFA (has aal2 factors but only aal1 authenticated)
+          if (
+            mfaResult.data &&
+            mfaResult.data.currentLevel === 'aal1' &&
+            mfaResult.data.nextLevel === 'aal2'
+          ) {
+            setShowMFAVerify(true);
+            setLocalLoading(false);
+            return; // Don't redirect yet, show MFA verification
+          }
+        }
+
         // Successful login - redirect will happen automatically via useRedirectIfAuthenticated
         trackEvent('login_success', { userId: result.data.user.id });
         setSuccess('Login successful! Redirecting...');
@@ -259,6 +320,32 @@ export default function AuthPage() {
 
   // Don't block the form - show it immediately
   // The form will work even if hydration is still pending
+
+  // Handle MFA verification step
+  const handleMFAVerificationComplete = () => {
+    // MFA verification completed successfully
+    setSuccess('Login successful! Redirecting...');
+    setShowMFAVerify(false);
+    // Redirect will happen automatically via useRedirectIfAuthenticated
+  };
+
+  const handleMFACancelled = () => {
+    setShowMFAVerify(false);
+    // Sign out to clear partial authentication
+    clear();
+  };
+
+  // Show MFA verification if needed
+  if (showMFAVerify) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+        <MFAVerify
+          onVerificationComplete={handleMFAVerificationComplete}
+          onCancel={handleMFACancelled}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
@@ -401,6 +488,8 @@ export default function AuthPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={formData.password}
                     onChange={e => setFormData({ ...formData, password: e.target.value })}
+                    onFocus={() => setIsPasswordFocused(true)}
+                    onBlur={() => setIsPasswordFocused(false)}
                     disabled={loading}
                     placeholder="Enter your password"
                     className="w-full h-12 px-4 pr-12 rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500 bg-white"
@@ -416,6 +505,14 @@ export default function AuthPage() {
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
+                {/* Password Strength Indicator for Registration */}
+                {mode === 'register' && (
+                  <PasswordStrengthIndicator
+                    password={formData.password}
+                    isFocused={isPasswordFocused}
+                    showOnlyWhenFocused={false}
+                  />
+                )}
               </div>
             )}
 
@@ -452,6 +549,45 @@ export default function AuthPage() {
                     )}
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* CAPTCHA for Registration */}
+            {mode === 'register' && captchaEnabled && turnstileSiteKey && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Verify you&apos;re human
+                </label>
+                <TurnstileCaptcha
+                  siteKey={turnstileSiteKey}
+                  onSuccess={handleCaptchaSuccess}
+                  onError={handleCaptchaError}
+                  onExpire={handleCaptchaExpire}
+                  theme="light"
+                />
+              </div>
+            )}
+
+            {/* Remember Me Checkbox for Login */}
+            {mode === 'login' && (
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={e => setRememberMe(e.target.checked)}
+                    disabled={loading}
+                    className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500 cursor-pointer"
+                  />
+                  <span className="text-sm text-gray-600">Remember me</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setMode('forgot')}
+                  className="text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors"
+                >
+                  Forgot password?
+                </button>
               </div>
             )}
 
@@ -492,17 +628,6 @@ export default function AuthPage() {
 
           {/* Navigation Links */}
           <div className="mt-6 space-y-4 text-center">
-            {mode === 'login' && (
-              <div>
-                <Link
-                  href="/auth/forgot-password"
-                  className="text-sm text-orange-600 hover:text-orange-700 font-medium transition-colors"
-                >
-                  Forgot your password?
-                </Link>
-              </div>
-            )}
-
             <div>
               <p className="text-gray-600 text-sm">
                 {mode === 'login'

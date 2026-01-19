@@ -38,34 +38,22 @@ import {
   DashboardProjects,
 } from '@/components/dashboard/sections';
 
-// Dynamic imports for heavy components
-const DashboardSidebar = dynamic(
-  () => import('@/components/dashboard/DashboardSidebar').then(mod => mod.DashboardSidebar),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse h-80" />
-    ),
-  }
-);
+// Import lighter components directly (no dynamic import overhead)
+import { MobileDashboardSidebar } from '@/components/dashboard/MobileDashboardSidebar';
 
-const MobileDashboardSidebar = dynamic(
-  () =>
-    import('@/components/dashboard/MobileDashboardSidebar').then(mod => mod.MobileDashboardSidebar),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse h-48" />
-    ),
-  }
-);
-
+// Only dynamic import for truly heavy component (Timeline with feed)
 const DashboardTimeline = dynamic(
   () => import('@/components/dashboard/DashboardTimeline').then(mod => mod.DashboardTimeline),
   {
     ssr: false,
     loading: () => (
-      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm animate-pulse h-96" />
+      <div className="rounded-xl border border-gray-100 bg-white p-4 shadow-sm">
+        <div className="animate-pulse space-y-4">
+          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+          <div className="h-24 bg-gray-200 rounded"></div>
+          <div className="h-24 bg-gray-200 rounded"></div>
+        </div>
+      </div>
     ),
   }
 );
@@ -100,16 +88,27 @@ export default function DashboardPage() {
           const currentProjects = useProjectStore.getState().projects;
           logger.debug(
             'Projects loaded successfully',
-            { userId: user.id, projectCount: currentProjects.length },
+            {
+              userId: user.id,
+              projectCount: currentProjects.length,
+              hasProjects: currentProjects.length > 0,
+            },
             'Dashboard'
           );
         })
         .catch(error => {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           logger.error(
             'Failed to load projects in dashboard',
-            { error, userId: user.id },
+            {
+              error: errorMessage,
+              errorDetails: error,
+              userId: user.id,
+            },
             'Dashboard'
           );
+          // Show toast notification for project loading errors
+          toast.error('Failed to load your projects. Please refresh the page.');
         });
     }
   }, [user?.id, hydrated, loadProjects]);
@@ -181,12 +180,22 @@ export default function DashboardPage() {
         {
           userId,
           eventCount: feed?.events?.length || 0,
+          hasEvents: feed && feed.events && feed.events.length > 0,
         },
         'Dashboard'
       );
     } catch (error) {
-      logger.error('Failed to load timeline feed', { error, userId }, 'Dashboard');
-      setTimelineError('Failed to load timeline');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      logger.error(
+        'Failed to load timeline feed',
+        {
+          error: errorMessage,
+          errorDetails: error,
+          userId,
+        },
+        'Dashboard'
+      );
+      setTimelineError(`Failed to load timeline: ${errorMessage}`);
     } finally {
       setTimelineLoading(false);
     }
@@ -240,6 +249,7 @@ export default function DashboardPage() {
   }, [profile?.username, profile?.bio, profile?.bitcoin_address]);
 
   const hasBitcoinAddress = useMemo(() => !!profile?.bitcoin_address, [profile?.bitcoin_address]);
+  const hasProjects = useMemo(() => safeProjects.length > 0, [safeProjects]);
   const hasAnyDraft = useMemo(() => safeDrafts.length > 0, [safeDrafts]);
 
   const hasTimelineActivity = useMemo(() => {
@@ -314,7 +324,7 @@ export default function DashboardPage() {
           <DashboardJourney
             profileCompletion={profileCompletion}
             hasBitcoinAddress={hasBitcoinAddress}
-            hasProjects={safeProjects.length > 0}
+            hasProjects={hasProjects}
             hasAnyDraft={hasAnyDraft}
             totalDrafts={totalDrafts}
             hasTimelineActivity={hasTimelineActivity}
@@ -322,9 +332,9 @@ export default function DashboardPage() {
         )}
 
         {/* Primary Content: Economic Activity */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           {/* Mobile Sidebar - Stats shown above content on mobile */}
-          <div className="lg:hidden">
+          <div className="block lg:hidden">
             <MobileDashboardSidebar
               stats={sidebarStats}
               profileCompletion={profileCompletion}
@@ -332,37 +342,27 @@ export default function DashboardPage() {
             />
           </div>
 
-          {/* Desktop Layout: Sidebar + Main Content */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Sidebar - Stats & Actions (desktop only) */}
-            <aside className="hidden lg:block lg:col-span-3">
-              <div className="lg:sticky lg:top-20 space-y-6">
-                <DashboardSidebar stats={sidebarStats} profileCompletion={profileCompletion} />
-              </div>
-            </aside>
+          {/* Main Content: Single column layout - no cluttered double sidebars */}
+          <div className="space-y-6">
+            {/* Timeline - User's activity feed */}
+            <DashboardTimeline
+              timelineFeed={timelineFeed}
+              isLoading={timelineLoading}
+              error={timelineError}
+              onRefresh={() => user?.id && loadTimelineFeed(user.id)}
+              onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
+              userId={user?.id}
+            />
 
-            {/* Main Content: Timeline + Projects */}
-            <main className="lg:col-span-9 space-y-6">
-              {/* Timeline - User's activity feed */}
-              <DashboardTimeline
-                timelineFeed={timelineFeed}
-                isLoading={timelineLoading}
-                error={timelineError}
-                onRefresh={() => user?.id && loadTimelineFeed(user.id)}
-                onPostSuccess={() => user?.id && loadTimelineFeed(user.id)}
-                userId={user?.id}
-              />
-
-              {/* Projects - User's economic activity */}
-              <DashboardProjects projects={safeProjects} />
-            </main>
+            {/* Projects - User's economic activity */}
+            <DashboardProjects projects={safeProjects} />
           </div>
         </div>
 
         {/* Secondary Actions (bottom) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <DashboardInviteCTA profile={profile} userId={user.id} />
-          <DashboardQuickActions hasProjects={safeProjects.length > 0} />
+          <DashboardQuickActions hasProjects={hasProjects} />
         </div>
       </div>
     </div>

@@ -21,6 +21,7 @@ export default function CreateProjectPage() {
   const router = useRouter();
   const { isLoading, isAuthenticated } = useRequireAuth();
   const [hasRedirected, setHasRedirected] = useState(false);
+  const [initialData, setInitialData] = useState<Record<string, unknown> | undefined>(undefined);
 
   // Redirect if not authenticated (backup check)
   useEffect(() => {
@@ -30,10 +31,29 @@ export default function CreateProjectPage() {
     }
   }, [isLoading, isAuthenticated, router, hasRedirected]);
 
+  // Prefill support from My Cat (project_prefill) - must be before conditional return
+  useEffect(() => {
+    // Only run when authenticated
+    if (!isAuthenticated) {
+      return;
+    }
+
+    try {
+      const raw = localStorage.getItem('project_prefill');
+      if (raw) {
+        const data = JSON.parse(raw);
+        setInitialData(data);
+        localStorage.removeItem('project_prefill');
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }, [isAuthenticated]);
+
   // Show loading while checking auth
   if (isLoading || !isAuthenticated) {
     return <Loading fullScreen contextual message="Loading..." />;
   }
 
-  return <ProjectCreationWizard />;
+  return <ProjectCreationWizard initialData={initialData} />;
 }
