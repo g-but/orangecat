@@ -16,7 +16,7 @@
 
 'use client';
 
-import { Menu, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import FocusLock from 'react-focus-lock';
 import { SidebarUserProfile } from './SidebarUserProfile';
 import { SidebarNavigation } from './SidebarNavigation';
@@ -64,20 +64,19 @@ export function Sidebar({
     }
   };
 
-  // Desktop: Always fixed w-16 (icons only with flyout tooltips)
-  // Mobile: w-64 full-width drawer when open
+  // Desktop: Fixed w-64 (full width with labels) - good UX for large screens
+  // Mobile: w-64 full-width drawer when open, hidden when closed
   // Using useIsDesktop hook (SSR-safe, reactive to window resizing)
   const isDesktop = useIsDesktop();
 
-  // Desktop sidebar is always visible at fixed width
+  // Desktop sidebar is always visible at full width
   // Mobile sidebar slides in/out
   const sidebarTranslate = navigationState.isSidebarOpen
     ? 'translate-x-0'
     : '-translate-x-full lg:translate-x-0';
 
-  // isExpanded only true on mobile when drawer is open
-  // Desktop always shows icons only (tooltips handle labels)
-  const isExpanded = !isDesktop && navigationState.isSidebarOpen;
+  // isExpanded true on desktop (always shows labels) and on mobile when drawer is open
+  const isExpanded = isDesktop || navigationState.isSidebarOpen;
 
   return (
     <>
@@ -93,10 +92,11 @@ export function Sidebar({
       {/* Focus trap for mobile drawer (accessibility) */}
       {/* Disabled on desktop where sidebar is always visible */}
       <FocusLock disabled={!navigationState.isSidebarOpen || isDesktop}>
-        {/* NOTE: Using literal class names w-64 and lg:w-16 instead of template interpolation
-            because Tailwind JIT can't detect dynamically generated responsive classes like lg:${SIDEBAR_WIDTHS.COLLAPSED} */}
+        {/* Desktop: w-64 (full width with labels) - good UX for large screens
+            Mobile: w-64 drawer when open
+            Using literal class names for Tailwind JIT compatibility */}
         <aside
-          className={`fixed bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg border-r ${SIDEBAR_COLORS.BORDER} ${sidebarTranslate} overflow-y-auto overflow-x-visible transition-transform ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} w-64 lg:w-16`}
+          className={`fixed bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg border-r ${SIDEBAR_COLORS.BORDER} ${sidebarTranslate} overflow-y-auto overflow-x-visible transition-transform ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} w-64`}
           style={{
             paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             paddingLeft: 'env(safe-area-inset-left, 0px)',
@@ -124,21 +124,6 @@ export function Sidebar({
               toggleSection={toggleSection}
               onNavigate={handleNavigate}
             />
-
-            {/* Toggle Button - Desktop only (expands to full drawer) */}
-            <div className={`border-t border-gray-100 px-3 py-2 hidden lg:block mt-auto`}>
-              <button
-                onClick={toggleSidebar}
-                className="w-full flex items-center justify-center p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-colors duration-200"
-                aria-label={
-                  navigationState.isSidebarOpen
-                    ? navigationLabels.SIDEBAR_COLLAPSE
-                    : navigationLabels.SIDEBAR_EXPAND
-                }
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-            </div>
 
             {/* Mobile Close Button */}
             {navigationState.isSidebarOpen && (
