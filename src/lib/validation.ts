@@ -676,18 +676,28 @@ export const assetSchema = z.object({
 
   // Sale options
   is_for_sale: z.boolean().optional().default(false),
-  sale_price_sats: z.number().positive().optional().nullable(),
+  sale_price_sats: z.number().int('Price must be whole satoshis').positive().optional().nullable(),
 
   // Rental options
   is_for_rent: z.boolean().optional().default(false),
-  rental_price_sats: z.number().positive().optional().nullable(),
+  rental_price_sats: z
+    .number()
+    .int('Price must be whole satoshis')
+    .positive()
+    .optional()
+    .nullable(),
   rental_period_type: z.enum(['hourly', 'daily', 'weekly', 'monthly']).optional().default('daily'),
   min_rental_period: z.number().int().positive().optional().default(1),
   max_rental_period: z.number().int().positive().optional().nullable(),
 
   // Deposit
   requires_deposit: z.boolean().optional().default(false),
-  deposit_amount_sats: z.number().positive().optional().nullable(),
+  deposit_amount_sats: z
+    .number()
+    .int('Amount must be whole satoshis')
+    .positive()
+    .optional()
+    .nullable(),
 
   // Visibility
   show_on_profile: z.boolean().optional().default(true),
@@ -895,7 +905,10 @@ export const wishlistItemSchema = z.object({
   external_source: z.string().max(100).optional().nullable(),
 
   // Funding
-  target_amount_sats: z.number().positive('Target amount must be positive'),
+  target_amount_sats: z
+    .number()
+    .int('Amount must be whole satoshis')
+    .positive('Target amount must be positive'),
   currency: z.enum(CURRENCY_CODES).optional().default('SATS'),
   original_amount: z.number().positive().optional().nullable(),
 
@@ -911,7 +924,7 @@ export const wishlistItemSchema = z.object({
 
 export const wishlistContributionSchema = z.object({
   wishlist_item_id: z.string().uuid(),
-  amount_sats: z.number().positive('Amount must be positive'),
+  amount_sats: z.number().int('Amount must be whole satoshis').positive('Amount must be positive'),
   message: z.string().max(500).optional().nullable(),
   is_anonymous: z.boolean().default(false),
 });
