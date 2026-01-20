@@ -24,16 +24,15 @@ import {
   Settings,
   User as UserIcon,
   MessageSquare,
-  Compass,
   BookOpen,
   Globe,
   Github,
   Twitter,
-  FileText,
   Info,
   HelpCircle,
-  Shield,
   Search,
+  Cat,
+  Bot,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -112,184 +111,152 @@ export function shouldShowNavigationItem(item: NavigationItem, user: SupabaseUse
 /**
  * Sidebar navigation sections for authenticated users
  *
- * Uses navigation generator for entity-based sections (single source of truth).
- * Manual sections for non-entity navigation (Home, Explore, Learn).
+ * SIMPLIFIED X/Twitter-style navigation:
+ * - 4-5 main sections only
+ * - Progressive disclosure via single "Create" button
+ * - Less cognitive load, faster navigation
  *
- * Progressive disclosure: Only most-used sections expanded by default.
+ * Structure:
+ * 1. Main (Home, Timeline, Messages, Explore) - flat, no nesting
+ * 2. Create (single section for all creation - collapsed by default)
+ * 3. More (Settings, Profile, Help) - collapsed by default
  */
-// Manual sections (non-entity navigation)
-const manualSections: NavSection[] = [
+
+// Generate entity-based navigation for the Create section only
+const entitySections = generateEntityNavigation();
+
+// Simplified main navigation - X/Twitter style
+const simplifiedSections: NavSection[] = [
   {
-    id: 'home',
-    title: 'Home',
+    id: 'main',
+    title: '', // No title - these are primary nav items
     priority: 1,
-    defaultExpanded: true, // Most used - always expanded
-    collapsible: true,
-    requiresAuth: true,
+    defaultExpanded: true,
+    collapsible: false, // Primary nav is always visible
+    requiresAuth: false,
     items: [
       {
-        name: 'Dashboard',
+        name: 'Home',
         href: '/dashboard',
         icon: Home,
-        description: 'Your activity overview',
+        description: 'Your dashboard',
         requiresAuth: true,
       },
       {
         name: 'Timeline',
         href: '/timeline',
         icon: BookOpen,
-        description: 'Your posts and updates',
+        description: 'Your feed',
         requiresAuth: true,
       },
       {
         name: 'Messages',
         href: '/messages',
         icon: MessageSquare,
-        description: 'Private conversations',
+        description: 'Private messages',
         requiresAuth: true,
       },
       {
-        name: 'Search',
-        href: '/discover',
-        icon: Search,
-        description: 'Find projects, people, and more',
-        requiresAuth: false, // Search is available to all
+        name: 'My Cat',
+        href: '/dashboard/cat',
+        icon: Cat,
+        description: 'AI assistant',
+        requiresAuth: true,
       },
       {
-        name: 'Profile',
-        href: '/dashboard/info',
-        icon: UserIcon,
-        description: 'Your public profile',
+        name: 'My AI',
+        href: '/settings/ai',
+        icon: Bot,
+        description: 'AI settings & keys',
+        requiresAuth: true,
+      },
+      {
+        name: 'Explore',
+        href: '/discover',
+        icon: Search,
+        description: 'Discover',
+        requiresAuth: false,
+      },
+    ],
+  },
+  {
+    id: 'create',
+    title: 'Create',
+    priority: 2,
+    defaultExpanded: false, // Collapsed - click to expand (progressive disclosure)
+    collapsible: true,
+    requiresAuth: true,
+    items: [
+      // Flatten all entity creation into one section
+      ...entitySections.flatMap(section => section.items),
+      // Add People to creation options
+      {
+        name: 'People',
+        href: '/dashboard/people',
+        icon: Users,
+        description: 'Find connections',
         requiresAuth: true,
       },
     ],
   },
-];
-
-// Generate entity-based navigation sections
-const entitySections = generateEntityNavigation();
-
-// Add "People" to Network section (not an entity type)
-const networkSection = entitySections.find(s => s.id === 'network');
-if (networkSection) {
-  networkSection.items.push({
-    name: 'People',
-    href: '/dashboard/people',
-    icon: Users,
-    description: 'Your connections',
-    requiresAuth: true,
-  });
-}
-
-// Public sections (Explore, Learn)
-const publicSections: NavSection[] = [
   {
-    id: 'explore',
-    title: 'Explore',
-    priority: 6,
-    defaultExpanded: false, // Collapsed - progressive disclosure
+    id: 'more',
+    title: 'More',
+    priority: 3,
+    defaultExpanded: false, // Collapsed by default
     collapsible: true,
     requiresAuth: false,
     items: [
       {
-        name: 'Discover',
-        href: '/discover',
-        icon: Compass,
-        description: 'Find projects and people',
-        requiresAuth: false,
+        name: 'Profile',
+        href: '/dashboard/info',
+        icon: UserIcon,
+        description: 'Your profile',
+        requiresAuth: true,
+      },
+      {
+        name: 'Settings',
+        href: '/settings',
+        icon: Settings,
+        description: 'Preferences',
+        requiresAuth: true,
       },
       {
         name: 'Community',
         href: '/community',
         icon: Globe,
-        description: 'Public timeline',
+        description: 'Public feed',
         requiresAuth: false,
       },
-      {
-        name: 'Channel',
-        href: '/channel',
-        icon: BookOpen,
-        description: 'Video & audio (coming soon)',
-        comingSoon: true,
-        requiresAuth: false,
-      },
-    ],
-  },
-  {
-    id: 'learn',
-    title: 'Learn',
-    priority: 7,
-    defaultExpanded: false, // Collapsed - progressive disclosure
-    collapsible: true,
-    requiresAuth: false,
-    items: [
       {
         name: 'About',
         href: '/about',
         icon: Info,
-        description: 'Learn about Orange Cat',
+        description: 'About OrangeCat',
         requiresAuth: false,
       },
       {
-        name: 'Blog',
-        href: '/blog',
-        icon: FileText,
-        description: 'Latest news and updates',
-        requiresAuth: false,
-      },
-      {
-        name: 'Docs',
-        href: '/docs',
-        icon: BookOpen,
-        description: 'Documentation and guides',
-        requiresAuth: false,
-      },
-      {
-        name: 'FAQ',
+        name: 'Help',
         href: '/faq',
         icon: HelpCircle,
-        description: 'Frequently asked questions',
-        requiresAuth: false,
-      },
-      {
-        name: 'Privacy',
-        href: '/privacy',
-        icon: Shield,
-        description: 'Privacy policy',
+        description: 'FAQ & Support',
         requiresAuth: false,
       },
     ],
   },
 ];
 
-// Merge all sections: manual + entity-generated + public
-export const sidebarSections: NavSection[] = [
-  ...manualSections,
-  ...entitySections,
-  ...publicSections,
-].sort((a, b) => a.priority - b.priority);
+// Export simplified sections
+export const sidebarSections: NavSection[] = simplifiedSections;
 
 /**
  * Bottom navigation items for account management
  *
  * These appear at the bottom of the sidebar
+ * Note: Profile and Settings are already in the "More" section above,
+ * so this array is kept empty to avoid duplicate navigation items.
  */
-export const bottomNavItems: NavItem[] = [
-  {
-    name: 'View My Profile',
-    href: '/profiles/me',
-    icon: UserIcon,
-    description: 'View your public profile',
-    requiresAuth: true,
-  },
-  {
-    name: 'Settings',
-    href: '/settings',
-    icon: Settings,
-    description: 'Account settings and preferences',
-    requiresAuth: true,
-  },
-];
+export const bottomNavItems: NavItem[] = [];
 
 /**
  * Footer navigation configuration
