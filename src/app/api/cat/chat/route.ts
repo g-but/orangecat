@@ -156,9 +156,28 @@ export async function POST(request: NextRequest) {
 
     // Build request
     const messages: OpenRouterMessage[] = [{ role: 'user', content: message }];
-    const openrouter = hasByok
-      ? createOpenRouterServiceWithByok(userApiKey as string)
-      : createOpenRouterService();
+
+    // Check if we can create the OpenRouter service
+    let openrouter;
+    try {
+      openrouter = hasByok
+        ? createOpenRouterServiceWithByok(userApiKey as string)
+        : createOpenRouterService();
+    } catch (_error) {
+      // No platform API key configured and user doesn't have BYOK
+      return NextResponse.json(
+        {
+          error: 'AI chat not configured',
+          code: 'NO_API_KEY',
+          details: {
+            message: 'To use My Cat AI chat, you need to add your own OpenRouter API key in Settings → API Keys. Get a free key at openrouter.ai',
+            hasByok: false,
+            helpUrl: '/dashboard/settings?tab=api-keys',
+          },
+        },
+        { status: 503 }
+      );
+    }
 
     // Streaming mode (SSE)
     if (stream) {
@@ -193,7 +212,7 @@ export async function POST(request: NextRequest) {
             if (!hasByok && usage?.totalTokens) {
               await keyService.incrementPlatformUsage(user.id, 1, usage.totalTokens);
             }
-          } catch (err) {
+          } catch (_err) {
             controller.enqueue(encoder.encode(`event: error\n`));
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ error: 'stream_error' })}\n\n`)

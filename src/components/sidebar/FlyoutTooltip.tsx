@@ -83,11 +83,12 @@ export function FlyoutTooltip({ isVisible, children, targetElement }: FlyoutTool
 
   return (
     <div
-      className="hidden lg:block fixed px-3 py-2 bg-gray-900 text-white text-sm rounded-lg whitespace-nowrap pointer-events-none shadow-xl z-[60]"
+      className="hidden lg:block fixed px-3 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg whitespace-nowrap pointer-events-none shadow-xl"
       style={{
         top: `${position.top}px`,
         left: `${position.left}px`,
         transform: 'translateY(-50%)',
+        zIndex: 9999, // Very high z-index to ensure it's above everything
       }}
     >
       {/* Tooltip arrow pointing left */}

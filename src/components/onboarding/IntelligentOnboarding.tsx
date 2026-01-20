@@ -19,6 +19,7 @@ import {
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { Textarea } from '@/components/ui/Textarea';
+import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
 import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
@@ -94,14 +95,23 @@ export default function IntelligentOnboarding() {
       </div>
 
       <div className="space-y-4">
-        <Textarea
-          data-testid="onboarding-description"
-          placeholder="e.g., 'I run a local cat shelter and need funds for food and medical care' or 'I'm building an open source Bitcoin wallet and need development funding' or 'My community wants to organize a Bitcoin education event'..."
-          value={userDescription}
-          onChange={e => setUserDescription(e.target.value)}
-          rows={6}
-          className="w-full resize-none"
-        />
+        <div className="flex items-start gap-2">
+          <Textarea
+            data-testid="onboarding-description"
+            placeholder="e.g., 'I run a local cat shelter and need funds for food and medical care' or 'I'm building an open source Bitcoin wallet and need development funding' or 'My community wants to organize a Bitcoin education event'..."
+            value={userDescription}
+            onChange={e => setUserDescription(e.target.value)}
+            rows={6}
+            className="w-full resize-none"
+          />
+          {process.env.NEXT_PUBLIC_FEATURE_VOICE_INPUT === 'true' && (
+            <VoiceInputButton
+              ariaLabel="Voice input for onboarding description"
+              size="sm"
+              onTranscript={t => setUserDescription(prev => (prev ? prev + ' ' : '') + t)}
+            />
+          )}
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card

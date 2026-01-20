@@ -45,6 +45,7 @@ export function AppShell({ children }: AppShellProps) {
   const {
     navigationState,
     toggleSidebar,
+    toggleSidebarCollapse,
     toggleSection,
     isItemActive,
     getFilteredSections,
@@ -78,6 +79,7 @@ export function AppShell({ children }: AppShellProps) {
             navigationState={navigationState}
             isItemActive={isItemActive}
             toggleSidebar={toggleSidebar}
+            toggleSidebarCollapse={toggleSidebarCollapse}
             toggleSection={toggleSection}
           />
         )}
@@ -85,7 +87,11 @@ export function AppShell({ children }: AppShellProps) {
         {/* Main Content Area */}
         <main
           className={`flex-1 ${
-            shouldShowSidebar ? 'lg:ml-16' : 'ml-0'
+            shouldShowSidebar
+              ? navigationState.isSidebarCollapsed
+                ? 'lg:ml-16'
+                : 'lg:ml-64'
+              : 'ml-0'
           }`}
         >
           {children}

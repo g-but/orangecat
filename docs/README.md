@@ -54,6 +54,7 @@ docs/
 ### **Development**
 
 - **[Best Practices](./development/BEST_PRACTICES.md)** - Development guidelines
+- **[Engineering Principles](./standards/engineering_principles.md)** - First principles (privacy/local-first, SSOT/DRY/SoC, a11y, security)
 - **[Code Review Guide](./development/code-review.md)** - Code review process
 - **[Technical Debt](./development/technical-debt.md)** - Current technical debt items
 - **[Dashboard Analysis](./development/dashboard-analysis.md)** - Dashboard page analysis
@@ -149,11 +150,9 @@ Use your IDE's search (Ctrl+Shift+F) to search across all documentation files.
 
 ### **Recently Updated**
 
-- **[Documentation Audit](./DOCUMENTATION_AUDIT_2025-11-16.md)** - 2025-11-16 ⭐ NEW
-- **[Posting System](./features/posting/README.md)** - 2025-11-16 ⭐ NEW
-- **[Supabase Migration Workflow](./workflows/SUPABASE_MIGRATION_WORKFLOW.md)** - 2025-11-14
-- **[Migration Quick Reference](./workflows/MIGRATION_QUICK_REFERENCE.md)** - 2025-11-14
-- **[Migration Lessons Learned](./workflows/MIGRATION_LESSONS_LEARNED.md)** - 2025-11-14
+- **[My Cat: Voice + Local Models](./my-cat-voice-and-local-models.md)** - 2026-01-18 ⭐ NEW
+- **[Engineering Principles](./standards/engineering_principles.md)** - 2026-01-18 ⭐ NEW
+- **[My Cat Spec](./my-cat-spec.md)** - 2026-01-18
 
 ---
 
@@ -208,11 +207,7 @@ When contributing documentation:
 
 ## 🗄️ Archive
 
-Historical documentation has been moved to preserve git history while keeping active docs clean:
+Historical documentation is preserved separately:
 
-- **[Archive 2024](./archive/2024/)** - Completed analyses, fixes, and development logs
-  - 13 analysis documents
-  - 4 fix documentation files
-  - 22 development progress logs
-
-See **[Documentation Audit](./DOCUMENTATION_AUDIT_2025-11-16.md)** for cleanup details.
+- **[Archive Index](./archives/README.md)**
+  - Previous audits, evaluations, and implementation plans

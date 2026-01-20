@@ -73,6 +73,8 @@ export interface EntityCardProps {
   metricsSlot?: ReactNode;
   /** Custom footer slot */
   footerSlot?: ReactNode;
+  /** Compact mode for dashboard - smaller tiles with reduced spacing */
+  compact?: boolean;
 }
 
 const badgeVariantClasses: Record<string, string> = {
@@ -155,6 +157,7 @@ export function EntityCard({
   progressSlot,
   metricsSlot,
   footerSlot,
+  compact = false,
 }: EntityCardProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -210,10 +213,13 @@ export function EntityCard({
       tabIndex={onClick ? 0 : undefined}
       onKeyDown={onClick ? (e) => e.key === 'Enter' && onClick() : undefined}
     >
-      {/* Image Section */}
+      {/* Image Section - smaller aspect ratio in compact mode */}
       <Link
         href={detailHref}
-        className="relative w-full overflow-hidden bg-gray-100 block aspect-video"
+        className={cn(
+          "relative w-full overflow-hidden bg-gray-100 block",
+          compact ? "aspect-[4/3]" : "aspect-video"
+        )}
       >
         {renderImage()}
       </Link>
@@ -247,11 +253,11 @@ export function EntityCard({
         </div>
       )}
 
-      {/* Content */}
-      <div className="flex flex-1 flex-col p-4">
+      {/* Content - reduced padding in compact mode */}
+      <div className={cn("flex flex-1 flex-col", compact ? "p-3" : "p-4")}>
         {/* Badge Row */}
         {badge && (
-          <div className="mb-2">
+          <div className={cn(compact ? "mb-1" : "mb-2")}>
             <Badge
               variant="secondary"
               className={cn('text-xs', badgeVariantClasses[badgeVariant])}
@@ -262,31 +268,34 @@ export function EntityCard({
         )}
 
         {/* Header Slot */}
-        {headerSlot && <div className="mb-2">{headerSlot}</div>}
+        {headerSlot && <div className={cn(compact ? "mb-1" : "mb-2")}>{headerSlot}</div>}
 
-        {/* Title */}
+        {/* Title - smaller text in compact mode */}
         <Link href={detailHref}>
-          <h3 className="text-lg font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-1">
+          <h3 className={cn(
+            "font-semibold text-gray-900 group-hover:text-orange-600 transition-colors line-clamp-1",
+            compact ? "text-sm" : "text-lg"
+          )}>
             {title}
           </h3>
         </Link>
 
-        {/* Description */}
-        {description && (
+        {/* Description - hidden in compact mode */}
+        {description && !compact && (
           <p className="mt-2 text-sm text-gray-600 line-clamp-2">{description}</p>
         )}
 
         {/* Price Label */}
         {priceLabel && (
-          <p className="mt-2 text-sm font-medium text-orange-600">{priceLabel}</p>
+          <p className={cn(compact ? "mt-1" : "mt-2", "text-sm font-medium text-orange-600")}>{priceLabel}</p>
         )}
 
         {/* Custom Metadata */}
-        {metadata && <div className="mt-2">{metadata}</div>}
+        {metadata && <div className={cn(compact ? "mt-1" : "mt-2")}>{metadata}</div>}
 
         {/* Status and Category */}
         {(status || category) && (
-          <div className="mt-3 flex items-center justify-between">
+          <div className={cn(compact ? "mt-2" : "mt-3", "flex items-center justify-between")}>
             <div className="flex items-center gap-2">
               {status && (
                 <Badge variant={status === 'active' ? 'default' : 'secondary'} className="text-xs">
@@ -307,7 +316,7 @@ export function EntityCard({
 
         {/* Funding Progress */}
         {fundingProgress !== undefined && (
-          <div className="mt-3">
+          <div className={cn(compact ? "mt-2" : "mt-3")}>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Progress</span>
               <span className="font-medium text-gray-900">{fundingProgress}%</span>
@@ -321,14 +330,14 @@ export function EntityCard({
           </div>
         )}
 
-        {/* Progress Slot */}
-        {progressSlot && <div className="mt-3">{progressSlot}</div>}
+        {/* Progress Slot - tighter spacing in compact mode */}
+        {progressSlot && <div className={cn(compact ? "mt-2" : "mt-3")}>{progressSlot}</div>}
 
-        {/* Metrics Slot */}
-        {metricsSlot && <div className="mt-3">{metricsSlot}</div>}
+        {/* Metrics Slot - tighter spacing in compact mode */}
+        {metricsSlot && <div className={cn(compact ? "mt-2" : "mt-3")}>{metricsSlot}</div>}
 
-        {/* Footer Slot */}
-        {footerSlot && <div className="mt-3 pt-3 border-t border-gray-100">{footerSlot}</div>}
+        {/* Footer Slot - tighter spacing in compact mode */}
+        {footerSlot && <div className={cn(compact ? "mt-2 pt-2" : "mt-3 pt-3", "border-t border-gray-100")}>{footerSlot}</div>}
       </div>
     </div>
   );

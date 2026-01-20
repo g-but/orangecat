@@ -1,5 +1,5 @@
 import type { Middleware } from './compose'
-import { rateLimit, rateLimitWrite, type RateLimitResult } from '@/lib/rate-limit'
+import { rateLimit, rateLimitWriteAsync, type RateLimitResult, applyRateLimitHeaders } from '@/lib/rate-limit'
 import { apiRateLimited } from './standardResponse'
 
 type Mode = 'read' | 'write'
@@ -21,7 +21,7 @@ export function withRateLimit(mode: Mode = 'read'): Middleware<any> {
       const ctxWithUser = ctx as ContextWithUser | undefined;
       const userId = ctxWithUser?.user?.id
       if (userId) {
-        result = await rateLimitWrite(userId)
+        result = await rateLimitWriteAsync(userId)
       } else {
         result = await rateLimit(req)
       }
@@ -32,8 +32,14 @@ export function withRateLimit(mode: Mode = 'read'): Middleware<any> {
       const res = apiRateLimited('Rate limit exceeded', retryAfter)
       return res
     }
-
-    return next(req, ctx)
+    const response = await next(req, ctx)
+    try {
+      if (response instanceof Response) {
+        return applyRateLimitHeaders(response, result)
+      }
+      return response
+    } catch {
+      return response
+    }
   }
 }
-

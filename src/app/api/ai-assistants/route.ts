@@ -20,7 +20,8 @@ import { withZodBody } from '@/lib/api/withZod';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
-import { rateLimitWrite } from '@/lib/rate-limit';
+import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
 
@@ -143,11 +144,16 @@ export const POST = compose(
     }
 
     // Rate limit check
-    const rl = rateLimitWrite(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      logger.warn('AI Assistant creation rate limit exceeded', { userId: user.id });
-      return apiRateLimited('Too many creation requests. Please slow down.', retryAfter);
+    let rl: RateLimitResult;
+    try {
+      rl = await enforceUserWriteLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        const retryAfter = e.details?.retryAfter || 60;
+        logger.warn('AI Assistant creation rate limit exceeded', { userId: user.id });
+        return apiRateLimited('Too many creation requests. Please slow down.', retryAfter);
+      }
+      throw e;
     }
 
     const validatedData = ctx.body;
@@ -194,9 +200,8 @@ export const POST = compose(
     }
 
     logger.info('AI Assistant created successfully', { assistantId: assistant.id, userId: user.id });
-    return apiSuccess(assistant, { status: 201 });
+    return applyRateLimitHeaders(apiSuccess(assistant, { status: 201 }), rl);
   } catch (error) {
     return handleApiError(error);
   }
 });
-

@@ -346,7 +346,11 @@ export default function AnalyticsPage() {
             <div className="h-64 flex items-center justify-center text-gray-500">
               <div className="text-center">
                 <BarChart3 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>Interactive charts coming soon</p>
+                {process.env.NEXT_PUBLIC_FEATURE_ANALYTICS === 'true' ? (
+                  <p>Interactive charts will render here</p>
+                ) : (
+                  <p className="text-gray-600">Analytics are disabled in this environment.</p>
+                )}
                 <p className="text-sm">Real-time funding visualization</p>
               </div>
             </div>
@@ -366,7 +370,11 @@ export default function AnalyticsPage() {
             <div className="h-64 flex items-center justify-center text-gray-500">
               <div className="text-center">
                 <PieChart className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p>Demographic analysis coming soon</p>
+                {process.env.NEXT_PUBLIC_FEATURE_ANALYTICS === 'true' ? (
+                  <p>Demographic analysis will render here</p>
+                ) : (
+                  <p className="text-gray-600">This module is currently disabled.</p>
+                )}
                 <p className="text-sm">Supporter behavior insights</p>
               </div>
             </div>

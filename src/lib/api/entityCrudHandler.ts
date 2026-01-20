@@ -30,7 +30,7 @@ import {
   handleSupabaseError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimit, rateLimitWrite, createRateLimitResponse } from '@/lib/rate-limit';
+import { rateLimit, rateLimitWriteAsync, createRateLimitResponse, applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { type EntityType, getEntityMetadata } from '@/config/entity-registry';
 import { checkOwnership } from '@/services/actors';
@@ -201,9 +201,10 @@ export function createGetHandler(config: EntityHandlerConfig) {
         ? getCacheControl(processedEntity, userId)
         : undefined;
 
-      return apiSuccess(processedEntity, {
+      const success = apiSuccess(processedEntity, {
         headers: cacheControl ? { 'Cache-Control': cacheControl } : undefined,
       });
+      return applyRateLimitHeaders(success, rateLimitResult);
     } catch (error) {
       return handleApiError(error);
     }
@@ -296,7 +297,7 @@ export function createPutHandler(config: EntityHandlerConfig) {
       }
 
       // Rate limiting check
-      const rateLimitResult = rateLimitWrite(user.id);
+      const rateLimitResult = await rateLimitWriteAsync(user.id);
       if (!rateLimitResult.success) {
         const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
         return apiRateLimited('Too many update requests. Please slow down.', retryAfter);
@@ -333,7 +334,7 @@ export function createPutHandler(config: EntityHandlerConfig) {
       }
 
       logger.info(`${meta.name} updated successfully`, { userId: user.id, entityId });
-      return apiSuccess(entity);
+      return applyRateLimitHeaders(apiSuccess(entity), rateLimitResult as RateLimitResult);
     } catch (error) {
       if (error instanceof ZodError) {
         return apiValidationError(`Invalid ${meta.name.toLowerCase()} data`, {

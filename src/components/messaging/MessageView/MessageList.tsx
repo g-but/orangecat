@@ -4,11 +4,12 @@
  * Message List Component
  *
  * Scrollable list of messages with date dividers and load more functionality.
+ * Preserves scroll position when loading older messages.
  *
  * @module messaging/MessageView/MessageList
  */
 
-import React, { useRef } from 'react';
+import React, { useRef, useCallback, useEffect, useState } from 'react';
 import { ChevronUp, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import MessageItem, { shouldShowDateDivider, getDateDividerText } from './MessageItem';
@@ -35,6 +36,45 @@ export default function MessageList({
   messagesEndRef,
 }: MessageListProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [previousScrollHeight, setPreviousScrollHeight] = useState<number | null>(null);
+  const [previousMessageCount, setPreviousMessageCount] = useState(0);
+
+  /**
+   * Handle load more with scroll position preservation
+   */
+  const handleLoadMore = useCallback(() => {
+    if (containerRef.current) {
+      // Save current scroll height before loading more
+      setPreviousScrollHeight(containerRef.current.scrollHeight);
+      setPreviousMessageCount(messages.length);
+    }
+    onLoadMore();
+  }, [onLoadMore, messages.length]);
+
+  /**
+   * Restore scroll position after older messages are prepended
+   */
+  useEffect(() => {
+    if (
+      previousScrollHeight !== null &&
+      containerRef.current &&
+      messages.length > previousMessageCount &&
+      !isLoadingMore
+    ) {
+      // Calculate the difference in scroll height
+      const newScrollHeight = containerRef.current.scrollHeight;
+      const scrollDiff = newScrollHeight - previousScrollHeight;
+
+      // Adjust scroll position to maintain visual position
+      if (scrollDiff > 0) {
+        containerRef.current.scrollTop += scrollDiff;
+      }
+
+      // Reset saved values
+      setPreviousScrollHeight(null);
+      setPreviousMessageCount(messages.length);
+    }
+  }, [messages.length, previousScrollHeight, previousMessageCount, isLoadingMore]);
 
   return (
     <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -44,7 +84,7 @@ export default function MessageList({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onLoadMore}
+            onClick={handleLoadMore}
             disabled={isLoadingMore}
             className="text-gray-500 hover:text-gray-700"
           >

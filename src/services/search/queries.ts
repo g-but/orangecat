@@ -51,7 +51,7 @@ export async function searchProfiles(
         p_query: query || null,
         p_limit: limit,
         p_offset: offset,
-      });
+      } as any);
 
       if (!error && data) {
         // Apply additional location filters if needed
@@ -89,7 +89,7 @@ export async function searchProfiles(
         p_query: query,
         p_limit: limit,
         p_offset: offset,
-      });
+      } as any);
 
       if (!error && data) {
         // Apply location filters to RPC results if needed
@@ -227,7 +227,7 @@ export async function searchFundingPages(
         p_query: query || null,
         p_limit: limit,
         p_offset: offset,
-      });
+      } as any);
 
       if (!error && data) {
         // Apply additional filters to RPC results
@@ -307,7 +307,7 @@ export async function searchFundingPages(
         p_query: query,
         p_limit: limit,
         p_offset: offset,
-      });
+      } as any);
 
       if (!error && data) {
         // Apply filters to RPC results

@@ -311,7 +311,7 @@ export default function StudyBitcoinPage() {
                     }`}
                     {...(path.status === 'coming-soon' ? { 'aria-disabled': true } : {})}
                   >
-                    {path.status === 'available' ? 'Start Learning' : 'Coming Soon'}
+                    {path.status === 'available' ? 'Start Learning' : 'Learn More'}
                     {path.status === 'available' && <ChevronRight className="w-4 h-4 ml-2" />}
                   </Link>
                 </CardContent>

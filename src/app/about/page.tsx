@@ -7,7 +7,7 @@ import BitBaumLogo from '@/components/layout/BitBaumLogo';
 export const metadata: Metadata = {
   title: 'About OrangeCat - A BitBaum Company',
   description:
-    'Learn about OrangeCat, the Bitcoin-native crowdfunding platform, and our parent company BitBaum.',
+    'Learn about OrangeCat, the Bitcoin Super-App for commerce, finance, community, and AI, and our parent company BitBaum.',
 };
 
 export default function AboutPage() {
@@ -21,7 +21,7 @@ export default function AboutPage() {
               About <span className="text-tiffany-600">OrangeCat</span>
             </h1>
             <p className="mt-3 max-w-md mx-auto text-base text-gray-500 sm:text-lg md:mt-5 md:text-xl md:max-w-3xl">
-              Making Bitcoin donations simple and accessible for everyone. A BitBaum company.
+              The Bitcoin Super-App—unifying commerce, finance, community, and AI. A BitBaum company.
             </p>
           </div>
         </div>
@@ -77,8 +77,8 @@ export default function AboutPage() {
             </div>
             <h3 className="text-2xl font-bold text-gray-900 mb-4">OrangeCat</h3>
             <p className="text-gray-600 mb-6">
-              Our flagship product - the friendly, approachable Bitcoin crowdfunding platform that
-              users interact with every day.
+              Our flagship product—the Bitcoin Super-App that unifies commerce, finance, community, and AI.
+              Everything you need in one friendly, approachable platform.
             </p>
             <div className="flex justify-center space-x-4 mb-6">
               <div className="flex items-center text-sm text-gray-500">
@@ -106,7 +106,8 @@ export default function AboutPage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Our Mission</h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
-              Growing Bitcoin communities through transparent, threaded conversations and commerce.
+              Empower individuals and communities with a unified platform for Bitcoin-powered commerce, finance,
+              collaboration, and innovation—all with complete transparency.
             </p>
           </div>
 
@@ -150,7 +151,7 @@ export default function AboutPage() {
           <div className="text-center">
             <h2 className="text-3xl font-bold text-white mb-4">Join Our Growing Community</h2>
             <p className="text-xl text-orange-100 mb-8">
-              Start accepting Bitcoin donations today with OrangeCat.
+              Sell products, offer services, fund projects, build communities, and deploy AI—all with Bitcoin.
             </p>
             <Link
               href="/auth?mode=register"

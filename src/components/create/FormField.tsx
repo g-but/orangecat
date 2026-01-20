@@ -17,6 +17,7 @@ import { CurrencyInput } from '@/components/ui/CurrencyInput';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import type { FormFieldProps } from './types';
 import type { Currency } from '@/types/settings';
+import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
 
 // ==================== COMPONENT ====================
 
@@ -39,16 +40,25 @@ export function FormField({
     switch (type) {
       case 'textarea':
         return (
-          <Textarea
-            id={name}
-            value={(value as string) || ''}
-            onChange={e => onChange(e.target.value)}
-            onFocus={onFocus}
-            placeholder={placeholder}
-            rows={rows}
-            disabled={disabled}
-            className={baseInputClass}
-          />
+          <div className="flex items-start gap-2">
+            <Textarea
+              id={name}
+              value={(value as string) || ''}
+              onChange={e => onChange(e.target.value)}
+              onFocus={onFocus}
+              placeholder={placeholder}
+              rows={rows}
+              disabled={disabled}
+              className={baseInputClass}
+            />
+            {process.env.NEXT_PUBLIC_FEATURE_VOICE_INPUT === 'true' && (
+              <VoiceInputButton
+                size="sm"
+                ariaLabel={`Voice input for ${label}`}
+                onTranscript={t => onChange(((value as string) || '').trim().length ? `${(value as string)} ${t}` : t)}
+              />
+            )}
+          </div>
         );
 
       case 'number':
@@ -205,16 +215,25 @@ export function FormField({
       case 'text':
       default:
         return (
-          <Input
-            id={name}
-            type="text"
-            value={(value as string) || ''}
-            onChange={e => onChange(e.target.value)}
-            onFocus={onFocus}
-            placeholder={placeholder}
-            disabled={disabled}
-            className={baseInputClass}
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              id={name}
+              type="text"
+              value={(value as string) || ''}
+              onChange={e => onChange(e.target.value)}
+              onFocus={onFocus}
+              placeholder={placeholder}
+              disabled={disabled}
+              className={baseInputClass}
+            />
+            {process.env.NEXT_PUBLIC_FEATURE_VOICE_INPUT === 'true' && (
+              <VoiceInputButton
+                size="sm"
+                ariaLabel={`Voice input for ${label}`}
+                onTranscript={t => onChange(((value as string) || '').trim().length ? `${(value as string)} ${t}` : t)}
+              />
+            )}
+          </div>
         );
     }
   };

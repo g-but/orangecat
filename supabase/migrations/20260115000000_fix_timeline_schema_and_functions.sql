@@ -442,8 +442,15 @@ CREATE INDEX IF NOT EXISTS idx_timeline_comments_user_id ON timeline_comments(us
 CREATE INDEX IF NOT EXISTS idx_timeline_comments_parent_id ON timeline_comments(parent_comment_id);
 
 -- Timeline Event Stats table (for cached counts)
--- Drop view if it exists (was previously created as a view)
-DROP VIEW IF EXISTS public.timeline_event_stats CASCADE;
+-- Drop view or table if it exists (handle either case)
+DO $$
+BEGIN
+  -- Try dropping as view first
+  EXECUTE 'DROP VIEW IF EXISTS public.timeline_event_stats CASCADE';
+EXCEPTION WHEN OTHERS THEN
+  -- If that fails, it might be a table - just continue
+  NULL;
+END $$;
 
 CREATE TABLE IF NOT EXISTS public.timeline_event_stats (
   event_id uuid PRIMARY KEY REFERENCES timeline_events(id) ON DELETE CASCADE,

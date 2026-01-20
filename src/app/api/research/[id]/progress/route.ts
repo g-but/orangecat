@@ -10,7 +10,8 @@ import {
 import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
-import { rateLimitWrite } from '@/lib/rate-limit';
+import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 
 // Helper to extract ID from URL
 function extractIdFromUrl(url: string): string {
@@ -98,10 +99,15 @@ export const POST = compose(
     }
 
     // Rate limit check
-    const rl = rateLimitWrite(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      return apiRateLimited('Too many updates. Please slow down.', retryAfter);
+    let rl: RateLimitResult;
+    try {
+      rl = await enforceUserWriteLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        const retryAfter = e.details?.retryAfter || 60;
+        return apiRateLimited('Too many updates. Please slow down.', retryAfter);
+      }
+      throw e;
     }
 
     const { title, description, milestone_achieved, funding_released, attachments } = await request.json();
@@ -144,7 +150,7 @@ export const POST = compose(
       milestoneAchieved: milestone_achieved
     });
 
-    return apiSuccess(update, { status: 201 });
+    return applyRateLimitHeaders(apiSuccess(update, { status: 201 }), rl);
   } catch (error) {
     return handleApiError(error);
   }

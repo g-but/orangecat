@@ -14,7 +14,8 @@ import {
   handleSupabaseError,
   isTableNotFoundError,
 } from '@/lib/wallets/errorHandling';
-import { rateLimitWrite } from '@/lib/rate-limit';
+import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import {
   apiRateLimited,
   apiSuccess,
@@ -95,11 +96,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Rate limiting check - 30 writes per minute per user
-    const rateLimitResult = rateLimitWrite(user.id);
-    if (!rateLimitResult.success) {
-      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
-      logger.info('Wallet creation rate limit exceeded', { userId: user.id });
-      return apiRateLimited('Too many wallet creation requests. Please slow down.', retryAfter);
+    let rateLimitResult: RateLimitResult;
+    try {
+      rateLimitResult = await enforceUserWriteLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        const retryAfter = e.details?.retryAfter || 60;
+        logger.info('Wallet creation rate limit exceeded', { userId: user.id });
+        return apiRateLimited('Too many wallet creation requests. Please slow down.', retryAfter);
+      }
+      throw e;
     }
 
     const body = (await request.json()) as WalletFormData & {
@@ -286,7 +292,7 @@ export async function POST(request: NextRequest) {
         wallet,
         ...(duplicateInfo && { duplicateWarning: duplicateInfo }),
       };
-      return apiCreated(responseData);
+      return applyRateLimitHeaders(apiCreated(responseData), rateLimitResult);
     } catch (insertError: unknown) {
       if (isTableNotFoundError(insertError)) {
         return apiError('Wallets table not available', 'TABLE_NOT_FOUND', 503);

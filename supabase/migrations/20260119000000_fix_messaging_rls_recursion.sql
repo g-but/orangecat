@@ -9,6 +9,10 @@ DROP POLICY IF EXISTS "Users can view participants in their conversations" ON co
 DROP POLICY IF EXISTS "Users can add participants to their conversations" ON conversation_participants;
 DROP POLICY IF EXISTS "Users can update their own participant record" ON conversation_participants;
 DROP POLICY IF EXISTS "conversation_participants_policy" ON conversation_participants;
+DROP POLICY IF EXISTS "Users can view own conversations" ON conversation_participants;
+DROP POLICY IF EXISTS "Users can join conversations" ON conversation_participants;
+DROP POLICY IF EXISTS "Users can update own participant record" ON conversation_participants;
+DROP POLICY IF EXISTS "Users can leave conversations" ON conversation_participants;
 
 -- Create simple, non-recursive SELECT policy
 -- Users can only see their own participant records

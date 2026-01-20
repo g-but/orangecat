@@ -16,7 +16,7 @@
 
 'use client';
 
-import { X } from 'lucide-react';
+import { X, PanelLeftClose, PanelLeft } from 'lucide-react';
 import FocusLock from 'react-focus-lock';
 import { SidebarUserProfile } from './SidebarUserProfile';
 import { SidebarNavigation } from './SidebarNavigation';
@@ -38,10 +38,12 @@ interface SidebarProps {
   bottomItems: NavItem[];
   navigationState: {
     isSidebarOpen: boolean;
+    isSidebarCollapsed: boolean;
     collapsedSections: Set<string>;
   };
   isItemActive: (href: string) => boolean;
   toggleSidebar: () => void;
+  toggleSidebarCollapse: () => void;
   toggleSection: (sectionId: string) => void;
   onNavigate?: () => void;
 }
@@ -54,6 +56,7 @@ export function Sidebar({
   navigationState,
   isItemActive,
   toggleSidebar,
+  toggleSidebarCollapse,
   toggleSection,
   onNavigate,
 }: SidebarProps) {
@@ -64,19 +67,25 @@ export function Sidebar({
     }
   };
 
-  // Desktop: Fixed w-64 (full width with labels) - good UX for large screens
+  // Desktop: w-64 (full width) or w-16 (collapsed, icons only) based on user preference
   // Mobile: w-64 full-width drawer when open, hidden when closed
   // Using useIsDesktop hook (SSR-safe, reactive to window resizing)
   const isDesktop = useIsDesktop();
 
-  // Desktop sidebar is always visible at full width
-  // Mobile sidebar slides in/out
+  // Desktop sidebar is always visible, mobile sidebar slides in/out
   const sidebarTranslate = navigationState.isSidebarOpen
     ? 'translate-x-0'
     : '-translate-x-full lg:translate-x-0';
 
-  // isExpanded true on desktop (always shows labels) and on mobile when drawer is open
-  const isExpanded = isDesktop || navigationState.isSidebarOpen;
+  // Determine sidebar width based on desktop collapse state
+  const sidebarWidth = isDesktop
+    ? navigationState.isSidebarCollapsed
+      ? 'w-16'
+      : 'w-64'
+    : 'w-64';
+
+  // isExpanded true on desktop when not collapsed, and on mobile when drawer is open
+  const isExpanded = isDesktop ? !navigationState.isSidebarCollapsed : navigationState.isSidebarOpen;
 
   return (
     <>
@@ -92,11 +101,11 @@ export function Sidebar({
       {/* Focus trap for mobile drawer (accessibility) */}
       {/* Disabled on desktop where sidebar is always visible */}
       <FocusLock disabled={!navigationState.isSidebarOpen || isDesktop}>
-        {/* Desktop: w-64 (full width with labels) - good UX for large screens
+        {/* Desktop: w-64 (full width) or w-16 (collapsed, icons only) based on user preference
             Mobile: w-64 drawer when open
             Using literal class names for Tailwind JIT compatibility */}
         <aside
-          className={`fixed bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg border-r ${SIDEBAR_COLORS.BORDER} ${sidebarTranslate} overflow-y-auto overflow-x-visible transition-transform ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} w-64`}
+          className={`fixed bottom-0 left-0 ${SIDEBAR_Z_INDEX.SIDEBAR} flex flex-col ${SIDEBAR_COLORS.BACKGROUND} shadow-lg border-r ${SIDEBAR_COLORS.BORDER} ${sidebarTranslate} overflow-y-auto overflow-x-visible transition-all ${SIDEBAR_TRANSITIONS.DURATION} ${SIDEBAR_TRANSITIONS.EASING} ${sidebarWidth}`}
           style={{
             paddingBottom: 'env(safe-area-inset-bottom, 0px)',
             paddingLeft: 'env(safe-area-inset-left, 0px)',
@@ -125,10 +134,33 @@ export function Sidebar({
               onNavigate={handleNavigate}
             />
 
-            {/* Mobile Close Button */}
-            {navigationState.isSidebarOpen && (
+            {/* Desktop Collapse Toggle Button */}
+            {isDesktop && (
               <div
-                className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 lg:hidden mt-auto`}
+                className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 mt-auto`}
+              >
+                <button
+                  onClick={toggleSidebarCollapse}
+                  className={`w-full flex items-center gap-3 p-2 text-gray-500 hover:bg-gray-50 hover:text-gray-700 rounded-xl transition-colors duration-200 ${
+                    !isExpanded ? 'justify-center' : ''
+                  }`}
+                  aria-label={navigationState.isSidebarCollapsed ? navigationLabels.SIDEBAR_EXPAND : navigationLabels.SIDEBAR_COLLAPSE}
+                  title={navigationState.isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                >
+                  {navigationState.isSidebarCollapsed ? (
+                    <PanelLeft className="h-5 w-5 flex-shrink-0" />
+                  ) : (
+                    <PanelLeftClose className="h-5 w-5 flex-shrink-0" />
+                  )}
+                  {isExpanded && <span>{navigationState.isSidebarCollapsed ? 'Expand' : 'Collapse'}</span>}
+                </button>
+              </div>
+            )}
+
+            {/* Mobile Close Button */}
+            {navigationState.isSidebarOpen && !isDesktop && (
+              <div
+                className={`border-t border-gray-100 ${SIDEBAR_SPACING.PADDING_X} py-2 mt-auto`}
               >
                 <button
                   onClick={toggleSidebar}

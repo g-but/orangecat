@@ -259,6 +259,21 @@ export function createRateLimitResponse(result: RateLimitResult): Response {
   );
 }
 
+/**
+ * Apply standard rate limit headers to an existing Response.
+ */
+export function applyRateLimitHeaders<T extends Response>(
+  response: T,
+  result: RateLimitResult
+): T {
+  const headers = response.headers;
+  headers.set('X-RateLimit-Limit', result.limit.toString());
+  headers.set('X-RateLimit-Remaining', result.remaining.toString());
+  headers.set('X-RateLimit-Reset', result.resetTime.toString());
+  headers.set('Retry-After', Math.ceil((result.resetTime - Date.now()) / 1000).toString());
+  return response;
+}
+
 // ==================== STATUS CHECK ====================
 
 /**

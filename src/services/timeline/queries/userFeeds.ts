@@ -100,7 +100,23 @@ export async function getUserFeed(
     };
   } catch (error) {
     logger.error('Error fetching user timeline feed', error, 'Timeline');
-    throw error;
+    // Return empty feed instead of throwing - error is logged for debugging
+    return {
+      events: [],
+      pagination: {
+        page: pagination?.page || 1,
+        limit: pagination?.limit || DEFAULT_PAGE_SIZE,
+        total: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+      filters: buildDefaultFilters(filters),
+      metadata: {
+        totalEvents: 0,
+        featuredEvents: 0,
+        lastUpdated: new Date().toISOString(),
+      },
+    };
   }
 }
 
@@ -227,7 +243,23 @@ export async function getFollowedUsersFeed(
     };
   } catch (error) {
     logger.error('Error fetching followed users feed', error, 'Timeline');
-    throw error;
+    // Return empty feed instead of throwing - error is logged for debugging
+    return {
+      events: [],
+      pagination: {
+        page: pagination?.page || 1,
+        limit: pagination?.limit || DEFAULT_PAGE_SIZE,
+        total: 0,
+        hasNext: false,
+        hasPrev: false,
+      },
+      filters: buildDefaultFilters(filters),
+      metadata: {
+        totalEvents: 0,
+        featuredEvents: 0,
+        lastUpdated: new Date().toISOString(),
+      },
+    };
   }
 }
 
@@ -381,12 +413,12 @@ export async function getEnrichedUserFeed(
     };
   } catch (error) {
     logger.error('Error fetching enriched user timeline feed', error, 'Timeline');
-    // Return empty feed instead of throwing
+    // Return empty feed instead of throwing - error is logged for debugging
     return {
       events: [],
       pagination: {
-        page: 1,
-        limit: DEFAULT_PAGE_SIZE,
+        page: pagination?.page || 1,
+        limit: pagination?.limit || DEFAULT_PAGE_SIZE,
         total: 0,
         hasNext: false,
         hasPrev: false,

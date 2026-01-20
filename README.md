@@ -1,8 +1,8 @@
-# 🟠 OrangeCat: Bitcoin Crowdfunding
+# 🟠 OrangeCat: The Bitcoin Super-App
 
-**Simple Bitcoin-native crowdfunding platform built for transparency.**
+**Commerce. Finance. Community. AI. All powered by Bitcoin.**
 
-Send Bitcoin to fund projects you believe in. Every satoshi is tracked transparently.
+The unified platform for selling products, offering services, funding projects, building communities, and deploying AI—all with complete transparency.
 
 [![Production](https://img.shields.io/badge/live-orangecat.ch-orange)](https://orangecat.ch)
 [![Bitcoin Only](https://img.shields.io/badge/bitcoin-only-orange)]()
@@ -29,11 +29,33 @@ npm run dev
 
 **🔗 Open Source**: This project is fully open source under the MIT license. View the source code, contribute, or run your own instance!
 
-## 💡 What It Does
+## 💡 What You Can Do
 
-- **Bitcoin donations** to projects you care about
-- **Transparent tracking** of every satoshi
-- **Simple web interface** for easy funding
+### Commerce
+- **Sell Products** - Physical or digital goods
+- **Offer Services** - Professional services and consultations
+- **List Assets** - Real estate and other assets
+
+### Finance
+- **Launch Projects** - Fund initiatives and creative endeavors
+- **Support Causes** - Contribute to charitable causes
+- **P2P Loans** - Bitcoin-based lending
+- **Manage Wallets** - Bitcoin wallet management
+
+### Community
+- **Build Groups** - Create and manage communities
+- **Host Events** - Organize meetups and gatherings
+- **Share Wishlists** - Collaborative gift lists
+
+### AI & Innovation
+- **Deploy AI Assistants** - Custom chatbots and automation
+- **Fund Research** - Support scientific research
+
+**Everything with**:
+- ✓ Zero platform fees
+- ✓ Direct peer-to-peer Bitcoin payments
+- ✓ Complete transparency on-chain
+- ✓ Lightning Network support
 
 ## 🛠️ Tech Stack
 
@@ -47,6 +69,7 @@ npm run dev
 - **[Complete Documentation](./docs/README.md)** - Everything you need to know
 - **[Getting Started](./docs/getting-started/README.md)** - Setup guide
 - **[Development](./docs/development/README.md)** - Development workflow
+- **[My Cat: Voice + Local Models](./docs/my-cat-voice-and-local-models.md)** - Private chat, local runtimes, voice entry, and entity prefill
 
 ## 🤝 Contributing
 

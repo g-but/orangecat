@@ -49,8 +49,8 @@ export interface AuthState {
   isLoading: boolean;
   /** Whether auth state has been hydrated from storage */
   hydrated: boolean;
-  /** Authentication error if any */
-  authError?: Error | null;
+  /** Authentication error if any (can originate as string from store) */
+  authError?: unknown | null;
 }
 
 /**

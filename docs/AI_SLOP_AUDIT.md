@@ -1,8 +1,19 @@
-# 🤖 AI Slop Audit Report
+---
+created_date: 2025-11-12
+last_modified_date: 2026-01-18
+last_modified_summary: Marked as archived; superseded by current specs and principles
+status: archived
+---
+
+# 🤖 AI Slop Audit Report (Archived)
 
 **Date:** 2025-11-12  
 **Last Updated:** 2026-01-30  
-**Status:** ⚠️ **HISTORICAL REFERENCE** - Many issues have been fixed. See `docs/development/FRESH_AUDIT_SUMMARY_2026-01-30.md` for current status.
+**Status:** ⚠️ **ARCHIVED** - Many issues have been fixed. See current docs:
+
+- My Cat Spec: `docs/my-cat-spec.md`
+- My Cat Implementation Guide: `docs/my-cat-voice-and-local-models.md`
+- Engineering Principles: `docs/standards/engineering_principles.md`
 
 > **⚠️ IMPORTANT:** This document is a **historical record** from November 2025. Many issues mentioned here have since been resolved.  
 > **For current codebase status, refer to:** `docs/development/FRESH_AUDIT_SUMMARY_2026-01-30.md`

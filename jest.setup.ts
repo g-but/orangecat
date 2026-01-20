@@ -341,7 +341,9 @@ jest.mock('lucide-react', () => ({
   BarChart: () => 'div',
   PieChart: () => 'div',
   LineChart: () => 'div',
-  Loader2: () => 'div'
+  Loader2: () => 'div',
+  Mic: () => 'div',
+  MicOff: () => 'div'
 }))
 
 // =====================================================================

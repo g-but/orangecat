@@ -70,6 +70,7 @@ export function SidebarNavItem({ item, isActive, isExpanded, onNavigate }: Sideb
 
   return (
     <div
+      ref={itemRef}
       className="relative overflow-visible"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

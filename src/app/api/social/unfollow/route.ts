@@ -2,7 +2,8 @@ import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createServerClient } from '@/lib/supabase/server';
 import { logger } from '@/utils/logger';
 import { apiSuccess, apiInternalError, apiRateLimited } from '@/lib/api/standardResponse';
-import { rateLimitSocial } from '@/lib/rate-limit';
+import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { enforceUserSocialLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -13,11 +14,16 @@ async function handleUnfollow(request: AuthenticatedRequest) {
     const user = request.user;
 
     // Rate limiting check - 10 unfollows per minute
-    const rateLimitResult = rateLimitSocial(user.id);
-    if (!rateLimitResult.success) {
-      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
-      logger.warn('Unfollow rate limit exceeded', { userId: user.id });
-      return apiRateLimited('Too many unfollow requests. Please slow down.', retryAfter);
+    let rateLimitResult: RateLimitResult;
+    try {
+      rateLimitResult = await enforceUserSocialLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        const retryAfter = e.details?.retryAfter || 60;
+        logger.warn('Unfollow rate limit exceeded', { userId: user.id });
+        return apiRateLimited('Too many unfollow requests. Please slow down.', retryAfter);
+      }
+      throw e;
     }
 
     const { following_id } = await request.json();
@@ -52,7 +58,7 @@ async function handleUnfollow(request: AuthenticatedRequest) {
       followingId: following_id,
     });
 
-    return apiSuccess({ following_id });
+    return applyRateLimitHeaders(apiSuccess({ following_id }), rateLimitResult);
   } catch (error) {
     logger.error('Unexpected error in POST /api/social/unfollow', { error });
     return apiInternalError('Internal server error');

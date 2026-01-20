@@ -27,7 +27,8 @@ interface AuthState {
   signOut: () => Promise<{ error: Error | null }>;
   signIn: (
     email: string,
-    password: string
+    password: string,
+    rememberMe?: boolean
   ) => Promise<{
     data: { user: User | null; session: Session | null } | null;
     error: Error | null;
@@ -156,6 +157,14 @@ export const useAuthStore = create<AuthState>()(
             return { error: new Error(error.message) };
           }
 
+          // Clean up remember me preference
+          try {
+            localStorage.removeItem('orangecat-remember-me');
+            sessionStorage.removeItem('orangecat-session-marker');
+          } catch {
+            // Storage may not be available
+          }
+
           get().clear();
           set({ isLoading: false, authError: null });
           return { error: null };
@@ -166,7 +175,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      signIn: async (email, password) => {
+      signIn: async (email, password, rememberMe = true) => {
         const currentState = get();
         if (currentState.isLoading) {
           return { data: null, error: new Error('Sign in already in progress') };
@@ -185,6 +194,15 @@ export const useAuthStore = create<AuthState>()(
           }
 
           if (result.data?.user && result.data?.session) {
+            // Store remember me preference for session persistence
+            try {
+              localStorage.setItem('orangecat-remember-me', rememberMe ? 'true' : 'false');
+              // Set a session marker so we can detect new browser sessions
+              sessionStorage.setItem('orangecat-session-marker', 'active');
+            } catch {
+              // Storage may not be available (e.g., private browsing)
+            }
+
             set({
               user: result.data.user,
               session: result.data.session,

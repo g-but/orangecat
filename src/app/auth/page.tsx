@@ -189,7 +189,7 @@ export default function AuthPage() {
 
       const result =
         mode === 'login'
-          ? await signIn(formData.email, formData.password)
+          ? await signIn(formData.email, formData.password, rememberMe)
           : await signUp(formData.email, formData.password);
 
       if (result.error) {

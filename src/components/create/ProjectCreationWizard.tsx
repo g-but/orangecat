@@ -24,7 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/Button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { projectConfig } from '@/config/entity-configs/project-config.ts';
+import { projectConfig } from '@/config/entity-configs/project-config';
 import { EntityForm } from './EntityForm';
 import type { ProjectData } from '@/lib/validation';
 

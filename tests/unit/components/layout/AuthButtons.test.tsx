@@ -127,7 +127,7 @@ describe('🔐 AuthButtons Component Tests', () => {
 
       // Should show login buttons, not dropdown
       expect(screen.queryByTestId('user-profile-dropdown')).not.toBeInTheDocument();
-      expect(screen.getByText('Log in')).toBeInTheDocument();
+      expect(screen.getByText('Sign In')).toBeInTheDocument();
     });
 
     test('should render login buttons when only session exists (requires both user AND session)', () => {
@@ -143,7 +143,7 @@ describe('🔐 AuthButtons Component Tests', () => {
 
       // Should show login buttons, not dropdown
       expect(screen.queryByTestId('user-profile-dropdown')).not.toBeInTheDocument();
-      expect(screen.getByText('Log in')).toBeInTheDocument();
+      expect(screen.getByText('Sign In')).toBeInTheDocument();
     });
   });
 
@@ -160,14 +160,14 @@ describe('🔐 AuthButtons Component Tests', () => {
     test('should render login and register buttons when not authenticated', () => {
       render(<AuthButtons />);
       
-      expect(screen.getByText('Log in')).toBeInTheDocument();
+      expect(screen.getByText('Sign In')).toBeInTheDocument();
       expect(screen.getByText('Get Started')).toBeInTheDocument();
     });
 
     test('should have correct href attributes for auth buttons', () => {
       render(<AuthButtons />);
       
-      const loginLink = screen.getByText('Log in').closest('a');
+      const loginLink = screen.getByText('Sign In').closest('a');
       const registerLink = screen.getByText('Get Started').closest('a');
       
       expect(loginLink).toHaveAttribute('href', '/auth?mode=login');
@@ -177,14 +177,14 @@ describe('🔐 AuthButtons Component Tests', () => {
     test('should use ghost variant for login button', () => {
       render(<AuthButtons />);
       
-      const loginButton = screen.getByText('Log in');
+      const loginButton = screen.getByText('Sign In');
       expect(loginButton).toHaveAttribute('data-variant', 'ghost');
     });
 
     test('should have minimum touch target size for buttons', () => {
       render(<AuthButtons />);
 
-      const loginButton = screen.getByText('Log in');
+      const loginButton = screen.getByText('Sign In');
       const registerButton = screen.getByText('Get Started');
 
       // Component uses 36px minimum height for compact buttons
@@ -206,7 +206,7 @@ describe('🔐 AuthButtons Component Tests', () => {
     test('should detect mobile navigation layout from className', () => {
       render(<AuthButtons className="flex-col mobile-nav" />);
 
-      const container = screen.getByText('Log in').closest('div');
+      const container = screen.getByText('Sign In').closest('div');
       // Component uses space-y-2 for mobile layout
       expect(container).toHaveClass('flex-col', 'space-y-2', 'w-full');
       // Mobile layout uses space-y-2 instead of space-x-2
@@ -216,7 +216,7 @@ describe('🔐 AuthButtons Component Tests', () => {
     test('should apply full width styling to links in mobile layout', () => {
       render(<AuthButtons className="flex-col" />);
       
-      const loginLink = screen.getByText('Log in').closest('a');
+      const loginLink = screen.getByText('Sign In').closest('a');
       const registerLink = screen.getByText('Get Started').closest('a');
       
       expect(loginLink).toHaveClass('w-full');
@@ -226,7 +226,7 @@ describe('🔐 AuthButtons Component Tests', () => {
     test('should apply full width and center styling to buttons in mobile layout', () => {
       render(<AuthButtons className="flex-col" />);
       
-      const loginButton = screen.getByText('Log in');
+      const loginButton = screen.getByText('Sign In');
       const registerButton = screen.getByText('Get Started');
       
       expect(loginButton).toHaveClass('w-full', 'justify-center');
@@ -282,7 +282,7 @@ describe('🔐 AuthButtons Component Tests', () => {
       });
       rerender(<AuthButtons />);
       
-      expect(screen.getByText('Log in')).toBeInTheDocument();
+      expect(screen.getByText('Sign In')).toBeInTheDocument();
       expect(screen.getByText('Get Started')).toBeInTheDocument();
     });
 
@@ -297,7 +297,7 @@ describe('🔐 AuthButtons Component Tests', () => {
       });
       rerender(<AuthButtons />);
       
-      expect(screen.getByText('Log in')).toBeInTheDocument();
+      expect(screen.getByText('Sign In')).toBeInTheDocument();
       
       mockUseAuth.mockReturnValue({
         user: { id: '123', email: 'user@example.com' },
@@ -308,7 +308,7 @@ describe('🔐 AuthButtons Component Tests', () => {
       rerender(<AuthButtons />);
       
       expect(screen.getByTestId('user-profile-dropdown')).toBeInTheDocument();
-      expect(screen.queryByText('Log in')).not.toBeInTheDocument();
+      expect(screen.queryByText('Sign In')).not.toBeInTheDocument();
     });
   });
 
@@ -325,14 +325,14 @@ describe('🔐 AuthButtons Component Tests', () => {
     test('should have accessible button text', () => {
       render(<AuthButtons />);
       
-      expect(screen.getByRole('button', { name: 'Log in' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Get Started' })).toBeInTheDocument();
     });
 
     test('should have proper link semantics', () => {
       render(<AuthButtons />);
       
-      const loginLink = screen.getByRole('link', { name: 'Log in' });
+      const loginLink = screen.getByRole('link', { name: 'Sign In' });
       const registerLink = screen.getByRole('link', { name: 'Get Started' });
       
       expect(loginLink).toHaveAttribute('href', '/auth?mode=login');
@@ -342,7 +342,7 @@ describe('🔐 AuthButtons Component Tests', () => {
     test('should maintain minimum touch target sizes', () => {
       render(<AuthButtons />);
 
-      const loginButton = screen.getByText('Log in');
+      const loginButton = screen.getByText('Sign In');
       const registerButton = screen.getByText('Get Started');
 
       // Component uses 36px minimum height for compact buttons
@@ -390,7 +390,7 @@ describe('🔐 AuthButtons Component Tests', () => {
         });
         
         const { unmount } = render(<AuthButtons className={className} />);
-        expect(screen.getByText('Log in')).toBeInTheDocument();
+        expect(screen.getByText('Sign In')).toBeInTheDocument();
         unmount();
       });
     });

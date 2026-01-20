@@ -1,8 +1,18 @@
-# Documentation Audit & Cleanup Plan
+---
+created_date: 2025-11-16
+last_modified_date: 2026-01-18
+last_modified_summary: Marked as archived; superseded by current docs structure
+status: archived
+---
+
+# Documentation Audit & Cleanup Plan (Archived)
 
 **Date:** 2025-11-16
 **Total Files:** 190 markdown files
-**Status:** 🔴 High tech debt - needs immediate cleanup
+**Status:** ⚠️ **ARCHIVED** - See current docs index and archive listing:
+
+- Docs Index: `docs/README.md`
+- Archive Index: `docs/archives/README.md`
 
 ---
 

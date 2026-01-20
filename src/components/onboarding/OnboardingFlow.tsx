@@ -36,17 +36,91 @@ interface OnboardingStep {
   };
 }
 
+const ONBOARDING_STORAGE_KEY = 'orangecat_onboarding_progress';
+
+interface OnboardingProgress {
+  currentStep: number;
+  completedSteps: number[];
+  lastUpdated: string;
+}
+
+/**
+ * Load onboarding progress from localStorage
+ */
+function loadProgress(): OnboardingProgress | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const saved = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+    if (saved) {
+      const progress = JSON.parse(saved) as OnboardingProgress;
+      // Check if progress is less than 24 hours old
+      const lastUpdated = new Date(progress.lastUpdated);
+      const hoursSinceUpdate = (Date.now() - lastUpdated.getTime()) / (1000 * 60 * 60);
+      if (hoursSinceUpdate < 24) {
+        return progress;
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load onboarding progress:', error);
+  }
+  return null;
+}
+
+/**
+ * Save onboarding progress to localStorage
+ */
+function saveProgress(currentStep: number, completedSteps: Set<number>): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const progress: OnboardingProgress = {
+      currentStep,
+      completedSteps: Array.from(completedSteps),
+      lastUpdated: new Date().toISOString(),
+    };
+    localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(progress));
+  } catch (error) {
+    console.error('Failed to save onboarding progress:', error);
+  }
+}
+
+/**
+ * Clear onboarding progress from localStorage
+ */
+function clearProgress(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+  } catch (error) {
+    console.error('Failed to clear onboarding progress:', error);
+  }
+}
+
 export function OnboardingFlow() {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [completingOnboarding, setCompletingOnboarding] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
   const router = useRouter();
   const { user } = useAuth();
 
+  // Load saved progress on mount
   useEffect(() => {
+    const savedProgress = loadProgress();
+    if (savedProgress) {
+      setCurrentStep(savedProgress.currentStep);
+      setCompletedSteps(new Set(savedProgress.completedSteps));
+    }
+    setIsInitialized(true);
     // Track onboarding start when component mounts
     onboardingEvents.started(user?.id);
   }, [user?.id]);
+
+  // Save progress whenever it changes
+  useEffect(() => {
+    if (isInitialized) {
+      saveProgress(currentStep, completedSteps);
+    }
+  }, [currentStep, completedSteps, isInitialized]);
 
   const steps: OnboardingStep[] = [
     {
@@ -367,6 +441,9 @@ export function OnboardingFlow() {
   const handleSkip = async () => {
     onboardingEvents.skipped(currentStep, user?.id);
 
+    // Clear saved progress since user is skipping
+    clearProgress();
+
     // Mark onboarding as completed so user doesn't see it again
     if (user?.id) {
       try {
@@ -389,6 +466,9 @@ export function OnboardingFlow() {
   };
 
   const handleCompleteOnboarding = async () => {
+    // Clear saved progress since onboarding is complete
+    clearProgress();
+
     if (!user?.id) {
       router.push('/dashboard?welcome=true');
       return;

@@ -9,6 +9,7 @@ import { logger } from '@/utils/logger';
 import TimelineComposer from './TimelineComposer';
 import { TimelineSkeleton } from './TimelineSkeleton';
 import { filterOptimisticEvents } from '@/utils/timeline';
+import { useInvalidateTimeline } from '@/hooks/useTimelineQuery';
 
 export interface SocialTimelineProps {
   // Page identity
@@ -73,11 +74,16 @@ export default function SocialTimeline({
   onOptimisticUpdate,
 }: SocialTimelineProps) {
   const { user, isLoading, hydrated } = useAuth();
-  const [authCheckComplete, setAuthCheckComplete] = useState(false);
+  // Auth check is complete when hydrated and not loading
+  const authCheckComplete = hydrated && !isLoading;
+
+  // React Query cache invalidation for stale-while-revalidate behavior
+  const { invalidateAll: invalidateTimelineCache } = useInvalidateTimeline();
   const [timelineFeed, setTimelineFeed] = useState<TimelineFeedResponse | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [optimisticEvents, setOptimisticEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<TimelineDisplayEvent[] | null>(null);
@@ -116,17 +122,6 @@ export default function SocialTimeline({
   const [sortBy, setSortBy] = useState<'recent' | 'trending' | 'popular'>(defaultSort);
   const composerRef = useRef<HTMLDivElement | null>(null);
 
-  // Give auth state time to fully restore from localStorage
-  useEffect(() => {
-    if (hydrated) {
-      const timer = setTimeout(() => {
-        setAuthCheckComplete(true);
-      }, 1500); // Wait 1.5 seconds for auth state to restore
-      return () => clearTimeout(timer);
-    }
-    return undefined;
-  }, [hydrated]);
-
   // Load timeline feed based on mode
   const loadTimelineFeed = useCallback(
     async (sort: string = defaultSort, page: number = 1) => {
@@ -138,6 +133,8 @@ export default function SocialTimeline({
         // Only show loading on initial load (page 1)
         if (page === 1) {
           setLoading(true);
+        } else {
+          setIsLoadingMore(true);
         }
         setError(null);
 
@@ -175,6 +172,7 @@ export default function SocialTimeline({
         setError(`Failed to load ${mode === 'timeline' ? 'your journey' : 'community posts'}`);
       } finally {
         setLoading(false);
+        setIsLoadingMore(false);
       }
     },
     [user?.id, mode, defaultSort]
@@ -288,14 +286,11 @@ export default function SocialTimeline({
     );
   }
 
-  // Show loading while auth check is in progress
-  if (hydrated && !authCheckComplete) {
+  // Show loading skeleton while auth check is in progress
+  if (!authCheckComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/20 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h2>
-          <p className="text-gray-600 mb-6">Checking authentication status...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/20 p-4">
+        <TimelineSkeleton count={5} />
       </div>
     );
   }
@@ -382,7 +377,11 @@ export default function SocialTimeline({
             mode === 'timeline' ? "What's on your mind?" : 'Share something with the community...'
           }
           buttonText={mode === 'timeline' ? 'Share Update' : 'Post'}
-          onPostCreated={() => loadTimelineFeed(sortBy)}
+          onPostCreated={() => {
+            loadTimelineFeed(sortBy);
+            // Invalidate React Query cache for other pages to get fresh data
+            invalidateTimelineCache();
+          }}
           onOptimisticUpdate={handleOptimisticUpdate}
           showBanner={Boolean(timelineOwnerId && timelineOwnerId !== user.id)}
         />
@@ -534,6 +533,7 @@ export default function SocialTimeline({
       feed={activeFeed}
       onEventUpdate={handleEventUpdate}
       onLoadMore={handleLoadMore}
+      isLoadingMore={isLoadingMore}
       stats={timelineStats}
       showFilters={false}
       compact={false}
