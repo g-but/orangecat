@@ -30,42 +30,50 @@ const playfairDisplay = Playfair_Display({
 import './globals.css';
 import Script from 'next/script';
 import { AuthProvider } from '@/components/providers/AuthProvider';
+import { QueryProvider } from '@/components/providers/QueryProvider';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toaster } from '@/components/ui/sonner';
 import Loading from '@/components/Loading';
 import { Suspense } from 'react';
 
 export const metadata = {
-  title: 'OrangeCat - Bitcoin Crowdfunding Platform',
+  title: 'OrangeCat - The Bitcoin Super-App',
   description:
-    'Empowering communities through Bitcoin crowdfunding. Create, fund, and support projects with cryptocurrency.',
-  keywords: 'bitcoin, crowdfunding, cryptocurrency, blockchain, funding, community',
+    'Commerce, finance, community, and AI—all powered by Bitcoin. Sell products, offer services, fund projects, build communities, and deploy AI in one unified platform.',
+  keywords:
+    'bitcoin, super-app, commerce, finance, community, AI, products, services, crowdfunding, cryptocurrency, blockchain, lightning network, peer-to-peer',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const gaId = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
+
   return (
     <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
-      <head>
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'GA_MEASUREMENT_ID');
-          `}
-        </Script>
-      </head>
       <body className="antialiased">
-        <AuthProvider>
-          <AppShell>
-            <Suspense fallback={<Loading />}>{children}</Suspense>
-          </AppShell>
-        </AuthProvider>
+        <QueryProvider>
+          <AuthProvider>
+            <AppShell>
+              <Suspense fallback={<Loading />}>{children}</Suspense>
+            </AppShell>
+          </AuthProvider>
+        </QueryProvider>
         <Toaster position="top-right" richColors closeButton />
+        {gaId && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+              strategy="afterInteractive"
+            />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', '${gaId}');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
