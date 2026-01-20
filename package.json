@@ -208,7 +208,7 @@
     "puppeteer-core": "^24.32.0",
     "react-router-dom": "^7.6.3",
     "shadcn": "^3.4.2",
-    "supabase": "^2.58.5",
+    "supabase": "^2.72.8",
     "ts-jest": "^29.1.1",
     "webpack-bundle-analyzer": "^4.10.2",
     "ws": "^8.18.2"
