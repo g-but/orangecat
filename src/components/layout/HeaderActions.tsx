@@ -69,7 +69,7 @@ export function MobileSearchButton({ onClick }: { onClick: () => void }) {
       )}
       aria-label="Search projects, people, organizations"
     >
-      <Search className="w-5 h-5" strokeWidth={2} />
+      <Search className="w-6 h-6 sm:w-5 sm:h-5" strokeWidth={2} />
     </button>
   );
 }
@@ -85,7 +85,7 @@ export function MessagesButton() {
     <HeaderActionButton
       onClick={() => router.push('/messages')}
       ariaLabel={`Messages ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
-      icon={<MessageSquare className="w-5 h-5" />}
+      icon={<MessageSquare className="w-6 h-6 sm:w-5 sm:h-5" />}
       badgeCount={unreadCount}
     />
   );
@@ -101,7 +101,7 @@ export function NotificationsButton({ onClick }: { onClick: () => void }) {
     <HeaderActionButton
       onClick={onClick}
       ariaLabel={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
-      icon={<Bell className="w-5 h-5" />}
+      icon={<Bell className="w-6 h-6 sm:w-5 sm:h-5" />}
       badgeCount={unreadCount}
     />
   );

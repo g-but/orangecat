@@ -58,7 +58,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className="min-h-screen flex flex-col bg-white">
       {/* Initialize message sync manager */}
       <MessageSyncManagerInitializer />
-      
+
       {/* Header - Always visible */}
       <Header
         showSidebarToggle={!!shouldShowSidebar}
@@ -67,8 +67,8 @@ export function AppShell({ children }: AppShellProps) {
         variant="default"
       />
 
-      {/* Main Layout Container */}
-      <div className="flex flex-1 pt-16">
+      {/* Main Layout Container - pt-14 for mobile header (56px), pt-16 for desktop (64px) */}
+      <div className="flex flex-1 pt-14 sm:pt-16">
         {/* Sidebar - Only for authenticated routes when auth is ready */}
         {shouldShowSidebar && (
           <Sidebar
@@ -106,4 +106,3 @@ export function AppShell({ children }: AppShellProps) {
     </div>
   );
 }
-

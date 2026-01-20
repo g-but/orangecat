@@ -35,7 +35,7 @@ export const MenuToggleButton = forwardRef<HTMLButtonElement, MenuToggleButtonPr
         className={cn('lg:hidden', TOUCH_TARGETS.RESPONSIVE, HEADER_BUTTON_BASE.BASE, className)}
         aria-label={ariaLabel}
       >
-        <Menu className="w-5 h-5 sm:w-6 sm:h-6" />
+        <Menu className="w-6 h-6 sm:w-5 sm:h-5" />
       </button>
     );
   }

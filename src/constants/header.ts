@@ -33,8 +33,8 @@ export const HEADER_SPACING = {
   CONTAINER_PADDING: 'px-3 sm:px-4 md:px-6',
   /** Gap between items */
   ITEM_GAP: 'gap-2 sm:gap-3',
-  /** Gap between action buttons */
-  ACTION_GAP: 'gap-1.5 sm:gap-2',
+  /** Gap between action buttons - increased on mobile for better touch targets */
+  ACTION_GAP: 'gap-2.5 sm:gap-2',
   /** Max width */
   MAX_WIDTH: 'max-w-7xl',
 } as const;
@@ -58,7 +58,8 @@ export const HEADER_BUTTON_BASE = {
   /** Base button classes */
   BASE: 'flex-shrink-0 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation relative',
   /** Mobile search button specific */
-  MOBILE_SEARCH: 'md:hidden text-gray-700 hover:bg-orange-50 active:bg-orange-100 border border-gray-200 hover:border-orange-300 shadow-sm',
+  MOBILE_SEARCH:
+    'md:hidden text-gray-700 hover:bg-orange-50 active:bg-orange-100 border border-gray-200 hover:border-orange-300 shadow-sm',
 } as const;
 
 /**
