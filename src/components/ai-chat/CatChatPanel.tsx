@@ -289,7 +289,8 @@ export function CatChatPanel() {
           let msg = 'Failed to get response';
           try {
             const data = await res.json();
-            msg = data?.error || msg;
+            // Use the detailed message if available (e.g., from NO_API_KEY error)
+            msg = data?.details?.message || data?.error || msg;
           } catch {}
           throw new Error(msg);
         }
@@ -619,22 +620,44 @@ export function CatChatPanel() {
             </div>
             <div className="font-medium">Start a private chat with your Cat</div>
             <div className="text-sm">Choose a model, ask anything. Nothing is saved.</div>
-            {!localEnabled && localHealthy === false && (
-              <div className="mt-6 max-w-lg text-left bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
-                <div className="font-semibold text-gray-800 mb-2">
-                  Quickstart: Use a small local model (no API key)
-                </div>
-                <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
-                  <li>Install Ollama from ollama.com and open a terminal</li>
-                  <li>
-                    Run:{' '}
-                    <code className="bg-gray-100 px-1 py-0.5 rounded">ollama pull mistral</code>
-                  </li>
-                  <li>Return here and click Settings → Local → Test</li>
-                </ol>
-                <div className="text-xs text-gray-500 mt-2">
-                  Alternatively, run LM Studio and enable its local server (OpenAI-compatible API).
-                </div>
+            {!localEnabled && (
+              <div className="mt-6 max-w-lg text-left space-y-4">
+                {/* BYOK Setup Prompt */}
+                <button
+                  onClick={() => router.push('/settings/ai/onboarding')}
+                  className="w-full text-left bg-gradient-to-r from-tiffany-50 to-blue-50 border border-tiffany-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <div className="font-semibold text-tiffany-800 mb-2 flex items-center gap-2">
+                    <Key className="h-4 w-4" />
+                    Set Up Your AI (Recommended)
+                  </div>
+                  <p className="text-sm text-tiffany-700 mb-2">
+                    Bring your own API key for unlimited access to premium AI models. Complete our
+                    5-step setup guide.
+                  </p>
+                  <span className="text-xs text-tiffany-600 hover:underline">Start AI Setup →</span>
+                </button>
+
+                {/* Local Model Alternative */}
+                {localHealthy === false && (
+                  <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+                    <div className="font-semibold text-gray-800 mb-2">
+                      Alternative: Use a local model (no API key)
+                    </div>
+                    <ol className="list-decimal list-inside space-y-1 text-sm text-gray-700">
+                      <li>Install Ollama from ollama.com and open a terminal</li>
+                      <li>
+                        Run:{' '}
+                        <code className="bg-gray-100 px-1 py-0.5 rounded">ollama pull mistral</code>
+                      </li>
+                      <li>Return here and click Settings → Local → Test</li>
+                    </ol>
+                    <div className="text-xs text-gray-500 mt-2">
+                      Alternatively, run LM Studio and enable its local server (OpenAI-compatible
+                      API).
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -666,7 +689,29 @@ export function CatChatPanel() {
 
       {/* Footer actions + input */}
       <div className="border-t bg-white p-3">
-        {error && <div className="text-sm text-red-600 mb-2">{error}</div>}
+        {error && (
+          <div className="text-sm text-red-600 mb-2 p-2 bg-red-50 rounded-lg border border-red-100">
+            <p>{error}</p>
+            {(error.includes('API key') ||
+              error.includes('not configured') ||
+              error.includes('openrouter')) && (
+              <div className="mt-2 flex flex-col gap-2">
+                <button
+                  onClick={() => router.push('/settings/ai')}
+                  className="text-xs text-blue-600 hover:underline flex items-center gap-1"
+                >
+                  <Key className="h-3 w-3" /> Configure API Key in AI Settings
+                </button>
+                <button
+                  onClick={() => router.push('/settings/ai/onboarding')}
+                  className="text-xs text-tiffany-600 hover:underline flex items-center gap-1"
+                >
+                  <Bot className="h-3 w-3" /> Complete AI Setup (5-step guide)
+                </button>
+              </div>
+            )}
+          </div>
+        )}
         {suggestEntities.length > 0 && (
           <div className="flex items-center gap-2 mb-2 text-sm">
             <span className="text-gray-600">Suggested:</span>
