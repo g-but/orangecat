@@ -84,10 +84,7 @@ export function Header({
           <div className={`flex items-center ${HEADER_SPACING.ITEM_GAP} min-w-0 flex-1`}>
             {/* Sidebar/Menu Toggle - Always first, proper touch target */}
             {showSidebarToggle && onToggleSidebar ? (
-              <MenuToggleButton
-                onClick={onToggleSidebar}
-                ariaLabel="Toggle sidebar"
-              />
+              <MenuToggleButton onClick={onToggleSidebar} ariaLabel="Toggle sidebar" />
             ) : !isAuthRoute ? (
               <MenuToggleButton
                 ref={buttonRef}
@@ -135,13 +132,7 @@ export function Header({
 
             {/* User Menu or Auth Buttons */}
             <div className="flex-shrink-0">
-              {authStatus.authenticated ? (
-                <UserProfileDropdown />
-              ) : (
-                <div className="hidden sm:flex">
-                  <AuthButtons />
-                </div>
-              )}
+              {authStatus.authenticated ? <UserProfileDropdown /> : <AuthButtons />}
             </div>
           </div>
         </div>
@@ -157,10 +148,17 @@ export function Header({
       )}
 
       {/* Mobile Search Modal */}
-      {showMobileSearch && <MobileSearchModal isOpen={showMobileSearch} onClose={() => setShowMobileSearch(false)} />}
+      {showMobileSearch && (
+        <MobileSearchModal isOpen={showMobileSearch} onClose={() => setShowMobileSearch(false)} />
+      )}
 
       {/* Notification Center */}
-      {showNotifications && <NotificationCenter isOpen={showNotifications} onClose={() => setShowNotifications(false)} />}
+      {showNotifications && (
+        <NotificationCenter
+          isOpen={showNotifications}
+          onClose={() => setShowNotifications(false)}
+        />
+      )}
 
       {/* Mobile Menu (public routes only) */}
       {!isAuthRoute && (

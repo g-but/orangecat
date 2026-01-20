@@ -177,7 +177,7 @@ export function useAISettings() {
   // Add API key
   const addKey = useCallback(
     async (params: { provider: string; apiKey: string; keyName: string }) => {
-      const response = await fetch('/api/ai/keys', {
+      const response = await fetch('/api/user/api-keys', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),
@@ -201,7 +201,7 @@ export function useAISettings() {
   // Delete API key
   const deleteKey = useCallback(
     async (keyId: string) => {
-      const response = await fetch(`/api/ai/keys/${keyId}`, {
+      const response = await fetch(`/api/user/api-keys/${keyId}`, {
         method: 'DELETE',
       });
 
@@ -219,8 +219,10 @@ export function useAISettings() {
   // Set primary key
   const setPrimaryKey = useCallback(
     async (keyId: string) => {
-      const response = await fetch(`/api/ai/keys/${keyId}/primary`, {
-        method: 'POST',
+      const response = await fetch(`/api/user/api-keys/${keyId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ isPrimary: true }),
       });
 
       if (!response.ok) {

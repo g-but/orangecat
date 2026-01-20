@@ -145,14 +145,18 @@ html {
     -webkit-tap-highlight-color: transparent;
     /* Prevent horizontal scrolling */
     overflow-x: hidden;
-    /* iOS Safari overscroll fix */
-    overscroll-behavior: none;
+    /* Allow vertical scrolling, prevent horizontal overscroll only */
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: auto;
     /* Better text rendering on mobile */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     /* Full viewport height for mobile */
     min-height: 100vh;
     min-height: -webkit-fill-available;
+    /* Ensure vertical scrolling works on all devices */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* PWA Viewport Fix for Mobile */
@@ -557,10 +561,12 @@ html {
   /* PWA-specific layouts */
   .pwa-layout {
     @apply viewport-fix safe-area-padding;
-    /* Prevent bounce scrolling on iOS */
-    overscroll-behavior: none;
+    /* Prevent horizontal bounce scrolling, allow vertical */
+    overscroll-behavior-x: none;
+    overscroll-behavior-y: auto;
     /* Better scrolling performance */
     -webkit-overflow-scrolling: touch;
+    overflow-y: auto;
   }
 
   /* Mobile-optimized text */
