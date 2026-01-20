@@ -170,7 +170,8 @@ export async function POST(request: NextRequest) {
           error: 'AI chat not configured',
           code: 'NO_API_KEY',
           details: {
-            message: 'To use My Cat AI chat, you need to add your own OpenRouter API key in Settings → API Keys. Get a free key at openrouter.ai',
+            message:
+              'To use My Cat AI chat, you need to add your own OpenRouter API key in Settings → API Keys. Get a free key at openrouter.ai',
             hasByok: false,
             helpUrl: '/dashboard/settings?tab=api-keys',
           },
@@ -188,6 +189,10 @@ export async function POST(request: NextRequest) {
             let usage:
               | { inputTokens?: number; outputTokens?: number; totalTokens?: number }
               | undefined;
+            // Send model info at the start of the stream
+            controller.enqueue(
+              encoder.encode(`data: ${JSON.stringify({ model: modelToUse })}\n\n`)
+            );
             for await (const chunk of openrouter.streamChatCompletion({
               model: modelToUse,
               messages,
@@ -203,7 +208,9 @@ export async function POST(request: NextRequest) {
               }
               if (chunk.done) {
                 controller.enqueue(
-                  encoder.encode(`data: ${JSON.stringify({ done: true, usage })}\n\n`)
+                  encoder.encode(
+                    `data: ${JSON.stringify({ done: true, usage, model: modelToUse })}\n\n`
+                  )
                 );
                 break;
               }
