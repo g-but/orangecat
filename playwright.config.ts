@@ -1,10 +1,14 @@
 import { defineConfig, devices } from '@playwright/test'
+import fs from 'fs'
+import path from 'path'
 
 /**
  * Playwright Configuration for OrangeCat
  * Optimized for real-time development with MCP integration
  * Supports Brave browser and automated testing workflows
  */
+const authFile = path.resolve(__dirname, 'tests/.auth/user.json')
+
 export default defineConfig({
   testDir: process.env.E2E_TEST_DIR || 'tests/e2e',
   /* Run tests in files in parallel */
@@ -29,6 +33,8 @@ export default defineConfig({
     video: 'retain-on-failure',
     /* Enable headless mode for automation */
     headless: true,
+    /* Reuse logged-in session if available */
+    storageState: fs.existsSync(authFile) ? authFile : undefined,
   },
 
   /* Configure projects for major browsers */
@@ -65,6 +71,9 @@ export default defineConfig({
     //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
     // },
   ],
+
+  /* Global setup to create storage state if credentials are provided */
+  globalSetup: './tests/setup/global-setup.cjs',
 
   /* Run your local dev server before starting the tests */
   // No webServer; this config targets existing environments via baseURL

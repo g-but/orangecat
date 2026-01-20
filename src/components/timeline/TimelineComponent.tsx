@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { TimelineDisplayEvent, TimelineFeedResponse, TimelineVisibility } from '@/types/timeline';
 import { logger } from '@/utils/logger';
 import { useToast } from '@/hooks/useToast';
 import { PostCard } from './PostCard';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
-import { Trash2, CheckSquare } from 'lucide-react';
+import { Trash2, CheckSquare, Loader2 } from 'lucide-react';
 import { usePostSelection } from '@/hooks/usePostSelection';
 import { BulkActionsToolbar } from './BulkActionsToolbar';
 
@@ -15,6 +15,7 @@ interface TimelineComponentProps {
   feed: TimelineFeedResponse;
   onEventUpdate?: (eventId: string, updates: Partial<TimelineDisplayEvent>) => void;
   onLoadMore?: () => void;
+  isLoadingMore?: boolean;
   showFilters?: boolean;
   compact?: boolean;
   enableMultiSelect?: boolean;
@@ -24,6 +25,7 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   feed,
   onEventUpdate,
   onLoadMore,
+  isLoadingMore = false,
   showFilters: _showFilters = true,
   compact = false,
   enableMultiSelect = false,
@@ -32,10 +34,41 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const { success: showSuccess, error: showError } = useToast();
 
+  // Ref for the infinite scroll sentinel element
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
   // Sync events when feed changes (e.g., from optimistic updates)
   useEffect(() => {
     setEvents(feed.events);
   }, [feed.events]);
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !onLoadMore || !feed.pagination.hasNext || isLoadingMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && feed.pagination.hasNext && !isLoadingMore) {
+          onLoadMore();
+        }
+      },
+      {
+        root: null, // viewport
+        rootMargin: '100px', // trigger 100px before reaching sentinel
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(sentinel);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [onLoadMore, feed.pagination.hasNext, isLoadingMore]);
 
   // Use centralized selection hook (DRY)
   const {
@@ -190,12 +223,24 @@ export const TimelineComponent: React.FC<TimelineComponentProps> = ({
         ))}
       </div>
 
-      {/* Load More */}
+      {/* Infinite Scroll Sentinel & Loading Indicator */}
       {feed.pagination.hasNext && onLoadMore && (
-        <div className="text-center pt-4 pb-6">
-          <Button onClick={onLoadMore} variant="outline">
-            Load More
-          </Button>
+        <div ref={sentinelRef} className="flex items-center justify-center py-6">
+          {isLoadingMore ? (
+            <div className="flex items-center gap-2 text-gray-500">
+              <Loader2 className="h-5 w-5 animate-spin" />
+              <span className="text-sm">Loading more posts...</span>
+            </div>
+          ) : (
+            <div className="h-4" aria-hidden="true" />
+          )}
+        </div>
+      )}
+
+      {/* End of feed indicator */}
+      {!feed.pagination.hasNext && events.length > 0 && (
+        <div className="text-center py-6">
+          <span className="text-sm text-gray-400">You've reached the end</span>
         </div>
       )}
 

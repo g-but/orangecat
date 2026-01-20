@@ -15,8 +15,11 @@ import {
   AlertTriangle,
   Mail,
   Lock,
-  ArrowLeft
+  ArrowLeft,
+  Shield
 } from 'lucide-react'
+import { MFASetup, MFAStatus } from '@/components/auth/MFASetup'
+import { RecoveryCodes } from '@/components/auth/RecoveryCodes'
 
 interface SettingsFormData {
   email: string;
@@ -45,6 +48,9 @@ export default function SettingsPage() {
   const [isSubmittingPassword, setIsSubmittingPassword] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showMFASetup, setShowMFASetup] = useState(false)
+  const [showRecoveryCodes, setShowRecoveryCodes] = useState(false)
+  const [mfaStatusKey, setMfaStatusKey] = useState(0) // For refreshing MFA status
 
   // Initialize form data
   useEffect(() => {
@@ -273,10 +279,43 @@ export default function SettingsPage() {
               </form>
             </div>
 
+            {/* Two-Factor Authentication */}
+            <div className="border-t border-gray-100 pt-10">
+              <h3 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <Shield className="w-6 h-6 mr-2 text-tiffany-600" />
+                Two-Factor Authentication
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Add an extra layer of security to your account by requiring a code from your authenticator app when signing in.
+              </p>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 max-w-md">
+                <MFAStatus
+                  key={mfaStatusKey}
+                  onEnableClick={() => setShowMFASetup(true)}
+                  onDisableComplete={() => {
+                    toast.success('Two-factor authentication has been disabled')
+                    setMfaStatusKey(prev => prev + 1)
+                  }}
+                />
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowRecoveryCodes(true)}
+                    className="text-sm text-tiffany-600 hover:text-tiffany-700 font-medium"
+                  >
+                    View Recovery Codes
+                  </button>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Backup codes for when you lose access to your authenticator
+                  </p>
+                </div>
+              </div>
+            </div>
+
             {/* Danger Zone */}
             <div className="border-t border-red-200 pt-10">
               <h3 className="text-xl font-semibold text-red-800 mb-4 flex items-center">
-                <AlertTriangle className="w-6 h-6 mr-2" /> 
+                <AlertTriangle className="w-6 h-6 mr-2" />
                 Danger Zone
               </h3>
               <div className="bg-red-50 border border-red-200 rounded-lg p-6">
@@ -308,6 +347,35 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+
+      {/* MFA Setup Modal */}
+      {showMFASetup && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="max-w-md w-full">
+            <MFASetup
+              onSetupComplete={() => {
+                toast.success('Two-factor authentication enabled!')
+                setShowMFASetup(false)
+                setMfaStatusKey(prev => prev + 1)
+                // Show recovery codes after successful setup
+                setShowRecoveryCodes(true)
+              }}
+              onCancel={() => setShowMFASetup(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Recovery Codes Modal */}
+      {showRecoveryCodes && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="max-w-md w-full">
+            <RecoveryCodes
+              onClose={() => setShowRecoveryCodes(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

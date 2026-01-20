@@ -1,6 +1,7 @@
 import * as bitcoin from 'bitcoinjs-lib';
 import BIP32Factory, { BIP32Interface } from 'bip32';
 import * as ecc from 'tiny-secp256k1';
+import bs58check from 'bs58check';
 
 // Initialize bip32 with secp256k1
 const bip32 = BIP32Factory(ecc);
@@ -70,6 +71,14 @@ const VERSION_BYTES = {
 /**
  * Convert ypub/zpub to standard xpub format for BIP32 parsing
  * BIP32 library only understands xpub/tpub format, so we need to convert
+ *
+ * Extended key structure (78 bytes):
+ * - 4 bytes: version (indicates network and key type)
+ * - 1 byte: depth
+ * - 4 bytes: parent fingerprint
+ * - 4 bytes: child index
+ * - 32 bytes: chain code
+ * - 33 bytes: public key
  */
 export function convertToStandardXpub(xpub: string, network: NetworkName): string {
   const prefix = xpub.substring(0, 4);
@@ -79,21 +88,27 @@ export function convertToStandardXpub(xpub: string, network: NetworkName): strin
     return xpub;
   }
 
-  // Decode the extended key
-  const decoded = bitcoin.address.fromBase58Check(xpub);
-  const data = decoded.hash;
+  // Decode the extended key using bs58check
+  const decoded = bs58check.decode(xpub);
+
+  // Verify it's 78 bytes (standard extended key length)
+  if (decoded.length !== 78) {
+    throw new Error(`Invalid extended key length: ${decoded.length}, expected 78`);
+  }
 
   // Get the target version bytes
   const targetVersion =
     network === 'mainnet' ? VERSION_BYTES.mainnet.xpub : VERSION_BYTES.testnet.tpub;
 
-  // Create new buffer with standard version
+  // Create new buffer with standard version bytes
   const buffer = Buffer.alloc(78);
   buffer.writeUInt32BE(targetVersion, 0);
-  data.copy(buffer, 4);
 
-  // Re-encode with standard prefix
-  return bitcoin.address.toBase58Check(buffer.slice(4), targetVersion >> 24);
+  // Copy the rest of the key data (everything after the 4-byte version)
+  Buffer.from(decoded).copy(buffer, 4, 4);
+
+  // Re-encode with base58check
+  return bs58check.encode(buffer);
 }
 
 /**

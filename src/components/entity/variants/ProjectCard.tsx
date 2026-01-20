@@ -30,12 +30,15 @@ interface ProjectCardProps extends Omit<
   };
   showProgress?: boolean;
   showMetrics?: boolean;
+  /** Compact mode for dashboard - smaller tiles with less detail */
+  compact?: boolean;
 }
 
 export function ProjectCard({
   project,
   showProgress = true,
   showMetrics = true,
+  compact = false,
   ...props
 }: ProjectCardProps) {
   const goalAmount = project.goal_amount ?? 0;
@@ -52,32 +55,51 @@ export function ProjectCard({
     PROJECT_STATUSES[status as keyof typeof PROJECT_STATUSES] || PROJECT_STATUSES.draft;
   const statusBadge = <Badge className={statusConfig.className}>{statusConfig.label}</Badge>;
 
-  // Progress slot
+  // Progress slot - simplified for compact mode
   const progressSlot = showProgressBar ? (
-    <div className="w-full space-y-2">
-      <div className="flex items-center justify-between text-xs text-gray-600">
-        <span>Progress</span>
-        <span className="font-medium">{Math.round(progressPercentage)}%</span>
+    compact ? (
+      // Compact progress: just bar and percentage
+      <div className="w-full space-y-1">
+        <div className="h-1.5 w-full overflow-hidden rounded-full bg-gray-200">
+          <div
+            className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-medium">
+            <CurrencyDisplay amount={currentAmount} currency={projectCurrency} />
+          </span>
+          <span className="text-gray-500">{Math.round(progressPercentage)}%</span>
+        </div>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-        <div
-          className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500"
-          style={{ width: `${progressPercentage}%` }}
-        />
+    ) : (
+      // Full progress: label, bar, amounts
+      <div className="w-full space-y-2">
+        <div className="flex items-center justify-between text-xs text-gray-600">
+          <span>Progress</span>
+          <span className="font-medium">{Math.round(progressPercentage)}%</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+          <div
+            className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500"
+            style={{ width: `${progressPercentage}%` }}
+          />
+        </div>
+        <div className="flex items-center justify-between text-sm font-medium">
+          <span>
+            <CurrencyDisplay amount={currentAmount} currency={projectCurrency} />
+          </span>
+          <span className="text-gray-500">
+            of <CurrencyDisplay amount={goalAmount} currency={projectCurrency} />
+          </span>
+        </div>
       </div>
-      <div className="flex items-center justify-between text-sm font-medium">
-        <span>
-          <CurrencyDisplay amount={currentAmount} currency={projectCurrency} />
-        </span>
-        <span className="text-gray-500">
-          of <CurrencyDisplay amount={goalAmount} currency={projectCurrency} />
-        </span>
-      </div>
-    </div>
+    )
   ) : null;
 
-  // Metrics slot
-  const metricsSlot = showMetrics ? (
+  // Metrics slot - hide in compact mode (shown in progress slot)
+  const metricsSlot = showMetrics && !compact ? (
     <div className="flex items-center gap-4 text-sm text-gray-600">
       {currentAmount > 0 && (
         <div className="flex items-center gap-1">
@@ -105,7 +127,7 @@ export function ProjectCard({
       {...props}
       id={project.id}
       title={project.title || 'Untitled Project'}
-      description={project.description || null}
+      description={compact ? null : (project.description || null)}
       thumbnailUrl={project.cover_image_url || project.banner_url || undefined}
       href={props.href || `/projects/${project.id}`}
       badge={statusConfig.label}
@@ -114,7 +136,7 @@ export function ProjectCard({
       progressSlot={progressSlot}
       metricsSlot={metricsSlot}
       metadata={
-        project.category ? (
+        !compact && project.category ? (
           <div className="flex flex-wrap gap-1">
             <Badge variant="outline" className="text-xs">
               {project.category}
@@ -122,6 +144,7 @@ export function ProjectCard({
           </div>
         ) : null
       }
+      compact={compact}
     />
   );
 }

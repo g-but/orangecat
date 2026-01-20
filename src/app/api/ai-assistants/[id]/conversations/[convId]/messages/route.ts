@@ -30,7 +30,8 @@ import {
 } from '@/services/ai';
 import { DEFAULT_FREE_MODEL_ID, isModelFree, getModelMetadata, getFreeModels } from '@/config/ai-models';
 import { createAutoRouter } from '@/services/ai/auto-router';
-import { rateLimitWriteAsync, createRateLimitResponse } from '@/lib/rate-limit';
+import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { z } from 'zod';
 
 interface RouteParams {
@@ -56,9 +57,36 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Rate limit AI message requests (30 per minute per user)
-    const rateLimitResult = await rateLimitWriteAsync(user.id);
-    if (!rateLimitResult.success) {
-      return createRateLimitResponse(rateLimitResult);
+    let rateLimitResult: RateLimitResult;
+    try {
+      rateLimitResult = await enforceUserWriteLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        const retryAfter = e.details?.retryAfter || 60;
+        const limit = e.details?.limit || 30;
+        const resetTime = Date.now() + retryAfter * 1000;
+        return new NextResponse(
+          JSON.stringify({
+            error: 'Rate limit exceeded',
+            code: 'RATE_LIMIT_EXCEEDED',
+            limit,
+            remaining: 0,
+            resetTime,
+            resetDate: new Date(resetTime).toUTCString(),
+          }),
+          {
+            status: 429,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-RateLimit-Limit': String(limit),
+              'X-RateLimit-Remaining': '0',
+              'X-RateLimit-Reset': String(resetTime),
+              'Retry-After': String(retryAfter),
+            },
+          }
+        );
+      }
+      throw e;
     }
 
     const body = await request.json();
@@ -364,7 +392,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       })
       .eq('id', convId);
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: {
         userMessage,
@@ -400,6 +428,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         },
       },
     });
+    return applyRateLimitHeaders(response, rateLimitResult);
   } catch (error) {
     console.error('Send message error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

@@ -286,7 +286,7 @@ export const projectSchema = baseEntitySchema.extend({
 **Step 3: Funding Details (Required)**
 
 - Bitcoin payment configuration
-- Fields: `goal_amount`, `currency`, `funding_purpose`, `bitcoin_address`, `lightning_address`
+- Fields: `goal_amount`, `funding_purpose`, `bitcoin_address`, `lightning_address`
 - Core to project functionality
 
 **Step 4: Additional Details (Optional)**

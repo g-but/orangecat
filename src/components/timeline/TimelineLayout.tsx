@@ -15,6 +15,7 @@ export interface TimelineLayoutProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   onEventUpdate: (eventId: string, updates: any) => void;
   onLoadMore: () => void;
+  isLoadingMore?: boolean;
   stats?: {
     totalPosts: number;
     totalLikes: number;
@@ -46,6 +47,7 @@ export default function TimelineLayout({
   feed,
   onEventUpdate,
   onLoadMore,
+  isLoadingMore = false,
   stats: _stats,
   showFilters = false,
   compact = false,
@@ -85,6 +87,7 @@ export default function TimelineLayout({
               feed={feed}
               onEventUpdate={onEventUpdate}
               onLoadMore={onLoadMore}
+              isLoadingMore={isLoadingMore}
               showFilters={showFilters}
               compact={compact}
               enableMultiSelect={enableMultiSelect}

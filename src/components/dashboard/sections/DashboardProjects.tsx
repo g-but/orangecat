@@ -85,8 +85,9 @@ export function DashboardProjects({ projects }: DashboardProjectsProps) {
         </div>
       </CardHeader>
       <CardContent className="p-4 sm:p-6">
-        <div className="grid gap-4">
-          {projects.slice(0, 3).map(project => (
+        {/* Compact grid: 1 column on mobile, 2 on tablet, 3 on desktop */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {projects.slice(0, 6).map(project => (
             <ProjectCard
               key={project.id}
               href={`/projects/${project.id}`}
@@ -106,14 +107,15 @@ export function DashboardProjects({ projects }: DashboardProjectsProps) {
                         : 'draft',
                 } as Parameters<typeof ProjectCard>[0]['project']
               }
+              compact
             />
           ))}
         </div>
-        {projects.length > 3 && (
+        {projects.length > 6 && (
           <div className="mt-4 text-center">
             <Link href={ENTITY_REGISTRY.project.basePath}>
               <Button variant="outline" size="sm">
-                View {projects.length - 3} more {projects.length - 3 === 1 ? 'project' : 'projects'}
+                View {projects.length - 6} more {projects.length - 6 === 1 ? 'project' : 'projects'}
               </Button>
             </Link>
           </div>

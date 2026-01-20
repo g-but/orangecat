@@ -8,7 +8,7 @@ import {
   handleApiError,
   handleSupabaseError,
 } from '@/lib/api/standardResponse';
-import { rateLimit, createRateLimitResponse } from '@/lib/rate-limit';
+import { rateLimit, createRateLimitResponse, applyRateLimitHeaders } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 
@@ -109,10 +109,10 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       newStatus: normalizedStatus,
     });
 
-    return apiSuccess({
+    return applyRateLimitHeaders(apiSuccess({
       ...project,
       status: normalizedStatus,
-    });
+    }), rateLimitResult);
   } catch (error) {
     return handleApiError(error);
   }

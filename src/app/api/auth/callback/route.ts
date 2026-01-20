@@ -5,7 +5,23 @@ import { logger } from '@/utils/logger';
 export async function POST(request: NextRequest) {
   try {
     const supabase = await createServerClient();
-    const body = await request.json();
+
+    // Safely parse JSON with error handling
+    let body;
+    try {
+      body = await request.json();
+    } catch (parseError) {
+      logger.error(
+        'Failed to parse request body in auth callback',
+        {
+          error: parseError instanceof Error ? parseError.message : String(parseError),
+          contentType: request.headers.get('content-type'),
+        },
+        'Auth'
+      );
+      return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
+    }
+
     const { event, session } = body;
 
     // Handle sign out

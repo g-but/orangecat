@@ -11,11 +11,27 @@
  * Last Modified Summary: Updated to use CreateEntityWorkflow for consistency
  */
 
+import { useEffect, useState } from 'react';
 import { CreateEntityWorkflow } from '@/components/create';
 import { productConfig } from '@/config/entity-configs';
 import { ProductTemplates } from '@/components/create/templates';
 
 export default function CreateProductPage() {
+  const [initialValues, setInitialValues] = useState<Record<string, unknown> | undefined>(
+    undefined
+  );
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('product_prefill');
+      if (raw) {
+        const data = JSON.parse(raw);
+        setInitialValues(data);
+        localStorage.removeItem('product_prefill');
+      }
+    } catch {}
+  }, []);
+
   return (
     <CreateEntityWorkflow
       config={productConfig}
@@ -24,6 +40,7 @@ export default function CreateProductPage() {
         title: 'Create Product',
         description: 'Add a new product to your personal marketplace.'
       }}
+      initialValues={initialValues}
       showTemplatesByDefault={false}
     />
   );

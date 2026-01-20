@@ -14,7 +14,7 @@ export default async function Home() {
       .from('profiles')
       .select('onboarding_completed')
       .eq('id', user.id)
-      .single();
+      .single<{ onboarding_completed: boolean | null }>();
 
     if (!profile?.onboarding_completed) {
       redirect('/onboarding');

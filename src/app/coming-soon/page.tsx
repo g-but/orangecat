@@ -1,18 +1,9 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-// import { createClient } from '@/lib/supabase/client' // Old import
-import supabase from '@/lib/supabase/browser'; // New default import
-import Link from 'next/link';
-import { ArrowLeft, Building, Briefcase, Calendar, Wallet, Users } from 'lucide-react';
-import Button from '@/components/ui/Button';
-import ComingSoonPage, { FeatureInfo } from '@/components/pages/ComingSoonPage';
-
-const featureDetails: Record<string, FeatureInfo> = {
+const _featureDetails: Record<string, unknown> = {
   organizations: {
     title: 'Organizations',
-    icon: Building,
+    icon: 'Building',
     color: 'from-green-500 to-emerald-500',
     iconColor: 'text-green-600',
     description: 'Create and manage organizations with governance, assets, and members',
@@ -37,7 +28,7 @@ const featureDetails: Record<string, FeatureInfo> = {
   },
   projects: {
     title: 'Projects',
-    icon: Briefcase,
+    icon: 'Briefcase',
     color: 'from-indigo-500 to-purple-500',
     iconColor: 'text-indigo-600',
     description: 'Launch and manage projects with transparent funding and milestone tracking',
@@ -62,7 +53,7 @@ const featureDetails: Record<string, FeatureInfo> = {
   },
   events: {
     title: 'Events',
-    icon: Calendar,
+    icon: 'Calendar',
     color: 'from-blue-500 to-teal-500',
     iconColor: 'text-blue-600',
     description: 'Organize and fundraise for conferences, parties, and community gatherings',
@@ -87,7 +78,7 @@ const featureDetails: Record<string, FeatureInfo> = {
   },
   assets: {
     title: 'Assets Marketplace',
-    icon: Wallet,
+    icon: 'Wallet',
     color: 'from-orange-500 to-red-500',
     iconColor: 'text-orange-600',
     description: 'List, rent, and discover physical assets in your community',
@@ -112,7 +103,7 @@ const featureDetails: Record<string, FeatureInfo> = {
   },
   people: {
     title: 'People & Networking',
-    icon: Users,
+    icon: 'Users',
     color: 'from-purple-500 to-pink-500',
     iconColor: 'text-purple-600',
     description: 'Connect with friends, create circles, and build your Bitcoin community',
@@ -137,83 +128,6 @@ const featureDetails: Record<string, FeatureInfo> = {
   },
 };
 
-export default function ComingSoon() {
-  const _router = useRouter();
-  const searchParams = useSearchParams();
-  const feature = searchParams?.get('feature') ?? null;
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      // const supabase = createClient() // No longer needed, supabase is imported directly
-      if (!supabase) {
-        setLoading(false);
-        return;
-      }
-
-      // Use getUser() for security - validates authentication with server
-      const {
-        data: { user },
-        error,
-      } = await supabase.auth.getUser();
-      setIsAuthenticated(!!user && !error);
-      setLoading(false);
-    };
-    checkAuth();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-50">
-        <div className="animate-spin w-8 h-8 border-2 border-orange-500 border-t-transparent rounded-full"></div>
-      </div>
-    );
-  }
-
-  const featureInfo = feature ? featureDetails[feature as keyof typeof featureDetails] : null;
-
-  if (feature && !featureInfo) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-50">
-        <div className="text-center px-4">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Feature Not Found</h1>
-          <p className="text-xl text-gray-600 mb-8">
-            The feature you&apos;re looking for doesn&apos;t exist.
-          </p>
-          <Link href={isAuthenticated ? '/dashboard' : '/'}>
-            <Button>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (featureInfo) {
-    return <ComingSoonPage featureInfo={featureInfo} isAuthenticated={isAuthenticated} />;
-  }
-
-  // Default coming soon page
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-white to-gray-50">
-      <div className="text-center px-4">
-        <h1 className="text-4xl font-bold text-gray-900 mb-4">Coming Soon</h1>
-        <p className="text-xl text-gray-600 mb-8">
-          We&apos;re working hard to bring you something amazing. Stay tuned!
-        </p>
-        <div className="animate-pulse mb-8">
-          <div className="h-2 w-20 bg-gray-300 rounded mx-auto"></div>
-        </div>
-        <Link href={isAuthenticated ? '/dashboard' : '/'}>
-          <Button>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            {isAuthenticated ? 'Back to Dashboard' : 'Back to Home'}
-          </Button>
-        </Link>
-      </div>
-    </div>
-  );
+export default function ComingSoonRedirect() {
+  redirect('/discover');
 }

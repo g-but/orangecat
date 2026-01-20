@@ -181,6 +181,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       hasSyncedInitialSession.current = true;
       logger.info('Starting prime session check', undefined, 'Auth');
+
+      // Check "Remember Me" preference - if user chose not to be remembered and this is
+      // a new browser session (no session marker), clear the Supabase session
+      try {
+        const rememberMe = localStorage.getItem('orangecat-remember-me');
+        const sessionMarker = sessionStorage.getItem('orangecat-session-marker');
+
+        if (rememberMe === 'false' && !sessionMarker) {
+          // User chose not to be remembered and this is a new browser session
+          logger.info('Remember me disabled and new browser session detected - signing out', undefined, 'Auth');
+          await supabase.auth.signOut();
+          localStorage.removeItem('orangecat-remember-me');
+          setInitialAuthState(null, null, null);
+          return;
+        }
+
+        // Set session marker if we have a valid session or if remember me is true
+        if (rememberMe === 'true' || sessionMarker) {
+          sessionStorage.setItem('orangecat-session-marker', 'active');
+        }
+      } catch {
+        // Storage may not be available (e.g., private browsing mode)
+        logger.debug('Could not check remember me preference - storage not available', undefined, 'Auth');
+      }
+
       const { data } = await supabase.auth.getSession();
       logger.info(
         'Prime session result',

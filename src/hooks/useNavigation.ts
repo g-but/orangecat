@@ -32,6 +32,7 @@ export interface NavSection {
 // Navigation state interface
 export interface NavigationState {
   isSidebarOpen: boolean;
+  isSidebarCollapsed: boolean; // Desktop collapse state (icons only vs full width)
   collapsedSections: Set<string>;
   activeSection: string | null;
   activeItem: string | null;
@@ -41,8 +42,10 @@ export interface NavigationState {
 export interface UseNavigationReturn {
   navigationState: NavigationState;
   toggleSidebar: () => void;
+  toggleSidebarCollapse: () => void; // Toggle between expanded (full width) and collapsed (icons only)
   toggleSection: (sectionId: string) => void;
   setSidebarOpen: (open: boolean) => void;
+  setSidebarCollapsed: (collapsed: boolean) => void;
   isItemActive: (href: string) => boolean;
   getFilteredSections: () => NavSection[];
   resetNavigation: () => void;
@@ -51,6 +54,7 @@ export interface UseNavigationReturn {
 // Local storage keys
 const STORAGE_KEYS = {
   SIDEBAR_OPEN: 'orangecat_sidebar_open',
+  SIDEBAR_COLLAPSED: 'orangecat_sidebar_collapsed',
   COLLAPSED_SECTIONS: 'orangecat_collapsed_sections',
 } as const;
 
@@ -61,6 +65,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
   // Initialize state - sidebar defaults to collapsed (narrow with icons only)
   const [navigationState, setNavigationState] = useState<NavigationState>({
     isSidebarOpen: false,
+    isSidebarCollapsed: false, // Default to expanded on desktop
     collapsedSections: new Set<string>(),
     activeSection: null,
     activeItem: null,
@@ -76,6 +81,10 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
       // Load sidebar state from localStorage - default to collapsed (false)
       const savedSidebarState = localStorage.getItem(STORAGE_KEYS.SIDEBAR_OPEN);
       const isSidebarOpen = savedSidebarState ? JSON.parse(savedSidebarState) : false;
+
+      // Load sidebar collapsed state from localStorage - default to expanded (false)
+      const savedCollapsedState = localStorage.getItem(STORAGE_KEYS.SIDEBAR_COLLAPSED);
+      const isSidebarCollapsed = savedCollapsedState ? JSON.parse(savedCollapsedState) : false;
 
       // Load collapsed sections from localStorage
       const savedCollapsedSections = localStorage.getItem(STORAGE_KEYS.COLLAPSED_SECTIONS);
@@ -113,6 +122,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
       setNavigationState(prev => ({
         ...prev,
         isSidebarOpen,
+        isSidebarCollapsed,
         collapsedSections: initialCollapsed,
       }));
     } catch (error) {
@@ -200,6 +210,15 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
     }
   }, []);
 
+  // Persist sidebar collapsed state to localStorage
+  const persistSidebarCollapsedState = useCallback((isCollapsed: boolean) => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.SIDEBAR_COLLAPSED, JSON.stringify(isCollapsed));
+    } catch (error) {
+      logger.warn('Failed to persist sidebar collapsed state', { error, isCollapsed }, 'useNavigation');
+    }
+  }, []);
+
   // Persist collapsed sections to localStorage
   const persistCollapsedSections = useCallback((collapsed: Set<string>) => {
     try {
@@ -240,6 +259,35 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
       });
     },
     [persistSidebarState]
+  );
+
+  // Toggle sidebar collapse state (for desktop - icons only vs full width)
+  const toggleSidebarCollapse = useCallback(() => {
+    setNavigationState(prev => {
+      const newIsCollapsed = !prev.isSidebarCollapsed;
+      persistSidebarCollapsedState(newIsCollapsed);
+      return {
+        ...prev,
+        isSidebarCollapsed: newIsCollapsed,
+      };
+    });
+  }, [persistSidebarCollapsedState]);
+
+  // Set sidebar collapsed state
+  const setSidebarCollapsed = useCallback(
+    (collapsed: boolean) => {
+      setNavigationState(prev => {
+        if (prev.isSidebarCollapsed === collapsed) {
+          return prev;
+        }
+        persistSidebarCollapsedState(collapsed);
+        return {
+          ...prev,
+          isSidebarCollapsed: collapsed,
+        };
+      });
+    },
+    [persistSidebarCollapsedState]
   );
 
   // Toggle section collapse
@@ -335,6 +383,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
   const resetNavigation = useCallback(() => {
     try {
       localStorage.removeItem(STORAGE_KEYS.SIDEBAR_OPEN);
+      localStorage.removeItem(STORAGE_KEYS.SIDEBAR_COLLAPSED);
       localStorage.removeItem(STORAGE_KEYS.COLLAPSED_SECTIONS);
     } catch (error) {
       logger.warn('Failed to reset navigation state', { error }, 'useNavigation');
@@ -361,6 +410,7 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
 
     setNavigationState({
       isSidebarOpen: false,
+      isSidebarCollapsed: false,
       collapsedSections: defaultCollapsed,
       activeSection: null,
       activeItem: null,
@@ -372,8 +422,10 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
     () => ({
       navigationState,
       toggleSidebar,
+      toggleSidebarCollapse,
       toggleSection,
       setSidebarOpen,
+      setSidebarCollapsed,
       isItemActive,
       getFilteredSections,
       resetNavigation,
@@ -381,8 +433,10 @@ export function useNavigation(sections: NavSection[]): UseNavigationReturn {
     [
       navigationState,
       toggleSidebar,
+      toggleSidebarCollapse,
       toggleSection,
       setSidebarOpen,
+      setSidebarCollapsed,
       isItemActive,
       getFilteredSections,
       resetNavigation,

@@ -61,33 +61,40 @@ const _CATEGORY_TO_SECTION: CategoryToSectionMap[] = [
 ];
 
 /**
- * Special handling for "Raise" section (Projects and Causes)
- * These are business entities but deserve their own section
+ * Entity groupings for semantic navigation sections
+ *
+ * CREATE: Things you make/offer (Products, Services, AI Assistants, Wishlists)
+ * FUND: Things that need funding/support (Projects, Causes, Research)
  */
-const RAISE_ENTITIES: EntityType[] = ['project', 'cause'];
+const CREATE_ENTITIES: EntityType[] = ['product', 'service', 'ai_assistant', 'wishlist'];
+const FUND_ENTITIES: EntityType[] = ['project', 'cause', 'research'];
 
 /**
  * Generate navigation items from entity registry
  *
- * Groups entities by category and creates navigation sections.
+ * Groups entities by semantic meaning for better UX:
+ * - Create: Things you make/offer
+ * - Fund: Things that need funding
+ * - Network: Community connections
+ * - Manage: Financial assets
+ *
  * Applies progressive disclosure with smart defaults.
  */
 export function generateEntityNavigation(): NavSection[] {
   const sections: NavSection[] = [];
 
-  // Group 1: Sell (Products, Services, AI Assistants)
-  const sellEntities = ENTITY_TYPES.filter(
-    type => ENTITY_REGISTRY[type].category === 'business' && !RAISE_ENTITIES.includes(type)
-  );
-  if (sellEntities.length > 0) {
+  // Group 1: Create (Products, Services, AI Assistants, Wishlists)
+  // Semantic: Things you create/offer to others
+  const createEntities = ENTITY_TYPES.filter(type => CREATE_ENTITIES.includes(type));
+  if (createEntities.length > 0) {
     sections.push({
-      id: 'sell',
-      title: 'Sell',
+      id: 'create',
+      title: 'Create',
       priority: 2,
-      defaultExpanded: true, // Core business - expanded by default
+      defaultExpanded: true, // Core function - expanded by default
       collapsible: true,
       requiresAuth: true,
-      items: sellEntities
+      items: createEntities
         .map(type => {
           const entity = ENTITY_REGISTRY[type];
           return {
@@ -109,16 +116,17 @@ export function generateEntityNavigation(): NavSection[] {
     });
   }
 
-  // Group 2: Raise (Projects, Causes)
-  if (RAISE_ENTITIES.length > 0) {
+  // Group 2: Fund (Projects, Causes, Research)
+  // Semantic: Things that need funding/support
+  if (FUND_ENTITIES.length > 0) {
     sections.push({
-      id: 'raise',
-      title: 'Raise',
+      id: 'fund',
+      title: 'Fund',
       priority: 3,
-      defaultExpanded: true, // Core business - expanded by default
+      defaultExpanded: true, // Core function - expanded by default
       collapsible: true,
       requiresAuth: true,
-      items: RAISE_ENTITIES.map(type => {
+      items: FUND_ENTITIES.map(type => {
         const entity = ENTITY_REGISTRY[type];
         return {
           name: entity.namePlural,

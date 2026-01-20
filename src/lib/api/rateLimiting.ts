@@ -1,7 +1,17 @@
 /**
  * REDIS-BASED RATE LIMITING SYSTEM
  *
- * Production-ready rate limiting with:
+ * NOTE: This module is being unified under the canonical limiter in `src/lib/rate-limit.ts`.
+ * Prefer using adapters exported here:
+ *  - enforceUserWriteLimit(userId)
+ *  - enforceUserSocialLimit(userId)
+ * or the middleware `withRateLimit` which now delegates to the canonical limiter
+ * and applies consistent rate limit headers.
+ *
+ * Existing functions (checkRateLimit, withRateLimit, etc.) remain for backward
+ * compatibility during migration, but are considered deprecated.
+ *
+ * Production-ready features:
  * - Redis backend for distributed rate limiting
  * - Multiple rate limit strategies
  * - Automatic cleanup and memory management
@@ -14,6 +24,8 @@
  */
 
 import { Redis } from '@upstash/redis'
+// Canonical limiter import (adapter for unification)
+import { rateLimitWriteAsync, rateLimitSocial, applyRateLimitHeaders, type RateLimitResult as CanonicalRateLimitResult } from '@/lib/rate-limit'
 import { logger } from '@/utils/logger'
 import { ApiError, ErrorCode } from '@/lib/api/errorHandling'
 
@@ -116,6 +128,47 @@ export class RateLimitError extends ApiError {
       }
     )
   }
+}
+
+/**
+ * Adapter: enforce per-user write limit using canonical limiter.
+ * Throws RateLimitError when exceeded.
+ */
+export async function enforceUserWriteLimit(userId: string): Promise<CanonicalRateLimitResult> {
+  const result = await rateLimitWriteAsync(userId)
+  if (!result.success) {
+    const retryAfter = Math.max(1, Math.ceil((result.resetTime - Date.now()) / 1000))
+    // Mirror config shape for error reporting
+    const adapterConfig: RateLimitConfig = {
+      limit: result.limit,
+      window: 60,
+      strategy: 'user',
+      blockDuration: retryAfter,
+    }
+    throw new RateLimitError(adapterConfig, `write:${userId}`, retryAfter)
+  }
+  return result
+}
+
+/**
+ * Adapter: enforce per-user social limit (follow/unfollow) using canonical limiter.
+ * Throws RateLimitError when exceeded.
+ */
+export async function enforceUserSocialLimit(userId: string): Promise<CanonicalRateLimitResult> {
+  // Social limiter is synchronous in canonical module (with in-memory fallback),
+  // but production uses Upstash-backed limiter under the hood.
+  const result = rateLimitSocial(userId)
+  if (!result.success) {
+    const retryAfter = Math.max(1, Math.ceil((result.resetTime - Date.now()) / 1000))
+    const adapterConfig: RateLimitConfig = {
+      limit: result.limit,
+      window: 60,
+      strategy: 'user',
+      blockDuration: retryAfter,
+    }
+    throw new RateLimitError(adapterConfig, `social:${userId}`, retryAfter)
+  }
+  return result
 }
 
 /**
@@ -311,15 +364,20 @@ export function withRateLimit<T extends any[]>(
 
     // Add rate limit headers to response
     const response = await handler(...args)
-
-    if (response && typeof response === 'object' && 'headers' in response) {
-      response.headers.set('X-RateLimit-Limit', config.limit.toString())
-      response.headers.set('X-RateLimit-Remaining', rateLimitResult.remaining.toString())
-      response.headers.set('X-RateLimit-Reset', rateLimitResult.resetTime.toString())
-      response.headers.set('Retry-After', rateLimitResult.resetTime.toString())
+    try {
+      // Apply consistent headers when possible
+      if (response instanceof Response) {
+        return applyRateLimitHeaders(response, {
+          success: true,
+          limit: config.limit,
+          remaining: rateLimitResult.remaining,
+          resetTime: rateLimitResult.resetTime,
+        })
+      }
+      return response
+    } catch {
+      return response
     }
-
-    return response
   }
 }
 

@@ -6,6 +6,10 @@ import HeroSection from '@/components/home/sections/HeroSection';
 
 // Lazy load non-critical sections
 // Hero loads immediately for good FCP, rest loads as user scrolls
+const WhatCanYouDoSection = dynamic(() => import('@/components/home/sections/WhatCanYouDoSection'), {
+  loading: () => <div className="h-96 bg-gradient-to-br from-gray-50 via-white to-gray-50 animate-pulse" />,
+});
+
 const ProofSection = dynamic(() => import('@/components/home/sections/ProofSection'), {
   loading: () => <div className="h-96 bg-gray-50 animate-pulse" />,
 });
@@ -41,6 +45,10 @@ export default function HomePublicClient() {
       <HeroSection />
 
       {/* Below-fold sections - lazy loaded */}
+      <Suspense fallback={<div className="h-96 bg-gradient-to-br from-gray-50 via-white to-gray-50 animate-pulse" />}>
+        <WhatCanYouDoSection />
+      </Suspense>
+
       <Suspense fallback={<div className="h-96 bg-gray-50 animate-pulse" />}>
         <ProofSection />
       </Suspense>

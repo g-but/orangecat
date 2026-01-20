@@ -29,7 +29,7 @@ import {
 import { compose } from '@/lib/api/compose';
 import { withZodBody } from '@/lib/api/withZod';
 import { withRequestId } from '@/lib/api/withRequestId';
-import { rateLimitWrite } from '@/lib/rate-limit';
+import { rateLimitWriteAsync, applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { type EntityType, getEntityMetadata } from '@/config/entity-registry';
 
@@ -102,7 +102,7 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
       }
 
       // Rate limiting
-      const rateLimit = rateLimitWrite(user.id);
+      const rateLimit = await rateLimitWriteAsync(user.id);
       if (!rateLimit.success) {
         const retryAfter = Math.ceil((rateLimit.resetTime - Date.now()) / 1000);
         logger.warn(`${meta.name} creation rate limit exceeded`, { userId: user.id });
@@ -116,7 +116,7 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
       if (createEntity) {
         const entity = await createEntity(user.id, ctx.body, supabase);
         logger.info(`${meta.name} created successfully`, { [`${entityType}Id`]: entity.id });
-        return apiSuccess(entity, { status: 201 });
+        return applyRateLimitHeaders(apiSuccess(entity, { status: 201 }), rateLimit as RateLimitResult);
       }
 
       // Default creation: transform data and insert
@@ -213,7 +213,7 @@ export function createEntityPostHandler(config: EntityPostHandlerConfig) {
 
       const createdEntity = entity as { id: string } & Record<string, unknown>;
       logger.info(`${meta.name} created successfully`, { [`${entityType}Id`]: createdEntity.id });
-      return apiSuccess(createdEntity, { status: 201 });
+      return applyRateLimitHeaders(apiSuccess(createdEntity, { status: 201 }), rateLimit as RateLimitResult);
     } catch (error) {
       return handleApiError(error);
     }

@@ -9,7 +9,8 @@ import {
   apiConflict,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
-import { rateLimitSocial } from '@/lib/rate-limit';
+import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { enforceUserSocialLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -20,11 +21,16 @@ async function handleFollow(request: AuthenticatedRequest) {
     const user = request.user;
 
     // Rate limiting check - 10 follows per minute
-    const rateLimitResult = rateLimitSocial(user.id);
-    if (!rateLimitResult.success) {
-      const retryAfter = Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000);
-      logger.warn('Follow rate limit exceeded', { userId: user.id });
-      return apiRateLimited('Too many follow requests. Please slow down.', retryAfter);
+    let rateLimitResult: RateLimitResult;
+    try {
+      rateLimitResult = await enforceUserSocialLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        const retryAfter = e.details?.retryAfter || 60;
+        logger.warn('Follow rate limit exceeded', { userId: user.id });
+        return apiRateLimited('Too many follow requests. Please slow down.', retryAfter);
+      }
+      throw e;
     }
 
     const { following_id } = await request.json();
@@ -87,7 +93,7 @@ async function handleFollow(request: AuthenticatedRequest) {
       followingId: following_id,
     });
 
-    return apiSuccess({ following_id }, { status: 201 });
+    return applyRateLimitHeaders(apiSuccess({ following_id }, { status: 201 }), rateLimitResult);
   } catch (error) {
     logger.error('Unexpected error in POST /api/social/follow', { error });
     return apiInternalError('Internal server error');

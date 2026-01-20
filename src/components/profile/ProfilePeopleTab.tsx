@@ -153,10 +153,10 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
   return (
     <div className="space-y-6">
       {/* Toggle between Followers and Following */}
-      <div className="flex gap-4 border-b border-gray-200">
+      <div className="flex gap-2 sm:gap-4 border-b border-gray-200">
         <button
           onClick={() => setActiveView('followers')}
-          className={`pb-3 px-4 font-medium transition-colors ${
+          className={`pb-2 sm:pb-3 px-2 sm:px-4 text-sm sm:text-base font-medium transition-colors ${
             activeView === 'followers'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-900'
@@ -166,7 +166,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
         </button>
         <button
           onClick={() => setActiveView('following')}
-          className={`pb-3 px-4 font-medium transition-colors ${
+          className={`pb-2 sm:pb-3 px-2 sm:px-4 text-sm sm:text-base font-medium transition-colors ${
             activeView === 'following'
               ? 'text-orange-600 border-b-2 border-orange-600'
               : 'text-gray-600 hover:text-gray-900'
@@ -197,7 +197,7 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
 
       {/* People List */}
       {hasConnections && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4">
           {currentList.map(person => {
             // Skip if no username or id
             if (!person.username || !person.id) {
@@ -209,25 +209,25 @@ export default function ProfilePeopleTab({ profile, isOwnProfile }: ProfilePeopl
               <Link
                 key={person.id}
                 href={`/profiles/${person.username}`}
-                className="flex items-start gap-4 p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all"
+                className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg border border-gray-200 hover:border-orange-300 hover:shadow-md transition-all"
               >
                 {person.avatar_url ? (
                   <Image
                     src={person.avatar_url}
                     alt={person.name || person.username}
-                    width={48}
-                    height={48}
-                    className="rounded-lg object-cover flex-shrink-0"
+                    width={40}
+                    height={40}
+                    className="rounded-lg object-cover flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12"
                   />
                 ) : (
-                  <DefaultAvatar size={48} className="rounded-lg flex-shrink-0" />
+                  <DefaultAvatar size={40} className="rounded-lg flex-shrink-0 sm:!w-12 sm:!h-12" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900 truncate">
+                  <h4 className="font-semibold text-gray-900 truncate text-sm sm:text-base">
                     {person.name || person.username}
                   </h4>
-                  <p className="text-sm text-gray-600 mb-1">@{person.username}</p>
-                  {person.bio && <p className="text-sm text-gray-600 line-clamp-2">{person.bio}</p>}
+                  <p className="text-xs sm:text-sm text-gray-600 mb-1">@{person.username}</p>
+                  {person.bio && <p className="text-xs sm:text-sm text-gray-600 line-clamp-1 sm:line-clamp-2">{person.bio}</p>}
                 </div>
               </Link>
             );

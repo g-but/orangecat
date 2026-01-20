@@ -1,7 +1,25 @@
 # OrangeCat Development Guide for Claude Code
 
-**Last Updated:** 2026-01-07
-**Version:** 5.1 - Agentic & Tool-Driven Development
+**Last Updated:** 2026-01-20
+**Version:** 5.2 - Agentic & Tool-Driven Development
+
+---
+
+## ⚠️ CRITICAL: Project Location
+
+**Project Path**: `/home/g/dev/orangecat`
+
+**User's projects folder**: `/home/g/dev/`
+
+When user says "orangecat" - ALWAYS go to `/home/g/dev/orangecat`. Do NOT search elsewhere.
+
+**Quick start**:
+```bash
+cd /home/g/dev/orangecat
+npm run dev -- -p 3020  # Runs on port 3020 to avoid conflicts
+```
+
+---
 
 > **🎯 Mission**: Maximize Claude's agentic power through automated workflows, intelligent tool usage, and self-correcting systems.
 

@@ -45,6 +45,16 @@ describe('auth smoke', () => {
             auth: {
               getUser: jest.fn().mockResolvedValue({ data: { user: { id: '123' } } }),
             },
+            from: jest.fn().mockReturnValue({
+              select: jest.fn().mockReturnValue({
+                eq: jest.fn().mockReturnValue({
+                  single: jest.fn().mockResolvedValue({
+                    data: { onboarding_completed: true },
+                    error: null,
+                  }),
+                }),
+              }),
+            }),
           }),
       }))
 

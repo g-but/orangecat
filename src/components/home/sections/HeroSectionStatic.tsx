@@ -32,21 +32,20 @@ export default function HeroSectionStatic() {
 
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-4 sm:mb-6">
-              Fund People. Support Projects.{' '}
+              The Bitcoin Super-App.{' '}
               <span className="bg-gradient-to-r from-bitcoinOrange to-orange-600 bg-clip-text text-transparent">
-                Total Transparency.
+                Everything in One Place.
               </span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 leading-relaxed mb-3 sm:mb-4">
-              Support creators directly with Bitcoin, or fund their specific projects. All transactions visible. Zero fees.
+              Sell products. Offer services. Fund projects. Connect communities. Build with AI. All powered by Bitcoin.
             </p>
 
             {/* Supporting text */}
             <p className="text-base sm:text-lg text-gray-600 leading-relaxed mb-6 sm:mb-8">
-              Create your profile. Add projects. Link your Bitcoin wallet.
-              Receive support from people who believe in your work. Show how you spend it.
+              Commerce, finance, community, and AI—unified in one platform. Whether you're a creator, entrepreneur, or community builder, OrangeCat has the tools you need.
             </p>
 
             {/* CTA Buttons */}
@@ -68,7 +67,7 @@ export default function HeroSectionStatic() {
                   className="w-full sm:w-auto text-base sm:text-lg px-6 sm:px-8 py-3 sm:py-4 min-h-[48px] sm:min-h-[56px] border-2 border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200"
                 >
                   <Bitcoin className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
-                  Start Your Project
+                  Get Started Free
                 </Button>
               </Link>
             </div>

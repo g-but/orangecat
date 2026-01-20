@@ -13,7 +13,8 @@ import { withZodBody } from '@/lib/api/withZod';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
 import { getPagination, getString } from '@/lib/api/query';
-import { rateLimitWrite } from '@/lib/rate-limit';
+import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
+import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
 import { ResearchEntityCreate } from '@/types/research';
@@ -116,11 +117,16 @@ export const POST = compose(
     }
 
     // Rate limit check
-    const rl = rateLimitWrite(user.id);
-    if (!rl.success) {
-      const retryAfter = Math.ceil((rl.resetTime - Date.now()) / 1000);
-      logger.warn('Research entity creation rate limit exceeded', { userId: user.id });
-      return apiRateLimited('Too many creation requests. Please slow down.', retryAfter);
+    let rl: RateLimitResult;
+    try {
+      rl = await enforceUserWriteLimit(user.id);
+    } catch (e) {
+      if (e instanceof RateLimitError) {
+        const retryAfter = e.details?.retryAfter || 60;
+        logger.warn('Research entity creation rate limit exceeded', { userId: user.id });
+        return apiRateLimited('Too many creation requests. Please slow down.', retryAfter);
+      }
+      throw e;
     }
 
     // Check user limit (max 10 research entities per user)
@@ -259,7 +265,7 @@ export const POST = compose(
         walletAddress: walletAddress,
       });
 
-      return apiSuccess(researchEntity, { status: 201 });
+      return applyRateLimitHeaders(apiSuccess(researchEntity, { status: 201 }), rl);
     } catch (insertError) {
       logger.error('Supabase insert threw exception', {
         message: (insertError as Error).message,
