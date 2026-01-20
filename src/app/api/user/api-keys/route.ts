@@ -11,7 +11,9 @@ import { createApiKeyService } from '@/services/ai/api-key-service';
 import { z } from 'zod';
 
 const addKeySchema = z.object({
-  provider: z.enum(['openrouter']).default('openrouter'),
+  provider: z
+    .enum(['openrouter', 'anthropic', 'openai', 'google', 'xai', 'groq', 'together', 'deepseek'])
+    .default('openrouter'),
   keyName: z.string().min(1).max(50).default('Default'),
   apiKey: z.string().min(10).max(500),
   isPrimary: z.boolean().default(true),
