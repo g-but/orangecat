@@ -25,7 +25,7 @@ import {
 } from '@/config/ai-models';
 import { createAutoRouter } from '@/services/ai/auto-router';
 import { createApiKeyService } from '@/services/ai/api-key-service';
-import { fetchDocumentsForCat, buildDocumentContextString } from '@/services/ai/document-context';
+import { fetchFullContextForCat, buildFullContextString } from '@/services/ai/document-context';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { OPENROUTER_KEY_HEADER } from '@/config/http-headers';
@@ -338,13 +338,13 @@ export async function POST(request: NextRequest) {
       modelToUse = DEFAULT_FREE_MODEL_ID;
     }
 
-    // Fetch user's documents for personalized context
-    const userDocuments = await fetchDocumentsForCat(supabase, user.id);
-    const documentContext = buildDocumentContextString(userDocuments);
+    // Fetch comprehensive user context for personalized advice
+    const userContext = await fetchFullContextForCat(supabase, user.id);
+    const contextString = buildFullContextString(userContext);
 
-    // Build system prompt with document context if available
-    const systemPromptWithContext = documentContext
-      ? `${SYSTEM_PROMPT}\n\n${documentContext}`
+    // Build system prompt with full user context if available
+    const systemPromptWithContext = contextString
+      ? `${SYSTEM_PROMPT}\n\n${contextString}`
       : SYSTEM_PROMPT;
 
     // Build request with system prompt + few-shot examples for better compliance
@@ -360,7 +360,7 @@ export async function POST(request: NextRequest) {
       openrouter = hasByok
         ? createOpenRouterServiceWithByok(userApiKey as string)
         : createOpenRouterService();
-    } catch (_error) {
+    } catch {
       // No platform API key configured and user doesn't have BYOK
       return NextResponse.json(
         {
@@ -427,7 +427,7 @@ export async function POST(request: NextRequest) {
             if (!hasByok && usage?.totalTokens) {
               await keyService.incrementPlatformUsage(user.id, 1, usage.totalTokens);
             }
-          } catch (_err) {
+          } catch {
             controller.enqueue(encoder.encode(`event: error\n`));
             controller.enqueue(
               encoder.encode(`data: ${JSON.stringify({ error: 'stream_error' })}\n\n`)
