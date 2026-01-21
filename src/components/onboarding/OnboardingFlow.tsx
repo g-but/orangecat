@@ -101,7 +101,26 @@ export function OnboardingFlow() {
   const [completingOnboarding, setCompletingOnboarding] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, profile, hydrated, isLoading } = useAuth();
+
+  // Check if onboarding is already completed - redirect to dashboard if so
+  // This prevents the onboarding flow from showing again after skip or completion
+  useEffect(() => {
+    if (hydrated && !isLoading) {
+      // Check database flag from profile
+      const onboardingCompleted = profile && (profile as { onboarding_completed?: boolean }).onboarding_completed;
+
+      // Check localStorage fallback (in case DB update failed during skip)
+      const skippedViaLocalStorage = typeof window !== 'undefined' && user?.id &&
+        localStorage.getItem(`onboarding_skipped_${user.id}`) === 'true';
+
+      if (onboardingCompleted || skippedViaLocalStorage) {
+        // User has already completed or skipped onboarding, redirect to dashboard
+        router.replace('/dashboard');
+        return;
+      }
+    }
+  }, [hydrated, isLoading, profile, user?.id, router]);
 
   // Load saved progress on mount
   useEffect(() => {
@@ -444,6 +463,11 @@ export function OnboardingFlow() {
     // Clear saved progress since user is skipping
     clearProgress();
 
+    // Set localStorage flag to prevent showing onboarding again (fallback if DB fails)
+    if (typeof window !== 'undefined' && user?.id) {
+      localStorage.setItem(`onboarding_skipped_${user.id}`, 'true');
+    }
+
     // Mark onboarding as completed so user doesn't see it again
     if (user?.id) {
       try {
@@ -452,7 +476,7 @@ export function OnboardingFlow() {
         });
       } catch (error) {
         console.error('Failed to mark onboarding as skipped:', error);
-        // Continue anyway - analytics event was sent
+        // Continue anyway - localStorage fallback + analytics event were set
       }
     }
 
