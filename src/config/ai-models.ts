@@ -61,40 +61,7 @@ export interface AIModelMetadata {
 export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
   // ==================== FREE TIER ====================
   // No API cost - rate limited (50-1000/day depending on account)
-
-  'meta-llama/llama-4-maverick:free': {
-    id: 'meta-llama/llama-4-maverick:free',
-    name: 'Llama 4 Maverick (Free)',
-    provider: 'Meta',
-    description: 'Latest Llama 4 model - free tier with rate limits',
-    contextWindow: 128000,
-    maxOutputTokens: 8192,
-    inputCostPer1M: 0,
-    outputCostPer1M: 0,
-    capabilities: ['text', 'streaming'],
-    tier: 'free',
-    recommendedFor: ['general purpose', 'coding', 'analysis'],
-    isAvailable: true,
-    isFree: true,
-    rateLimit: '50-1000/day',
-  },
-
-  'meta-llama/llama-4-scout:free': {
-    id: 'meta-llama/llama-4-scout:free',
-    name: 'Llama 4 Scout (Free)',
-    provider: 'Meta',
-    description: 'Efficient Llama 4 variant - free tier',
-    contextWindow: 128000,
-    maxOutputTokens: 8192,
-    inputCostPer1M: 0,
-    outputCostPer1M: 0,
-    capabilities: ['text', 'streaming'],
-    tier: 'free',
-    recommendedFor: ['quick responses', 'simple tasks'],
-    isAvailable: true,
-    isFree: true,
-    rateLimit: '50-1000/day',
-  },
+  // Updated 2026-01-20 with verified OpenRouter free models
 
   'meta-llama/llama-3.3-70b-instruct:free': {
     id: 'meta-llama/llama-3.3-70b-instruct:free',
@@ -107,7 +74,7 @@ export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
     outputCostPer1M: 0,
     capabilities: ['text', 'streaming'],
     tier: 'free',
-    recommendedFor: ['complex reasoning', 'detailed analysis'],
+    recommendedFor: ['complex reasoning', 'detailed analysis', 'coding'],
     isAvailable: true,
     isFree: true,
     rateLimit: '50-1000/day',
@@ -147,25 +114,8 @@ export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
     rateLimit: '50-1000/day',
   },
 
-  'deepseek/deepseek-chat-v3-0324:free': {
-    id: 'deepseek/deepseek-chat-v3-0324:free',
-    name: 'DeepSeek Chat V3 (Free)',
-    provider: 'DeepSeek',
-    description: 'Powerful Chinese AI model - free tier',
-    contextWindow: 64000,
-    maxOutputTokens: 8192,
-    inputCostPer1M: 0,
-    outputCostPer1M: 0,
-    capabilities: ['text', 'streaming'],
-    tier: 'free',
-    recommendedFor: ['coding', 'math', 'reasoning'],
-    isAvailable: true,
-    isFree: true,
-    rateLimit: '50-1000/day',
-  },
-
-  'deepseek/deepseek-r1:free': {
-    id: 'deepseek/deepseek-r1:free',
+  'deepseek/deepseek-r1-0528:free': {
+    id: 'deepseek/deepseek-r1-0528:free',
     name: 'DeepSeek R1 (Free)',
     provider: 'DeepSeek',
     description: 'Reasoning-focused model - free tier',
@@ -181,18 +131,35 @@ export const AI_MODEL_REGISTRY: Record<string, AIModelMetadata> = {
     rateLimit: '50-1000/day',
   },
 
-  'qwen/qwq-32b:free': {
-    id: 'qwen/qwq-32b:free',
-    name: 'Qwen QWQ 32B (Free)',
+  'mistralai/mistral-small-3.1-24b-instruct:free': {
+    id: 'mistralai/mistral-small-3.1-24b-instruct:free',
+    name: 'Mistral Small 3.1 (Free)',
+    provider: 'Mistral',
+    description: 'Efficient Mistral model - free tier',
+    contextWindow: 128000,
+    maxOutputTokens: 8192,
+    inputCostPer1M: 0,
+    outputCostPer1M: 0,
+    capabilities: ['text', 'streaming'],
+    tier: 'free',
+    recommendedFor: ['coding', 'general purpose', 'fast responses'],
+    isAvailable: true,
+    isFree: true,
+    rateLimit: '50-1000/day',
+  },
+
+  'qwen/qwen3-4b:free': {
+    id: 'qwen/qwen3-4b:free',
+    name: 'Qwen 3 4B (Free)',
     provider: 'Alibaba',
-    description: 'Alibaba reasoning model - free tier',
+    description: 'Lightweight Qwen model - free tier',
     contextWindow: 32000,
     maxOutputTokens: 8192,
     inputCostPer1M: 0,
     outputCostPer1M: 0,
     capabilities: ['text', 'streaming'],
     tier: 'free',
-    recommendedFor: ['reasoning', 'analysis'],
+    recommendedFor: ['quick responses', 'simple tasks'],
     isAvailable: true,
     isFree: true,
     rateLimit: '50-1000/day',
@@ -514,10 +481,10 @@ export function getAllProviders(): string[] {
 // ==================== CONSTANTS ====================
 
 /** Default model for Auto mode fallback (free model) */
-export const DEFAULT_MODEL_ID = 'meta-llama/llama-4-maverick:free';
+export const DEFAULT_MODEL_ID = 'meta-llama/llama-3.3-70b-instruct:free';
 
 /** Default free model for platform usage */
-export const DEFAULT_FREE_MODEL_ID = 'meta-llama/llama-4-maverick:free';
+export const DEFAULT_FREE_MODEL_ID = 'meta-llama/llama-3.3-70b-instruct:free';
 
 /** Default BTC price for cost calculations (updated periodically) */
 export const DEFAULT_BTC_PRICE_USD = 100000;

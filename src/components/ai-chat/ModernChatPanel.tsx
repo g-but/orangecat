@@ -209,14 +209,19 @@ function MessageBubble({ message, isLast }: { message: Message; isLast: boolean 
 
 // ==================== EMPTY STATE ====================
 
-function EmptyState() {
-  const suggestions = [
-    'Help me write a product description',
-    'Explain Bitcoin Lightning Network',
-    'Give me ideas for my crowdfunding project',
-    'How can I improve my service offering?',
-  ];
+interface EmptyStateProps {
+  suggestions: string[];
+  hasContext: boolean;
+  isLoadingSuggestions: boolean;
+  onSuggestionClick: (suggestion: string) => void;
+}
 
+function EmptyState({
+  suggestions,
+  hasContext,
+  isLoadingSuggestions,
+  onSuggestionClick,
+}: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center px-4 py-12">
       <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-400 to-orange-500 flex items-center justify-center mb-6 shadow-lg">
@@ -224,24 +229,66 @@ function EmptyState() {
       </div>
       <h2 className="text-2xl font-semibold text-gray-900 mb-2">Hi, I'm your Cat</h2>
       <p className="text-gray-500 mb-8 max-w-md">
-        I'm here to help with your projects, products, and ideas. Ask me anything — conversations
-        are private and not saved.
+        {hasContext ? (
+          <>
+            I know about your goals and context. Ask me anything — I'll give you personalized
+            advice.
+          </>
+        ) : (
+          <>
+            I'm here to help with your projects, products, and ideas. Ask me anything —
+            conversations are private and not saved.
+          </>
+        )}
       </p>
+      {hasContext && (
+        <p className="text-xs text-tiffany-600 mb-4 flex items-center gap-1">
+          <Sparkles className="h-3 w-3" />
+          Personalized suggestions based on your context
+        </p>
+      )}
       <div className="flex flex-wrap justify-center gap-2 max-w-lg">
-        {suggestions.map((suggestion, i) => (
-          <button
-            key={i}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm text-gray-700 transition-colors"
-          >
-            {suggestion}
-          </button>
-        ))}
+        {isLoadingSuggestions ? (
+          // Loading skeleton for suggestions
+          <>
+            {[1, 2, 3, 4].map(i => (
+              <div
+                key={i}
+                className="h-9 bg-gray-100 rounded-full animate-pulse"
+                style={{ width: `${100 + Math.random() * 80}px` }}
+              />
+            ))}
+          </>
+        ) : (
+          suggestions.map((suggestion, i) => (
+            <button
+              key={i}
+              onClick={() => onSuggestionClick(suggestion)}
+              className={cn(
+                'px-4 py-2 rounded-full text-sm transition-colors text-left',
+                hasContext
+                  ? 'bg-tiffany-50 hover:bg-tiffany-100 text-tiffany-700 border border-tiffany-200'
+                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              )}
+            >
+              {suggestion}
+            </button>
+          ))
+        )}
       </div>
     </div>
   );
 }
 
 // ==================== MAIN COMPONENT ====================
+
+// Default suggestions as fallback
+const DEFAULT_SUGGESTIONS = [
+  'Help me write a product description',
+  'Explain Bitcoin Lightning Network',
+  'Give me ideas for my crowdfunding project',
+  'How can I improve my service offering?',
+];
 
 export function ModernChatPanel() {
   const router = useRouter();
@@ -252,8 +299,36 @@ export function ModernChatPanel() {
   const [error, setError] = useState<string | null>(null);
   const [userStatus, setUserStatus] = useState<UserStatus | null>(null);
 
+  // Context-aware suggestions state
+  const [suggestions, setSuggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
+  const [hasContext, setHasContext] = useState(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Fetch context-aware suggestions on mount
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        const res = await fetch('/api/cat/suggestions');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.data.suggestions) {
+            setSuggestions(data.data.suggestions);
+            setHasContext(data.data.hasContext || false);
+          }
+        }
+      } catch (e) {
+        // Keep default suggestions on error
+        console.error('Failed to fetch suggestions:', e);
+      } finally {
+        setIsLoadingSuggestions(false);
+      }
+    };
+
+    void fetchSuggestions();
+  }, []);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -364,6 +439,92 @@ export function ModernChatPanel() {
     setError(null);
   };
 
+  // Handle suggestion click - directly send the message
+  const sendSuggestion = useCallback(
+    async (suggestion: string) => {
+      if (isLoading) {
+        return;
+      }
+
+      setError(null);
+      setInput('');
+
+      // Add user message
+      const userMessage: Message = {
+        id: `user-${Date.now()}`,
+        role: 'user',
+        content: suggestion,
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, userMessage]);
+      setIsLoading(true);
+
+      // Add placeholder assistant message
+      const assistantId = `assistant-${Date.now()}`;
+      setMessages(prev => [
+        ...prev,
+        {
+          id: assistantId,
+          role: 'assistant',
+          content: '',
+          timestamp: new Date(),
+        },
+      ]);
+
+      try {
+        const res = await fetch('/api/cat/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: suggestion,
+            model: selectedModel !== 'auto' ? selectedModel : undefined,
+            stream: true,
+          }),
+        });
+
+        if (!res.ok || !res.body) {
+          let msg = 'Failed to get response';
+          try {
+            const data = await res.json();
+            msg = data?.details?.message || data?.error || msg;
+          } catch {}
+          throw new Error(msg);
+        }
+
+        let modelUsed = selectedModel;
+
+        await readEventStream(res.body, (json: unknown) => {
+          const event = json as {
+            content?: string;
+            done?: boolean;
+            usage?: unknown;
+            model?: string;
+          };
+          if (event?.content) {
+            setMessages(prev =>
+              prev.map(m =>
+                m.id === assistantId ? { ...m, content: (m.content || '') + event.content } : m
+              )
+            );
+          }
+          if (event?.model) {
+            modelUsed = event.model;
+          }
+        });
+
+        // Update with final model used
+        setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, modelUsed } : m)));
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Something went wrong');
+        // Remove the empty assistant message on error
+        setMessages(prev => prev.filter(m => m.id !== assistantId));
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [isLoading, selectedModel]
+  );
+
   return (
     <div className="flex flex-col h-[calc(100vh-12rem)] sm:h-[calc(100vh-8rem)] bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Header */}
@@ -408,7 +569,12 @@ export function ModernChatPanel() {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto py-4">
         {messages.length === 0 ? (
-          <EmptyState />
+          <EmptyState
+            suggestions={suggestions}
+            hasContext={hasContext}
+            isLoadingSuggestions={isLoadingSuggestions}
+            onSuggestionClick={sendSuggestion}
+          />
         ) : (
           <div className="space-y-4">
             {messages.map((msg, i) => (

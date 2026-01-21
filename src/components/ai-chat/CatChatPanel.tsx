@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { renderMarkdownToReact } from '@/utils/markdown';
 import Button from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/badge';
@@ -671,7 +672,7 @@ export function CatChatPanel() {
                 <div
                   className={`max-w-[75%] px-3 py-2 rounded-2xl text-sm ${m.role === 'user' ? 'bg-orange-500 text-white' : 'bg-white border border-gray-200 text-gray-900'}`}
                 >
-                  <div className="whitespace-pre-wrap">{m.content}</div>
+                  <div className="whitespace-pre-wrap">{renderMarkdownToReact(m.content)}</div>
                 </div>
               </div>
             ))}

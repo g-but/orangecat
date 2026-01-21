@@ -25,6 +25,7 @@ import {
 } from '@/config/ai-models';
 import { createAutoRouter } from '@/services/ai/auto-router';
 import { createApiKeyService } from '@/services/ai/api-key-service';
+import { fetchDocumentsForCat, buildDocumentContextString } from '@/services/ai/document-context';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { OPENROUTER_KEY_HEADER } from '@/config/http-headers';
@@ -34,6 +35,60 @@ const bodySchema = z.object({
   model: z.string().optional(), // 'auto' | model id
   stream: z.boolean().optional(),
 });
+
+/**
+ * System prompt for My Cat - OrangeCat's personal AI agent
+ * Concise with few-shot examples for better model compliance
+ */
+const SYSTEM_PROMPT = `You are My Cat, OrangeCat's AI assistant. OrangeCat is a Bitcoin-powered platform where users create Products, Services, Projects (crowdfunding), Causes, and Events. Payments use Bitcoin/Lightning in satoshis.
+
+CRITICAL RULES:
+- Help users do things HERE on OrangeCat - never recommend other platforms
+- Never cite external websites (no investopedia, indiegogo, etc.)
+- Ask clarifying questions to understand what they really need
+- Give specific, actionable guidance - not generic advice
+- Think from first principles`;
+
+/**
+ * Few-shot examples to demonstrate desired behavior
+ * These are more effective than instructions for smaller models
+ */
+const FEW_SHOT_EXAMPLES: OpenRouterMessage[] = [
+  {
+    role: 'user',
+    content: 'I want to start a crowdfunding campaign for my podcast',
+  },
+  {
+    role: 'assistant',
+    content: `Great! Let's create a Project on OrangeCat for your podcast.
+
+First, help me understand:
+1. What's your podcast about?
+2. What do you need funding for - equipment, production costs, or ongoing support?
+3. Do you have a funding goal in mind (in sats or USD equivalent)?
+
+Once I understand these, I'll help you craft a compelling Project that resonates with potential supporters.`,
+  },
+  {
+    role: 'user',
+    content: 'How do I price my digital products?',
+  },
+  {
+    role: 'assistant',
+    content: `Let's think through pricing from first principles.
+
+Key questions:
+1. What's the product? (ebook, course, template, software?)
+2. Who's your target buyer - Bitcoiners, general audience, professionals?
+3. What problem does it solve for them?
+
+Pricing on OrangeCat is in sats. Common ranges:
+- Small digital goods: 5,000-50,000 sats ($2-20)
+- Courses/premium content: 100,000-500,000 sats ($40-200)
+
+What are you selling? I'll help you think through the right price point.`,
+  },
+];
 
 export async function POST(request: NextRequest) {
   try {
@@ -154,8 +209,21 @@ export async function POST(request: NextRequest) {
       modelToUse = DEFAULT_FREE_MODEL_ID;
     }
 
-    // Build request
-    const messages: OpenRouterMessage[] = [{ role: 'user', content: message }];
+    // Fetch user's documents for personalized context
+    const userDocuments = await fetchDocumentsForCat(supabase, user.id);
+    const documentContext = buildDocumentContextString(userDocuments);
+
+    // Build system prompt with document context if available
+    const systemPromptWithContext = documentContext
+      ? `${SYSTEM_PROMPT}\n\n${documentContext}`
+      : SYSTEM_PROMPT;
+
+    // Build request with system prompt + few-shot examples for better compliance
+    const messages: OpenRouterMessage[] = [
+      { role: 'system', content: systemPromptWithContext },
+      ...FEW_SHOT_EXAMPLES,
+      { role: 'user', content: message },
+    ];
 
     // Check if we can create the OpenRouter service
     let openrouter;

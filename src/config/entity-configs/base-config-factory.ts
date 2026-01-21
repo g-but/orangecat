@@ -10,7 +10,12 @@
  */
 
 import type { LucideIcon } from 'lucide-react';
-import type { EntityConfig, FieldGroup, FieldConfig, GuidanceContent } from '@/components/create/types';
+import type {
+  EntityConfig,
+  FieldGroup,
+  FieldConfig,
+  GuidanceContent,
+} from '@/components/create/types';
 import type { ZodType } from 'zod';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
 
@@ -68,10 +73,7 @@ export const commonFields = {
 /**
  * Create a basic field group with title and description
  */
-export function createBasicInfoGroup(
-  entityName: string,
-  fields: FieldConfig[] = []
-): FieldGroup {
+export function createBasicInfoGroup(entityName: string, fields: FieldConfig[] = []): FieldGroup {
   return {
     id: 'basic',
     title: 'Basic Information',
@@ -97,7 +99,7 @@ export interface BaseConfigOptions<T extends Record<string, any>> {
   /** Entity icon */
   icon: LucideIcon;
   /** Primary color theme */
-  colorTheme: 'orange' | 'tiffany' | 'rose' | 'blue' | 'green' | 'purple';
+  colorTheme: 'orange' | 'tiffany' | 'rose' | 'blue' | 'green' | 'purple' | 'indigo';
   /** Back link URL */
   backUrl: string;
   /** Success redirect URL */
@@ -194,4 +196,3 @@ export function createEntityConfig<T extends Record<string, any>>(
     successRedirectDelay: options.successRedirectDelay,
   };
 }
-

@@ -32,6 +32,7 @@ import {
   Bot,
   Calendar,
   Gift,
+  FileText,
 } from 'lucide-react';
 
 // ==================== ENTITY TYPES ====================
@@ -52,6 +53,7 @@ export const ENTITY_TYPES = [
   'event',
   'research',
   'wishlist',
+  'document',
 ] as const;
 
 export type EntityType = (typeof ENTITY_TYPES)[number];
@@ -61,13 +63,14 @@ export type EntityType = (typeof ENTITY_TYPES)[number];
 /**
  * Entity categories for grouping in UI
  */
-export type EntityCategory = 'gateway' | 'business' | 'community' | 'finance';
+export type EntityCategory = 'gateway' | 'business' | 'community' | 'finance' | 'personal';
 
 export const ENTITY_CATEGORY_ORDER: EntityCategory[] = [
   'gateway',
   'business',
   'community',
   'finance',
+  'personal',
 ];
 
 // ==================== ENTITY METADATA ====================
@@ -303,7 +306,8 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createPath: '/dashboard/research/create',
     apiEndpoint: '/api/research',
     hasTemplates: true,
-    description: 'Independent research topics with decentralized funding (e.g., Dark Matter, Climate Science)',
+    description:
+      'Independent research topics with decentralized funding (e.g., Dark Matter, Climate Science)',
     createActionLabel: 'Fund a research topic',
     category: 'business',
     createPriority: 6,
@@ -326,6 +330,25 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     createActionLabel: 'Create a wishlist',
     category: 'business',
     createPriority: 7,
+  },
+
+  // ==================== PERSONAL (My Cat Context) ====================
+  document: {
+    type: 'document',
+    name: 'Document',
+    namePlural: 'Documents',
+    tableName: 'user_documents',
+    userIdField: 'actor_id',
+    icon: FileText,
+    colorTheme: 'indigo',
+    basePath: '/dashboard/documents',
+    createPath: '/dashboard/documents/create',
+    apiEndpoint: '/api/documents',
+    hasTemplates: false,
+    description: 'Personal context for My Cat - goals, skills, notes',
+    createActionLabel: 'Add context for My Cat',
+    category: 'personal',
+    createPriority: 1,
   },
 };
 
@@ -437,6 +460,7 @@ export function getEntitiesByCategory(): Record<EntityCategory, EntityMetadata[]
     business: [],
     community: [],
     finance: [],
+    personal: [],
   };
 
   ENTITY_TYPES.forEach(type => {
