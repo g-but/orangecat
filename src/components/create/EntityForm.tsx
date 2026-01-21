@@ -149,8 +149,23 @@ export function EntityForm<T extends Record<string, any>>({
   }, [initialValues, config.defaultValues]);
 
   // Load draft on mount (only in create mode, not edit mode)
+  // Skip draft loading if initialValues has meaningful content (e.g., from URL params/Cat actions)
   useEffect(() => {
     if (mode === 'edit' || !user?.id) {
+      return;
+    }
+
+    // If initialValues has meaningful content (title or description), skip draft loading
+    // This ensures URL params from Cat action buttons take priority over saved drafts
+    const hasInitialContent =
+      initialValues &&
+      (('title' in initialValues && initialValues.title) ||
+        ('description' in initialValues && initialValues.description));
+
+    if (hasInitialContent) {
+      // Clear any existing draft since user is starting fresh with prefilled data
+      const draftKey = `${config.type}-draft-${user.id}`;
+      localStorage.removeItem(draftKey);
       return;
     }
 
@@ -180,7 +195,7 @@ export function EntityForm<T extends Record<string, any>>({
         localStorage.removeItem(draftKey);
       }
     }
-  }, [config.type, user?.id, mode]);
+  }, [config.type, user?.id, mode, initialValues]);
 
   // Auto-save draft every 10 seconds (only in create mode)
   useEffect(() => {
