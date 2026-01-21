@@ -17,9 +17,27 @@ import {
   Trash2,
   AlertCircle,
   Key,
+  Plus,
+  Package,
+  Briefcase,
+  Rocket,
+  Heart,
+  Calendar,
 } from 'lucide-react';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 // ==================== TYPES ====================
+
+interface SuggestedAction {
+  type: 'create_entity';
+  entityType: 'product' | 'service' | 'project' | 'cause' | 'event';
+  prefill: {
+    title: string;
+    description?: string;
+    category?: string;
+    [key: string]: unknown;
+  };
+}
 
 interface Message {
   id: string;
@@ -27,6 +45,7 @@ interface Message {
   content: string;
   timestamp: Date;
   modelUsed?: string;
+  actions?: SuggestedAction[];
 }
 
 interface UserStatus {
@@ -143,10 +162,55 @@ function ModelSelector({
   );
 }
 
+// ==================== ACTION BUTTON ====================
+
+const ENTITY_ICONS: Record<string, React.ElementType> = {
+  product: Package,
+  service: Briefcase,
+  project: Rocket,
+  cause: Heart,
+  event: Calendar,
+};
+
+function ActionButton({ action, onClick }: { action: SuggestedAction; onClick: () => void }) {
+  const Icon = ENTITY_ICONS[action.entityType] || Plus;
+  const entityMeta = ENTITY_REGISTRY[action.entityType];
+  const entityName = entityMeta?.name || action.entityType;
+
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-2 px-4 py-2.5 rounded-xl',
+        'bg-gradient-to-r from-tiffany-500 to-tiffany-600 hover:from-tiffany-600 hover:to-tiffany-700',
+        'text-white font-medium text-sm shadow-md hover:shadow-lg',
+        'transition-all transform hover:scale-[1.02]'
+      )}
+    >
+      <Plus className="h-4 w-4" />
+      <Icon className="h-4 w-4" />
+      <span>
+        Create {entityName}: {action.prefill.title}
+      </span>
+    </button>
+  );
+}
+
 // ==================== MESSAGE BUBBLE ====================
 
-function MessageBubble({ message, isLast }: { message: Message; isLast: boolean }) {
+function MessageBubble({
+  message,
+  isLast,
+  onActionClick,
+}: {
+  message: Message;
+  isLast: boolean;
+  onActionClick?: (action: SuggestedAction) => void;
+}) {
   const isUser = message.role === 'user';
+
+  // Clean the message content by removing action blocks for display
+  const displayContent = message.content.replace(/```action[\s\S]*?```/g, '').trim();
 
   return (
     <div
@@ -177,8 +241,8 @@ function MessageBubble({ message, isLast }: { message: Message; isLast: boolean 
           )}
         >
           <div className="whitespace-pre-wrap break-words text-[15px] leading-relaxed">
-            {message.content}
-            {isLast && !isUser && !message.content && (
+            {displayContent}
+            {isLast && !isUser && !displayContent && (
               <span className="inline-flex items-center gap-1">
                 <span
                   className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
@@ -196,8 +260,18 @@ function MessageBubble({ message, isLast }: { message: Message; isLast: boolean 
             )}
           </div>
         </div>
+
+        {/* Action buttons */}
+        {!isUser && message.actions && message.actions.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {message.actions.map((action, idx) => (
+              <ActionButton key={idx} action={action} onClick={() => onActionClick?.(action)} />
+            ))}
+          </div>
+        )}
+
         {/* Model used indicator */}
-        {!isUser && message.modelUsed && message.content && (
+        {!isUser && message.modelUsed && displayContent && (
           <div className="text-xs text-gray-400 mt-1">
             {AI_MODEL_REGISTRY[message.modelUsed]?.name || message.modelUsed}
           </div>
@@ -401,9 +475,16 @@ export function ModernChatPanel() {
       }
 
       let modelUsed = selectedModel;
+      let actions: SuggestedAction[] | undefined;
 
       await readEventStream(res.body, (json: unknown) => {
-        const event = json as { content?: string; done?: boolean; usage?: unknown; model?: string };
+        const event = json as {
+          content?: string;
+          done?: boolean;
+          usage?: unknown;
+          model?: string;
+          actions?: SuggestedAction[];
+        };
         if (event?.content) {
           setMessages(prev =>
             prev.map(m =>
@@ -414,10 +495,13 @@ export function ModernChatPanel() {
         if (event?.model) {
           modelUsed = event.model;
         }
+        if (event?.actions) {
+          actions = event.actions;
+        }
       });
 
-      // Update with final model used
-      setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, modelUsed } : m)));
+      // Update with final model used and actions
+      setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, modelUsed, actions } : m)));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Something went wrong');
       // Remove the empty assistant message on error
@@ -438,6 +522,38 @@ export function ModernChatPanel() {
     setMessages([]);
     setError(null);
   };
+
+  // Handle action button clicks - navigate to prefilled entity creation
+  const handleActionClick = useCallback(
+    (action: SuggestedAction) => {
+      if (action.type === 'create_entity') {
+        const entityMeta = ENTITY_REGISTRY[action.entityType];
+        if (entityMeta?.createPath) {
+          // Encode prefill data as URL params
+          const prefillParams = new URLSearchParams();
+          if (action.prefill.title) {
+            prefillParams.set('title', action.prefill.title);
+          }
+          if (action.prefill.description) {
+            prefillParams.set('description', action.prefill.description);
+          }
+          if (action.prefill.category) {
+            prefillParams.set('category', action.prefill.category);
+          }
+          // Add any other prefill fields
+          Object.entries(action.prefill).forEach(([key, value]) => {
+            if (!['title', 'description', 'category'].includes(key) && value) {
+              prefillParams.set(key, String(value));
+            }
+          });
+
+          const url = `${entityMeta.createPath}?${prefillParams.toString()}`;
+          router.push(url);
+        }
+      }
+    },
+    [router]
+  );
 
   // Handle suggestion click - directly send the message
   const sendSuggestion = useCallback(
@@ -492,6 +608,7 @@ export function ModernChatPanel() {
         }
 
         let modelUsed = selectedModel;
+        let actions: SuggestedAction[] | undefined;
 
         await readEventStream(res.body, (json: unknown) => {
           const event = json as {
@@ -499,6 +616,7 @@ export function ModernChatPanel() {
             done?: boolean;
             usage?: unknown;
             model?: string;
+            actions?: SuggestedAction[];
           };
           if (event?.content) {
             setMessages(prev =>
@@ -510,10 +628,15 @@ export function ModernChatPanel() {
           if (event?.model) {
             modelUsed = event.model;
           }
+          if (event?.actions) {
+            actions = event.actions;
+          }
         });
 
-        // Update with final model used
-        setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, modelUsed } : m)));
+        // Update with final model used and actions
+        setMessages(prev =>
+          prev.map(m => (m.id === assistantId ? { ...m, modelUsed, actions } : m))
+        );
       } catch (e) {
         setError(e instanceof Error ? e.message : 'Something went wrong');
         // Remove the empty assistant message on error
@@ -578,7 +701,12 @@ export function ModernChatPanel() {
         ) : (
           <div className="space-y-4">
             {messages.map((msg, i) => (
-              <MessageBubble key={msg.id} message={msg} isLast={i === messages.length - 1} />
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                isLast={i === messages.length - 1}
+                onActionClick={handleActionClick}
+              />
             ))}
             <div ref={messagesEndRef} />
           </div>
