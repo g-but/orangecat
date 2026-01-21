@@ -25,6 +25,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { PendingActionsCard, usePendingActions } from './PendingActionsCard';
 
 // ==================== TYPES ====================
 
@@ -52,6 +53,15 @@ interface UserStatus {
   hasByok: boolean;
   freeMessagesPerDay: number;
   freeMessagesRemaining: number;
+}
+
+interface PendingAction {
+  id: string;
+  actionId: string;
+  category: string;
+  parameters: Record<string, unknown>;
+  description: string;
+  expiresAt: string;
 }
 
 // ==================== MODEL SELECTOR ====================
@@ -371,12 +381,16 @@ export function ModernChatPanel() {
   const [selectedModel, setSelectedModel] = useState('auto');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [userStatus, setUserStatus] = useState<UserStatus | null>(null);
+  const [_userStatus, _setUserStatus] = useState<UserStatus | null>(null);
 
   // Context-aware suggestions state
   const [suggestions, setSuggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
   const [hasContext, setHasContext] = useState(false);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(true);
+
+  // Pending actions state
+  const [pendingActions, setPendingActions] = useState<PendingAction[]>([]);
+  const { confirmAction, rejectAction, getPendingActions } = usePendingActions();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -403,6 +417,66 @@ export function ModernChatPanel() {
 
     void fetchSuggestions();
   }, []);
+
+  // Fetch pending actions on mount and periodically
+  useEffect(() => {
+    const fetchPendingActions = async () => {
+      try {
+        const actions = await getPendingActions();
+        setPendingActions(actions);
+      } catch (e) {
+        console.error('Failed to fetch pending actions:', e);
+      }
+    };
+
+    void fetchPendingActions();
+    // Poll for new pending actions every 30 seconds
+    const interval = setInterval(fetchPendingActions, 30000);
+    return () => clearInterval(interval);
+  }, [getPendingActions]);
+
+  // Handle pending action confirmation
+  const handleConfirmAction = useCallback(
+    async (actionId: string) => {
+      try {
+        const result = await confirmAction(actionId);
+        if (result.success) {
+          // Remove from local state
+          setPendingActions(prev => prev.filter(a => a.id !== actionId));
+          // Add a system message about the completed action
+          const action = pendingActions.find(a => a.id === actionId);
+          if (action) {
+            setMessages(prev => [
+              ...prev,
+              {
+                id: `system-${Date.now()}`,
+                role: 'assistant',
+                content: `✅ Action completed: ${action.description}`,
+                timestamp: new Date(),
+              },
+            ]);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to confirm action:', e);
+      }
+    },
+    [confirmAction, pendingActions]
+  );
+
+  // Handle pending action rejection
+  const handleRejectAction = useCallback(
+    async (actionId: string) => {
+      try {
+        await rejectAction(actionId);
+        // Remove from local state
+        setPendingActions(prev => prev.filter(a => a.id !== actionId));
+      } catch (e) {
+        console.error('Failed to reject action:', e);
+      }
+    },
+    [rejectAction]
+  );
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -704,10 +778,25 @@ export function ModernChatPanel() {
               <MessageBubble
                 key={msg.id}
                 message={msg}
-                isLast={i === messages.length - 1}
+                isLast={i === messages.length - 1 && pendingActions.length === 0}
                 onActionClick={handleActionClick}
               />
             ))}
+
+            {/* Pending Actions */}
+            {pendingActions.length > 0 && (
+              <div className="max-w-3xl mx-auto px-4 space-y-3">
+                {pendingActions.map(action => (
+                  <PendingActionsCard
+                    key={action.id}
+                    action={action}
+                    onConfirm={handleConfirmAction}
+                    onReject={handleRejectAction}
+                  />
+                ))}
+              </div>
+            )}
+
             <div ref={messagesEndRef} />
           </div>
         )}
