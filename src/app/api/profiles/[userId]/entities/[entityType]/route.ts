@@ -12,22 +12,34 @@ import { createServerClient } from '@/lib/supabase/server';
 import { NextRequest } from 'next/server';
 import { apiSuccess, apiInternalError, apiBadRequest } from '@/lib/api/standardResponse';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
-import { getTableName, isValidEntityType, EntityType, getEntityMetadata } from '@/config/entity-registry';
+import {
+  getTableName,
+  isValidEntityType,
+  EntityType,
+  getEntityMetadata,
+} from '@/config/entity-registry';
 
 // Entity-specific column selections for optimal queries
 const ENTITY_COLUMNS: Record<EntityType, string> = {
-  project: 'id, title, description, category, tags, status, bitcoin_address, lightning_address, goal_amount, currency, raised_amount, bitcoin_balance_btc, created_at, updated_at, thumbnail_url',
+  project:
+    'id, title, description, category, tags, status, bitcoin_address, lightning_address, goal_amount, currency, raised_amount, bitcoin_balance_btc, created_at, updated_at, thumbnail_url',
   product: 'id, title, description, category, price, currency, status, images, created_at',
-  service: 'id, title, description, category, pricing_type, hourly_rate, fixed_price, currency, status, created_at',
+  service:
+    'id, title, description, category, pricing_type, hourly_rate, fixed_price, currency, status, created_at',
   cause: 'id, title, description, category, goal_amount, currency, status, created_at',
   ai_assistant: 'id, title, description, category, pricing_model, status, avatar_url, created_at',
-  asset: 'id, title, description, type, estimated_value, currency, verification_status, status, created_at',
+  asset:
+    'id, title, description, type, estimated_value, currency, verification_status, status, created_at',
   loan: 'id, title, description, original_amount, remaining_balance, interest_rate, currency, status, created_at',
-  event: 'id, title, description, event_type, category, start_date, end_date, venue_name, venue_city, is_online, status, ticket_price, is_free, currency, created_at',
+  event:
+    'id, title, description, event_type, category, start_date, end_date, venue_name, venue_city, is_online, status, ticket_price, is_free, currency, created_at',
   wallet: 'id, label, wallet_type, address, is_active, created_at',
   group: 'id, name, slug, description, is_public, created_at',
-  research: 'id, title, description, field, methodology, expected_outcome, funding_goal_sats, current_funding_sats, status, created_at',
-  wishlist: 'id, title, description, type, visibility, is_active, event_date, cover_image_url, created_at',
+  research:
+    'id, title, description, field, methodology, expected_outcome, funding_goal_sats, current_funding_sats, status, created_at',
+  wishlist:
+    'id, title, description, type, visibility, is_active, event_date, cover_image_url, created_at',
+  document: 'id, title, content, document_type, visibility, tags, created_at',
 };
 
 // Entities that should filter by user_id
@@ -44,10 +56,11 @@ const USER_ID_FIELD: Record<EntityType, string> = {
   group: 'owner_id',
   research: 'user_id',
   wishlist: 'actor_id',
+  document: 'actor_id',
 };
 
-// Entities that shouldn't appear on profile (e.g., groups have their own pages)
-const EXCLUDED_ENTITY_TYPES: EntityType[] = ['wallet', 'group'];
+// Entities that shouldn't appear on profile (e.g., groups have their own pages, documents are personal)
+const EXCLUDED_ENTITY_TYPES: EntityType[] = ['wallet', 'group', 'document'];
 
 export async function GET(
   request: NextRequest,

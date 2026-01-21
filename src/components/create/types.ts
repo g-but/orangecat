@@ -73,10 +73,12 @@ export interface FieldConfig {
     value: string | string[] | boolean;
   };
   /** Field depends on another field's value */
-  dependsOn?: string | {
-    field: string;
-    value?: string | string[] | boolean;
-  };
+  dependsOn?:
+    | string
+    | {
+        field: string;
+        value?: string | string[] | boolean;
+      };
   /** Default value for the field */
   defaultValue?: unknown;
   /** Field grouping */
@@ -141,7 +143,21 @@ export interface DefaultGuidance {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface EntityConfig<T extends Record<string, any> = Record<string, any>> {
   /** Entity type identifier */
-  type: 'product' | 'service' | 'cause' | 'loan' | 'circle' | 'project' | 'asset' | 'organization' | 'ai_assistant' | 'event' | 'group' | 'wishlist' | 'research';
+  type:
+    | 'product'
+    | 'service'
+    | 'cause'
+    | 'loan'
+    | 'project'
+    | 'asset'
+    | 'ai_assistant'
+    | 'event'
+    | 'group'
+    | 'wishlist'
+    | 'research'
+    | 'wallet'
+    | 'document'
+    | 'organization';
   /** Display name (singular) */
   name: string;
   /** Display name (plural) */
@@ -149,7 +165,7 @@ export interface EntityConfig<T extends Record<string, any> = Record<string, any
   /** Entity icon */
   icon: LucideIcon;
   /** Primary color theme */
-  colorTheme: 'orange' | 'tiffany' | 'rose' | 'blue' | 'green' | 'purple';
+  colorTheme: 'orange' | 'tiffany' | 'rose' | 'blue' | 'green' | 'purple' | 'indigo';
   /** Back link URL */
   backUrl: string;
   /** API endpoint for CRUD */
@@ -294,5 +310,71 @@ export interface UseTemplateSelectionReturn<T extends Record<string, unknown>> {
   hasTemplateSelected: boolean;
 }
 
+// ==================== AI PREFILL TYPES ====================
 
+/**
+ * Request body for AI form prefill
+ */
+export interface AIPrefillRequest {
+  /** Entity type to generate fields for */
+  entityType: string;
+  /** User's natural language description */
+  description: string;
+  /** Any fields already filled (to preserve user input) */
+  existingData?: Record<string, unknown>;
+}
 
+/**
+ * Confidence score for an AI-generated field (0-1)
+ */
+export type FieldConfidence = number;
+
+/**
+ * Response from AI form prefill
+ */
+export interface AIPrefillResponse {
+  /** Whether the prefill was successful */
+  success: boolean;
+  /** Generated field values */
+  data: Record<string, unknown>;
+  /** Confidence scores for each generated field (0-1) */
+  confidence: Record<string, FieldConfidence>;
+  /** Optional error message if unsuccessful */
+  error?: string;
+}
+
+/**
+ * Tracks which fields were AI-generated for visual indication
+ */
+export interface AIGeneratedFields {
+  /** Set of field names that were AI-generated */
+  fields: Set<string>;
+  /** Confidence levels for each field */
+  confidence: Record<string, FieldConfidence>;
+}
+
+/**
+ * Props for the AI prefill button component
+ */
+export interface AIPrefillButtonProps {
+  /** Entity type being created */
+  entityType: string;
+  /** Callback when AI generates field values */
+  onPrefill: (data: Record<string, unknown>, confidence: Record<string, FieldConfidence>) => void;
+  /** Whether form is currently submitting */
+  disabled?: boolean;
+  /** Existing form data (to preserve user input) */
+  existingData?: Record<string, unknown>;
+}
+
+/**
+ * State for AI prefill in entity form
+ */
+export interface AIPrefillState {
+  /** Whether AI prefill is in progress */
+  isGenerating: boolean;
+  /** Fields that were AI-generated */
+  aiGeneratedFields: AIGeneratedFields;
+  /** Last error if any */
+  error?: string;
+}

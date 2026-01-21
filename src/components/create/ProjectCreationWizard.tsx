@@ -26,7 +26,10 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { projectConfig } from '@/config/entity-configs/project-config';
 import { EntityForm } from './EntityForm';
+import { WizardTemplatePicker } from './templates/WizardTemplatePicker';
+import { PROJECT_TEMPLATES } from './templates';
 import type { ProjectData } from '@/lib/validation';
+import type { EntityTemplate } from './types';
 
 // ==================== TYPES ====================
 
@@ -93,6 +96,10 @@ export function ProjectCreationWizard({
 }: ProjectCreationWizardProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [selectedTemplate, setSelectedTemplate] = useState<EntityTemplate | null>(null);
+  const [formInitialValues, setFormInitialValues] = useState<Partial<ProjectData> | undefined>(
+    initialData
+  );
   const router = useRouter();
 
   const currentStepConfig = WIZARD_STEPS[currentStep];
@@ -126,6 +133,24 @@ export function ProjectCreationWizard({
       }
     },
     [currentStep, completedSteps]
+  );
+
+  // Handle template selection
+  const handleTemplateSelect = useCallback(
+    (template: EntityTemplate | null) => {
+      setSelectedTemplate(template);
+      if (template?.defaults) {
+        // Merge template defaults with any existing initial data
+        setFormInitialValues(prev => ({
+          ...prev,
+          ...template.defaults,
+        }));
+      } else {
+        // Starting from scratch - clear template defaults but keep any user-provided initial data
+        setFormInitialValues(initialData);
+      }
+    },
+    [initialData]
   );
 
   const handleCancel = useCallback(() => {
@@ -257,17 +282,20 @@ export function ProjectCreationWizard({
                 {currentStepConfig.id === 'template' ? (
                   <div className="space-y-4">
                     <p className="text-sm text-gray-600">
-                      Choose a template to get started quickly, or skip to create from scratch.
+                      Choose a template to get started quickly, or start from scratch with a blank
+                      canvas.
                     </p>
-                    {/* TODO: Add TemplatePicker component */}
-                    <div className="text-center py-12 text-gray-500">
-                      Template selection will appear here
-                    </div>
+                    <WizardTemplatePicker
+                      templates={PROJECT_TEMPLATES}
+                      onSelectTemplate={handleTemplateSelect}
+                      selectedTemplateId={selectedTemplate?.id}
+                      showStartFromScratch
+                    />
                   </div>
                 ) : (
                   <EntityForm
                     config={projectConfig}
-                    initialValues={initialData}
+                    initialValues={formInitialValues}
                     onSuccess={onSuccess}
                     wizardMode={{
                       currentStep,

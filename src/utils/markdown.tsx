@@ -43,13 +43,14 @@ export function renderMarkdown(text: string): string {
 /**
  * Token types for parsing
  */
-type TokenType = 'text' | 'bold' | 'italic' | 'mention' | 'url';
+type TokenType = 'text' | 'bold' | 'italic' | 'mention' | 'url' | 'mdlink';
 
 interface Token {
   type: TokenType;
   value: string;
   username?: string; // For mentions
   url?: string; // For URLs
+  linkText?: string; // For markdown links [text](url)
 }
 
 /**
@@ -62,9 +63,10 @@ function tokenize(text: string): Token[] {
 
   const tokens: Token[] = [];
 
-  // Combined pattern for all formats: **bold**, *italic*, @mentions, URLs
+  // Combined pattern for all formats: [text](url), **bold**, *italic*, @mentions, URLs
+  // Note: mdlink must come before plain URLs to match first
   const combinedRegex =
-    /(\*\*[^*]+\*\*|\*[^*]+\*|@[a-zA-Z0-9_]{1,30}|https?:\/\/[^\s<>[\]{}|\\^`"']+)/g;
+    /(\[[^\]]+\]\([^)]+\)|\*\*[^*]+\*\*|\*[^*]+\*|@[a-zA-Z0-9_]{1,30}|https?:\/\/[^\s<>[\]{}|\\^`"']+)/g;
 
   let lastIndex = 0;
   let match;
@@ -78,7 +80,18 @@ function tokenize(text: string): Token[] {
     const matchedText = match[0];
 
     // Determine token type
-    if (matchedText.startsWith('**') && matchedText.endsWith('**')) {
+    if (matchedText.startsWith('[') && matchedText.includes('](')) {
+      // Markdown link: [text](url)
+      const linkMatch = matchedText.match(/\[([^\]]+)\]\(([^)]+)\)/);
+      if (linkMatch) {
+        tokens.push({
+          type: 'mdlink',
+          value: matchedText,
+          linkText: linkMatch[1],
+          url: linkMatch[2],
+        });
+      }
+    } else if (matchedText.startsWith('**') && matchedText.endsWith('**')) {
       tokens.push({
         type: 'bold',
         value: matchedText.slice(2, -2),
@@ -148,6 +161,21 @@ export function renderMarkdownToReact(text: string): React.ReactNode[] {
           >
             {token.value}
           </Link>
+        );
+
+      case 'mdlink':
+        // Markdown link: [text](url)
+        return (
+          <a
+            key={key}
+            href={token.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sky-600 hover:text-sky-700 hover:underline font-medium"
+            onClick={e => e.stopPropagation()}
+          >
+            {token.linkText}
+          </a>
         );
 
       case 'url':

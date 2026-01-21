@@ -1,61 +1,67 @@
 # Session Handoff
 
-**Date:** 2026-01-16
-**Last Modified:** 2026-01-16 16:15
-**Last Modified Summary:** ✅ Auth fix - Added useRequireAuth to project creation page
-**Status:** ✅ READY FOR DEPLOYMENT - All issues resolved, auth protection added
+**Date:** 2026-01-20
+**Last Modified:** 2026-01-20
+**Last Modified Summary:** ✅ Implemented WizardTemplatePicker for wizard Step 1 + AI Form Prefill feature
+**Status:** ✅ READY FOR TESTING - Template picker and AI prefill implemented
 
 ---
 
 ## 🚀 NEXT AGENT START HERE
 
 **What Just Happened:**
-Implemented complete UX overhaul for project creation - 4-phase progressive disclosure wizard with auto-save, friendly validation, and step-by-step guidance.
+
+1. Implemented WizardTemplatePicker component for wizard Step 1 (previously a placeholder)
+2. Completed AI Form Prefill feature for entity creation forms
+3. Started dev server (port 3020) and attempted browser testing
 
 **Current State:**
 
-- ✅ All code committed to main (commit e0b91b81)
-- ✅ Dev server running on http://localhost:3003
-- ✅ No ESLint/TypeScript errors in modified files
-- ⏸️ Manual testing needed (browser automation blocked by auth)
+- ✅ Type check passes
+- ✅ ESLint passes (no warnings)
+- ✅ WizardTemplatePicker integrated into ProjectCreationWizard
+- ✅ AI Form Prefill API endpoint created
+- ✅ Dev server running on port 3020
+- ⏸️ Authentication required to view wizard - test user: `test@orangecat.ch`
 
 **Immediate Next Steps:**
 
-1. Login to http://localhost:3003/auth
+1. Log in to the app (test user: `test@orangecat.ch`, password needed from dev)
 2. Navigate to /dashboard/projects/create
-3. Test wizard flow (4 steps: Template → Basic → Funding → Advanced)
-4. Verify: draft persistence, validation messages, skip buttons, navigation
+3. Test wizard Step 1: Select template → verify form prefills on Step 2
+4. Test "Start from scratch" → verify blank form
+5. Test AI Form Prefill in EntityForm (non-wizard create pages)
 
-**Key Files:**
+**Key Files (New/Modified Today):**
 
-- New: `src/components/create/ProjectCreationWizard.tsx` (307 lines)
-- Modified: `src/components/create/EntityForm.tsx` (wizard integration)
-- Modified: `src/lib/validation.ts` (friendly error messages)
+- New: `src/components/create/templates/WizardTemplatePicker.tsx` - Wizard step template selector
+- Modified: `src/components/create/ProjectCreationWizard.tsx` - Integrated WizardTemplatePicker
+- New: `src/app/api/ai/form-prefill/route.ts` - AI prefill API endpoint
+- New: `src/lib/ai/form-prefill-service.ts` - AI prefill business logic
+- New: `src/lib/ai/schema-to-prompt.ts` - Schema to prompt utilities
+- New: `src/config/entity-configs/get-config.ts` - Dynamic entity config loader
+- Modified: `src/components/create/EntityForm.tsx` - AI prefill integration + wizard mode
 
-**Testing Results (2026-01-16 16:00):**
+**Testing Checklist:**
 
-- ✅ Code review completed - wizard implementation verified
-- ✅ Fixed field mismatch: Removed `currency` from Step 3 (was removed in Phase 4)
-- ✅ Fixed field mismatch: Moved `category` from Step 2 to Step 4 (belongs in 'details' group)
-- ✅ ESLint: No errors or warnings
-- ✅ Dev server: Running on port 3003
-- ⚠️ Browser testing: Blocked by authentication (requires manual login)
+### Wizard Template Picker (Step 1)
 
-**Issues Found & Fixed:**
+- [ ] Templates display in 2-column grid on desktop
+- [ ] Templates display in 1-column on mobile
+- [ ] "Start from scratch" option works
+- [ ] Selecting template shows orange checkmark
+- [ ] Template selection persists when navigating Next → Previous
+- [ ] Template defaults populate form in Step 2
 
-1. **Wizard Step 3** referenced `currency` field that was removed in Phase 4
-   - **Fix:** Removed `currency` from funding step fields array
-2. **Wizard Step 2** referenced `category` field that's in 'details' group, not 'basic'
-   - **Fix:** Moved `category` to Step 4 (advanced) where it belongs
+### AI Form Prefill
 
-**Next Steps:**
+- [ ] "AI Assist" button appears on entity create forms
+- [ ] AI generates field values from description
+- [ ] AI-generated fields show purple indicator
+- [ ] Editing a field clears the AI indicator
+- [ ] Rate limit (5/min) is enforced
 
-- Manual testing recommended once authenticated
-- Verify wizard flow end-to-end
-- Test draft persistence across steps
-- Verify validation messages display correctly
-
-**Session Outcome:** 100% complete, all deliverables met, issues fixed, ready for deployment.
+**Session Outcome:** All features implemented and type-checked. Ready for manual testing.
 
 ---
 

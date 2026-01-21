@@ -34,7 +34,14 @@ import Button from '@/components/ui/Button';
 import { FormField } from './FormField';
 import { GuidancePanel } from './GuidancePanel';
 import { TemplatePicker } from './templates/TemplatePicker';
-import type { EntityConfig, FormState, EntityTemplate } from './types';
+import { AIPrefillButton } from './AIPrefillButton';
+import type {
+  EntityConfig,
+  FormState,
+  EntityTemplate,
+  AIGeneratedFields,
+  FieldConfidence,
+} from './types';
 import { logger } from '@/utils/logger';
 
 // ==================== HELPERS ====================
@@ -47,9 +54,15 @@ function formatRelativeTime(timestamp: string): string {
   const then = new Date(timestamp).getTime();
   const seconds = Math.floor((now - then) / 1000);
 
-  if (seconds < 60) return 'just now';
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} minute${Math.floor(seconds / 60) > 1 ? 's' : ''} ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} hour${Math.floor(seconds / 3600) > 1 ? 's' : ''} ago`;
+  if (seconds < 60) {
+    return 'just now';
+  }
+  if (seconds < 3600) {
+    return `${Math.floor(seconds / 60)} minute${Math.floor(seconds / 60) > 1 ? 's' : ''} ago`;
+  }
+  if (seconds < 86400) {
+    return `${Math.floor(seconds / 3600)} hour${Math.floor(seconds / 3600) > 1 ? 's' : ''} ago`;
+  }
   return `${Math.floor(seconds / 86400)} day${Math.floor(seconds / 86400) > 1 ? 's' : ''} ago`;
 }
 
@@ -117,6 +130,12 @@ export function EntityForm<T extends Record<string, any>>({
   // Draft persistence state
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
 
+  // AI prefill state - tracks which fields were AI-generated
+  const [aiGeneratedFields, setAiGeneratedFields] = useState<AIGeneratedFields>({
+    fields: new Set<string>(),
+    confidence: {},
+  });
+
   // Allow callers to re-prefill the form (e.g., templates)
   useEffect(() => {
     setFormState(prev => ({
@@ -131,7 +150,9 @@ export function EntityForm<T extends Record<string, any>>({
 
   // Load draft on mount (only in create mode, not edit mode)
   useEffect(() => {
-    if (mode === 'edit' || !user?.id) return;
+    if (mode === 'edit' || !user?.id) {
+      return;
+    }
 
     const draftKey = `${config.type}-draft-${user.id}`;
     const savedDraft = localStorage.getItem(draftKey);
@@ -163,17 +184,25 @@ export function EntityForm<T extends Record<string, any>>({
 
   // Auto-save draft every 10 seconds (only in create mode)
   useEffect(() => {
-    if (mode === 'edit' || !user?.id) return;
+    if (mode === 'edit' || !user?.id) {
+      return;
+    }
 
     const interval = setInterval(() => {
       // Check if there's meaningful content to save
       const hasContent = Object.values(formState.data).some(v => {
-        if (typeof v === 'string') return v.trim().length > 0;
-        if (Array.isArray(v)) return v.length > 0;
+        if (typeof v === 'string') {
+          return v.trim().length > 0;
+        }
+        if (Array.isArray(v)) {
+          return v.length > 0;
+        }
         return v !== null && v !== undefined;
       });
 
-      if (!hasContent) return;
+      if (!hasContent) {
+        return;
+      }
 
       const draftKey = `${config.type}-draft-${user.id}`;
       const savedAt = new Date().toISOString();
@@ -223,6 +252,11 @@ export function EntityForm<T extends Record<string, any>>({
         focus: 'focus:ring-purple-500',
         bg: 'from-purple-50/30',
       },
+      indigo: {
+        gradient: 'from-indigo-600 to-indigo-700',
+        focus: 'focus:ring-indigo-500',
+        bg: 'from-indigo-50/30',
+      },
     }),
     []
   );
@@ -252,6 +286,18 @@ export function EntityForm<T extends Record<string, any>>({
         errors: { ...prev.errors, [field as string]: '' },
         isDirty: true,
       }));
+
+      // Clear AI-generated status for this field when user edits it
+      setAiGeneratedFields(prev => {
+        if (prev.fields.has(field as string)) {
+          const newFields = new Set(prev.fields);
+          newFields.delete(field as string);
+          const newConfidence = { ...prev.confidence };
+          delete newConfidence[field as string];
+          return { fields: newFields, confidence: newConfidence };
+        }
+        return prev;
+      });
     },
     [formState.data, config.type]
   );
@@ -273,10 +319,34 @@ export function EntityForm<T extends Record<string, any>>({
         data: { ...prev.data, ...templateData } as T,
         isDirty: true,
       }));
+      // Clear AI-generated field tracking when using template
+      setAiGeneratedFields({ fields: new Set(), confidence: {} });
       // Scroll to top to show filled form
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     [initialFormData]
+  );
+
+  // AI prefill handler - fills form with AI-generated data
+  const handleAIPrefill = useCallback(
+    (data: Record<string, unknown>, confidence: Record<string, FieldConfidence>) => {
+      setFormState(prev => ({
+        ...prev,
+        data: { ...prev.data, ...data } as T,
+        isDirty: true,
+      }));
+
+      // Track which fields were AI-generated
+      const newFields = new Set<string>(Object.keys(data));
+      setAiGeneratedFields({
+        fields: newFields,
+        confidence,
+      });
+
+      // Scroll to top to show filled form
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    []
   );
 
   // Submit handler
@@ -285,7 +355,11 @@ export function EntityForm<T extends Record<string, any>>({
       e.preventDefault();
 
       logger.debug('EntityForm: handleSubmit called for', { entity: config.name }, 'EntityForm');
-      logger.debug('EntityForm: form data before validation:', { data: formState.data }, 'EntityForm');
+      logger.debug(
+        'EntityForm: form data before validation:',
+        { data: formState.data },
+        'EntityForm'
+      );
       logger.debug('EntityForm: default values:', { defaults: config.defaultValues }, 'EntityForm');
 
       try {
@@ -293,14 +367,30 @@ export function EntityForm<T extends Record<string, any>>({
 
         // Merge form data with defaults to ensure all required fields are present
         const dataToValidate = { ...config.defaultValues, ...formState.data };
-        logger.debug('EntityForm: merged data for validation:', { data: dataToValidate }, 'EntityForm');
-        logger.debug('EntityForm: start_date in merged data:', { start_date: dataToValidate.start_date }, 'EntityForm');
-        logger.debug('EntityForm: start_date type:', { type: typeof dataToValidate.start_date }, 'EntityForm');
+        logger.debug(
+          'EntityForm: merged data for validation:',
+          { data: dataToValidate },
+          'EntityForm'
+        );
+        logger.debug(
+          'EntityForm: start_date in merged data:',
+          { start_date: dataToValidate.start_date },
+          'EntityForm'
+        );
+        logger.debug(
+          'EntityForm: start_date type:',
+          { type: typeof dataToValidate.start_date },
+          'EntityForm'
+        );
 
         // Validate with Zod
         const validatedData = config.validationSchema.parse(dataToValidate);
         logger.debug('EntityForm: validation passed', { data: validatedData }, 'EntityForm');
-        logger.debug('EntityForm: start_date in validated data:', { start_date: validatedData.start_date }, 'EntityForm');
+        logger.debug(
+          'EntityForm: start_date in validated data:',
+          { start_date: validatedData.start_date },
+          'EntityForm'
+        );
         logger.debug('EntityForm: data being sent to API:', { data: validatedData }, 'EntityForm');
 
         // API call
@@ -459,7 +549,9 @@ export function EntityForm<T extends Record<string, any>>({
     // In wizard mode, filter to only show fields in visibleFields
     return config.fieldGroups
       .map(group => {
-        if (!group.fields) return group;
+        if (!group.fields) {
+          return group;
+        }
 
         const filteredFields = group.fields.filter(field =>
           wizardMode.visibleFields.includes(field.name)
@@ -486,7 +578,11 @@ export function EntityForm<T extends Record<string, any>>({
 
   return (
     <div
-      className={wizardMode ? '' : `min-h-screen bg-gradient-to-br ${theme.bg} via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8`}
+      className={
+        wizardMode
+          ? ''
+          : `min-h-screen bg-gradient-to-br ${theme.bg} via-white to-tiffany-50/20 p-4 sm:p-6 lg:p-8 pb-24 md:pb-8`
+      }
     >
       {/* Header - Hidden in wizard mode */}
       {!wizardMode && (
@@ -516,7 +612,19 @@ export function EntityForm<T extends Record<string, any>>({
         <div className="lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>{mode === 'create' ? config.formTitle : `Edit ${config.name}`}</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>
+                  {mode === 'create' ? config.formTitle : `Edit ${config.name}`}
+                </CardTitle>
+                {mode === 'create' && !wizardMode && (
+                  <AIPrefillButton
+                    entityType={config.type}
+                    onPrefill={handleAIPrefill}
+                    disabled={formState.isSubmitting}
+                    existingData={formState.data}
+                  />
+                )}
+              </div>
               <CardDescription>
                 {mode === 'create'
                   ? config.formDescription
@@ -563,32 +671,61 @@ export function EntityForm<T extends Record<string, any>>({
                               return null;
                             }
 
+                            const isAIGenerated = aiGeneratedFields.fields.has(field.name);
+                            const aiConfidence = aiGeneratedFields.confidence[field.name];
+
                             return (
                               <div
                                 key={field.name}
-                                className={field.colSpan === 2 ? 'md:col-span-2' : ''}
+                                className={`${field.colSpan === 2 ? 'md:col-span-2' : ''} ${
+                                  isAIGenerated ? 'relative' : ''
+                                }`}
                               >
-                                <FormField
-                                  config={field}
-                                  value={formState.data[field.name as keyof T]}
-                                  error={formState.errors[field.name]}
-                                  onChange={value =>
-                                    handleFieldChange(field.name as keyof T, value)
+                                {/* AI-generated indicator */}
+                                {isAIGenerated && (
+                                  <div className="absolute -top-1 -right-1 z-10">
+                                    <span
+                                      className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full border border-purple-200"
+                                      title={`AI generated (${Math.round((aiConfidence || 0.7) * 100)}% confidence)`}
+                                    >
+                                      <svg
+                                        className="w-3 h-3"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L10 6.477V16h2a1 1 0 110 2H8a1 1 0 110-2h2V6.477l-3.763 1.105 1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.616a1 1 0 01.894-1.79l1.599.8L9 4.323V3a1 1 0 011-1z" />
+                                      </svg>
+                                      AI
+                                    </span>
+                                  </div>
+                                )}
+                                <div
+                                  className={
+                                    isAIGenerated ? 'ring-1 ring-purple-200 rounded-md p-0.5' : ''
                                   }
-                                  onFocus={() => handleFieldFocus(field.name)}
-                                  disabled={formState.isSubmitting}
-                                  currency={
-                                    field.type === 'currency' && 'currency' in formState.data
-                                      ? (formState.data.currency as string)
-                                      : undefined
-                                  }
-                                  onCurrencyChange={
-                                    field.type === 'currency' && 'currency' in formState.data
-                                      ? currency =>
-                                          handleFieldChange('currency' as keyof T, currency)
-                                      : undefined
-                                  }
-                                />
+                                >
+                                  <FormField
+                                    config={field}
+                                    value={formState.data[field.name as keyof T]}
+                                    error={formState.errors[field.name]}
+                                    onChange={value =>
+                                      handleFieldChange(field.name as keyof T, value)
+                                    }
+                                    onFocus={() => handleFieldFocus(field.name)}
+                                    disabled={formState.isSubmitting}
+                                    currency={
+                                      field.type === 'currency' && 'currency' in formState.data
+                                        ? (formState.data.currency as string)
+                                        : undefined
+                                    }
+                                    onCurrencyChange={
+                                      field.type === 'currency' && 'currency' in formState.data
+                                        ? currency =>
+                                            handleFieldChange('currency' as keyof T, currency)
+                                        : undefined
+                                    }
+                                  />
+                                </div>
                               </div>
                             );
                           })}
@@ -642,15 +779,18 @@ export function EntityForm<T extends Record<string, any>>({
                 )}
 
                 {/* Template Examples - Show at bottom of form after all fields (hidden in wizard mode) */}
-                {config.templates && config.templates.length > 0 && mode === 'create' && !wizardMode && (
-                  <div className="mt-8 pt-8 border-t border-gray-200">
-                    <TemplatePicker
-                      label={config.namePlural}
-                      templates={config.templates as EntityTemplate<T>[]}
-                      onSelectTemplate={handleTemplateSelect}
-                    />
-                  </div>
-                )}
+                {config.templates &&
+                  config.templates.length > 0 &&
+                  mode === 'create' &&
+                  !wizardMode && (
+                    <div className="mt-8 pt-8 border-t border-gray-200">
+                      <TemplatePicker
+                        label={config.namePlural}
+                        templates={config.templates as EntityTemplate<T>[]}
+                        onSelectTemplate={handleTemplateSelect}
+                      />
+                    </div>
+                  )}
 
                 {/* Actions */}
                 <div className="pt-6 border-t space-y-3">

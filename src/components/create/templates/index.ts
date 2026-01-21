@@ -20,8 +20,20 @@ export { ASSET_TEMPLATES } from './asset-templates';
 export type { AssetDefaults } from './asset-templates';
 export { EVENT_TEMPLATES } from './event-templates';
 export { GROUP_TEMPLATES } from './group-templates';
-export { WISHLIST_TEMPLATES, WISHLIST_ITEM_TEMPLATES, WISHLIST_TEMPLATE_CATEGORIES, WISHLIST_ITEM_TEMPLATE_CATEGORIES } from './wishlist-templates';
-export type { WishlistDefaults, WishlistTemplate, WishlistItemDefaults, WishlistItemTemplate, WishlistTemplateCategory, WishlistItemTemplateCategory } from './wishlist-templates';
+export {
+  WISHLIST_TEMPLATES,
+  WISHLIST_ITEM_TEMPLATES,
+  WISHLIST_TEMPLATE_CATEGORIES,
+  WISHLIST_ITEM_TEMPLATE_CATEGORIES,
+} from './wishlist-templates';
+export type {
+  WishlistDefaults,
+  WishlistTemplate,
+  WishlistItemDefaults,
+  WishlistItemTemplate,
+  WishlistTemplateCategory,
+  WishlistItemTemplateCategory,
+} from './wishlist-templates';
 
 // Export template components (from template-factory.tsx)
 export {
@@ -48,4 +60,11 @@ export {
 
 // Export custom template components
 export { CircleTemplates } from './CircleTemplates';
-export { default as OrganizationTemplates, ORGANIZATION_TEMPLATES, type OrganizationTemplate } from './OrganizationTemplates';
+export {
+  default as OrganizationTemplates,
+  ORGANIZATION_TEMPLATES,
+  type OrganizationTemplate,
+} from './OrganizationTemplates';
+
+// Export wizard-specific template picker
+export { WizardTemplatePicker } from './WizardTemplatePicker';
