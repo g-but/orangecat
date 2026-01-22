@@ -23,6 +23,7 @@ import {
   Zap,
   AlertTriangle,
   Check,
+  Gift,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 
@@ -45,6 +46,7 @@ interface PermissionData {
 }
 
 const MODEL_TIERS = [
+  { id: 'free', name: 'Free', description: 'No API cost, rate limited', icon: Gift },
   { id: 'economy', name: 'Economy', description: 'Fast, cost-effective responses', icon: Zap },
   { id: 'standard', name: 'Standard', description: 'Balanced performance', icon: Bot },
   { id: 'premium', name: 'Premium', description: 'Best quality responses', icon: Sparkles },
@@ -101,7 +103,7 @@ export function CatSettingsTab() {
     }
   };
 
-  const handleTierChange = async (tier: 'economy' | 'standard' | 'premium') => {
+  const handleTierChange = async (tier: 'free' | 'economy' | 'standard' | 'premium') => {
     try {
       await updatePreferences({ default_tier: tier });
     } catch {
@@ -109,7 +111,7 @@ export function CatSettingsTab() {
     }
   };
 
-  const currentTier = preferences?.default_tier || 'economy';
+  const currentTier = preferences?.default_tier || 'free';
 
   return (
     <div className="space-y-6">
@@ -126,7 +128,9 @@ export function CatSettingsTab() {
             return (
               <button
                 key={tier.id}
-                onClick={() => handleTierChange(tier.id)}
+                onClick={() =>
+                  handleTierChange(tier.id as 'free' | 'economy' | 'standard' | 'premium')
+                }
                 disabled={aiLoading}
                 className={`w-full flex items-center gap-3 p-3 rounded-lg border-2 transition-all ${
                   isSelected
