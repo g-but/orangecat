@@ -4,12 +4,12 @@
  * Unified entity creation system components.
  *
  * Created: 2025-12-03
- * Last Modified: 2025-12-03
+ * Last Modified: 2026-01-22
+ * Last Modified Summary: Removed CreateEntityWorkflow (replaced by EntityCreationWizard)
  */
 
 // Main form component
 export { EntityForm } from './EntityForm';
-export { CreateEntityWorkflow } from './CreateEntityWorkflow';
 export { EntityCreationWizard } from './EntityCreationWizard';
 
 // Sub-components

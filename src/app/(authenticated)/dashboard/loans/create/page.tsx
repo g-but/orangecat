@@ -3,32 +3,37 @@
 /**
  * CREATE/EDIT LOAN PAGE
  *
- * Uses the unified CreateEntityWorkflow component for maximum modularity and DRY principles.
- * Leverages existing modular architecture: EntityForm + TemplateSelection + Workflow management.
+ * Uses the generic EntityCreationWizard for consistent entity creation UX.
  * Supports both create and edit modes via query parameter.
  *
+ * Supports:
+ * - Create mode: /dashboard/loans/create (shows template selection then form)
+ * - Edit mode: /dashboard/loans/create?edit=<id> (shows form directly with existing data)
+ * - Prefill from URL params: /dashboard/loans/create?title=...&description=...
+ *
  * Created: 2025-12-04
- * Last Modified: 2025-01-31
- * Last Modified Summary: Added edit mode support with query parameter handling
+ * Last Modified: 2026-01-22
+ * Last Modified Summary: Migrated to EntityCreationWizard (DRY - single wizard for all entities)
  */
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { CreateEntityWorkflow } from '@/components/create';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { EntityCreationWizard } from '@/components/create';
 import { EntityForm } from '@/components/create/EntityForm';
 import { loanConfig } from '@/config/entity-configs';
-import { LoanTemplates } from '@/components/create/templates';
 import Loading from '@/components/Loading';
 import { useAuth } from '@/hooks/useAuth';
 import { logger } from '@/utils/logger';
 import type { LoanFormData } from '@/lib/validation';
 
 export default function CreateLoanPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams?.get('edit');
   const { user, hydrated } = useAuth();
   const [loanData, setLoanData] = useState<Partial<LoanFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
+  const [initialData, setInitialData] = useState<Partial<LoanFormData> | undefined>(undefined);
 
   // Fetch loan data if in edit mode
   useEffect(() => {
@@ -54,6 +59,31 @@ export default function CreateLoanPage() {
     }
   }, [editId, user?.id, hydrated]);
 
+  // Prefill support from URL params (create mode only)
+  useEffect(() => {
+    if (editId) {
+      return;
+    } // Don't prefill in edit mode
+
+    const title = searchParams?.get('title');
+    const description = searchParams?.get('description');
+    const loanType = searchParams?.get('loan_type');
+
+    if (title || description) {
+      const prefillData: Partial<LoanFormData> = {};
+      if (title) {
+        prefillData.title = title;
+      }
+      if (description) {
+        prefillData.description = description;
+      }
+      if (loanType) {
+        prefillData.loan_type = loanType as LoanFormData['loan_type'];
+      }
+      setInitialData(prefillData);
+    }
+  }, [searchParams, editId]);
+
   if (loading) {
     return <Loading fullScreen message="Loading loan..." />;
   }
@@ -61,26 +91,16 @@ export default function CreateLoanPage() {
   // Edit mode: use EntityForm directly (skip template selection)
   if (editId && loanData) {
     return (
-      <EntityForm
-        config={loanConfig}
-        initialValues={loanData}
-        mode="edit"
-        entityId={editId}
-      />
+      <EntityForm config={loanConfig} initialValues={loanData} mode="edit" entityId={editId} />
     );
   }
 
-  // Create mode: use CreateEntityWorkflow
+  // Create mode: use EntityCreationWizard
   return (
-    <CreateEntityWorkflow
+    <EntityCreationWizard<LoanFormData>
       config={loanConfig}
-      TemplateComponent={LoanTemplates}
-      pageHeader={{
-        title: editId ? 'Edit Loan Listing' : 'Create Loan Listing',
-        description: 'List your loan needs and connect with peer-to-peer lenders.'
-      }}
-      showTemplatesByDefault={false}
-      initialValues={loanData || undefined}
+      initialData={initialData}
+      onCancel={() => router.push('/dashboard/loans')}
     />
   );
 }
