@@ -55,6 +55,7 @@ export interface FullUserContext {
     totalProjects: number;
     totalCauses: number;
     totalEvents: number;
+    totalAssets: number;
   };
 }
 
@@ -209,6 +210,7 @@ export async function fetchEntitiesForCat(
     totalProjects: 0,
     totalCauses: 0,
     totalEvents: 0,
+    totalAssets: 0,
   };
   const entities: EntitySummary[] = [];
 
@@ -222,47 +224,64 @@ export async function fetchEntitiesForCat(
       .maybeSingle();
 
     if (actorError || !actor) {
+      logger.warn(
+        'Could not find actor for user when fetching entities',
+        { userId },
+        'DocumentContext'
+      );
       return { entities, stats };
     }
 
     const actorId = actor.id;
 
-    // Fetch products
-    const { data: products } = await supabase
+    // Fetch products (include draft so user can ask about their drafts)
+    const { data: products, error: productsError } = await supabase
       .from('user_products')
-      .select('title, description, status, price_sats')
+      .select('title, description, status, price_sats, category')
       .eq('actor_id', actorId)
-      .eq('status', 'active')
-      .limit(10);
+      .in('status', ['active', 'draft', 'paused'])
+      .limit(20);
 
-    if (products) {
+    if (productsError) {
+      logger.warn(
+        'Failed to fetch products for cat',
+        { error: productsError.message },
+        'DocumentContext'
+      );
+    } else if (products) {
       stats.totalProducts = products.length;
       products.forEach(p => {
         entities.push({
           type: 'product',
           title: p.title,
-          description: p.description?.substring(0, 200),
+          description: p.description?.substring(0, 300),
           status: p.status,
           price_sats: p.price_sats,
         });
       });
     }
 
-    // Fetch services
-    const { data: services } = await supabase
+    // Fetch services (include draft)
+    const { data: services, error: servicesError } = await supabase
       .from('user_services')
-      .select('title, description, status, price_sats')
+      .select('title, description, status, price_sats, category')
       .eq('actor_id', actorId)
-      .eq('status', 'active')
-      .limit(10);
+      .in('status', ['active', 'draft', 'paused'])
+      .limit(20);
 
-    if (services) {
+    if (servicesError) {
+      logger.warn(
+        'Failed to fetch services for cat',
+        { error: servicesError.message },
+        'DocumentContext'
+      );
+    } else if (services) {
       stats.totalServices = services.length;
       services.forEach(s => {
         entities.push({
           type: 'service',
           title: s.title,
-          description: s.description?.substring(0, 200),
+          description: s.description?.substring(0, 300),
           status: s.status,
           price_sats: s.price_sats,
         });
@@ -270,20 +289,26 @@ export async function fetchEntitiesForCat(
     }
 
     // Fetch projects
-    const { data: projects } = await supabase
+    const { data: projects, error: projectsError } = await supabase
       .from('user_projects')
-      .select('title, description, status, goal_sats')
+      .select('title, description, status, goal_sats, current_sats, category')
       .eq('actor_id', actorId)
-      .in('status', ['active', 'draft'])
-      .limit(10);
+      .in('status', ['active', 'draft', 'paused'])
+      .limit(20);
 
-    if (projects) {
+    if (projectsError) {
+      logger.warn(
+        'Failed to fetch projects for cat',
+        { error: projectsError.message },
+        'DocumentContext'
+      );
+    } else if (projects) {
       stats.totalProjects = projects.length;
       projects.forEach(p => {
         entities.push({
           type: 'project',
           title: p.title,
-          description: p.description?.substring(0, 200),
+          description: p.description?.substring(0, 300),
           status: p.status,
           price_sats: p.goal_sats,
         });
@@ -291,44 +316,94 @@ export async function fetchEntitiesForCat(
     }
 
     // Fetch causes
-    const { data: causes } = await supabase
+    const { data: causes, error: causesError } = await supabase
       .from('user_causes')
-      .select('title, description, status')
+      .select('title, description, status, category')
       .eq('actor_id', actorId)
-      .in('status', ['active', 'draft'])
-      .limit(10);
+      .in('status', ['active', 'draft', 'paused'])
+      .limit(20);
 
-    if (causes) {
+    if (causesError) {
+      logger.warn(
+        'Failed to fetch causes for cat',
+        { error: causesError.message },
+        'DocumentContext'
+      );
+    } else if (causes) {
       stats.totalCauses = causes.length;
       causes.forEach(c => {
         entities.push({
           type: 'cause',
           title: c.title,
-          description: c.description?.substring(0, 200),
+          description: c.description?.substring(0, 300),
           status: c.status,
         });
       });
     }
 
     // Fetch events
-    const { data: events } = await supabase
+    const { data: events, error: eventsError } = await supabase
       .from('user_events')
-      .select('title, description, status')
+      .select('title, description, status, start_date, end_date, location')
       .eq('actor_id', actorId)
-      .in('status', ['active', 'draft'])
-      .limit(10);
+      .in('status', ['active', 'draft', 'paused'])
+      .limit(20);
 
-    if (events) {
+    if (eventsError) {
+      logger.warn(
+        'Failed to fetch events for cat',
+        { error: eventsError.message },
+        'DocumentContext'
+      );
+    } else if (events) {
       stats.totalEvents = events.length;
       events.forEach(e => {
         entities.push({
           type: 'event',
           title: e.title,
-          description: e.description?.substring(0, 200),
+          description: e.description?.substring(0, 300),
           status: e.status,
         });
       });
     }
+
+    // Fetch assets
+    const { data: assets, error: assetsError } = await supabase
+      .from('user_assets')
+      .select('title, description, status, price_sats, asset_type, location')
+      .eq('actor_id', actorId)
+      .in('status', ['active', 'draft', 'paused'])
+      .limit(20);
+
+    if (assetsError) {
+      logger.warn(
+        'Failed to fetch assets for cat',
+        { error: assetsError.message },
+        'DocumentContext'
+      );
+    } else if (assets) {
+      stats.totalAssets = assets.length;
+      assets.forEach(a => {
+        entities.push({
+          type: 'asset',
+          title: a.title,
+          description: a.description?.substring(0, 300),
+          status: a.status,
+          price_sats: a.price_sats,
+        });
+      });
+    }
+
+    logger.info(
+      'Fetched entities for cat',
+      {
+        userId,
+        actorId,
+        stats,
+        totalEntities: entities.length,
+      },
+      'DocumentContext'
+    );
 
     return { entities, stats };
   } catch (error) {
@@ -421,6 +496,7 @@ export function buildFullContextString(context: FullUserContext): string {
       project: 'Projects',
       cause: 'Causes',
       event: 'Events',
+      asset: 'Assets',
     };
 
     for (const [type, items] of Object.entries(entityGroups)) {
@@ -454,7 +530,8 @@ export function buildFullContextString(context: FullUserContext): string {
       stats.totalServices +
       stats.totalProjects +
       stats.totalCauses +
-      stats.totalEvents >
+      stats.totalEvents +
+      stats.totalAssets >
     0;
 
   if (hasAnyEntities) {
@@ -473,6 +550,9 @@ export function buildFullContextString(context: FullUserContext): string {
     }
     if (stats.totalEvents > 0) {
       statParts.push(`${stats.totalEvents} event${stats.totalEvents > 1 ? 's' : ''}`);
+    }
+    if (stats.totalAssets > 0) {
+      statParts.push(`${stats.totalAssets} asset${stats.totalAssets > 1 ? 's' : ''}`);
     }
 
     sections.push(`## Activity Summary\nThe user has: ${statParts.join(', ')}.`);
