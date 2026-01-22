@@ -10,6 +10,7 @@
 // Main form component
 export { EntityForm } from './EntityForm';
 export { CreateEntityWorkflow } from './CreateEntityWorkflow';
+export { EntityCreationWizard } from './EntityCreationWizard';
 
 // Sub-components
 export { FormField } from './FormField';
@@ -32,31 +33,6 @@ export type {
   EntityFormProps,
   FormFieldProps,
   GuidancePanelProps,
+  WizardStep,
+  WizardConfig,
 } from './types';
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

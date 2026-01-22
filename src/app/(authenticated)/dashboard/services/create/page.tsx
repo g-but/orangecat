@@ -3,30 +3,32 @@
 /**
  * CREATE SERVICE PAGE
  *
- * Uses the unified CreateEntityWorkflow component for maximum modularity and DRY principles.
- * Leverages existing modular architecture: EntityForm + TemplateSelection + Workflow management.
+ * Uses the generic EntityCreationWizard for consistent entity creation UX.
+ * Automatically shows template selection (from config.templates) then form.
  *
  * Supports prefill from:
  * - URL params: /dashboard/services/create?title=...&description=...
  * - localStorage: service_prefill (legacy)
  *
  * Created: 2025-12-03
- * Last Modified: 2026-01-21
- * Last Modified Summary: Added URL params prefill support from My Cat AI
+ * Last Modified: 2026-01-22
+ * Last Modified Summary: Migrated to EntityCreationWizard (DRY - single wizard for all entities)
  */
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { CreateEntityWorkflow } from '@/components/create';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { EntityCreationWizard } from '@/components/create';
 import { serviceConfig } from '@/config/entity-configs';
-import { ServiceTemplates } from '@/components/create/templates';
+import type { UserServiceFormData } from '@/lib/validation';
 
 export default function CreateServicePage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [initialValues, setInitialValues] = useState<Record<string, unknown> | undefined>(
+  const [initialData, setInitialData] = useState<Partial<UserServiceFormData> | undefined>(
     undefined
   );
 
+  // Prefill support - URL params take priority, then localStorage
   useEffect(() => {
     // Check URL params first (from My Cat action buttons)
     const title = searchParams?.get('title');
@@ -34,7 +36,7 @@ export default function CreateServicePage() {
     const category = searchParams?.get('category');
 
     if (title || description) {
-      const prefillData: Record<string, unknown> = {};
+      const prefillData: Partial<UserServiceFormData> = {};
       if (title) {
         prefillData.title = title;
       }
@@ -44,7 +46,7 @@ export default function CreateServicePage() {
       if (category) {
         prefillData.category = category;
       }
-      setInitialValues(prefillData);
+      setInitialData(prefillData);
       return;
     }
 
@@ -53,24 +55,19 @@ export default function CreateServicePage() {
       const raw = localStorage.getItem('service_prefill');
       if (raw) {
         const data = JSON.parse(raw);
-        setInitialValues(data);
+        setInitialData(data);
         localStorage.removeItem('service_prefill');
       }
     } catch {
-      // ignore parse errors
+      // Ignore parse errors
     }
   }, [searchParams]);
 
   return (
-    <CreateEntityWorkflow
+    <EntityCreationWizard<UserServiceFormData>
       config={serviceConfig}
-      TemplateComponent={ServiceTemplates}
-      pageHeader={{
-        title: 'Create Service',
-        description: 'Offer your expertise to the community.',
-      }}
-      initialValues={initialValues}
-      showTemplatesByDefault={false}
+      initialData={initialData}
+      onCancel={() => router.push('/dashboard/services')}
     />
   );
 }

@@ -15,6 +15,7 @@ import type {
   FieldGroup,
   FieldConfig,
   GuidanceContent,
+  WizardConfig,
 } from '@/components/create/types';
 import type { ZodType } from 'zod';
 import { getEntityMetadata, type EntityType } from '@/config/entity-registry';
@@ -142,6 +143,8 @@ export interface BaseConfigOptions<T extends Record<string, any>> {
   successMessage?: string;
   /** Optional redirect delay */
   successRedirectDelay?: number;
+  /** Optional wizard configuration for multi-step creation flow */
+  wizardConfig?: WizardConfig;
 }
 
 /**
@@ -194,5 +197,6 @@ export function createEntityConfig<T extends Record<string, any>>(
     infoBanner: options.infoBanner,
     successMessage: options.successMessage,
     successRedirectDelay: options.successRedirectDelay,
+    wizardConfig: options.wizardConfig,
   };
 }

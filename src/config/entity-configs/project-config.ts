@@ -14,7 +14,7 @@ import {
   projectGuidanceContent,
   projectDefaultGuidance,
 } from '@/lib/entity-guidance/project-guidance';
-import type { FieldGroup } from '@/components/create/types';
+import type { FieldGroup, WizardConfig } from '@/components/create/types';
 import { PROJECT_TEMPLATES, type ProjectTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
 
@@ -145,6 +145,43 @@ const fieldGroups: FieldGroup[] = [
   },
 ];
 
+// ==================== WIZARD CONFIGURATION ====================
+
+const wizardConfig: WizardConfig = {
+  enabled: true,
+  includeTemplateStep: true,
+  steps: [
+    {
+      id: 'basic',
+      title: 'Basic Info',
+      description: 'Tell us about your project',
+      optional: false,
+      fields: ['title', 'description'],
+    },
+    {
+      id: 'funding',
+      title: 'Funding',
+      description: 'Set your funding goals and Bitcoin payment details',
+      optional: false,
+      fields: ['goal_amount', 'funding_purpose', 'bitcoin_address', 'lightning_address'],
+    },
+    {
+      id: 'additional',
+      title: 'Additional',
+      description: 'Add more details to help people discover your project',
+      optional: true,
+      fields: [
+        'website_url',
+        'category',
+        'tags',
+        'start_date',
+        'target_completion',
+        'show_on_profile',
+      ],
+    },
+  ],
+};
+
 // ==================== CONFIGURATION ====================
 
 export const projectConfig = createEntityConfig<ProjectData>({
@@ -180,5 +217,5 @@ export const projectConfig = createEntityConfig<ProjectData>({
   templates: PROJECT_TEMPLATES as unknown as ProjectTemplate[],
   successMessage: 'Project created successfully!',
   successRedirectDelay: 2000,
+  wizardConfig,
 });
-
