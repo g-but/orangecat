@@ -39,3 +39,17 @@ export {
   type PlatformUsage,
   type KeyValidationResult,
 } from './api-key-service';
+
+// Groq Service (fast, free inference)
+export {
+  GroqService,
+  GroqAPIError,
+  createGroqService,
+  createGroqServiceWithByok,
+  isGroqAvailable,
+  GROQ_MODELS,
+  DEFAULT_GROQ_MODEL,
+  type GroqMessage,
+  type GroqChatResult,
+  type GroqStreamChunkResult,
+} from './groq';
