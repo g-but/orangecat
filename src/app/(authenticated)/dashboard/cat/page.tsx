@@ -1,19 +1,54 @@
+/**
+ * Cat Hub Page - Unified AI Assistant Interface
+ *
+ * Single page with tabs for:
+ * - Chat: Conversation with My Cat
+ * - Context: Documents that inform the AI
+ * - Settings: Model selection and permissions
+ *
+ * Created: 2026-01-22
+ * Last Modified: 2026-01-22
+ */
+
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import { ModernChatPanel } from '@/components/ai-chat/ModernChatPanel';
-import { CatContextPanel } from '@/components/ai-chat/CatContextPanel';
-import Link from 'next/link';
-import { Info, X, Settings } from 'lucide-react';
+import { CatContextTab } from '@/components/ai-chat/CatContextTab';
+import { CatSettingsTab } from '@/components/ai-chat/CatSettingsTab';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { MessageSquare, FolderOpen, Settings, Cat } from 'lucide-react';
 
-export default function CatDashboardPage() {
+type TabValue = 'chat' | 'context' | 'settings';
+
+export default function CatHubPage() {
   const { user, isLoading, hydrated } = useAuth();
   const router = useRouter();
-  const [showContext, setShowContext] = useState(false);
-  const [hasSeenContext, setHasSeenContext] = useState(false);
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<TabValue>('chat');
+
+  // Get initial tab from URL
+  useEffect(() => {
+    const tab = searchParams?.get('tab') as TabValue | null;
+    if (tab && ['chat', 'context', 'settings'].includes(tab)) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
+
+  // Update URL when tab changes
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as TabValue);
+    const url = new URL(window.location.href);
+    if (value === 'chat') {
+      url.searchParams.delete('tab');
+    } else {
+      url.searchParams.set('tab', value);
+    }
+    window.history.replaceState({}, '', url.toString());
+  };
 
   useEffect(() => {
     if (hydrated && !isLoading && !user) {
@@ -21,99 +56,98 @@ export default function CatDashboardPage() {
     }
   }, [hydrated, isLoading, user, router]);
 
-  // Check if user has seen the context panel before
-  useEffect(() => {
-    try {
-      const seen = localStorage.getItem('cat_context_seen');
-      setHasSeenContext(!!seen);
-    } catch {}
-  }, []);
-
-  // Mark as seen when panel is opened
-  const handleShowContext = () => {
-    setShowContext(true);
-    try {
-      localStorage.setItem('cat_context_seen', '1');
-      setHasSeenContext(true);
-    } catch {}
-  };
-
   if (!hydrated || isLoading) {
     return <Loading fullScreen message="Loading..." />;
   }
+
   if (!user) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20 p-2 sm:p-4 lg:p-6 pb-20 sm:pb-6">
-      <div className="max-w-6xl mx-auto h-full">
-        <div className="flex gap-4">
-          {/* Main chat panel */}
-          <div className="flex-1 min-w-0">
-            <ModernChatPanel />
-          </div>
-
-          {/* Context panel - desktop sidebar */}
-          <div className="hidden lg:block w-80 flex-shrink-0">
-            <CatContextPanel className="sticky top-4" />
-          </div>
-        </div>
-
-        {/* Mobile buttons */}
-        <div className="lg:hidden fixed bottom-24 right-4 z-40 flex flex-col gap-2">
-          <Link
-            href="/dashboard/cat/permissions"
-            className="flex items-center justify-center p-3 bg-white border border-gray-200 text-gray-700 rounded-full shadow-lg hover:shadow-xl transition-all"
-          >
-            <Settings className="h-5 w-5" />
-          </Link>
-          <button
-            onClick={handleShowContext}
-            className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all"
-          >
-            <Info className="h-5 w-5" />
-            <span className="text-sm font-medium">What My Cat Knows</span>
-            {!hasSeenContext && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-orange-500 rounded-full animate-pulse" />
-            )}
-          </button>
-        </div>
-
-        {/* Mobile context panel - slide up modal */}
-        {showContext && (
-          <div className="lg:hidden fixed inset-0 z-50 flex items-end">
-            {/* Backdrop */}
-            <div
-              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-              onClick={() => setShowContext(false)}
-            />
-
-            {/* Panel */}
-            <div className="relative w-full max-h-[85vh] bg-white rounded-t-2xl overflow-hidden animate-slide-up">
-              {/* Handle */}
-              <div className="flex items-center justify-center py-3 border-b border-gray-100">
-                <div className="w-10 h-1 bg-gray-300 rounded-full" />
+    <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-30">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-orange-400 to-orange-500 rounded-xl shadow-sm">
+                <Cat className="h-6 w-6 text-white" />
               </div>
-
-              {/* Close button */}
-              <button
-                onClick={() => setShowContext(false)}
-                className="absolute top-3 right-3 p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <X className="h-5 w-5 text-gray-500" />
-              </button>
-
-              {/* Content */}
-              <div className="overflow-y-auto max-h-[calc(85vh-56px)]">
-                <CatContextPanel showGreeting={true} />
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">My Cat</h1>
+                <p className="text-xs text-gray-500">Your personal AI assistant</p>
               </div>
             </div>
           </div>
-        )}
+        </div>
       </div>
 
-      {/* Add slide-up animation - using global style via useEffect */}
+      {/* Main Content */}
+      <div className="max-w-4xl mx-auto">
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          {/* Tab Navigation - Fixed at top on mobile, inline on desktop */}
+          <div className="sticky top-[73px] z-20 bg-gradient-to-br from-orange-50/80 via-white/80 to-tiffany-50/80 backdrop-blur-sm px-4 py-2">
+            <TabsList className="w-full grid grid-cols-3 h-12 bg-white/80 border border-gray-200 shadow-sm">
+              <TabsTrigger
+                value="chat"
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white"
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="hidden sm:inline">Chat</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="context"
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-600 data-[state=active]:text-white"
+              >
+                <FolderOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Context</span>
+              </TabsTrigger>
+              <TabsTrigger
+                value="settings"
+                className="flex items-center gap-2 data-[state=active]:bg-gradient-to-r data-[state=active]:from-gray-600 data-[state=active]:to-gray-700 data-[state=active]:text-white"
+              >
+                <Settings className="h-4 w-4" />
+                <span className="hidden sm:inline">Settings</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* Tab Content */}
+          <div className="px-4 pb-24 sm:pb-8">
+            {/* Chat Tab */}
+            <TabsContent value="chat" className="mt-4 focus:outline-none">
+              <ModernChatPanel />
+            </TabsContent>
+
+            {/* Context Tab */}
+            <TabsContent value="context" className="mt-4 focus:outline-none">
+              <div className="max-w-xl mx-auto">
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">My Context</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Add documents to help My Cat understand your goals, skills, and situation
+                  </p>
+                </div>
+                <CatContextTab />
+              </div>
+            </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings" className="mt-4 focus:outline-none">
+              <div className="max-w-xl mx-auto">
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">My AI</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Configure how your AI assistant works
+                  </p>
+                </div>
+                <CatSettingsTab />
+              </div>
+            </TabsContent>
+          </div>
+        </Tabs>
+      </div>
     </div>
   );
 }
