@@ -301,9 +301,11 @@ export function ProjectCreationWizard({
                       currentStep,
                       totalSteps: WIZARD_STEPS.length,
                       visibleFields: currentStepConfig.fields,
-                      onNext: handleNext,
+                      // Don't pass onNext on the last step - EntityForm will show submit button
+                      onNext: currentStep < WIZARD_STEPS.length - 1 ? handleNext : undefined,
                       onPrevious: currentStep > 0 ? handlePrevious : undefined,
                       onSkip: currentStepConfig.optional ? handleSkip : undefined,
+                      isLastStep: currentStep === WIZARD_STEPS.length - 1,
                     }}
                   />
                 )}
@@ -312,33 +314,28 @@ export function ProjectCreationWizard({
           </motion.div>
         </AnimatePresence>
 
-        {/* Navigation */}
-        <div className="flex justify-between items-center">
-          <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Previous
-          </Button>
+        {/* Navigation - Only show for template step (EntityForm handles its own navigation in wizard mode) */}
+        {currentStepConfig.id === 'template' && (
+          <div className="flex justify-between items-center">
+            <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Previous
+            </Button>
 
-          <div className="flex gap-3">
-            {currentStepConfig.optional && currentStep < WIZARD_STEPS.length - 1 && (
-              <Button variant="ghost" onClick={handleSkip}>
-                Skip
-              </Button>
-            )}
+            <div className="flex gap-3">
+              {currentStepConfig.optional && (
+                <Button variant="ghost" onClick={handleSkip}>
+                  Skip
+                </Button>
+              )}
 
-            {currentStep < WIZARD_STEPS.length - 1 ? (
               <Button onClick={handleNext}>
                 Next
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-            ) : (
-              <Button className="bg-orange-600 hover:bg-orange-700">
-                Create Project
-                <Check className="w-4 h-4 ml-2" />
-              </Button>
-            )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

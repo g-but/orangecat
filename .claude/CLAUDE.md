@@ -14,6 +14,7 @@
 When user says "orangecat" - ALWAYS go to `/home/g/dev/orangecat`. Do NOT search elsewhere.
 
 **Quick start**:
+
 ```bash
 cd /home/g/dev/orangecat
 npm run dev -- -p 3020  # Runs on port 3020 to avoid conflicts
@@ -102,6 +103,7 @@ grep "ENTITY_REGISTRY" → read matched files → analyze patterns → edit file
 3. **Separation of Concerns**: domain/ → business logic, api/ → HTTP, components/ → UI
 4. **Type Safety**: TypeScript + Zod validation everywhere
 5. **Modularity**: Configuration over code
+6. **UI/UX Quality**: No demos - everything must be production-ready (see checklist below)
 
 ### Critical Files (Memorize These)
 
@@ -726,6 +728,71 @@ Update SESSION_HANDOFF.md with:
 ✅ Type safety (Zod + TypeScript)
 ✅ Test coverage (unit + E2E)
 ✅ Documentation updates (keep in sync)
+```
+
+---
+
+## 🎨 UI/UX Quality Checklist (CRITICAL)
+
+**No demos, no prototypes** - every feature must be production-ready with polished UX.
+
+### Before Every UI Change
+
+**Check for these common issues:**
+
+1. **Duplicate Controls**: Multiple buttons/navigation doing the same thing
+   - Watch for: Wizards with navigation AND forms with their own navigation
+   - Watch for: Multiple "Cancel" or "Back" buttons visible simultaneously
+   - Watch for: Redundant submit buttons in nested components
+
+2. **Broken Navigation Flows**:
+   - Verify: Back button works and goes to expected location
+   - Verify: Cancel buttons work at every step
+   - Verify: Breadcrumbs are accurate (if present)
+   - Verify: Browser back button behaves correctly
+
+3. **Missing/Broken States**:
+   - Loading states for every async operation
+   - Empty states when no data exists
+   - Error states with recovery actions
+   - Success feedback after actions
+
+4. **Responsive Design**:
+   - Test on mobile viewport (< 768px)
+   - Touch targets minimum 44x44px
+   - No horizontal scrolling
+   - Readable text without zooming
+
+5. **Visual Consistency**:
+   - Same spacing patterns throughout
+   - Consistent button styles/sizes
+   - Design system colors only (no hex codes)
+   - Proper hierarchy (one primary CTA per view)
+
+### After UI Changes
+
+**Always verify with browser automation or manual testing:**
+
+```javascript
+// Quick sanity check flow
+1. Navigate to the feature
+2. Check initial render (loading → content)
+3. Test primary action (click/submit)
+4. Verify feedback (success/error message)
+5. Check navigation works (back, cancel, etc.)
+6. Test on mobile viewport
+```
+
+### Common Anti-Patterns to REJECT
+
+```
+❌ Duplicate navigation buttons (wizard + form both showing Previous/Next)
+❌ Missing loading spinners on buttons during submission
+❌ Forms that silently fail without error messages
+❌ Dead-end screens with no way to navigate back
+❌ Modals that don't close properly
+❌ Inconsistent button placement (sometimes left, sometimes right)
+❌ Multiple ways to do the same action that behave differently
 ```
 
 ---
