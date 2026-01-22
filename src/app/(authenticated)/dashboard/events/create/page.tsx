@@ -3,37 +3,36 @@
 /**
  * CREATE EVENT PAGE
  *
- * Uses the unified CreateEntityWorkflow component for maximum modularity and DRY principles.
- * Leverages existing modular architecture: EntityForm + TemplateSelection + Workflow management.
+ * Uses the generic EntityCreationWizard for consistent entity creation UX.
+ * Automatically shows template selection (from config.templates) then form.
  *
  * Supports prefill from:
  * - URL params: /dashboard/events/create?title=...&description=...
  *
  * Created: 2025-01-30
- * Last Modified: 2026-01-21
- * Last Modified Summary: Added URL params prefill support from My Cat AI
+ * Last Modified: 2026-01-22
+ * Last Modified Summary: Migrated to EntityCreationWizard (DRY - single wizard for all entities)
  */
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
-import { CreateEntityWorkflow } from '@/components/create';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { EntityCreationWizard } from '@/components/create';
 import { eventConfig } from '@/config/entity-configs';
-import { EventTemplates } from '@/components/create/templates';
+import type { EventFormData } from '@/lib/validation';
 
 export default function CreateEventPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const [initialValues, setInitialValues] = useState<Record<string, unknown> | undefined>(
-    undefined
-  );
+  const [initialData, setInitialData] = useState<Partial<EventFormData> | undefined>(undefined);
 
+  // Prefill support from URL params (e.g., from My Cat AI action buttons)
   useEffect(() => {
-    // Check URL params (from My Cat action buttons)
     const title = searchParams?.get('title');
     const description = searchParams?.get('description');
     const category = searchParams?.get('category');
 
     if (title || description) {
-      const prefillData: Record<string, unknown> = {};
+      const prefillData: Partial<EventFormData> = {};
       if (title) {
         prefillData.title = title;
       }
@@ -43,20 +42,15 @@ export default function CreateEventPage() {
       if (category) {
         prefillData.category = category;
       }
-      setInitialValues(prefillData);
+      setInitialData(prefillData);
     }
   }, [searchParams]);
 
   return (
-    <CreateEntityWorkflow
+    <EntityCreationWizard<EventFormData>
       config={eventConfig}
-      TemplateComponent={EventTemplates}
-      pageHeader={{
-        title: 'Create Event',
-        description: 'Organize an in-person gathering or meetup with Bitcoin-powered ticketing.',
-      }}
-      initialValues={initialValues}
-      showTemplatesByDefault={false}
+      initialData={initialData}
+      onCancel={() => router.push('/dashboard/events')}
     />
   );
 }

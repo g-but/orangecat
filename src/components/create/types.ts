@@ -109,6 +109,38 @@ export interface FieldGroup {
   };
 }
 
+// ==================== WIZARD TYPES ====================
+
+/**
+ * Configuration for a wizard step
+ * Used when entity creation requires multi-step progressive disclosure
+ */
+export interface WizardStep {
+  /** Step identifier (should match fieldGroup id for form steps) */
+  id: string;
+  /** Step title displayed in progress indicator */
+  title: string;
+  /** Step description shown in the step content area */
+  description: string;
+  /** Whether this step can be skipped */
+  optional?: boolean;
+  /** Field names to display in this step (empty for template step) */
+  fields: string[];
+}
+
+/**
+ * Wizard configuration for entity creation
+ * When defined, enables multi-step wizard UI instead of single-page form
+ */
+export interface WizardConfig {
+  /** Whether wizard mode is enabled */
+  enabled: boolean;
+  /** Wizard steps configuration */
+  steps: WizardStep[];
+  /** Whether to include template selection as first step */
+  includeTemplateStep?: boolean;
+}
+
 // ==================== GUIDANCE TYPES ====================
 
 export interface GuidanceContent {
@@ -202,6 +234,8 @@ export interface EntityConfig<T extends Record<string, any> = Record<string, any
   successMessage?: string;
   /** Optional delay before redirecting after success (ms) */
   successRedirectDelay?: number;
+  /** Optional wizard configuration for multi-step creation flow */
+  wizardConfig?: WizardConfig;
 }
 
 // ==================== FORM STATE ====================

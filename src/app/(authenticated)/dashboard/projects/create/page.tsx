@@ -3,30 +3,32 @@
 /**
  * CREATE PROJECT PAGE
  *
- * Uses the new ProjectCreationWizard for progressive disclosure and improved UX.
- * 4-step guided flow: Template → Basic Info → Funding Details → Advanced Options
+ * Uses the generic EntityCreationWizard for progressive disclosure and improved UX.
+ * 4-step guided flow: Template → Basic Info → Funding Details → Additional Options
  *
  * Supports prefill from:
  * - URL params: /dashboard/projects/create?title=...&description=...
  * - localStorage: project_prefill (legacy)
  *
  * Created: 2025-12-03
- * Last Modified: 2026-01-21
- * Last Modified Summary: Added URL params prefill support from My Cat AI
+ * Last Modified: 2026-01-22
+ * Last Modified Summary: Migrated to generic EntityCreationWizard (DRY principle)
  */
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useRequireAuth } from '@/hooks/useAuth';
-import { ProjectCreationWizard } from '@/components/create/ProjectCreationWizard';
+import { EntityCreationWizard } from '@/components/create';
+import { projectConfig } from '@/config/entity-configs/project-config';
 import Loading from '@/components/Loading';
+import type { ProjectData } from '@/lib/validation';
 
 export default function CreateProjectPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { isLoading, isAuthenticated } = useRequireAuth();
   const [hasRedirected, setHasRedirected] = useState(false);
-  const [initialData, setInitialData] = useState<Record<string, unknown> | undefined>(undefined);
+  const [initialData, setInitialData] = useState<Partial<ProjectData> | undefined>(undefined);
 
   // Redirect if not authenticated (backup check)
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function CreateProjectPage() {
     const category = searchParams?.get('category');
 
     if (title || description) {
-      const prefillData: Record<string, unknown> = {};
+      const prefillData: Partial<ProjectData> = {};
       if (title) {
         prefillData.title = title;
       }
@@ -81,5 +83,11 @@ export default function CreateProjectPage() {
     return <Loading fullScreen contextual message="Loading..." />;
   }
 
-  return <ProjectCreationWizard initialData={initialData} />;
+  return (
+    <EntityCreationWizard<ProjectData>
+      config={projectConfig}
+      initialData={initialData}
+      onCancel={() => router.push('/dashboard/projects')}
+    />
+  );
 }
