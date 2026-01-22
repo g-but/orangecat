@@ -53,7 +53,7 @@ const bodySchema = z.object({
  */
 interface SuggestedAction {
   type: 'create_entity';
-  entityType: 'product' | 'service' | 'project' | 'cause' | 'event';
+  entityType: 'product' | 'service' | 'project' | 'cause' | 'event' | 'asset';
   prefill: {
     title: string;
     description?: string;
@@ -81,7 +81,7 @@ function parseActionsFromResponse(content: string): {
       // Validate action structure
       if (
         action.type === 'create_entity' &&
-        ['product', 'service', 'project', 'cause', 'event'].includes(action.entityType) &&
+        ['product', 'service', 'project', 'cause', 'event', 'asset'].includes(action.entityType) &&
         action.prefill?.title
       ) {
         actions.push(action);
@@ -116,6 +116,7 @@ OrangeCat exists to empower individuals and communities to build outside traditi
 - **Product**: Physical or digital goods (books, merchandise, tools, art)
 - **Service**: Professional offerings (consulting, development, design, education)
 - **Event**: Gatherings, conferences, meetups (Bitcoin meetups, network state assemblies)
+- **Asset**: Real estate, equipment, or other rentable/sellable assets
 
 ## How to Help Users
 1. **Understand their TRUE intent** - "I want Ossetia independent" = they want to CREATE something, not just discuss
