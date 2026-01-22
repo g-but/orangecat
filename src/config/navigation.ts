@@ -32,8 +32,6 @@ import {
   HelpCircle,
   Search,
   Cat,
-  Bot,
-  FileText,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -162,20 +160,6 @@ const simplifiedSections: NavSection[] = [
         href: '/dashboard/cat',
         icon: Cat,
         description: 'AI assistant',
-        requiresAuth: true,
-      },
-      {
-        name: 'My Context',
-        href: '/dashboard/documents',
-        icon: FileText,
-        description: 'Context for My Cat',
-        requiresAuth: true,
-      },
-      {
-        name: 'My AI',
-        href: '/settings/ai',
-        icon: Bot,
-        description: 'AI settings & keys',
         requiresAuth: true,
       },
       {
