@@ -1,30 +1,56 @@
-/**
- * Create Wishlist Page
- *
- * Page for creating a new wishlist using the unified entity creation system.
- *
- * Created: 2026-01-07
- * Last Modified: 2026-01-07
- * Last Modified Summary: Converted to client component to fix serialization issues
- */
-
 'use client';
 
-import { CreateEntityWorkflow } from '@/components/create/CreateEntityWorkflow';
-import { wishlistConfig } from '@/config/entity-configs/wishlist-config';
-import { useAuth } from '@/hooks/useAuth';
-import Loading from '@/components/Loading';
+/**
+ * CREATE WISHLIST PAGE
+ *
+ * Uses the generic EntityCreationWizard for consistent entity creation UX.
+ * Automatically shows template selection (from config.templates) then form.
+ *
+ * Supports prefill from:
+ * - URL params: /dashboard/wishlists/create?title=...&description=...
+ *
+ * Created: 2026-01-07
+ * Last Modified: 2026-01-22
+ * Last Modified Summary: Migrated to EntityCreationWizard (DRY - single wizard for all entities)
+ */
+
+import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { EntityCreationWizard } from '@/components/create';
+import { wishlistConfig } from '@/config/entity-configs';
+import type { WishlistFormData } from '@/lib/validation';
 
 export default function CreateWishlistPage() {
-  const { user, isLoading, hydrated } = useAuth();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [initialData, setInitialData] = useState<Partial<WishlistFormData> | undefined>(undefined);
 
-  if (!hydrated || isLoading) {
-    return <Loading fullScreen message="Preparing wishlist creator..." />;
-  }
+  // Prefill support from URL params
+  useEffect(() => {
+    const title = searchParams?.get('title');
+    const description = searchParams?.get('description');
+    const wishlistType = searchParams?.get('type');
 
-  if (!user) {
-    return null;
-  }
+    if (title || description) {
+      const prefillData: Partial<WishlistFormData> = {};
+      if (title) {
+        prefillData.title = title;
+      }
+      if (description) {
+        prefillData.description = description;
+      }
+      if (wishlistType) {
+        prefillData.type = wishlistType as WishlistFormData['type'];
+      }
+      setInitialData(prefillData);
+    }
+  }, [searchParams]);
 
-  return <CreateEntityWorkflow config={wishlistConfig} />;
+  return (
+    <EntityCreationWizard<WishlistFormData>
+      config={wishlistConfig}
+      initialData={initialData}
+      onCancel={() => router.push('/dashboard/wishlists')}
+    />
+  );
 }
