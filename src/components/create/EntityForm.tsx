@@ -75,6 +75,7 @@ interface WizardMode {
   onNext?: () => void;
   onPrevious?: () => void;
   onSkip?: () => void;
+  isLastStep?: boolean;
 }
 
 interface EntityFormProps<T extends Record<string, any>> {
@@ -841,7 +842,7 @@ export function EntityForm<T extends Record<string, any>>({
                             Skip
                           </Button>
                         )}
-                        {wizardMode.onNext && (
+                        {wizardMode.onNext ? (
                           <Button
                             type="button"
                             onClick={wizardMode.onNext}
@@ -849,7 +850,16 @@ export function EntityForm<T extends Record<string, any>>({
                           >
                             Next
                           </Button>
-                        )}
+                        ) : wizardMode.isLastStep ? (
+                          /* Submit button on last step */
+                          <Button
+                            type="submit"
+                            disabled={formState.isSubmitting}
+                            className={`bg-gradient-to-r ${theme.gradient}`}
+                          >
+                            {formState.isSubmitting ? 'Creating...' : `Create ${config.name}`}
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   ) : (
