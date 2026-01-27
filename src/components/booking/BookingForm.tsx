@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Calendar, Clock, CreditCard, MessageSquare, Loader2, CheckCircle } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 interface BookingFormProps {
   serviceId: string;
@@ -63,7 +64,11 @@ export function BookingForm({
         toast.error(data.error || 'Failed to create booking');
       }
     } catch (error) {
-      console.error('Booking error:', error);
+      logger.error(
+        'Booking error',
+        { error: error instanceof Error ? error.message : error },
+        'BookingForm'
+      );
       toast.error('Something went wrong');
     } finally {
       setIsSubmitting(false);

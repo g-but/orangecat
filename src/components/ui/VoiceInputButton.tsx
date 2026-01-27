@@ -3,6 +3,46 @@
 import { useEffect, useRef, useState } from 'react';
 import { Mic, MicOff } from 'lucide-react';
 
+// Web Speech API types (not in default TypeScript lib)
+interface SpeechRecognitionResult {
+  readonly transcript: string;
+  readonly confidence: number;
+}
+
+interface SpeechRecognitionResultList {
+  readonly length: number;
+  item(index: number): SpeechRecognitionResult;
+  [index: number]: SpeechRecognitionResult[];
+}
+
+interface SpeechRecognitionEvent extends Event {
+  readonly results: SpeechRecognitionResultList;
+  readonly resultIndex: number;
+}
+
+interface SpeechRecognitionInstance extends EventTarget {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: Event) => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+interface SpeechRecognitionConstructor {
+  new (): SpeechRecognitionInstance;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition?: SpeechRecognitionConstructor;
+    webkitSpeechRecognition?: SpeechRecognitionConstructor;
+  }
+}
+
 interface VoiceInputButtonProps {
   onTranscript: (text: string) => void;
   lang?: string;
@@ -22,11 +62,13 @@ export function VoiceInputButton({
 }: VoiceInputButtonProps) {
   const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   useEffect(() => {
     try {
-      const has = typeof window !== 'undefined' && ((window as any).webkitSpeechRecognition || (window as any).SpeechRecognition);
+      const has =
+        typeof window !== 'undefined' &&
+        (window.webkitSpeechRecognition || window.SpeechRecognition);
       setSupported(!!has);
     } catch {
       setSupported(false);
@@ -34,15 +76,22 @@ export function VoiceInputButton({
   }, []);
 
   const start = () => {
-    if (!supported || listening || disabled) return;
+    if (!supported || listening || disabled) {
+      return;
+    }
     try {
-      const SR = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      const SR = window.webkitSpeechRecognition || window.SpeechRecognition;
+      if (!SR) {
+        return;
+      }
       const recog = new SR();
       recog.lang = lang;
       recog.interimResults = false;
-      recog.onresult = (ev: any) => {
+      recog.onresult = (ev: SpeechRecognitionEvent) => {
         const text = ev?.results?.[0]?.[0]?.transcript || '';
-        if (text) onTranscript(text);
+        if (text) {
+          onTranscript(text);
+        }
       };
       recog.onend = () => {
         setListening(false);
@@ -110,4 +159,3 @@ export function VoiceInputButton({
 }
 
 export default VoiceInputButton;
-

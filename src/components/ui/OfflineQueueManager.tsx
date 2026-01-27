@@ -4,7 +4,7 @@ import React, { useCallback, useState } from 'react';
 import BottomSheet from '@/components/ui/BottomSheet';
 import { useOfflineQueue } from '@/hooks/useOfflineQueue';
 import Button from '@/components/ui/Button';
-import { offlineQueueService } from '@/lib/offline-queue';
+import { offlineQueueService, type QueuedPost } from '@/lib/offline-queue';
 import { timelineService } from '@/services/timeline';
 import { logger } from '@/utils/logger';
 
@@ -28,7 +28,7 @@ export function OfflineQueueManager({ isOpen, onClose }: OfflineQueueManagerProp
     }
   }, []);
 
-  const handleRetry = useCallback(async (item: any) => {
+  const handleRetry = useCallback(async (item: QueuedPost) => {
     try {
       setBusyId(item.id);
       const res = await timelineService.createEvent(item.payload);
@@ -37,7 +37,7 @@ export function OfflineQueueManager({ isOpen, onClose }: OfflineQueueManagerProp
       } else {
         await offlineQueueService.incrementAttemptCount(item.id);
       }
-    } catch (e: any) {
+    } catch (e: unknown) {
       logger.error('Retry failed', e, 'OfflineQueueManager');
       try {
         await offlineQueueService.incrementAttemptCount(item.id);
@@ -60,35 +60,41 @@ export function OfflineQueueManager({ isOpen, onClose }: OfflineQueueManagerProp
           <div className="text-sm text-gray-600">No queued posts.</div>
         ) : (
           <ul className="space-y-2">
-            {queuedPosts.map((item: any) => (
-              <li key={item.id} className="p-3 border rounded-md bg-white">
-                <div className="text-sm font-medium text-gray-900">{item.payload?.title || 'Post'}</div>
-                {item.payload?.description && (
-                  <div className="text-sm text-gray-700 line-clamp-2">{item.payload.description}</div>
-                )}
-                <div className="mt-2 text-xs text-gray-500">
-                  Attempts: {item.attempts ?? 0} • Queued: {new Date(item.createdAt).toLocaleString()}
-                </div>
-                <div className="mt-3 flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleRemove(item.id)}
-                    disabled={busyId === item.id}
-                  >
-                    Remove
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="primary"
-                    onClick={() => handleRetry(item)}
-                    disabled={busyId === item.id || !isOnline}
-                  >
-                    {busyId === item.id ? 'Working…' : 'Retry Now'}
-                  </Button>
-                </div>
-              </li>
-            ))}
+            {queuedPosts.map((item: QueuedPost) => {
+              const payload = item.payload as { title?: string; description?: string } | undefined;
+              return (
+                <li key={item.id} className="p-3 border rounded-md bg-white">
+                  <div className="text-sm font-medium text-gray-900">
+                    {payload?.title || 'Post'}
+                  </div>
+                  {payload?.description && (
+                    <div className="text-sm text-gray-700 line-clamp-2">{payload.description}</div>
+                  )}
+                  <div className="mt-2 text-xs text-gray-500">
+                    Attempts: {item.attempts ?? 0} • Queued:{' '}
+                    {new Date(item.createdAt).toLocaleString()}
+                  </div>
+                  <div className="mt-3 flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleRemove(item.id)}
+                      disabled={busyId === item.id}
+                    >
+                      Remove
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => handleRetry(item)}
+                      disabled={busyId === item.id || !isOnline}
+                    >
+                      {busyId === item.id ? 'Working…' : 'Retry Now'}
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
 

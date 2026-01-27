@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 import {
   Bitcoin,
   Smartphone,
@@ -28,8 +29,8 @@ interface OnboardingStep {
   id: string;
   title: string;
   description: string;
-  icon: any;
-  content: any;
+  icon: LucideIcon;
+  content: React.ReactNode;
   action?: {
     label: string;
     onClick: () => void;
