@@ -7,11 +7,12 @@ import { Card, CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import BottomSheet from '@/components/ui/BottomSheet';
 import AvatarLink from '@/components/ui/AvatarLink';
-import { Globe, X, ChevronDown, ArrowLeft, Image, Bold, Italic } from 'lucide-react';
+import { Globe, ChevronDown, ArrowLeft, ImageIcon } from 'lucide-react';
 import { usePostComposer, type PostComposerOptions } from '@/hooks/usePostComposerNew';
 import { useContentEditableEditor } from '@/hooks/useContentEditableEditor';
 import { cn } from '@/lib/utils';
 import { sanitizeHtml } from '@/lib/validation';
+import { TextFormatToolbar, ComposerMessages, CharacterCounter } from './ComposerShared';
 
 /**
  * MOBILE-FIRST Post Composer Component
@@ -25,11 +26,10 @@ import { sanitizeHtml } from '@/lib/validation';
  * - Offline support, auto-save drafts
  * - X-style full-screen mode via fullScreen prop
  *
- * NOTE: For inline timeline posting, use TimelineComposer.
- * TODO: This component shares ~70% logic with TimelineComposer.
- * Future consolidation should merge this into TimelineComposer with a `fullScreen` prop.
+ * Uses shared components from ComposerShared.tsx for DRY compliance.
  *
  * @see TimelineComposer for inline posting variant
+ * @see ComposerShared for reusable UI components
  */
 
 export interface PostComposerMobileProps extends PostComposerOptions {
@@ -230,21 +230,11 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
             />
 
             {/* Character counter */}
-            {composer.content.length > 0 && (
-              <div
-                id="character-count"
-                className={cn(
-                  'mt-4 text-sm font-medium',
-                  composer.characterCount > 450
-                    ? 'text-red-500'
-                    : composer.characterCount > 400
-                      ? 'text-orange-500'
-                      : 'text-gray-400'
-                )}
-              >
-                {composer.characterCount}/{composerOptions.maxLength || 500}
-              </div>
-            )}
+            <CharacterCounter
+              count={composer.characterCount}
+              max={composerOptions.maxLength || 500}
+              className="mt-4"
+            />
           </div>
         </div>
       </div>
@@ -262,36 +252,13 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
       )}
 
       {/* Error/Success Messages */}
-      {composer.error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <div className="flex items-start gap-2">
-            <div className="text-red-500 text-sm flex-1">{composer.error}</div>
-            <button
-              onClick={composer.clearError}
-              className="text-red-400 hover:text-red-600 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              aria-label="Dismiss error"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          {composer.retryCount < 3 && (
-            <div className="mt-2">
-              <button
-                onClick={composer.retry}
-                className="text-sm text-red-600 hover:text-red-800 underline rounded-md min-h-[44px] px-2 flex items-center"
-              >
-                Try again
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      {composer.postSuccess && (
-        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <div className="text-green-700 text-sm">✓ Post shared successfully!</div>
-        </div>
-      )}
+      <ComposerMessages
+        error={composer.error}
+        success={composer.postSuccess}
+        onClearError={composer.clearError}
+        onRetry={composer.retry}
+        retryCount={composer.retryCount}
+      />
 
       {/* Toolbar (X-style) - Only features that exist/are needed */}
       {fullScreen && (
@@ -303,28 +270,11 @@ const PostComposerMobile: React.FC<PostComposerMobileProps> = ({
             title="Image upload (coming soon)"
             disabled
           >
-            <Image className="w-5 h-5" />
+            <ImageIcon className="w-5 h-5" />
           </button>
 
-          {/* Bold formatting - uses execCommand for visual formatting */}
-          <button
-            onClick={() => handleFormat('bold')}
-            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-orange-500 hover:bg-orange-50 rounded-full transition-colors"
-            aria-label="Bold"
-            title="Bold (Ctrl+B)"
-          >
-            <Bold className="w-5 h-5" />
-          </button>
-
-          {/* Italic formatting - uses execCommand for visual formatting */}
-          <button
-            onClick={() => handleFormat('italic')}
-            className="p-2 min-h-[44px] min-w-[44px] flex items-center justify-center text-orange-500 hover:bg-orange-50 rounded-full transition-colors"
-            aria-label="Italic"
-            title="Italic (Ctrl+I)"
-          >
-            <Italic className="w-5 h-5" />
-          </button>
+          {/* Text formatting toolbar */}
+          <TextFormatToolbar onFormat={handleFormat} variant="orange" size="md" />
         </div>
       )}
 

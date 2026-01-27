@@ -4,13 +4,13 @@
  * React hook wrapper for the centralized currency converter service.
  * Provides synchronous conversion using cached rates.
  *
- * Single source of truth: /src/services/currencyConverter.ts
+ * Single source of truth: /src/services/currency
  *
  * Created: 2025-06-05
  */
 
 import { useState, useEffect } from 'react';
-import { currencyConverter } from '@/services/currencyConverter';
+import { currencyConverter } from '@/services/currency';
 import { type CurrencyCode } from '@/config/currencies';
 
 export function useCurrencyConversion() {

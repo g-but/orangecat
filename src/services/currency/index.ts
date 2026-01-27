@@ -1,16 +1,29 @@
 /**
- * CURRENCY SERVICE
+ * CURRENCY SERVICE - SINGLE SOURCE OF TRUTH
  *
  * Handles currency conversions between fiat and Bitcoin.
  * BTC is the base currency for all transactions and calculations.
  * Users can input/view amounts in their preferred currency.
  *
+ * This is the SSOT for all currency operations. Other currency files
+ * (utils/currency.ts, services/currencyConverter.ts) re-export from here.
+ *
  * Created: 2025-12-04
- * Last Modified: 2026-01-07
- * Last Modified Summary: Removed sats terminology, BTC is now the base currency
+ * Last Modified: 2026-01-27
+ * Last Modified Summary: Consolidated from 3 duplicate files into SSOT
  */
 
-import { CURRENCY_METADATA } from '@/config/currencies';
+import { CURRENCY_METADATA, type CurrencyCode } from '@/config/currencies';
+import { logger } from '@/utils/logger';
+
+// ==================== TYPES ====================
+
+export interface ExchangeRates {
+  btcToChf: number;
+  btcToUsd: number;
+  btcToEur: number;
+  lastUpdated: number;
+}
 
 // ==================== RATE CACHE ====================
 
@@ -31,6 +44,186 @@ const cache: RateCache = {
   lastUpdated: null,
   expiresAt: null,
 };
+
+// ==================== COINGECKO SERVICE ====================
+
+/**
+ * CurrencyConverterService class for async rate fetching
+ * Used by useCurrencyConversion hook and server actions
+ */
+class CurrencyConverterService {
+  private apiRates: ExchangeRates | null = null;
+  private cacheDuration = 60 * 1000; // 1 minute cache
+  private fetchPromise: Promise<ExchangeRates> | null = null;
+
+  /**
+   * Fetch live BTC prices from CoinGecko
+   */
+  private async fetchRatesFromApi(): Promise<ExchangeRates> {
+    if (this.fetchPromise) {
+      return this.fetchPromise;
+    }
+
+    this.fetchPromise = (async () => {
+      try {
+        const response = await fetch(
+          'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=chf,usd,eur',
+          { headers: { Accept: 'application/json' } }
+        );
+
+        if (!response.ok) {
+          throw new Error(`CoinGecko API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const bitcoin = data.bitcoin;
+
+        const rates: ExchangeRates = {
+          btcToChf: bitcoin.chf || 86000,
+          btcToUsd: bitcoin.usd || 97000,
+          btcToEur: bitcoin.eur || 91000,
+          lastUpdated: Date.now(),
+        };
+
+        this.apiRates = rates;
+        // Also update the cache for sync access
+        updateRates({
+          BTC_USD: rates.btcToUsd,
+          BTC_EUR: rates.btcToEur,
+          BTC_CHF: rates.btcToChf,
+        });
+        return rates;
+      } catch (error) {
+        logger.warn('Failed to fetch BTC prices, using fallback rates', error, 'Currency');
+
+        const fallbackRates: ExchangeRates = {
+          btcToChf: 86000,
+          btcToUsd: 97000,
+          btcToEur: 91000,
+          lastUpdated: Date.now(),
+        };
+
+        this.apiRates = fallbackRates;
+        return fallbackRates;
+      } finally {
+        setTimeout(() => {
+          this.fetchPromise = null;
+        }, 1000);
+      }
+    })();
+
+    return this.fetchPromise;
+  }
+
+  async getRates(): Promise<ExchangeRates> {
+    if (this.apiRates && Date.now() - this.apiRates.lastUpdated < this.cacheDuration) {
+      return this.apiRates;
+    }
+    return this.fetchRatesFromApi();
+  }
+
+  getCachedRates(): ExchangeRates | null {
+    return this.apiRates;
+  }
+
+  async toBTC(amount: number, fromCurrency: CurrencyCode): Promise<number> {
+    if (amount === 0) {
+      return 0;
+    }
+    const rates = await this.getRates();
+
+    switch (fromCurrency.toUpperCase()) {
+      case 'BTC':
+        return amount;
+      case 'SATS':
+        return amount / 100_000_000;
+      case 'CHF':
+        return amount / rates.btcToChf;
+      case 'USD':
+        return amount / rates.btcToUsd;
+      case 'EUR':
+        return amount / rates.btcToEur;
+      default:
+        return 0;
+    }
+  }
+
+  async fromBTC(amountBTC: number, toCurrency: CurrencyCode): Promise<number> {
+    if (amountBTC === 0) {
+      return 0;
+    }
+    const rates = await this.getRates();
+
+    switch (toCurrency.toUpperCase()) {
+      case 'BTC':
+        return amountBTC;
+      case 'SATS':
+        return Math.round(amountBTC * 100_000_000);
+      case 'CHF':
+        return amountBTC * rates.btcToChf;
+      case 'USD':
+        return amountBTC * rates.btcToUsd;
+      case 'EUR':
+        return amountBTC * rates.btcToEur;
+      default:
+        return 0;
+    }
+  }
+
+  async convert(
+    amount: number,
+    fromCurrency: CurrencyCode,
+    toCurrency: CurrencyCode
+  ): Promise<number> {
+    if (amount === 0 || fromCurrency === toCurrency) {
+      return amount;
+    }
+    const btcAmount = await this.toBTC(amount, fromCurrency);
+    return this.fromBTC(btcAmount, toCurrency);
+  }
+
+  /**
+   * Format BTC amount for display
+   */
+  formatBTC(amountBTC: number, showDecimals = true): string {
+    if (amountBTC === 0) {
+      return '0 BTC';
+    }
+    if (amountBTC < 0.00001) {
+      const sats = Math.round(amountBTC * 100_000_000);
+      return `${sats.toLocaleString()} sats`;
+    }
+    if (showDecimals) {
+      return `${amountBTC.toLocaleString(undefined, { maximumFractionDigits: 8 })} BTC`;
+    }
+    return `${amountBTC.toFixed(2)} BTC`;
+  }
+
+  clearCache(): void {
+    this.apiRates = null;
+    this.fetchPromise = null;
+  }
+}
+
+// Singleton instance for async operations
+export const currencyConverter = new CurrencyConverterService();
+
+// Convenience async functions
+export async function convertToBTC(amount: number, fromCurrency: CurrencyCode): Promise<number> {
+  return currencyConverter.toBTC(amount, fromCurrency);
+}
+
+export async function convertFromBTC(amountBTC: number, toCurrency: CurrencyCode): Promise<number> {
+  return currencyConverter.fromBTC(amountBTC, toCurrency);
+}
+
+export async function convertCurrencyAsync(
+  amount: number,
+  fromCurrency: CurrencyCode,
+  toCurrency: CurrencyCode
+): Promise<number> {
+  return currencyConverter.convert(amount, fromCurrency, toCurrency);
+}
 
 // ==================== CORE CONVERSION FUNCTIONS ====================
 
@@ -225,7 +418,11 @@ export async function fetchRates(): Promise<void> {
       }
     }
   } catch (error) {
-    console.error('Failed to fetch currency rates:', error);
+    logger.error(
+      'Failed to fetch currency rates',
+      { error: error instanceof Error ? error.message : error },
+      'currency'
+    );
   }
 }
 
