@@ -22,13 +22,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { createAIPaymentService } from '@/services/ai-payments';
+import { logger } from '@/utils/logger';
 import {
   createOpenRouterService,
   createOpenRouterServiceWithByok,
   createApiKeyService,
   type OpenRouterMessage,
 } from '@/services/ai';
-import { DEFAULT_FREE_MODEL_ID, isModelFree, getModelMetadata, getFreeModels } from '@/config/ai-models';
+import {
+  DEFAULT_FREE_MODEL_ID,
+  isModelFree,
+  getModelMetadata,
+  getFreeModels,
+} from '@/config/ai-models';
 import { createAutoRouter } from '@/services/ai/auto-router';
 import { applyRateLimitHeaders, type RateLimitResult } from '@/lib/rate-limit';
 import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
@@ -105,8 +111,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { content, model: requestedModel } = result.data;
 
     // Verify conversation exists and belongs to user
-    const { data: conversationData, error: convError } = await (supabase
-      .from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
+    const { data: conversationData, error: convError } = await (
+      supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any
+    )
       .select('id, assistant_id, user_id, status')
       .eq('id', convId)
       .eq('assistant_id', assistantId)
@@ -123,8 +130,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get assistant details including all configuration
-    const { data: assistantData, error: assistantError } = await (supabase
-      .from(DATABASE_TABLES.AI_ASSISTANTS) as any)
+    const { data: assistantData, error: assistantError } = await (
+      supabase.from(DATABASE_TABLES.AI_ASSISTANTS) as any
+    )
       .select(
         'id, title, system_prompt, welcome_message, pricing_model, price_per_message, price_per_1k_tokens, user_id, model_preference, allowed_models, min_model_tier, temperature, max_tokens_per_response, free_messages_per_day'
       )
@@ -161,8 +169,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get conversation history for context (used by auto-router and AI call)
-    const { data: historyData } = await (supabase
-      .from(DATABASE_TABLES.AI_MESSAGES) as any)
+    const { data: historyData } = await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any)
       .select('role, content')
       .eq('conversation_id', convId)
       .order('created_at', { ascending: true })
@@ -220,8 +227,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       today.setHours(0, 0, 0, 0);
 
       // Get all user's conversations with this assistant
-      const { data: userConvosData } = await (supabase
-        .from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
+      const { data: userConvosData } = await (
+        supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any
+      )
         .select('id')
         .eq('assistant_id', assistantId)
         .eq('user_id', user.id);
@@ -231,8 +239,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
       if (convoIds.length > 0) {
         // Count user messages to this assistant today (across all conversations)
-        const { count: todayMessageCount } = await (supabase
-          .from(DATABASE_TABLES.AI_MESSAGES) as any)
+        const { count: todayMessageCount } = await (
+          supabase.from(DATABASE_TABLES.AI_MESSAGES) as any
+        )
           .select('id', { count: 'exact', head: true })
           .in('conversation_id', convoIds)
           .eq('role', 'user')
@@ -269,8 +278,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Store user message first
-    const { data: userMessageData, error: userMsgError } = await (supabase
-      .from(DATABASE_TABLES.AI_MESSAGES) as any)
+    const { data: userMessageData, error: userMsgError } = await (
+      supabase.from(DATABASE_TABLES.AI_MESSAGES) as any
+    )
       .insert({
         conversation_id: convId,
         role: 'user',
@@ -283,7 +293,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const userMessage = userMessageData as any;
 
     if (userMsgError) {
-      console.error('Error storing user message:', userMsgError);
+      logger.error('Error storing user message', userMsgError, 'AIMessagesAPI');
       return NextResponse.json({ error: 'Failed to store message' }, { status: 500 });
     }
 
@@ -312,7 +322,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         maxTokens: assistant.max_tokens_per_response || undefined,
       });
     } catch (aiError: unknown) {
-      console.error('OpenRouter API error:', aiError);
+      logger.error('OpenRouter API error', aiError, 'AIMessagesAPI');
 
       // Clean up user message on AI failure
       await (supabase.from(DATABASE_TABLES.AI_MESSAGES) as any).delete().eq('id', userMessage.id);
@@ -333,8 +343,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const totalCostSats = apiCostSats + creatorMarkupSats;
 
     // Store AI response
-    const { data: assistantMessageData, error: aiMsgError } = await (supabase
-      .from(DATABASE_TABLES.AI_MESSAGES) as any)
+    const { data: assistantMessageData, error: aiMsgError } = await (
+      supabase.from(DATABASE_TABLES.AI_MESSAGES) as any
+    )
       .insert({
         conversation_id: convId,
         role: 'assistant',
@@ -357,7 +368,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const assistantMessage = assistantMessageData as any;
 
     if (aiMsgError) {
-      console.error('Error storing AI message:', aiMsgError);
+      logger.error('Error storing AI message', aiMsgError, 'AIMessagesAPI');
       return NextResponse.json({ error: 'Failed to store AI response' }, { status: 500 });
     }
 
@@ -375,7 +386,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       });
 
       if (!paymentResult.success) {
-        console.warn('Payment failed after message stored:', paymentResult.error);
+        logger.warn('Payment failed after message stored', paymentResult.error, 'AIMessagesAPI');
       }
     }
 
@@ -385,8 +396,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // 3. Update conversation stats
-    await (supabase
-      .from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
+    await (supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
       .update({
         last_message_at: new Date().toISOString(),
       })
@@ -430,7 +440,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     });
     return applyRateLimitHeaders(response, rateLimitResult);
   } catch (error) {
-    console.error('Send message error:', error);
+    logger.error('Send message error', error, 'AIMessagesAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

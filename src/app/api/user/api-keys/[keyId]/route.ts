@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ keyId: string }>;
@@ -44,7 +45,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting API key:', error);
+    logger.error('Error deleting API key', error, 'ApiKeysAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -90,7 +91,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error updating API key:', error);
+    logger.error('Error updating API key', error, 'ApiKeysAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

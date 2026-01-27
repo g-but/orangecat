@@ -12,6 +12,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { fetchFullContextForCat, type FullUserContext } from '@/services/ai/document-context';
+import { logger } from '@/utils/logger';
 
 interface ContextSummary {
   greeting: string;
@@ -328,7 +329,7 @@ export async function GET(_request: NextRequest) {
       data: summary,
     });
   } catch (error) {
-    console.error('Error fetching cat context:', error);
+    logger.error('Error fetching cat context', error, 'CatContextAPI');
     return NextResponse.json({ error: 'Failed to fetch context' }, { status: 500 });
   }
 }

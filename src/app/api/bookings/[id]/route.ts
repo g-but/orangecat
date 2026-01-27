@@ -10,6 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -43,7 +44,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Verify user has access (is customer or provider)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: actors } = await (supabase.from('actors') as any).select('id').eq('user_id', user.id);
+    const { data: actors } = await (supabase.from('actors') as any)
+      .select('id')
+      .eq('user_id', user.id);
 
     const actorIds = actors?.map((a: { id: string }) => a.id) || [];
     const isCustomer = booking.customer_user_id === user.id;
@@ -59,7 +62,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       role: isProvider ? 'provider' : 'customer',
     });
   } catch (error) {
-    console.error('Get booking error:', error);
+    logger.error('Get booking error', error, 'BookingsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -96,7 +99,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Get user's actor IDs
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: actors } = await (supabase.from('actors') as any).select('id').eq('user_id', user.id);
+    const { data: actors } = await (supabase.from('actors') as any)
+      .select('id')
+      .eq('user_id', user.id);
 
     const actorIds = actors?.map((a: { id: string }) => a.id) || [];
 
@@ -156,7 +161,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       data: bookingResult.booking,
     });
   } catch (error) {
-    console.error('Update booking error:', error);
+    logger.error('Update booking error', error, 'BookingsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -187,7 +192,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Cancel booking error:', error);
+    logger.error('Cancel booking error', error, 'BookingsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

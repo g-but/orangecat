@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .order('last_message_at', { ascending: false, nullsFirst: false });
 
     if (error) {
-      console.error('Error fetching conversations:', error);
+      logger.error('Error fetching conversations', error, 'AIConversationsAPI');
       return NextResponse.json({ error: 'Failed to fetch conversations' }, { status: 500 });
     }
 
@@ -57,7 +58,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       data: conversations || [],
     });
   } catch (error) {
-    console.error('Conversations API error:', error);
+    logger.error('Conversations API error', error, 'AIConversationsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -76,8 +77,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify assistant exists and is active
-    const { data: assistant, error: assistantError } = await (supabase
-      .from(DATABASE_TABLES.AI_ASSISTANTS) as any)
+    const { data: assistant, error: assistantError } = await (
+      supabase.from(DATABASE_TABLES.AI_ASSISTANTS) as any
+    )
       .select('id, title, status, system_prompt, welcome_message')
       .eq('id', assistantId)
       .single();
@@ -91,8 +93,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Create new conversation
-    const { data: conversation, error: createError } = await (supabase
-      .from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
+    const { data: conversation, error: createError } = await (
+      supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any
+    )
       .insert({
         assistant_id: assistantId,
         user_id: user.id,
@@ -102,7 +105,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       .single();
 
     if (createError) {
-      console.error('Error creating conversation:', createError);
+      logger.error('Error creating conversation', createError, 'AIConversationsAPI');
       return NextResponse.json({ error: 'Failed to create conversation' }, { status: 500 });
     }
 
@@ -132,7 +135,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Create conversation error:', error);
+    logger.error('Create conversation error', error, 'AIConversationsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

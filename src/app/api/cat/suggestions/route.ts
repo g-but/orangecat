@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { fetchDocumentsForCat, type DocumentContext } from '@/services/ai/document-context';
+import { logger } from '@/utils/logger';
 
 // Document type to suggestion mapping
 const DOCUMENT_TYPE_SUGGESTIONS: Record<string, (doc: DocumentContext) => string[]> = {
@@ -152,7 +153,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('[Cat Suggestions] Error:', error);
+    logger.error('Cat Suggestions error', error, 'CatSuggestionsAPI');
     // Return defaults on error
     return NextResponse.json({
       success: true,

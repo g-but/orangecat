@@ -9,6 +9,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
 import { getTableName } from '@/config/entity-registry';
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -51,9 +52,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const endsAt = new Date(ends_at);
 
     // Verify service exists and is active
-    const { data: service, error: serviceError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('service')) as any)
+    const { data: service, error: serviceError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('service')) as any
+    )
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
       .eq('status', 'active')
@@ -64,9 +67,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     }
 
     // Get customer's actor
-    const { data: customerActor } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('actors') as any)
+    const { data: customerActor } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('actors') as any
+    )
       .select('id')
       .eq('user_id', user.id)
       .single();
@@ -120,7 +125,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Book service error:', error);
+    logger.error('Book service error', error, 'ServiceBookAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 const addKeySchema = z.object({
   provider: z
@@ -50,7 +51,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error fetching API keys:', error);
+    logger.error('Error fetching API keys', error, 'ApiKeysAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -112,7 +113,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Error adding API key:', error);
+    logger.error('Error adding API key', error, 'ApiKeysAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

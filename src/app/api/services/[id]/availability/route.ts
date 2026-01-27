@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
 import { getTableName } from '@/config/entity-registry';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -41,9 +42,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify service exists
-    const { data: service, error: serviceError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('service')) as any)
+    const { data: service, error: serviceError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('service')) as any
+    )
       .select('id, title, actor_id, hourly_rate, fixed_price, currency')
       .eq('id', serviceId)
       .eq('status', 'active')
@@ -76,7 +79,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    console.error('Get availability error:', error);
+    logger.error('Get availability error', error, 'ServiceAvailabilityAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

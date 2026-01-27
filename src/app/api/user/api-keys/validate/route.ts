@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 const validateSchema = z.object({
   apiKey: z.string().min(10).max(500),
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('Error validating API key:', error);
+    logger.error('Error validating API key', error, 'ApiKeysValidateAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
