@@ -12,6 +12,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { CAT_ACTIONS, type CatAction, type ActionCategory } from '@/config/cat-actions';
 import { CatPermissionService } from './permission-service';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnySupabaseClient = SupabaseClient<any, any, any>;
@@ -61,7 +62,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
   create_product: async (supabase, _userId, actorId, params) => {
     const { data, error } = await supabase
-      .from('user_products')
+      .from(ENTITY_REGISTRY.product.tableName)
       .insert({
         actor_id: actorId,
         title: params.title,
@@ -81,7 +82,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
   create_service: async (supabase, _userId, actorId, params) => {
     const { data, error } = await supabase
-      .from('user_services')
+      .from(ENTITY_REGISTRY.service.tableName)
       .insert({
         actor_id: actorId,
         title: params.title,
@@ -101,7 +102,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
   create_project: async (supabase, _userId, actorId, params) => {
     const { data, error } = await supabase
-      .from('user_projects')
+      .from(ENTITY_REGISTRY.project.tableName)
       .insert({
         actor_id: actorId,
         title: params.title,
@@ -121,7 +122,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
   create_cause: async (supabase, _userId, actorId, params) => {
     const { data, error } = await supabase
-      .from('user_causes')
+      .from(ENTITY_REGISTRY.cause.tableName)
       .insert({
         actor_id: actorId,
         title: params.title,
@@ -140,7 +141,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
   create_event: async (supabase, _userId, actorId, params) => {
     const { data, error } = await supabase
-      .from('user_events')
+      .from(ENTITY_REGISTRY.event.tableName)
       .insert({
         actor_id: actorId,
         title: params.title,
@@ -233,7 +234,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
 
   add_context: async (supabase, _userId, actorId, params) => {
     const { data, error } = await supabase
-      .from('user_documents')
+      .from(ENTITY_REGISTRY.document.tableName)
       .insert({
         actor_id: actorId,
         title: params.title,
@@ -255,7 +256,7 @@ const ACTION_HANDLERS: Partial<Record<string, ActionHandler>> = {
   create_organization: async (supabase, userId, _actorId, params) => {
     // Create the group (organization)
     const { data: group, error: groupError } = await supabase
-      .from('groups')
+      .from(ENTITY_REGISTRY.group.tableName)
       .insert({
         name: params.name,
         description: params.description || null,

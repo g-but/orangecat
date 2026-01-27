@@ -14,6 +14,7 @@
 
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '@/utils/logger';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 
 // Type alias for any SupabaseClient (accepts any database schema)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -97,7 +98,7 @@ export async function fetchDocumentsForCat(
 
     // Fetch documents visible to My Cat
     const { data: documents, error: docsError } = await supabase
-      .from('user_documents')
+      .from(ENTITY_REGISTRY.document.tableName)
       .select('id, title, content, document_type, visibility')
       .eq('actor_id', actor.id)
       .in('visibility', ['cat_visible', 'public'])
@@ -236,7 +237,7 @@ export async function fetchEntitiesForCat(
 
     // Fetch products (include draft so user can ask about their drafts)
     const { data: products, error: productsError } = await supabase
-      .from('user_products')
+      .from(ENTITY_REGISTRY.product.tableName)
       .select('title, description, status, price_sats, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
@@ -263,7 +264,7 @@ export async function fetchEntitiesForCat(
 
     // Fetch services (include draft)
     const { data: services, error: servicesError } = await supabase
-      .from('user_services')
+      .from(ENTITY_REGISTRY.service.tableName)
       .select('title, description, status, price_sats, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
@@ -290,7 +291,7 @@ export async function fetchEntitiesForCat(
 
     // Fetch projects
     const { data: projects, error: projectsError } = await supabase
-      .from('user_projects')
+      .from(ENTITY_REGISTRY.project.tableName)
       .select('title, description, status, goal_sats, current_sats, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
@@ -317,7 +318,7 @@ export async function fetchEntitiesForCat(
 
     // Fetch causes
     const { data: causes, error: causesError } = await supabase
-      .from('user_causes')
+      .from(ENTITY_REGISTRY.cause.tableName)
       .select('title, description, status, category')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
@@ -343,7 +344,7 @@ export async function fetchEntitiesForCat(
 
     // Fetch events
     const { data: events, error: eventsError } = await supabase
-      .from('user_events')
+      .from(ENTITY_REGISTRY.event.tableName)
       .select('title, description, status, start_date, end_date, location')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
@@ -369,7 +370,7 @@ export async function fetchEntitiesForCat(
 
     // Fetch assets
     const { data: assets, error: assetsError } = await supabase
-      .from('user_assets')
+      .from(ENTITY_REGISTRY.asset.tableName)
       .select('title, description, status, price_sats, asset_type, location')
       .eq('actor_id', actorId)
       .in('status', ['active', 'draft', 'paused'])
