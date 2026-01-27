@@ -1,38 +1,16 @@
-import { createClient } from '@supabase/supabase-js';
+/**
+ * Supabase Admin Client - Re-exports from SSOT
+ *
+ * DEPRECATED: Import directly from '@/lib/supabase/admin' instead.
+ * This file exists for backwards compatibility only.
+ *
+ * SSOT: @/lib/supabase/admin
+ */
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-// SUPABASE_SERVICE_ROLE_KEY is canonical; SUPABASE_SERVICE_KEY for backward compatibility
-const SUPABASE_SERVICE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
+import { getAdminClient, createAdminClient } from '@/lib/supabase/admin';
 
-// During static builds (e.g., Vercel build step) the service-role key may be
-// intentionally absent for security.  To prevent the build from crashing we
-// fall back to a dummy client that will throw **at runtime** if it is actually
-// used without the required credentials.  This keeps the build green while
-// still ensuring we do not accidentally operate without proper secrets in
-// production.
-
-function createDummyClient() {
-  return new Proxy(
-    {},
-    {
-      get() {
-        throw new Error(
-          'Supabase Admin client requested, but required environment variables are missing (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_KEY). Configure these in your deployment environment.'
-        );
-      },
-    }
-  ) as unknown as ReturnType<typeof createClient>;
-}
-
-const supabaseAdmin =
-  SUPABASE_URL && SUPABASE_SERVICE_KEY
-    ? createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
-        auth: {
-          autoRefreshToken: false,
-          persistSession: false,
-        },
-      })
-    : createDummyClient();
+// Export singleton for backwards compatibility with default export
+const supabaseAdmin = getAdminClient();
 
 export default supabaseAdmin;
+export { createAdminClient, getAdminClient };

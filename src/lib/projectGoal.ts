@@ -1,6 +1,6 @@
 'use server';
 
-import { currencyConverter } from '@/services/currencyConverter';
+import { currencyConverter } from '@/services/currency';
 
 /**
  * Compute amount raised in goal currency from BTC balance.

@@ -2,12 +2,21 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import { Globe, Lock, Users } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { Globe, Lock, FolderPlus, X, Bold, Italic, WifiOff, Users } from 'lucide-react';
 import { usePostComposer } from '@/hooks/usePostComposerNew';
 import { useContentEditableEditor } from '@/hooks/useContentEditableEditor';
 import AvatarLink from '@/components/ui/AvatarLink';
 import { cn } from '@/lib/utils';
+import {
+  TextFormatToolbar,
+  ProjectSelectionPanel,
+  ProjectToggleButton,
+  ComposerMessages,
+  CharacterCounter,
+  OfflineIndicator,
+  ContextIndicator,
+} from './ComposerShared';
 
 /**
  * TimelineComposer Component - X-Inspired Minimal Design
@@ -21,11 +30,10 @@ import { cn } from '@/lib/utils';
  * - Basic text formatting (bold/italic via markdown)
  * - Modular, maintainable, DRY code
  *
- * NOTE: For full-screen mobile modal posting, use PostComposerMobile.
- * TODO: Consolidate PostComposerMobile into this component with a `fullScreen` prop
- * to eliminate code duplication. Both share ~70% identical logic.
+ * Uses shared components from ComposerShared.tsx for DRY compliance.
  *
  * @see PostComposerMobile for full-screen mobile modal variant
+ * @see ComposerShared for reusable UI components
  */
 
 export interface TimelineComposerProps {
@@ -45,118 +53,6 @@ export interface TimelineComposerProps {
   parentEventId?: string;
   /** Simplified UI that hides advanced controls */
   simpleMode?: boolean;
-}
-
-/**
- * Text Formatting Toolbar Component
- *
- * Modular component for applying markdown-style formatting (bold/italic)
- * Uses markdown syntax: **bold** and *italic*
- */
-function TextFormatToolbar({ onFormat }: { onFormat: (format: 'bold' | 'italic') => void }) {
-  return (
-    <div className="flex items-center gap-1">
-      <button
-        type="button"
-        onClick={() => onFormat('bold')}
-        className="h-9 w-9 flex items-center justify-center rounded-full text-sky-600 hover:bg-sky-50 active:bg-sky-100 transition-colors"
-        title="Bold (Ctrl+B)"
-        aria-label="Make text bold"
-      >
-        <Bold className="w-4 h-4" />
-      </button>
-      <button
-        type="button"
-        onClick={() => onFormat('italic')}
-        className="h-9 w-9 flex items-center justify-center rounded-full text-sky-600 hover:bg-sky-50 active:bg-sky-100 transition-colors"
-        title="Italic (Ctrl+I)"
-        aria-label="Make text italic"
-      >
-        <Italic className="w-4 h-4" />
-      </button>
-    </div>
-  );
-}
-
-/**
- * Project Selection Panel Component
- *
- * Collapsible panel for selecting projects to cross-post
- * Uses progressive disclosure - hidden by default
- */
-function ProjectSelectionPanel({
-  projects,
-  selectedProjects,
-  onToggle,
-  onClose,
-  isPosting,
-}: {
-  projects: Array<{ id: string; title: string }>;
-  selectedProjects: string[];
-  onToggle: (id: string) => void;
-  onClose: () => void;
-  isPosting: boolean;
-}) {
-  if (projects.length === 0) {
-    return null;
-  }
-
-  return (
-    <div className="mt-3 p-3 bg-orange-50/50 rounded-xl border border-orange-100">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-semibold text-orange-800 uppercase tracking-wide">
-          Cross-post to Projects
-        </span>
-        <button
-          onClick={onClose}
-          className="text-orange-400 hover:text-orange-600 active:text-orange-700 transition-colors p-2 sm:p-1 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full touch-manipulation"
-          aria-label="Close project selection"
-        >
-          <X className="w-4 h-4 sm:w-3 sm:h-3" />
-        </button>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {projects.map(project => (
-          <button
-            key={project.id}
-            type="button"
-            onClick={() => onToggle(project.id)}
-            disabled={isPosting}
-            className={cn(
-              'px-3 py-1 text-xs font-medium rounded-full border transition-all',
-              selectedProjects.includes(project.id)
-                ? 'bg-orange-500 text-white border-orange-500 shadow-sm'
-                : 'bg-white text-gray-600 border-gray-200 hover:border-orange-300 hover:bg-orange-50'
-            )}
-          >
-            {project.title}
-          </button>
-        ))}
-      </div>
-      {selectedProjects.length > 0 && (
-        <p className="mt-2 text-xs text-gray-600">
-          This post will appear on {selectedProjects.length} project timeline
-          {selectedProjects.length > 1 ? 's' : ''}
-        </p>
-      )}
-    </div>
-  );
-}
-
-/**
- * Context Indicator Component
- *
- * Subtle indicator showing where the post will appear
- * Replaces the large banner with minimal design
- */
-function ContextIndicator({ targetName }: { targetName: string }) {
-  return (
-    <div className="mb-1.5 flex items-center">
-      <span className="text-xs sm:text-xs text-gray-500 font-medium bg-gray-100 px-2 py-1 sm:py-0.5 rounded-full">
-        To {targetName}
-      </span>
-    </div>
-  );
 }
 
 const TimelineComposer = React.memo(function TimelineComposer({
@@ -266,17 +162,6 @@ const TimelineComposer = React.memo(function TimelineComposer({
     setShowProjects(true);
   }, []);
 
-  // Character count color
-  const characterCountColor = useMemo(() => {
-    if (postComposer.content.length > 450) {
-      return 'text-red-500';
-    }
-    if (postComposer.content.length > 400) {
-      return 'text-orange-500';
-    }
-    return 'text-gray-400';
-  }, [postComposer.content.length]);
-
   // Button disabled state
   const isButtonDisabled = useMemo(
     () =>
@@ -343,16 +228,7 @@ const TimelineComposer = React.memo(function TimelineComposer({
           )}
 
           {/* Error/Success Messages */}
-          {postComposer.error && (
-            <div className="mt-2 text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">
-              {postComposer.error}
-            </div>
-          )}
-          {postComposer.postSuccess && (
-            <div className="mt-2 text-sm text-green-600 bg-green-50 px-3 py-2 rounded-lg">
-              ✓ Post shared successfully!
-            </div>
-          )}
+          <ComposerMessages error={postComposer.error} success={postComposer.postSuccess} />
 
           {/* Bottom Toolbar - simplified by default */}
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-100">
@@ -360,20 +236,11 @@ const TimelineComposer = React.memo(function TimelineComposer({
               {!simpleMode && <TextFormatToolbar onFormat={handleFormat} />}
 
               {!simpleMode && allowProjectSelection && postComposer.userProjects.length > 0 && (
-                <button
-                  type="button"
-                  onClick={showProjects ? handleCloseProjects : handleOpenProjects}
-                  className={cn(
-                    'h-9 w-9 flex items-center justify-center rounded-full transition-colors touch-manipulation',
-                    showProjects || postComposer.selectedProjects.length > 0
-                      ? 'text-sky-700 bg-sky-50'
-                      : 'text-sky-600 hover:bg-sky-50 active:bg-sky-100'
-                  )}
-                  title="Cross-post to projects"
-                  aria-label="Toggle project selection"
-                >
-                  <FolderPlus className="w-4 h-4" />
-                </button>
+                <ProjectToggleButton
+                  showProjects={showProjects}
+                  selectedCount={postComposer.selectedProjects.length}
+                  onToggle={showProjects ? handleCloseProjects : handleOpenProjects}
+                />
               )}
 
               {simpleMode ? (
@@ -430,17 +297,8 @@ const TimelineComposer = React.memo(function TimelineComposer({
             </div>
 
             <div className="flex items-center gap-3">
-              {!isOnline && (
-                <div className="flex items-center gap-1 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded-full">
-                  <WifiOff className="w-3 h-3" />
-                  <span>Offline</span>
-                </div>
-              )}
-              {!simpleMode && postComposer.content.length > 0 && (
-                <div className={cn('text-sm font-medium', characterCountColor)}>
-                  {postComposer.content.length}/500
-                </div>
-              )}
+              <OfflineIndicator isOnline={isOnline} />
+              {!simpleMode && <CharacterCounter count={postComposer.content.length} />}
 
               <Button
                 onClick={postComposer.handlePost}

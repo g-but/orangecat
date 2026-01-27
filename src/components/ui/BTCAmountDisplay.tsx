@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Bitcoin } from 'lucide-react';
-import { currencyConverter } from '@/services/currencyConverter';
+import { currencyConverter } from '@/services/currency';
 import type { CurrencyCode } from '@/config/currencies';
 
 interface BTCAmountDisplayProps {
