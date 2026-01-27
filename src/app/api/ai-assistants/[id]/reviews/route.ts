@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -32,9 +33,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     } = await supabase.auth.getUser();
 
     // Verify assistant exists
-    const { data: assistant, error: assistantError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(DATABASE_TABLES.AI_ASSISTANTS) as any)
+    const { data: assistant, error: assistantError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.AI_ASSISTANTS) as any
+    )
       .select('id, average_rating, total_ratings')
       .eq('id', assistantId)
       .single();
@@ -44,9 +47,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Build query
-    let query = (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
+    let query = (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any
+    )
       .select(
         `
         id,
@@ -80,14 +85,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { data: reviews, count, error: reviewsError } = await query;
 
     if (reviewsError) {
-      console.error('Error fetching reviews:', reviewsError);
+      logger.error('Error fetching reviews', reviewsError, 'AIAssistantReviewsAPI');
       return NextResponse.json({ error: 'Failed to fetch reviews' }, { status: 500 });
     }
 
     // Get rating distribution
-    const { data: distribution } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
+    const { data: distribution } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any
+    )
       .select('rating')
       .eq('assistant_id', assistantId);
 
@@ -108,9 +115,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get current user's rating if authenticated
     let userRating = null;
     if (user) {
-      const { data: myRating } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any)
+      const { data: myRating } = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(DATABASE_TABLES.AI_ASSISTANT_RATINGS) as any
+      )
         .select('id, rating, review, created_at')
         .eq('assistant_id', assistantId)
         .eq('user_id', user.id)
@@ -138,7 +147,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    console.error('Fetch reviews error:', error);
+    logger.error('Fetch reviews error', error, 'AIAssistantReviewsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

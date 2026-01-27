@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -57,7 +58,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Verify asset exists and is for rent
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: asset, error: assetError } = await (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
+    const { data: asset, error: assetError } = await (
+      supabase.from(DATABASE_TABLES.USER_ASSETS) as any
+    )
       .select(
         'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats'
       )
@@ -99,7 +102,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    console.error('Get asset availability error:', error);
+    logger.error('Get asset availability error', error, 'AssetAvailabilityAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

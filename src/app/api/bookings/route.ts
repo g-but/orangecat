@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
 import { BookingStatus } from '@/services/bookings';
+import { logger } from '@/utils/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
       data: bookings,
     });
   } catch (error) {
-    console.error('Fetch bookings error:', error);
+    logger.error('Fetch bookings error', error, 'BookingsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

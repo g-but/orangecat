@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyCaptchaToken } from '@/lib/captcha';
+import { logger } from '@/utils/logger';
 
 /**
  * POST /api/auth/verify-captcha
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: false, error: result.error }, { status: 400 });
   } catch (error) {
-    console.error('[API] CAPTCHA verification error:', error);
+    logger.error('CAPTCHA verification error', error, 'CaptchaAPI');
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
   }
 }

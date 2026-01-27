@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createActionExecutor } from '@/services/cat';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -63,7 +64,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       );
     }
   } catch (error) {
-    console.error('[API] Confirm pending action error:', error);
+    logger.error('Confirm pending action error', error, 'CatActionsAPI');
     return NextResponse.json(
       { success: false, error: 'Failed to confirm action' },
       { status: 500 }
@@ -106,7 +107,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       data: { rejected: true },
     });
   } catch (error) {
-    console.error('[API] Reject pending action error:', error);
+    logger.error('Reject pending action error', error, 'CatActionsAPI');
     return NextResponse.json({ success: false, error: 'Failed to reject action' }, { status: 500 });
   }
 }

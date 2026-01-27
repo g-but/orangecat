@@ -22,6 +22,7 @@ import {
   type ActionCategory,
 } from '@/config/cat-actions';
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 // Validation schemas - category enum derived from ACTION_CATEGORIES (DRY)
 const categorySchema = z.enum(ACTION_CATEGORY_KEYS);
@@ -84,7 +85,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('[API] Get cat permissions error:', error);
+    logger.error('Get cat permissions error', error, 'CatPermissionsAPI');
     return NextResponse.json(
       { success: false, error: 'Failed to get permissions' },
       { status: 500 }
@@ -163,7 +164,7 @@ export async function POST(request: NextRequest) {
       data: { summary },
     });
   } catch (error) {
-    console.error('[API] Grant cat permission error:', error);
+    logger.error('Grant cat permission error', error, 'CatPermissionsAPI');
     return NextResponse.json(
       { success: false, error: 'Failed to grant permission' },
       { status: 500 }
@@ -217,7 +218,7 @@ export async function DELETE(request: NextRequest) {
       data: { summary },
     });
   } catch (error) {
-    console.error('[API] Revoke cat permission error:', error);
+    logger.error('Revoke cat permission error', error, 'CatPermissionsAPI');
     return NextResponse.json(
       { success: false, error: 'Failed to revoke permission' },
       { status: 500 }

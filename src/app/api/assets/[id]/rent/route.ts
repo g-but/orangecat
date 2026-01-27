@@ -9,6 +9,7 @@ import { createServerClient } from '@/lib/supabase/server';
 import { createBookingService } from '@/services/bookings';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -52,7 +53,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     // Verify asset exists and is for rent
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: assetData, error: assetError } = await (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
+    const { data: assetData, error: assetError } = await (
+      supabase.from(DATABASE_TABLES.USER_ASSETS) as any
+    )
       .select(
         'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats, currency'
       )
@@ -166,7 +169,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       { status: 201 }
     );
   } catch (error) {
-    console.error('Rent asset error:', error);
+    logger.error('Rent asset error', error, 'AssetRentAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

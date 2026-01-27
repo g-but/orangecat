@@ -15,6 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { createActionExecutor } from '@/services/cat';
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 // Validation schema
 const executeActionSchema = z.object({
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('[API] Get cat actions error:', error);
+    logger.error('Get cat actions error', error, 'CatActionsAPI');
     return NextResponse.json({ success: false, error: 'Failed to get actions' }, { status: 500 });
   }
 }
@@ -118,7 +119,7 @@ export async function POST(request: NextRequest) {
       );
     }
   } catch (error) {
-    console.error('[API] Execute cat action error:', error);
+    logger.error('Execute cat action error', error, 'CatActionsAPI');
     return NextResponse.json(
       { success: false, error: 'Failed to execute action' },
       { status: 500 }

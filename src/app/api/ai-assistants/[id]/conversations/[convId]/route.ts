@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
+import { logger } from '@/utils/logger';
 
 interface RouteParams {
   params: Promise<{ id: string; convId: string }>;
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .order('created_at', { ascending: true });
 
     if (msgError) {
-      console.error('Error fetching messages:', msgError);
+      logger.error('Error fetching messages', msgError, 'AIConversationAPI');
       return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
     }
 
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       },
     });
   } catch (error) {
-    console.error('Get conversation error:', error);
+    logger.error('Get conversation error', error, 'AIConversationAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -108,8 +109,9 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Update conversation
-    const { data: conversation, error } = await (supabase
-      .from(DATABASE_TABLES.AI_CONVERSATIONS) as any)
+    const { data: conversation, error } = await (
+      supabase.from(DATABASE_TABLES.AI_CONVERSATIONS) as any
+    )
       .update({
         ...result.data,
         updated_at: new Date().toISOString(),
@@ -121,7 +123,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       .single();
 
     if (error) {
-      console.error('Error updating conversation:', error);
+      logger.error('Error updating conversation', error, 'AIConversationAPI');
       return NextResponse.json({ error: 'Failed to update conversation' }, { status: 500 });
     }
 
@@ -134,7 +136,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       data: conversation,
     });
   } catch (error) {
-    console.error('Update conversation error:', error);
+    logger.error('Update conversation error', error, 'AIConversationAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -161,7 +163,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       .eq('user_id', user.id);
 
     if (error) {
-      console.error('Error deleting conversation:', error);
+      logger.error('Error deleting conversation', error, 'AIConversationAPI');
       return NextResponse.json({ error: 'Failed to delete conversation' }, { status: 500 });
     }
 
@@ -170,7 +172,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       message: 'Conversation deleted',
     });
   } catch (error) {
-    console.error('Delete conversation error:', error);
+    logger.error('Delete conversation error', error, 'AIConversationAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
