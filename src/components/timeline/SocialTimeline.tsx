@@ -1,55 +1,49 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '@/hooks/useAuth';
-import { timelineService } from '@/services/timeline';
-import TimelineLayout from './TimelineLayout';
-import { TimelineDisplayEvent, TimelineFeedResponse } from '@/types/timeline';
+/**
+ * SocialTimeline Component
+ *
+ * Displays personal or community timeline with posts, search, and sorting.
+ * Logic extracted to useSocialTimeline hook, controls to separate components.
+ */
+
+'use client';
+
+import React, { useRef } from 'react';
+import { LucideIcon, Plus } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import { LucideIcon, TrendingUp, Clock, Flame, Plus, Search, Loader2, X } from 'lucide-react';
-import { logger } from '@/utils/logger';
+import TimelineLayout from './TimelineLayout';
+import { TimelineFeedResponse } from '@/types/timeline';
 import TimelineComposer from './TimelineComposer';
 import { TimelineSkeleton } from './TimelineSkeleton';
-import { filterOptimisticEvents } from '@/utils/timeline';
-import { useInvalidateTimeline } from '@/hooks/useTimelineQuery';
+import { useSocialTimeline } from './useSocialTimeline';
+import { TimelineSortingControls } from './TimelineSortingControls';
+import { TimelineSearchControls } from './TimelineSearchControls';
 
 export interface SocialTimelineProps {
-  // Page identity
   title: string;
   description: string;
   icon: LucideIcon;
   gradientFrom: string;
   gradientVia: string;
   gradientTo: string;
-
-  // Data source
   mode: 'timeline' | 'community';
-
-  // Timeline ownership (for cross-posting)
-  timelineOwnerId?: string; // Whose timeline posts appear on
-  timelineOwnerType?: 'profile' | 'project'; // Type of timeline owner
-  timelineOwnerName?: string; // Display name for context
-
-  // Header customization
+  timelineOwnerId?: string;
+  timelineOwnerType?: 'profile' | 'project';
+  timelineOwnerName?: string;
   showShareButton?: boolean;
   shareButtonText?: string;
   shareButtonIcon?: LucideIcon;
-
-  // Timeline configuration
   defaultSort?: 'recent' | 'trending' | 'popular';
   showSortingControls?: boolean;
-
-  // Stats configuration
   customStats?: {
     totalPosts: number;
     totalLikes: number;
     totalComments: number;
     totalFollowers?: number;
   };
-
-  // Inline composer
   showInlineComposer?: boolean;
   allowProjectSelection?: boolean;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onOptimisticUpdate?: (event: any) => void; // For immediate UI feedback on posts
+  onOptimisticUpdate?: (event: any) => void;
 }
 
 export default function SocialTimeline({
@@ -73,207 +67,37 @@ export default function SocialTimeline({
   allowProjectSelection = false,
   onOptimisticUpdate,
 }: SocialTimelineProps) {
-  const { user, isLoading, hydrated } = useAuth();
-  // Auth check is complete when hydrated and not loading
-  const authCheckComplete = hydrated && !isLoading;
-
-  // React Query cache invalidation for stale-while-revalidate behavior
-  const { invalidateAll: invalidateTimelineCache } = useInvalidateTimeline();
-  const [timelineFeed, setTimelineFeed] = useState<TimelineFeedResponse | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [optimisticEvents, setOptimisticEvents] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<TimelineDisplayEvent[] | null>(null);
-  const [searchTotal, setSearchTotal] = useState<number | null>(null);
-  const [searchError, setSearchError] = useState<string | null>(null);
-  const [searching, setSearching] = useState(false);
-
-  // Handle optimistic event updates
-  const handleOptimisticUpdate = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (event: any) => {
-      setOptimisticEvents(prev => [event, ...prev]);
-      onOptimisticUpdate?.(event);
-    },
-    [onOptimisticUpdate]
-  );
-
-  // Merge optimistic events with real feed using shared utility (DRY)
-  const mergedFeed = React.useMemo(() => {
-    if (!timelineFeed) {
-      return null;
-    }
-
-    // Use centralized utility to filter optimistic events
-    const filteredOptimistic = filterOptimisticEvents(optimisticEvents, timelineFeed.events);
-
-    return {
-      ...timelineFeed,
-      events: [...filteredOptimistic, ...timelineFeed.events],
-      metadata: {
-        ...timelineFeed.metadata,
-        totalEvents: filteredOptimistic.length + timelineFeed.events.length,
-      },
-    };
-  }, [timelineFeed, optimisticEvents]);
-  const [sortBy, setSortBy] = useState<'recent' | 'trending' | 'popular'>(defaultSort);
   const composerRef = useRef<HTMLDivElement | null>(null);
 
-  // Load timeline feed based on mode
-  const loadTimelineFeed = useCallback(
-    async (sort: string = defaultSort, page: number = 1) => {
-      if (!user?.id) {
-        return;
-      }
+  const {
+    user,
+    hydrated,
+    authCheckComplete,
+    isLoading,
+    mergedFeed,
+    timelineFeed,
+    loading,
+    isLoadingMore,
+    error,
+    sortBy,
+    searchQuery,
+    searchResults,
+    searchTotal,
+    searchError,
+    searching,
+    isSearchActive,
+    setSearchQuery,
+    loadTimelineFeed,
+    handleSortChange,
+    handleEventUpdate,
+    handleLoadMore,
+    handleSearch,
+    handleClearSearch,
+    handleOptimisticUpdate,
+    invalidateTimelineCache,
+  } = useSocialTimeline({ mode, defaultSort, onOptimisticUpdate });
 
-      try {
-        // Only show loading on initial load (page 1)
-        if (page === 1) {
-          setLoading(true);
-        } else {
-          setIsLoadingMore(true);
-        }
-        setError(null);
-
-        let feed: TimelineFeedResponse;
-
-        if (mode === 'timeline') {
-          // Personal timeline - user's own posts
-          feed = await timelineService.getEnrichedUserFeed(user.id, {}, { page, limit: 20 });
-        } else {
-          // Community timeline - public posts from all users
-          feed = await timelineService.getCommunityFeed(
-            { sortBy: sort as 'recent' | 'trending' | 'popular' },
-            { page, limit: 20 }
-          );
-        }
-
-        // Append events for pagination, replace for initial load or sort change
-        if (page === 1) {
-          setTimelineFeed(feed);
-        } else {
-          setTimelineFeed(prev => {
-            if (!prev) {return feed;}
-            return {
-              ...feed,
-              events: [...prev.events, ...feed.events],
-            };
-          });
-        }
-      } catch (err) {
-        logger.error(
-          `Failed to load ${mode} timeline`,
-          err,
-          mode === 'timeline' ? 'Journey' : 'Community'
-        );
-        setError(`Failed to load ${mode === 'timeline' ? 'your journey' : 'community posts'}`);
-      } finally {
-        setLoading(false);
-        setIsLoadingMore(false);
-      }
-    },
-    [user?.id, mode, defaultSort]
-  );
-
-  // Handle sort change
-  const handleSortChange = useCallback(
-    (newSort: 'recent' | 'trending' | 'popular') => {
-      setSortBy(newSort);
-      loadTimelineFeed(newSort);
-    },
-    [loadTimelineFeed]
-  );
-
-  // Handle timeline event updates
-  const handleEventUpdate = useCallback(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (eventId: string, updates: any) => {
-      if (!timelineFeed) {
-        return;
-      }
-
-      setTimelineFeed(prev => {
-        if (!prev) {
-          return prev;
-        }
-
-        return {
-          ...prev,
-          events: prev.events.map(event =>
-            event.id === eventId ? { ...event, ...updates } : event
-          ),
-        };
-      });
-    },
-    [timelineFeed]
-  );
-
-  // Handle load more
-  const handleLoadMore = useCallback(() => {
-    if (searchResults !== null) {
-      // Disable pagination while search results are active
-      return;
-    }
-
-    if (!timelineFeed?.pagination.hasNext) {
-      return;
-    }
-    loadTimelineFeed(sortBy, timelineFeed.pagination.page + 1);
-  }, [timelineFeed, sortBy, loadTimelineFeed, searchResults]);
-
-  const isSearchActive = searchResults !== null;
-
-  const handleSearch = useCallback(
-    async (e?: React.FormEvent) => {
-      e?.preventDefault();
-
-      const query = searchQuery.trim();
-      if (query.length < 2) {
-        setSearchError('Enter at least 2 characters');
-        setSearchResults(null);
-        setSearchTotal(null);
-        return;
-      }
-
-      setSearching(true);
-      setSearchError(null);
-
-      const result = await timelineService.searchPosts(query, { limit: 30, offset: 0 });
-
-      if (!result.success) {
-        setSearchError(result.error || 'Search failed. Please try again.');
-        setSearchResults(null);
-        setSearchTotal(null);
-      } else {
-        setSearchResults(result.posts || []);
-        setSearchTotal(result.total ?? result.posts?.length ?? 0);
-      }
-
-      setSearching(false);
-    },
-    [searchQuery]
-  );
-
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
-    setSearchResults(null);
-    setSearchTotal(null);
-    setSearchError(null);
-  }, []);
-
-  // Load data on mount and when dependencies change
-  useEffect(() => {
-    if (hydrated && user?.id) {
-      loadTimelineFeed();
-    }
-  }, [hydrated, user?.id, loadTimelineFeed]);
-
-  // Early return for unauthenticated users (show immediately, no double loading)
-  // Be more lenient - only show sign-in if we're sure the user is not authenticated
-  // Wait for auth check to complete before showing sign-in message
+  // Early return for unauthenticated users
   if (hydrated && authCheckComplete && !isLoading && !user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50/30 via-white to-purple-50/20 flex items-center justify-center">
@@ -295,75 +119,24 @@ export default function SocialTimeline({
     );
   }
 
-  // Show layout immediately with loading state in feed (no double loading screen)
   const isInitialLoad = !hydrated || isLoading;
 
-  // Sorting controls component
-  const SortingControls = () => (
-    <div className="flex bg-white/50 rounded-xl p-1">
-      <Button
-        variant={sortBy === 'trending' ? 'secondary' : 'ghost'}
-        size="sm"
-        onClick={() => handleSortChange('trending')}
-        className={`px-3 py-2 text-sm ${sortBy === 'trending' ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}
-      >
-        <TrendingUp className="w-4 h-4 mr-1" />
-        Trending
-      </Button>
-      <Button
-        variant={sortBy === 'recent' ? 'secondary' : 'ghost'}
-        size="sm"
-        onClick={() => handleSortChange('recent')}
-        className={`px-3 py-2 text-sm ${sortBy === 'recent' ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}
-      >
-        <Clock className="w-4 h-4 mr-1" />
-        Recent
-      </Button>
-      <Button
-        variant={sortBy === 'popular' ? 'secondary' : 'ghost'}
-        size="sm"
-        onClick={() => handleSortChange('popular')}
-        className={`px-3 py-2 text-sm ${sortBy === 'popular' ? 'bg-white shadow-sm' : 'hover:bg-white/50'}`}
-      >
-        <Flame className="w-4 h-4 mr-1" />
-        Popular
-      </Button>
-    </div>
-  );
-
+  // Search controls component
   const searchControls = (
-    <div className="border-b border-gray-200 bg-white px-4 py-3">
-      <form onSubmit={handleSearch} className="flex items-center gap-2">
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Search posts (title or description)..."
-            className="w-full rounded-full border border-gray-200 bg-gray-50 py-2 pl-9 pr-3 text-sm focus:border-sky-500 focus:outline-none focus:ring-2 focus:ring-sky-100"
-          />
-        </div>
-        <Button type="submit" size="sm" disabled={searching} className="gap-2">
-          {searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
-          {searching ? 'Searching' : 'Search'}
-        </Button>
-        {isSearchActive && (
-          <Button type="button" size="sm" variant="ghost" onClick={handleClearSearch} className="text-gray-600">
-            <X className="w-4 h-4 mr-1" />
-            Clear
-          </Button>
-        )}
-      </form>
-      {searchError && <p className="text-sm text-red-600 mt-2">{searchError}</p>}
-      {isSearchActive && !searchError && (
-        <p className="text-xs text-gray-500 mt-2">
-          Showing {searchResults?.length || 0} of {searchTotal ?? searchResults?.length ?? 0} results
-        </p>
-      )}
-    </div>
+    <TimelineSearchControls
+      searchQuery={searchQuery}
+      onSearchQueryChange={setSearchQuery}
+      onSearch={handleSearch}
+      onClearSearch={handleClearSearch}
+      isSearchActive={isSearchActive}
+      searching={searching}
+      searchError={searchError}
+      searchResultsCount={searchResults?.length || 0}
+      searchTotal={searchTotal}
+    />
   );
 
+  // Inline composer
   const inlineComposer =
     showInlineComposer && user ? (
       <div ref={composerRef}>
@@ -379,7 +152,6 @@ export default function SocialTimeline({
           buttonText={mode === 'timeline' ? 'Share Update' : 'Post'}
           onPostCreated={() => {
             loadTimelineFeed(sortBy);
-            // Invalidate React Query cache for other pages to get fresh data
             invalidateTimelineCache();
           }}
           onOptimisticUpdate={handleOptimisticUpdate}
@@ -403,7 +175,7 @@ export default function SocialTimeline({
         }
       : undefined);
 
-  // Timeline feed content
+  // Build timeline feed content
   const timelineFeedContent = mergedFeed || {
     events: [],
     pagination: { page: 1, limit: 20, total: 0, hasNext: false, hasPrev: false },
@@ -430,10 +202,7 @@ export default function SocialTimeline({
           hasNext: false,
           hasPrev: false,
         },
-        filters: {
-          ...timelineFeedContent.filters,
-          search: searchQuery,
-        },
+        filters: { ...timelineFeedContent.filters, search: searchQuery },
         metadata: {
           ...timelineFeedContent.metadata,
           totalEvents: searchResults?.length || 0,
@@ -442,75 +211,68 @@ export default function SocialTimeline({
       }
     : timelineFeedContent;
 
-  // Single, clean empty state (no double loading)
-  const emptyState =
-    isSearchActive ? (
-      searching ? (
-        <TimelineSkeleton count={3} />
-      ) : searchError ? (
-        <div className="text-center py-10">
-          <Icon className="w-14 h-14 text-red-300 mx-auto mb-3" />
-          <p className="text-red-600 text-lg mb-2">{searchError}</p>
-          <Button variant="outline" onClick={handleClearSearch}>
-            Clear Search
-          </Button>
-        </div>
-      ) : activeFeed.events.length === 0 ? (
-        <div className="text-center py-10">
-          <Icon className="w-14 h-14 text-gray-300 mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-1">No posts found</h3>
-          <p className="text-gray-600">Try another search term.</p>
-          <div className="mt-4">
-            <Button variant="secondary" onClick={handleClearSearch}>
-              Clear search
-            </Button>
-          </div>
-        </div>
-      ) : null
-    ) : isInitialLoad || loading ? (
-      <TimelineSkeleton count={5} />
-    ) : error ? (
-      <div className="text-center py-16">
-        <div className="mb-4">
-          <Icon className="w-16 h-16 text-red-300 mx-auto mb-4" />
-          <p className="text-red-600 text-lg mb-4">{error}</p>
-          <Button variant="outline" onClick={() => loadTimelineFeed(sortBy)}>
-            Try Again
+  // Empty state rendering
+  const emptyState = isSearchActive ? (
+    searching ? (
+      <TimelineSkeleton count={3} />
+    ) : searchError ? (
+      <div className="text-center py-10">
+        <Icon className="w-14 h-14 text-red-300 mx-auto mb-3" />
+        <p className="text-red-600 text-lg mb-2">{searchError}</p>
+        <Button variant="outline" onClick={handleClearSearch}>
+          Clear Search
+        </Button>
+      </div>
+    ) : activeFeed.events.length === 0 ? (
+      <div className="text-center py-10">
+        <Icon className="w-14 h-14 text-gray-300 mx-auto mb-3" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-1">No posts found</h3>
+        <p className="text-gray-600">Try another search term.</p>
+        <div className="mt-4">
+          <Button variant="secondary" onClick={handleClearSearch}>
+            Clear search
           </Button>
         </div>
       </div>
-    ) : timelineFeed?.events.length === 0 ? (
-      <div className="text-center py-16">
-        <Icon className="w-20 h-20 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-xl font-semibold text-gray-900 mb-2">
-          {mode === 'timeline' ? 'No posts yet' : 'No posts yet'}
-        </h3>
-        <p className="text-gray-600 max-w-md mx-auto">
-          {mode === 'timeline'
-            ? "Share your first update about what you're working on!"
-            : 'Be the first to share something productive with the community!'}
-        </p>
-      </div>
-    ) : null;
+    ) : null
+  ) : isInitialLoad || loading ? (
+    <TimelineSkeleton count={5} />
+  ) : error ? (
+    <div className="text-center py-16">
+      <Icon className="w-16 h-16 text-red-300 mx-auto mb-4" />
+      <p className="text-red-600 text-lg mb-4">{error}</p>
+      <Button variant="outline" onClick={() => loadTimelineFeed(sortBy)}>
+        Try Again
+      </Button>
+    </div>
+  ) : timelineFeed?.events.length === 0 ? (
+    <div className="text-center py-16">
+      <Icon className="w-20 h-20 text-gray-300 mx-auto mb-4" />
+      <h3 className="text-xl font-semibold text-gray-900 mb-2">No posts yet</h3>
+      <p className="text-gray-600 max-w-md mx-auto">
+        {mode === 'timeline'
+          ? "Share your first update about what you're working on!"
+          : 'Be the first to share something productive with the community!'}
+      </p>
+    </div>
+  ) : null;
 
+  // Header content with sorting and share button
   const headerContent =
     showSortingControls || (showShareButton && user) ? (
       <>
-        {showSortingControls && <SortingControls />}
+        {showSortingControls && (
+          <TimelineSortingControls sortBy={sortBy} onSortChange={handleSortChange} />
+        )}
         {showShareButton && user && (
           <Button
             size="sm"
             variant="secondary"
             onClick={() => {
-              // Scroll to composer smoothly without causing jumps
               if (composerRef.current) {
                 const element = composerRef.current;
                 const elementPosition = element.getBoundingClientRect().top + window.scrollY;
-                const offsetPosition = elementPosition - 80; // Account for sticky header
-                window.scrollTo({
-                  top: offsetPosition,
-                  behavior: 'smooth'
-                });
+                window.scrollTo({ top: elementPosition - 80, behavior: 'smooth' });
               }
             }}
             className="inline-flex items-center gap-2"
@@ -537,7 +299,7 @@ export default function SocialTimeline({
       stats={timelineStats}
       showFilters={false}
       compact={false}
-      enableMultiSelect={mode === 'timeline'} // Enable multi-select for personal timeline (management mode)
+      enableMultiSelect={mode === 'timeline'}
       additionalHeaderContent={headerContent}
       emptyState={emptyState}
       inlineComposer={inlineComposer}
