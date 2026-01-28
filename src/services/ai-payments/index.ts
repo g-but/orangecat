@@ -11,6 +11,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // Type alias for any SupabaseClient (accepts any database schema)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { logger } from '@/utils/logger';
 
 // Payment result types
 export interface PaymentResult {
@@ -232,7 +233,7 @@ export class AIPaymentService {
 
     if (deductError) {
       // If RPC doesn't exist yet, just log and continue (MVP)
-      console.warn('Credit deduction RPC not available:', deductError);
+      logger.warn('Credit deduction RPC not available', { error: deductError }, 'AIPayments');
     }
 
     // Record earnings for the assistant owner

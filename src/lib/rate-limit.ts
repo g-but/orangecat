@@ -16,6 +16,7 @@
 
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
+import { logger } from '@/utils/logger';
 
 // ==================== TYPES ====================
 
@@ -49,9 +50,11 @@ function createRedisClient(): Redis | null {
 
   if (!url || !token) {
     if (process.env.NODE_ENV === 'production') {
-      console.warn(
-        '[Rate Limit] UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN not configured. ' +
-          'Rate limiting will use in-memory fallback which does NOT work correctly in serverless.'
+      logger.warn(
+        'UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN not configured. ' +
+          'Rate limiting will use in-memory fallback which does NOT work correctly in serverless.',
+        {},
+        'RateLimit'
       );
     }
     return null;
@@ -262,10 +265,7 @@ export function createRateLimitResponse(result: RateLimitResult): Response {
 /**
  * Apply standard rate limit headers to an existing Response.
  */
-export function applyRateLimitHeaders<T extends Response>(
-  response: T,
-  result: RateLimitResult
-): T {
+export function applyRateLimitHeaders<T extends Response>(response: T, result: RateLimitResult): T {
   const headers = response.headers;
   headers.set('X-RateLimit-Limit', result.limit.toString());
   headers.set('X-RateLimit-Remaining', result.remaining.toString());

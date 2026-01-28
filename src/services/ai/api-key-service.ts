@@ -15,6 +15,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // Type alias for any SupabaseClient (accepts any database schema)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
+import { logger } from '@/utils/logger';
 
 // ==================== TYPES ====================
 
@@ -191,7 +192,7 @@ export class ApiKeyService {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching API keys:', error);
+      logger.error('Error fetching API keys', { error, userId }, 'APIKeyService');
       return [];
     }
 
@@ -218,7 +219,7 @@ export class ApiKeyService {
     try {
       return decryptApiKey(data.encrypted_key);
     } catch {
-      console.error('Failed to decrypt API key');
+      logger.error('Failed to decrypt API key', { keyId }, 'APIKeyService');
       return null;
     }
   }
@@ -343,7 +344,7 @@ export class ApiKeyService {
     });
 
     if (error) {
-      console.error('Error incrementing platform usage:', error);
+      logger.error('Error incrementing platform usage', { error, userId }, 'APIKeyService');
       return { limitReached: false };
     }
 
