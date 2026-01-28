@@ -14,6 +14,7 @@ import { AIModelPreferences, type AIPreferences } from '@/components/ai/AIModelP
 import { AIUsageStats } from '@/components/ai/AIUsageStats';
 import { AIGuidanceSidebar } from '@/components/ai/AIGuidanceSidebar';
 import type { AIFieldType } from '@/lib/ai-guidance';
+import { logger } from '@/utils/logger';
 
 export default function AISettingsPage() {
   const { user, hydrated, isLoading: authLoading } = useAuth();
@@ -70,7 +71,7 @@ export default function AISettingsPage() {
 
   const handlePreferencesChange = async (updates: Partial<AIPreferences>) => {
     // Map component preferences to DB preferences
-    const dbUpdates: Record<string, any> = {};
+    const dbUpdates: Record<string, string | number | boolean | null> = {};
     if (updates.defaultModelId !== undefined) {
       dbUpdates.default_model_id = updates.defaultModelId;
     }
@@ -93,7 +94,7 @@ export default function AISettingsPage() {
     try {
       await updatePreferences(dbUpdates);
     } catch (error) {
-      console.error('Failed to update preferences:', error);
+      logger.error('Failed to update preferences', error, 'AI');
     }
   };
 

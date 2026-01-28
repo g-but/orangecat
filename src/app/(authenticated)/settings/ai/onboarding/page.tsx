@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useAISettings } from '@/hooks/useAISettings';
 import Loading from '@/components/Loading';
 import { AIOnboarding } from '@/components/ai/AIOnboarding';
+import { logger } from '@/utils/logger';
 
 export default function AIOnboardingPage() {
   const { user, hydrated, isLoading: authLoading } = useAuth();
@@ -14,7 +15,7 @@ export default function AIOnboardingPage() {
     addKey,
     updatePreferences,
     completeOnboarding,
-    isLoading: settingsLoading,
+    isLoading: _settingsLoading,
   } = useAISettings();
 
   // Show loading state while hydrating
@@ -32,7 +33,7 @@ export default function AIOnboardingPage() {
     try {
       await completeOnboarding();
     } catch (error) {
-      console.error('Failed to complete onboarding:', error);
+      logger.error('Failed to complete onboarding', error, 'AI');
     }
   };
 

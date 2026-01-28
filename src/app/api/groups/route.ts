@@ -18,7 +18,7 @@ import type { CreateGroupInput } from '@/types/group';
 
 export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const { user } = request;
+    const { user: _user } = request;
 
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type'); // 'circle', 'organization', etc.
