@@ -8,7 +8,8 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ProfileService } from '@/services/profile';
 import { onboardingEvents } from '@/lib/analytics';
-import { ONBOARDING_STORAGE_KEY, PROGRESS_EXPIRATION_HOURS } from '../constants';
+import { logger } from '@/utils/logger';
+import { ONBOARDING_STORAGE_KEY, PROGRESS_EXPIRATION_HOURS, ONBOARDING_METHOD } from '../constants';
 import type {
   OnboardingProgress,
   OnboardingStep,
@@ -35,7 +36,7 @@ function loadProgress(): OnboardingProgress | null {
       }
     }
   } catch (error) {
-    console.error('Failed to load onboarding progress:', error);
+    logger.error('Failed to load onboarding progress', error, 'Onboarding');
   }
   return null;
 }
@@ -55,7 +56,7 @@ function saveProgress(currentStep: number, completedSteps: Set<number>): void {
     };
     localStorage.setItem(ONBOARDING_STORAGE_KEY, JSON.stringify(progress));
   } catch (error) {
-    console.error('Failed to save onboarding progress:', error);
+    logger.error('Failed to save onboarding progress', error, 'Onboarding');
   }
 }
 
@@ -69,7 +70,7 @@ function clearProgress(): void {
   try {
     localStorage.removeItem(ONBOARDING_STORAGE_KEY);
   } catch (error) {
-    console.error('Failed to clear onboarding progress:', error);
+    logger.error('Failed to clear onboarding progress', error, 'Onboarding');
   }
 }
 
@@ -125,14 +126,15 @@ export function useOnboardingProgress(
     // Clear saved progress since user is skipping
     clearProgress();
 
-    // Mark onboarding as completed so user doesn't see it again
+    // Mark onboarding as completed (skipped) so user doesn't see it again
     if (userId) {
       try {
         await ProfileService.fallbackProfileUpdate(userId, {
           onboarding_completed: true,
+          onboarding_method: ONBOARDING_METHOD.SKIPPED,
         });
       } catch (error) {
-        console.error('Failed to mark onboarding as skipped:', error);
+        logger.error('Failed to mark onboarding as skipped', error, 'Onboarding');
         // Continue anyway - analytics event was sent
       }
     }
@@ -162,12 +164,13 @@ export function useOnboardingProgress(
     try {
       await ProfileService.fallbackProfileUpdate(userId, {
         onboarding_completed: true,
+        onboarding_method: ONBOARDING_METHOD.STANDARD,
       });
       onboardingEvents.completed(userId);
       toast.success('Welcome to OrangeCat! Your journey begins now.');
       router.push('/dashboard?welcome=true');
     } catch (error) {
-      console.error('Failed to complete onboarding:', error);
+      logger.error('Failed to complete onboarding', error, 'Onboarding');
       // Still mark as completed in analytics - the user tried
       onboardingEvents.completed(userId);
       toast.error('Something went wrong, but you can continue to your dashboard.');

@@ -83,6 +83,9 @@ export interface Database {
           metadata: Json | null;
           // Onboarding
           onboarding_completed: boolean | null;
+          onboarding_wallet_setup_completed: boolean | null;
+          onboarding_first_project_created: boolean | null;
+          onboarding_method: 'standard' | 'intelligent' | 'skipped' | null;
           profile_completed_at: string | null;
           terms_accepted_at: string | null;
           privacy_policy_accepted_at: string | null;
@@ -156,6 +159,9 @@ export interface Database {
           metadata?: Json | null;
           // Onboarding
           onboarding_completed?: boolean | null;
+          onboarding_wallet_setup_completed?: boolean | null;
+          onboarding_first_project_created?: boolean | null;
+          onboarding_method?: 'standard' | 'intelligent' | 'skipped' | null;
           profile_completed_at?: string | null;
           terms_accepted_at?: string | null;
           privacy_policy_accepted_at?: string | null;
@@ -228,6 +234,9 @@ export interface Database {
           metadata?: Json | null;
           // Onboarding
           onboarding_completed?: boolean | null;
+          onboarding_wallet_setup_completed?: boolean | null;
+          onboarding_first_project_created?: boolean | null;
+          onboarding_method?: 'standard' | 'intelligent' | 'skipped' | null;
           profile_completed_at?: string | null;
           terms_accepted_at?: string | null;
           privacy_policy_accepted_at?: string | null;

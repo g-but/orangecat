@@ -67,6 +67,9 @@ export class ProfileMapper {
       last_active_at: null,
       profile_completed_at: null,
       onboarding_completed: false,
+      onboarding_wallet_setup_completed: false,
+      onboarding_first_project_created: false,
+      onboarding_method: null,
       terms_accepted_at: null,
       privacy_policy_accepted_at: null,
 

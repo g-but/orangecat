@@ -23,6 +23,10 @@ import { VoiceInputButton } from '@/components/ui/VoiceInputButton';
 import { Progress } from '@/components/ui/progress';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { ProfileService } from '@/services/profile';
+import { logger } from '@/utils/logger';
+import { ROUTES } from '@/config/routes';
+import { ONBOARDING_METHOD } from './OnboardingFlow/constants';
 
 type AnalysisResult = {
   isPersonal: boolean;
@@ -76,8 +80,24 @@ export default function IntelligentOnboarding() {
   const goNext = () => setCurrentStep(s => Math.min(s + 1, 3));
   const goBack = () => setCurrentStep(s => Math.max(s - 1, 0));
 
-  const handleSetup = () => {
-    router.push('/projects/create');
+  const handleSetup = async () => {
+    // Mark onboarding as completed with intelligent method
+    if (_user?.id) {
+      try {
+        await ProfileService.fallbackProfileUpdate(_user.id, {
+          onboarding_completed: true,
+          onboarding_method: ONBOARDING_METHOD.INTELLIGENT,
+        });
+      } catch (error) {
+        logger.error(
+          'Failed to mark intelligent onboarding as completed',
+          error,
+          'IntelligentOnboarding'
+        );
+        // Continue anyway - don't block user
+      }
+    }
+    router.push(ROUTES.PROJECTS.CREATE);
   };
 
   // Step 1: Describe needs
@@ -342,7 +362,7 @@ export default function IntelligentOnboarding() {
       <div className="space-y-4">
         <Card
           className="p-4 border-2 border-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
-          onClick={() => router.push('/discover')}
+          onClick={() => router.push(ROUTES.DISCOVER)}
         >
           <div className="flex items-center gap-3 mb-2">
             <Globe className="w-6 h-6 text-gray-600" />
@@ -355,7 +375,7 @@ export default function IntelligentOnboarding() {
 
         <Card
           className="p-4 border-2 border-gray-200 hover:border-gray-300 transition-colors cursor-pointer"
-          onClick={() => router.push('/study-bitcoin')}
+          onClick={() => router.push(ROUTES.STUDY_BITCOIN)}
         >
           <div className="flex items-center gap-3 mb-2">
             <Sparkles className="w-6 h-6 text-gray-600" />

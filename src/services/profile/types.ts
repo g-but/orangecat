@@ -12,7 +12,10 @@ import type { Profile, ProfileFormData } from '@/types/database';
 // 🎯 SCALABLE PROFILE INTERFACE (CURRENT SCHEMA COMPATIBLE)
 // =====================================================================
 
-export interface ScalableProfile extends Omit<Profile, 'social_links' | 'verification_status' | 'currency'> {
+export interface ScalableProfile extends Omit<
+  Profile,
+  'social_links' | 'verification_status' | 'currency'
+> {
   // Core fields (existing in database)
   id: string;
   username: string | null;
@@ -60,20 +63,29 @@ export interface ScalableProfile extends Omit<Profile, 'social_links' | 'verific
   last_active_at: string | null;
   profile_completed_at: string | null;
   onboarding_completed: boolean | null;
+  onboarding_wallet_setup_completed: boolean | null;
+  onboarding_first_project_created: boolean | null;
+  onboarding_method: 'standard' | 'intelligent' | 'skipped' | null;
   terms_accepted_at: string | null;
   privacy_policy_accepted_at: string | null;
 
   // Extensibility (JSON fields)
   // Note: social_links is inherited from Profile with type { links: Array<{...}> } | null
   // We override it to allow both the structured format and flexible Record for backward compatibility
-  social_links: { links: Array<{ platform: string; label?: string; value: string }> } | Record<string, unknown> | null;
+  social_links:
+    | { links: Array<{ platform: string; label?: string; value: string }> }
+    | Record<string, unknown>
+    | null;
   preferences: Record<string, unknown> | null;
   metadata: Record<string, unknown> | null;
   verification_data: Record<string, unknown> | null;
   privacy_settings: Record<string, unknown> | null;
 }
 
-export interface ScalableProfileFormData extends Omit<ProfileFormData, 'social_links' | 'currency'> {
+export interface ScalableProfileFormData extends Omit<
+  ProfileFormData,
+  'social_links' | 'currency'
+> {
   // All existing fields plus new ones
   email?: string;
   phone?: string;

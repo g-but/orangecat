@@ -4,7 +4,7 @@
  */
 
 import { Card, CardContent } from '@/components/ui/Card';
-import { Bitcoin, Sparkles, CheckCircle, Users } from 'lucide-react';
+import { Bitcoin, Sparkles, CheckCircle, AlertTriangle, ExternalLink } from 'lucide-react';
 
 export function WalletSetupStep() {
   return (
@@ -18,6 +18,30 @@ export function WalletSetupStep() {
           Paste your Bitcoin wallet address so supporters can send you Bitcoin directly. You keep
           full control of your funds.
         </p>
+      </div>
+
+      {/* Warning Banner */}
+      <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="font-medium text-amber-900">Without a Bitcoin address:</p>
+            <ul className="text-sm text-amber-800 mt-1 space-y-1">
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-amber-600 rounded-full" />
+                Supporters can't send you Bitcoin
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-amber-600 rounded-full" />
+                Your projects won't receive funding
+              </li>
+              <li className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 bg-amber-600 rounded-full" />
+                You'll miss out on the full OrangeCat experience
+              </li>
+            </ul>
+          </div>
+        </div>
       </div>
 
       <Card className="bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200">
@@ -78,14 +102,46 @@ export function WalletSetupStep() {
         </Card>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      {/* Wallet Recommendations */}
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
-          <Users className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <Bitcoin className="h-5 w-5 text-gray-600 mt-0.5 flex-shrink-0" />
           <div>
-            <p className="text-sm font-medium text-blue-900">Don't have a Bitcoin wallet yet?</p>
-            <p className="text-xs text-blue-700 mt-1">
-              No problem! You can skip this step and add your address later. We recommend{' '}
-              <strong>Muun</strong> or <strong>BlueWallet</strong> for beginners.
+            <p className="text-sm font-medium text-gray-900">Need a Bitcoin wallet?</p>
+            <p className="text-xs text-gray-600 mt-1 mb-2">
+              We recommend these beginner-friendly wallets:
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href="https://muun.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700"
+              >
+                Muun <ExternalLink className="h-3 w-3" />
+              </a>
+              <span className="text-gray-300">|</span>
+              <a
+                href="https://bluewallet.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700"
+              >
+                BlueWallet <ExternalLink className="h-3 w-3" />
+              </a>
+              <span className="text-gray-300">|</span>
+              <a
+                href="https://phoenix.acinq.co"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-xs text-orange-600 hover:text-orange-700"
+              >
+                Phoenix <ExternalLink className="h-3 w-3" />
+              </a>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              You can skip for now, but you'll need to add a wallet address before receiving any
+              Bitcoin.
             </p>
           </div>
         </div>
