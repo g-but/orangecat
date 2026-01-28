@@ -5,70 +5,46 @@
  * Uses unified GroupsService.
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Created unified group detail API route
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored PUT/DELETE to use withAuth middleware
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import groupsService from '@/services/groups';
 import { updateGroupSchema } from '@/services/groups/validation';
 import { logger } from '@/utils/logger';
 import type { UpdateGroupInput } from '@/types/group';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ slug: string }>;
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(_request: NextRequest, context: RouteContext) {
   try {
-    const supabase = await createServerClient();
-    const { data: { user: _user } } = await supabase.auth.getUser();
-
-    const { slug } = await params;
+    const { slug } = await context.params;
 
     // Get group by slug (second param is bySlug=true)
     const result = await groupsService.getGroup(slug, true);
 
     if (!result.success) {
       if (result.error?.includes('not found')) {
-        return NextResponse.json(
-          { error: 'Group not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'Group not found' }, { status: 404 });
       }
-      return NextResponse.json(
-        { error: result.error || 'Failed to fetch group' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: result.error || 'Failed to fetch group' }, { status: 500 });
     }
 
     return NextResponse.json({ group: result.group });
   } catch (error) {
     logger.error('Error in GET /api/groups/[slug]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export const PUT = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { slug } = await params;
+    const { user } = request;
+    const { slug } = await context.params;
     const body = await request.json();
 
     // Validate request
@@ -83,10 +59,7 @@ export async function PUT(
     // Get group first to check permissions
     const groupResult = await groupsService.getGroup(slug, true);
     if (!groupResult.success || !groupResult.group) {
-      return NextResponse.json(
-        { error: 'Group not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }
 
     // Check if user has permission to update
@@ -119,34 +92,19 @@ export async function PUT(
     return NextResponse.json({ group: result.group });
   } catch (error) {
     logger.error('Error in PUT /api/groups/[slug]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { slug } = await params;
+    const { user } = request;
+    const { slug } = await context.params;
 
     // Get group first to check permissions
     const groupResult = await groupsService.getGroup(slug, true);
     if (!groupResult.success || !groupResult.group) {
-      return NextResponse.json(
-        { error: 'Group not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }
 
     // Check if user is owner
@@ -170,11 +128,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error('Error in DELETE /api/groups/[slug]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
-
+});

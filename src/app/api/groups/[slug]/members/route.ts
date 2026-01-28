@@ -5,36 +5,33 @@
  * Uses unified GroupsService.
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Created group members API route
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored POST to use withAuth middleware
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import groupsService from '@/services/groups';
 import { logger } from '@/utils/logger';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ slug: string }>;
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
     const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-    const { slug } = await params;
+    const { slug } = await context.params;
 
     // Get group first
     const groupResult = await groupsService.getGroup(slug, !!user);
     if (!groupResult.success || !groupResult.group) {
-      return NextResponse.json(
-        { error: 'Group not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }
 
     // Get members
@@ -53,45 +50,26 @@ export async function GET(
     });
   } catch (error) {
     logger.error('Error in GET /api/groups/[slug]/members:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const { slug } = await params;
+    const { slug } = await context.params;
     const _body = await request.json();
 
     // Get group first
     const groupResult = await groupsService.getGroup(slug, true);
     if (!groupResult.success || !groupResult.group) {
-      return NextResponse.json(
-        { error: 'Group not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }
 
     // Join group
     const result = await groupsService.joinGroup(groupResult.group.id);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to join group' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: result.error || 'Failed to join group' }, { status: 500 });
     }
 
     return NextResponse.json(
@@ -100,11 +78,6 @@ export async function POST(
     );
   } catch (error) {
     logger.error('Error in POST /api/groups/[slug]/members:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
-
+});

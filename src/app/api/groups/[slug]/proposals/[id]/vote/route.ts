@@ -1,22 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { handleApiError, apiUnauthorized, apiSuccess } from '@/lib/api/standardResponse';
+/**
+ * Proposal Vote API
+ *
+ * POST /api/groups/[slug]/proposals/[id]/vote - Cast a vote on a proposal
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
+ */
+
+import { NextResponse } from 'next/server';
+import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
 import { castVote } from '@/services/groups/mutations/votes';
-import { createServerClient } from '@/lib/supabase/server';
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ slug: string; id: string }> }
-) {
+interface RouteContext {
+  params: Promise<{ slug: string; id: string }>;
+}
+
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {return apiUnauthorized();}
-
-    const { id } = await params;
+    const { id } = await context.params;
     const body = await request.json();
     const result = await castVote({ proposal_id: id, vote: body.vote });
     if (!result.success) {
@@ -28,5 +31,4 @@ export async function POST(
     logger.error('Error in POST /api/groups/[slug]/proposals/[id]/vote', error, 'API');
     return handleApiError(error);
   }
-}
-
+});
