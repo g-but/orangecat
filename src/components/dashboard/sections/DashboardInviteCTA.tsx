@@ -31,9 +31,9 @@ export function DashboardInviteCTA({ profile, userId }: DashboardInviteCTAProps)
   };
 
   return (
-    <div className="rounded-xl border border-orange-200 bg-gradient-to-r from-orange-50 to-teal-50 p-4 sm:p-5 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex-1 min-w-0">
+    <div className="relative rounded-xl border border-orange-200 bg-gradient-to-r from-orange-50 to-teal-50 p-4 sm:p-5 shadow-sm">
+      <div className="space-y-3">
+        <div>
           <h3 className="text-base sm:text-lg font-semibold text-gray-900">
             Invite friends to OrangeCat
           </h3>
@@ -60,18 +60,18 @@ export function DashboardInviteCTA({ profile, userId }: DashboardInviteCTAProps)
             <Copy className="w-4 h-4 mr-2" />
             Copy
           </Button>
-          {showShare && (
-            <div className="absolute right-4 top-full mt-2 z-50">
-              <ProfileShare
-                username={profile?.username || userId}
-                profileName={profile?.name || profile?.username || 'My Profile'}
-                profileBio={profile?.bio || undefined}
-                onClose={() => setShowShare(false)}
-              />
-            </div>
-          )}
         </div>
       </div>
+      {showShare && (
+        <div className="absolute right-4 top-full mt-2 z-50">
+          <ProfileShare
+            username={profile?.username || userId}
+            profileName={profile?.name || profile?.username || 'My Profile'}
+            profileBio={profile?.bio || undefined}
+            onClose={() => setShowShare(false)}
+          />
+        </div>
+      )}
     </div>
   );
 }
