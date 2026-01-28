@@ -399,7 +399,7 @@ export function AIRevenuePanel() {
 
             {/* Custom amount */}
             <div>
-              <label className="text-sm font-medium text-gray-700">Amount (sats)</label>
+              <label className="text-sm font-medium text-gray-700">Amount</label>
               <Input
                 type="number"
                 value={withdrawAmount}
@@ -409,7 +409,7 @@ export function AIRevenuePanel() {
                   (earnings?.available_balance_sats || 0) - (earnings?.pending_withdrawal_sats || 0)
                 }
                 className="mt-1"
-                placeholder={`Minimum: ${MIN_WITHDRAWAL_SATS} sats`}
+                placeholder={`Minimum: ${formatAmount(MIN_WITHDRAWAL_SATS)}`}
               />
             </div>
 

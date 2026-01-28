@@ -3,6 +3,7 @@
 import { MessageSquare, Coins, TrendingUp, Clock, BarChart2, Info } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface UsageData {
   totalRequests: number;
@@ -28,6 +29,8 @@ interface AIUsageStatsProps {
  * - Last used timestamp
  */
 export function AIUsageStats({ usage, periodSelector, className }: AIUsageStatsProps) {
+  const { formatAmount } = useDisplayCurrency();
+
   const formatNumber = (num: number) => {
     if (num >= 1_000_000) {
       return `${(num / 1_000_000).toFixed(1)}M`;
@@ -74,7 +77,7 @@ export function AIUsageStats({ usage, periodSelector, className }: AIUsageStatsP
     },
     {
       label: 'Cost',
-      value: `${formatNumber(usage.totalCostSats)} sats`,
+      value: formatAmount(usage.totalCostSats),
       icon: Coins,
       color: 'text-amber-600',
       bgColor: 'bg-amber-100',
@@ -142,6 +145,8 @@ export function AIUsageStats({ usage, periodSelector, className }: AIUsageStatsP
  * AIUsageStatsCompact - Compact inline version
  */
 export function AIUsageStatsCompact({ usage }: { usage: UsageData }) {
+  const { formatAmount } = useDisplayCurrency();
+
   return (
     <div className="flex items-center gap-4 text-sm text-gray-600">
       <div className="flex items-center gap-1">
@@ -150,7 +155,7 @@ export function AIUsageStatsCompact({ usage }: { usage: UsageData }) {
       </div>
       <div className="flex items-center gap-1">
         <Coins className="w-4 h-4" />
-        <span>{usage.totalCostSats.toLocaleString()} sats</span>
+        <span>{formatAmount(usage.totalCostSats)}</span>
       </div>
     </div>
   );

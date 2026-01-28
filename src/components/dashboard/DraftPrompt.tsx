@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
 import { useProjectStore, Campaign } from '@/stores/projectStore';
 import { formatDistanceToNow } from 'date-fns';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface DraftPromptProps {
   className?: string;
@@ -14,6 +15,7 @@ interface DraftPromptProps {
 
 export default function DraftPrompt({ className }: DraftPromptProps) {
   const { drafts, isLoading } = useProjectStore();
+  const { formatAmount } = useDisplayCurrency();
   const [dismissed, setDismissed] = useState(false);
 
   const hasAnyDraft = drafts.length > 0;
@@ -175,9 +177,7 @@ export function DraftsList({ className }: { className?: string }) {
                     <span>
                       Updated {formatDistanceToNow(new Date(draft.updated_at), { addSuffix: true })}
                     </span>
-                    {draft.goal_amount && (
-                      <span>Goal: {draft.goal_amount.toLocaleString('en-US')} sats</span>
-                    )}
+                    {draft.goal_amount && <span>Goal: {formatAmount(draft.goal_amount)}</span>}
                   </div>
                 </div>
 

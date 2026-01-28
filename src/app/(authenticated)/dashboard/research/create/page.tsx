@@ -15,6 +15,8 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Plus, Minus, Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface TeamMember {
   name: string;
@@ -55,6 +57,7 @@ interface ImpactArea {
 
 export default function CreateResearchEntity() {
   const router = useRouter();
+  const { formatAmount, currency } = useDisplayCurrency();
   const [loading, setLoading] = useState(false);
 
   // Basic Info
@@ -98,7 +101,11 @@ export default function CreateResearchEntity() {
     setTeamMembers(teamMembers.filter((_, i) => i !== index));
   };
 
-  const updateTeamMember = (index: number, field: keyof TeamMember, value: TeamMember[keyof TeamMember]) => {
+  const updateTeamMember = (
+    index: number,
+    field: keyof TeamMember,
+    value: TeamMember[keyof TeamMember]
+  ) => {
     const updated = [...teamMembers];
     updated[index] = { ...updated[index], [field]: value };
     setTeamMembers(updated);
@@ -112,7 +119,11 @@ export default function CreateResearchEntity() {
     setResourceNeeds(resourceNeeds.filter((_, i) => i !== index));
   };
 
-  const _updateResourceNeed = (index: number, field: keyof ResourceNeed, value: ResourceNeed[keyof ResourceNeed]) => {
+  const _updateResourceNeed = (
+    index: number,
+    field: keyof ResourceNeed,
+    value: ResourceNeed[keyof ResourceNeed]
+  ) => {
     const updated = [...resourceNeeds];
     updated[index] = { ...updated[index], [field]: value };
     setResourceNeeds(updated);
@@ -126,7 +137,11 @@ export default function CreateResearchEntity() {
     setImpactAreas(impactAreas.filter((_, i) => i !== index));
   };
 
-  const _updateImpactArea = (index: number, field: keyof ImpactArea, value: ImpactArea[keyof ImpactArea]) => {
+  const _updateImpactArea = (
+    index: number,
+    field: keyof ImpactArea,
+    value: ImpactArea[keyof ImpactArea]
+  ) => {
     const updated = [...impactAreas];
     updated[index] = { ...updated[index], [field]: value };
     setImpactAreas(updated);
@@ -175,7 +190,7 @@ export default function CreateResearchEntity() {
         toast.error(error.message || 'Failed to create research entity');
       }
     } catch (error) {
-      console.error('Error creating research entity:', error);
+      logger.error('Error creating research entity', error, 'Research');
       toast.error('An error occurred while creating the research entity');
     } finally {
       setLoading(false);
@@ -252,7 +267,9 @@ export default function CreateResearchEntity() {
                     <SelectItem value="environmental_science">Environmental Science</SelectItem>
                     <SelectItem value="social_science">Social Science</SelectItem>
                     <SelectItem value="artificial_intelligence">Artificial Intelligence</SelectItem>
-                    <SelectItem value="blockchain_cryptography">Blockchain & Cryptography</SelectItem>
+                    <SelectItem value="blockchain_cryptography">
+                      Blockchain & Cryptography
+                    </SelectItem>
                     <SelectItem value="other">Other</SelectItem>
                   </SelectContent>
                 </Select>
@@ -320,7 +337,7 @@ export default function CreateResearchEntity() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">Funding Goal (sats) *</label>
+                <label className="text-sm font-medium">Funding Goal ({currency}) *</label>
                 <Input
                   type="number"
                   value={fundingGoal}
@@ -329,7 +346,7 @@ export default function CreateResearchEntity() {
                   min="1000"
                   required
                 />
-                <p className="text-xs text-muted-foreground mt-1">Minimum 1000 sats</p>
+                <p className="text-xs text-muted-foreground mt-1">Minimum {formatAmount(1000)}</p>
               </div>
 
               <div>

@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Calendar, CreditCard, Shield, MessageSquare, Loader2, CheckCircle } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface AssetRentalFormProps {
   assetId: string;
@@ -32,6 +34,7 @@ export function AssetRentalForm({
   onBack,
 }: AssetRentalFormProps) {
   const router = useRouter();
+  const { formatAmount } = useDisplayCurrency();
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -91,7 +94,7 @@ export function AssetRentalForm({
         toast.error(data.error || 'Failed to create rental request');
       }
     } catch (error) {
-      console.error('Rental error:', error);
+      logger.error('Rental request error', error, 'Booking');
       toast.error('Something went wrong');
     } finally {
       setIsSubmitting(false);
@@ -108,10 +111,7 @@ export function AssetRentalForm({
   };
 
   const formatPrice = (sats: number) => {
-    if (currency === 'SATS' || currency === 'BTC') {
-      return `${sats.toLocaleString()} sats`;
-    }
-    return `${sats.toLocaleString()} ${currency}`;
+    return formatAmount(sats);
   };
 
   const getPeriodLabel = () => {

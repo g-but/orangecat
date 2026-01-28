@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { toast } from 'sonner';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface LightningPaymentProps {
   recipientAddress: string;
@@ -36,6 +37,7 @@ export default function LightningPayment({
   onPaymentFailed: _onPaymentFailed,
   className = '',
 }: LightningPaymentProps) {
+  const { currency } = useDisplayCurrency();
   const [amount, setAmount] = useState(presetAmount?.toString() || '');
   const [message, setMessage] = useState('');
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -225,12 +227,14 @@ export default function LightningPayment({
           // Invoice Generation Form
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Amount (sats)</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Amount ({currency})
+              </label>
               <Input
                 type="number"
                 value={amount}
                 onChange={e => setAmount(e.target.value)}
-                placeholder="Enter amount in satoshis"
+                placeholder="Enter amount"
                 min="1"
                 className="font-mono"
                 disabled={true}

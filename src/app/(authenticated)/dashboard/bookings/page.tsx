@@ -15,6 +15,8 @@ import {
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface Booking {
   id: string;
@@ -49,6 +51,7 @@ type FilterStatus = 'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled';
 
 export default function BookingsDashboardPage() {
   const router = useRouter();
+  const { formatAmount } = useDisplayCurrency();
   const [activeTab, setActiveTab] = useState<TabType>('incoming');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -78,7 +81,7 @@ export default function BookingsDashboardPage() {
         setBookings(data.data || []);
       }
     } catch (error) {
-      console.error('Error loading bookings:', error);
+      logger.error('Error loading bookings', error, 'Booking');
       toast.error('Failed to load bookings');
     } finally {
       setIsLoading(false);
@@ -119,7 +122,7 @@ export default function BookingsDashboardPage() {
         toast.error(data.error || 'Action failed');
       }
     } catch (error) {
-      console.error('Action error:', error);
+      logger.error('Action error', error, 'Booking');
       toast.error('Something went wrong');
     } finally {
       setProcessingId(null);
@@ -143,11 +146,8 @@ export default function BookingsDashboardPage() {
     });
   };
 
-  const formatPrice = (sats: number, currency?: string) => {
-    if (currency === 'SATS' || currency === 'BTC' || !currency) {
-      return `${sats.toLocaleString()} sats`;
-    }
-    return `${sats.toLocaleString()} ${currency}`;
+  const formatPrice = (sats: number) => {
+    return formatAmount(sats);
   };
 
   const getStatusBadge = (status: string) => {
@@ -298,7 +298,7 @@ export default function BookingsDashboardPage() {
                       </span>
                     </div>
                     <div className="text-sm font-medium text-gray-900">
-                      {formatPrice(booking.price_sats, booking.currency)}
+                      {formatPrice(booking.price_sats)}
                     </div>
                   </div>
 

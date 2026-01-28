@@ -82,7 +82,7 @@ export function AICreditsPanel() {
   const handleDeposit = async () => {
     const amount = parseInt(depositAmount, 10);
     if (isNaN(amount) || amount < 100) {
-      toast.error('Minimum deposit is 100 sats');
+      toast.error(`Minimum deposit is ${formatAmount(100)}`);
       return;
     }
 
@@ -266,7 +266,7 @@ export function AICreditsPanel() {
 
             {/* Custom amount */}
             <div>
-              <label className="text-sm font-medium text-gray-700">Custom Amount (sats)</label>
+              <label className="text-sm font-medium text-gray-700">Custom Amount</label>
               <Input
                 type="number"
                 value={depositAmount}
@@ -276,7 +276,7 @@ export function AICreditsPanel() {
                 className="mt-1"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Minimum: 100 sats | Maximum: 1,000,000 sats
+                Minimum: {formatAmount(100)} | Maximum: {formatAmount(1000000)}
               </p>
             </div>
 

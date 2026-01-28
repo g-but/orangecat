@@ -28,7 +28,8 @@ export default function ChannelComingSoonPage() {
             Stream anything. Get paid directly.
           </h1>
           <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
-            Share videos, audio, and live sessions. Build your audience, accept sats, and keep your creative freedom. We respect rights and make support simple.
+            Share videos, audio, and live sessions. Build your audience, accept Bitcoin payments,
+            and keep your creative freedom. We respect rights and make support simple.
           </p>
         </div>
 
@@ -74,7 +75,10 @@ export default function ChannelComingSoonPage() {
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Rights & Safety</h3>
             <p className="text-sm text-gray-700">
-              Use original or licensed content, or ensure your use is transformative under fair use. We respect artists and owners: we will offer clear licensing metadata, an easy takedown process, and fair dispute handling. Our goal is to make direct creator support easy while protecting rights holders.
+              Use original or licensed content, or ensure your use is transformative under fair use.
+              We respect artists and owners: we will offer clear licensing metadata, an easy
+              takedown process, and fair dispute handling. Our goal is to make direct creator
+              support easy while protecting rights holders.
             </p>
           </CardContent>
         </Card>
@@ -85,7 +89,9 @@ export default function ChannelComingSoonPage() {
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="text-center md:text-left">
                 <h3 className="text-lg font-semibold text-gray-900">Be the first to try it</h3>
-                <p className="text-sm text-gray-600">Invite friends, build your audience, and get notified when we launch.</p>
+                <p className="text-sm text-gray-600">
+                  Invite friends, build your audience, and get notified when we launch.
+                </p>
                 <div className="mt-3 flex items-center gap-2">
                   <div className="relative">
                     <Input
@@ -104,7 +110,11 @@ export default function ChannelComingSoonPage() {
                           const res = await fetch('/api/waitlist', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ email, source: 'channel_page', referrer: document.referrer }),
+                            body: JSON.stringify({
+                              email,
+                              source: 'channel_page',
+                              referrer: document.referrer,
+                            }),
                           });
                           const data = await res.json();
                           if (!res.ok || !data.success) {
@@ -131,7 +141,10 @@ export default function ChannelComingSoonPage() {
                   </Button>
                 </Link>
                 <div className="relative">
-                  <Button onClick={() => setShowShare(!showShare)} className="bg-orange-600 hover:bg-orange-700 text-white">
+                  <Button
+                    onClick={() => setShowShare(!showShare)}
+                    className="bg-orange-600 hover:bg-orange-700 text-white"
+                  >
                     <Share2 className="w-4 h-4 mr-2" /> Share My Profile
                   </Button>
                   {showShare && (
@@ -152,16 +165,20 @@ export default function ChannelComingSoonPage() {
 
         {/* Roadmap */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[{
-            title: 'Phase 1 — Uploads',
-            desc: 'Upload videos and audio, with shareable links, tipping in sats, and basic analytics.',
-          }, {
-            title: 'Phase 2 — Live',
-            desc: 'Live streaming with basic chat and replays.',
-          }, {
-            title: 'Phase 3 — Monetize',
-            desc: 'Paywalled content, subscriptions, revenue splits, creator tools.',
-          }].map((item, _idx) => (
+          {[
+            {
+              title: 'Phase 1 — Uploads',
+              desc: 'Upload videos and audio, with shareable links, Bitcoin tipping, and basic analytics.',
+            },
+            {
+              title: 'Phase 2 — Live',
+              desc: 'Live streaming with basic chat and replays.',
+            },
+            {
+              title: 'Phase 3 — Monetize',
+              desc: 'Paywalled content, subscriptions, revenue splits, creator tools.',
+            },
+          ].map((item, _idx) => (
             <Card key={item.title}>
               <CardContent className="p-5">
                 <div className="flex items-start gap-3">
