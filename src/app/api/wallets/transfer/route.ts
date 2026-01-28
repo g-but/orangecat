@@ -1,14 +1,21 @@
+/**
+ * Wallet Transfer API
+ *
+ * POST /api/wallets/transfer - Transfer between user's wallets
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
+ */
+
 import { logger } from '@/utils/logger';
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiForbidden,
   apiNotFound,
   apiBadRequest,
   apiInternalError,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 
@@ -19,16 +26,9 @@ interface TransferRequest {
   note?: string;
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     const body = (await request.json()) as TransferRequest;
 
@@ -63,9 +63,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch both wallets and verify ownership
-    const { data: walletsData, error: walletsError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wallets') as any)
+    const { data: walletsData, error: walletsError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wallets') as any
+    )
       .select('id, user_id, label, balance_btc, profile_id, project_id')
       .in('id', [body.from_wallet_id, body.to_wallet_id])
       .eq('is_active', true);
@@ -137,9 +139,11 @@ export async function POST(request: NextRequest) {
     const to_entity_id = toWallet.profile_id || toWallet.project_id;
 
     // Create transaction record (marked as internal transfer)
-    const { data: transactionData, error: txError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('transactions') as any)
+    const { data: transactionData, error: txError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('transactions') as any
+    )
       .insert({
         amount_sats,
         from_entity_type,
@@ -190,9 +194,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Fetch updated wallets
-    const { data: updatedWalletsData } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wallets') as any)
+    const { data: updatedWalletsData } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wallets') as any
+    )
       .select('*')
       .in('id', [body.from_wallet_id, body.to_wallet_id]);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -232,4 +238,4 @@ export async function POST(request: NextRequest) {
     logger.error('Unexpected error in wallet transfer', { error });
     return apiInternalError('Internal server error');
   }
-}
+});

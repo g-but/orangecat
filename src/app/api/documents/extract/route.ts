@@ -5,18 +5,12 @@
  * Supports .txt, .md files natively. PDF/DOCX show helpful message.
  *
  * Created: 2026-01-21
- * Last Modified: 2026-01-21
- * Last Modified Summary: Initial implementation
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import {
-  apiSuccess,
-  apiUnauthorized,
-  apiValidationError,
-  handleApiError,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, apiValidationError, handleApiError } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_EXTENSIONS = ['.txt', '.md', '.markdown', '.text'];
@@ -106,18 +100,8 @@ function detectDocumentType(content: string, fileName: string): string {
   return 'notes';
 }
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
     const formData = await request.formData();
     const file = formData.get('file') as File;
 
@@ -184,4 +168,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});

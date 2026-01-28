@@ -1,23 +1,25 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import { WalletFormData, validateAddressOrXpub, detectWalletType } from '@/types/wallet';
 import { logger } from '@/utils/logger';
 import { handleSupabaseError } from '@/lib/wallets/errorHandling';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiForbidden,
   apiNotFound,
   apiBadRequest,
   apiInternalError,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
 // PATCH /api/wallets/[id] - Update wallet
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
 
     // Validate wallet ID format
     const idValidation = getValidationError(validateUUID(id, 'wallet ID'));
@@ -25,21 +27,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return idValidation;
     }
 
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     const body = (await request.json()) as Partial<WalletFormData>;
 
     // Fetch wallet with ownership info
-    const { data: walletData, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wallets') as any)
+    const { data: walletData, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wallets') as any
+    )
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
       .single();
@@ -125,9 +122,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
           : { project_id: wallet.project_id };
 
         // Unset all other wallets as primary
-        await (supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from('wallets') as any)
+        await (
+          supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .from('wallets') as any
+        )
           .update({ is_primary: false })
           .eq('is_active', true)
           .neq('id', id)
@@ -138,9 +137,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     updates.updated_at = new Date().toISOString();
 
     // Update wallet
-    const { data: updatedWallet, error: updateError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wallets') as any)
+    const { data: updatedWallet, error: updateError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wallets') as any
+    )
       .update(updates)
       .eq('id', id)
       .select()
@@ -164,15 +165,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     logger.error('Unexpected error updating wallet', { error });
     return apiInternalError('Failed to update wallet');
   }
-}
+});
 
 // DELETE /api/wallets/[id] - Delete wallet (soft delete)
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
 
     // Validate wallet ID format
     const idValidation = getValidationError(validateUUID(id, 'wallet ID'));
@@ -180,19 +178,14 @@ export async function DELETE(
       return idValidation;
     }
 
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     // Fetch wallet with ownership info
-    const { data: walletData2, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wallets') as any)
+    const { data: walletData2, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wallets') as any
+    )
       .select('*, profiles!wallets_profile_id_fkey(id), projects!wallets_project_id_fkey(user_id)')
       .eq('id', id)
       .single();
@@ -226,9 +219,11 @@ export async function DELETE(
     }
 
     // Soft delete
-    const { error: deleteError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wallets') as any)
+    const { error: deleteError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wallets') as any
+    )
       .update({ is_active: false, updated_at: new Date().toISOString() })
       .eq('id', id);
 
@@ -251,4 +246,4 @@ export async function DELETE(
     logger.error('Unexpected error deleting wallet', { error });
     return apiInternalError('Failed to delete wallet');
   }
-}
+});

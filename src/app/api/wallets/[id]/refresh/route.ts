@@ -1,16 +1,23 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+/**
+ * Wallet Balance Refresh API
+ *
+ * POST /api/wallets/[id]/refresh - Refresh wallet balance from blockchain
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
+ */
+
 import { fetchBitcoinBalance } from '@/services/blockchain';
 import { logger } from '@/utils/logger';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiForbidden,
   apiNotFound,
   apiBadRequest,
   apiInternalError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 
@@ -90,12 +97,16 @@ async function fetchXpubBalance(xpub: string): Promise<number> {
   }
 }
 
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
 /**
  * POST /api/wallets/[id]/refresh - Refresh wallet balance
  */
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id } = await params;
+    const { id } = await context.params;
 
     // Validate wallet ID
     const idValidation = getValidationError(validateUUID(id, 'wallet ID'));
@@ -103,19 +114,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return idValidation;
     }
 
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     // Get wallet
-    const { data: wallet, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wallets') as any)
+    const { data: wallet, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wallets') as any
+    )
       .select('*')
       .eq('id', id)
       .eq('user_id', user.id)
@@ -207,9 +213,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Update wallet balance
-    const { data: updatedWallet, error: updateError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wallets') as any)
+    const { data: updatedWallet, error: updateError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wallets') as any
+    )
       .update({
         balance_btc: totalBalanceBtc,
         balance_updated_at: new Date().toISOString(),
@@ -252,4 +260,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     logger.error('Unexpected balance refresh error', { error });
     return apiInternalError('Internal server error');
   }
-}
+});
