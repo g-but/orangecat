@@ -17,31 +17,31 @@ interface DashboardQuickActionsProps {
 export function DashboardQuickActions({ hasProjects }: DashboardQuickActionsProps) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="pb-3">
         <CardTitle>Quick Actions</CardTitle>
         <CardDescription>Common tasks to get you started</CardDescription>
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent>
+        <div className="flex flex-wrap gap-3">
           {hasProjects ? (
             <Link href={ENTITY_REGISTRY.project.basePath}>
-              <Button variant="outline" className="w-full h-16 flex-col">
-                <Eye className="w-5 h-5 mb-2" />
+              <Button variant="outline" className="min-h-[44px]">
+                <Eye className="w-4 h-4 mr-2" />
                 Manage Projects
               </Button>
             </Link>
           ) : (
             <Link href="/discover">
-              <Button variant="outline" className="w-full h-16 flex-col">
-                <Users className="w-5 h-5 mb-2" />
+              <Button variant="outline" className="min-h-[44px]">
+                <Users className="w-4 h-4 mr-2" />
                 Explore Projects
               </Button>
             </Link>
           )}
 
           <Link href="/profile">
-            <Button variant="outline" className="w-full h-16 flex-col">
-              <Star className="w-5 h-5 mb-2" />
+            <Button variant="outline" className="min-h-[44px]">
+              <Star className="w-4 h-4 mr-2" />
               Update Profile
             </Button>
           </Link>

@@ -1,5 +1,6 @@
 'use client';
 
+import { User } from 'lucide-react';
 import { PROFILE_CATEGORIES } from '@/types/profile';
 
 interface DashboardHeaderProps {
@@ -23,11 +24,11 @@ export function DashboardHeader({ profile, totalProjects, totalDrafts }: Dashboa
       : PROFILE_CATEGORIES.individual;
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-r from-orange-50/50 to-tiffany-50/50 rounded-xl border border-gray-100 p-5 sm:p-6 mb-6">
+    <div className="relative overflow-hidden bg-gradient-to-r from-orange-50/50 to-tiffany-50/50 rounded-xl border border-gray-100 p-5 sm:p-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-gradient-to-br from-orange-500 to-tiffany-500 rounded-xl">
-            <span className="text-2xl">👤</span>
+            <User className="h-6 w-6 text-white" />
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
