@@ -239,27 +239,8 @@ export default function DashboardPage() {
     [safeProjects]
   );
 
-  // Profile completion
-  const profileCompletion = useMemo(() => {
-    const hasUsername = !!profile?.username;
-    const hasBio = !!profile?.bio;
-    const hasBitcoinAddress = !!profile?.bitcoin_address;
-    const profileFields = [hasUsername, hasBio, hasBitcoinAddress];
-    return Math.round((profileFields.filter(Boolean).length / profileFields.length) * 100);
-  }, [profile?.username, profile?.bio, profile?.bitcoin_address]);
-
-  const hasBitcoinAddress = useMemo(() => !!profile?.bitcoin_address, [profile?.bitcoin_address]);
+  // Derived state (profile completion now handled by TasksSection SSOT)
   const hasProjects = useMemo(() => safeProjects.length > 0, [safeProjects]);
-  const hasAnyDraft = useMemo(() => safeDrafts.length > 0, [safeDrafts]);
-
-  const hasTimelineActivity = useMemo(() => {
-    const feed = timelineFeed as unknown as {
-      events?: unknown[];
-      items?: unknown[];
-      data?: unknown[];
-    };
-    return Boolean(feed?.events?.length || feed?.items?.length || feed?.data?.length);
-  }, [timelineFeed]);
 
   // Loading states
   if (!hydrated || localLoading) {
@@ -319,17 +300,8 @@ export default function DashboardPage() {
           />
         )}
 
-        {/* Getting Started Section (only if incomplete) */}
-        {(profileCompletion < 100 || !hasBitcoinAddress || !hasProjects || hasAnyDraft) && (
-          <DashboardJourney
-            profileCompletion={profileCompletion}
-            hasBitcoinAddress={hasBitcoinAddress}
-            hasProjects={hasProjects}
-            hasAnyDraft={hasAnyDraft}
-            totalDrafts={totalDrafts}
-            hasTimelineActivity={hasTimelineActivity}
-          />
-        )}
+        {/* Recommended Next Steps - TasksSection handles its own visibility */}
+        <DashboardJourney />
 
         {/* Primary Content: Economic Activity */}
         <div className="space-y-4 sm:space-y-6">
