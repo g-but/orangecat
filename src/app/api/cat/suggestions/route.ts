@@ -42,11 +42,11 @@ const DOCUMENT_TYPE_SUGGESTIONS: Record<string, (doc: DocumentContext) => string
     }
     return suggestions;
   },
-  background: doc => [
+  background: _doc => [
     `How can my background help me succeed on OrangeCat?`,
     `What unique value can I offer based on my experience?`,
   ],
-  preferences: doc => [
+  preferences: _doc => [
     `Recommend products to create based on my preferences`,
     `What kind of projects align with my values?`,
   ],
@@ -59,7 +59,7 @@ const DOCUMENT_TYPE_SUGGESTIONS: Record<string, (doc: DocumentContext) => string
     `Help me develop this idea: "${truncate(doc.title, 35)}"`,
     `Turn my notes into an actionable plan`,
   ],
-  other: doc => [`Give me advice based on my context`, `What opportunities should I consider?`],
+  other: _doc => [`Give me advice based on my context`, `What opportunities should I consider?`],
 };
 
 // Default suggestions when user has no documents

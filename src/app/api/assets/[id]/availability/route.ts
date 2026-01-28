@@ -57,17 +57,16 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }
 
     // Verify asset exists and is for rent
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: asset, error: assetError } = await (
-      supabase.from(DATABASE_TABLES.USER_ASSETS) as any
-    )
-      .select(
-        'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats'
-      )
-      .eq('id', assetId)
-      .eq('status', 'active')
-      .eq('is_for_rent', true)
-      .single();
+    const { data: asset, error: assetError } =
+      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
+        .select(
+          'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats'
+        )
+        .eq('id', assetId)
+        .eq('status', 'active')
+        .eq('is_for_rent', true)
+        .single();
 
     if (assetError || !asset) {
       return NextResponse.json(
