@@ -48,7 +48,7 @@ export const createServerClient = async () => {
           );
         } catch (error) {
           // Gracefully handle errors if `set` is called in an unsupported context
-          console.warn('Failed to set cookies in server client:', error);
+          logger.warn('Failed to set cookies in server client', { error }, 'Supabase');
         }
       },
     },
