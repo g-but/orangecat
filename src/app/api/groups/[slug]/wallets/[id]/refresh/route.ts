@@ -2,29 +2,27 @@
  * Refresh Wallet Balance API
  *
  * POST /api/groups/[slug]/wallets/[id]/refresh - Refresh wallet balance from blockchain
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { handleApiError, apiUnauthorized, apiSuccess } from '@/lib/api/standardResponse';
+import { NextResponse } from 'next/server';
+import { handleApiError, apiSuccess } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { logger } from '@/utils/logger';
 import { refreshWalletBalance } from '@/services/groups/mutations/treasury';
-import { createServerClient } from '@/lib/supabase/server';
 import { checkGroupPermission } from '@/services/groups/permissions';
 import { getGroupBySlug } from '@/services/groups/queries/groups';
 
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: Promise<{ slug: string; id: string }> }
-) {
+interface RouteContext {
+  params: Promise<{ slug: string; id: string }>;
+}
+
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { slug, id: walletId } = await params;
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    
-    if (authError || !user) {return apiUnauthorized();}
+    const { slug, id: walletId } = await context.params;
+    const { user } = request;
 
     // Get group
     const groupResult = await getGroupBySlug(slug);
@@ -40,7 +38,7 @@ export async function POST(
 
     // Refresh balance
     const result = await refreshWalletBalance(walletId);
-    
+
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
@@ -50,5 +48,4 @@ export async function POST(
     logger.error('Error in POST /api/groups/[slug]/wallets/[id]/refresh', error, 'API');
     return handleApiError(error);
   }
-}
-
+});
