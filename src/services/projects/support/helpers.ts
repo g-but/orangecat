@@ -32,15 +32,9 @@ export async function getCurrentUserId(): Promise<string | null> {
   }
 }
 
-/**
- * Format sats to readable format
- */
-export function formatSats(sats: number): string {
-  if (sats >= 100_000_000) {
-    return `${(sats / 100_000_000).toFixed(8)} BTC`;
-  }
-  return `${sats.toLocaleString()} sats`;
-}
+// Re-export formatSats from SSOT to avoid duplication
+// Use useDisplayCurrency hook in components for user-preferred currency
+export { formatSats } from '@/services/currency';
 
 /**
  * Get support type display label
@@ -71,5 +65,3 @@ export function getReactionLabel(emoji: string): string {
   };
   return labels[emoji] || emoji;
 }
-
-

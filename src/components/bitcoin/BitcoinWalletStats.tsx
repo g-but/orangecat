@@ -1,60 +1,68 @@
-'use client'
+'use client';
 
-import { logger } from '@/utils/logger'
-import { useEffect, useState } from 'react'
-import { Bitcoin, TrendingUp, ArrowUpRight, ArrowDownRight, ExternalLink, RefreshCw } from 'lucide-react'
+import { logger } from '@/utils/logger';
+import { useEffect, useState } from 'react';
+import {
+  Bitcoin,
+  TrendingUp,
+  ArrowUpRight,
+  ArrowDownRight,
+  ExternalLink,
+  RefreshCw,
+} from 'lucide-react';
 import {
   getAddressBalance,
   getAddressTransactions,
   processTransactions,
-  formatSats,
   getTxUrl,
-  type TransactionSummary
-} from '@/services/mempool'
-import Button from '@/components/ui/Button'
+  type TransactionSummary,
+} from '@/services/mempool';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
+import Button from '@/components/ui/Button';
 
 interface BitcoinWalletStatsProps {
-  address: string
-  className?: string
+  address: string;
+  className?: string;
 }
 
 export default function BitcoinWalletStats({ address, className = '' }: BitcoinWalletStatsProps) {
-  const [balance, setBalance] = useState<number | null>(null)
-  const [transactions, setTransactions] = useState<TransactionSummary[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { formatAmount } = useDisplayCurrency();
+  const [balance, setBalance] = useState<number | null>(null);
+  const [transactions, setTransactions] = useState<TransactionSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchData = async () => {
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
       // Fetch balance and transactions in parallel
       const [balanceResult, txsResult] = await Promise.all([
         getAddressBalance(address),
-        getAddressTransactions(address, 5)
-      ])
+        getAddressTransactions(address, 5),
+      ]);
 
-      setBalance(balanceResult)
+      setBalance(balanceResult);
 
       if (txsResult.length > 0) {
-        const processed = processTransactions(txsResult, address)
-        setTransactions(processed)
+        const processed = processTransactions(txsResult, address);
+        setTransactions(processed);
       }
     } catch (err) {
-      setError('Failed to load wallet data')
-      logger.error('Error fetching wallet data:', err)
+      setError('Failed to load wallet data');
+      logger.error('Error fetching wallet data:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (address) {
-      fetchData()
+      fetchData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address])
+  }, [address]);
 
   if (loading) {
     return (
@@ -63,7 +71,7 @@ export default function BitcoinWalletStats({ address, className = '' }: BitcoinW
           <RefreshCw className="w-6 h-6 animate-spin text-orange-500" />
         </div>
       </div>
-    )
+    );
   }
 
   if (error || balance === null) {
@@ -77,15 +85,17 @@ export default function BitcoinWalletStats({ address, className = '' }: BitcoinW
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   const totalReceived = transactions
     .filter(tx => tx.type === 'received')
-    .reduce((sum, tx) => sum + tx.amount, 0)
+    .reduce((sum, tx) => sum + tx.amount, 0);
 
   return (
-    <div className={`bg-white rounded-xl shadow-md border border-orange-100 overflow-hidden ${className}`}>
+    <div
+      className={`bg-white rounded-xl shadow-md border border-orange-100 overflow-hidden ${className}`}
+    >
       {/* Balance Header */}
       <div className="bg-gradient-to-r from-orange-500 to-amber-500 p-6 text-white">
         <div className="flex items-center justify-between mb-2">
@@ -102,12 +112,10 @@ export default function BitcoinWalletStats({ address, className = '' }: BitcoinW
             <RefreshCw className="w-4 h-4" />
           </Button>
         </div>
-        <div className="text-3xl font-bold">
-          {formatSats(balance)}
-        </div>
+        <div className="text-3xl font-bold">{formatAmount(balance)}</div>
         {totalReceived > 0 && (
           <div className="text-sm opacity-90 mt-1">
-            Total received: {formatSats(totalReceived)}
+            Total received: {formatAmount(totalReceived)}
           </div>
         )}
       </div>
@@ -121,7 +129,7 @@ export default function BitcoinWalletStats({ address, className = '' }: BitcoinW
           </h4>
 
           <div className="space-y-3">
-            {transactions.map((tx) => (
+            {transactions.map(tx => (
               <a
                 key={tx.txid}
                 href={getTxUrl(tx.txid)}
@@ -137,10 +145,13 @@ export default function BitcoinWalletStats({ address, className = '' }: BitcoinW
                       ) : (
                         <ArrowUpRight className="w-4 h-4 text-red-600" />
                       )}
-                      <span className={`font-semibold ${
-                        tx.type === 'received' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {tx.type === 'received' ? '+' : '-'}{formatSats(tx.amount)}
+                      <span
+                        className={`font-semibold ${
+                          tx.type === 'received' ? 'text-green-600' : 'text-red-600'
+                        }`}
+                      >
+                        {tx.type === 'received' ? '+' : '-'}
+                        {formatAmount(tx.amount)}
                       </span>
                       {!tx.confirmed && (
                         <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded">
@@ -180,5 +191,5 @@ export default function BitcoinWalletStats({ address, className = '' }: BitcoinW
         </div>
       )}
     </div>
-  )
+  );
 }

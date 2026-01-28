@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Coins, Plus, ArrowUpRight, ArrowDownLeft, RefreshCw, Zap } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -13,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { formatSats } from '@/utils/currency';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface CreditBalance {
   balance_sats: number;
@@ -48,6 +49,7 @@ interface AICreditsData {
 }
 
 export function AICreditsPanel() {
+  const { formatAmount } = useDisplayCurrency();
   const [data, setData] = useState<AICreditsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [depositing, setDepositing] = useState(false);
@@ -66,7 +68,7 @@ export function AICreditsPanel() {
         setData(result.data);
       }
     } catch (error) {
-      console.error('Failed to fetch AI credits:', error);
+      logger.error('Failed to fetch AI credits', error, 'AI');
       toast.error('Failed to load credits');
     } finally {
       setLoading(false);
@@ -102,14 +104,14 @@ export function AICreditsPanel() {
       }
 
       await response.json();
-      toast.success(`Added ${formatSats(amount)} to your balance`);
+      toast.success(`Added ${formatAmount(amount)} to your balance`);
       setShowDepositDialog(false);
       setDepositAmount('1000');
 
       // Refresh balance
       fetchCredits();
     } catch (error) {
-      console.error('Deposit failed:', error);
+      logger.error('Deposit failed', error, 'AI');
       toast.error(error instanceof Error ? error.message : 'Deposit failed');
     } finally {
       setDepositing(false);
@@ -180,11 +182,11 @@ export function AICreditsPanel() {
           <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-lg p-4 border border-yellow-200">
             <div className="text-sm text-yellow-800 mb-1">Available Balance</div>
             <div className="text-3xl font-bold text-yellow-900">
-              {formatSats(balance.balance_sats)}
+              {formatAmount(balance.balance_sats)}
             </div>
             <div className="text-xs text-yellow-700 mt-2 flex gap-4">
-              <span>Deposited: {formatSats(balance.total_deposited_sats)}</span>
-              <span>Spent: {formatSats(balance.total_spent_sats)}</span>
+              <span>Deposited: {formatAmount(balance.total_deposited_sats)}</span>
+              <span>Spent: {formatAmount(balance.total_spent_sats)}</span>
             </div>
           </div>
 
@@ -217,7 +219,7 @@ export function AICreditsPanel() {
                     </div>
                     <div className={`font-medium ${getTransactionColor(tx.transaction_type)}`}>
                       {tx.transaction_type === 'charge' ? '-' : '+'}
-                      {formatSats(tx.amount_sats)}
+                      {formatAmount(tx.amount_sats)}
                     </div>
                   </div>
                 ))}
@@ -257,7 +259,7 @@ export function AICreditsPanel() {
                   size="sm"
                   onClick={() => setDepositAmount(amount.toString())}
                 >
-                  {formatSats(amount)}
+                  {formatAmount(amount)}
                 </Button>
               ))}
             </div>
@@ -296,7 +298,7 @@ export function AICreditsPanel() {
                 Cancel
               </Button>
               <Button className="flex-1" onClick={handleDeposit} disabled={depositing}>
-                {depositing ? 'Adding...' : `Add ${formatSats(parseInt(depositAmount) || 0)}`}
+                {depositing ? 'Adding...' : `Add ${formatAmount(parseInt(depositAmount) || 0)}`}
               </Button>
             </div>
           </div>

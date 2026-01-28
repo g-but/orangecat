@@ -17,7 +17,7 @@ import { Heart, Coins } from 'lucide-react';
 import { SupportModal } from './SupportModal';
 import projectSupportService from '@/services/projects/support';
 import type { ProjectSupportStats } from '@/services/projects/support/types';
-import { formatSats } from '@/services/projects/support/helpers';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { logger } from '@/utils/logger';
 
 interface ProjectSupportButtonProps {
@@ -37,6 +37,7 @@ export function ProjectSupportButton({
   className,
   onSupportAdded,
 }: ProjectSupportButtonProps) {
+  const { formatAmount } = useDisplayCurrency();
   const [modalOpen, setModalOpen] = useState(false);
   const [stats, setStats] = useState<ProjectSupportStats | null>(null);
   const [_loading, setLoading] = useState(false);
@@ -89,7 +90,7 @@ export function ProjectSupportButton({
             {stats.total_bitcoin_sats > 0 && (
               <div className="flex items-center gap-1">
                 <Coins className="h-4 w-4 text-orange-600" />
-                <span className="font-medium">{formatSats(stats.total_bitcoin_sats)}</span>
+                <span className="font-medium">{formatAmount(stats.total_bitcoin_sats)}</span>
               </div>
             )}
             {totalSupport > 0 && (
