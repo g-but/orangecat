@@ -3,10 +3,15 @@
  * First step of the onboarding flow introducing OrangeCat
  */
 
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Bitcoin, DollarSign, Users, CheckCircle } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { Bitcoin, DollarSign, Users, CheckCircle, Sparkles } from 'lucide-react';
+import { ROUTES } from '@/config/routes';
 
 export function WelcomeStep() {
+  const router = useRouter();
+
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -79,6 +84,23 @@ export function WelcomeStep() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Smart Setup Option */}
+      <div className="mt-6 pt-6 border-t border-gray-200">
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground mb-3">
+            Want a personalized setup based on your goals?
+          </p>
+          <Button
+            variant="outline"
+            onClick={() => router.push(ROUTES.ONBOARDING.INTELLIGENT)}
+            className="border-purple-200 hover:border-purple-300 hover:bg-purple-50"
+          >
+            <Sparkles className="h-4 w-4 mr-2 text-purple-600" />
+            Smart Setup Guide
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

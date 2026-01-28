@@ -216,6 +216,10 @@ export const ROUTES = {
   AUTH: '/auth',
   DISCOVER: '/discover',
   STUDY_BITCOIN: '/study-bitcoin',
+  ONBOARDING: {
+    STANDARD: '/onboarding',
+    INTELLIGENT: '/onboarding/intelligent',
+  },
   COMMUNITY: '/community',
   ABOUT: '/about',
   BLOG: '/blog',
@@ -280,7 +284,3 @@ export const ROUTES = {
 export const LEGACY_ROUTES = {
   CREATE: '/create', // Redirects to /projects/create
 } as const;
-
-
-
-

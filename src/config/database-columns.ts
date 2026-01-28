@@ -18,15 +18,15 @@
 
 /**
  * Column names for all database tables
- * 
+ *
  * Usage:
  * ```typescript
  * import { COLUMNS } from '@/config/database-columns';
- * 
+ *
  * // ✅ GOOD - Type-safe, autocomplete works
  * .eq(COLUMNS.profiles.ID, userId)
  * .select(COLUMNS.profiles.NAME, COLUMNS.profiles.EMAIL)
- * 
+ *
  * // ❌ BAD - Hardcoded, no type safety
  * .eq('id', userId)
  * .select('name', 'email')
@@ -77,6 +77,9 @@ export const COLUMNS = {
     LOGIN_COUNT: 'login_count',
     PROFILE_COMPLETED_AT: 'profile_completed_at',
     ONBOARDING_COMPLETED: 'onboarding_completed',
+    ONBOARDING_WALLET_SETUP_COMPLETED: 'onboarding_wallet_setup_completed',
+    ONBOARDING_FIRST_PROJECT_CREATED: 'onboarding_first_project_created',
+    ONBOARDING_METHOD: 'onboarding_method',
     TERMS_ACCEPTED_AT: 'terms_accepted_at',
     PRIVACY_POLICY_ACCEPTED_AT: 'privacy_policy_accepted_at',
     TWO_FACTOR_ENABLED: 'two_factor_enabled',
@@ -315,7 +318,7 @@ export const COLUMNS = {
 
 /**
  * Type-safe column accessor
- * 
+ *
  * Usage:
  * ```typescript
  * const columnName = column('profiles', 'NAME'); // Returns 'name'
@@ -323,22 +326,20 @@ export const COLUMNS = {
  */
 export function column<T extends keyof typeof COLUMNS>(
   table: T,
-  col: keyof typeof COLUMNS[T]
+  col: keyof (typeof COLUMNS)[T]
 ): string {
   return COLUMNS[table][col] as string;
 }
 
 /**
  * Get all column names for a table
- * 
+ *
  * Usage:
  * ```typescript
  * const profileColumns = getColumns('profiles');
  * // Returns: ['id', 'username', 'name', 'email', ...]
  * ```
  */
-export function getColumns<T extends keyof typeof COLUMNS>(
-  table: T
-): string[] {
+export function getColumns<T extends keyof typeof COLUMNS>(table: T): string[] {
   return Object.values(COLUMNS[table]) as string[];
 }
