@@ -5,6 +5,8 @@
 
 import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { STORAGE_KEYS } from '@/config/storage-keys';
 import type { ChatMessage, EntitySuggestion } from '../types';
 
 export function useEntityPrefill(messages: ChatMessage[]) {
@@ -65,25 +67,25 @@ export function useEntityPrefill(messages: ChatMessage[]) {
   const handleCreateService = useCallback(() => {
     const prefill = buildServicePrefill();
     try {
-      localStorage.setItem('service_prefill', JSON.stringify(prefill));
+      localStorage.setItem(STORAGE_KEYS.ENTITY_PREFILL('service'), JSON.stringify(prefill));
     } catch {}
-    router.push('/dashboard/services/create?prefill=1');
+    router.push(`${ENTITY_REGISTRY.service.createPath}?prefill=1`);
   }, [buildServicePrefill, router]);
 
   const handleCreateProduct = useCallback(() => {
     const prefill = buildProductPrefill();
     try {
-      localStorage.setItem('product_prefill', JSON.stringify(prefill));
+      localStorage.setItem(STORAGE_KEYS.ENTITY_PREFILL('product'), JSON.stringify(prefill));
     } catch {}
-    router.push('/dashboard/store/create?prefill=1');
+    router.push(`${ENTITY_REGISTRY.product.createPath}?prefill=1`);
   }, [buildProductPrefill, router]);
 
   const handleCreateProject = useCallback(() => {
     const prefill = buildProjectPrefill();
     try {
-      localStorage.setItem('project_prefill', JSON.stringify(prefill));
+      localStorage.setItem(STORAGE_KEYS.ENTITY_PREFILL('project'), JSON.stringify(prefill));
     } catch {}
-    router.push('/dashboard/projects/create?prefill=1');
+    router.push(`${ENTITY_REGISTRY.project.createPath}?prefill=1`);
   }, [buildProjectPrefill, router]);
 
   // Naive intent detection for entity suggestions

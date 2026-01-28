@@ -154,6 +154,7 @@ export default function DraftPrompt({ className }: DraftPromptProps) {
 // Additional component for showing multiple drafts in a compact format
 export function DraftsList({ className }: { className?: string }) {
   const { drafts, isLoading } = useProjectStore();
+  const { formatAmount } = useDisplayCurrency();
 
   if (isLoading || drafts.length === 0) {
     return null;

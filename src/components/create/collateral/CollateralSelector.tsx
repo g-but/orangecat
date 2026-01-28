@@ -13,11 +13,13 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Shield, Wallet, Package, CheckCircle2, AlertCircle } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { DEFAULT_CURRENCY } from '@/config/currencies';
+import { convertBtcTo } from '@/services/currency';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface CollateralItem {
@@ -84,7 +86,7 @@ export function CollateralSelector({
           setWallets(walletsData.data || []);
         }
       } catch (error) {
-        console.error('Failed to fetch collateral options:', error);
+        logger.error('Failed to fetch collateral options', error, 'Collateral');
       } finally {
         setLoading(false);
       }
@@ -125,9 +127,9 @@ export function CollateralSelector({
   };
 
   const handleAddWallet = (wallet: any) => {
-    // Convert BTC balance to fiat (simplified - would need real conversion)
+    // Convert BTC balance to fiat using currency service
     const btcValue = wallet.balance_btc || 0;
-    const estimatedValue = btcValue * 86000; // Rough BTC price estimate
+    const estimatedValue = convertBtcTo(btcValue, DEFAULT_CURRENCY);
 
     const newItem: CollateralItem = {
       id: wallet.id,

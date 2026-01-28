@@ -4,22 +4,13 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowRight, Calendar, MapPin, Tag, Globe } from 'lucide-react';
-import {
-  Package,
-  Briefcase,
-  Heart,
-  Coins,
-  Bot,
-  Building,
-  Rocket,
-  LucideIcon,
-} from 'lucide-react';
+import { Package, Briefcase, Heart, Coins, Bot, Building, Rocket, LucideIcon } from 'lucide-react';
 import { ScalableProfile } from '@/types/database';
 import Button from '@/components/ui/Button';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { logger } from '@/utils/logger';
-import { EntityType } from '@/config/entity-registry';
+import { EntityType, ENTITY_REGISTRY } from '@/config/entity-registry';
 
 // Icon mapping for entity types
 const ENTITY_ICONS: Record<string, LucideIcon> = {
@@ -58,10 +49,18 @@ const getRelativeTime = (date: string) => {
   const created = new Date(date);
   const now = new Date();
   const days = Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
-  if (days === 0) {return 'Today';}
-  if (days === 1) {return 'Yesterday';}
-  if (days < 7) {return `${days}d ago`;}
-  if (days < 30) {return `${Math.floor(days / 7)}w ago`;}
+  if (days === 0) {
+    return 'Today';
+  }
+  if (days === 1) {
+    return 'Yesterday';
+  }
+  if (days < 7) {
+    return `${days}d ago`;
+  }
+  if (days < 30) {
+    return `${Math.floor(days / 7)}w ago`;
+  }
   return created.toLocaleDateString();
 };
 
@@ -125,38 +124,11 @@ export default function ProfileEntityTab({
   const [metadata, setMetadata] = useState<EntityMetadata | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Get dashboard/create paths based on entity type
-  const getDashboardPath = () => {
-    const paths: Record<string, string> = {
-      project: '/dashboard/projects',
-      product: '/dashboard/store',
-      service: '/dashboard/services',
-      cause: '/dashboard/causes',
-      ai_assistant: '/dashboard/ai-assistants',
-      asset: '/dashboard/assets',
-      loan: '/dashboard/loans',
-      event: '/dashboard/events',
-    };
-    return paths[entityType] || '/dashboard';
-  };
-
-  const getCreatePath = () => {
-    return `${getDashboardPath()}/create`;
-  };
-
-  const getViewPath = (id: string) => {
-    const paths: Record<string, string> = {
-      project: `/projects/${id}`,
-      product: `/products/${id}`,
-      service: `/services/${id}`,
-      cause: `/causes/${id}`,
-      ai_assistant: `/ai-assistants/${id}`,
-      asset: `/assets/${id}`,
-      loan: `/loans/${id}`,
-      event: `/events/${id}`,
-    };
-    return paths[entityType] || `/${entityType}s/${id}`;
-  };
+  // Get paths from ENTITY_REGISTRY (SSOT)
+  const entityMeta = ENTITY_REGISTRY[entityType];
+  const getDashboardPath = () => entityMeta?.basePath || '/dashboard';
+  const getCreatePath = () => entityMeta?.createPath || `${getDashboardPath()}/create`;
+  const getViewPath = (id: string) => `${entityMeta?.publicBasePath || `/${entityType}s`}/${id}`;
 
   useEffect(() => {
     const fetchEntities = async () => {
@@ -224,7 +196,9 @@ export default function ProfileEntityTab({
 
   // Get price display for an entity
   const getPriceDisplay = (entity: EntityData) => {
-    if (entity.is_free) {return 'Free';}
+    if (entity.is_free) {
+      return 'Free';
+    }
 
     const priceValue =
       entity.price ||
@@ -235,7 +209,9 @@ export default function ProfileEntityTab({
       entity.original_amount ||
       entity.estimated_value;
 
-    if (!priceValue) {return null;}
+    if (!priceValue) {
+      return null;
+    }
 
     const label =
       entityType === 'service' && entity.pricing_type === 'hourly'
