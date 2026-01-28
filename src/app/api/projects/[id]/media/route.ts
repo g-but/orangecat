@@ -1,21 +1,32 @@
-import { createServerClient } from '@/lib/supabase/server';
-import { NextRequest } from 'next/server';
+/**
+ * Project Media API
+ *
+ * POST /api/projects/[id]/media - Upload media to project
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
+ */
+
 import {
   apiSuccess,
-  apiUnauthorized,
   apiForbidden,
   apiNotFound,
   apiBadRequest,
   apiInternalError,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: projectId } = await params;
+    const { id: projectId } = await context.params;
 
     // Validate project ID
     const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
@@ -23,14 +34,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return idValidation;
     }
 
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     const { path, alt_text } = await request.json();
 
@@ -38,9 +42,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return apiBadRequest('Invalid storage path');
     }
 
-    const { data: project } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { data: project } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('project')) as any
+    )
       .select('user_id')
       .eq('id', projectId)
       .single();
@@ -60,9 +66,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Check current media count - use fresh query to avoid stale data
-    const { count, error: countError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('project_media') as any)
+    const { count, error: countError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('project_media') as any
+    )
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId);
 
@@ -83,14 +91,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
     // Find the first available position (0, 1, or 2)
     // Get all existing positions
-    const { data: existing } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('project_media') as any)
+    const { data: existing } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('project_media') as any
+    )
       .select('position')
       .eq('project_id', projectId);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const existingPositions = (existing || []).map((m: any) => m.position).sort((a: number, b: number) => a - b);
+    const existingPositions = (existing || [])
+      .map((m: any) => m.position)
+      .sort((a: number, b: number) => a - b);
 
     // Find first available position (0, 1, or 2)
     let nextPosition = 0;
@@ -106,9 +118,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return apiBadRequest('Maximum 3 images per project');
     }
 
-    const { data: media, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('project_media') as any)
+    const { data: media, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('project_media') as any
+    )
       .insert({ project_id: projectId, storage_path: path, position: nextPosition, alt_text })
       .select()
       .single();
@@ -142,4 +156,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     logger.error('Unexpected error uploading media', { error });
     return apiInternalError('Failed to create media');
   }
-}
+});

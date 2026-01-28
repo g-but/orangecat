@@ -2,16 +2,19 @@
  * Service Booking API
  *
  * POST /api/services/[id]/book - Request a booking for a service
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getTableName } from '@/config/entity-registry';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
@@ -21,18 +24,10 @@ const bookServiceSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: serviceId } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id: serviceId } = await context.params;
+    const { user, supabase } = request;
 
     const body = await request.json();
     const result = bookServiceSchema.safeParse(body);
@@ -128,4 +123,4 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     logger.error('Book service error', error, 'ServiceBookAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

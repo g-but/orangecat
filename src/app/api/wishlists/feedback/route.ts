@@ -6,24 +6,19 @@
  * POST /api/wishlists/feedback - Submit like/dislike feedback
  *
  * Created: 2026-01-06
- * Last Modified: 2026-01-06
- * Last Modified Summary: Created wishlist feedback API endpoint
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { wishlistFeedbackSchema } from '@/lib/validation';
 import { logger } from '@/utils/logger';
 
 // POST /api/wishlists/feedback - Submit like/dislike feedback
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user, supabase } = request;
 
     const body = await request.json();
 
@@ -37,22 +32,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the wishlist item exists
-    const { data: wishlistItem, error: itemError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wishlist_items') as any)
+    const { data: wishlistItem, error: itemError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wishlist_items') as any
+    )
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', validationResult.data.wishlist_item_id)
       .single();
 
     if (itemError || !wishlistItem) {
-      return NextResponse.json(
-        { error: 'Wishlist item not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Wishlist item not found' }, { status: 404 });
     }
 
     // Users cannot feedback on their own wishlist items
-    const wishlist = Array.isArray(wishlistItem.wishlists) ? wishlistItem.wishlists[0] : wishlistItem.wishlists;
+    const wishlist = Array.isArray(wishlistItem.wishlists)
+      ? wishlistItem.wishlists[0]
+      : wishlistItem.wishlists;
     if (wishlist && wishlist.actor_id === user.id) {
       return NextResponse.json(
         { error: 'You cannot provide feedback on your own wishlist items' },
@@ -62,9 +58,11 @@ export async function POST(request: NextRequest) {
 
     // If feedback is associated with a proof, verify it exists
     if (validationResult.data.fulfillment_proof_id) {
-      const { data: proof, error: proofError } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('wishlist_fulfillment_proofs') as any)
+      const { data: proof, error: proofError } = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from('wishlist_fulfillment_proofs') as any
+      )
         .select('id, wishlist_item_id')
         .eq('id', validationResult.data.fulfillment_proof_id)
         .eq('wishlist_item_id', validationResult.data.wishlist_item_id)
@@ -79,9 +77,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already provided feedback for this proof/item combination
-    const existingFeedbackQuery = (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wishlist_feedback') as any)
+    const existingFeedbackQuery = (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wishlist_feedback') as any
+    )
       .select('id, feedback_type')
       .eq('user_id', user.id)
       .eq('wishlist_item_id', validationResult.data.wishlist_item_id);
@@ -100,10 +100,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         wishlistItemId: validationResult.data.wishlist_item_id,
       });
-      return NextResponse.json(
-        { error: 'Failed to check existing feedback' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to check existing feedback' }, { status: 500 });
     }
 
     if (existingFeedback && existingFeedback.length > 0) {
@@ -115,9 +112,11 @@ export async function POST(request: NextRequest) {
         );
       } else {
         // Update existing feedback (allow changing like to dislike or vice versa)
-        const { data: updatedFeedback, error: updateError } = await (supabase
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .from('wishlist_feedback') as any)
+        const { data: updatedFeedback, error: updateError } = await (
+          supabase
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            .from('wishlist_feedback') as any
+        )
           .update({
             feedback_type: validationResult.data.feedback_type,
             comment: validationResult.data.comment,
@@ -132,10 +131,7 @@ export async function POST(request: NextRequest) {
             feedbackId: existing.id,
             userId: user.id,
           });
-          return NextResponse.json(
-            { error: 'Failed to update feedback' },
-            { status: 500 }
-          );
+          return NextResponse.json({ error: 'Failed to update feedback' }, { status: 500 });
         }
 
         logger.info('Updated wishlist feedback successfully', {
@@ -145,17 +141,16 @@ export async function POST(request: NextRequest) {
           feedbackType: validationResult.data.feedback_type,
         });
 
-        return NextResponse.json(
-          { feedback: updatedFeedback },
-          { status: 200 }
-        );
+        return NextResponse.json({ feedback: updatedFeedback }, { status: 200 });
       }
     }
 
     // Create new feedback
-    const { data: feedback, error: feedbackError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wishlist_feedback') as any)
+    const { data: feedback, error: feedbackError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wishlist_feedback') as any
+    )
       .insert({
         wishlist_item_id: validationResult.data.wishlist_item_id,
         fulfillment_proof_id: validationResult.data.fulfillment_proof_id,
@@ -172,10 +167,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         wishlistItemId: validationResult.data.wishlist_item_id,
       });
-      return NextResponse.json(
-        { error: 'Failed to create feedback' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to create feedback' }, { status: 500 });
     }
 
     logger.info('Created wishlist feedback successfully', {
@@ -185,15 +177,9 @@ export async function POST(request: NextRequest) {
       feedbackType: validationResult.data.feedback_type,
     });
 
-    return NextResponse.json(
-      { feedback },
-      { status: 201 }
-    );
+    return NextResponse.json({ feedback }, { status: 201 });
   } catch (error) {
     logger.error('Error in POST /api/wishlists/feedback:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

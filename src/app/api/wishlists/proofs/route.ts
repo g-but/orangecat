@@ -6,24 +6,19 @@
  * POST /api/wishlists/proofs - Create proof of purchase/wishlist fulfillment
  *
  * Created: 2026-01-06
- * Last Modified: 2026-01-06
- * Last Modified Summary: Created wishlist proof API endpoint
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { wishlistFulfillmentProofSchema } from '@/lib/validation';
 import { logger } from '@/utils/logger';
 
 // POST /api/wishlists/proofs - Create proof of purchase/wishlist fulfillment
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user, supabase } = request;
 
     const body = await request.json();
 
@@ -37,22 +32,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify the wishlist item exists and user has access
-    const { data: wishlistItem, error: itemError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wishlist_items') as any)
+    const { data: wishlistItem, error: itemError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wishlist_items') as any
+    )
       .select('id, wishlist_id, wishlists!inner(actor_id)')
       .eq('id', validationResult.data.wishlist_item_id)
       .single();
 
     if (itemError || !wishlistItem) {
-      return NextResponse.json(
-        { error: 'Wishlist item not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Wishlist item not found' }, { status: 404 });
     }
 
     // Users can only add proofs to their own wishlists
-    const wishlist = Array.isArray(wishlistItem.wishlists) ? wishlistItem.wishlists[0] : wishlistItem.wishlists;
+    const wishlist = Array.isArray(wishlistItem.wishlists)
+      ? wishlistItem.wishlists[0]
+      : wishlistItem.wishlists;
     if (!wishlist || wishlist.actor_id !== user.id) {
       return NextResponse.json(
         { error: 'You can only add proofs to your own wishlists' },
@@ -61,9 +57,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the proof
-    const { data: proof, error: proofError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wishlist_fulfillment_proofs') as any)
+    const { data: proof, error: proofError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wishlist_fulfillment_proofs') as any
+    )
       .insert({
         wishlist_item_id: validationResult.data.wishlist_item_id,
         user_id: user.id,
@@ -81,10 +79,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         wishlistItemId: validationResult.data.wishlist_item_id,
       });
-      return NextResponse.json(
-        { error: 'Failed to create proof' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to create proof' }, { status: 500 });
     }
 
     logger.info('Created wishlist proof successfully', {
@@ -94,15 +89,9 @@ export async function POST(request: NextRequest) {
       proofType: validationResult.data.proof_type,
     });
 
-    return NextResponse.json(
-      { proof },
-      { status: 201 }
-    );
+    return NextResponse.json({ proof }, { status: 201 });
   } catch (error) {
     logger.error('Error in POST /api/wishlists/proofs:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
