@@ -10,6 +10,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 // Type alias for any SupabaseClient (accepts any database schema)
 type AnySupabaseClient = SupabaseClient<any, any, any>;
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { logger } from '@/utils/logger';
 
 // Types
 export type BookableType = 'service' | 'asset';
@@ -294,7 +295,7 @@ export class BookingService {
       .single();
 
     if (error) {
-      console.error('Error creating booking:', error);
+      logger.error('Error creating booking', { error }, 'BookingService');
       return {
         success: false,
         error: 'Failed to create booking',
@@ -489,7 +490,7 @@ export class BookingService {
     const { data, error } = await query;
 
     if (error) {
-      console.error('Error fetching bookings:', error);
+      logger.error('Error fetching bookings', { error }, 'BookingService');
       return [];
     }
 
