@@ -288,7 +288,6 @@ export default function DashboardPage() {
 
   const sidebarStats = {
     totalProjects,
-    totalDrafts,
     totalRaised,
     totalSupporters,
     primaryCurrency,
@@ -309,6 +308,7 @@ export default function DashboardPage() {
         {showWelcome && (
           <DashboardWelcome
             profile={profile}
+            hasProjects={hasProjects}
             onDismiss={() => {
               setShowWelcome(false);
               if (user?.id) {
@@ -335,11 +335,7 @@ export default function DashboardPage() {
         <div className="space-y-4 sm:space-y-6">
           {/* Mobile Sidebar - Stats shown above content on mobile */}
           <div className="block lg:hidden">
-            <MobileDashboardSidebar
-              stats={sidebarStats}
-              profileCompletion={profileCompletion}
-              profile={profile}
-            />
+            <MobileDashboardSidebar stats={sidebarStats} />
           </div>
 
           {/* Main Content: Single column layout - no cluttered double sidebars */}
