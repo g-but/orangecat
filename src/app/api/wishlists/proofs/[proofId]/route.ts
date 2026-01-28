@@ -6,69 +6,56 @@
  * DELETE /api/wishlists/proofs/[proofId] - Delete a proof
  *
  * Created: 2026-01-06
- * Last Modified: 2026-01-06
- * Last Modified Summary: Created wishlist proof delete API endpoint
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ proofId: string }>;
 }
 
 // DELETE /api/wishlists/proofs/[proofId] - Delete a proof
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { proofId } = await params;
+    const { proofId } = await context.params;
 
     // Validate proof ID
     if (!validateUUID(proofId)) {
-      return NextResponse.json(
-        { error: 'Invalid proof ID' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid proof ID' }, { status: 400 });
     }
 
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user, supabase } = request;
 
     // Get the proof and verify ownership
-    const { data: proof, error: proofError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wishlist_fulfillment_proofs') as any)
+    const { data: proof, error: proofError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wishlist_fulfillment_proofs') as any
+    )
       .select('id, user_id, wishlist_item_id')
       .eq('id', proofId)
       .single();
 
     if (proofError || !proof) {
-      return NextResponse.json(
-        { error: 'Proof not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Proof not found' }, { status: 404 });
     }
 
     // Users can only delete their own proofs
     if (proof.user_id !== user.id) {
-      return NextResponse.json(
-        { error: 'You can only delete your own proofs' },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: 'You can only delete your own proofs' }, { status: 403 });
     }
 
     // Delete the proof
-    const { error: deleteError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wishlist_fulfillment_proofs') as any)
+    const { error: deleteError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wishlist_fulfillment_proofs') as any
+    )
       .delete()
       .eq('id', proofId);
 
@@ -78,16 +65,15 @@ export async function DELETE(
         proofId,
         userId: user.id,
       });
-      return NextResponse.json(
-        { error: 'Failed to delete proof' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to delete proof' }, { status: 500 });
     }
 
     // Also delete any associated feedback
-    const { error: feedbackDeleteError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('wishlist_feedback') as any)
+    const { error: feedbackDeleteError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('wishlist_feedback') as any
+    )
       .delete()
       .eq('fulfillment_proof_id', proofId);
 
@@ -104,15 +90,9 @@ export async function DELETE(
       userId: user.id,
     });
 
-    return NextResponse.json(
-      { message: 'Proof deleted successfully' },
-      { status: 200 }
-    );
+    return NextResponse.json({ message: 'Proof deleted successfully' }, { status: 200 });
   } catch (error) {
     logger.error('Error in DELETE /api/wishlists/proofs/[proofId]:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

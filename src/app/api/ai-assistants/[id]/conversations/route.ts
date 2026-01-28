@@ -3,31 +3,26 @@
  *
  * GET /api/ai-assistants/[id]/conversations - List user's conversations with this assistant
  * POST /api/ai-assistants/[id]/conversations - Create a new conversation
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: assistantId } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id: assistantId } = await context.params;
+    const { user, supabase } = request;
 
     // Verify assistant exists
     const { data: assistant, error: assistantError } = await supabase
@@ -61,20 +56,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     logger.error('Conversations API error', error, 'AIConversationsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: assistantId } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id: assistantId } = await context.params;
+    const { user, supabase } = request;
 
     // Verify assistant exists and is active
     const { data: assistant, error: assistantError } = await (
@@ -138,4 +125,4 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     logger.error('Create conversation error', error, 'AIConversationsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

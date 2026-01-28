@@ -2,10 +2,13 @@
  * API Key Validation Endpoint
  *
  * POST - Validate an API key without saving it
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { createApiKeyService } from '@/services/ai/api-key-service';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
@@ -18,17 +21,9 @@ const validateSchema = z.object({
  * POST /api/user/api-keys/validate
  * Validate an API key without saving
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { supabase } = request;
 
     const body = await request.json();
     const result = validateSchema.safeParse(body);
@@ -60,4 +55,4 @@ export async function POST(request: NextRequest) {
     logger.error('Error validating API key', error, 'ApiKeysValidateAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
