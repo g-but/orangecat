@@ -1,20 +1,31 @@
-import { createServerClient } from '@/lib/supabase/server';
-import { NextRequest } from 'next/server';
+/**
+ * Project Media Upload URL API
+ *
+ * POST /api/projects/[id]/media/upload-url - Generate signed upload URL
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
+ */
+
 import {
   apiSuccess,
-  apiUnauthorized,
   apiForbidden,
   apiNotFound,
   apiBadRequest,
   apiInternalError,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: projectId } = await params;
+    const { id: projectId } = await context.params;
 
     // Validate project ID
     const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
@@ -22,18 +33,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return idValidation;
     }
 
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user, supabase } = request;
 
-    if (!user) {
-      return apiUnauthorized();
-    }
-
-    const { data: project } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { data: project } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('project')) as any
+    )
       .select('user_id')
       .eq('id', projectId)
       .single();
@@ -53,9 +59,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Check current media count - use fresh query to avoid stale data
-    const { count, error: countError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('project_media') as any)
+    const { count, error: countError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('project_media') as any
+    )
       .select('*', { count: 'exact', head: true })
       .eq('project_id', projectId);
 
@@ -117,4 +125,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     logger.error('Unexpected error generating upload URL', { error });
     return apiInternalError('Failed to generate upload URL');
   }
-}
+});

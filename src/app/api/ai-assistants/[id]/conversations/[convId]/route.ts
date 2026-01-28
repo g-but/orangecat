@@ -4,17 +4,20 @@
  * GET /api/ai-assistants/[id]/conversations/[convId] - Get conversation with messages
  * PUT /api/ai-assistants/[id]/conversations/[convId] - Update conversation (title, archive)
  * DELETE /api/ai-assistants/[id]/conversations/[convId] - Delete conversation
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ id: string; convId: string }>;
 }
 
@@ -23,18 +26,10 @@ const updateConversationSchema = z.object({
   status: z.enum(['active', 'archived']).optional(),
 });
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: assistantId, convId } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id: assistantId, convId } = await context.params;
+    const { user, supabase } = request;
 
     // Get conversation with messages
     const { data: conversation, error: convError } = await supabase
@@ -80,20 +75,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     logger.error('Get conversation error', error, 'AIConversationAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export const PUT = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: assistantId, convId } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id: assistantId, convId } = await context.params;
+    const { user, supabase } = request;
 
     const body = await request.json();
     const result = updateConversationSchema.safeParse(body);
@@ -139,20 +126,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     logger.error('Update conversation error', error, 'AIConversationAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: assistantId, convId } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id: assistantId, convId } = await context.params;
+    const { user, supabase } = request;
 
     // Delete conversation (cascade deletes messages)
     const { error } = await supabase
@@ -175,4 +154,4 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     logger.error('Delete conversation error', error, 'AIConversationAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

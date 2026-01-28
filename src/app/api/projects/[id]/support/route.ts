@@ -4,36 +4,39 @@
  * Handles project support operations (donations, signatures, messages, reactions).
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Created project support API route
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored POST to use withAuth middleware
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import projectSupportService from '@/services/projects/support';
-import { supportProjectSchema, supportFiltersSchema, supportPaginationSchema } from '@/services/projects/support/validation';
+import {
+  supportProjectSchema,
+  supportFiltersSchema,
+  supportPaginationSchema,
+} from '@/services/projects/support/validation';
 import { logger } from '@/utils/logger';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
 // GET /api/projects/[id]/support - Get project support list
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, context: RouteContext) {
   try {
-    const { id: projectId } = await params;
-    const supabase = await createServerClient();
-    const { data: { user: _user } } = await supabase.auth.getUser();
-
+    const { id: projectId } = await context.params;
     const searchParams = request.nextUrl.searchParams;
-    
+
     // Parse filters
     const filters = {
       support_type: searchParams.get('support_type') || undefined,
-      is_anonymous: searchParams.get('is_anonymous') === 'true' ? true : searchParams.get('is_anonymous') === 'false' ? false : undefined,
+      is_anonymous:
+        searchParams.get('is_anonymous') === 'true'
+          ? true
+          : searchParams.get('is_anonymous') === 'false'
+            ? false
+            : undefined,
       user_id: searchParams.get('user_id') || undefined,
     };
 
@@ -65,26 +68,14 @@ export async function GET(
     return NextResponse.json(result);
   } catch (error) {
     logger.error('Error in GET /api/projects/[id]/support:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
 // POST /api/projects/[id]/support - Create project support
-export async function POST(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: projectId } = await params;
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id: projectId } = await context.params;
 
     const body = await request.json();
 
@@ -98,7 +89,10 @@ export async function POST(
     }
 
     // Create support
-    const result = await projectSupportService.createProjectSupport(projectId, validationResult.data);
+    const result = await projectSupportService.createProjectSupport(
+      projectId,
+      validationResult.data
+    );
 
     if (!result.success) {
       return NextResponse.json(
@@ -107,17 +101,9 @@ export async function POST(
       );
     }
 
-    return NextResponse.json(
-      { support: result.support },
-      { status: 201 }
-    );
+    return NextResponse.json({ support: result.support }, { status: 201 });
   } catch (error) {
     logger.error('Error in POST /api/projects/[id]/support:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
-
+});
