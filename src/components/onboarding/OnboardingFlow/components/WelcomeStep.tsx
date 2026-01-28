@@ -1,12 +1,15 @@
 /**
  * WELCOME STEP COMPONENT
  * First step of the onboarding flow introducing OrangeCat
+ *
+ * Follows Progressive Disclosure: Focus on core value prop only
+ * Advanced features (P2P lending, etc.) discovered later
  */
 
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Bitcoin, DollarSign, Users, CheckCircle, Sparkles } from 'lucide-react';
+import { Bitcoin, Eye, Users, CheckCircle, Sparkles } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 
 export function WelcomeStep() {
@@ -21,8 +24,8 @@ export function WelcomeStep() {
           </div>
           <h2 className="text-2xl font-bold mb-2">Welcome to OrangeCat</h2>
           <p className="text-muted-foreground">
-            The decentralized platform where Bitcoin meets community. Fund projects, access
-            peer-to-peer lending, and build with like-minded creators.
+            Create a project, share your story, and receive Bitcoin funding directly from supporters
+            around the world.
           </p>
         </div>
       </div>
@@ -32,26 +35,26 @@ export function WelcomeStep() {
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Bitcoin className="h-5 w-5 text-orange-600" />
-              Bitcoin-First
+              Direct to Your Wallet
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Fund and receive payments in Bitcoin. No intermediaries, no fees on donations.
+              Receive Bitcoin directly. No middlemen, no platform fees on funding.
             </p>
           </CardContent>
         </Card>
 
-        <Card className="border-green-200 bg-green-50">
+        <Card className="border-tiffany-200 bg-tiffany-50">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-green-600" />
-              Peer-to-Peer Lending
+              <Eye className="h-5 w-5 text-tiffany-600" />
+              Fully Transparent
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              List loans for refinancing or lend to community members. Better rates than banks.
+              Every transaction is visible on-chain. Build trust with your supporters.
             </p>
           </CardContent>
         </Card>
@@ -60,12 +63,12 @@ export function WelcomeStep() {
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
               <Users className="h-5 w-5 text-blue-600" />
-              Community-Driven
+              Community Support
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Social features, project discussions, and collective wisdom against scams.
+              Connect with like-minded supporters who believe in your project.
             </p>
           </CardContent>
         </Card>

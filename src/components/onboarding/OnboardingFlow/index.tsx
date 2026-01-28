@@ -31,7 +31,7 @@ export function OnboardingFlow() {
       {
         id: 'welcome',
         title: 'Welcome to OrangeCat! 🟠',
-        description: 'Your gateway to Bitcoin-powered crowdfunding and community lending',
+        description: 'Create a project and start receiving Bitcoin funding',
         icon: Sparkles,
         content: <WelcomeStep />,
       },
