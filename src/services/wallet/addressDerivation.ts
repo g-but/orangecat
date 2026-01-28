@@ -7,6 +7,7 @@ import {
   type DerivedAddress,
   type NetworkName,
 } from '@/lib/bitcoin';
+import { logger } from '@/utils/logger';
 
 /**
  * Address Derivation Service
@@ -108,7 +109,7 @@ export async function getOrDeriveAddress(
   } as WalletAddressInsert);
 
   if (error) {
-    console.error('[AddressDerivation] Failed to cache address:', error);
+    logger.error('Failed to cache address', { error }, 'AddressDerivation');
     // Don't throw - address derivation succeeded even if caching failed
   }
 
@@ -219,7 +220,7 @@ export async function preDeriveAddresses(options: GapLimitOptions): Promise<Deri
   });
 
   if (error) {
-    console.error('[AddressDerivation] Failed to cache batch addresses:', error);
+    logger.error('Failed to cache batch addresses', { error }, 'AddressDerivation');
   }
 
   return derivedAddresses;
@@ -238,7 +239,11 @@ export async function markAddressUsed(walletId: string, address: string): Promis
     .eq('address', address);
 
   if (error) {
-    console.error('[AddressDerivation] Failed to mark address as used:', error);
+    logger.error(
+      'Failed to mark address as used',
+      { error, walletId, address },
+      'AddressDerivation'
+    );
     throw new Error('Failed to mark address as used');
   }
 }
@@ -266,7 +271,7 @@ export async function getWalletAddresses(
   const { data, error } = (await query) as QueryResult<WalletAddress[] | null>;
 
   if (error) {
-    console.error('[AddressDerivation] Failed to get wallet addresses:', error);
+    logger.error('Failed to get wallet addresses', { error, walletId }, 'AddressDerivation');
     throw new Error('Failed to get wallet addresses');
   }
 
