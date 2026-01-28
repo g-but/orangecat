@@ -90,7 +90,7 @@ export function CreateProposalDialog({
 }: CreateProposalDialogProps) {
   const [submitting, setSubmitting] = useState(false);
   const [activeField, setActiveField] = useState<ProposalFieldType>(null);
-  const { currency } = useDisplayCurrency();
+  const { displayCurrency } = useDisplayCurrency();
 
   const form = useForm<ProposalFormData>({
     resolver: zodResolver(proposalSchema),
@@ -343,7 +343,7 @@ export function CreateProposalDialog({
                       name="amount_sats"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Amount ({currency}) *</FormLabel>
+                          <FormLabel>Amount ({displayCurrency}) *</FormLabel>
                           <FormControl>
                             <Input
                               type="number"

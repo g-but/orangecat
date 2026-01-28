@@ -57,7 +57,7 @@ interface ImpactArea {
 
 export default function CreateResearchEntity() {
   const router = useRouter();
-  const { formatAmount, currency } = useDisplayCurrency();
+  const { formatAmount, displayCurrency } = useDisplayCurrency();
   const [loading, setLoading] = useState(false);
 
   // Basic Info
@@ -337,7 +337,7 @@ export default function CreateResearchEntity() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-sm font-medium">Funding Goal ({currency}) *</label>
+                <label className="text-sm font-medium">Funding Goal ({displayCurrency}) *</label>
                 <Input
                   type="number"
                   value={fundingGoal}

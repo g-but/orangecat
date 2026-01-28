@@ -37,7 +37,7 @@ export default function LightningPayment({
   onPaymentFailed: _onPaymentFailed,
   className = '',
 }: LightningPaymentProps) {
-  const { currency } = useDisplayCurrency();
+  const { displayCurrency } = useDisplayCurrency();
   const [amount, setAmount] = useState(presetAmount?.toString() || '');
   const [message, setMessage] = useState('');
   const [invoice, setInvoice] = useState<Invoice | null>(null);
@@ -228,7 +228,7 @@ export default function LightningPayment({
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Amount ({currency})
+                Amount ({displayCurrency})
               </label>
               <Input
                 type="number"

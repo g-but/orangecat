@@ -90,10 +90,12 @@ export interface EntityMetadata {
   icon: LucideIcon;
   /** Color theme */
   colorTheme: 'orange' | 'tiffany' | 'rose' | 'blue' | 'green' | 'purple' | 'indigo';
-  /** Base URL path */
+  /** Base URL path (dashboard) */
   basePath: string;
   /** Create page URL */
   createPath: string;
+  /** Public view base path (e.g., /products, /services) - append /{id} for detail view */
+  publicBasePath: string;
   /** API endpoint */
   apiEndpoint: string;
   /** Whether this entity type supports templates */
@@ -126,6 +128,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'orange',
     basePath: '/dashboard/wallets',
     createPath: '/dashboard/wallets',
+    publicBasePath: '/wallets',
     apiEndpoint: '/api/wallets',
     hasTemplates: false,
     description: 'Bitcoin wallet connections',
@@ -145,6 +148,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'orange',
     basePath: '/dashboard/projects',
     createPath: '/dashboard/projects/create',
+    publicBasePath: '/projects',
     apiEndpoint: '/api/projects',
     hasTemplates: true,
     description: 'Crowdfunded initiatives',
@@ -162,6 +166,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'blue',
     basePath: '/dashboard/store',
     createPath: '/dashboard/store/create',
+    publicBasePath: '/products',
     apiEndpoint: '/api/products',
     hasTemplates: true,
     description: 'Physical or digital products for sale',
@@ -179,6 +184,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'tiffany',
     basePath: '/dashboard/services',
     createPath: '/dashboard/services/create',
+    publicBasePath: '/services',
     apiEndpoint: '/api/services',
     hasTemplates: true,
     description: 'Professional services you offer',
@@ -196,6 +202,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'rose',
     basePath: '/dashboard/causes',
     createPath: '/dashboard/causes/create',
+    publicBasePath: '/causes',
     apiEndpoint: '/api/causes',
     hasTemplates: false,
     description: 'Charitable causes to support',
@@ -213,6 +220,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'purple',
     basePath: '/dashboard/ai-assistants',
     createPath: '/dashboard/ai-assistants/create',
+    publicBasePath: '/ai-assistants',
     apiEndpoint: '/api/ai-assistants',
     hasTemplates: true,
     description: 'Autonomous AI services you create and monetize',
@@ -232,6 +240,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'purple',
     basePath: '/dashboard/groups',
     createPath: '/dashboard/groups/create',
+    publicBasePath: '/groups',
     apiEndpoint: '/api/groups',
     hasTemplates: false,
     description: 'Community groups and organizations',
@@ -251,6 +260,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'green',
     basePath: '/dashboard/assets',
     createPath: '/dashboard/assets/create',
+    publicBasePath: '/assets',
     apiEndpoint: '/api/assets',
     hasTemplates: true,
     description: 'Valuable assets for collateral',
@@ -268,6 +278,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'tiffany',
     basePath: '/dashboard/loans',
     createPath: '/dashboard/loans/create',
+    publicBasePath: '/loans',
     apiEndpoint: '/api/loans',
     hasTemplates: false,
     description: 'Peer-to-peer Bitcoin loans',
@@ -285,6 +296,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'blue',
     basePath: '/dashboard/events',
     createPath: '/dashboard/events/create',
+    publicBasePath: '/events',
     apiEndpoint: '/api/events',
     hasTemplates: true,
     description: 'In-person gatherings and meetups',
@@ -304,6 +316,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'purple',
     basePath: '/dashboard/research',
     createPath: '/dashboard/research/create',
+    publicBasePath: '/research',
     apiEndpoint: '/api/research',
     hasTemplates: true,
     description:
@@ -324,6 +337,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'rose',
     basePath: '/dashboard/wishlists',
     createPath: '/dashboard/wishlists/create',
+    publicBasePath: '/wishlists',
     apiEndpoint: '/api/wishlists',
     hasTemplates: true,
     description: 'List items you want - others can buy them for you',
@@ -343,6 +357,7 @@ export const ENTITY_REGISTRY: Record<EntityType, EntityMetadata> = {
     colorTheme: 'indigo',
     basePath: '/dashboard/documents',
     createPath: '/dashboard/documents/create',
+    publicBasePath: '/documents',
     apiEndpoint: '/api/documents',
     hasTemplates: false,
     description: 'Personal context for My Cat - goals, skills, notes',
