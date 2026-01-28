@@ -1,45 +1,69 @@
-import { NextResponse } from 'next/server'
-import { z } from 'zod'
-import { withSecurity, apiRateLimiter } from '@/utils/security'
-import { createServerClient } from '@/lib/supabase/server'
-import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies'
-import { getTableName } from '@/config/entity-registry'
+/**
+ * Loan Collateral API
+ *
+ * POST /api/loan-collateral - Attach collateral to a loan
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
+ */
+
+import { z } from 'zod';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiSuccess, apiForbidden, apiValidationError, apiError } from '@/lib/api/standardResponse';
+import { logger } from '@/utils/logger';
+import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { getTableName } from '@/config/entity-registry';
 
 const CollateralSchema = z.object({
   loan_id: z.string().min(1),
   asset_id: z.string().min(1),
   pledged_value: z.number().positive().optional().nullable(),
   currency: z.string().min(3).max(6).optional().default('USD'),
-})
+});
 
-type CollateralInput = z.infer<typeof CollateralSchema>
+export const POST = withAuth(async (req: AuthenticatedRequest) => {
+  try {
+    const { user, supabase } = req;
 
-const postHandler = withSecurity<CollateralInput>(
-  async (data) => {
-    const supabase = await createServerClient()
-    const { data: auth } = await supabase.auth.getUser()
-    const user = auth?.user
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    let body: unknown;
+    try {
+      body = await req.json();
+    } catch {
+      return apiValidationError('Invalid request body');
     }
 
-    // Verify ownership of loan and asset
+    const validation = CollateralSchema.safeParse(body);
+    if (!validation.success) {
+      return apiValidationError('Validation failed', {
+        fields: validation.error.issues.map(issue => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        })),
+      });
+    }
+
+    const data = validation.data;
+
+    // Verify ownership of loan
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: loan, error: loanErr } = await (supabase.from(getTableName('loan')) as any)
       .select('id, user_id')
       .eq('id', data.loan_id)
-      .single()
+      .single();
+
     if (loanErr || !loan || loan.user_id !== user.id) {
-      return NextResponse.json({ error: 'Loan not found or not owned' }, { status: 403 })
+      return apiForbidden('Loan not found or not owned');
     }
 
+    // Verify ownership of asset
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: asset, error: assetErr } = await (supabase.from(getTableName('asset')) as any)
       .select('id, owner_id')
       .eq('id', data.asset_id)
-      .single()
+      .single();
+
     if (assetErr || !asset || asset.owner_id !== user.id) {
-      return NextResponse.json({ error: 'Asset not found or not owned' }, { status: 403 })
+      return apiForbidden('Asset not found or not owned');
     }
 
     // Insert collateral link
@@ -54,42 +78,16 @@ const postHandler = withSecurity<CollateralInput>(
         status: 'pending',
       })
       .select('id')
-      .single()
+      .single();
 
     if (error) {
-      return NextResponse.json({ error: 'Failed to attach collateral' }, { status: 500 })
+      logger.error('Failed to attach collateral', { error }, 'LoanCollateral');
+      return apiError('Failed to attach collateral');
     }
 
-    return NextResponse.json({ success: true, id: created.id })
-  },
-  CollateralSchema as z.ZodType<CollateralInput>,
-  { rateLimiter: apiRateLimiter, requireAuth: true, logActivity: true }
-)
-
-export async function POST(req: Request) {
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown'
-  const supabase = await createServerClient()
-  const { data: auth } = await supabase.auth.getUser()
-  const userId = auth?.user?.id
-
-  let body: unknown
-  try {
-    body = await req.json()
-  } catch {
-    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
-  }
-
-  try {
-    return await postHandler(body, { ip, userId })
+    return apiSuccess({ id: created.id });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Failed to attach collateral'
-    const status =
-      message === 'Authentication required'
-        ? 401
-        : message === 'Rate limit exceeded'
-          ? 429
-          : 400
-    return NextResponse.json({ error: message }, { status })
+    logger.error('Loan collateral error', { error }, 'LoanCollateral');
+    return apiError('Failed to attach collateral');
   }
-}
-
+});
