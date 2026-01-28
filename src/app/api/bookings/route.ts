@@ -2,25 +2,20 @@
  * Bookings API - List user's bookings
  *
  * GET /api/bookings - List bookings for current user
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
 import { BookingStatus } from '@/services/bookings';
 import { logger } from '@/utils/logger';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user, supabase } = request;
 
     const url = new URL(request.url);
     const role = url.searchParams.get('role') as 'customer' | 'provider' | 'both' | null;
@@ -47,4 +42,4 @@ export async function GET(request: NextRequest) {
     logger.error('Fetch bookings error', error, 'BookingsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

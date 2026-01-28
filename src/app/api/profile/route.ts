@@ -1,33 +1,24 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import { profileSchema, normalizeProfileData } from '@/lib/validation';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiNotFound,
   apiValidationError,
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { ProfileServerService } from '@/services/profile/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import type { User } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { createServerClient } from '@/lib/supabase/server';
 
 type ProfileRow = Database['public']['Tables']['profiles']['Row'];
 
 // GET /api/profile - Get current user's profile
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     // Use ProfileServerService instead of direct database access
     const { data: profile, error: profileError } = await ProfileServerService.getProfile(
@@ -51,7 +42,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
 
 type SupabaseServer = Awaited<ReturnType<typeof createServerClient>>;
 
@@ -59,7 +50,7 @@ async function respondWithProfile(
   supabase: SupabaseServer,
   user: User,
   profile: ProfileRow,
-  request: NextRequest
+  request: AuthenticatedRequest
 ) {
   // Only fetch project count if explicitly requested via query param
   // This makes auth flow faster by avoiding expensive count query
@@ -89,17 +80,9 @@ async function respondWithProfile(
 // ensureProfileRecord function removed - now using ProfileServerService.ensureProfile
 
 // PUT /api/profile - Update current user's profile
-export async function PUT(request: NextRequest) {
+export const PUT = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     const body = await request.json();
     logger.info('Profile update request', { userId: user.id, fields: Object.keys(body) });
@@ -207,4 +190,4 @@ export async function PUT(request: NextRequest) {
     }
     return handleApiError(error);
   }
-}
+});
