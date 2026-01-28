@@ -8,13 +8,14 @@
  * Last Modified Summary: Refactored to use withAuth middleware
  */
 
+import { NextRequest } from 'next/server';
 import { z } from 'zod';
-import { apiSuccess, handleApiError } from '@/lib/api/standardResponse';
+import { createServerClient } from '@/lib/supabase/server';
+import { apiSuccess, apiUnauthorized, handleApiError } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
 import { compose } from '@/lib/api/compose';
 import { withRateLimit } from '@/lib/api/withRateLimit';
 import { withRequestId } from '@/lib/api/withRequestId';
-import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { getPagination } from '@/lib/api/query';
 
 // Schema for deposit request
@@ -29,11 +30,17 @@ const depositRequestSchema = z.object({
  */
 export const GET = compose(
   withRequestId(),
-  withRateLimit('read'),
-  withAuth
-)(async (request: AuthenticatedRequest) => {
+  withRateLimit('read')
+)(async (request: NextRequest) => {
   try {
-    const { user, supabase } = request;
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return apiUnauthorized();
+    }
 
     const { limit, offset } = getPagination(request.url, { defaultLimit: 20, maxLimit: 100 });
 
@@ -119,11 +126,17 @@ export const GET = compose(
  */
 export const POST = compose(
   withRequestId(),
-  withRateLimit('write'),
-  withAuth
-)(async (request: AuthenticatedRequest) => {
+  withRateLimit('write')
+)(async (request: NextRequest) => {
   try {
-    const { user, supabase } = request;
+    const supabase = await createServerClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return apiUnauthorized();
+    }
 
     const body = await request.json();
     const result = depositRequestSchema.safeParse(body);

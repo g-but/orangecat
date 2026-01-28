@@ -1,10 +1,9 @@
-import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { researchConfig } from '@/config/entity-configs/research-config';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiRateLimited,
+  apiUnauthorized,
   handleApiError,
 } from '@/lib/api/standardResponse';
 import { logger } from '@/utils/logger';
@@ -18,6 +17,7 @@ import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import { getCacheControl, calculatePage } from '@/lib/api/helpers';
 import { getTableName } from '@/config/entity-registry';
 import { ResearchEntityCreate } from '@/types/research';
+import { NextRequest } from 'next/server';
 
 // GET /api/research - List research topics
 export const GET = compose(
@@ -31,9 +31,6 @@ export const GET = compose(
     const userId = getString(request.url, 'user_id');
     const field = getString(request.url, 'field');
     const status = getString(request.url, 'status');
-
-    // Check auth for showing private entities (user info available if needed)
-    await supabase.auth.getUser();
 
     // Build query
     const tableName = getTableName('research');
@@ -109,10 +106,9 @@ export const POST = compose(
     const supabase = await createServerClient();
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    if (!user) {
       return apiUnauthorized();
     }
 
@@ -154,7 +150,8 @@ export const POST = compose(
     const walletAddress = `bc1q${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
 
     // Get funding_goal_sats from validated data
-    const fundingGoalSats = (validatedData as { funding_goal_sats?: number }).funding_goal_sats || 1000;
+    const fundingGoalSats =
+      (validatedData as { funding_goal_sats?: number }).funding_goal_sats || 1000;
 
     // Build insert data
     const insertData = {
@@ -221,9 +218,11 @@ export const POST = compose(
     // Create the research entity with throwOnError for better error messages
     try {
       // Try with explicit error handling using status
-      const response = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(tableName) as any)
+      const response = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(tableName) as any
+      )
         .insert(insertData)
         .select()
         .single();
@@ -256,7 +255,9 @@ export const POST = compose(
           errorHint: error?.hint,
           fullError: JSON.stringify(error, Object.getOwnPropertyNames(error || {})),
         });
-        throw new Error(error?.message || `Database error (status ${status}): ${statusText || 'Unknown error'}`);
+        throw new Error(
+          error?.message || `Database error (status ${status}): ${statusText || 'Unknown error'}`
+        );
       }
 
       logger.info('Research entity created successfully', {

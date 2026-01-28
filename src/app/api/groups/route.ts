@@ -5,25 +5,20 @@
  * Uses unified GroupsService.
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Created unified groups API route
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 import groupsService from '@/services/groups';
 import { createGroupSchema } from '@/services/groups/validation';
 import { logger } from '@/utils/logger';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import type { CreateGroupInput } from '@/types/group';
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user } = request;
 
     const searchParams = request.nextUrl.searchParams;
     const type = searchParams.get('type'); // 'circle', 'organization', etc.
@@ -56,21 +51,13 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error('Error in GET /api/groups:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user, supabase } = request;
 
     const body = await request.json();
 
@@ -95,16 +82,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Return in format expected by EntityForm (data property)
-    return NextResponse.json(
-      { data: result.group, group: result.group },
-      { status: 201 }
-    );
+    return NextResponse.json({ data: result.group, group: result.group }, { status: 201 });
   } catch (error) {
     logger.error('Error in POST /api/groups:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
-
+});

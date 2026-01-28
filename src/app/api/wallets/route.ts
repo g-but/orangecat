@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import {
   WalletFormData,
   validateWalletFormData,
@@ -19,7 +20,6 @@ import { enforceUserWriteLimit, RateLimitError } from '@/lib/api/rateLimiting';
 import {
   apiRateLimited,
   apiSuccess,
-  apiUnauthorized,
   apiError,
   apiCreated,
   apiForbidden,
@@ -84,16 +84,9 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/wallets - Create new wallet (FIXED VERSION)
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     // Rate limiting check - 30 writes per minute per user
     let rateLimitResult: RateLimitResult;
@@ -302,4 +295,4 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return handleSupabaseError('create wallet', error);
   }
-}
+});
