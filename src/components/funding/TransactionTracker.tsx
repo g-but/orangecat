@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import Card from '@/components/ui/Card';
 import { DATABASE_TABLES } from '@/config/database-tables';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface TransactionTrackerProps {
   fundingPageId: string;
@@ -19,6 +20,7 @@ export default function TransactionTracker({
   onBalanceUpdate,
 }: TransactionTrackerProps) {
   const { user: _user } = useAuth();
+  const { formatAmount } = useDisplayCurrency();
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -118,7 +120,9 @@ export default function TransactionTracker({
                     {new Date(tx.created_at).toLocaleDateString()}
                   </p>
                 </div>
-                <p className="text-sm font-medium text-tiffany-600">{tx.amount} sats</p>
+                <p className="text-sm font-medium text-tiffany-600">
+                  {formatAmount(tx.amount_sats || tx.amount || 0)}
+                </p>
               </div>
             ))}
           </div>

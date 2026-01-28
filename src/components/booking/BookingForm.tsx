@@ -6,6 +6,7 @@ import { Calendar, Clock, CreditCard, MessageSquare, Loader2, CheckCircle } from
 import Button from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface BookingFormProps {
   serviceId: string;
@@ -25,6 +26,7 @@ export function BookingForm({
   onBack,
 }: BookingFormProps) {
   const router = useRouter();
+  const { formatAmount } = useDisplayCurrency();
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -92,10 +94,7 @@ export function BookingForm({
   };
 
   const formatPrice = (sats: number) => {
-    if (currency === 'SATS' || currency === 'BTC') {
-      return `${sats.toLocaleString()} sats`;
-    }
-    return `${sats.toLocaleString()} ${currency}`;
+    return formatAmount(sats);
   };
 
   // Success state

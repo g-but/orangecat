@@ -14,6 +14,7 @@ import {
   type ModelTier,
   type AIModelMetadata,
 } from '@/config/ai-models';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 export interface AIPreferences {
   defaultModelId: string | null;
@@ -47,6 +48,7 @@ export function AIModelPreferences({
   onFieldFocus,
   disabled = false,
 }: AIModelPreferencesProps) {
+  const { currency } = useDisplayCurrency();
   const [isModelSelectorOpen, setIsModelSelectorOpen] = useState(false);
 
   const selectedModel = preferences.defaultModelId
@@ -248,7 +250,7 @@ export function AIModelPreferences({
       {/* Cost Limit */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Maximum Cost per Request (sats)
+          Maximum Cost per Request ({currency})
         </label>
         <div className="flex items-center gap-2">
           <div className="relative flex-1">
@@ -265,7 +267,7 @@ export function AIModelPreferences({
               placeholder="100"
             />
           </div>
-          <span className="text-sm text-gray-500">sats</span>
+          <span className="text-sm text-gray-500">{currency}</span>
         </div>
         <p className="mt-1 text-xs text-gray-500">
           Set to 0 for unlimited. Auto-router will avoid models exceeding this limit.

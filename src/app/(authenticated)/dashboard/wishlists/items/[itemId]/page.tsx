@@ -13,6 +13,7 @@
 import { notFound, redirect } from 'next/navigation';
 import { createServerClient } from '@/lib/supabase/server';
 import { WishlistItemProofSection } from '@/components/wishlist/WishlistItemProofSection';
+import { FormattedAmount } from '@/components/ui/FormattedAmount';
 
 interface PageProps {
   params: Promise<{ itemId: string }>;
@@ -22,16 +23,19 @@ export default async function WishlistItemDetailPage({ params }: PageProps) {
   const { itemId } = await params;
 
   const supabase = await createServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser();
 
   if (authError || !user) {
     redirect('/auth?mode=login&from=/dashboard/wishlists');
   }
 
   // Fetch wishlist item
-  const { data: item, error: itemError } = await (supabase
-    .from('wishlist_items') as any)
-    .select(`
+  const { data: item, error: itemError } = await (supabase.from('wishlist_items') as any)
+    .select(
+      `
       id,
       title,
       description,
@@ -46,7 +50,8 @@ export default async function WishlistItemDetailPage({ params }: PageProps) {
         title,
         actor_id
       )
-    `)
+    `
+    )
     .eq('id', itemId)
     .single();
 
@@ -67,9 +72,7 @@ export default async function WishlistItemDetailPage({ params }: PageProps) {
           ← Back to Wishlist
         </a>
         <h1 className="text-3xl font-bold mt-2">{item.title}</h1>
-        {item.description && (
-          <p className="text-gray-600 mt-2">{item.description}</p>
-        )}
+        {item.description && <p className="text-gray-600 mt-2">{item.description}</p>}
       </div>
 
       {/* Funding Status */}
@@ -78,11 +81,11 @@ export default async function WishlistItemDetailPage({ params }: PageProps) {
         <div className="space-y-2">
           <div className="flex justify-between">
             <span className="text-gray-600">Target:</span>
-            <span className="font-medium">{item.target_amount_sats.toLocaleString()} sats</span>
+            <FormattedAmount sats={item.target_amount_sats} className="font-medium" />
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Funded:</span>
-            <span className="font-medium">{item.funded_amount_sats.toLocaleString()} sats</span>
+            <FormattedAmount sats={item.funded_amount_sats} className="font-medium" />
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2 mt-4">
             <div

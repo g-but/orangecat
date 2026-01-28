@@ -10,6 +10,7 @@ import {
   PaymentType,
 } from '@/services/bitcoin/paymentService';
 import QRCodeGenerator from './QRCodeGenerator';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface BitcoinPaymentModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export default function BitcoinPaymentModal({
   suggestedAmount = 10000,
   recipientAddress,
 }: BitcoinPaymentModalProps) {
+  const { formatAmount } = useDisplayCurrency();
   const [paymentType, setPaymentType] = useState<PaymentType>('lightning');
   const [amount, setAmount] = useState(suggestedAmount);
   const [paymentRequest, setPaymentRequest] = useState<PaymentRequest | null>(null);
@@ -127,7 +129,7 @@ export default function BitcoinPaymentModal({
                 type="number"
                 value={amount}
                 onChange={e => setAmount(parseInt(e.target.value) || 0)}
-                placeholder="Amount in satoshis"
+                placeholder="Enter amount"
                 className="text-center"
               />
 
@@ -152,7 +154,9 @@ export default function BitcoinPaymentModal({
                 label={paymentType === 'lightning' ? 'Lightning Invoice' : 'Bitcoin Address'}
               />
 
-              <div className="text-sm text-gray-600">Amount: {paymentRequest.amount} sats</div>
+              <div className="text-sm text-gray-600">
+                Amount: {formatAmount(paymentRequest.amount)}
+              </div>
               {transactionId && <div className="text-xs text-gray-500">Transaction created</div>}
             </div>
           )}

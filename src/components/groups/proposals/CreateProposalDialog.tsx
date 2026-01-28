@@ -51,11 +51,14 @@ import {
   proposalDefaultGuidance,
   type ProposalFieldType,
 } from '@/lib/entity-guidance/proposal-guidance';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 const proposalSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200, 'Title must be 200 characters or less'),
   description: z.string().max(5000, 'Description must be 5000 characters or less').optional(),
-  proposal_type: z.enum(['general', 'treasury', 'membership', 'governance', 'employment']).default('general'),
+  proposal_type: z
+    .enum(['general', 'treasury', 'membership', 'governance', 'employment'])
+    .default('general'),
   voting_threshold: z.number().int().min(1).max(100).optional(),
   voting_ends_at: z.string().optional(),
   is_public: z.boolean().optional().default(false),
@@ -87,6 +90,7 @@ export function CreateProposalDialog({
 }: CreateProposalDialogProps) {
   const [submitting, setSubmitting] = useState(false);
   const [activeField, setActiveField] = useState<ProposalFieldType>(null);
+  const { currency } = useDisplayCurrency();
 
   const form = useForm<ProposalFormData>({
     resolver: zodResolver(proposalSchema),
@@ -157,7 +161,8 @@ export function CreateProposalDialog({
             Create New Proposal
           </DialogTitle>
           <DialogDescription>
-            Create a new proposal for the group. It will start as a draft and can be activated for voting.
+            Create a new proposal for the group. It will start as a draft and can be activated for
+            voting.
           </DialogDescription>
         </DialogHeader>
 
@@ -201,7 +206,9 @@ export function CreateProposalDialog({
                           onBlur={() => setActiveField(null)}
                         />
                       </FormControl>
-                      <FormDescription>Provide context and details about the proposal</FormDescription>
+                      <FormDescription>
+                        Provide context and details about the proposal
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -214,13 +221,15 @@ export function CreateProposalDialog({
                     <FormItem>
                       <FormLabel>Type</FormLabel>
                       <Select
-                        onValueChange={(value) => {
+                        onValueChange={value => {
                           field.onChange(value);
                           setActiveField('proposal_type');
                         }}
                         defaultValue={field.value}
-                        onOpenChange={(open) => {
-                          if (open) {setActiveField('proposal_type');}
+                        onOpenChange={open => {
+                          if (open) {
+                            setActiveField('proposal_type');
+                          }
                         }}
                       >
                         <FormControl>
@@ -281,7 +290,9 @@ export function CreateProposalDialog({
                           max="100"
                           placeholder="50"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          onChange={e =>
+                            field.onChange(e.target.value ? parseInt(e.target.value) : undefined)
+                          }
                           onFocus={() => setActiveField('voting_threshold')}
                           onBlur={() => setActiveField(null)}
                         />
@@ -304,9 +315,13 @@ export function CreateProposalDialog({
                         <Input
                           type="datetime-local"
                           {...field}
-                          value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ''}
-                          onChange={(e) =>
-                            field.onChange(e.target.value ? new Date(e.target.value).toISOString() : undefined)
+                          value={
+                            field.value ? new Date(field.value).toISOString().slice(0, 16) : ''
+                          }
+                          onChange={e =>
+                            field.onChange(
+                              e.target.value ? new Date(e.target.value).toISOString() : undefined
+                            )
                           }
                           onFocus={() => setActiveField('voting_ends_at')}
                           onBlur={() => setActiveField(null)}
@@ -328,21 +343,23 @@ export function CreateProposalDialog({
                       name="amount_sats"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Amount (sats) *</FormLabel>
+                          <FormLabel>Amount ({currency}) *</FormLabel>
                           <FormControl>
                             <Input
                               type="number"
                               min="1"
                               placeholder="1000000"
                               {...field}
-                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                              onChange={e =>
+                                field.onChange(
+                                  e.target.value ? parseInt(e.target.value) : undefined
+                                )
+                              }
                               onFocus={() => setActiveField('amount_sats')}
                               onBlur={() => setActiveField(null)}
                             />
                           </FormControl>
-                          <FormDescription>
-                            Amount to spend in satoshis
-                          </FormDescription>
+                          <FormDescription>Amount to spend</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -362,9 +379,7 @@ export function CreateProposalDialog({
                               onBlur={() => setActiveField(null)}
                             />
                           </FormControl>
-                          <FormDescription>
-                            Bitcoin address to send funds to
-                          </FormDescription>
+                          <FormDescription>Bitcoin address to send funds to</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

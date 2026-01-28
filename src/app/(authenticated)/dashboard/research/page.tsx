@@ -7,12 +7,21 @@ import Button from '@/components/ui/Button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import Input from '@/components/ui/Input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Plus, Search, TrendingUp, Users, DollarSign, Target } from 'lucide-react';
 import { ResearchEntity } from '@/types/research';
+import { logger } from '@/utils/logger';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 export default function ResearchDashboard() {
   const router = useRouter();
+  const { formatAmount } = useDisplayCurrency();
   const [entities, setEntities] = useState<ResearchEntity[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -31,15 +40,16 @@ export default function ResearchDashboard() {
         setEntities(data.data || []);
       }
     } catch (error) {
-      console.error('Failed to fetch research entities:', error);
+      logger.error('Failed to fetch research entities', error, 'Research');
     } finally {
       setLoading(false);
     }
   };
 
   const filteredEntities = entities.filter(entity => {
-    const matchesSearch = entity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         entity.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      entity.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      entity.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesField = fieldFilter === 'all' || entity.field === fieldFilter;
     const matchesStatus = statusFilter === 'all' || entity.status === statusFilter;
 
@@ -48,12 +58,18 @@ export default function ResearchDashboard() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-500';
-      case 'draft': return 'bg-yellow-500';
-      case 'completed': return 'bg-blue-500';
-      case 'paused': return 'bg-orange-500';
-      case 'cancelled': return 'bg-red-500';
-      default: return 'bg-gray-500';
+      case 'active':
+        return 'bg-green-500';
+      case 'draft':
+        return 'bg-yellow-500';
+      case 'completed':
+        return 'bg-blue-500';
+      case 'paused':
+        return 'bg-orange-500';
+      case 'cancelled':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
     }
   };
 
@@ -84,9 +100,7 @@ export default function ResearchDashboard() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">DeSci Research</h1>
-          <p className="text-muted-foreground">
-            Independent research with decentralized funding
-          </p>
+          <p className="text-muted-foreground">Independent research with decentralized funding</p>
         </div>
         <Button onClick={() => router.push('/dashboard/research/create')}>
           <Plus className="w-4 h-4 mr-2" />
@@ -125,7 +139,7 @@ export default function ResearchDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {entities.reduce((sum, e) => sum + (e.funding_raised_btc || 0), 0).toLocaleString()} sats
+              {formatAmount(entities.reduce((sum, e) => sum + (e.funding_raised_btc || 0), 0))}
             </div>
           </CardContent>
         </Card>
@@ -151,7 +165,7 @@ export default function ResearchDashboard() {
             <Input
               placeholder="Search research projects..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -187,9 +201,12 @@ export default function ResearchDashboard() {
 
       {/* Research Entities Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEntities.map((entity) => (
-          <Card key={entity.id} className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => router.push(`/dashboard/research/${entity.id}`)}>
+        {filteredEntities.map(entity => (
+          <Card
+            key={entity.id}
+            className="cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => router.push(`/dashboard/research/${entity.id}`)}
+          >
             <CardHeader>
               <div className="flex justify-between items-start">
                 <div className="flex-1">
@@ -214,10 +231,17 @@ export default function ResearchDashboard() {
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span>Funding Progress</span>
-                  <span>{(entity.funding_raised_btc || 0).toLocaleString()} / {(entity.funding_goal || 0).toLocaleString()} sats</span>
+                  <span>
+                    {formatAmount(entity.funding_raised_btc || 0)} /{' '}
+                    {formatAmount(entity.funding_goal || 0)}
+                  </span>
                 </div>
                 <Progress
-                  value={entity.funding_goal ? ((entity.funding_raised_btc || 0) / entity.funding_goal) * 100 : 0}
+                  value={
+                    entity.funding_goal
+                      ? ((entity.funding_raised_btc || 0) / entity.funding_goal) * 100
+                      : 0
+                  }
                   className="h-2"
                 />
               </div>
@@ -248,8 +272,7 @@ export default function ResearchDashboard() {
           <p className="text-muted-foreground mb-4">
             {searchTerm || fieldFilter !== 'all' || statusFilter !== 'all'
               ? 'Try adjusting your filters'
-              : 'Start your first research project'
-            }
+              : 'Start your first research project'}
           </p>
           <Button onClick={() => router.push('/dashboard/research/create')}>
             <Plus className="w-4 h-4 mr-2" />
