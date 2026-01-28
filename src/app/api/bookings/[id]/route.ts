@@ -4,15 +4,18 @@
  * GET    /api/bookings/[id] - Get booking details
  * PUT    /api/bookings/[id] - Update booking status
  * DELETE /api/bookings/[id] - Cancel booking
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
@@ -21,18 +24,10 @@ const updateBookingSchema = z.object({
   reason: z.string().max(500).optional(),
 });
 
-export async function GET(request: NextRequest, { params }: RouteParams) {
+export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id } = await context.params;
+    const { user, supabase } = request;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingService = createBookingService(supabase as any);
@@ -65,20 +60,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     logger.error('Get booking error', error, 'BookingsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function PUT(request: NextRequest, { params }: RouteParams) {
+export const PUT = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id } = await context.params;
+    const { user, supabase } = request;
 
     const body = await request.json();
     const result = updateBookingSchema.safeParse(body);
@@ -164,20 +151,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     logger.error('Update booking error', error, 'BookingsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id } = await context.params;
+    const { user, supabase } = request;
 
     const url = new URL(request.url);
     const reason = url.searchParams.get('reason') || undefined;
@@ -195,4 +174,4 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     logger.error('Cancel booking error', error, 'BookingsAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

@@ -1,28 +1,28 @@
+/**
+ * File Upload API
+ *
+ * POST /api/upload - Upload an image file
+ * DELETE /api/upload - Delete an uploaded file
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
+ */
+
 import { logger } from '@/utils/logger';
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiValidationError,
   apiInternalError,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -74,20 +74,12 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
 
 // DELETE /api/upload - Delete an uploaded file
-export async function DELETE(request: NextRequest) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     const { searchParams } = new URL(request.url);
     const filePath = searchParams.get('path');
@@ -111,4 +103,4 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});

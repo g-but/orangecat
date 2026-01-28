@@ -5,12 +5,12 @@
  * Single endpoint to get all data needed for dynamic task generation.
  *
  * Created: 2026-01-07
- * Last Modified: 2026-01-07
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import { apiSuccess, apiUnauthorized, handleApiError } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { ENTITY_REGISTRY, ENTITY_TYPES, type EntityType } from '@/config/entity-registry';
 import {
   buildUserContext,
@@ -62,20 +62,14 @@ type UntypedTable = any;
  * - Recommended tasks
  * - Smart questions (if profile complete)
  */
-export async function GET(_request: NextRequest) {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+    const { user, supabase } = request;
 
     // Get profile
-    const { data: profileData, error: profileError } = await (supabase.from(DATABASE_TABLES.PROFILES) as UntypedTable)
+    const { data: profileData, error: profileError } = await (
+      supabase.from(DATABASE_TABLES.PROFILES) as UntypedTable
+    )
       .select('*')
       .eq('id', user.id)
       .single();
@@ -256,4 +250,4 @@ export async function GET(_request: NextRequest) {
   } catch (error) {
     return handleApiError(error);
   }
-}
+});

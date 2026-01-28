@@ -1,32 +1,28 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiNotFound,
   apiInternalError,
   handleApiError,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 
-// GET /api/transparency/[profileId] - Get transparency score for a profile
-export async function GET(_request: NextRequest, { params }: { params: Promise<{ profileId: string }> }) {
-  try {
-    const { profileId } = await params;
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+interface RouteContext {
+  params: Promise<{ profileId: string }>;
+}
 
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
+// GET /api/transparency/[profileId] - Get transparency score for a profile
+export const GET = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
+  try {
+    const { profileId } = await context.params;
+    const { supabase } = request;
 
     // Get transparency score for the profile
-    const { data: transparencyScore, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from('transparency_scores') as any)
+    const { data: transparencyScore, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from('transparency_scores') as any
+    )
       .select('*')
       .eq('entity_type', 'profile')
       .eq('entity_id', profileId)
@@ -39,9 +35,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
 
     if (!transparencyScore) {
       // Calculate transparency score if it doesn't exist
-      const { data: _profile, error: profileError } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from(DATABASE_TABLES.PROFILES) as any)
+      const { data: _profile, error: profileError } = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from(DATABASE_TABLES.PROFILES) as any
+      )
         .select('*')
         .eq('id', profileId)
         .single();
@@ -62,9 +60,11 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       }
 
       // Fetch the newly calculated score
-      const { data: newScore, error: fetchError } = await (supabase
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .from('transparency_scores') as any)
+      const { data: newScore, error: fetchError } = await (
+        supabase
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .from('transparency_scores') as any
+      )
         .select('*')
         .eq('entity_type', 'profile')
         .eq('entity_id', profileId)
@@ -93,4 +93,4 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
   } catch (error) {
     return handleApiError(error);
   }
-}
+});

@@ -3,11 +3,14 @@
  *
  * GET - List user's API keys
  * POST - Add a new API key
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 import { createApiKeyService } from '@/services/ai/api-key-service';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 
@@ -24,17 +27,9 @@ const addKeySchema = z.object({
  * GET /api/user/api-keys
  * List all API keys for the current user
  */
-export async function GET() {
+export const GET = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user, supabase } = request;
 
     const keyService = createApiKeyService(supabase);
     const keys = await keyService.getKeys(user.id);
@@ -54,23 +49,15 @@ export async function GET() {
     logger.error('Error fetching API keys', error, 'ApiKeysAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 /**
  * POST /api/user/api-keys
  * Add a new API key
  */
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (request: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { user, supabase } = request;
 
     const body = await request.json();
     const result = addKeySchema.safeParse(body);
@@ -116,4 +103,4 @@ export async function POST(request: NextRequest) {
     logger.error('Error adding API key', error, 'ApiKeysAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

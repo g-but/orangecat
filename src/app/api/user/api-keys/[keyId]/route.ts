@@ -3,15 +3,18 @@
  *
  * DELETE - Remove an API key
  * PATCH - Update API key (set as primary)
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 import { createApiKeyService } from '@/services/ai/api-key-service';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ keyId: string }>;
 }
 
@@ -23,18 +26,10 @@ const updateKeySchema = z.object({
  * DELETE /api/user/api-keys/[keyId]
  * Delete an API key
  */
-export async function DELETE(request: NextRequest, { params }: RouteParams) {
+export const DELETE = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { keyId } = await params;
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { keyId } = await context.params;
+    const { user, supabase } = request;
 
     const keyService = createApiKeyService(supabase);
     const success = await keyService.deleteKey(user.id, keyId);
@@ -48,24 +43,16 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     logger.error('Error deleting API key', error, 'ApiKeysAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});
 
 /**
  * PATCH /api/user/api-keys/[keyId]
  * Update an API key (e.g., set as primary)
  */
-export async function PATCH(request: NextRequest, { params }: RouteParams) {
+export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { keyId } = await params;
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { keyId } = await context.params;
+    const { user, supabase } = request;
 
     const body = await request.json();
     const result = updateKeySchema.safeParse(body);
@@ -94,4 +81,4 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     logger.error('Error updating API key', error, 'ApiKeysAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

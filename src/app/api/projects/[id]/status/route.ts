@@ -1,5 +1,12 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+/**
+ * Project Status API
+ *
+ * PATCH /api/projects/[id]/status - Update project status
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
+ */
+
 import {
   apiSuccess,
   apiUnauthorized,
@@ -8,6 +15,7 @@ import {
   handleApiError,
   handleSupabaseError,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { rateLimit, createRateLimitResponse, applyRateLimitHeaders } from '@/lib/rate-limit';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
@@ -25,8 +33,12 @@ const VALID_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
   cancelled: ['draft'], // Can only unpublish (archive)
 };
 
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
 // PATCH /api/projects/[id]/status - Update project status
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
     // Rate limiting check
     const rateLimitResult = await rateLimit(request);
@@ -34,17 +46,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       return createRateLimitResponse(rateLimitResult);
     }
 
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { user, supabase } = request;
 
-    if (authError || !user) {
-      return apiUnauthorized();
-    }
-
-    const { id } = await params;
+    const { id } = await context.params;
     const body = await request.json();
     const { status } = body;
 
@@ -59,9 +63,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // Fetch current project
-    const { data: existingProject, error: fetchError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { data: existingProject, error: fetchError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('project')) as any
+    )
       .select('id, user_id, status')
       .eq('id', id)
       .single();
@@ -87,9 +93,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     // Update status
-    const { data: project, error: updateError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { data: project, error: updateError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('project')) as any
+    )
       .update({
         status: normalizedStatus,
         updated_at: new Date().toISOString(),
@@ -109,11 +117,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       newStatus: normalizedStatus,
     });
 
-    return applyRateLimitHeaders(apiSuccess({
-      ...project,
-      status: normalizedStatus,
-    }), rateLimitResult);
+    return applyRateLimitHeaders(
+      apiSuccess({
+        ...project,
+        status: normalizedStatus,
+      }),
+      rateLimitResult
+    );
   } catch (error) {
     return handleApiError(error);
   }
-}
+});
