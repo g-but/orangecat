@@ -1,6 +1,8 @@
 /**
  * GET STARTED STEP COMPONENT
  * Final step - single primary CTA to create first project
+ *
+ * Context-aware: Adjusts messaging based on user's actual state
  */
 
 import { useRouter } from 'next/navigation';
@@ -9,8 +11,30 @@ import Button from '@/components/ui/Button';
 import { Target, Sparkles, ArrowRight, Users, BookOpen } from 'lucide-react';
 import { ROUTES } from '@/config/routes';
 
-export function GetStartedStep() {
+/** Benefits shown on the CTA card - centralized for easy updates */
+const PROJECT_BENEFITS = ['No platform fees', 'Direct to your wallet', 'Full control'] as const;
+
+interface GetStartedStepProps {
+  hasWallet?: boolean;
+  hasProjects?: boolean;
+}
+
+export function GetStartedStep({ hasWallet = false, hasProjects = false }: GetStartedStepProps) {
   const router = useRouter();
+
+  // Dynamic messaging based on user state
+  const ctaTitle = hasProjects ? 'Create Another Project' : 'Create Your First Project';
+  const ctaDescription = hasProjects
+    ? 'Launch another Bitcoin crowdfunding campaign'
+    : 'Launch a Bitcoin crowdfunding campaign and start receiving support';
+  const headerText = hasProjects
+    ? 'Ready to grow your portfolio?'
+    : 'The most important thing you can do now is create your first project.';
+
+  // Pro tip based on wallet status
+  const proTip = hasWallet
+    ? "Projects with a clear story and Bitcoin address set up get 3x more support. You've already added your wallet — you're ahead of the game!"
+    : 'Projects with a clear story and Bitcoin address set up get 3x more support. Add your wallet address to start receiving Bitcoin!';
 
   return (
     <div className="space-y-6">
@@ -19,9 +43,7 @@ export function GetStartedStep() {
           <Target className="h-8 w-8 text-white" />
         </div>
         <h3 className="text-2xl font-bold mb-2">You're Ready to Launch!</h3>
-        <p className="text-muted-foreground">
-          The most important thing you can do now is create your first project.
-        </p>
+        <p className="text-muted-foreground">{headerText}</p>
       </div>
 
       {/* Primary CTA - Create Project */}
@@ -29,29 +51,24 @@ export function GetStartedStep() {
         className="border-2 border-orange-300 bg-gradient-to-r from-orange-50 to-orange-100 hover:border-orange-400 hover:shadow-lg transition-all cursor-pointer"
         onClick={() => router.push(ROUTES.PROJECTS.CREATE)}
       >
-        <CardContent className="p-6">
+        <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-start gap-4">
-              <div className="p-3 bg-orange-500 rounded-xl flex-shrink-0">
-                <Target className="h-6 w-6 text-white" />
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className="p-2 sm:p-3 bg-orange-500 rounded-xl flex-shrink-0">
+                <Target className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
               <div>
-                <h4 className="text-xl font-bold text-orange-900 mb-1">
-                  Create Your First Project
-                </h4>
-                <p className="text-orange-800 mb-3">
-                  Launch a Bitcoin crowdfunding campaign and start receiving support
-                </p>
+                <h4 className="text-lg sm:text-xl font-bold text-orange-900 mb-1">{ctaTitle}</h4>
+                <p className="text-sm sm:text-base text-orange-800 mb-3">{ctaDescription}</p>
                 <div className="flex flex-wrap gap-2 text-xs">
-                  <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full">
-                    No platform fees
-                  </span>
-                  <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full">
-                    Direct to your wallet
-                  </span>
-                  <span className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full">
-                    Full control
-                  </span>
+                  {PROJECT_BENEFITS.map(benefit => (
+                    <span
+                      key={benefit}
+                      className="bg-orange-200 text-orange-800 px-2 py-1 rounded-full"
+                    >
+                      {benefit}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
@@ -78,14 +95,14 @@ export function GetStartedStep() {
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <button
             onClick={() => router.push(ROUTES.DISCOVER)}
-            className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition-colors"
+            className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition-colors min-h-[44px]"
           >
             <Users className="h-4 w-4" />
             Explore Projects
           </button>
           <button
             onClick={() => router.push(ROUTES.STUDY_BITCOIN)}
-            className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition-colors"
+            className="flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition-colors min-h-[44px]"
           >
             <BookOpen className="h-4 w-4" />
             Learn About Bitcoin
@@ -100,8 +117,7 @@ export function GetStartedStep() {
             <Sparkles className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm text-green-800">
-                <strong>Pro tip:</strong> Projects with a clear story and Bitcoin address set up get
-                3x more support. You've already added your wallet — you're ahead of the game!
+                <strong>Pro tip:</strong> {proTip}
               </p>
             </div>
           </div>

@@ -5,12 +5,15 @@
  *
  * Multi-step onboarding wizard for new users.
  * Split into smaller subcomponents and hooks for maintainability.
+ *
+ * Context-aware: Adapts messaging based on user's actual state
  */
 
 import { useMemo } from 'react';
 import { Sparkles, Bitcoin, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useOnboardingProgress } from './hooks';
+import { ENTITY_REGISTRY } from '@/config/entity-registry';
 import {
   WelcomeStep,
   WalletSetupStep,
@@ -23,9 +26,13 @@ import {
 import type { OnboardingStep } from './types';
 
 export function OnboardingFlow() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
-  // Build steps with their content
+  // Derive user state from profile
+  const hasWallet = Boolean(profile?.bitcoin_address || profile?.lightning_address);
+  const hasProjects = Boolean(profile?.project_count && profile.project_count > 0);
+
+  // Build steps with their content - context-aware
   const steps: OnboardingStep[] = useMemo(
     () => [
       {
@@ -43,7 +50,7 @@ export function OnboardingFlow() {
         content: <WalletSetupStep />,
         action: {
           label: 'Add My Bitcoin Address',
-          href: '/dashboard/wallets',
+          href: ENTITY_REGISTRY.wallet.basePath,
         },
       },
       {
@@ -51,10 +58,10 @@ export function OnboardingFlow() {
         title: 'Ready to Start Your Journey?',
         description: 'Choose your first action and begin building with OrangeCat',
         icon: TrendingUp,
-        content: <GetStartedStep />,
+        content: <GetStartedStep hasWallet={hasWallet} hasProjects={hasProjects} />,
       },
     ],
-    []
+    [hasWallet, hasProjects]
   );
 
   const {
