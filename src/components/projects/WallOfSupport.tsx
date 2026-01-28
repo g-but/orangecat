@@ -16,8 +16,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Heart, MessageSquare, PenTool, Coins, Trash2 } from 'lucide-react';
 import type { ProjectSupportWithUser } from '@/services/projects/support/types';
 import projectSupportService from '@/services/projects/support';
-import { formatSats, getSupportTypeLabel } from '@/services/projects/support/helpers';
+import { getSupportTypeLabel } from '@/services/projects/support/helpers';
 import { useAuth } from '@/hooks/useAuth';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { logger } from '@/utils/logger';
@@ -29,6 +30,7 @@ interface WallOfSupportProps {
 
 export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
   const { user } = useAuth();
+  const { formatAmount } = useDisplayCurrency();
   const [supports, setSupports] = useState<ProjectSupportWithUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -164,7 +166,7 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
                   {/* Bitcoin Donation */}
                   {support.amount_sats && support.amount_sats > 0 && (
                     <div className="text-sm font-medium text-orange-600 mb-2">
-                      {formatSats(support.amount_sats)}
+                      {formatAmount(support.amount_sats)}
                     </div>
                   )}
 

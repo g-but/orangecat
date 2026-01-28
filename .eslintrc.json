@@ -51,6 +51,40 @@
   // Plugin-specific rule adjustments
   "overrides": [
     {
+      // Prevent direct formatSats usage in components - must use useDisplayCurrency hook
+      "files": ["src/components/**/*.{ts,tsx}", "src/app/**/*.{ts,tsx}"],
+      "excludedFiles": ["**/hooks/**", "**/*.test.*", "**/*.spec.*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@/services/currency",
+                "importNames": ["formatSats"],
+                "message": "Use useDisplayCurrency().formatAmount() for user-facing amounts. formatSats ignores user's currency preference."
+              },
+              {
+                "name": "@/utils/currency",
+                "importNames": ["formatSats"],
+                "message": "Use useDisplayCurrency().formatAmount() for user-facing amounts. formatSats ignores user's currency preference."
+              },
+              {
+                "name": "@/services/mempool",
+                "importNames": ["formatSats"],
+                "message": "Use useDisplayCurrency().formatAmount() for user-facing amounts. formatSats ignores user's currency preference."
+              },
+              {
+                "name": "@/services/projects/support/helpers",
+                "importNames": ["formatSats"],
+                "message": "Use useDisplayCurrency().formatAmount() for user-facing amounts. formatSats ignores user's currency preference."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["**/*.{ts,tsx}"],
       "rules": {
         "react-hooks/rules-of-hooks": "error",

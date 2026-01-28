@@ -14,7 +14,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Heart, MessageSquare, PenTool, Coins } from 'lucide-react';
 import type { ProjectSupportStats } from '@/services/projects/support/types';
-import { formatSats } from '@/services/projects/support/helpers';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 import projectSupportService from '@/services/projects/support';
 import { logger } from '@/utils/logger';
 
@@ -24,6 +24,7 @@ interface SupportStatsProps {
 }
 
 export function SupportStats({ projectId, className }: SupportStatsProps) {
+  const { formatAmount } = useDisplayCurrency();
   const [stats, setStats] = useState<ProjectSupportStats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -61,7 +62,7 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
               <Coins className="h-5 w-5 text-orange-600" />
             </div>
             <div className="text-2xl font-bold text-orange-600">
-              {formatSats(stats.total_bitcoin_sats)}
+              {formatAmount(stats.total_bitcoin_sats)}
             </div>
             <div className="text-sm text-gray-500">Donated</div>
           </div>

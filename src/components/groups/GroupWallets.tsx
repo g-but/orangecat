@@ -19,6 +19,7 @@ import type { GroupWalletSummary } from '@/services/groups/types';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface GroupWalletsProps {
   groupId: string;
@@ -27,9 +28,15 @@ interface GroupWalletsProps {
   onUpdate?: () => void;
 }
 
-export function GroupWallets({ groupId: _groupId, groupSlug, wallets, onUpdate }: GroupWalletsProps) {
+export function GroupWallets({
+  groupId: _groupId,
+  groupSlug,
+  wallets,
+  onUpdate,
+}: GroupWalletsProps) {
   const { user: _user } = useAuth();
   const _router = useRouter();
+  const { formatAmount } = useDisplayCurrency();
   const [_creating, setCreating] = useState(false);
   const [refreshing, setRefreshing] = useState<string | null>(null);
 
@@ -46,7 +53,7 @@ export function GroupWallets({ groupId: _groupId, groupSlug, wallets, onUpdate }
       }
 
       const data = await response.json();
-      toast.success(`Balance updated: ${formatSats(data.data?.balance || 0)}`);
+      toast.success(`Balance updated: ${formatAmount(data.data?.balance || 0)}`);
       onUpdate?.();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Failed to refresh balance');
@@ -58,13 +65,6 @@ export function GroupWallets({ groupId: _groupId, groupSlug, wallets, onUpdate }
   const handleCopyAddress = (address: string) => {
     navigator.clipboard.writeText(address);
     toast.success('Address copied to clipboard');
-  };
-
-  const formatSats = (sats: number) => {
-    if (sats >= 100_000_000) {
-      return `${(sats / 100_000_000).toFixed(8)} BTC`;
-    }
-    return `${sats.toLocaleString()} sats`;
   };
 
   // Type guard for wallet summary
@@ -100,7 +100,7 @@ export function GroupWallets({ groupId: _groupId, groupSlug, wallets, onUpdate }
             <div className="text-center py-8 text-gray-500">No wallets yet</div>
           ) : (
             <div className="space-y-4">
-              {typedWallets.map((wallet) => (
+              {typedWallets.map(wallet => (
                 <Card key={wallet.id} className="border">
                   <CardHeader className="pb-3">
                     <div className="flex items-center justify-between">
@@ -116,9 +116,7 @@ export function GroupWallets({ groupId: _groupId, groupSlug, wallets, onUpdate }
                         <Badge variant="secondary">Inactive</Badge>
                       )}
                     </div>
-                    {wallet.description && (
-                      <CardDescription>{wallet.description}</CardDescription>
-                    )}
+                    {wallet.description && <CardDescription>{wallet.description}</CardDescription>}
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {wallet.purpose && (
@@ -182,7 +180,7 @@ export function GroupWallets({ groupId: _groupId, groupSlug, wallets, onUpdate }
                           <div>
                             <div className="text-sm text-gray-500">Balance</div>
                             <div className="text-lg font-bold text-green-600">
-                              {formatSats(wallet.current_balance_sats)}
+                              {formatAmount(wallet.current_balance_sats)}
                             </div>
                           </div>
                           {wallet.bitcoin_address && (

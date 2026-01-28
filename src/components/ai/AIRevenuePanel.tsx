@@ -13,6 +13,7 @@ import {
   XCircle,
   AlertCircle,
 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -24,7 +25,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { formatSats } from '@/utils/currency';
+import { useDisplayCurrency } from '@/hooks/useDisplayCurrency';
 
 interface AssistantRevenue {
   id: string;
@@ -68,6 +69,7 @@ interface EarningsData {
 const MIN_WITHDRAWAL_SATS = 1000;
 
 export function AIRevenuePanel() {
+  const { formatAmount } = useDisplayCurrency();
   const [data, setData] = useState<RevenueData | null>(null);
   const [earnings, setEarnings] = useState<EarningsData | null>(null);
   const [recentWithdrawals, setRecentWithdrawals] = useState<Withdrawal[]>([]);
@@ -89,7 +91,7 @@ export function AIRevenuePanel() {
         setData(result.data);
       }
     } catch (error) {
-      console.error('Failed to fetch revenue:', error);
+      logger.error('Failed to fetch revenue', error, 'AI');
       toast.error('Failed to load revenue data');
     } finally {
       setLoading(false);
@@ -108,7 +110,7 @@ export function AIRevenuePanel() {
         setRecentWithdrawals(result.data.withdrawals);
       }
     } catch (error) {
-      console.error('Failed to fetch withdrawals:', error);
+      logger.error('Failed to fetch withdrawals', error, 'AI');
     }
   }, []);
 
@@ -120,7 +122,7 @@ export function AIRevenuePanel() {
   const handleWithdraw = async () => {
     const amount = parseInt(withdrawAmount, 10);
     if (isNaN(amount) || amount < MIN_WITHDRAWAL_SATS) {
-      toast.error(`Minimum withdrawal is ${formatSats(MIN_WITHDRAWAL_SATS)}`);
+      toast.error(`Minimum withdrawal is ${formatAmount(MIN_WITHDRAWAL_SATS)}`);
       return;
     }
 
@@ -134,7 +136,7 @@ export function AIRevenuePanel() {
     const maxWithdrawable = availableBalance - pendingAmount;
 
     if (amount > maxWithdrawable) {
-      toast.error(`Maximum available for withdrawal: ${formatSats(maxWithdrawable)}`);
+      toast.error(`Maximum available for withdrawal: ${formatAmount(maxWithdrawable)}`);
       return;
     }
 
@@ -163,7 +165,7 @@ export function AIRevenuePanel() {
       fetchRevenue();
       fetchWithdrawals();
     } catch (error) {
-      console.error('Withdrawal failed:', error);
+      logger.error('Withdrawal failed', error, 'AI');
       toast.error(error instanceof Error ? error.message : 'Withdrawal failed');
     } finally {
       setWithdrawing(false);
@@ -230,16 +232,16 @@ export function AIRevenuePanel() {
         <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
           <div className="text-sm text-green-800 mb-1">Total Earnings</div>
           <div className="text-3xl font-bold text-green-900">
-            {formatSats(earnings?.total_earned_sats || summary.total_revenue_sats)}
+            {formatAmount(earnings?.total_earned_sats || summary.total_revenue_sats)}
           </div>
           <div className="text-sm text-green-700 mt-1 space-y-0.5">
             <div>
               Available:{' '}
-              {formatSats(earnings?.available_balance_sats || summary.available_balance_sats)}
+              {formatAmount(earnings?.available_balance_sats || summary.available_balance_sats)}
             </div>
             {(earnings?.pending_withdrawal_sats || 0) > 0 && (
               <div className="text-yellow-700">
-                Pending: {formatSats(earnings?.pending_withdrawal_sats || 0)}
+                Pending: {formatAmount(earnings?.pending_withdrawal_sats || 0)}
               </div>
             )}
           </div>
@@ -289,7 +291,7 @@ export function AIRevenuePanel() {
                   <div className="flex items-center gap-2">
                     {getStatusIcon(withdrawal.status)}
                     <div>
-                      <div className="font-medium">{formatSats(withdrawal.amount_sats)}</div>
+                      <div className="font-medium">{formatAmount(withdrawal.amount_sats)}</div>
                       <div className="text-xs text-gray-500">
                         {new Date(withdrawal.created_at).toLocaleDateString()}
                       </div>
@@ -333,7 +335,7 @@ export function AIRevenuePanel() {
                   </div>
                   <div className="text-right flex-shrink-0 ml-2">
                     <div className="font-medium text-green-600">
-                      {formatSats(assistant.total_revenue_sats)}
+                      {formatAmount(assistant.total_revenue_sats)}
                     </div>
                   </div>
                 </div>
@@ -368,7 +370,7 @@ export function AIRevenuePanel() {
             <div className="bg-green-50 border border-green-200 rounded-lg p-3">
               <div className="text-sm text-green-800">Available to withdraw</div>
               <div className="text-2xl font-bold text-green-900">
-                {formatSats(
+                {formatAmount(
                   (earnings?.available_balance_sats || 0) - (earnings?.pending_withdrawal_sats || 0)
                 )}
               </div>
@@ -389,7 +391,7 @@ export function AIRevenuePanel() {
                     onClick={() => setWithdrawAmount(amount.toString())}
                     disabled={isDisabled}
                   >
-                    {formatSats(amount)}
+                    {formatAmount(amount)}
                   </Button>
                 );
               })}
@@ -450,7 +452,7 @@ export function AIRevenuePanel() {
               >
                 {withdrawing
                   ? 'Processing...'
-                  : `Withdraw ${formatSats(parseInt(withdrawAmount) || 0)}`}
+                  : `Withdraw ${formatAmount(parseInt(withdrawAmount) || 0)}`}
               </Button>
             </div>
           </div>
