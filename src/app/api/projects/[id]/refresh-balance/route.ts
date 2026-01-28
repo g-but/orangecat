@@ -1,23 +1,34 @@
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+/**
+ * Project Balance Refresh API
+ *
+ * POST /api/projects/[id]/refresh-balance - Refresh project Bitcoin balance
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
+ */
+
 import { fetchBitcoinBalance } from '@/services/blockchain';
 import {
   apiSuccess,
-  apiUnauthorized,
   apiForbidden,
   apiNotFound,
   apiBadRequest,
   apiInternalError,
   apiRateLimited,
 } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { validateUUID, getValidationError } from '@/lib/api/validation';
 import { auditSuccess, AUDIT_ACTIONS } from '@/lib/api/auditLog';
 import { logger } from '@/utils/logger';
 import { getTableName } from '@/config/entity-registry';
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+interface RouteContext {
+  params: Promise<{ id: string }>;
+}
+
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: projectId } = await params;
+    const { id: projectId } = await context.params;
 
     // Validate project ID
     const idValidation = getValidationError(validateUUID(projectId, 'project ID'));
@@ -25,18 +36,13 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       return idValidation;
     }
 
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    const { user, supabase } = request;
 
-    if (!user) {
-      return apiUnauthorized();
-    }
-
-    const { data: project, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { data: project, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('project')) as any
+    )
       .select(
         'id, user_id, bitcoin_address, bitcoin_balance_btc, bitcoin_balance_updated_at, title'
       )
@@ -107,9 +113,11 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
 
     // Update project balance
-    const { error: updateError } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(getTableName('project')) as any)
+    const { error: updateError } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(getTableName('project')) as any
+    )
       .update({
         bitcoin_balance_btc: balance.balance_btc,
         bitcoin_balance_updated_at: balance.updated_at,
@@ -150,4 +158,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     logger.error('Unexpected error refreshing project balance', { error });
     return apiInternalError('Failed to refresh balance');
   }
-}
+});

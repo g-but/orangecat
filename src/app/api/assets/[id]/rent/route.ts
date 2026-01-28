@@ -2,16 +2,19 @@
  * Asset Rental API
  *
  * POST /api/assets/[id]/rent - Request a rental for an asset
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 import { createBookingService } from '@/services/bookings';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { z } from 'zod';
 import { logger } from '@/utils/logger';
 
-interface RouteParams {
+interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
@@ -21,18 +24,10 @@ const rentAssetSchema = z.object({
   notes: z.string().max(500).optional(),
 });
 
-export async function POST(request: NextRequest, { params }: RouteParams) {
+export const POST = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { id: assetId } = await params;
-    const supabase = await createServerClient();
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const { id: assetId } = await context.params;
+    const { user, supabase } = request;
 
     const body = await request.json();
     const result = rentAssetSchema.safeParse(body);
@@ -52,17 +47,16 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const endsAt = new Date(ends_at);
 
     // Verify asset exists and is for rent
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: assetData, error: assetError } = await (
-      supabase.from(DATABASE_TABLES.USER_ASSETS) as any
-    )
-      .select(
-        'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats, currency'
-      )
-      .eq('id', assetId)
-      .eq('status', 'active')
-      .eq('is_for_rent', true)
-      .single();
+    const { data: assetData, error: assetError } =
+      await // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from(DATABASE_TABLES.USER_ASSETS) as any)
+        .select(
+          'id, title, actor_id, is_for_rent, rental_price_sats, rental_period_type, min_rental_period, max_rental_period, requires_deposit, deposit_amount_sats, currency'
+        )
+        .eq('id', assetId)
+        .eq('status', 'active')
+        .eq('is_for_rent', true)
+        .single();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const asset = assetData as any;
 
@@ -172,4 +166,4 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     logger.error('Rent asset error', error, 'AssetRentAPI');
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-}
+});

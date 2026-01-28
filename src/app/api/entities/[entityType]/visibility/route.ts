@@ -6,12 +6,19 @@
  *
  * PATCH /api/entities/[entityType]/visibility
  * Body: { ids: string[], show_on_profile: boolean }
+ *
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
-import { apiSuccess, apiError, apiBadRequest, apiUnauthorized } from '@/lib/api/standardResponse';
-import { isValidEntityType, getTableName, getUserIdField, EntityType } from '@/config/entity-registry';
+import { apiSuccess, apiError, apiBadRequest } from '@/lib/api/standardResponse';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import {
+  isValidEntityType,
+  getTableName,
+  getUserIdField,
+  EntityType,
+} from '@/config/entity-registry';
 import { logger } from '@/utils/logger';
 import { z } from 'zod';
 
@@ -21,28 +28,20 @@ const visibilityUpdateSchema = z.object({
   show_on_profile: z.boolean(),
 });
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ entityType: string }> }
-) {
+interface RouteContext {
+  params: Promise<{ entityType: string }>;
+}
+
+export const PATCH = withAuth(async (request: AuthenticatedRequest, context: RouteContext) => {
   try {
-    const { entityType } = await params;
+    const { entityType } = await context.params;
 
     // Validate entity type
     if (!isValidEntityType(entityType)) {
       return apiBadRequest(`Invalid entity type: ${entityType}`);
     }
 
-    // Get authenticated user
-    const supabase = await createServerClient();
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return apiUnauthorized('Authentication required');
-    }
+    const { user, supabase } = request;
 
     // Parse request body
     const body = await request.json();
@@ -57,9 +56,11 @@ export async function PATCH(
     const userIdField = getUserIdField(entityType as EntityType);
 
     // Update entities - RLS ensures user can only update their own
-    const { data, error } = await (supabase
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .from(tableName) as any)
+    const { data, error } = await (
+      supabase
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .from(tableName) as any
+    )
       .update({ show_on_profile, updated_at: new Date().toISOString() })
       .in('id', ids)
       .eq(userIdField, user.id)
@@ -93,4 +94,4 @@ export async function PATCH(
     logger.error('Unexpected error in visibility toggle', { error });
     return apiError('Failed to update visibility');
   }
-}
+});
