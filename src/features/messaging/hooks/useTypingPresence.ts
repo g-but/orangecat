@@ -14,6 +14,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
 import type { RealtimeChannel, RealtimePresenceState } from '@supabase/supabase-js';
+import { debugLog } from '../lib/constants';
 
 export type PresenceStatus = 'online' | 'away' | 'offline';
 
@@ -321,7 +322,7 @@ export function useTypingPresence(
         for (const presence of newPresences) {
           const p = presence as unknown as UserPresenceState;
           if (p.user_id !== user.id) {
-            console.log(`[useTypingPresence] ${p.username} joined`);
+            debugLog(`[useTypingPresence] ${p.username} joined`);
           }
         }
       })
@@ -330,7 +331,7 @@ export function useTypingPresence(
         for (const presence of leftPresences) {
           const p = presence as unknown as UserPresenceState;
           if (p.user_id !== user.id) {
-            console.log(`[useTypingPresence] ${p.username} left`);
+            debugLog(`[useTypingPresence] ${p.username} left`);
           }
         }
       })

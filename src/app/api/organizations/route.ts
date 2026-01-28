@@ -5,28 +5,23 @@
  * Maintains backward compatibility for existing clients.
  *
  * Created: 2025-01-30
- * Last Modified: 2025-01-30
- * Last Modified Summary: Updated to use unified groups API
+ * Last Modified: 2026-01-28
+ * Last Modified Summary: Refactored to use withAuth middleware
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@/lib/supabase/server';
+import { NextResponse } from 'next/server';
 import groupsService from '@/services/groups';
 import { createGroupSchema } from '@/services/groups/validation';
 import { logger } from '@/utils/logger';
+import { withAuth, type AuthenticatedRequest } from '@/lib/api/withAuth';
+import { apiSuccess, apiError, apiBadRequest } from '@/lib/api/standardResponse';
 import type { CreateGroupInput } from '@/types/group';
 
 // GET /api/organizations - Get organizations (exclude circles)
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const searchParams = request.nextUrl.searchParams;
+    const { user } = req;
+    const searchParams = req.nextUrl.searchParams;
     const filter = searchParams.get('filter'); // 'my' for user's orgs
     const pageSize = parseInt(searchParams.get('limit') || '20');
 
@@ -35,16 +30,13 @@ export async function GET(request: NextRequest) {
       const result = await groupsService.getUserGroups({}, { page: 1, pageSize });
 
       if (!result.success) {
-        return NextResponse.json(
-          { error: result.error || 'Failed to fetch organizations' },
-          { status: 500 }
-        );
+        return apiError(result.error || 'Failed to fetch organizations');
       }
 
       // Filter out circles (label === 'circle')
-      const organizations = (result.groups || []).filter((g) => g.label !== 'circle');
+      const organizations = (result.groups || []).filter(g => g.label !== 'circle');
 
-      return NextResponse.json({
+      return apiSuccess({
         organizations,
         count: organizations.length,
       });
@@ -56,40 +48,27 @@ export async function GET(request: NextRequest) {
       );
 
       if (!result.success) {
-        return NextResponse.json(
-          { error: result.error || 'Failed to fetch organizations' },
-          { status: 500 }
-        );
+        return apiError(result.error || 'Failed to fetch organizations');
       }
 
       // Filter out circles (label === 'circle')
-      const organizations = (result.groups || []).filter((g) => g.label !== 'circle');
+      const organizations = (result.groups || []).filter(g => g.label !== 'circle');
 
-      return NextResponse.json({
+      return apiSuccess({
         organizations,
         count: organizations.length,
       });
     }
   } catch (error) {
     logger.error('Error in GET /api/organizations', { error }, 'Organizations');
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('Internal server error');
   }
-}
+});
 
 // POST /api/organizations - Create organization
-export async function POST(request: NextRequest) {
+export const POST = withAuth(async (req: AuthenticatedRequest) => {
   try {
-    const supabase = await createServerClient();
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const body = await request.json();
+    const body = await req.json();
 
     // Validate and ensure type is NOT 'circle'
     const validationResult = createGroupSchema.safeParse({
@@ -98,31 +77,19 @@ export async function POST(request: NextRequest) {
     });
 
     if (!validationResult.success) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: validationResult.error.errors },
-        { status: 400 }
-      );
+      return apiBadRequest('Invalid request', validationResult.error.errors);
     }
 
     // Create group (organization)
     const result = await groupsService.createGroup(validationResult.data as CreateGroupInput);
 
     if (!result.success) {
-      return NextResponse.json(
-        { error: result.error || 'Failed to create organization' },
-        { status: 500 }
-      );
+      return apiError(result.error || 'Failed to create organization');
     }
 
-    return NextResponse.json(
-      { organization: result.group },
-      { status: 201 }
-    );
+    return NextResponse.json({ success: true, organization: result.group }, { status: 201 });
   } catch (error) {
     logger.error('Error in POST /api/organizations', { error }, 'Organizations');
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return apiError('Internal server error');
   }
-}
+});
