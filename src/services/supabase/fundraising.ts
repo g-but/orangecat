@@ -60,13 +60,13 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
     const uniqueProjects = (ownedProjects as RawProject[] | null) || [];
 
     // Get transactions for these projects to calculate stats
-    const projectIds = uniqueProjects.map((p) => p.id);
+    const projectIds = uniqueProjects.map(p => p.id);
     let totalRaised = 0;
     let totalSupporters = 0;
 
     if (projectIds.length > 0) {
       // Build OR filter for multiple project IDs
-      const projectFilters = projectIds.map((id) => `to_entity_id.eq.${id}`).join(',');
+      const projectFilters = projectIds.map(id => `to_entity_id.eq.${id}`).join(',');
 
       // Only query transactions if we have valid project IDs
       if (projectFilters) {
@@ -86,14 +86,14 @@ export async function getUserFundraisingStats(userId: string): Promise<Fundraisi
 
         // Count unique donors (from_entity_id where from_entity_type = 'profile')
         const uniqueDonors = new Set(
-          txList.filter((t) => t.from_entity_type === 'profile').map((t) => t.from_entity_id)
+          txList.filter(t => t.from_entity_type === 'profile').map(t => t.from_entity_id)
         );
         totalSupporters = uniqueDonors.size;
       }
     }
 
     const totalProjects = uniqueProjects.length;
-    const activeProjects = uniqueProjects.filter((p) => p.status === 'active').length;
+    const activeProjects = uniqueProjects.filter(p => p.status === 'active').length;
 
     return {
       totalProjects,
@@ -135,7 +135,7 @@ export async function getUserFundraisingActivity(
     }
 
     const projectList = (pages as RawProject[] | null) || [];
-    const pageIds = projectList.map((page) => page.id);
+    const pageIds = projectList.map(page => page.id);
 
     // Get recent transactions
     if (pageIds.length > 0) {
@@ -167,7 +167,7 @@ export async function getUserFundraisingActivity(
 
           activities.push({
             type: 'donation',
-            title: 'New donation received',
+            title: 'New contribution received',
             context: transaction.projects?.title || 'Unknown project',
             time: timeAgo,
             amount: transaction.amount,
@@ -178,7 +178,7 @@ export async function getUserFundraisingActivity(
     }
 
     // Add project creation activities
-    projectList.slice(0, 3).forEach((page) => {
+    projectList.slice(0, 3).forEach(page => {
       const timeDiff = Date.now() - new Date(page.created_at).getTime();
       const timeAgo = formatTimeAgo(timeDiff);
 
@@ -279,12 +279,12 @@ export async function getGlobalFundraisingStats(): Promise<FundraisingStats> {
 
     const totalProjects = projectList.length;
     // Current schema doesn't have is_active, so assume all public pages are active
-    const activeProjects = projectList.filter((page) => page.is_public).length;
+    const activeProjects = projectList.filter(page => page.is_public).length;
     // Current schema doesn't have total_funding, so use 0 for now
     const totalRaised = 0;
 
     // Count unique supporters
-    const uniqueSupporters = new Set(txList.map((t) => t.user_id));
+    const uniqueSupporters = new Set(txList.map(t => t.user_id));
     const totalSupporters = uniqueSupporters.size;
 
     return {
@@ -325,7 +325,7 @@ export async function getRecentDonationsCount(userId: string): Promise<number> {
       return 0;
     }
 
-    const pageIds = (pages3 as Array<{ id: string }>).map((page) => page.id);
+    const pageIds = (pages3 as Array<{ id: string }>).map(page => page.id);
 
     // Count transactions this month
     const { count, error: transactionsError } = await supabase

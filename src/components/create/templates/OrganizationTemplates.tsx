@@ -59,12 +59,7 @@ export const ORGANIZATION_TEMPLATES: OrganizationTemplate[] = [
       requires_approval: true,
       tags: ['nonprofit', 'charity', 'transparency'],
     },
-    benefits: [
-      'Transparent donations',
-      'Public accountability',
-      'Tax compliance',
-      'Community trust',
-    ],
+    benefits: ['Transparent funding', 'Public accountability', 'Tax compliance', 'Community trust'],
     useCase:
       'Ideal for charitable foundations, educational institutions, and community service organizations.',
   },

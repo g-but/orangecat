@@ -1,7 +1,7 @@
 /**
  * ProjectUpdatesTimeline Component
  *
- * Shows recent project updates, donations, and activity
+ * Shows recent project updates, funding, and activity
  * Builds trust through transparency and demonstrates active engagement
  *
  * Created: 2025-11-17
@@ -48,7 +48,11 @@ export function ProjectUpdatesTimeline({ projectId, className = '' }: ProjectUpd
           setUpdates([]);
         }
       } catch (error) {
-        logger.error('Error fetching project updates', { projectId, error }, 'ProjectUpdatesTimeline');
+        logger.error(
+          'Error fetching project updates',
+          { projectId, error },
+          'ProjectUpdatesTimeline'
+        );
         setUpdates([]);
       } finally {
         setLoading(false);
@@ -95,7 +99,7 @@ export function ProjectUpdatesTimeline({ projectId, className = '' }: ProjectUpd
             <h3 className="text-lg font-semibold text-gray-400">Loading activity...</h3>
           </div>
           <div className="space-y-4">
-            {[1, 2, 3].map((i) => (
+            {[1, 2, 3].map(i => (
               <div key={i} className="flex gap-3 pb-4 border-b animate-pulse">
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200" />
                 <div className="flex-1 space-y-2">
@@ -120,7 +124,7 @@ export function ProjectUpdatesTimeline({ projectId, className = '' }: ProjectUpd
 
         {updates.length > 0 ? (
           <div className="space-y-4">
-            {updates.map((update) => (
+            {updates.map(update => (
               <div key={update.id} className="flex gap-3 pb-4 border-b last:border-b-0 last:pb-0">
                 {/* Icon based on type */}
                 <div
@@ -155,7 +159,9 @@ export function ProjectUpdatesTimeline({ projectId, className = '' }: ProjectUpd
               <Activity className="w-8 h-8 text-gray-400" />
             </div>
             <p className="text-sm text-gray-500 mb-1">No recent activity yet</p>
-            <p className="text-xs text-gray-400">Updates will appear here as the project progresses</p>
+            <p className="text-xs text-gray-400">
+              Updates will appear here as the project progresses
+            </p>
           </div>
         )}
       </CardContent>

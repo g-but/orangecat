@@ -220,7 +220,7 @@ export default function WalletRecommendationCards() {
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Find the perfect Bitcoin wallet for receiving donations
+          Find the perfect Bitcoin wallet for receiving funding
         </h2>
         <p className="text-gray-600">
           All recommendations are non-custodial — you control your keys. We connect directly for

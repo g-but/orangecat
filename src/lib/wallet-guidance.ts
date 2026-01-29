@@ -110,7 +110,7 @@ export const walletGuidanceContent: Record<NonNullable<WalletFieldType>, FieldGu
     icon: React.createElement(Coins, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Goal Currency',
     description:
-      'The currency is only for display – all donations still arrive in Bitcoin, but you can explain your goal in CHF, EUR, USD, BTC, or SATS.',
+      'The currency is only for display – all funding still arrives in Bitcoin, but you can explain your goal in CHF, EUR, USD, BTC, or SATS.',
     tips: [
       'Use CHF if your real‑world costs are in Switzerland',
       'Use EUR or USD if that better matches your situation',

@@ -2,7 +2,7 @@
  * MissingWalletBanner Component
  *
  * Displays a prominent banner on project pages when the Bitcoin address is missing.
- * Prompts the project owner to add their wallet to start receiving donations.
+ * Prompts the project owner to add their wallet to start receiving funding.
  *
  * Purpose: Convert demo projects into active fundraising campaigns.
  *
@@ -52,7 +52,7 @@ export default function MissingWalletBanner({
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-2">
             <h3 className="text-lg font-semibold text-gray-900">
-              Add Your Bitcoin Address to Start Receiving Donations
+              Add Your Bitcoin Address to Start Receiving Funding
             </h3>
             <button
               onClick={() => setIsDismissed(true)}
@@ -64,7 +64,7 @@ export default function MissingWalletBanner({
           </div>
 
           <p className="text-sm text-gray-700 mb-4">
-            Your project is live, but you can't receive donations yet! Add your Bitcoin or Lightning
+            Your project is live, but you can't receive funding yet! Add your Bitcoin or Lightning
             address so supporters can contribute.
           </p>
 
@@ -92,7 +92,7 @@ export default function MissingWalletBanner({
           <div className="mt-4 flex items-start gap-2 text-xs text-gray-600">
             <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-orange-500" />
             <p>
-              <strong>Self-custodial:</strong> Donations go directly to your wallet. No KYC, no
+              <strong>Self-custodial:</strong> Funding goes directly to your wallet. No KYC, no
               middleman.
             </p>
           </div>

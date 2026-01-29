@@ -39,7 +39,7 @@ export default function BitcoinPaymentModal({
   const handleCreatePayment = async () => {
     setLoading(true);
 
-    const description = `Donation to ${projectTitle}`;
+    const description = `Support for ${projectTitle}`;
 
     // Record pending transaction for transparency
     try {

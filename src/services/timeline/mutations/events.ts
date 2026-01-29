@@ -1,9 +1,9 @@
 /**
  * Timeline Event Mutations
- * 
+ *
  * Handles all write operations for timeline events (create, update, delete).
  * Single responsibility: Modify timeline data in database.
- * 
+ *
  * Created: 2025-01-28
  * Last Modified: 2025-01-28
  * Last Modified Summary: Extracted mutation logic from monolithic timeline service
@@ -22,7 +22,11 @@ import type {
 } from '@/types/timeline';
 import { validateEventRequest } from '../processors/validation';
 import { mapDbEventToTimelineEvent } from '../formatters';
-import { generateProjectEventTitle, generateProjectEventDescription, shouldFeatureProjectEvent } from '../formatters/eventTitles';
+import {
+  generateProjectEventTitle,
+  generateProjectEventDescription,
+  shouldFeatureProjectEvent,
+} from '../formatters/eventTitles';
 
 /**
  * Get current user ID helper
@@ -88,9 +92,7 @@ export async function createEventWithVisibility(
 
     // Ensure title is never null (DB constraint)
     const safeTitle =
-      request.title?.trim() ||
-      request.description?.trim()?.slice(0, 140) ||
-      'Update';
+      request.title?.trim() || request.description?.trim()?.slice(0, 140) || 'Update';
 
     // Use database function to create post with visibility contexts
     // The function returns JSONB, so we need to parse it
@@ -173,8 +175,9 @@ export async function createEventWithVisibility(
 
     // Fetch the created event
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData, error: fetchError } = await (supabase
-      .from(TIMELINE_TABLES.EVENTS) as any)
+    const { data: eventData, error: fetchError } = await (
+      supabase.from(TIMELINE_TABLES.EVENTS) as any
+    )
       .select('*')
       .eq('id', postId)
       .single();
@@ -195,7 +198,7 @@ export async function createEventWithVisibility(
         visibility_count: result.visibility_count || 0,
       },
     };
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     logger.error('Error creating post with visibility', { error, request }, 'Timeline');
 
@@ -227,7 +230,9 @@ export async function createEventWithVisibility(
 /**
  * Create a new timeline event (LEGACY - prefer createEventWithVisibility for posts)
  */
-export async function createEvent(request: CreateTimelineEventRequest): Promise<TimelineEventResponse> {
+export async function createEvent(
+  request: CreateTimelineEventRequest
+): Promise<TimelineEventResponse> {
   try {
     // Get current user if actorId not provided
     let actorId = request.actorId;
@@ -249,9 +254,7 @@ export async function createEvent(request: CreateTimelineEventRequest): Promise<
 
     // Prepare event data - match database function parameter names exactly
     const safeTitle =
-      request.title?.trim() ||
-      request.description?.trim()?.slice(0, 140) ||
-      'Update';
+      request.title?.trim() || request.description?.trim()?.slice(0, 140) || 'Update';
 
     const eventData = {
       p_event_type: request.eventType || 'post_created',
@@ -296,8 +299,9 @@ export async function createEvent(request: CreateTimelineEventRequest): Promise<
 
     // Fetch the created event (only if database function succeeded)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData2, error: fetchError } = await (supabase
-      .from(TIMELINE_TABLES.EVENTS) as any)
+    const { data: eventData2, error: fetchError } = await (
+      supabase.from(TIMELINE_TABLES.EVENTS) as any
+    )
       .select('*')
       .eq('id', eventId)
       .single();
@@ -332,8 +336,7 @@ export async function createProjectEvent(
 ): Promise<TimelineEventResponse> {
   // Get project details
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: projectData } = await (supabase
-    .from(getTableName('project')) as any)
+  const { data: projectData } = await (supabase.from(getTableName('project')) as any)
     .select('title, description, goal_amount, currency')
     .eq('id', projectId)
     .single();
@@ -379,8 +382,7 @@ export async function createTransactionEvent(
 ): Promise<TimelineEventResponse> {
   // Get transaction and project details
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: transactionData } = await (supabase
-    .from(DATABASE_TABLES.TRANSACTIONS) as any)
+  const { data: transactionData } = await (supabase.from(DATABASE_TABLES.TRANSACTIONS) as any)
     .select('*')
     .eq('id', transactionId)
     .single();
@@ -388,8 +390,7 @@ export async function createTransactionEvent(
   const transaction = transactionData as any;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: projectData } = await (supabase
-    .from(getTableName('project')) as any)
+  const { data: projectData } = await (supabase.from(getTableName('project')) as any)
     .select('title')
     .eq('id', projectId)
     .single();
@@ -397,8 +398,7 @@ export async function createTransactionEvent(
   const project = projectData as any;
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: donorData } = await (supabase
-    .from(DATABASE_TABLES.PROFILES) as any)
+  const { data: donorData } = await (supabase.from(DATABASE_TABLES.PROFILES) as any)
     .select('username, display_name')
     .eq('id', donorId)
     .single();
@@ -411,13 +411,13 @@ export async function createTransactionEvent(
 
   const title =
     eventType === 'donation_received'
-      ? `Received ₿${amountBtc.toFixed(6)} donation`
-      : `Sent ₿${amountBtc.toFixed(6)} donation`;
+      ? `Received ₿${amountBtc.toFixed(6)} contribution`
+      : `Sent ₿${amountBtc.toFixed(6)} contribution`;
 
   const description =
     eventType === 'donation_received'
-      ? `${donor?.display_name || donor?.username || 'Anonymous'} donated ₿${amountBtc.toFixed(6)} to ${project.title}`
-      : `Donated ₿${amountBtc.toFixed(6)} to ${project.title}`;
+      ? `${donor?.display_name || donor?.username || 'Anonymous'} contributed ₿${amountBtc.toFixed(6)} to ${project.title}`
+      : `Contributed ₿${amountBtc.toFixed(6)} to ${project.title}`;
 
   return createEvent({
     eventType,
@@ -484,8 +484,9 @@ export async function createQuoteReply(
 
     // Fallback: fetch directly
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: eventData, error: fetchError } = await (supabase
-      .from(TIMELINE_TABLES.EVENTS) as any)
+    const { data: eventData, error: fetchError } = await (
+      supabase.from(TIMELINE_TABLES.EVENTS) as any
+    )
       .select('*')
       .eq('id', result.data)
       .single();
@@ -540,7 +541,9 @@ export async function updateEvent(
     updateData.updated_at = new Date().toISOString();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (supabase.from(TIMELINE_TABLES.EVENTS) as any).update(updateData).eq('id', eventId);
+    const { error } = await (supabase.from(TIMELINE_TABLES.EVENTS) as any)
+      .update(updateData)
+      .eq('id', eventId);
 
     if (error) {
       logger.error('Failed to update timeline event', error, 'Timeline');
@@ -619,15 +622,14 @@ export async function shareEvent(
       metadata: { original_event_id: originalEventId },
       visibility,
     });
-    
+
     if (!fallback.success) {
       return { success: false, shareCount: 0, error: fallback.error || 'Share failed' };
     }
-    
+
     // Attempt to count share events referencing this original
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { count } = await (supabase
-      .from(TIMELINE_TABLES.EVENTS) as any)
+    const { count } = await (supabase.from(TIMELINE_TABLES.EVENTS) as any)
       .select('id', { count: 'exact', head: true })
       .contains('metadata', { original_event_id: originalEventId });
 
@@ -637,4 +639,3 @@ export async function shareEvent(
     return { success: false, shareCount: 0, error: 'Internal server error' };
   }
 }
-

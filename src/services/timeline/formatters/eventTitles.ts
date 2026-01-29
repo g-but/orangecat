@@ -1,8 +1,8 @@
 /**
  * Event Title and Description Generators
- * 
+ *
  * Generates human-readable titles and descriptions for timeline events.
- * 
+ *
  * Created: 2025-01-28
  * Last Modified: 2025-01-28
  * Last Modified Summary: Extracted title generation logic from monolithic timeline service
@@ -46,7 +46,7 @@ export function generateProjectEventDescription(
     case 'project_created':
       return `Started working on "${project.title}" with a goal of ${project.goal_amount || 0} ${project.currency || 'sats'}`;
     case 'project_published':
-      return `"${project.title}" is now live and accepting donations`;
+      return `"${project.title}" is now live and accepting funding`;
     case 'project_completed':
       return `Successfully completed "${project.title}"`;
     case 'project_goal_reached':
@@ -67,6 +67,3 @@ export function shouldFeatureProjectEvent(eventType: TimelineEventType): boolean
     'project_goal_reached',
   ].includes(eventType);
 }
-
-
-

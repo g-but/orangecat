@@ -55,7 +55,9 @@ export default function DemoPage({ initiative }: DemoPageProps) {
             title: 'Invite Members',
             description: 'Add team members with specific roles and permissions',
             action: 'Inviting first team members...',
-            mockData: { newMembers: ['Sarah (Developer)', 'Mike (Designer)', 'Alex (Community Manager)'] },
+            mockData: {
+              newMembers: ['Sarah (Developer)', 'Mike (Designer)', 'Alex (Community Manager)'],
+            },
           },
           {
             id: 'create-proposal',
@@ -80,7 +82,12 @@ export default function DemoPage({ initiative }: DemoPageProps) {
             title: 'Create Event',
             description: 'Set up your party, art exhibit, or weekend getaway',
             action: 'Creating "Summer Art Exhibit & Party"...',
-            mockData: { name: 'Summer Art Exhibit & Party', date: 'July 20, 2025', type: 'Art Exhibit', capacity: 75 },
+            mockData: {
+              name: 'Summer Art Exhibit & Party',
+              date: 'July 20, 2025',
+              type: 'Art Exhibit',
+              capacity: 75,
+            },
           },
           {
             id: 'set-tickets',
@@ -224,10 +231,10 @@ export default function DemoPage({ initiative }: DemoPageProps) {
             mockData: { media: 5, rewards: 3, updates: 0 },
           },
           {
-            id: 'receive-donations',
-            title: 'Receive Donations',
-            description: 'Accept Bitcoin donations from supporters',
-            action: 'Receiving donations...',
+            id: 'receive-funding',
+            title: 'Receive Funding',
+            description: 'Accept Bitcoin funding from supporters',
+            action: 'Receiving funding...',
             mockData: { raised: '6.7 BTC', supporters: 89, percentage: 67 },
           },
           {

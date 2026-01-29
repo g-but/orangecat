@@ -5,9 +5,9 @@ const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'OrangeCat';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: 'OrangeCat - Bitcoin Donations Made Simple',
-  description: 'Create your profile and start accepting Bitcoin donations today. A BitBaum company.',
-  keywords: ['bitcoin', 'donation', 'crypto', 'blockchain', 'bitbaum', 'crowdfunding'],
+  title: 'OrangeCat - Bitcoin Funding Made Simple',
+  description: 'Create your profile and start accepting Bitcoin funding today. A BitBaum company.',
+  keywords: ['bitcoin', 'funding', 'crypto', 'blockchain', 'bitbaum', 'crowdfunding'],
   authors: [{ name: 'BitBaum AG' }, { name: 'OrangeCat Team' }],
   icons: {
     icon: [
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
         url: '/favicon.ico',
         sizes: '32x32',
         type: 'image/x-icon',
-      }
+      },
     ],
     apple: {
       url: '/images/orange-cat-logo.svg',
@@ -27,8 +27,8 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: `${siteName} - Bitcoin Donation Platform`,
-    description: 'A platform for accepting Bitcoin donations with ease.',
+    title: `${siteName} - Bitcoin Funding Platform`,
+    description: 'A platform for accepting Bitcoin funding with ease.',
     type: 'website',
     locale: 'en_US',
     siteName: siteName,
@@ -36,11 +36,11 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${siteName} - Bitcoin Donation Platform`,
-    description: 'A platform for accepting Bitcoin donations with ease.',
+    title: `${siteName} - Bitcoin Funding Platform`,
+    description: 'A platform for accepting Bitcoin funding with ease.',
   },
   robots: {
     index: true,
     follow: true,
   },
-}; 
+};
