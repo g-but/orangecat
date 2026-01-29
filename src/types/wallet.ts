@@ -43,7 +43,7 @@ export const WALLET_CATEGORIES: Record<
   general: {
     label: 'General',
     icon: '💰',
-    description: 'General purpose donations',
+    description: 'General purpose funding',
   },
   rent: {
     label: 'Rent & Housing',
@@ -418,7 +418,10 @@ export function validateWalletFormData(data: WalletFormData): ValidationResult {
 
   // Validate category icon (whitelist for security)
   // Type guard to check if string is in the allowed icons array
-  if (data.category_icon && !(ALLOWED_CATEGORY_ICONS as readonly string[]).includes(data.category_icon)) {
+  if (
+    data.category_icon &&
+    !(ALLOWED_CATEGORY_ICONS as readonly string[]).includes(data.category_icon)
+  ) {
     return { valid: false, error: 'Invalid category icon' };
   }
 

@@ -141,7 +141,7 @@ export default function BitcoinDonationCard({
         <div>
           <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <Bitcoin className="w-5 h-5 text-orange-500" />
-            Accept Bitcoin Donations
+            Accept Bitcoin Funding
           </h3>
           <p className="text-xs text-gray-600 mt-0.5">Send Bitcoin directly to this profile</p>
         </div>

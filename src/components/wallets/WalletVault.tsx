@@ -43,8 +43,8 @@ const sampleAddresses: WalletAddress[] = [
     address: 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh',
     type: 'bitcoin',
     category: 'personal',
-    description: 'Primary Bitcoin address for receiving donations',
-    tags: ['primary', 'donations', 'bitcoin'],
+    description: 'Primary Bitcoin address for receiving funding',
+    tags: ['primary', 'funding', 'bitcoin'],
     isFavorite: true,
     isPublic: true,
     createdAt: '2024-01-15T10:30:00Z',
@@ -224,7 +224,7 @@ export default function WalletVault() {
                 <option value="project">Campaign</option>
                 <option value="friend">Friend</option>
                 <option value="business">Business</option>
-                <option value="donation">Donation</option>
+                <option value="donation">Funding</option>
               </select>
               <select
                 value={selectedType}
@@ -449,7 +449,7 @@ export default function WalletVault() {
                         <option value="project">Campaign</option>
                         <option value="friend">Friend</option>
                         <option value="business">Business</option>
-                        <option value="donation">Donation</option>
+                        <option value="donation">Funding</option>
                       </select>
                     </div>
 

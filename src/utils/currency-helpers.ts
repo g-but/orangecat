@@ -1,9 +1,9 @@
 /**
  * Currency Helper Utilities
- * 
+ *
  * Provides helper functions to determine currency characteristics
  * and behavior differences between fiat and Bitcoin-native currencies.
- * 
+ *
  * Created: 2026-01-05
  * Last Modified: 2026-01-05
  * Last Modified Summary: Initial implementation
@@ -13,9 +13,9 @@ import { Currency } from '@/types/settings';
 
 /**
  * Check if a currency is Bitcoin-native (BTC or SATS)
- * 
+ *
  * Bitcoin-native currencies work differently:
- * - Goals can ONLY be reached by donations (not price appreciation)
+ * - Goals can ONLY be reached by contributions (not price appreciation)
  * - No conversion needed for comparison (direct BTC comparison)
  * - Used by Bitcoin-native users who think in BTC/sats
  */
@@ -25,9 +25,9 @@ export function isBitcoinNativeCurrency(currency: Currency): boolean {
 
 /**
  * Check if a currency is fiat (USD, CHF, EUR, etc.)
- * 
+ *
  * Fiat currencies:
- * - Goals can be reached by donations OR Bitcoin price appreciation
+ * - Goals can be reached by contributions OR Bitcoin price appreciation
  * - Requires conversion from BTC balance to fiat for comparison
  * - Used by users who think in traditional currencies
  */
@@ -41,11 +41,11 @@ export function isFiatCurrency(currency: Currency): boolean {
 export function getGoalExplanation(currency: Currency, isGoal: boolean = true): string {
   if (isBitcoinNativeCurrency(currency)) {
     return isGoal
-      ? 'Bitcoin-native goal: Can only be reached by donations (not affected by Bitcoin price changes)'
+      ? 'Bitcoin-native goal: Can only be reached by contributions (not affected by Bitcoin price changes)'
       : 'Bitcoin-native amount: No conversion needed, works directly with Bitcoin';
   } else {
     return isGoal
-      ? 'Fiat goal: Can be reached by donations OR Bitcoin price appreciation'
+      ? 'Fiat goal: Can be reached by contributions OR Bitcoin price appreciation'
       : 'Fiat amount: Will be converted to Bitcoin when sending transactions';
   }
 }

@@ -15,7 +15,7 @@ export const platformFeatures: PlatformFeature[] = [
     color: 'bg-gradient-to-r from-bitcoin-orange to-orange-500',
     iconColor: 'text-bitcoin-orange',
     preview:
-      'Create project pages, accept Bitcoin donations, track funding progress, and engage with supporters.',
+      'Create project pages, accept Bitcoin funding, track funding progress, and engage with supporters.',
     comingSoon: false,
     priority: 1,
   },

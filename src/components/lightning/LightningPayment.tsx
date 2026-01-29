@@ -87,7 +87,7 @@ export default function LightningPayment({
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       const amountSats = parseInt(amount);
-      const description = `${projectTitle} - ${message || 'Lightning donation'}`;
+      const description = `${projectTitle} - ${message || 'Lightning payment'}`;
 
       // Development/Demo Implementation
       // In production, this would integrate with a Lightning service provider like:
@@ -215,7 +215,7 @@ export default function LightningPayment({
                 instant Bitcoin payment feature.
               </p>
               <p className="text-xs text-yellow-600">
-                <strong>For now, please use the Bitcoin address for donations.</strong> Lightning
+                <strong>For now, please use the Bitcoin address for funding.</strong> Lightning
                 integration will be available in a future update.
               </p>
             </div>

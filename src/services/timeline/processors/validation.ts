@@ -31,7 +31,7 @@ export function validateEventRequest(request: CreateTimelineEventRequest): {
     case 'donation_received':
     case 'donation_sent':
       if (!request.amountSats || request.amountSats <= 0) {
-        return { valid: false, error: 'Valid donation amount required' };
+        return { valid: false, error: 'Valid contribution amount required' };
       }
       break;
     case 'project_created':

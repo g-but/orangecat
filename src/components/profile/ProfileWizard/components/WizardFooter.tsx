@@ -37,7 +37,7 @@ export function WizardFooter({
           {currentStep === 0 && "🚀 Let's get your profile started!"}
           {currentStep === 1 && '📍 Great! Local supporters will love this.'}
           {currentStep === 2 && '📖 Your story matters - share it!'}
-          {isLastStep && '₿ Almost there! Donations await.'}
+          {isLastStep && '₿ Almost there! Funding awaits.'}
         </div>
         <div className="text-xs text-gray-500">
           {steps.filter((_, i) => i <= currentStep).length} of {steps.length} steps completed
@@ -102,7 +102,7 @@ export function WizardFooter({
       {isLastStep && (
         <div className="mt-4 text-center">
           <p className="text-xs text-gray-500">
-            🎉 Completing your profile unlocks donation features and helps you stand out!
+            🎉 Completing your profile unlocks funding features and helps you stand out!
           </p>
         </div>
       )}

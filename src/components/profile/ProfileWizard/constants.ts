@@ -37,7 +37,7 @@ export const WIZARD_STEPS: WizardStep[] = [
   {
     id: 'wallets',
     title: '₿ Bitcoin Wallets',
-    description: "Set up donations (we'll help you get started)",
+    description: "Set up funding (we'll help you get started)",
     icon: Wallet,
     fields: ['bitcoin_address', 'lightning_address'],
     required: false,

@@ -1,15 +1,15 @@
-import { DashboardCard } from '@/types/dashboard'
+import { DashboardCard } from '@/types/dashboard';
 
 export const dashboardCards: DashboardCard[] = [
   {
     title: 'Create New Page',
     subtitle: 'Set up a new fundraising page',
-    description: 'Create a new page to start accepting Bitcoin donations',
+    description: 'Create a new page to start accepting Bitcoin funding',
     action: {
       label: 'Create Page',
       href: '/create',
-      variant: 'primary'
-    }
+      variant: 'primary',
+    },
   },
   {
     title: 'Your Pages',
@@ -18,17 +18,17 @@ export const dashboardCards: DashboardCard[] = [
     action: {
       label: 'View Pages',
       href: '/(authenticated)/dashboard/projects',
-      variant: 'outline'
-    }
+      variant: 'outline',
+    },
   },
   {
-    title: 'Donations',
-    subtitle: 'Track your donations',
-    description: 'View your donation history and analytics',
+    title: 'Funding',
+    subtitle: 'Track your funding',
+    description: 'View your funding history and analytics',
     action: {
-      label: 'View Donations',
+      label: 'View Funding',
       href: '/(authenticated)/dashboard/analytics',
-      variant: 'outline'
-    }
-  }
-]
+      variant: 'outline',
+    },
+  },
+];

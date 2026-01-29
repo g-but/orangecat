@@ -244,7 +244,7 @@ export const fundingTools = [
   },
   {
     name: 'Liberapay',
-    description: 'Recurrent donations platform',
+    description: 'Recurring funding platform',
     url: 'https://liberapay.com',
     icon: Wallet,
     color: 'bg-blue-100 text-blue-600',

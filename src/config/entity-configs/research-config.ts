@@ -7,45 +7,101 @@ export const researchEntitySchema = z.object({
   title: z.string().min(1).max(200),
   description: z.string().min(1).max(2000),
   field: z.enum([
-    'fundamental_physics', 'mathematics', 'computer_science', 'biology',
-    'chemistry', 'neuroscience', 'psychology', 'economics', 'philosophy',
-    'engineering', 'medicine', 'environmental_science', 'social_science',
-    'artificial_intelligence', 'blockchain_cryptography', 'other'
+    'fundamental_physics',
+    'mathematics',
+    'computer_science',
+    'biology',
+    'chemistry',
+    'neuroscience',
+    'psychology',
+    'economics',
+    'philosophy',
+    'engineering',
+    'medicine',
+    'environmental_science',
+    'social_science',
+    'artificial_intelligence',
+    'blockchain_cryptography',
+    'other',
   ]),
   methodology: z.enum([
-    'theoretical', 'experimental', 'computational', 'empirical', 'qualitative',
-    'mixed_methods', 'meta_analysis', 'survey', 'case_study', 'action_research'
+    'theoretical',
+    'experimental',
+    'computational',
+    'empirical',
+    'qualitative',
+    'mixed_methods',
+    'meta_analysis',
+    'survey',
+    'case_study',
+    'action_research',
   ]),
   expected_outcome: z.string().min(1).max(1000),
   timeline: z.enum(['short_term', 'medium_term', 'long_term', 'ongoing', 'indefinite']),
   funding_goal_sats: z.number().min(1000),
   funding_model: z.enum(['donation', 'subscription', 'milestone', 'royalty', 'hybrid']),
-  resource_needs: z.array(z.object({
-    type: z.enum(['compute', 'data', 'equipment', 'collaboration', 'publication', 'travel', 'software', 'other']),
-    description: z.string().optional(),
-    estimated_cost_sats: z.number().min(0).optional(),
-    priority: z.enum(['low', 'medium', 'high', 'critical'])
-  })).optional(),
+  resource_needs: z
+    .array(
+      z.object({
+        type: z.enum([
+          'compute',
+          'data',
+          'equipment',
+          'collaboration',
+          'publication',
+          'travel',
+          'software',
+          'other',
+        ]),
+        description: z.string().optional(),
+        estimated_cost_sats: z.number().min(0).optional(),
+        priority: z.enum(['low', 'medium', 'high', 'critical']),
+      })
+    )
+    .optional(),
   lead_researcher: z.string().min(1),
-  team_members: z.array(z.object({
-    name: z.string().min(1),
-    role: z.string().min(1),
-    expertise: z.string().optional(),
-    contribution_percentage: z.number().min(0).max(100).optional()
-  })).optional(),
+  team_members: z
+    .array(
+      z.object({
+        name: z.string().min(1),
+        role: z.string().min(1),
+        expertise: z.string().optional(),
+        contribution_percentage: z.number().min(0).max(100).optional(),
+      })
+    )
+    .optional(),
   open_collaboration: z.boolean().optional(),
   progress_frequency: z.enum(['weekly', 'biweekly', 'monthly', 'milestone', 'as_needed']),
   transparency_level: z.enum(['full', 'progress', 'milestone', 'minimal']),
   voting_enabled: z.boolean().optional(),
-  impact_areas: z.array(z.object({
-    area: z.enum(['scientific_understanding', 'technological_innovation', 'medical_advancement', 'environmental_protection', 'social_progress', 'economic_development', 'education', 'policy_making', 'philosophical_insight', 'other']),
-    description: z.string().optional()
-  })).optional(),
+  impact_areas: z
+    .array(
+      z.object({
+        area: z.enum([
+          'scientific_understanding',
+          'technological_innovation',
+          'medical_advancement',
+          'environmental_protection',
+          'social_progress',
+          'economic_development',
+          'education',
+          'policy_making',
+          'philosophical_insight',
+          'other',
+        ]),
+        description: z.string().optional(),
+      })
+    )
+    .optional(),
   target_audience: z.array(z.string()).optional(),
-  sdg_alignment: z.array(z.object({
-    goal: z.string(),
-    description: z.string().optional()
-  })).optional(),
+  sdg_alignment: z
+    .array(
+      z.object({
+        goal: z.string(),
+        description: z.string().optional(),
+      })
+    )
+    .optional(),
   is_public: z.boolean().optional(),
 });
 
@@ -55,7 +111,8 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
   namePlural: 'Research',
   displayName: 'Research',
   displayNamePlural: 'Research',
-  description: 'Independent research topics with decentralized funding (e.g., Dark Matter, Climate Science)',
+  description:
+    'Independent research topics with decentralized funding (e.g., Dark Matter, Climate Science)',
   icon: '🔬',
   color: '#8B5CF6', // Purple for research
   colorTheme: 'purple',
@@ -69,8 +126,8 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
   apiEndpoint: '/api/research',
 
   // Card rendering
-  makeHref: (entity) => `/research/${entity.id}`,
-  makeCardProps: (entity) => ({
+  makeHref: entity => `/research/${entity.id}`,
+  makeCardProps: entity => ({
     badge: entity.status === 'active' ? 'Active' : entity.status === 'draft' ? 'Draft' : undefined,
     badgeVariant: entity.status === 'active' ? 'success' : 'default',
     showEditButton: true,
@@ -181,7 +238,7 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
           type: 'select',
           required: true,
           options: [
-            { value: 'donation', label: 'Donation-based (pure support)' },
+            { value: 'donation', label: 'Funding-based (pure support)' },
             { value: 'subscription', label: 'Subscription (ongoing support)' },
             { value: 'milestone', label: 'Milestone-based (progress payments)' },
             { value: 'royalty', label: 'Royalty-share (revenue sharing)' },
@@ -226,7 +283,13 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
             { name: 'name', label: 'Name', type: 'text', required: true },
             { name: 'role', label: 'Role', type: 'text', required: true },
             { name: 'expertise', label: 'Expertise', type: 'text' },
-            { name: 'contribution_percentage', label: 'Funding Share %', type: 'number', min: 0, max: 100 },
+            {
+              name: 'contribution_percentage',
+              label: 'Funding Share %',
+              type: 'number',
+              min: 0,
+              max: 100,
+            },
           ],
         },
         {
@@ -363,9 +426,16 @@ export const researchConfig: EntityConfig<ResearchEntity> = {
       {
         field: 'team_members',
         rule: (value: unknown) => {
-          if (!value || !Array.isArray(value)) {return true;}
+          if (!value || !Array.isArray(value)) {
+            return true;
+          }
           const members = value as Array<{ contribution_percentage?: number }>;
-          return members.reduce((sum: number, member) => sum + (member.contribution_percentage || 0), 0) <= 100;
+          return (
+            members.reduce(
+              (sum: number, member) => sum + (member.contribution_percentage || 0),
+              0
+            ) <= 100
+          );
         },
         message: 'Total contribution percentages cannot exceed 100%',
       },

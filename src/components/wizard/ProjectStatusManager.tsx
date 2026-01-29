@@ -43,7 +43,7 @@ export default function ProjectStatusManager({
       case 'active':
         return [
           {
-            label: 'Pause Donations',
+            label: 'Pause Funding',
             status: 'paused',
             icon: Pause,
             variant: 'secondary',
@@ -64,7 +64,7 @@ export default function ProjectStatusManager({
       case 'paused':
         return [
           {
-            label: 'Resume Donations',
+            label: 'Resume Funding',
             status: 'active',
             icon: Play,
             variant: 'primary',
@@ -142,5 +142,3 @@ export default function ProjectStatusManager({
     </Card>
   );
 }
-
-

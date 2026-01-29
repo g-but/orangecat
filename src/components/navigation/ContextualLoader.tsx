@@ -171,7 +171,7 @@ export function ContextualLoader({ className, pathname: propPathname }: Contextu
         subtitle: 'Support what matters to you',
         actions: [
           { icon: Heart, text: 'Find causes you care about' },
-          { icon: DollarSign, text: 'Make donations that count' },
+          { icon: DollarSign, text: 'Make contributions that count' },
           { icon: Users, text: 'Join community initiatives' },
           { icon: Target, text: 'Track your impact' },
         ],

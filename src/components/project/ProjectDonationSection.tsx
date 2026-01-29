@@ -1,12 +1,15 @@
 /**
  * ProjectDonationSection Component
  *
- * Displays Bitcoin and Lightning donation addresses with copy functionality
- * Also includes favorite functionality for easy project saving
+ * Displays Bitcoin and Lightning funding addresses with copy functionality.
+ * Also includes favorite functionality for easy project saving.
+ *
+ * Note: This component uses "support" and "funding" terminology per domain-specific.md
+ * (not "donate" or "donation").
  *
  * Created: 2025-01-27
- * Last Modified: 2025-01-30
- * Last Modified Summary: Added favorite functionality integrated with donation section
+ * Last Modified: 2026-01-29
+ * Last Modified Summary: Updated terminology from "donate" to "support/fund"
  */
 
 'use client';
@@ -32,7 +35,7 @@ interface ProjectDonationSectionProps {
   isOwner?: boolean;
 }
 
-// Suggested donation amounts in sats (converted to user currency for display)
+// Suggested support amounts in sats (converted to user currency for display)
 const SUGGESTED_AMOUNTS_SATS = [
   { sats: 100_000, label: 'Small' }, // ~$4-5 USD / ~CHF 5
   { sats: 500_000, label: 'Medium' }, // ~$20-25 USD / ~CHF 25
@@ -170,7 +173,7 @@ export function ProjectDonationSection({
             </Button>
           )}
 
-          {/* Donate Button - Scrolls to donation addresses */}
+          {/* Support Button - Scrolls to funding section */}
           {(bitcoinAddress || lightningAddress) && (
             <div className="flex-1">
               {/* Open payment modal for smoother UX */}
@@ -182,20 +185,20 @@ export function ProjectDonationSection({
                   recipientAddress={bitcoinAddress || undefined}
                 />
               </div>
-              {/* Fallback: scroll to donation addresses on small screens */}
+              {/* Fallback: scroll to funding section on small screens */}
               <div className="sm:hidden">
                 <Button
                   onClick={() => {
-                    const donationSection = document.getElementById('bitcoin-donation-section');
-                    if (donationSection) {
-                      donationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    const supportSection = document.getElementById('bitcoin-donation-section');
+                    if (supportSection) {
+                      supportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }
                   }}
                   className="w-full bg-orange-600 hover:bg-orange-700 text-white"
-                  aria-label="Scroll to donation addresses"
+                  aria-label="Scroll to Bitcoin funding section"
                 >
                   <Bitcoin className="w-4 h-4 mr-2" aria-hidden="true" />
-                  Donate Bitcoin
+                  Fund with Bitcoin
                 </Button>
               </div>
             </div>
@@ -204,9 +207,9 @@ export function ProjectDonationSection({
         <p className="text-sm text-gray-500 mt-3">
           {user
             ? isFavorited
-              ? 'You can find this project in your Favorites to donate later.'
-              : 'Save this project to your favorites to donate later, or donate now.'
-            : 'Sign in to save this project to your favorites and donate later.'}
+              ? 'You can find this project in your Favorites to support later.'
+              : 'Save this project to your favorites to support later, or fund now.'
+            : 'Sign in to save this project to your favorites and support later.'}
         </p>
       </section>
 
@@ -219,7 +222,7 @@ export function ProjectDonationSection({
         >
           <h3 id="bitcoin-heading" className="text-lg font-semibold mb-4 flex items-center gap-2">
             <Bitcoin className="w-5 h-5 text-bitcoinOrange" aria-hidden="true" />
-            Donate Bitcoin
+            Fund with Bitcoin
           </h3>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -281,10 +284,10 @@ export function ProjectDonationSection({
             </div>
           )}
 
-          {/* Suggested donation amounts - Keep as fallback or secondary */}
+          {/* Suggested support amounts - Keep as fallback or secondary */}
           <div className="mt-6 border-t pt-6">
             <p className="text-sm font-medium text-gray-700 mb-3">
-              {ownerId && !isOwner ? 'Other amounts:' : 'Suggested donation amounts:'}
+              {ownerId && !isOwner ? 'Other amounts:' : 'Suggested support amounts:'}
             </p>
             <div className="grid grid-cols-3 gap-3">
               {SUGGESTED_AMOUNTS_SATS.map(({ sats, label }) => {
@@ -300,7 +303,7 @@ export function ProjectDonationSection({
                     onClick={() => {
                       copyToClipboard(bitcoinAddress, 'Bitcoin address');
                       toast.success(`Address copied! Send ${satsDisplay}`, {
-                        description: `Suggested ${label.toLowerCase()} donation (≈ ${formattedAmount})`,
+                        description: `Suggested ${label.toLowerCase()} support (≈ ${formattedAmount})`,
                       });
                     }}
                     className="px-4 py-3 border-2 border-gray-300 rounded-lg hover:border-orange-500 hover:bg-orange-50 transition-all text-center group"
@@ -326,7 +329,7 @@ export function ProjectDonationSection({
         <section className="mt-6" aria-labelledby="lightning-heading">
           <h3 id="lightning-heading" className="text-lg font-semibold mb-3 flex items-center gap-2">
             <ExternalLink className="w-5 h-5 text-yellow-500" aria-hidden="true" />
-            Lightning Donation
+            Lightning Payment
           </h3>
           <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
             <div className="flex items-center justify-between gap-4">

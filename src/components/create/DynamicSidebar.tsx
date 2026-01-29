@@ -106,7 +106,7 @@ function CurrencyBreakdown({ amount, currency }: { amount: number; currency: str
       <div className="mt-3 pt-3 border-t border-gray-100">
         <p className="text-xs text-gray-500 flex items-start gap-1">
           <TrendingUp className="w-3 h-3 mt-0.5 flex-shrink-0" />
-          <span>Live rates. All donations settle in Bitcoin.</span>
+          <span>Live rates. All funding settles in Bitcoin.</span>
         </p>
       </div>
     </div>

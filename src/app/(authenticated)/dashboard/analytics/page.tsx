@@ -100,7 +100,7 @@ export default function AnalyticsPage() {
         color: 'text-purple-600',
       },
       {
-        label: 'Avg Donation',
+        label: 'Avg Contribution',
         value: avgDonation,
         change: -2.1,
         changeType: 'decrease',
@@ -272,7 +272,9 @@ export default function AnalyticsPage() {
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Goal</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Progress</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Supporters</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-900">Avg Donation</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900">
+                      Avg Contribution
+                    </th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Views</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900">Conv. Rate</th>
                   </tr>
@@ -427,8 +429,8 @@ export default function AnalyticsPage() {
                     <div>
                       <h4 className="font-medium text-orange-900">Engage Your Supporters</h4>
                       <p className="text-orange-700 text-sm mt-1">
-                        Send personalized thank-you messages to increase repeat donations by up to
-                        60%.
+                        Send personalized thank-you messages to increase repeat contributions by up
+                        to 60%.
                       </p>
                     </div>
                   </div>

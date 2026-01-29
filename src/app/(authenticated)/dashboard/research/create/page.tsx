@@ -356,7 +356,7 @@ export default function CreateResearchEntity() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="donation">Donation-based (pure support)</SelectItem>
+                    <SelectItem value="donation">Funding-based (pure support)</SelectItem>
                     <SelectItem value="subscription">Subscription (ongoing support)</SelectItem>
                     <SelectItem value="milestone">Milestone-based (progress payments)</SelectItem>
                     <SelectItem value="royalty">Royalty-share (revenue sharing)</SelectItem>

@@ -25,7 +25,7 @@ export function WalletsStep({ form }: WalletsStepProps) {
     <div className="space-y-6">
       <div className="text-center mb-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Bitcoin Wallets</h2>
-        <p className="text-gray-600 mb-3">Set up addresses where people can send you donations.</p>
+        <p className="text-gray-600 mb-3">Set up addresses where people can send you funding.</p>
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-orange-700 text-xs rounded-full">
           <span>₿</span>
           <span>All wallet fields are optional</span>
@@ -47,7 +47,7 @@ export function WalletsStep({ form }: WalletsStepProps) {
               />
             </FormControl>
             <FormDescription className="text-xs text-gray-500">
-              Optional: Your Bitcoin address for receiving donations
+              Optional: Your Bitcoin address for receiving funding
             </FormDescription>
             <FormMessage />
           </FormItem>
