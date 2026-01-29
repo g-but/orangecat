@@ -88,7 +88,7 @@ export default function DocsPage() {
                     <div>
                       <span className="font-medium">Transparency</span>
                       <p className="text-gray-600">
-                        Public funding history and real-time donation tracking
+                        Public funding history and real-time contribution tracking
                       </p>
                     </div>
                   </li>
@@ -156,7 +156,7 @@ export default function DocsPage() {
                 <li>Complete your profile</li>
                 <li>Add your Bitcoin address</li>
                 <li>Create your funding page</li>
-                <li>Start receiving donations</li>
+                <li>Start receiving funding</li>
               </ol>
             </div>
           </div>

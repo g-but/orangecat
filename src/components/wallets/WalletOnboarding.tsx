@@ -323,7 +323,7 @@ export default function WalletOnboarding() {
                 <span className="font-semibold text-blue-900">Pro Tip</span>
               </div>
               <p className="text-blue-800 text-sm">
-                You can generate a new address for each donation to improve privacy.
+                You can generate a new address for each contribution to improve privacy.
               </p>
             </div>
 
@@ -333,7 +333,7 @@ export default function WalletOnboarding() {
                 <span className="font-semibold text-green-900">Next Step</span>
               </div>
               <p className="text-green-800 text-sm">
-                Add this address to your OrangeCat profile to start receiving donations.
+                Add this address to your OrangeCat profile to start receiving funding.
               </p>
             </div>
           </div>

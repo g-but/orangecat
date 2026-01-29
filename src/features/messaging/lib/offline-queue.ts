@@ -9,6 +9,7 @@
 
 import { messageQueueService } from '@/lib/message-queue';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 export interface QueuedMessageData {
   conversationId: string;
@@ -37,7 +38,10 @@ export async function queueMessageForLater(
     toastMessage?: string;
   } = {}
 ): Promise<boolean> {
-  const { showToast = true, toastMessage = "You're offline. Message saved and will send when connected." } = options;
+  const {
+    showToast = true,
+    toastMessage = "You're offline. Message saved and will send when connected.",
+  } = options;
 
   try {
     await messageQueueService.addMessageToQueue(
@@ -56,7 +60,7 @@ export async function queueMessageForLater(
 
     return true;
   } catch (error) {
-    console.error('[offline-queue] Failed to queue message:', error);
+    logger.error('Failed to queue message', error, 'Messaging');
     if (showToast) {
       toast.error('Failed to save message offline. Please try again.');
     }
@@ -69,10 +73,7 @@ export async function queueMessageForLater(
  *
  * @returns true if queued (meaning caller should stop processing), false if online
  */
-export async function queueIfOffline(
-  data: QueuedMessageData,
-  userId: string
-): Promise<boolean> {
+export async function queueIfOffline(data: QueuedMessageData, userId: string): Promise<boolean> {
   if (!isOnline()) {
     return queueMessageForLater(data, userId);
   }

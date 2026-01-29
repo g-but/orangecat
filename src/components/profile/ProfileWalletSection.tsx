@@ -22,7 +22,7 @@ interface ProfileWalletSectionProps {
 /**
  * ProfileWalletSection Component
  *
- * Displays wallet cards for accepting Bitcoin donations.
+ * Displays wallet cards for accepting Bitcoin funding.
  * Supports both new multi-wallet system and legacy single address.
  */
 export default function ProfileWalletSection({
@@ -186,9 +186,9 @@ export default function ProfileWalletSection({
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6">
         <div className="text-center text-gray-500 py-8">
           <Bitcoin className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <h3 className="text-lg font-semibold text-gray-700 mb-2">Accept Bitcoin Donations</h3>
+          <h3 className="text-lg font-semibold text-gray-700 mb-2">Accept Bitcoin Funding</h3>
           <p className="text-sm mb-4">
-            Add Bitcoin wallets to start receiving donations from supporters
+            Add Bitcoin wallets to start receiving funding from supporters
           </p>
           {onEditClick && (
             <Button variant="outline" onClick={onEditClick}>
@@ -220,7 +220,9 @@ export default function ProfileWalletSection({
     <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border-0 p-6 text-center text-gray-600">
       <Bitcoin className="w-10 h-10 mx-auto mb-3 text-gray-300" />
       <h3 className="text-lg font-semibold text-gray-700 mb-1">No wallets shared yet</h3>
-      <p className="text-sm text-gray-500">This profile has not added any wallets you can send to yet.</p>
+      <p className="text-sm text-gray-500">
+        This profile has not added any wallets you can send to yet.
+      </p>
     </div>
   );
 }

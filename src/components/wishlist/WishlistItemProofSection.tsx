@@ -12,6 +12,7 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { WishlistProofSection } from './WishlistProofSection';
+import { logger } from '@/utils/logger';
 import type { FulfillmentProof } from './types';
 
 interface WishlistItemProofSectionProps {
@@ -65,7 +66,7 @@ export function WishlistItemProofSection({ itemId, canAddProof }: WishlistItemPr
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load proofs');
-      console.error('Error fetching proofs:', err);
+      logger.error('Error fetching proofs', err, 'Wishlist');
     } finally {
       setIsLoading(false);
     }

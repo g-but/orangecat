@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import { timelineService } from '@/services/timeline';
 import { TimelineDisplayEvent } from '@/types/timeline';
 import { PostCard } from '@/components/timeline/PostCard';
@@ -33,7 +34,11 @@ export default function PostPage() {
   const [error, setError] = useState<string | null>(null);
 
   const updateReplyTree = useCallback(
-    (items: TimelineDisplayEvent[], eventId: string, updates: Partial<TimelineDisplayEvent>): TimelineDisplayEvent[] => {
+    (
+      items: TimelineDisplayEvent[],
+      eventId: string,
+      updates: Partial<TimelineDisplayEvent>
+    ): TimelineDisplayEvent[] => {
       return items.map(item => {
         if (item.id === eventId) {
           return { ...item, ...updates };
@@ -48,7 +53,11 @@ export default function PostPage() {
   );
 
   const appendReplyToTree = useCallback(
-    (items: TimelineDisplayEvent[], parentId: string, reply: TimelineDisplayEvent): TimelineDisplayEvent[] => {
+    (
+      items: TimelineDisplayEvent[],
+      parentId: string,
+      reply: TimelineDisplayEvent
+    ): TimelineDisplayEvent[] => {
       return items.map(item => {
         if (item.id === parentId) {
           const nextReplies = [...(item.replies || []), reply];
@@ -65,7 +74,9 @@ export default function PostPage() {
 
   // Fetch the main post and its context
   const fetchPost = useCallback(async () => {
-    if (!postId) {return;}
+    if (!postId) {
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -106,7 +117,7 @@ export default function PostPage() {
         setReplies(repliesResult.replies);
       }
     } catch (err) {
-      console.error('Error fetching post:', err);
+      logger.error('Error fetching post', err, 'Timeline');
       setError('Failed to load post');
     } finally {
       setIsLoading(false);
@@ -118,14 +129,17 @@ export default function PostPage() {
   }, [fetchPost]);
 
   // Handle post updates (likes, etc.)
-  const handlePostUpdate = useCallback((eventId: string, updates: Partial<TimelineDisplayEvent>) => {
-    if (eventId === mainPost?.id) {
-      setMainPost(prev => prev ? { ...prev, ...updates } : null);
-    } else {
-      setReplies(prev => updateReplyTree(prev, eventId, updates));
-      setParentPosts(prev => prev.map(p => p.id === eventId ? { ...p, ...updates } : p));
-    }
-  }, [mainPost?.id, updateReplyTree]);
+  const handlePostUpdate = useCallback(
+    (eventId: string, updates: Partial<TimelineDisplayEvent>) => {
+      if (eventId === mainPost?.id) {
+        setMainPost(prev => (prev ? { ...prev, ...updates } : null));
+      } else {
+        setReplies(prev => updateReplyTree(prev, eventId, updates));
+        setParentPosts(prev => prev.map(p => (p.id === eventId ? { ...p, ...updates } : p)));
+      }
+    },
+    [mainPost?.id, updateReplyTree]
+  );
 
   // Handle new reply created
   const handleReplyCreated = useCallback(() => {
@@ -151,8 +165,8 @@ export default function PostPage() {
         >
           <PostCard
             event={reply}
-            onUpdate={(updates) => handlePostUpdate(reply.id, updates)}
-            onReplyCreated={(newReply) => handleNestedReplyCreated(reply.id, newReply)}
+            onUpdate={updates => handlePostUpdate(reply.id, updates)}
+            onReplyCreated={newReply => handleNestedReplyCreated(reply.id, newReply)}
           />
           {reply.replies && reply.replies.length > 0 && renderReplies(reply.replies, depth + 1)}
         </div>
@@ -226,7 +240,7 @@ export default function PostPage() {
                 />
                 <PostCard
                   event={parent}
-                  onUpdate={(updates) => handlePostUpdate(parent.id, updates)}
+                  onUpdate={updates => handlePostUpdate(parent.id, updates)}
                   compact
                 />
               </div>
@@ -238,7 +252,7 @@ export default function PostPage() {
         <div className="border-b border-gray-200">
           <PostCard
             event={mainPost}
-            onUpdate={(updates) => handlePostUpdate(mainPost.id, updates)}
+            onUpdate={updates => handlePostUpdate(mainPost.id, updates)}
             showMetrics={true}
           />
 
@@ -259,7 +273,9 @@ export default function PostPage() {
             {(mainPost.commentsCount || 0) > 0 && (
               <button className="hover:underline">
                 <span className="font-bold text-gray-900">{mainPost.commentsCount}</span>
-                <span className="text-gray-500 ml-1">{mainPost.commentsCount === 1 ? 'Reply' : 'Replies'}</span>
+                <span className="text-gray-500 ml-1">
+                  {mainPost.commentsCount === 1 ? 'Reply' : 'Replies'}
+                </span>
               </button>
             )}
           </div>
@@ -292,9 +308,7 @@ export default function PostPage() {
         {replies.length === 0 && (
           <div className="py-12 text-center">
             <p className="text-gray-500">No replies yet</p>
-            {user && (
-              <p className="text-sm text-gray-400 mt-1">Be the first to reply!</p>
-            )}
+            {user && <p className="text-sm text-gray-400 mt-1">Be the first to reply!</p>}
           </div>
         )}
       </div>

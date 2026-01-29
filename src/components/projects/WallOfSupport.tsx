@@ -163,7 +163,7 @@ export function WallOfSupport({ projectId, className }: WallOfSupportProps) {
                     <div className="text-2xl mb-2">{support.reaction_emoji}</div>
                   )}
 
-                  {/* Bitcoin Donation */}
+                  {/* Bitcoin Funding */}
                   {support.amount_sats && support.amount_sats > 0 && (
                     <div className="text-sm font-medium text-orange-600 mb-2">
                       {formatAmount(support.amount_sats)}

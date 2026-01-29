@@ -1,20 +1,14 @@
 /**
  * ACTION BUTTON COMPONENT
  * Button for suggested entity creation actions
+ *
+ * Uses ENTITY_REGISTRY as SSOT for entity metadata including icons.
  */
 
 import { cn } from '@/lib/utils';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
-import { Plus, Package, Briefcase, Rocket, Heart, Calendar } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import type { SuggestedAction } from '../types';
-
-const ENTITY_ICONS: Record<string, React.ElementType> = {
-  product: Package,
-  service: Briefcase,
-  project: Rocket,
-  cause: Heart,
-  event: Calendar,
-};
 
 interface ActionButtonProps {
   action: SuggestedAction;
@@ -22,8 +16,8 @@ interface ActionButtonProps {
 }
 
 export function ActionButton({ action, onClick }: ActionButtonProps) {
-  const Icon = ENTITY_ICONS[action.entityType] || Plus;
   const entityMeta = ENTITY_REGISTRY[action.entityType];
+  const Icon = entityMeta?.icon || Plus;
   const entityName = entityMeta?.name || action.entityType;
 
   return (

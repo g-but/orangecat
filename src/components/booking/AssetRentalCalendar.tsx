@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import { cn } from '@/lib/utils';
 
 interface AvailabilityDay {
@@ -77,7 +78,7 @@ export function AssetRentalCalendar({
           setAvailability(availMap);
         }
       } catch (error) {
-        console.error('Error loading availability:', error);
+        logger.error('Error loading availability', error, 'Booking');
       } finally {
         setIsLoading(false);
       }

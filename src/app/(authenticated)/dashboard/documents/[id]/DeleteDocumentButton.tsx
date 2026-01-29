@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 interface DeleteDocumentButtonProps {
   documentId: string;
@@ -56,7 +57,7 @@ export function DeleteDocumentButton({ documentId, documentTitle }: DeleteDocume
       router.push('/dashboard/cat?tab=context');
       router.refresh();
     } catch (error) {
-      console.error('Delete error:', error);
+      logger.error('Delete error', error, 'Documents');
       toast.error('Failed to delete document', {
         description: error instanceof Error ? error.message : 'An unexpected error occurred',
       });

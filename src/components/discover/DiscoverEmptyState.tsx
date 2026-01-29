@@ -110,7 +110,7 @@ export default function DiscoverEmptyState({
                 <div className="p-4 bg-white/60 rounded-lg">
                   <div className="text-2xl font-bold text-green-600 mb-1">3</div>
                   <div className="text-sm font-medium">Receive</div>
-                  <div className="text-xs text-gray-600">Accept Bitcoin donations</div>
+                  <div className="text-xs text-gray-600">Accept Bitcoin funding</div>
                 </div>
               </div>
 

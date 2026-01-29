@@ -11,6 +11,7 @@
 import { useState, useCallback } from 'react';
 import { Sparkles, Loader2, AlertCircle, Lightbulb } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 
 import Button from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Textarea';
@@ -89,7 +90,7 @@ export function AIPrefillButton({
         description: 'Review and adjust the generated values as needed',
       });
     } catch (err) {
-      console.error('AI prefill error:', err);
+      logger.error('AI prefill error', err, 'AI');
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
     } finally {
       setIsGenerating(false);

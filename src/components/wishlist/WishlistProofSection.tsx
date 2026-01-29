@@ -12,6 +12,7 @@
 
 import React, { useState } from 'react';
 import { Plus, Receipt, ChevronDown, ChevronUp } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import { Button } from '@/components/ui/Button';
 import EmptyState from '@/components/ui/EmptyState';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -51,7 +52,7 @@ export function WishlistProofSection({
       });
       onFeedbackChanged?.();
     } catch (error) {
-      console.error('Error submitting like:', error);
+      logger.error('Error submitting like', error, 'Wishlist');
     }
   };
 
@@ -69,12 +70,14 @@ export function WishlistProofSection({
       });
       onFeedbackChanged?.();
     } catch (error) {
-      console.error('Error submitting dislike:', error);
+      logger.error('Error submitting dislike', error, 'Wishlist');
     }
   };
 
   const handleDelete = async (proofId: string) => {
-    if (!confirm('Are you sure you want to delete this proof?')) {return;}
+    if (!confirm('Are you sure you want to delete this proof?')) {
+      return;
+    }
 
     try {
       await fetch(`/api/wishlists/proofs/${proofId}`, {
@@ -82,7 +85,7 @@ export function WishlistProofSection({
       });
       onProofDeleted?.(proofId);
     } catch (error) {
-      console.error('Error deleting proof:', error);
+      logger.error('Error deleting proof', error, 'Wishlist');
     }
   };
 
@@ -111,19 +114,13 @@ export function WishlistProofSection({
           <h3 className="font-semibold">
             Proof of Purchase
             {proofs.length > 0 && (
-              <span className="ml-2 text-muted-foreground font-normal">
-                ({proofs.length})
-              </span>
+              <span className="ml-2 text-muted-foreground font-normal">({proofs.length})</span>
             )}
           </h3>
         </div>
 
         {canAddProof && !showUploadForm && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowUploadForm(true)}
-          >
+          <Button variant="outline" size="sm" onClick={() => setShowUploadForm(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Add Proof
           </Button>
@@ -145,7 +142,7 @@ export function WishlistProofSection({
           title="No proofs yet"
           description={
             canAddProof
-              ? "Post proof of purchase to show supporters how their contributions were used."
+              ? 'Post proof of purchase to show supporters how their contributions were used.'
               : "The creator hasn't posted any proof of purchase yet."
           }
           action={
@@ -159,12 +156,12 @@ export function WishlistProofSection({
         />
       ) : (
         <div className="space-y-3">
-          {visibleProofs.map((proof) => (
+          {visibleProofs.map(proof => (
             <ProofOfPurchaseCard
               key={proof.id}
               proof={proof}
               onLike={() => handleLike(proof.id)}
-              onDislike={(comment) => handleDislike(proof.id, comment)}
+              onDislike={comment => handleDislike(proof.id, comment)}
               isOwner={canAddProof}
               onDelete={canAddProof ? () => handleDelete(proof.id) : undefined}
             />
@@ -172,11 +169,7 @@ export function WishlistProofSection({
 
           {/* Show More/Less Button */}
           {proofs.length > 3 && (
-            <Button
-              variant="ghost"
-              className="w-full"
-              onClick={() => setIsExpanded(!isExpanded)}
-            >
+            <Button variant="ghost" className="w-full" onClick={() => setIsExpanded(!isExpanded)}>
               {isExpanded ? (
                 <>
                   <ChevronUp className="h-4 w-4 mr-2" />

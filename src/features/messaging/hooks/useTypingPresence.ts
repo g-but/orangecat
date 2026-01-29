@@ -13,6 +13,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import supabase from '@/lib/supabase/browser';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 import type { RealtimeChannel, RealtimePresenceState } from '@supabase/supabase-js';
 import { debugLog } from '../lib/constants';
 
@@ -122,7 +123,7 @@ export function useTypingPresence(
       try {
         await channelRef.current.track(getPresenceState(typing, status));
       } catch (error) {
-        console.error('[useTypingPresence] Error tracking presence:', error);
+        logger.error('Error tracking presence', error, 'Messaging');
       }
     },
     [user?.id, getPresenceState]

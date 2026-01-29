@@ -205,7 +205,7 @@ export default function ProjectsDashboardPage() {
     <>
       <EntityListShell
         title="My Projects"
-        description="Manage your crowdfunding projects and track donations"
+        description="Manage your crowdfunding projects and track funding"
         headerActions={headerActions}
       >
         <Tabs

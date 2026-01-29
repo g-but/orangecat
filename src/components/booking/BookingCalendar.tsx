@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight, Clock, Loader2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
@@ -85,7 +86,7 @@ export function BookingCalendar({ serviceId, onSlotSelect, selectedSlot }: Booki
           setSlots(data.data?.slots || []);
         }
       } catch (error) {
-        console.error('Error loading slots:', error);
+        logger.error('Error loading slots', error, 'Booking');
       } finally {
         setIsLoadingSlots(false);
       }

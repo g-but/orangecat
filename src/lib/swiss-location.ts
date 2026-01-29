@@ -5,6 +5,8 @@
  * Swiss zip codes are 4 digits and unique - perfect for quick location entry.
  */
 
+import { logger } from '@/utils/logger';
+
 // Swiss cantons mapping (ISO 3166-2:CH codes)
 export const SWISS_CANTONS: Record<string, { code: string; name: string; nameEn: string }> = {
   AG: { code: 'AG', name: 'Aargau', nameEn: 'Aargau' },
@@ -101,7 +103,7 @@ export async function lookupSwissZipCode(zipCode: string): Promise<{
       country: 'CH',
     };
   } catch (error) {
-    console.error('Swiss zip code lookup error:', error);
+    logger.error('Swiss zip code lookup error', error, 'LOCATION');
     return null;
   }
 }
@@ -154,6 +156,3 @@ export function extractCantonFromGooglePlaces(
 
   return null;
 }
-
-
-

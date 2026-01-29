@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { logger } from '@/utils/logger';
 
 interface AIAssistant {
   id: string;
@@ -184,7 +185,7 @@ export default function AIAssistantsDiscoveryPage() {
           setHasMore((data.data?.length || 0) === 20);
         }
       } catch (error) {
-        console.error('Error loading assistants:', error);
+        logger.error('Error loading assistants', error, 'AI');
       } finally {
         setIsLoading(false);
       }

@@ -96,7 +96,7 @@ export function WalletSetupStep() {
               <span className="font-medium">No Fees</span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Zero platform fees on donations. You keep 100% of what's sent.
+              Zero platform fees on funding. You keep 100% of what's sent.
             </p>
           </CardContent>
         </Card>

@@ -1,18 +1,21 @@
 /**
- * Wishlist Donation Tiers Component
+ * Wishlist Support Tiers Component
  *
- * Fetches and displays wishlist items as preset donation tiers.
+ * Fetches and displays wishlist items as preset support tiers.
  * Displays amounts in user's preferred currency while transactions use BTC.
  *
+ * Note: Uses "support" terminology per domain-specific.md (not "donation").
+ *
  * Created: 2026-01-07
- * Last Modified: 2026-01-07
- * Last Modified Summary: Added currency conversion for user's preferred display currency
+ * Last Modified: 2026-01-29
+ * Last Modified Summary: Updated terminology from "donation" to "support"
  */
 
 'use client';
 
 import React, { useEffect, useState } from 'react';
 import { Gift, Loader2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import BitcoinPaymentModal from '@/components/bitcoin/BitcoinPaymentModal';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import { convert, formatCurrency } from '@/services/currency';
@@ -54,7 +57,7 @@ export function WishlistDonationTiers({
           setItems(data.items || []);
         }
       } catch (error) {
-        console.error('Failed to fetch wishlist tiers:', error);
+        logger.error('Failed to fetch wishlist tiers', error, 'Wishlist');
       } finally {
         setIsLoading(false);
       }

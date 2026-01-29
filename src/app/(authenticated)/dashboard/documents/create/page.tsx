@@ -22,6 +22,7 @@ import { documentFormConfig } from '@/config/entity-configs/document-form-config
 import { DocumentFileUpload } from '@/components/documents/DocumentFileUpload';
 import { ArrowLeft, Upload, PenLine, Cat, FileText, Sparkles } from 'lucide-react';
 import type { DocumentFormData } from '@/lib/validation';
+import { logger } from '@/utils/logger';
 
 type CreateMode = 'choose' | 'upload' | 'form';
 
@@ -86,7 +87,7 @@ function DocumentPageContent() {
           setMode('form');
         }
       } catch (error) {
-        console.error('Error fetching document:', error);
+        logger.error('Error fetching document', error, 'Documents');
         setLoadError('Failed to load document for editing');
       } finally {
         setIsLoadingDocument(false);
@@ -113,7 +114,7 @@ function DocumentPageContent() {
   }, []);
 
   const handleUploadError = useCallback((error: string) => {
-    console.error('Upload error:', error);
+    logger.error('Upload error', { message: error }, 'Documents');
   }, []);
 
   if (!hydrated || authLoading || isLoadingDocument) {

@@ -1,6 +1,7 @@
 import React, { Component, ReactNode } from 'react';
 import Button from '@/components/ui/Button';
 import { AlertTriangle, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 interface Props {
   children: ReactNode;
@@ -44,7 +45,7 @@ export class PostingErrorBoundary extends Component<Props, State> {
     });
 
     // Log error for monitoring
-    console.error('PostingErrorBoundary caught an error:', error, errorInfo);
+    logger.error('PostingErrorBoundary caught an error', { error, errorInfo }, 'Timeline');
   }
 
   componentDidMount() {
@@ -183,7 +184,7 @@ export function usePostingErrorHandler() {
 
   const handleError = React.useCallback((err: Error) => {
     setError(err);
-    console.error('Posting error:', err);
+    logger.error('Posting error', err, 'Timeline');
   }, []);
 
   const clearError = React.useCallback(() => {
@@ -213,4 +214,3 @@ export function withPostingErrorBoundary<P extends object>(
 
   return WrappedComponent;
 }
-

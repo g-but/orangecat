@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { MessageSquare, Search, Plus, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
 import ConversationList from './ConversationList';
 import MessageView from './MessageView';
@@ -37,8 +38,12 @@ export default function MessagePanel({
   useRealtimeManager();
 
   // Use centralized messaging store
-  const { conversations: _conversations, currentConversationId, setCurrentConversation, setConversations: _setConversations } =
-    useMessagingStore();
+  const {
+    conversations: _conversations,
+    currentConversationId,
+    setCurrentConversation,
+    setConversations: _setConversations,
+  } = useMessagingStore();
 
   // Track if auth is truly ready (hydrated + not loading + has checked user)
   const isAuthReady = hydrated && !isLoading;
@@ -110,7 +115,7 @@ export default function MessagePanel({
         router.replace('/messages');
       }
     } catch (e) {
-      console.error('Bulk conversation leave error:', e);
+      logger.error('Bulk conversation leave error', e, 'Messaging');
     }
   };
 

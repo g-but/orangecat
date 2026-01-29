@@ -45,13 +45,23 @@ const Footer = React.memo(function Footer() {
               <div className="flex items-center space-x-4 mb-2">
                 <Logo />
                 <div className="text-gray-400 text-sm">by</div>
-                <BitBaumLogo showText={false} className="opacity-80 hover:opacity-100 transition-opacity" />
+                <BitBaumLogo
+                  showText={false}
+                  className="opacity-80 hover:opacity-100 transition-opacity"
+                />
               </div>
               <p className="text-slate-600 text-base leading-relaxed max-w-xs">
-                Making Bitcoin donations simple and accessible for everyone.
+                Making Bitcoin funding simple and accessible for everyone.
               </p>
               <p className="text-slate-500 text-sm">
-                A <Link href="/company/about" className="text-orange-600 hover:text-orange-700 underline">BitBaum</Link> company
+                A{' '}
+                <Link
+                  href="/company/about"
+                  className="text-orange-600 hover:text-orange-700 underline"
+                >
+                  BitBaum
+                </Link>{' '}
+                company
               </p>
             </div>
 
@@ -186,7 +196,16 @@ const Footer = React.memo(function Footer() {
           <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
             <div className="text-sm text-slate-500 text-center sm:text-left">
               <p>&copy; 2025 BitBaum AG. All rights reserved.</p>
-              <p className="mt-1">OrangeCat is a product of <Link href="/company/about" className="text-orange-600 hover:text-orange-700 underline">BitBaum</Link>.</p>
+              <p className="mt-1">
+                OrangeCat is a product of{' '}
+                <Link
+                  href="/company/about"
+                  className="text-orange-600 hover:text-orange-700 underline"
+                >
+                  BitBaum
+                </Link>
+                .
+              </p>
             </div>
 
             {/* Additional Links */}

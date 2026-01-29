@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Loader2, Bot, MessageSquare } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { toast } from 'sonner';
@@ -36,7 +37,9 @@ export default function AIAssistantChatPage() {
   const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
-    if (!assistantId) {return;}
+    if (!assistantId) {
+      return;
+    }
 
     const loadData = async () => {
       try {
@@ -48,15 +51,13 @@ export default function AIAssistantChatPage() {
         }
 
         // Load existing conversations
-        const convsRes = await fetch(
-          `/api/ai-assistants/${assistantId}/conversations`
-        );
+        const convsRes = await fetch(`/api/ai-assistants/${assistantId}/conversations`);
         if (convsRes.ok) {
           const data = await convsRes.json();
           setConversations(data.data || []);
         }
       } catch (err) {
-        console.error('Error loading data:', err);
+        logger.error('Error loading data', err, 'AI');
       } finally {
         setIsLoading(false);
       }
@@ -68,13 +69,10 @@ export default function AIAssistantChatPage() {
   const handleNewConversation = async () => {
     setIsCreating(true);
     try {
-      const response = await fetch(
-        `/api/ai-assistants/${assistantId}/conversations`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      const response = await fetch(`/api/ai-assistants/${assistantId}/conversations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
 
       if (!response.ok) {
         throw new Error('Failed to create conversation');
@@ -87,7 +85,7 @@ export default function AIAssistantChatPage() {
         throw new Error(data.error || 'Failed to create');
       }
     } catch (err) {
-      console.error('Error creating conversation:', err);
+      logger.error('Error creating conversation', err, 'AI');
       toast.error('Failed to start conversation');
     } finally {
       setIsCreating(false);
@@ -121,12 +119,8 @@ export default function AIAssistantChatPage() {
           </AvatarFallback>
         </Avatar>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {assistant?.title || 'AI Assistant'}
-          </h1>
-          {assistant?.description && (
-            <p className="text-gray-600 mt-1">{assistant.description}</p>
-          )}
+          <h1 className="text-2xl font-bold text-gray-900">{assistant?.title || 'AI Assistant'}</h1>
+          {assistant?.description && <p className="text-gray-600 mt-1">{assistant.description}</p>}
         </div>
       </div>
 
@@ -159,11 +153,9 @@ export default function AIAssistantChatPage() {
       {/* Previous Conversations */}
       {conversations.length > 0 && (
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Previous Conversations
-          </h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Previous Conversations</h2>
           <div className="space-y-2">
-            {conversations.map((conv) => (
+            {conversations.map(conv => (
               <Link
                 key={conv.id}
                 href={`/ai-chat/${assistantId}/${conv.id}`}

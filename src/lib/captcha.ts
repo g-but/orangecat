@@ -4,6 +4,8 @@
  * Server-side verification for Cloudflare Turnstile CAPTCHA tokens.
  */
 
+import { logger } from '@/utils/logger';
+
 const TURNSTILE_VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
 
 export interface TurnstileVerifyResponse {
@@ -38,7 +40,7 @@ export async function verifyCaptchaToken(
   if (!secretKey) {
     // In development without secret key, allow bypass
     if (process.env.NODE_ENV === 'development') {
-      console.warn('[CAPTCHA] No TURNSTILE_SECRET_KEY - bypassing verification in development');
+      logger.warn('No TURNSTILE_SECRET_KEY - bypassing verification in development', 'CAPTCHA');
       return { success: true };
     }
     return {
@@ -97,7 +99,7 @@ export async function verifyCaptchaToken(
       error: errorMessage,
     };
   } catch (error) {
-    console.error('[CAPTCHA] Verification error:', error);
+    logger.error('Verification error', error, 'CAPTCHA');
     return {
       success: false,
       error: 'CAPTCHA verification failed',

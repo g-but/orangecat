@@ -6,6 +6,7 @@
 
 import type { EntityType } from '@/config/entity-registry';
 import { ENTITY_REGISTRY } from '@/config/entity-registry';
+import { logger } from '@/utils/logger';
 
 /**
  * System prompt for form prefill AI
@@ -112,7 +113,7 @@ export function parseAIResponse(
 
     // Validate structure
     if (!parsed.data || typeof parsed.data !== 'object') {
-      console.error('AI response missing "data" object');
+      logger.error('AI response missing "data" object', undefined, 'AI');
       return null;
     }
 
@@ -131,7 +132,7 @@ export function parseAIResponse(
       confidence,
     };
   } catch (error) {
-    console.error('Failed to parse AI response:', error);
+    logger.error('Failed to parse AI response', error, 'AI');
     return null;
   }
 }
