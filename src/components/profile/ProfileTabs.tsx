@@ -1,36 +1,45 @@
-'use client'
+'use client';
 
-import { motion } from 'framer-motion'
-import { User, Bitcoin, Globe } from 'lucide-react'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { motion } from 'framer-motion';
+import { User, Bitcoin, Globe } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   UsernameField,
   DisplayNameField,
   BioField,
   BitcoinAddressField,
   LightningAddressField,
-  WebsiteField
-} from './ProfileFormFields'
-import { Control } from 'react-hook-form'
-import type { ProfileFormValues } from './types'
+  WebsiteField,
+} from './ProfileFormFields';
+import { Control } from 'react-hook-form';
+import type { ProfileFormValues } from './types';
 
 interface ProfileTabsProps {
-  control: Control<ProfileFormValues>
+  control: Control<ProfileFormValues>;
 }
 
 export function ProfileTabs({ control }: ProfileTabsProps) {
   return (
     <Tabs defaultValue="basic" className="w-full">
       <TabsList className="grid w-full grid-cols-3 mb-8 bg-orange-50 p-1">
-        <TabsTrigger value="basic" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+        <TabsTrigger
+          value="basic"
+          className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+        >
           <User className="w-4 h-4" />
           <span className="hidden sm:inline">Basic Info</span>
         </TabsTrigger>
-        <TabsTrigger value="payment" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+        <TabsTrigger
+          value="payment"
+          className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+        >
           <Bitcoin className="w-4 h-4" />
           <span className="hidden sm:inline">Payment</span>
         </TabsTrigger>
-        <TabsTrigger value="social" className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+        <TabsTrigger
+          value="social"
+          className="gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+        >
           <Globe className="w-4 h-4" />
           <span className="hidden sm:inline">Social</span>
         </TabsTrigger>
@@ -62,7 +71,7 @@ export function ProfileTabs({ control }: ProfileTabsProps) {
               <div>
                 <h4 className="font-semibold text-orange-900">Bitcoin Payment Details</h4>
                 <p className="text-sm text-orange-700 mt-1">
-                  Add your Bitcoin addresses to receive donations and payments
+                  Add your Bitcoin addresses to receive funding and payments
                 </p>
               </div>
             </div>
@@ -96,6 +105,5 @@ export function ProfileTabs({ control }: ProfileTabsProps) {
         </motion.div>
       </TabsContent>
     </Tabs>
-  )
+  );
 }
-

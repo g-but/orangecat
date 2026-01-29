@@ -174,7 +174,7 @@ export const groupGuidanceContent: Record<NonNullable<GroupFieldType>, GuidanceC
       'Format: yourname@domain.com',
       'Enables instant micro-payments',
       'Lower fees than on-chain transactions',
-      'Great for donations and small payments',
+      'Great for funding and small payments',
       'Can be added later if not ready now',
     ],
     examples: ['ossetia@ln.address', 'guild@lightning.gifts', 'makerspace@zbd.gg'],

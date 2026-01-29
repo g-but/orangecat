@@ -138,7 +138,7 @@ export const circleGuidanceContent: Record<NonNullable<CircleFieldType>, Guidanc
       'Use a dedicated wallet for the circle',
       'Consider multi-signature for added security',
       "This becomes the circle's shared treasury",
-      'Members can donate or contribute to this wallet',
+      'Members can fund or contribute to this wallet',
       'Keep the private key secure',
     ],
     examples: [

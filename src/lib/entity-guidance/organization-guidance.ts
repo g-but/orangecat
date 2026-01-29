@@ -169,7 +169,7 @@ export const organizationGuidanceContent: Record<
       'Format: yourname@domain.com',
       'Enables instant micro-payments',
       'Lower fees than on-chain transactions',
-      'Great for donations and small payments',
+      'Great for funding and small payments',
     ],
     examples: ['orangecat@ln.address', 'guild@lightning.gifts', 'makerspace@zbd.gg'],
   },
@@ -202,6 +202,3 @@ export const organizationDefaultGuidance: DefaultGuidance = {
     },
   ],
 };
-
-
-

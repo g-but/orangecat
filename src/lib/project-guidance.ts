@@ -45,11 +45,11 @@ export interface DefaultContent {
 export const projectDefaultContent: DefaultContent = {
   title: "What's a Project?",
   description:
-    'A project is any initiative that needs funding — from personal goals to community causes. Accept Bitcoin donations directly to your wallet.',
+    'A project is any initiative that needs funding — from personal goals to community causes. Accept Bitcoin funding directly to your wallet.',
   features: [
     {
       icon: React.createElement(Heart, { className: 'w-4 h-4 text-orange-600' }),
-      text: 'Accept Bitcoin donations instantly',
+      text: 'Accept Bitcoin funding instantly',
     },
     {
       icon: React.createElement(Users, { className: 'w-4 h-4 text-orange-600' }),
@@ -62,6 +62,3 @@ export const projectDefaultContent: DefaultContent = {
   ],
   hint: '💡 Click on any field to get specific guidance',
 };
-
-
-

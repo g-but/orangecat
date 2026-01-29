@@ -3,46 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Calendar, MapPin, Tag, Globe } from 'lucide-react';
-import { Package, Briefcase, Heart, Coins, Bot, Building, Rocket, LucideIcon } from 'lucide-react';
+import { ArrowRight, Calendar, MapPin, Tag, Globe, Package } from 'lucide-react';
 import { ScalableProfile } from '@/types/database';
 import Button from '@/components/ui/Button';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 import { logger } from '@/utils/logger';
 import { EntityType, ENTITY_REGISTRY } from '@/config/entity-registry';
-
-// Icon mapping for entity types
-const ENTITY_ICONS: Record<string, LucideIcon> = {
-  project: Rocket,
-  product: Package,
-  service: Briefcase,
-  cause: Heart,
-  ai_assistant: Bot,
-  asset: Building,
-  loan: Coins,
-  event: Calendar,
-};
-
-// Status styling
-const getStatusInfo = (status: string) => {
-  const statusMap: Record<string, { label: string; className: string }> = {
-    active: { label: 'Active', className: 'bg-green-100 text-green-700' },
-    draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700' },
-    completed: { label: 'Completed', className: 'bg-blue-100 text-blue-700' },
-    cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700' },
-    paused: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700' },
-    pending: { label: 'Pending', className: 'bg-yellow-100 text-yellow-700' },
-    approved: { label: 'Approved', className: 'bg-green-100 text-green-700' },
-    rejected: { label: 'Rejected', className: 'bg-red-100 text-red-700' },
-  };
-  return (
-    statusMap[status?.toLowerCase()] || {
-      label: status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown',
-      className: 'bg-gray-100 text-gray-700',
-    }
-  );
-};
+import { getStatusInfo } from '@/config/status-config';
 
 // Format relative time
 const getRelativeTime = (date: string) => {
@@ -153,7 +121,7 @@ export default function ProfileEntityTab({
     }
   }, [profile.id, entityType]);
 
-  const Icon = ENTITY_ICONS[entityType] || Package;
+  const Icon = entityMeta?.icon || Package;
   const displayName = metadata?.namePlural || entityType;
 
   if (loading) {

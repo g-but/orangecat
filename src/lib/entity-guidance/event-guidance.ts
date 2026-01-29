@@ -48,8 +48,7 @@ export const eventGuidanceContent: Record<NonNullable<EventFieldType>, GuidanceC
   title: {
     icon: React.createElement(Calendar, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Event Title',
-    description:
-      'Create a clear, engaging title that tells people what your event is about.',
+    description: 'Create a clear, engaging title that tells people what your event is about.',
     tips: [
       'Be specific about what the event is',
       'Include the event type if helpful (Meetup, Workshop, etc.)',
@@ -66,8 +65,7 @@ export const eventGuidanceContent: Record<NonNullable<EventFieldType>, GuidanceC
   description: {
     icon: React.createElement(FileText, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Event Description',
-    description:
-      'Describe what will happen at your event, who should attend, and what to expect.',
+    description: 'Describe what will happen at your event, who should attend, and what to expect.',
     tips: [
       'Explain the event format and activities',
       'Mention who the event is for',
@@ -103,8 +101,7 @@ export const eventGuidanceContent: Record<NonNullable<EventFieldType>, GuidanceC
   category: {
     icon: React.createElement(Tag, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Category',
-    description:
-      'Further categorize your event to help people discover it.',
+    description: 'Further categorize your event to help people discover it.',
     tips: [
       'Choose the most relevant category',
       'Helps with event discovery',
@@ -119,129 +116,95 @@ export const eventGuidanceContent: Record<NonNullable<EventFieldType>, GuidanceC
   start_date: {
     icon: React.createElement(Clock, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Start Date & Time',
-    description:
-      'When does your event begin? Be specific with date and time.',
+    description: 'When does your event begin? Be specific with date and time.',
     tips: [
       'Set a clear start time',
       'Consider timezone for global audiences',
       'Allow enough time for setup',
       'Be realistic about timing',
     ],
-    examples: [
-      '2025-02-15 at 18:00 - Evening meetup',
-      '2025-03-01 at 09:00 - Morning workshop',
-    ],
+    examples: ['2025-02-15 at 18:00 - Evening meetup', '2025-03-01 at 09:00 - Morning workshop'],
   },
   end_date: {
     icon: React.createElement(Clock, { className: 'w-5 h-5 text-blue-600' }),
     title: 'End Date & Time',
-    description:
-      'When does your event end? Leave empty for single-day events.',
+    description: 'When does your event end? Leave empty for single-day events.',
     tips: [
       'Optional for single-day events',
       'Required for multi-day events',
       'Helps attendees plan their schedule',
     ],
-    examples: [
-      '2025-02-15 at 21:00 - 3-hour event',
-      '2025-03-03 at 17:00 - Multi-day conference',
-    ],
+    examples: ['2025-02-15 at 21:00 - 3-hour event', '2025-03-03 at 17:00 - Multi-day conference'],
   },
   venue_name: {
     icon: React.createElement(Building, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Venue Name',
-    description:
-      'The name of the venue or location where your event will take place.',
+    description: 'The name of the venue or location where your event will take place.',
     tips: [
       'Use the official venue name',
-      'Be specific if it\'s a well-known location',
+      "Be specific if it's a well-known location",
       'Include building or room number if relevant',
     ],
-    examples: [
-      'Community Center Zurich',
-      'Art Gallery Basel',
-      'Co-working Space Geneva',
-    ],
+    examples: ['Community Center Zurich', 'Art Gallery Basel', 'Co-working Space Geneva'],
   },
   venue_address: {
     icon: React.createElement(MapPin, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Venue Address',
-    description:
-      'The full street address where attendees should go.',
+    description: 'The full street address where attendees should go.',
     tips: [
       'Include street name and number',
       'Complete address helps with navigation',
       'Consider parking availability',
     ],
-    examples: [
-      'Bahnhofstrasse 1',
-      'Rue du Rhône 5',
-    ],
+    examples: ['Bahnhofstrasse 1', 'Rue du Rhône 5'],
   },
   is_online: {
     icon: React.createElement(Globe, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Online Event',
-    description:
-      'Check this if your event will be held online (virtual event).',
+    description: 'Check this if your event will be held online (virtual event).',
     tips: [
       'Online events can reach global audiences',
       'No venue needed',
       'Requires online URL (Zoom, Jitsi, etc.)',
       'Can be hybrid (both online and in-person)',
     ],
-    examples: [
-      'Virtual meetup via Zoom',
-      'Online workshop via Jitsi',
-    ],
+    examples: ['Virtual meetup via Zoom', 'Online workshop via Jitsi'],
   },
   online_url: {
     icon: React.createElement(Globe, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Online Event URL',
-    description:
-      'The link where people can join your online event.',
+    description: 'The link where people can join your online event.',
     tips: [
       'Use Zoom, Jitsi, Google Meet, or similar',
       'Test the link before publishing',
       'Consider password protection',
       'Required for online events',
     ],
-    examples: [
-      'https://zoom.us/j/123456789',
-      'https://meet.jit.si/YourEventName',
-    ],
+    examples: ['https://zoom.us/j/123456789', 'https://meet.jit.si/YourEventName'],
   },
   max_attendees: {
     icon: React.createElement(Users, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Maximum Attendees',
-    description:
-      'How many people can attend? Leave empty for unlimited capacity.',
+    description: 'How many people can attend? Leave empty for unlimited capacity.',
     tips: [
       'Consider venue capacity',
       'Think about optimal group size',
       'Leave empty for unlimited events',
       'Can help create exclusivity',
     ],
-    examples: [
-      '50 - Medium-sized meetup',
-      '200 - Large conference',
-      '20 - Intimate workshop',
-    ],
+    examples: ['50 - Medium-sized meetup', '200 - Large conference', '20 - Intimate workshop'],
   },
   requires_rsvp: {
     icon: React.createElement(CheckCircle2, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Requires RSVP',
-    description:
-      'Should people register in advance? Recommended for most events.',
+    description: 'Should people register in advance? Recommended for most events.',
     tips: [
       'Helps you plan and prepare',
       'Allows you to communicate with attendees',
       'Essential for capacity-limited events',
       'Enables check-in management',
     ],
-    examples: [
-      'Yes - For organized events',
-      'No - For open, drop-in events',
-    ],
+    examples: ['Yes - For organized events', 'No - For open, drop-in events'],
   },
   ticket_price: {
     icon: React.createElement(Ticket, { className: 'w-5 h-5 text-blue-600' }),
@@ -255,11 +218,7 @@ export const eventGuidanceContent: Record<NonNullable<EventFieldType>, GuidanceC
       'All transactions settle in Bitcoin',
       'Enter amount in your preferred currency (USD, CHF, EUR, BTC, or SATS)',
     ],
-    examples: [
-      '$50 - Small meetup',
-      '$200 - Workshop with materials',
-      'Free - Community event',
-    ],
+    examples: ['$50 - Small meetup', '$200 - Workshop with materials', 'Free - Community event'],
   },
   funding_goal: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-blue-600' }),
@@ -271,46 +230,35 @@ export const eventGuidanceContent: Record<NonNullable<EventFieldType>, GuidanceC
       'Can be separate from ticket sales',
       'Allows community support',
       'Transparent cost breakdown',
-      'Fiat goals (USD/CHF/EUR) can be reached via donations OR Bitcoin price appreciation',
-      'BTC/SATS goals can only be reached via donations',
+      'Fiat goals (USD/CHF/EUR) can be reached via funding OR Bitcoin price appreciation',
+      'BTC/SATS goals can only be reached via funding',
       'Enter amount in your preferred currency',
     ],
-    examples: [
-      '$10,000 - Venue rental + catering',
-      '$5,000 - Materials and supplies',
-    ],
+    examples: ['$10,000 - Venue rental + catering', '$5,000 - Materials and supplies'],
   },
   bitcoin_address: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Bitcoin Address',
-    description:
-      'Where should ticket payments and donations be sent?',
+    description: 'Where should ticket payments and funding be sent?',
     tips: [
       'Use a dedicated address for the event',
       'Can be your wallet or organization wallet',
       'Lightning address recommended for instant payments',
       'Keep track of payments',
     ],
-    examples: [
-      'bc1q... - On-chain Bitcoin address',
-      'Use Lightning for faster payments',
-    ],
+    examples: ['bc1q... - On-chain Bitcoin address', 'Use Lightning for faster payments'],
   },
   asset_id: {
     icon: React.createElement(Building, { className: 'w-5 h-5 text-blue-600' }),
     title: 'Link to Asset',
-    description:
-      'If you\'re renting a venue from the assets marketplace, link it here.',
+    description: "If you're renting a venue from the assets marketplace, link it here.",
     tips: [
       'Connects event to rented asset',
       'Helps with resource management',
       'Shows transparency in venue costs',
       'Optional - only if using asset marketplace',
     ],
-    examples: [
-      'Link to rented community space',
-      'Link to rented conference room',
-    ],
+    examples: ['Link to rented community space', 'Link to rented conference room'],
   },
 };
 
@@ -338,6 +286,3 @@ export const eventDefaultGuidance: DefaultGuidance = {
   ],
   hint: '💡 Click on any field to get specific guidance',
 };
-
-
-

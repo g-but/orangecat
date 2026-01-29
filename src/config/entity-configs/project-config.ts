@@ -64,21 +64,21 @@ const fieldGroups: FieldGroup[] = [
         type: 'textarea',
         placeholder: 'How will the funds be used?',
         rows: 3,
-        hint: "Explain how donations will be spent and what impact they'll create.",
+        hint: 'Explain how funding will be spent and what impact it will create.',
       },
     ],
   },
   {
     id: 'bitcoin',
     title: 'Bitcoin & Payments',
-    description: 'Bitcoin addresses for receiving donations',
+    description: 'Bitcoin addresses for receiving funding',
     fields: [
       {
         name: 'bitcoin_address',
         label: 'Bitcoin Address',
         type: 'bitcoin_address',
         placeholder: 'bc1q... or 1...',
-        hint: 'Your Bitcoin address for receiving donations',
+        hint: 'Your Bitcoin address for receiving funding',
       },
       {
         name: 'lightning_address',
