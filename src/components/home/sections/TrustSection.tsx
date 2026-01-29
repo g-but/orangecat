@@ -1,51 +1,27 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Check, X, Bitcoin, Globe, Shield, Zap } from 'lucide-react';
-
-const comparisonData = [
-  { feature: 'Platform fees', traditional: '5-10%', orangecat: '0%', highlight: true },
-  { feature: 'Geographic reach', traditional: 'Limited', orangecat: 'Global' },
-  { feature: 'Funds control', traditional: 'Platform holds', orangecat: 'Direct to wallet' },
-  { feature: 'Account freezing', traditional: 'Can happen', orangecat: 'Impossible' },
-  { feature: 'Transaction speed', traditional: '3-7 days', orangecat: 'Instant' },
-  { feature: 'Transparency', traditional: 'Limited', orangecat: 'Blockchain verified' },
-];
-
-const benefits = [
-  {
-    icon: Bitcoin,
-    title: 'No Platform Fees',
-    description: 'Keep 100% of donations. Bitcoin transactions go directly to your wallet.',
-  },
-  {
-    icon: Globe,
-    title: 'Works Globally',
-    description: 'Accept support from anywhere in the world. No geographic restrictions.',
-  },
-  {
-    icon: Shield,
-    title: 'Transparent & Secure',
-    description: 'All transactions are recorded on the Bitcoin blockchain. Fully auditable.',
-  },
-  {
-    icon: Zap,
-    title: 'Instant Setup',
-    description: 'Create your funding page in 2 minutes. No lengthy verification process.',
-  },
-];
+import { Check, X } from 'lucide-react';
+import {
+  PLATFORM_COMPARISON,
+  PLATFORM_BENEFITS,
+  TRUST_SIGNALS,
+  SECTION_HEADERS,
+} from '@/config/landing-page';
 
 export default function TrustSection() {
+  const { whyBitcoin } = SECTION_HEADERS;
+
   return (
     <section className="py-12 sm:py-16 lg:py-24 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-10 sm:mb-12 lg:mb-16">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">
-            Why Bitcoin? Why OrangeCat?
+            {whyBitcoin.title}
           </h2>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-            Traditional platforms charge fees and control your funds. Bitcoin changes the game.
+            {whyBitcoin.subtitle}
           </p>
         </div>
 
@@ -62,7 +38,9 @@ export default function TrustSection() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Feature</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Feature
+                    </th>
                     <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600">
                       Traditional Platforms
                     </th>
@@ -72,7 +50,7 @@ export default function TrustSection() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {comparisonData.map((row, index) => (
+                  {PLATFORM_COMPARISON.map((row, index) => (
                     <motion.tr
                       key={row.feature}
                       initial={{ opacity: 0, x: -20 }}
@@ -91,7 +69,9 @@ export default function TrustSection() {
                       <td className="px-6 py-4 text-center bg-orange-50/50">
                         <div className="flex items-center justify-center gap-2">
                           <Check className="w-4 h-4 text-green-600" />
-                          <span className={`text-sm font-semibold ${row.highlight ? 'text-green-700' : 'text-gray-900'}`}>
+                          <span
+                            className={`text-sm font-semibold ${row.highlight ? 'text-green-700' : 'text-gray-900'}`}
+                          >
                             {row.orangecat}
                           </span>
                         </div>
@@ -106,7 +86,7 @@ export default function TrustSection() {
 
         {/* Comparison Cards - Mobile */}
         <div className="mb-12 space-y-3 md:hidden">
-          {comparisonData.map((row, index) => (
+          {PLATFORM_COMPARISON.map((row, index) => (
             <motion.div
               key={row.feature}
               initial={{ opacity: 0, y: 20 }}
@@ -129,7 +109,9 @@ export default function TrustSection() {
                     <Check className="w-3 h-3 text-green-600" />
                     <span className="text-xs font-medium text-bitcoinOrange">OrangeCat</span>
                   </div>
-                  <span className={`text-xs font-semibold ${row.highlight ? 'text-green-700' : 'text-gray-900'}`}>
+                  <span
+                    className={`text-xs font-semibold ${row.highlight ? 'text-green-700' : 'text-gray-900'}`}
+                  >
                     {row.orangecat}
                   </span>
                 </div>
@@ -140,7 +122,7 @@ export default function TrustSection() {
 
         {/* Benefits Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {benefits.map((benefit, index) => (
+          {PLATFORM_BENEFITS.map((benefit, index) => (
             <motion.div
               key={benefit.title}
               initial={{ opacity: 0, y: 20 }}
@@ -152,7 +134,9 @@ export default function TrustSection() {
               <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-100 to-orange-50 mb-3 sm:mb-4">
                 <benefit.icon className="w-7 h-7 sm:w-8 sm:h-8 text-bitcoinOrange" />
               </div>
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">{benefit.title}</h3>
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
+                {benefit.title}
+              </h3>
               <p className="text-sm text-gray-600 leading-relaxed">{benefit.description}</p>
             </motion.div>
           ))}
@@ -167,25 +151,15 @@ export default function TrustSection() {
           className="mt-10 sm:mt-12 lg:mt-16 text-center"
         >
           <div className="inline-flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:gap-6 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 bg-gray-50 rounded-xl sm:rounded-2xl">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full" />
-              <span className="text-xs sm:text-sm font-medium text-gray-700">No platform fees</span>
-            </div>
-            <div className="w-px h-3 sm:h-4 bg-gray-300 hidden sm:block" />
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full" />
-              <span className="text-xs sm:text-sm font-medium text-gray-700">Everything transparent</span>
-            </div>
-            <div className="w-px h-3 sm:h-4 bg-gray-300 hidden sm:block" />
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full" />
-              <span className="text-xs sm:text-sm font-medium text-gray-700">Direct Bitcoin transfers</span>
-            </div>
-            <div className="w-px h-3 sm:h-4 bg-gray-300 hidden sm:block" />
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full" />
-              <span className="text-xs sm:text-sm font-medium text-gray-700">Open source</span>
-            </div>
+            {TRUST_SIGNALS.map((signal, index) => (
+              <div key={signal} className="flex items-center gap-1.5 sm:gap-2">
+                {index > 0 && (
+                  <div className="w-px h-3 sm:h-4 bg-gray-300 hidden sm:block mr-3 sm:mr-4 lg:mr-6" />
+                )}
+                <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full" />
+                <span className="text-xs sm:text-sm font-medium text-gray-700">{signal}</span>
+              </div>
+            ))}
           </div>
         </motion.div>
       </div>
