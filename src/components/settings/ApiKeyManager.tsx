@@ -9,6 +9,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Key, Plus, Trash2, Star, Check, AlertCircle, Loader2, ExternalLink } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import {
@@ -69,7 +70,7 @@ export function ApiKeyManager() {
         }
       }
     } catch (error) {
-      console.error('Error loading API keys:', error);
+      logger.error('Error loading API keys', error, 'Settings');
     } finally {
       setIsLoading(false);
     }

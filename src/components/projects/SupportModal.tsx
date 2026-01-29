@@ -2,7 +2,7 @@
  * Support Modal Component
  *
  * Modal for selecting support type and submitting support.
- * Handles all support types: Bitcoin donation, signature, message, reaction.
+ * Handles all support types: Bitcoin funding, signature, message, reaction.
  *
  * Created: 2025-01-30
  * Last Modified: 2025-01-30
@@ -54,7 +54,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
   const [activeTab, setActiveTab] = useState<string>('reaction');
   const [loading, setLoading] = useState(false);
 
-  // Bitcoin donation fields
+  // Bitcoin funding fields
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState(profile?.currency || PLATFORM_DEFAULT_CURRENCY);
   const [transactionHash, setTransactionHash] = useState('');
@@ -183,8 +183,8 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
         <DialogHeader>
           <DialogTitle>Support This Project</DialogTitle>
           <DialogDescription>
-            Show your support in multiple ways - donate Bitcoin, sign your name, leave a message, or
-            react!
+            Show your support in multiple ways - fund with Bitcoin, sign your name, leave a message,
+            or react!
           </DialogDescription>
         </DialogHeader>
 
@@ -204,7 +204,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
             </TabsTrigger>
             <TabsTrigger value="bitcoin" className="flex items-center gap-2">
               <Coins className="h-4 w-4" />
-              Donate
+              Fund
             </TabsTrigger>
           </TabsList>
 
@@ -372,7 +372,7 @@ export function SupportModal({ open, onOpenChange, projectId, onSuccess }: Suppo
             )}
           </TabsContent>
 
-          {/* Bitcoin Donation Tab */}
+          {/* Bitcoin Funding Tab */}
           <TabsContent value="bitcoin" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>

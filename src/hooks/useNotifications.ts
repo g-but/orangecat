@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { logger } from '@/utils/logger';
 
 export interface Notification {
   id: string;
@@ -128,7 +129,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         setUnreadCount(data.data.count);
       }
     } catch (err) {
-      console.error('Failed to fetch unread count:', err);
+      logger.error('Failed to fetch unread count', err, 'Notifications');
     }
   }, [user]);
 
@@ -244,7 +245,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
         setUnreadCount(prev => Math.max(0, prev - ids.length));
       }
     } catch (err) {
-      console.error('Failed to mark as read:', err);
+      logger.error('Failed to mark as read', err, 'Notifications');
       throw err;
     }
   }, []);
@@ -271,7 +272,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       });
       setTotal(prev => prev - 1);
     } catch (err) {
-      console.error('Failed to delete notification:', err);
+      logger.error('Failed to delete notification', err, 'Notifications');
       throw err;
     }
   }, []);
@@ -292,7 +293,7 @@ export function useNotifications(options: UseNotificationsOptions = {}): UseNoti
       setNotifications(prev => prev.filter(n => !n.read));
       setTotal(prev => prev - (data.data.deleted || 0));
     } catch (err) {
-      console.error('Failed to clear read notifications:', err);
+      logger.error('Failed to clear read notifications', err, 'Notifications');
       throw err;
     }
   }, []);
@@ -340,7 +341,7 @@ export function useUnreadNotifications() {
           setCount(data.data.count);
         }
       } catch (err) {
-        console.error('Failed to fetch notification count:', err);
+        logger.error('Failed to fetch notification count', err, 'Notifications');
       }
     };
 

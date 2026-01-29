@@ -10,8 +10,14 @@ import { formatDistanceToNow } from 'date-fns';
 import dynamic from 'next/dynamic';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
 
-const ProjectSupportButton = dynamic(() => import('@/components/projects/ProjectSupportButton').then(m => ({ default: m.ProjectSupportButton })));
-const SupportStats = dynamic(() => import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats })));
+const ProjectSupportButton = dynamic(() =>
+  import('@/components/projects/ProjectSupportButton').then(m => ({
+    default: m.ProjectSupportButton,
+  }))
+);
+const SupportStats = dynamic(() =>
+  import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats }))
+);
 
 interface Props {
   project: {
@@ -112,7 +118,10 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
             </div>
             {project.bitcoin_balance_updated_at && (
               <div className="text-xs text-gray-500 mt-1">
-                Updated {formatDistanceToNow(new Date(project.bitcoin_balance_updated_at), { addSuffix: true })}
+                Updated{' '}
+                {formatDistanceToNow(new Date(project.bitcoin_balance_updated_at), {
+                  addSuffix: true,
+                })}
               </div>
             )}
           </div>
@@ -136,7 +145,8 @@ export default function ProjectSummaryRail({ project, isOwner }: Props) {
           {project.last_donation_at && (
             <div className="text-xs text-green-600 flex items-center gap-1">
               <span className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-              Last donation {formatDistanceToNow(new Date(project.last_donation_at), { addSuffix: true })}
+              Last contribution{' '}
+              {formatDistanceToNow(new Date(project.last_donation_at), { addSuffix: true })}
             </div>
           )}
         </div>

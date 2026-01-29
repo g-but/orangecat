@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAIProvider, getRecommendedProvider, validateApiKeyFormat } from '@/data/aiProviders';
+import { logger } from '@/utils/logger';
 import type { ModelTier } from '@/config/ai-models';
 import type { AIOnboardingProps, OnboardingState, OnboardingActions } from '../types';
 
@@ -101,7 +102,7 @@ export function useOnboardingState(
         });
       } catch (error) {
         // Log error but don't block completion
-        console.error('Failed to save preferences:', error);
+        logger.error('Failed to save preferences', error, 'AI');
       } finally {
         setIsSubmitting(false);
       }

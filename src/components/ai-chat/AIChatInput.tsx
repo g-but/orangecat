@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback, KeyboardEvent } from 'react';
 import { Send, Loader2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
 import { cn } from '@/lib/utils';
 
@@ -21,7 +22,9 @@ export function AIChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleSubmit = useCallback(async () => {
-    if (!content.trim() || isSending || disabled) {return;}
+    if (!content.trim() || isSending || disabled) {
+      return;
+    }
 
     const message = content.trim();
     setContent('');
@@ -35,7 +38,7 @@ export function AIChatInput({
     try {
       await onSend(message);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      logger.error('Failed to send message', error, 'AI');
       // Restore content on error
       setContent(message);
     } finally {
@@ -53,21 +56,15 @@ export function AIChatInput({
     [handleSubmit]
   );
 
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setContent(e.target.value);
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
 
-      // Auto-resize textarea
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = `${Math.min(
-          textareaRef.current.scrollHeight,
-          200
-        )}px`;
-      }
-    },
-    []
-  );
+    // Auto-resize textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+    }
+  }, []);
 
   return (
     <div className="border-t border-gray-200 bg-white p-4">
@@ -103,17 +100,11 @@ export function AIChatInput({
           )}
           aria-label="Send message"
         >
-          {isSending ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <Send className="w-5 h-5" />
-          )}
+          {isSending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
         </Button>
       </div>
 
-      <p className="text-xs text-gray-400 mt-2">
-        Press Enter to send, Shift+Enter for new line
-      </p>
+      <p className="text-xs text-gray-400 mt-2">Press Enter to send, Shift+Enter for new line</p>
     </div>
   );
 }

@@ -5,6 +5,8 @@
  * Rate limit: 1 request per second (we debounce to respect this)
  */
 
+import { logger } from '@/utils/logger';
+
 export interface NominatimResult {
   place_id: number;
   display_name: string;
@@ -107,7 +109,7 @@ export async function searchNominatim(
       };
     });
   } catch (error) {
-    console.error('Nominatim search error:', error);
+    logger.error('Nominatim search error', error, 'LOCATION');
     return [];
   }
 }
@@ -188,7 +190,7 @@ export async function getNominatimDetails(placeId: number): Promise<{
       formattedAddress,
     };
   } catch (error) {
-    console.error('Nominatim details error:', error);
+    logger.error('Nominatim details error', error, 'LOCATION');
     return null;
   }
 }

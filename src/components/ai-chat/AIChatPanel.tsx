@@ -5,6 +5,7 @@ import { AIChatMessage, type AIMessage } from './AIChatMessage';
 import { AIChatInput } from './AIChatInput';
 import { ModelSelector, ModelBadge } from './ModelSelector';
 import { Loader2, Bot, ArrowLeft, Key, Gift, AlertCircle } from 'lucide-react';
+import { logger } from '@/utils/logger';
 import Button from '@/components/ui/Button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -108,7 +109,7 @@ export function AIChatPanel({
           }
         }
       } catch (err) {
-        console.error('Error loading conversation:', err);
+        logger.error('Error loading conversation', err, 'AI');
         setError(err instanceof Error ? err.message : 'Failed to load');
       } finally {
         setIsLoading(false);
@@ -181,7 +182,7 @@ export function AIChatPanel({
           throw new Error(data.error || 'Failed to send');
         }
       } catch (err) {
-        console.error('Error sending message:', err);
+        logger.error('Error sending message', err, 'AI');
         if (!(err instanceof Error && err.message.includes('limit'))) {
           toast.error('Failed to send message. Please try again.');
         }

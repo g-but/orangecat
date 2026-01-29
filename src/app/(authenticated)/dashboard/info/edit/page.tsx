@@ -9,6 +9,7 @@ import ModernProfileEditor from '@/components/profile/ModernProfileEditor';
 import { Profile } from '@/types/profile';
 import { ProfileFormData } from '@/types/database';
 import { toast } from 'sonner';
+import { logger } from '@/utils/logger';
 import { Edit, HelpCircle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { DynamicSidebar } from '@/components/create/DynamicSidebar';
 import {
@@ -179,7 +180,7 @@ export default function DashboardInfoEditPage() {
         let errorData;
         try {
           errorData = await response.json();
-          console.error('Profile save error response:', errorData);
+          logger.error('Profile save error response', errorData, 'Profile');
 
           // API returns: { success: false, error: { code, message, details } }
           if (errorData?.error) {
@@ -203,18 +204,22 @@ export default function DashboardInfoEditPage() {
             errorMessage = JSON.stringify(errorData);
           }
         } catch (parseError) {
-          console.error('Failed to parse error response:', parseError);
+          logger.error('Failed to parse error response', parseError, 'Profile');
           // If JSON parsing fails, use response status text
           errorMessage = response.statusText || `HTTP ${response.status}: Failed to save profile`;
         }
 
         // Log full error for debugging
-        console.error('Profile save failed:', {
-          status: response.status,
-          errorData,
-          errorMessage,
-          sentData: data,
-        });
+        logger.error(
+          'Profile save failed',
+          {
+            status: response.status,
+            errorData,
+            errorMessage,
+            sentData: data,
+          },
+          'Profile'
+        );
 
         throw new Error(errorMessage);
       }

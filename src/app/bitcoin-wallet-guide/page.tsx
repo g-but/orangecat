@@ -210,7 +210,7 @@ export default function BitcoinWalletGuidePage() {
                 Get Your Bitcoin Wallet
               </h1>
               <p className="text-lg text-gray-600 mt-2">
-                Start receiving Bitcoin donations on OrangeCat
+                Start receiving Bitcoin funding on OrangeCat
               </p>
             </div>
           </div>
@@ -532,7 +532,7 @@ export default function BitcoinWalletGuidePage() {
               <h2 className="text-2xl font-bold text-gray-900 mb-4">Ready to Get Started?</h2>
               <p className="text-gray-600 mb-6">
                 Once you have your Bitcoin wallet set up, you can add your Bitcoin address to your
-                OrangeCat profile and start receiving donations for your projects and projects.
+                OrangeCat profile and start receiving funding for your projects.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button

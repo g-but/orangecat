@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { createBrowserClient } from '@/lib/supabase/client';
+import { logger } from '@/utils/logger';
 import type { ModelTier } from '@/config/ai-models';
 import type { UserApiKey } from '@/components/ai/AIKeyManager';
 
@@ -117,7 +118,7 @@ export function useAISettings() {
         setPlatformUsage(data);
       }
     } catch (err) {
-      console.error('Failed to fetch platform usage:', err);
+      logger.error('Failed to fetch platform usage', err, 'AI');
     }
   }, []);
 

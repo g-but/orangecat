@@ -1,7 +1,7 @@
 /**
  * Support Stats Component
  *
- * Displays project support statistics (donations, signatures, messages, reactions).
+ * Displays project support statistics (funding, signatures, messages, reactions).
  *
  * Created: 2025-01-30
  * Last Modified: 2025-01-30
@@ -56,7 +56,7 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Bitcoin Donations */}
+          {/* Bitcoin Funding */}
           <div className="text-center">
             <div className="flex items-center justify-center mb-2">
               <Coins className="h-5 w-5 text-orange-600" />
@@ -64,7 +64,7 @@ export function SupportStats({ projectId, className }: SupportStatsProps) {
             <div className="text-2xl font-bold text-orange-600">
               {formatAmount(stats.total_bitcoin_sats)}
             </div>
-            <div className="text-sm text-gray-500">Donated</div>
+            <div className="text-sm text-gray-500">Funded</div>
           </div>
 
           {/* Signatures */}

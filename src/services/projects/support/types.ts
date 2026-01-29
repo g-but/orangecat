@@ -2,7 +2,7 @@
  * Project Support Types
  *
  * Type definitions for the project support system.
- * Supports multiple support types: Bitcoin donations, signatures, messages, reactions.
+ * Supports multiple support types: Bitcoin funding, signatures, messages, reactions.
  *
  * Created: 2025-01-30
  * Last Modified: 2025-01-30
@@ -24,7 +24,7 @@ export interface ProjectSupport {
   // Support type
   support_type: SupportType;
 
-  // Bitcoin donation fields (if type = 'bitcoin_donation')
+  // Bitcoin funding fields (if type = 'bitcoin_donation')
   amount_sats?: number | null;
   transaction_hash?: string | null;
   lightning_invoice?: string | null;
@@ -68,7 +68,7 @@ export interface ProjectSupportStats {
 export interface SupportProjectRequest {
   support_type: SupportType;
 
-  // Bitcoin donation
+  // Bitcoin funding
   amount?: number;
   currency?: string;
   lightning_invoice?: string;

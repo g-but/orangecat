@@ -5,6 +5,8 @@
  * Optimized for minimal user friction - country selection + zip code entry.
  */
 
+import { logger } from '@/utils/logger';
+
 // Common zip code patterns by country (for detection)
 export const ZIP_CODE_PATTERNS: Record<string, { pattern: RegExp; length: number }> = {
   CH: { pattern: /^\d{4}$/, length: 4 }, // Switzerland
@@ -136,7 +138,7 @@ export async function lookupZipCode(
       zipCode: cleanZip,
     };
   } catch (error) {
-    console.error('Zip code lookup error:', error);
+    logger.error('Zip code lookup error', error, 'LOCATION');
     return null;
   }
 }
@@ -194,6 +196,3 @@ export function getCountryName(countryCode: string): string {
 
   return countryNames[countryCode.toUpperCase()] || countryCode;
 }
-
-
-

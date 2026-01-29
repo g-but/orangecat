@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import supabase from '@/lib/supabase/browser';
+import { logger } from '@/utils/logger';
 import type { Message } from '@/features/messaging/types';
 import { CHANNELS, debugLog, TIMING } from '@/features/messaging/lib/constants';
 import { DATABASE_TABLES } from '@/config/database-tables';
@@ -237,10 +238,7 @@ export function useMessageSubscription(
                   status: 'delivered' as const,
                 } as Message;
               } else {
-                console.error(
-                  '[useMessageSubscription] Failed to fetch message:',
-                  messageError || viewError
-                );
+                logger.error('Failed to fetch message', messageError || viewError, 'Messaging');
                 // Last resort: create message from payload
                 if (payload.new) {
                   newMessage = {
@@ -295,15 +293,13 @@ export function useMessageSubscription(
                 // Call immediately - React will batch updates
                 onNewMessage(messageWithStatus);
               } else {
-                console.warn('[useMessageSubscription] ⚠️ onNewMessage callback not provided');
+                logger.warn('onNewMessage callback not provided', undefined, 'Messaging');
               }
             } else {
-              console.error(
-                '[useMessageSubscription] ❌ Failed to create message object from payload'
-              );
+              logger.error('Failed to create message object from payload', undefined, 'Messaging');
             }
           } catch (error) {
-            console.error('[useMessageSubscription] Error processing real-time message:', error);
+            logger.error('Error processing real-time message', error, 'Messaging');
           }
         }
       )
@@ -331,7 +327,7 @@ export function useMessageSubscription(
                 onNewMessage(messageDetails as Message);
               }
             } catch (error) {
-              console.error('[useMessageSubscription] Error processing message update:', error);
+              logger.error('Error processing message update', error, 'Messaging');
             }
           }
         }
@@ -364,7 +360,7 @@ export function useMessageSubscription(
 
         if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           const error = err || new Error(`Subscription error: ${status}`);
-          console.error(`[useMessageSubscription] channel error for ${conversationId}:`, error);
+          logger.error(`Channel error for ${conversationId}`, error, 'Messaging');
           setupInProgressRef.current = false;
           if (onSubscriptionStatusChange) {
             onSubscriptionStatusChange(status, error);

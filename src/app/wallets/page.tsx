@@ -27,7 +27,7 @@ export default function WalletsPage() {
       <div className="mt-10 p-6 rounded-lg bg-orange-50 border border-orange-200">
         <h4 className="font-semibold text-gray-900 mb-2">What is a wallet?</h4>
         <p className="text-sm text-gray-700 mb-3">
-          A Bitcoin wallet lets you receive donations. It gives you a Bitcoin address (looks like
+          A Bitcoin wallet lets you receive funding. It gives you a Bitcoin address (looks like
           bc1...) and often a Lightning address (looks like email). You control it. We don't keep
           your funds.
         </p>
@@ -36,7 +36,7 @@ export default function WalletsPage() {
             • On-chain address: starts with bc1, slower, best for larger amounts.
           </div>
           <div className="mb-1">
-            • Lightning address: looks like email, instant and low-fee, great for small donations.
+            • Lightning address: looks like email, instant and low-fee, great for smaller amounts.
           </div>
         </div>
       </div>
@@ -50,4 +50,3 @@ export default function WalletsPage() {
     </div>
   );
 }
-

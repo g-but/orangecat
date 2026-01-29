@@ -14,6 +14,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
+import { logger } from '@/utils/logger';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Receipt,
@@ -204,7 +205,7 @@ export function ProofUploadForm({
       setSelectedType(null);
       onSuccess?.(result.proof);
     } catch (error) {
-      console.error('Error uploading proof:', error);
+      logger.error('Error uploading proof', error, 'Wishlist');
     } finally {
       setIsSubmitting(false);
     }

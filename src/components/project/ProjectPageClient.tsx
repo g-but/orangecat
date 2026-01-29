@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import { ROUTES } from '@/lib/routes';
 import { useState, useEffect } from 'react';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { getStatusInfo } from '@/config/status-config';
 
 const MissingWalletBanner = dynamic(() => import('@/components/project/MissingWalletBanner'));
 const CampaignShare = dynamic(() => import('@/components/sharing/CampaignShare'));
@@ -16,9 +17,17 @@ const ProjectSummaryRail = dynamic(() => import('@/components/project/ProjectSum
 const ProjectHeader = dynamic(() => import('@/components/project/ProjectHeader'));
 const ProjectContent = dynamic(() => import('@/components/project/ProjectContent'));
 const ProjectTimeline = dynamic(() => import('@/components/project/ProjectTimeline'));
-const _ProjectSupportButton = dynamic(() => import('@/components/projects/ProjectSupportButton').then(m => ({ default: m.ProjectSupportButton })));
-const _WallOfSupport = dynamic(() => import('@/components/projects/WallOfSupport').then(m => ({ default: m.WallOfSupport })));
-const _SupportStats = dynamic(() => import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats })));
+const _ProjectSupportButton = dynamic(() =>
+  import('@/components/projects/ProjectSupportButton').then(m => ({
+    default: m.ProjectSupportButton,
+  }))
+);
+const _WallOfSupport = dynamic(() =>
+  import('@/components/projects/WallOfSupport').then(m => ({ default: m.WallOfSupport }))
+);
+const _SupportStats = dynamic(() =>
+  import('@/components/projects/SupportStats').then(m => ({ default: m.SupportStats }))
+);
 
 interface Project {
   id: string;
@@ -78,11 +87,11 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Scroll to donation section
-  const scrollToDonation = () => {
-    const donationSection = document.getElementById('bitcoin-donation-section');
-    if (donationSection) {
-      donationSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  // Scroll to support section
+  const scrollToSupport = () => {
+    const supportSection = document.getElementById('bitcoin-donation-section');
+    if (supportSection) {
+      supportSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -90,24 +99,6 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
   const progressPercentage = project.goal_amount
     ? Math.min(((project.raised_amount || 0) / project.goal_amount) * 100, 100)
     : 0;
-
-  // Get status display info helper
-  const getStatusInfo = (status: string) => {
-    const normalized = status?.toLowerCase();
-    const statusMap: Record<string, { label: string; className: string }> = {
-      draft: { label: 'Draft', className: 'bg-slate-100 text-slate-700' },
-      active: { label: 'Active', className: 'bg-green-100 text-green-700' },
-      paused: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700' },
-      completed: { label: 'Completed', className: 'bg-blue-100 text-blue-700' },
-      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700' },
-    };
-    return (
-      statusMap[normalized] || {
-        label: status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown',
-        className: 'bg-gray-100 text-gray-700',
-      }
-    );
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50/30 via-white to-tiffany-50/20">
@@ -234,11 +225,11 @@ export default function ProjectPageClient({ project }: ProjectPageClientProps) {
                 </div>
               </div>
               <Button
-                onClick={scrollToDonation}
+                onClick={scrollToSupport}
                 className="flex-shrink-0 bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 shadow-lg"
               >
                 <Bitcoin className="w-4 h-4 mr-2" aria-hidden="true" />
-                Donate
+                Fund
               </Button>
             </div>
           </div>

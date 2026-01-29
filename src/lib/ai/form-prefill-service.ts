@@ -8,6 +8,7 @@
 import type { EntityType } from '@/config/entity-registry';
 import { ENTITY_REGISTRY, isValidEntityType } from '@/config/entity-registry';
 import type { AIPrefillResponse } from '@/components/create/types';
+import { logger } from '@/utils/logger';
 import {
   extractFieldDescriptions,
   formatFieldsForPrompt,
@@ -130,7 +131,7 @@ export async function generateFormPrefill(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('AI API error:', errorText);
+      logger.error('AI API error', { errorText }, 'AI');
       return {
         success: false,
         data: {},
@@ -182,7 +183,7 @@ export async function generateFormPrefill(
       confidence: parsed.confidence,
     };
   } catch (error) {
-    console.error('Form prefill error:', error);
+    logger.error('Form prefill error', error, 'AI');
     return {
       success: false,
       data: {},

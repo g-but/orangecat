@@ -41,7 +41,7 @@ export { formatSats } from '@/services/currency';
  */
 export function getSupportTypeLabel(supportType: string): string {
   const labels: Record<string, string> = {
-    bitcoin_donation: 'Bitcoin Donation',
+    bitcoin_donation: 'Bitcoin Funding',
     signature: 'Signature',
     message: 'Message',
     reaction: 'Reaction',
