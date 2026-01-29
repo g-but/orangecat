@@ -66,7 +66,7 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
       'Be transparent about fund usage',
       'Include timeline and milestones',
       'Add personal story or connection',
-      'Explain why Bitcoin donations help',
+      'Explain why Bitcoin funding helps',
     ],
     examples: [
       'Our village of 500 families has no access to clean water. With your help, we can install a well system...',
@@ -94,7 +94,8 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
   goal_amount: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Fundraising Goal',
-    description: 'Set a realistic fundraising goal in your preferred currency. Leave empty for open-ended fundraising. System monitors your Bitcoin address and notifies you when goal is reached.',
+    description:
+      'Set a realistic fundraising goal in your preferred currency. Leave empty for open-ended fundraising. System monitors your Bitcoin address and notifies you when goal is reached.',
     tips: [
       'Calculate actual costs needed',
       'Include all expenses and buffer',
@@ -111,12 +112,12 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
   currency: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Display Currency',
-    description: 'Choose how to display your goal. All donations are received in Bitcoin.',
+    description: 'Choose how to display your goal. All funding is received in Bitcoin.',
     tips: [
       'SATS is the Bitcoin standard',
       'Fiat display helps donors understand value',
       'Goal can be shown in any currency',
-      'Actual donations always in Bitcoin',
+      'Actual funding always in Bitcoin',
     ],
     examples: ['10,000,000 SATS', '0.1 BTC', '$10,000 equivalent in BTC'],
   },
@@ -124,12 +125,12 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
     icon: React.createElement(Bitcoin, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Bitcoin Address',
     description:
-      'Your Bitcoin address where on-chain donations will be sent. Use a dedicated address for transparency.',
+      'Your Bitcoin address where on-chain funding will be sent. Use a dedicated address for transparency.',
     tips: [
       'Use a new, dedicated address for this cause',
       'Keep the private key secure',
       'Consider using xpub for address rotation',
-      'On-chain for larger donations',
+      'On-chain for larger contributions',
       'Never share your private key',
     ],
     examples: [
@@ -141,15 +142,15 @@ export const causeGuidanceContent: Record<NonNullable<CauseFieldType>, GuidanceC
   lightning_address: {
     icon: React.createElement(Zap, { className: 'w-5 h-5 text-rose-600' }),
     title: 'Lightning Address',
-    description: 'Lightning address for instant, low-fee donations. Great for smaller amounts.',
+    description: 'Lightning address for instant, low-fee funding. Great for smaller amounts.',
     tips: [
       'Looks like an email: you@wallet.com',
       'Instant settlement, near-zero fees',
-      'Perfect for small donations',
+      'Perfect for smaller contributions',
       'Get one from Alby, Wallet of Satoshi, etc.',
       'Combines well with on-chain address',
     ],
-    examples: ['yourcause@getalby.com', 'donations@walletofsatoshi.com', 'yourname@ln.tips'],
+    examples: ['yourcause@getalby.com', 'funding@walletofsatoshi.com', 'yourname@ln.tips'],
   },
   beneficiaries: {
     icon: React.createElement(Users, { className: 'w-5 h-5 text-rose-600' }),
@@ -184,11 +185,8 @@ export const causeDefaultGuidance: DefaultGuidance = {
     },
     {
       icon: React.createElement(CheckCircle2, { className: 'w-4 h-4 text-rose-600' }),
-      text: 'Receive donations globally in Bitcoin',
+      text: 'Receive funding globally in Bitcoin',
     },
   ],
   hint: '💡 Click on any field to get specific guidance',
 };
-
-
-

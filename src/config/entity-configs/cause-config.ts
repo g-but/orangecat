@@ -9,10 +9,7 @@
 
 import { Heart } from 'lucide-react';
 import { userCauseSchema, type UserCauseFormData } from '@/lib/validation';
-import {
-  causeGuidanceContent,
-  causeDefaultGuidance,
-} from '@/lib/entity-guidance/cause-guidance';
+import { causeGuidanceContent, causeDefaultGuidance } from '@/lib/entity-guidance/cause-guidance';
 import type { FieldGroup } from '@/components/create/types';
 import { CAUSE_TEMPLATES, type CauseTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
@@ -57,7 +54,8 @@ const fieldGroups: FieldGroup[] = [
         name: 'description',
         label: 'Description',
         type: 'textarea',
-        placeholder: 'Describe your cause in detail - what you\'re raising funds for, who will benefit, how the funds will be used...',
+        placeholder:
+          "Describe your cause in detail - what you're raising funds for, who will benefit, how the funds will be used...",
         rows: 5,
         colSpan: 2,
       },
@@ -66,7 +64,7 @@ const fieldGroups: FieldGroup[] = [
         label: 'Category',
         type: 'select',
         required: true,
-        options: CAUSE_CATEGORIES.map((cat) => ({ value: cat, label: cat })),
+        options: CAUSE_CATEGORIES.map(cat => ({ value: cat, label: cat })),
         colSpan: 2,
       },
     ],
@@ -90,7 +88,7 @@ const fieldGroups: FieldGroup[] = [
   {
     id: 'payment',
     title: 'Payment Addresses',
-    description: 'Add Bitcoin addresses where donations should be sent',
+    description: 'Add Bitcoin addresses where funding should be sent',
     fields: [
       {
         name: 'bitcoin_address',
@@ -104,7 +102,7 @@ const fieldGroups: FieldGroup[] = [
         label: 'Lightning Address',
         type: 'text',
         placeholder: 'you@getalby.com',
-        hint: 'For instant, low-fee donations',
+        hint: 'For instant, low-fee funding',
         colSpan: 2,
       },
     ],
@@ -152,7 +150,8 @@ export const causeConfig = createEntityConfig<UserCauseFormData>({
   pageTitle: 'Create Cause',
   pageDescription: 'Start a charitable fundraising campaign',
   formTitle: 'Cause Details',
-  formDescription: 'Fill in the information for your charitable cause. Be clear about how funds will be used.',
+  formDescription:
+    'Fill in the information for your charitable cause. Be clear about how funds will be used.',
   fieldGroups,
   validationSchema: userCauseSchema,
   defaultValues,
@@ -161,8 +160,8 @@ export const causeConfig = createEntityConfig<UserCauseFormData>({
   templates: CAUSE_TEMPLATES as unknown as CauseTemplate[],
   infoBanner: {
     title: 'Transparency Commitment',
-    content: 'By creating this cause, you commit to using all donated funds for the stated purpose and providing updates to your donors about how their contributions are being used.',
+    content:
+      'By creating this cause, you commit to using all received funds for the stated purpose and providing updates to your supporters about how their contributions are being used.',
     variant: 'warning',
   },
 });
-

@@ -10,6 +10,7 @@ import Button from '@/components/ui/Button';
 import { ROUTES } from '@/lib/routes';
 import { CurrencyDisplay } from '@/components/ui/CurrencyDisplay';
 import { PLATFORM_DEFAULT_CURRENCY } from '@/config/currencies';
+import { getStatusInfo } from '@/config/status-config';
 
 // Extended project list item for profile display
 interface ProfileProjectItem {
@@ -63,23 +64,6 @@ export default function ProfileProjectsTab({ profile, isOwnProfile }: ProfilePro
       fetchProjects();
     }
   }, [profile.id]);
-
-  // Helper function to get status display info
-  const getStatusInfo = (status: string) => {
-    const statusMap: Record<string, { label: string; className: string }> = {
-      active: { label: 'Active', className: 'bg-green-100 text-green-700' },
-      draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700' },
-      completed: { label: 'Completed', className: 'bg-blue-100 text-blue-700' },
-      cancelled: { label: 'Cancelled', className: 'bg-red-100 text-red-700' },
-      paused: { label: 'Paused', className: 'bg-yellow-100 text-yellow-700' },
-    };
-    return (
-      statusMap[status?.toLowerCase()] || {
-        label: status?.charAt(0).toUpperCase() + status?.slice(1) || 'Unknown',
-        className: 'bg-gray-100 text-gray-700',
-      }
-    );
-  };
 
   // Format bitcoin display
   const formatBitcoinDisplay = (btc: number, unit: string) => {

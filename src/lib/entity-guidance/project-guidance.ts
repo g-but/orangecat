@@ -48,7 +48,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
     icon: React.createElement(Rocket, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Project Title',
     description:
-      'Choose a compelling title that clearly communicates what you\'re building and why it matters.',
+      "Choose a compelling title that clearly communicates what you're building and why it matters.",
     tips: [
       'Be specific and descriptive',
       'Include the main outcome or benefit',
@@ -69,7 +69,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
     description:
       'Tell the complete story of your project. Explain the problem, your solution, and the impact.',
     tips: [
-      'Start with the problem you\'re solving',
+      "Start with the problem you're solving",
       'Explain your unique approach',
       'Include specific outcomes and benefits',
       'Mention your background and expertise',
@@ -77,7 +77,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
     ],
     examples: [
       'Our community solar garden will provide clean energy while teaching sustainable practices...',
-      'We\'re building privacy tools that anyone can use to protect their financial sovereignty...',
+      "We're building privacy tools that anyone can use to protect their financial sovereignty...",
     ],
   },
   goal_amount: {
@@ -101,17 +101,16 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   currency: {
     icon: React.createElement(DollarSign, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Currency Selection',
-    description:
-      'Choose the currency that best fits your project and target audience.',
+    description: 'Choose the currency that best fits your project and target audience.',
     tips: [
       'BTC/SATS for Bitcoin-native projects',
       'CHF/USD/EUR for traditional funding',
-      'Consider your supporters\' preferences',
+      "Consider your supporters' preferences",
       'Think about currency volatility',
       'All payments convert to Bitcoin',
     ],
     examples: [
-      'SATS for micro-donations and Bitcoin community',
+      'SATS for micro-funding and Bitcoin community',
       'CHF for Swiss-based local projects',
       'USD for international reach',
     ],
@@ -119,8 +118,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   funding_purpose: {
     icon: React.createElement(Coins, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Funding Purpose',
-    description:
-      'Clearly explain how donations will be used and what specific outcomes they enable.',
+    description: 'Clearly explain how funding will be used and what specific outcomes it enables.',
     tips: [
       'Break down costs into categories',
       'Be transparent about allocation',
@@ -137,8 +135,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   bitcoin_address: {
     icon: React.createElement(Bitcoin, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Bitcoin Address',
-    description:
-      'Your secure Bitcoin address where donations will be received.',
+    description: 'Your secure Bitcoin address where funding will be received.',
     tips: [
       'Use a fresh address for this project',
       'Consider using a multi-signature wallet',
@@ -155,13 +152,12 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   lightning_address: {
     icon: React.createElement(Target, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Lightning Address',
-    description:
-      'Lightning Network address for instant, low-fee Bitcoin payments.',
+    description: 'Lightning Network address for instant, low-fee Bitcoin payments.',
     tips: [
       'Format: yourproject@domain.com',
-      'Enables instant micro-donations',
+      'Enables instant micro-funding',
       'Lower fees than on-chain transactions',
-      'Great for international donations',
+      'Great for international funding',
       'Works alongside regular Bitcoin address',
     ],
     examples: [
@@ -173,10 +169,9 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   website_url: {
     icon: React.createElement(ExternalLink, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Project Website',
-    description:
-      'Link to additional information about your project.',
+    description: 'Link to additional information about your project.',
     tips: [
-      'Use your project\'s official website',
+      "Use your project's official website",
       'Can be a landing page or detailed site',
       'Should be professional and informative',
       'Include contact information',
@@ -191,12 +186,11 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   category: {
     icon: React.createElement(Tag, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Project Category',
-    description:
-      'Choose the category that best describes your project\'s focus area.',
+    description: "Choose the category that best describes your project's focus area.",
     tips: [
       'Pick the most specific category available',
       'Think about how people search for projects',
-      'Consider your project\'s primary impact area',
+      "Consider your project's primary impact area",
       'Categories help with discoverability',
       'You can change this later if needed',
     ],
@@ -210,14 +204,13 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   tags: {
     icon: React.createElement(Tag, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Project Tags',
-    description:
-      'Add relevant tags to help people discover your project through search.',
+    description: 'Add relevant tags to help people discover your project through search.',
     tips: [
       'Use specific, searchable terms',
       'Include location if relevant',
       'Add technology or method keywords',
       'Think about what people would search for',
-      'Don\'t over-tag - quality over quantity',
+      "Don't over-tag - quality over quantity",
     ],
     examples: [
       'solar, renewable, community, education',
@@ -228,8 +221,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   start_date: {
     icon: React.createElement(Calendar, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Start Date',
-    description:
-      'When do you plan to begin active work on this project?',
+    description: 'When do you plan to begin active work on this project?',
     tips: [
       'Be realistic about your timeline',
       'Consider dependencies and preparation time',
@@ -246,8 +238,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   target_completion: {
     icon: React.createElement(CheckCircle2, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Target Completion',
-    description:
-      'When do you expect to complete the main deliverables of your project?',
+    description: 'When do you expect to complete the main deliverables of your project?',
     tips: [
       'Set realistic completion targets',
       'Break large projects into milestones',
@@ -283,8 +274,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   fundingPurpose: {
     icon: React.createElement(Coins, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Funding Purpose',
-    description:
-      'Clearly explain how donations will be used and what specific outcomes they enable.',
+    description: 'Clearly explain how funding will be used and what specific outcomes it enables.',
     tips: [
       'Break down costs into categories',
       'Be transparent about allocation',
@@ -301,8 +291,7 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   bitcoinAddress: {
     icon: React.createElement(Bitcoin, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Bitcoin Address',
-    description:
-      'Your secure Bitcoin address where donations will be received.',
+    description: 'Your secure Bitcoin address where funding will be received.',
     tips: [
       'Use a fresh address for this project',
       'Consider using a multi-signature wallet',
@@ -319,12 +308,11 @@ export const projectGuidanceContent: Record<NonNullable<ProjectFieldType>, Guida
   categories: {
     icon: React.createElement(Tag, { className: 'w-5 h-5 text-orange-600' }),
     title: 'Project Categories',
-    description:
-      'Choose the categories that best describe your project\'s focus areas.',
+    description: "Choose the categories that best describe your project's focus areas.",
     tips: [
       'Pick the most specific categories available',
       'Think about how people search for projects',
-      'Consider your project\'s primary impact areas',
+      "Consider your project's primary impact areas",
       'Categories help with discoverability',
       'You can change this later if needed',
     ],
@@ -364,33 +352,3 @@ export const projectDefaultGuidance: DefaultGuidance = {
     },
   ],
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

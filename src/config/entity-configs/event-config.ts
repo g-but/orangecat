@@ -10,10 +10,7 @@
 
 import { Calendar } from 'lucide-react';
 import { eventSchema, type EventFormData } from '@/lib/validation';
-import {
-  eventGuidanceContent,
-  eventDefaultGuidance,
-} from '@/lib/entity-guidance/event-guidance';
+import { eventGuidanceContent, eventDefaultGuidance } from '@/lib/entity-guidance/event-guidance';
 import type { FieldGroup } from '@/components/create/types';
 import { EVENT_TEMPLATES, type EventTemplate } from '@/components/create/templates';
 import { createEntityConfig } from './base-config-factory';
@@ -200,7 +197,7 @@ const fieldGroups: FieldGroup[] = [
         label: 'Link to Asset (Optional)',
         type: 'text',
         placeholder: 'UUID of asset if venue is a rented asset',
-        hint: 'If you\'re renting a venue from the assets marketplace, link it here',
+        hint: "If you're renting a venue from the assets marketplace, link it here",
         showWhen: {
           field: 'is_online',
           value: false,
@@ -273,7 +270,7 @@ const fieldGroups: FieldGroup[] = [
         type: 'currency',
         placeholder: '10000.00',
         min: 1,
-        hint: 'Optional: Set a funding goal to cover event costs. System monitors your Bitcoin address and notifies you when goal is reached. Note: Fiat goals (USD/CHF/EUR) can be reached via donations OR Bitcoin price appreciation. BTC/SATS goals can only be reached via donations.',
+        hint: 'Optional: Set a funding goal to cover event costs. System monitors your Bitcoin address and notifies you when goal is reached. Note: Fiat goals (USD/CHF/EUR) can be reached via funding OR Bitcoin price appreciation. BTC/SATS goals can only be reached via funding.',
         colSpan: 2,
       },
       {
@@ -281,7 +278,7 @@ const fieldGroups: FieldGroup[] = [
         label: 'Bitcoin Address',
         type: 'bitcoin_address',
         placeholder: 'bc1q...',
-        hint: 'Where ticket payments and donations should be sent',
+        hint: 'Where ticket payments and funding should be sent',
         colSpan: 2,
       },
       {
@@ -372,4 +369,3 @@ export const eventConfig = createEntityConfig<EventFormData>({
   defaultGuidance: eventDefaultGuidance,
   templates: EVENT_TEMPLATES as unknown as EventTemplate[],
 });
-
