@@ -19,6 +19,10 @@ playwright-report/
 playwright/.cache/
 .playwright-mcp/
 
+# Code analysis reports
+report/
+jscpd-report.json
+
 # Next.js
 /.next/
 /out/
