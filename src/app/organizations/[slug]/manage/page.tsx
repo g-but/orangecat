@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Building2,
@@ -18,9 +18,7 @@ import {
 import Loading from '@/components/Loading';
 
 interface ManageOrganizationPageProps {
-  params: {
-    slug: string;
-  };
+  params: Promise<{ slug: string }>;
 }
 
 interface GroupData {
@@ -64,7 +62,7 @@ interface Proposal {
 }
 
 export default function ManageOrganizationPage({ params }: ManageOrganizationPageProps) {
-  const { slug } = params;
+  const { slug } = use(params);
   const [group, setGroup] = useState<GroupData | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [proposals, setProposals] = useState<Proposal[]>([]);
