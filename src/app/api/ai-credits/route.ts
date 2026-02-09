@@ -172,12 +172,6 @@ export const POST = compose(
     if (depositError && depositError.code === '42P01') {
       logger.info('ai_credit_deposits table does not exist, returning mock data');
 
-      // Generate mock payment details
-      const mockInvoice =
-        payment_method === 'lightning'
-          ? `lnbc${amount_sats}u1p${Math.random().toString(36).substr(2, 50)}`
-          : null;
-
       return apiSuccess({
         deposit_id: depositId,
         amount_sats,
@@ -185,10 +179,10 @@ export const POST = compose(
         status: 'pending',
         expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
         payment_details: {
-          invoice: mockInvoice,
-          // In production: real invoice from Lightning provider
+          invoice: null,
         },
-        message: 'Development mode: Use manual credits for testing',
+        development_mode: true,
+        message: 'Payment integration not configured. Use manual credits for testing.',
       });
     }
 
@@ -196,26 +190,18 @@ export const POST = compose(
       throw depositError;
     }
 
-    // Generate Lightning invoice or Bitcoin address
     // TODO: Integrate with actual Lightning provider (BTCPay, Strike, Alby, etc.)
-    const paymentDetails =
-      payment_method === 'lightning'
-        ? {
-            invoice: `lnbc${amount_sats}u1p${Math.random().toString(36).substr(2, 50)}`,
-            // In production, this would be a real BOLT11 invoice
-          }
-        : {
-            address: 'bc1q_deposit_address_would_go_here',
-            // In production, this would be a real Bitcoin address
-          };
-
     return apiSuccess({
       deposit_id: deposit?.id || depositId,
       amount_sats,
       payment_method,
       status: 'pending',
       expires_at: deposit?.expires_at || new Date(Date.now() + 15 * 60 * 1000).toISOString(),
-      payment_details: paymentDetails,
+      payment_details: {
+        invoice: null,
+      },
+      development_mode: true,
+      message: 'Payment integration not configured. Deposit recorded but no invoice generated.',
     });
   } catch (error) {
     logger.error('Failed to create deposit request', { error });

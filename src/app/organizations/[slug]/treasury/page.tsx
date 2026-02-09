@@ -1,23 +1,8 @@
-import React from 'react';
-import { Metadata } from 'next';
-import {
-  Wallet,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Users,
-  Shield,
-  Clock,
-  CheckCircle,
-  Plus,
-  Send,
-  Download,
-} from 'lucide-react';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Organization Treasury - OrangeCat',
-  description:
-    "Manage your organization's multi-signature Bitcoin treasury with transparent governance.",
-};
+import React, { useEffect, useState } from 'react';
+import { Wallet, Users, Shield, Clock, Download, Send, Plus, AlertCircle } from 'lucide-react';
+import Loading from '@/components/Loading';
 
 interface TreasuryPageProps {
   params: {
@@ -25,76 +10,79 @@ interface TreasuryPageProps {
   };
 }
 
+interface GroupData {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  bitcoin_address: string | null;
+  lightning_address: string | null;
+}
+
+interface Member {
+  id: string;
+  user_id: string;
+  role: string;
+  status: string;
+  joined_at: string;
+  voting_weight: number;
+  username: string | null;
+  display_name: string | null;
+  avatar_url: string | null;
+}
+
 export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) {
-  const { slug: _slug } = params;
+  const { slug } = params;
+  const [group, setGroup] = useState<GroupData | null>(null);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock treasury data
-  const treasury = {
-    balance: '₿ 50.25',
-    usdValue: '$2,125,000',
-    multiSig: '3-of-5',
-    signers: 5,
-    pendingTransactions: 2,
-    monthlySpending: '₿ 8.5',
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [groupRes, membersRes] = await Promise.all([
+          fetch(`/api/groups/${slug}`),
+          fetch(`/api/groups/${slug}/members`),
+        ]);
 
-  const signers = [
-    { name: 'Alex Chen', role: 'Founder', status: 'active', lastActive: '2 hours ago' },
-    { name: 'Maria Rodriguez', role: 'Founder', status: 'active', lastActive: '1 hour ago' },
-    { name: 'David Kim', role: 'Founder', status: 'active', lastActive: '30 min ago' },
-    { name: 'Sarah Johnson', role: 'Employee', status: 'active', lastActive: '4 hours ago' },
-    { name: 'Mike Chen', role: 'Employee', status: 'inactive', lastActive: '2 days ago' },
-  ];
+        if (!groupRes.ok) {
+          setError('Organization not found');
+          return;
+        }
 
-  const transactions = [
-    {
-      id: 'tx-001',
-      type: 'incoming',
-      amount: '₿ 25.0',
-      description: 'Investment from Series A',
-      status: 'confirmed',
-      date: '2025-12-20',
-      confirmations: 6,
-      signers: '3/3',
-    },
-    {
-      id: 'tx-002',
-      type: 'outgoing',
-      amount: '₿ 2.5',
-      description: 'Office rent payment',
-      status: 'confirmed',
-      date: '2025-12-18',
-      confirmations: 12,
-      signers: '3/3',
-    },
-    {
-      id: 'tx-003',
-      type: 'outgoing',
-      amount: '₿ 12.8',
-      description: 'Employee salaries',
-      status: 'pending',
-      date: '2025-12-15',
-      confirmations: 0,
-      signers: '2/3',
-    },
-    {
-      id: 'tx-004',
-      type: 'incoming',
-      amount: '₿ 1.2',
-      description: 'Service revenue',
-      status: 'confirmed',
-      date: '2025-12-14',
-      confirmations: 8,
-      signers: '3/3',
-    },
-  ];
+        const groupData = await groupRes.json();
+        setGroup(groupData.group);
 
-  const spendingLimits = [
-    { category: 'Operations', limit: '₿ 5.0', used: '₿ 2.1', period: 'Daily' },
-    { category: 'Salaries', limit: '₿ 15.0', used: '₿ 12.8', period: 'Monthly' },
-    { category: 'Investments', limit: '₿ 50.0', used: '₿ 0.0', period: 'Quarterly' },
-    { category: 'Legal', limit: '₿ 10.0', used: '₿ 3.2', period: 'Monthly' },
-  ];
+        if (membersRes.ok) {
+          const membersData = await membersRes.json();
+          setMembers(membersData.members || []);
+        }
+      } catch {
+        setError('Failed to load treasury data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [slug]);
+
+  if (loading) {
+    return <Loading fullScreen message="Loading treasury..." />;
+  }
+
+  if (error || !group) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <AlertCircle className="h-12 w-12 text-red-400 mb-4" />
+        <h3 className="text-lg font-semibold mb-2">{error || 'Organization not found'}</h3>
+        <p className="text-gray-500">Please check the URL and try again.</p>
+      </div>
+    );
+  }
+
+  const activeMembers = members.filter(m => m.status === 'active');
 
   return (
     <div className="space-y-6">
@@ -102,7 +90,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Treasury Management</h1>
-          <p className="text-gray-600">Multi-signature Bitcoin treasury with governance controls</p>
+          <p className="text-gray-600">Multi-signature Bitcoin treasury for {group.name}</p>
         </div>
         <div className="flex space-x-3">
           <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
@@ -124,9 +112,10 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
               <Wallet className="w-6 h-6 text-orange-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Total Balance</p>
-              <p className="text-2xl font-semibold text-gray-900">{treasury.balance}</p>
-              <p className="text-sm text-gray-500">{treasury.usdValue}</p>
+              <p className="text-sm font-medium text-gray-600">Wallet</p>
+              <p className="text-lg font-semibold text-gray-900">
+                {group.lightning_address || group.bitcoin_address || 'Not configured'}
+              </p>
             </div>
           </div>
         </div>
@@ -137,9 +126,9 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
               <Shield className="w-6 h-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Multi-Sig Security</p>
-              <p className="text-2xl font-semibold text-gray-900">{treasury.multiSig}</p>
-              <p className="text-sm text-gray-500">{treasury.signers} authorized signers</p>
+              <p className="text-sm font-medium text-gray-600">Members</p>
+              <p className="text-2xl font-semibold text-gray-900">{activeMembers.length}</p>
+              <p className="text-sm text-gray-500">active members</p>
             </div>
           </div>
         </div>
@@ -151,8 +140,8 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Pending Transactions</p>
-              <p className="text-2xl font-semibold text-gray-900">{treasury.pendingTransactions}</p>
-              <p className="text-sm text-gray-500">Awaiting signatures</p>
+              <p className="text-2xl font-semibold text-gray-500">--</p>
+              <p className="text-sm text-gray-400">Coming soon</p>
             </div>
           </div>
         </div>
@@ -160,102 +149,127 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
             <div className="p-2 bg-green-100 rounded-lg">
-              <ArrowDownLeft className="w-6 h-6 text-green-600" />
+              <Wallet className="w-6 h-6 text-green-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Monthly Spending</p>
-              <p className="text-2xl font-semibold text-gray-900">{treasury.monthlySpending}</p>
-              <p className="text-sm text-gray-500">This month</p>
+              <p className="text-sm font-medium text-gray-600">Total Balance</p>
+              <p className="text-2xl font-semibold text-gray-500">--</p>
+              <p className="text-sm text-gray-400">Coming soon</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Multi-Sig Signers */}
+      {/* Authorized Signers (real member data) */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Authorized Signers</h2>
+          <h2 className="text-lg font-medium text-gray-900">Members</h2>
           <p className="text-sm text-gray-600">
-            Multi-signature wallet requires 3 of 5 signers for transactions
+            {activeMembers.length} active member{activeMembers.length !== 1 ? 's' : ''} in this
+            organization
           </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Signer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Last Active
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {signers.map((signer, index) => (
-                <tr key={index}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium text-gray-600">
-                          {signer.name
-                            .split(' ')
-                            .map(n => n[0])
-                            .join('')}
-                        </span>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{signer.name}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        signer.role === 'Founder'
-                          ? 'bg-purple-100 text-purple-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}
-                    >
-                      {signer.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        signer.status === 'active'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {signer.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {signer.lastActive}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button className="text-orange-600 hover:text-orange-900 mr-4">Replace</button>
-                    <button className="text-red-600 hover:text-red-900">Remove</button>
-                  </td>
+        {members.length === 0 ? (
+          <div className="p-12 text-center">
+            <Users className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+            <p className="text-gray-500">No members found</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Member
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Role
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Joined
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {members.map(member => (
+                  <tr key={member.id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
+                          {member.avatar_url ? (
+                            <img src={member.avatar_url} alt="" className="w-8 h-8 rounded-full" />
+                          ) : (
+                            <span className="text-sm font-medium text-gray-600">
+                              {(member.display_name || member.username || '?')
+                                .charAt(0)
+                                .toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {member.display_name || member.username || 'Unknown'}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          member.role === 'owner'
+                            ? 'bg-purple-100 text-purple-800'
+                            : member.role === 'admin'
+                              ? 'bg-blue-100 text-blue-800'
+                              : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {member.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                          member.status === 'active'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {member.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(member.joined_at).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Transactions - Coming Soon */}
+      <div className="bg-white rounded-lg shadow">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-medium text-gray-900">Transaction History</h2>
+          <p className="text-sm text-gray-600">
+            Treasury transactions with multi-sig confirmations
+          </p>
+        </div>
+        <div className="p-12 text-center">
+          <Clock className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Coming Soon</h3>
+          <p className="text-sm text-gray-400">
+            Transaction tracking will be available when treasury integration is complete.
+          </p>
         </div>
       </div>
 
-      {/* Spending Limits */}
+      {/* Spending Limits - Coming Soon */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">Spending Limits</h2>
@@ -263,137 +277,12 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
             Automated controls to prevent unauthorized spending
           </p>
         </div>
-
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {spendingLimits.map((limit, index) => (
-              <div key={index} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{limit.category}</h3>
-                    <p className="text-sm text-gray-500">{limit.period} limit</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-500">Used / Limit</div>
-                    <div className="font-medium">
-                      {limit.used} / {limit.limit}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-orange-600 h-2 rounded-full"
-                    style={{
-                      width: `${(parseFloat(limit.used.replace('₿ ', '')) / parseFloat(limit.limit.replace('₿ ', ''))) * 100}%`,
-                    }}
-                  ></div>
-                </div>
-
-                <div className="mt-2 text-xs text-gray-500">
-                  {(
-                    (parseFloat(limit.used.replace('₿ ', '')) /
-                      parseFloat(limit.limit.replace('₿ ', ''))) *
-                    100
-                  ).toFixed(1)}
-                  % utilized
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Transaction History */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-medium text-gray-900">Transaction History</h2>
-          <p className="text-sm text-gray-600">
-            All treasury transactions with multi-sig confirmations
+        <div className="p-12 text-center">
+          <Shield className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+          <h3 className="text-sm font-medium text-gray-500 mb-1">Coming Soon</h3>
+          <p className="text-sm text-gray-400">
+            Spending limits will be configurable when treasury integration is complete.
           </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Transaction
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Type
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Amount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Signers
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Date
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {transactions.map(tx => (
-                <tr key={tx.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          tx.type === 'incoming' ? 'bg-green-100' : 'bg-red-100'
-                        }`}
-                      >
-                        {tx.type === 'incoming' ? (
-                          <ArrowDownLeft className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <ArrowUpRight className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{tx.description}</div>
-                        <div className="text-sm text-gray-500">{tx.id}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        tx.type === 'incoming'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}
-                    >
-                      {tx.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {tx.amount}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span
-                      className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                        tx.status === 'confirmed'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                      }`}
-                    >
-                      {tx.status === 'confirmed' && <CheckCircle className="w-3 h-3 mr-1" />}
-                      {tx.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
-                      {tx.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {tx.signers}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{tx.date}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
 

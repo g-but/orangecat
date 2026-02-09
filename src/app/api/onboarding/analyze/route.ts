@@ -1,10 +1,6 @@
 import { logger } from '@/utils/logger';
 import { withOptionalAuth } from '@/lib/api/withAuth';
-import {
-  apiSuccess,
-  apiValidationError,
-  handleApiError,
-} from '@/lib/api/standardResponse';
+import { apiSuccess, apiValidationError, handleApiError } from '@/lib/api/standardResponse';
 import { z } from 'zod';
 
 const analysisRequestSchema = z.object({
@@ -119,6 +115,7 @@ function analyzeDescription(description: string): AnalysisResponse {
   const text = description.toLowerCase();
   const scores = {
     personal: 0,
+    organization: 0,
     charity: 0,
     business: 0,
     community: 0,
@@ -138,7 +135,7 @@ function analyzeDescription(description: string): AnalysisResponse {
   // Determine project characteristics
   const isCharity = scores.charity > 0;
   const isBusiness = scores.business > 0;
-  const isPersonal = true; // All projects are personal projects now
+  const isPersonal = scores.personal >= scores.organization;
   const isOpenSource = scores.openSource > 0;
   const needsFunding = scores.funding > 0;
 
@@ -193,7 +190,7 @@ function analyzeDescription(description: string): AnalysisResponse {
   };
 }
 
-export const POST = withOptionalAuth(async (req) => {
+export const POST = withOptionalAuth(async req => {
   try {
     const body = await req.json();
     const validation = analysisRequestSchema.safeParse(body);
