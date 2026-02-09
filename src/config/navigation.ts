@@ -32,6 +32,8 @@ import {
   HelpCircle,
   Search,
   Cat,
+  ClipboardList,
+  BarChart3,
 } from 'lucide-react';
 
 export interface NavigationItem {
@@ -192,9 +194,33 @@ const simplifiedSections: NavSection[] = [
     ],
   },
   {
+    id: 'betrieb',
+    title: 'Betrieb',
+    priority: 3,
+    defaultExpanded: false, // Collapsed by default
+    collapsible: true,
+    requiresAuth: true,
+    items: [
+      {
+        name: 'Aufgaben',
+        href: '/dashboard/tasks',
+        icon: ClipboardList,
+        description: 'Teamaufgaben verwalten',
+        requiresAuth: true,
+      },
+      {
+        name: 'Statistiken',
+        href: '/dashboard/tasks/analytics',
+        icon: BarChart3,
+        description: 'Aufgaben-Analytik',
+        requiresAuth: true,
+      },
+    ],
+  },
+  {
     id: 'more',
     title: 'More',
-    priority: 3,
+    priority: 4,
     defaultExpanded: false, // Collapsed by default
     collapsible: true,
     requiresAuth: false,

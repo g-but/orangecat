@@ -71,6 +71,13 @@ export const DATABASE_TABLES = {
   AVAILABILITY_SLOTS: 'availability_slots',
   ASSET_AVAILABILITY: 'asset_availability',
 
+  // Task Management
+  TASKS: 'tasks',
+  TASK_COMPLETIONS: 'task_completions',
+  TASK_ATTENTION_FLAGS: 'task_attention_flags',
+  TASK_REQUESTS: 'task_requests',
+  TASK_PROJECTS: 'task_projects',
+
   // Entity Tables (for direct access when not using entity-registry)
   USER_ASSETS: 'user_assets',
   USER_PRODUCTS: 'user_products',

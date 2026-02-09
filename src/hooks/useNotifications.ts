@@ -15,7 +15,12 @@ export interface Notification {
     | 'comment'
     | 'like'
     | 'mention'
-    | 'system';
+    | 'system'
+    // Task-related notification types
+    | 'task_attention'
+    | 'task_request'
+    | 'task_completed'
+    | 'task_broadcast';
   title: string;
   message: string | null;
   action_url: string | null;
