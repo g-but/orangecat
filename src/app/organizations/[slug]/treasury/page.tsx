@@ -1,70 +1,18 @@
 'use client';
 
-import React, { use, useEffect, useState } from 'react';
-import { Wallet, Users, Shield, Clock, Download, Send, Plus, AlertCircle } from 'lucide-react';
+import React, { use } from 'react';
+import { Wallet, Shield, Clock, Download, Send, Plus, Users, AlertCircle } from 'lucide-react';
 import Loading from '@/components/Loading';
+import { useOrganizationData } from '../useOrganizationData';
+import { MemberTable } from '../MemberTable';
 
 interface TreasuryPageProps {
   params: Promise<{ slug: string }>;
 }
 
-interface GroupData {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  bitcoin_address: string | null;
-  lightning_address: string | null;
-}
-
-interface Member {
-  id: string;
-  user_id: string;
-  role: string;
-  status: string;
-  joined_at: string;
-  voting_weight: number;
-  username: string | null;
-  display_name: string | null;
-  avatar_url: string | null;
-}
-
 export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) {
   const { slug } = use(params);
-  const [group, setGroup] = useState<GroupData | null>(null);
-  const [members, setMembers] = useState<Member[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [groupRes, membersRes] = await Promise.all([
-          fetch(`/api/groups/${slug}`),
-          fetch(`/api/groups/${slug}/members`),
-        ]);
-
-        if (!groupRes.ok) {
-          setError('Organization not found');
-          return;
-        }
-
-        const groupData = await groupRes.json();
-        setGroup(groupData.group);
-
-        if (membersRes.ok) {
-          const membersData = await membersRes.json();
-          setMembers(membersData.members || []);
-        }
-      } catch {
-        setError('Failed to load treasury data');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [slug]);
+  const { group, members, loading, error } = useOrganizationData(slug);
 
   if (loading) {
     return <Loading fullScreen message="Loading treasury..." />;
@@ -91,11 +39,19 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
           <p className="text-gray-600">Multi-signature Bitcoin treasury for {group.name}</p>
         </div>
         <div className="flex space-x-3">
-          <button className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+          <button
+            disabled
+            className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-400 bg-gray-50 cursor-not-allowed"
+            title="Coming soon"
+          >
             <Download className="w-4 h-4 mr-2" />
             Export Report
           </button>
-          <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700">
+          <button
+            disabled
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-400 cursor-not-allowed"
+            title="Coming soon"
+          >
             <Send className="w-4 h-4 mr-2" />
             New Transaction
           </button>
@@ -158,7 +114,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
         </div>
       </div>
 
-      {/* Authorized Signers (real member data) */}
+      {/* Members */}
       <div className="bg-white rounded-lg shadow">
         <div className="px-6 py-4 border-b border-gray-200">
           <h2 className="text-lg font-medium text-gray-900">Members</h2>
@@ -167,87 +123,7 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
             organization
           </p>
         </div>
-
-        {members.length === 0 ? (
-          <div className="p-12 text-center">
-            <Users className="h-10 w-10 text-gray-300 mx-auto mb-3" />
-            <p className="text-gray-500">No members found</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Member
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Role
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Joined
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {members.map(member => (
-                  <tr key={member.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center">
-                          {member.avatar_url ? (
-                            <img src={member.avatar_url} alt="" className="w-8 h-8 rounded-full" />
-                          ) : (
-                            <span className="text-sm font-medium text-gray-600">
-                              {(member.display_name || member.username || '?')
-                                .charAt(0)
-                                .toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {member.display_name || member.username || 'Unknown'}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          member.role === 'owner'
-                            ? 'bg-purple-100 text-purple-800'
-                            : member.role === 'admin'
-                              ? 'bg-blue-100 text-blue-800'
-                              : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        {member.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          member.status === 'active'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
-                      >
-                        {member.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {new Date(member.joined_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <MemberTable members={members} columns={['member', 'role', 'status', 'joined']} />
       </div>
 
       {/* Transactions - Coming Soon */}
@@ -291,24 +167,36 @@ export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) 
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-orange-400 hover:text-orange-600 transition-colors">
+            <button
+              disabled
+              className="flex items-center justify-center p-4 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 cursor-not-allowed"
+            >
               <div className="text-center">
                 <Plus className="w-8 h-8 mx-auto mb-2" />
                 <span className="text-sm font-medium">New Transaction</span>
+                <span className="block text-xs text-gray-300 mt-1">Coming soon</span>
               </div>
             </button>
 
-            <button className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-orange-400 hover:text-orange-600 transition-colors">
+            <button
+              disabled
+              className="flex items-center justify-center p-4 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 cursor-not-allowed"
+            >
               <div className="text-center">
                 <Users className="w-8 h-8 mx-auto mb-2" />
                 <span className="text-sm font-medium">Manage Signers</span>
+                <span className="block text-xs text-gray-300 mt-1">Coming soon</span>
               </div>
             </button>
 
-            <button className="flex items-center justify-center p-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-orange-400 hover:text-orange-600 transition-colors">
+            <button
+              disabled
+              className="flex items-center justify-center p-4 border-2 border-dashed border-gray-200 rounded-lg text-gray-400 cursor-not-allowed"
+            >
               <div className="text-center">
                 <Shield className="w-8 h-8 mx-auto mb-2" />
                 <span className="text-sm font-medium">Update Limits</span>
+                <span className="block text-xs text-gray-300 mt-1">Coming soon</span>
               </div>
             </button>
           </div>
