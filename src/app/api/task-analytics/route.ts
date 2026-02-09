@@ -101,20 +101,59 @@ export async function GET(request: NextRequest) {
         .neq('requested_by', user.id),
     ]);
 
-    // Get recent completions for the feed
-    const { data: recentCompletions } = await supabase
+    // Get recent completions for the feed (no profile join - FK goes to auth.users not profiles)
+    const { data: rawCompletions } = await supabase
       .from(DATABASE_TABLES.TASK_COMPLETIONS)
       .select(
         `
         id,
         completed_at,
+        completed_by,
         notes,
-        task:tasks!task_completions_task_id_fkey(id, title, category),
-        completer:profiles!task_completions_completed_by_fkey(id, username, display_name, avatar_url)
+        task:tasks!task_completions_task_id_fkey(id, title, category)
       `
       )
       .order('completed_at', { ascending: false })
       .limit(5);
+
+    // Fetch profiles for recent completers
+    const completerIds = [
+      ...new Set((rawCompletions || []).map((c: { completed_by: string }) => c.completed_by)),
+    ];
+    const completionProfiles: Record<
+      string,
+      { id: string; username: string; display_name: string | null; avatar_url: string | null }
+    > = {};
+    if (completerIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('id, username, display_name, avatar_url')
+        .in('id', completerIds);
+      for (const p of profiles || []) {
+        completionProfiles[(p as { id: string }).id] = p as {
+          id: string;
+          username: string;
+          display_name: string | null;
+          avatar_url: string | null;
+        };
+      }
+    }
+
+    const recentCompletions = (rawCompletions || []).map(
+      (c: {
+        id: string;
+        completed_at: string;
+        completed_by: string;
+        notes: string | null;
+        task: unknown;
+      }) => ({
+        id: c.id,
+        completed_at: c.completed_at,
+        notes: c.notes,
+        task: c.task,
+        completer: completionProfiles[c.completed_by] || null,
+      })
+    );
 
     // Get tasks needing attention
     const { data: urgentTasks } = await supabase

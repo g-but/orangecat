@@ -26,11 +26,12 @@ interface CompletionRow {
   task_id: string;
   completed_by: string;
   completed_at: string;
-  completer: {
-    id: string;
-    username: string;
-    display_name: string | null;
-  } | null;
+}
+
+interface ProfileRow {
+  id: string;
+  username: string;
+  display_name: string | null;
 }
 
 /**
@@ -97,21 +98,10 @@ export async function GET(request: NextRequest) {
     // Get completions for these tasks within the time period
     const taskIds = recurringTasks.map(t => t.id);
 
+    // Fetch completions without profile join (FK goes to auth.users not profiles)
     const { data: completionsData, error: completionsError } = await supabase
       .from(DATABASE_TABLES.TASK_COMPLETIONS)
-      .select(
-        `
-        id,
-        task_id,
-        completed_by,
-        completed_at,
-        completer:profiles!task_completions_completed_by_fkey(
-          id,
-          username,
-          display_name
-        )
-      `
-      )
+      .select('id, task_id, completed_by, completed_at')
       .in('task_id', taskIds)
       .gte('completed_at', startDate.toISOString())
       .order('completed_at', { ascending: false });
@@ -122,6 +112,21 @@ export async function GET(request: NextRequest) {
     }
 
     const completions = (completionsData || []) as CompletionRow[];
+
+    // Fetch profiles separately for all unique completers
+    const uniqueUserIds = [...new Set(completions.map(c => c.completed_by))];
+    const profilesMap = new Map<string, ProfileRow>();
+
+    if (uniqueUserIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('id, username, display_name')
+        .in('id', uniqueUserIds);
+
+      for (const p of (profiles || []) as ProfileRow[]) {
+        profilesMap.set(p.id, p);
+      }
+    }
 
     // Calculate fairness metrics per task
     const taskMetrics = recurringTasks.map(task => {
@@ -134,19 +139,19 @@ export async function GET(request: NextRequest) {
       >();
 
       for (const completion of taskCompletions) {
-        const completer = completion.completer;
-        if (!completer) {
+        const profile = profilesMap.get(completion.completed_by);
+        if (!profile) {
           continue;
         }
 
-        const existing = uniqueCompleters.get(completer.id);
+        const existing = uniqueCompleters.get(profile.id);
         if (existing) {
           existing.count += 1;
         } else {
-          uniqueCompleters.set(completer.id, {
-            id: completer.id,
-            username: completer.username,
-            display_name: completer.display_name,
+          uniqueCompleters.set(profile.id, {
+            id: profile.id,
+            username: profile.username,
+            display_name: profile.display_name,
             count: 1,
           });
         }
