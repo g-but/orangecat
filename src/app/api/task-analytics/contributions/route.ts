@@ -12,7 +12,7 @@ import { ApiResponses, createSuccessResponse } from '@/lib/api/responses';
 import { DATABASE_TABLES } from '@/config/database-tables';
 import { logger } from '@/utils/logger';
 
-// Type for completion with joined data
+// Type for completion row (without profile join)
 interface CompletionRow {
   id: string;
   completed_by: string;
@@ -23,12 +23,13 @@ interface CompletionRow {
     title: string;
     category: string;
   } | null;
-  completer: {
-    id: string;
-    username: string;
-    display_name: string | null;
-    avatar_url: string | null;
-  } | null;
+}
+
+interface ProfileRow {
+  id: string;
+  username: string;
+  display_name: string | null;
+  avatar_url: string | null;
 }
 
 /**
@@ -56,8 +57,8 @@ export async function GET(request: NextRequest) {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    // Get completions with user and task info
-    const query = supabase
+    // Get completions with task info (no profile join - FK goes to auth.users not profiles)
+    const { data, error } = await supabase
       .from(DATABASE_TABLES.TASK_COMPLETIONS)
       .select(
         `
@@ -69,27 +70,33 @@ export async function GET(request: NextRequest) {
           id,
           title,
           category
-        ),
-        completer:profiles!task_completions_completed_by_fkey(
-          id,
-          username,
-          display_name,
-          avatar_url
         )
       `
       )
       .gte('completed_at', startDate.toISOString())
       .order('completed_at', { ascending: false });
 
-    const { data, error } = await query;
-
     if (error) {
       logger.error('Failed to fetch contributions', { error }, 'TaskAnalyticsAPI');
       return ApiResponses.internalServerError('Failed to fetch contributions');
     }
 
-    // Cast to typed array
     const completions = (data || []) as CompletionRow[];
+
+    // Fetch profiles separately for all unique completers
+    const uniqueUserIds = [...new Set(completions.map(c => c.completed_by))];
+    const profilesMap = new Map<string, ProfileRow>();
+
+    if (uniqueUserIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from(DATABASE_TABLES.PROFILES)
+        .select('id, username, display_name, avatar_url')
+        .in('id', uniqueUserIds);
+
+      for (const p of (profiles || []) as ProfileRow[]) {
+        profilesMap.set(p.id, p);
+      }
+    }
 
     // Filter by category if specified
     let filteredCompletions = completions;
@@ -115,16 +122,16 @@ export async function GET(request: NextRequest) {
 
     for (const completion of filteredCompletions) {
       const userId = completion.completed_by;
-      const completer = completion.completer;
+      const profile = profilesMap.get(userId);
       const task = completion.task;
 
-      if (!completer) {
+      if (!profile) {
         continue;
       }
 
       if (!contributionsByUser.has(userId)) {
         contributionsByUser.set(userId, {
-          user: completer,
+          user: profile,
           totalCompletions: 0,
           totalMinutes: 0,
           byCategory: {},
