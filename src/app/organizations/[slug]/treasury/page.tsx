@@ -1,13 +1,11 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { use, useEffect, useState } from 'react';
 import { Wallet, Users, Shield, Clock, Download, Send, Plus, AlertCircle } from 'lucide-react';
 import Loading from '@/components/Loading';
 
 interface TreasuryPageProps {
-  params: {
-    slug: string;
-  };
+  params: Promise<{ slug: string }>;
 }
 
 interface GroupData {
@@ -32,7 +30,7 @@ interface Member {
 }
 
 export default function OrganizationTreasuryPage({ params }: TreasuryPageProps) {
-  const { slug } = params;
+  const { slug } = use(params);
   const [group, setGroup] = useState<GroupData | null>(null);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);

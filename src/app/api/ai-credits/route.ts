@@ -200,8 +200,7 @@ export const POST = compose(
       payment_details: {
         invoice: null,
       },
-      development_mode: true,
-      message: 'Payment integration not configured. Deposit recorded but no invoice generated.',
+      message: 'Deposit recorded. Payment provider integration pending.',
     });
   } catch (error) {
     logger.error('Failed to create deposit request', { error });
