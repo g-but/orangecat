@@ -4,7 +4,7 @@ import { apiSuccess, apiValidationError, handleApiError } from '@/lib/api/standa
 import { z } from 'zod';
 
 const analysisRequestSchema = z.object({
-  description: z.string().min(1).max(5000),
+  description: z.string().trim().min(1).max(5000),
 });
 
 interface AnalysisResponse {
@@ -123,10 +123,12 @@ function analyzeDescription(description: string): AnalysisResponse {
     funding: 0,
   };
 
-  // Count keyword matches
+  // Count keyword matches (use word boundaries for short keywords to avoid false positives)
   Object.entries(KEYWORDS).forEach(([category, keywords]) => {
     keywords.forEach(keyword => {
-      if (text.includes(keyword)) {
+      const match =
+        keyword.length <= 3 ? new RegExp(`\\b${keyword}\\b`).test(text) : text.includes(keyword);
+      if (match) {
         scores[category as keyof typeof scores]++;
       }
     });
@@ -205,10 +207,6 @@ export const POST = withOptionalAuth(async req => {
     }
 
     const { description } = validation.data;
-
-    if (!description || description.trim().length === 0) {
-      return apiValidationError('Description is required');
-    }
 
     const analysis = analyzeDescription(description);
 

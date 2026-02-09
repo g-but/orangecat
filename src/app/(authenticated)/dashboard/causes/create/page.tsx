@@ -33,6 +33,7 @@ export default function CreateCausePage() {
   const { user, hydrated } = useAuth();
   const [causeData, setCauseData] = useState<Partial<UserCauseFormData> | null>(null);
   const [loading, setLoading] = useState(!!editId);
+  const [editError, setEditError] = useState<string | null>(null);
   const [initialData, setInitialData] = useState<Partial<UserCauseFormData> | undefined>(undefined);
 
   // Fetch cause data if in edit mode
@@ -45,10 +46,15 @@ export default function CreateCausePage() {
             const result = await response.json();
             if (result.success && result.data) {
               setCauseData(result.data);
+            } else {
+              setEditError('Failed to load cause data');
             }
+          } else {
+            setEditError(response.status === 404 ? 'Cause not found' : 'Failed to load cause data');
           }
         } catch (error) {
           logger.error('Failed to fetch cause:', error);
+          setEditError('Failed to load cause data');
         } finally {
           setLoading(false);
         }
@@ -86,6 +92,22 @@ export default function CreateCausePage() {
 
   if (loading) {
     return <Loading fullScreen message="Loading cause..." />;
+  }
+
+  // Edit mode: show error if fetch failed
+  if (editId && editError) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <h3 className="text-lg font-semibold mb-2">{editError}</h3>
+        <p className="text-gray-500 mb-4">Unable to load cause for editing.</p>
+        <button
+          onClick={() => router.push('/dashboard/causes')}
+          className="text-sm text-orange-600 hover:text-orange-700 font-medium"
+        >
+          Back to causes
+        </button>
+      </div>
+    );
   }
 
   // Edit mode: use EntityForm directly (skip template selection)
