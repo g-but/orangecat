@@ -13,16 +13,7 @@ import ProfileShare from '@/components/sharing/ProfileShare';
 import { Input } from '@/components/ui/Input';
 import { toast } from 'sonner';
 import { logger } from '@/utils/logger';
-
-interface Profile {
-  id: string;
-  username: string | null;
-  name: string | null;
-  avatar_url: string | null;
-  bio: string | null;
-  bitcoin_address: string | null;
-  lightning_address: string | null;
-}
+import type { Profile } from '@/types/profile';
 
 interface Connection {
   profile: Profile;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import { WalletManager } from '@/components/wallets/WalletManager';
 import { DuplicateWalletDialog } from '@/components/wallets/DuplicateWalletDialog';
@@ -30,7 +30,7 @@ import { WalletsMobileGuidance } from './components/WalletsMobileGuidance';
  * Last Modified Summary: Refactored to use extracted hooks and components
  */
 export default function DashboardWalletsPage() {
-  const { user, profile, isLoading: authLoading } = useAuth();
+  const { user, profile, isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
   const [focusedField, setFocusedField] = useState<WalletFieldType>(null);
   const [showMobileGuidance, setShowMobileGuidance] = useState(false);
@@ -44,7 +44,7 @@ export default function DashboardWalletsPage() {
 
   // We need to manage wallets state here to pass to the operations hook
   const [walletsState, setWalletsState] = useState(wallets);
-  
+
   // Update local state when wallets change from the fetch hook
   useEffect(() => {
     setWalletsState(wallets);
@@ -69,10 +69,8 @@ export default function DashboardWalletsPage() {
     return <Loading message="Loading your wallets..." />;
   }
 
-  // Not authenticated
   if (!user) {
-    router.push('/auth');
-    return <Loading message="Redirecting to login..." />;
+    return null;
   }
 
   // Show error state if loading failed
@@ -113,7 +111,6 @@ export default function DashboardWalletsPage() {
                 onFieldFocus={setFocusedField}
               />
             </div>
-
 
             {/* Help Section */}
             <WalletsHelpSection isDesktop={isDesktop} />

@@ -194,25 +194,25 @@ const simplifiedSections: NavSection[] = [
     ],
   },
   {
-    id: 'betrieb',
-    title: 'Betrieb',
+    id: 'operations',
+    title: 'Operations',
     priority: 3,
     defaultExpanded: false, // Collapsed by default
     collapsible: true,
     requiresAuth: true,
     items: [
       {
-        name: 'Aufgaben',
+        name: 'Tasks',
         href: '/dashboard/tasks',
         icon: ClipboardList,
-        description: 'Teamaufgaben verwalten',
+        description: 'Manage team tasks',
         requiresAuth: true,
       },
       {
-        name: 'Statistiken',
+        name: 'Analytics',
         href: '/dashboard/tasks/analytics',
         icon: BarChart3,
-        description: 'Aufgaben-Analytik',
+        description: 'Task analytics',
         requiresAuth: true,
       },
     ],

@@ -79,7 +79,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     if (fetchError) {
       if (fetchError.code === 'PGRST116') {
-        return ApiResponses.notFound('Anfrage');
+        return ApiResponses.notFound('Request');
       }
       logger.error(
         'Failed to fetch task request',
@@ -98,12 +98,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       taskRequest.requested_user_id === null; // Broadcast
 
     if (!canRespond) {
-      return ApiResponses.authorizationFailed('Du kannst auf diese Anfrage nicht antworten');
+      return ApiResponses.authorizationFailed('You cannot respond to this request');
     }
 
     // Verify request is still pending
     if (taskRequest.status !== REQUEST_STATUSES.PENDING) {
-      return ApiResponses.badRequest('Diese Anfrage wurde bereits beantwortet');
+      return ApiResponses.badRequest('This request has already been answered');
     }
 
     // Update request
@@ -149,15 +149,15 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       .single();
 
     const responderProfile = profileData as ProfileRow | null;
-    const responderName = responderProfile?.display_name || responderProfile?.username || 'Jemand';
+    const responderName = responderProfile?.display_name || responderProfile?.username || 'Someone';
     const task = taskRequest.task;
-    const taskTitle = task?.title || 'Aufgabe';
+    const taskTitle = task?.title || 'Task';
     const taskId = task?.id || taskRequest.task_id;
 
     const notificationTitle =
       responseData.status === REQUEST_STATUSES.ACCEPTED
-        ? `${responderName} übernimmt: "${taskTitle}"`
-        : `${responderName} hat abgelehnt: "${taskTitle}"`;
+        ? `${responderName} accepted: "${taskTitle}"`
+        : `${responderName} declined: "${taskTitle}"`;
 
     await notificationService.createNotification({
       recipientUserId: taskRequest.requested_by,
@@ -172,7 +172,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return createSuccessResponse(
       { request: updatedRequest },
       HttpStatus.OK,
-      responseData.status === REQUEST_STATUSES.ACCEPTED ? 'Anfrage angenommen' : 'Anfrage abgelehnt'
+      responseData.status === REQUEST_STATUSES.ACCEPTED ? 'Request accepted' : 'Request declined'
     );
   } catch (err) {
     logger.error('Exception in PATCH /api/task-requests/[id]', { error: err }, 'TaskRequestsAPI');

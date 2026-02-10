@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
@@ -29,7 +29,7 @@ import { Trash2 } from 'lucide-react';
  * Last Modified Summary: Added delete functionality with confirmation dialog
  */
 export default function OrganizationsDashboardPage() {
-  const { user, isLoading, hydrated } = useAuth();
+  const { user, isLoading, hydrated } = useRequireAuth();
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -49,7 +49,7 @@ export default function OrganizationsDashboardPage() {
     limit: 12,
     enabled: !!user?.id && hydrated && !isLoading,
     // Transform raw API response to entity format
-    transformResponse: (data) => {
+    transformResponse: data => {
       const orgs = data.organizations || data.items || [];
       return {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -59,13 +59,7 @@ export default function OrganizationsDashboardPage() {
     },
   });
 
-  useEffect(() => {
-    if (hydrated && !isLoading && !user) {
-      router.push('/auth');
-    }
-  }, [user, hydrated, isLoading, router]);
-
-  if (!hydrated || isLoading) {
+  if (isLoading) {
     return <Loading fullScreen message="Loading your organizations..." />;
   }
 
@@ -81,7 +75,9 @@ export default function OrganizationsDashboardPage() {
 
   // Handle delete confirmation
   const handleDeleteConfirm = async () => {
-    if (!orgToDelete) {return;}
+    if (!orgToDelete) {
+      return;
+    }
 
     setDeletingId(orgToDelete.id);
     try {
@@ -120,7 +116,7 @@ export default function OrganizationsDashboardPage() {
     // Check if user is founder (can delete)
     // For now, we'll show delete for all - the API will enforce founder-only
     const isDeleting = deletingId === org.id;
-    
+
     return {
       ...baseProps,
       actions: (
@@ -129,7 +125,7 @@ export default function OrganizationsDashboardPage() {
           <Button
             size="sm"
             variant="outline"
-            onClick={(e) => {
+            onClick={e => {
               e.stopPropagation();
               handleDeleteClick(org);
             }}
@@ -182,8 +178,9 @@ export default function OrganizationsDashboardPage() {
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Organization</h3>
             <p className="text-gray-600 mb-4">
-              Are you sure you want to delete "{orgToDelete.title || orgToDelete.name || 'this organization'}"?
-              This action cannot be undone and will permanently delete the organization and all associated data.
+              Are you sure you want to delete "
+              {orgToDelete.title || orgToDelete.name || 'this organization'}"? This action cannot be
+              undone and will permanently delete the organization and all associated data.
             </p>
             <div className="flex justify-end gap-3">
               <Button
@@ -208,4 +205,3 @@ export default function OrganizationsDashboardPage() {
     </>
   );
 }
-

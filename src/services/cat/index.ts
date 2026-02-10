@@ -13,3 +13,11 @@ export type { CatPermission, PermissionCheck, UserPermissionSummary } from './pe
 
 export { CatActionExecutor, createActionExecutor } from './action-executor';
 export type { ActionRequest, ActionResult, PendingAction } from './action-executor';
+
+export { buildCatSystemPrompt } from './system-prompt';
+export type { CatSystemPromptContext } from './system-prompt';
+
+export { getCatFewShotExamples } from './few-shot-examples';
+
+export { parseActionsFromResponse } from './response-parser';
+export type { ParsedResponse } from './response-parser';

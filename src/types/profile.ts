@@ -40,7 +40,7 @@ export interface Profile {
   verification_status?: VerificationStatus;
 }
 
-export type ProfileType = 'individual' | 'project' | 'organization' | 'collective' | 'project';
+export type ProfileType = 'individual' | 'project' | 'organization' | 'collective';
 
 export interface AssociatedEntity {
   id: string;

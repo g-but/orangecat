@@ -18,7 +18,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import { useProjectStore } from '@/stores/projectStore';
 import { timelineService } from '@/services/timeline';
 import { TimelineFeedResponse } from '@/types/timeline';
@@ -59,7 +59,7 @@ const DashboardTimeline = dynamic(
 );
 
 export default function DashboardPage() {
-  const { user, profile, isLoading, error: authError, hydrated } = useAuth();
+  const { user, profile, isLoading, hydrated } = useRequireAuth();
   const { projects, drafts, loadProjects, getStats } = useProjectStore();
   useTimelineEvents();
   const router = useRouter();
@@ -67,7 +67,6 @@ export default function DashboardPage() {
 
   // Local state
   const [localLoading, setLocalLoading] = useState(true);
-  const [hasRedirected, setHasRedirected] = useState(false);
   const [timelineFeed, setTimelineFeed] = useState<TimelineFeedResponse | null>(null);
   const [timelineLoading, setTimelineLoading] = useState(false);
   const [timelineError, setTimelineError] = useState<string | null>(null);
@@ -158,17 +157,6 @@ export default function DashboardPage() {
     return () => window.removeEventListener('focus', handleFocus);
   }, [user?.id, hydrated, loadProjects]);
 
-  // Auth redirect
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    if (hydrated && !isLoading && !user && !hasRedirected) {
-      setHasRedirected(true);
-      router.push('/auth');
-    }
-  }, [user, hydrated, isLoading, router, hasRedirected]);
-
   const loadTimelineFeed = async (userId: string) => {
     setTimelineLoading(true);
     setTimelineError(null);
@@ -249,18 +237,6 @@ export default function DashboardPage() {
 
   if (!user && !isLoading) {
     return <Loading fullScreen message="Redirecting to login..." />;
-  }
-
-  if (authError && user) {
-    return (
-      <div className="max-w-7xl mx-auto p-4 sm:p-6">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-6">Dashboard</h1>
-        <div className="border border-red-200 rounded-lg bg-red-50 p-6">
-          <h2 className="text-lg font-semibold text-red-900 mb-2">Error Loading Dashboard</h2>
-          <p className="text-sm text-red-700">{authError}</p>
-        </div>
-      </div>
-    );
   }
 
   if (!user) {

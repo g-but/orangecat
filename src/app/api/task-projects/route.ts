@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       return ApiResponses.internalServerError('Failed to create project');
     }
 
-    return createSuccessResponse({ project }, HttpStatus.CREATED, 'Projekt erstellt');
+    return createSuccessResponse({ project }, HttpStatus.CREATED, 'Project created');
   } catch (err) {
     logger.error('Exception in POST /api/task-projects', { error: err }, 'TaskProjectsAPI');
     return ApiResponses.internalServerError();

@@ -7,6 +7,8 @@
  * @module messaging/lib/constants
  */
 
+import { logger } from '@/utils/logger';
+
 // =============================================================================
 // PAGINATION
 // =============================================================================
@@ -150,6 +152,5 @@ export const DEBUG = process.env.NODE_ENV === 'development';
 
 /** Conditional logger that only logs in development */
 export const debugLog = DEBUG
-  ? // eslint-disable-next-line no-console -- Intentional dev-only debug logging
-    (...args: unknown[]) => console.log('[Messaging]', ...args)
+  ? (...args: unknown[]) => logger.debug(args.map(String).join(' '), undefined, 'messaging')
   : () => {};

@@ -3,16 +3,9 @@
  * Shared types for the chat panel components
  */
 
-export interface SuggestedAction {
-  type: 'create_entity';
-  entityType: 'product' | 'service' | 'project' | 'cause' | 'event';
-  prefill: {
-    title: string;
-    description?: string;
-    category?: string;
-    [key: string]: unknown;
-  };
-}
+// SuggestedAction is the SSOT shared type from @/types/cat
+import type { SuggestedAction } from '@/types/cat';
+export type { SuggestedAction };
 
 export interface Message {
   id: string;

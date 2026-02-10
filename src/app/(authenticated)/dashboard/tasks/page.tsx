@@ -16,7 +16,7 @@
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
 import Button from '@/components/ui/Button';
@@ -64,7 +64,7 @@ interface TaskWithRelations extends Task {
 }
 
 export default function TasksPage() {
-  const { user, isLoading: authLoading, hydrated } = useAuth();
+  const { user, isLoading: authLoading, hydrated } = useRequireAuth();
   const router = useRouter();
 
   // State
@@ -127,12 +127,6 @@ export default function TasksPage() {
     }
   }, [hydrated, authLoading, user, loadTasks]);
 
-  useEffect(() => {
-    if (hydrated && !authLoading && !user) {
-      router.push('/auth');
-    }
-  }, [user, hydrated, authLoading, router]);
-
   // Group tasks by status for quick overview
   const taskCounts = useMemo(() => {
     return {
@@ -158,7 +152,7 @@ export default function TasksPage() {
         throw new Error(data.error || 'Failed to complete task');
       }
 
-      toast.success('Aufgabe erledigt!');
+      toast.success('Task completed!');
       loadTasks();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to complete task';
@@ -172,7 +166,7 @@ export default function TasksPage() {
       const response = await fetch(`/api/tasks/${taskId}/attention`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'Braucht Aufmerksamkeit' }),
+        body: JSON.stringify({ message: 'Needs attention' }),
       });
 
       if (!response.ok) {
@@ -180,7 +174,7 @@ export default function TasksPage() {
         throw new Error(data.error || 'Failed to flag task');
       }
 
-      toast.success('Aufgabe markiert');
+      toast.success('Task flagged');
       loadTasks();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to flag task';
@@ -188,8 +182,8 @@ export default function TasksPage() {
     }
   };
 
-  if (!hydrated || authLoading) {
-    return <Loading fullScreen message="Aufgaben werden geladen..." />;
+  if (authLoading) {
+    return <Loading fullScreen message="Loading tasks..." />;
   }
 
   if (!user) {
@@ -205,7 +199,7 @@ export default function TasksPage() {
         className="flex items-center gap-2"
       >
         <BarChart3 className="h-4 w-4" />
-        <span className="hidden sm:inline">Statistiken</span>
+        <span className="hidden sm:inline">Analytics</span>
       </Button>
       <Button
         onClick={() => setShowFilters(!showFilters)}
@@ -222,30 +216,30 @@ export default function TasksPage() {
         className="flex items-center gap-2 bg-gradient-to-r from-tiffany-600 to-tiffany-700"
       >
         <Plus className="h-4 w-4" />
-        <span>Neue Aufgabe</span>
+        <span>New task</span>
       </Button>
     </div>
   );
 
   return (
     <EntityListShell
-      title="Aufgaben"
-      description="Teamaufgaben verwalten und erledigen"
+      title="Tasks"
+      description="Manage and complete team tasks"
       headerActions={headerActions}
     >
       {/* Quick Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <QuickStatCard icon={ClipboardList} label="Gesamt" value={taskCounts.total} color="gray" />
-        <QuickStatCard icon={Clock} label="Bereit" value={taskCounts.idle} color="blue" />
+        <QuickStatCard icon={ClipboardList} label="Total" value={taskCounts.total} color="gray" />
+        <QuickStatCard icon={Clock} label="Ready" value={taskCounts.idle} color="blue" />
         <QuickStatCard
           icon={AlertTriangle}
-          label="Braucht Aufmerksamkeit"
+          label="Needs attention"
           value={taskCounts.needsAttention}
           color="amber"
         />
         <QuickStatCard
           icon={Play}
-          label="In Bearbeitung"
+          label="In progress"
           value={taskCounts.inProgress}
           color="green"
         />
@@ -256,13 +250,13 @@ export default function TasksPage() {
         <div className="bg-white rounded-xl border border-gray-200 p-4 mb-6 space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Kategorie</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
               <select
                 value={categoryFilter}
                 onChange={e => setCategoryFilter(e.target.value as TaskCategory | '')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tiffany-500"
               >
-                <option value="">Alle Kategorien</option>
+                <option value="">All categories</option>
                 {Object.entries(TASK_CATEGORY_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -277,7 +271,7 @@ export default function TasksPage() {
                 onChange={e => setStatusFilter(e.target.value as TaskStatus | '')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tiffany-500"
               >
-                <option value="">Alle Status</option>
+                <option value="">All statuses</option>
                 {Object.entries(TASK_STATUS_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -286,13 +280,13 @@ export default function TasksPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Typ</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
               <select
                 value={typeFilter}
                 onChange={e => setTypeFilter(e.target.value as TaskType | '')}
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tiffany-500"
               >
-                <option value="">Alle Typen</option>
+                <option value="">All types</option>
                 {Object.entries(TASK_TYPE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
@@ -309,7 +303,7 @@ export default function TasksPage() {
                 onChange={e => setShowArchived(e.target.checked)}
                 className="h-4 w-4 rounded border-gray-300 text-tiffany-600 focus:ring-tiffany-500"
               />
-              <span>Archivierte anzeigen</span>
+              <span>Show archived</span>
             </label>
           </div>
         </div>
@@ -330,15 +324,15 @@ export default function TasksPage() {
       ) : tasks.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
           <ClipboardList className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Keine Aufgaben gefunden</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No tasks found</h3>
           <p className="text-gray-600 mb-6">
             {categoryFilter || statusFilter || typeFilter
-              ? 'Versuche andere Filtereinstellungen'
-              : 'Erstelle deine erste Aufgabe'}
+              ? 'Try different filter settings'
+              : 'Create your first task'}
           </p>
           <Button href="/dashboard/tasks/new" className="inline-flex">
             <Plus className="h-4 w-4 mr-2" />
-            Neue Aufgabe
+            New task
           </Button>
         </div>
       ) : (
@@ -443,7 +437,7 @@ function TaskCard({
             {task.estimated_minutes && (
               <>
                 <span>•</span>
-                <span>~{task.estimated_minutes} Min.</span>
+                <span>~{task.estimated_minutes} min</span>
               </>
             )}
           </div>
@@ -453,7 +447,7 @@ function TaskCard({
             <button
               onClick={onFlagAttention}
               className="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-              title="Als braucht Aufmerksamkeit markieren"
+              title="Flag as needs attention"
             >
               <AlertTriangle className="h-5 w-5" />
             </button>
@@ -461,7 +455,7 @@ function TaskCard({
           <button
             onClick={onComplete}
             className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-            title="Als erledigt markieren"
+            title="Mark as complete"
           >
             <CheckCircle className="h-5 w-5" />
           </button>

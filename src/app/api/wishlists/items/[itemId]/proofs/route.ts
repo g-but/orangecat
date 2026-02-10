@@ -24,7 +24,7 @@ interface WishlistItem {
   wishlists: { actor_id: string } | { actor_id: string }[];
 }
 
-interface Profile {
+interface ProofCreatorProfile {
   id: string;
   username: string | null;
   display_name: string | null;
@@ -40,7 +40,7 @@ interface Proof {
   image_url: string | null;
   transaction_id: string | null;
   created_at: string;
-  profiles: Profile | null;
+  profiles: ProofCreatorProfile | null;
 }
 
 interface Feedback {
@@ -50,19 +50,18 @@ interface Feedback {
   feedback_type: string;
   comment: string | null;
   created_at: string;
-  profiles: Profile | null;
+  profiles: ProofCreatorProfile | null;
 }
 
 // GET /api/wishlists/items/[itemId]/proofs - Get all proofs for a wishlist item
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { itemId } = await params;
 
     const supabase = await createServerClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
     // Verify the wishlist item exists
     const { data: wishlistItemData, error: itemError } = await supabase
@@ -73,16 +72,14 @@ export async function GET(
     const wishlistItem = wishlistItemData as WishlistItem | null;
 
     if (itemError || !wishlistItem) {
-      return NextResponse.json(
-        { error: 'Wishlist item not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Wishlist item not found' }, { status: 404 });
     }
 
     // Get all proofs for this item
     const { data: proofsData, error: proofsError } = await supabase
       .from('wishlist_fulfillment_proofs')
-      .select(`
+      .select(
+        `
         id,
         wishlist_item_id,
         user_id,
@@ -97,7 +94,8 @@ export async function GET(
           display_name,
           avatar_url
         )
-      `)
+      `
+      )
       .eq('wishlist_item_id', itemId)
       .order('created_at', { ascending: false });
     const proofs = (proofsData ?? []) as Proof[];
@@ -107,10 +105,7 @@ export async function GET(
         error: proofsError.message,
         itemId,
       });
-      return NextResponse.json(
-        { error: 'Failed to fetch proofs' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Failed to fetch proofs' }, { status: 500 });
     }
 
     // Get feedback for each proof
@@ -120,7 +115,8 @@ export async function GET(
     if (proofIds.length > 0) {
       const { data: feedbackData, error: feedbackError } = await supabase
         .from('wishlist_feedback')
-        .select(`
+        .select(
+          `
           id,
           fulfillment_proof_id,
           user_id,
@@ -133,21 +129,25 @@ export async function GET(
             display_name,
             avatar_url
           )
-        `)
+        `
+        )
         .in('fulfillment_proof_id', proofIds);
       const feedback = (feedbackData ?? []) as Feedback[];
 
       if (!feedbackError && feedback) {
         // Group feedback by proof_id
-        feedbackMap = feedback.reduce((acc: Record<string, Feedback[]>, f: Feedback) => {
-          if (f.fulfillment_proof_id) {
-            if (!acc[f.fulfillment_proof_id]) {
-              acc[f.fulfillment_proof_id] = [];
+        feedbackMap = feedback.reduce(
+          (acc: Record<string, Feedback[]>, f: Feedback) => {
+            if (f.fulfillment_proof_id) {
+              if (!acc[f.fulfillment_proof_id]) {
+                acc[f.fulfillment_proof_id] = [];
+              }
+              acc[f.fulfillment_proof_id].push(f);
             }
-            acc[f.fulfillment_proof_id].push(f);
-          }
-          return acc;
-        }, {} as Record<string, Feedback[]>);
+            return acc;
+          },
+          {} as Record<string, Feedback[]>
+        );
       }
     }
 
@@ -171,16 +171,20 @@ export async function GET(
         feedback: {
           likes,
           dislikes,
-          user_feedback: userFeedback ? {
-            type: userFeedback.feedback_type,
-            comment: userFeedback.comment,
-          } : null,
+          user_feedback: userFeedback
+            ? {
+                type: userFeedback.feedback_type,
+                comment: userFeedback.comment,
+              }
+            : null,
         },
       };
     });
 
     // Check if current user can add proofs (must be wishlist owner)
-    const wishlist = Array.isArray(wishlistItem.wishlists) ? wishlistItem.wishlists[0] : wishlistItem.wishlists;
+    const wishlist = Array.isArray(wishlistItem.wishlists)
+      ? wishlistItem.wishlists[0]
+      : wishlistItem.wishlists;
     const canAddProof = user && wishlist && wishlist.actor_id === user.id;
 
     return NextResponse.json({
@@ -189,9 +193,6 @@ export async function GET(
     });
   } catch (error) {
     logger.error('Error in GET /api/wishlists/items/[itemId]/proofs:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

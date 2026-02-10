@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Bot, Sparkles } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import { useAISettings } from '@/hooks/useAISettings';
 import Loading from '@/components/Loading';
 import Button from '@/components/ui/Button';
@@ -17,7 +17,7 @@ import type { AIFieldType } from '@/lib/ai-guidance';
 import { logger } from '@/utils/logger';
 
 export default function AISettingsPage() {
-  const { user, hydrated, isLoading: authLoading } = useAuth();
+  const { user, hydrated, isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
   const [focusedField, setFocusedField] = useState<AIFieldType>(null);
 
@@ -44,10 +44,8 @@ export default function AISettingsPage() {
     return <Loading fullScreen />;
   }
 
-  // Redirect if not authenticated
   if (!user) {
-    router.push('/auth');
-    return <Loading fullScreen />;
+    return null;
   }
 
   // Convert preferences to component format

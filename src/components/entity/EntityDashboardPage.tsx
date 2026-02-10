@@ -1,8 +1,7 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useMemo, useCallback } from 'react';
+import { useRequireAuth } from '@/hooks/useAuth';
 import { useUserCurrency } from '@/hooks/useUserCurrency';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
@@ -53,23 +52,14 @@ export default function EntityDashboardPage<T extends BaseEntity>({
   createButtonLabel,
   limit = 12,
 }: EntityDashboardPageProps<T>) {
-  const { user, isLoading: authLoading, hydrated } = useAuth();
+  const { user, isLoading: authLoading, hydrated } = useRequireAuth();
   const userCurrency = useUserCurrency();
-  const router = useRouter();
   const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [showSelection, setShowSelection] = useState(false);
 
-  const {
-    items,
-    loading,
-    error,
-    page,
-    total,
-    setPage,
-    refresh,
-  } = useEntityList<T>({
+  const { items, loading, error, page, total, setPage, refresh } = useEntityList<T>({
     apiEndpoint: config.apiEndpoint,
     userId: user?.id,
     limit,
@@ -79,51 +69,51 @@ export default function EntityDashboardPage<T extends BaseEntity>({
   // Memoize items to prevent unnecessary re-renders
   const memoizedItems = useMemo(() => items, [items]);
 
-  // Redirect to auth if not logged in
-  useEffect(() => {
-    if (hydrated && !authLoading && !user) {
-      router.push('/auth');
-    }
-  }, [user, hydrated, authLoading, router]);
-
   // Delete a single item
-  const handleDeleteItem = useCallback(async (id: string) => {
-    setDeletingIds((prev) => new Set(prev).add(id));
-    try {
-      const response = await fetch(`${config.apiEndpoint}/${id}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Failed to delete ${config.name}`);
+  const handleDeleteItem = useCallback(
+    async (id: string) => {
+      setDeletingIds(prev => new Set(prev).add(id));
+      try {
+        const response = await fetch(`${config.apiEndpoint}/${id}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Failed to delete ${config.name}`);
+        }
+        toast.success(`${config.name} deleted successfully`);
+        await refresh();
+      } catch (error) {
+        logger.error(`Failed to delete ${config.name}`, { error, id }, 'EntityDashboardPage');
+        toast.error(`Failed to delete ${config.name}. Please try again.`);
+      } finally {
+        setDeletingIds(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       }
-      toast.success(`${config.name} deleted successfully`);
-      await refresh();
-    } catch (error) {
-      logger.error(`Failed to delete ${config.name}`, { error, id }, 'EntityDashboardPage');
-      toast.error(`Failed to delete ${config.name}. Please try again.`);
-    } finally {
-      setDeletingIds((prev) => {
-        const next = new Set(prev);
-        next.delete(id);
-        return next;
-      });
-    }
-  }, [config.apiEndpoint, config.name, refresh]);
+    },
+    [config.apiEndpoint, config.name, refresh]
+  );
 
   // Bulk delete selected items
   const handleBulkDelete = useCallback(async () => {
-    if (selectedIds.size === 0) {return;}
+    if (selectedIds.size === 0) {
+      return;
+    }
 
     const confirmed = window.confirm(
       `Are you sure you want to delete ${selectedIds.size} ${selectedIds.size > 1 ? config.namePlural.toLowerCase() : config.name.toLowerCase()}? This action cannot be undone.`
     );
 
-    if (!confirmed) {return;}
+    if (!confirmed) {
+      return;
+    }
 
     setIsDeleting(true);
     try {
-      const deletePromises = Array.from(selectedIds).map(async (id) => {
+      const deletePromises = Array.from(selectedIds).map(async id => {
         const response = await fetch(`${config.apiEndpoint}/${id}`, {
           method: 'DELETE',
         });
@@ -150,7 +140,12 @@ export default function EntityDashboardPage<T extends BaseEntity>({
 
   // Loading state
   if (!hydrated || authLoading) {
-    return <Loading fullScreen message={loadingMessage || `Loading your ${config.namePlural.toLowerCase()}...`} />;
+    return (
+      <Loading
+        fullScreen
+        message={loadingMessage || `Loading your ${config.namePlural.toLowerCase()}...`}
+      />
+    );
   }
 
   // Not authenticated
@@ -170,11 +165,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
   const headerActions = (
     <div className="flex items-center gap-2">
       {memoizedItems.length > 0 && (
-        <Button
-          onClick={() => setShowSelection(!showSelection)}
-          variant="outline"
-          size="sm"
-        >
+        <Button onClick={() => setShowSelection(!showSelection)} variant="outline" size="sm">
           {showSelection ? 'Cancel' : 'Select'}
         </Button>
       )}
@@ -201,7 +192,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
                   <input
                     type="checkbox"
                     checked={selectedIds.size === memoizedItems.length && memoizedItems.length > 0}
-                    onChange={() => toggleSelectAll(memoizedItems.map((item) => item.id))}
+                    onChange={() => toggleSelectAll(memoizedItems.map(item => item.id))}
                     className="h-4 w-4 rounded border-gray-300 text-orange-600 focus:ring-orange-500"
                   />
                   <span>Select All</span>
@@ -212,7 +203,7 @@ export default function EntityDashboardPage<T extends BaseEntity>({
               items={memoizedItems}
               isLoading={loading}
               makeHref={config.makeHref}
-              makeCardProps={(item) => config.makeCardProps(item, userCurrency)}
+              makeCardProps={item => config.makeCardProps(item, userCurrency)}
               emptyState={config.emptyState}
               gridCols={config.gridCols}
               selectedIds={showSelection ? selectedIds : undefined}

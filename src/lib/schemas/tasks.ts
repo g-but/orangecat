@@ -25,20 +25,17 @@ import {
  * Schema for creating/updating a task
  */
 export const taskSchema = z.object({
-  title: z
-    .string()
-    .min(1, 'Titel ist erforderlich')
-    .max(200, 'Titel darf maximal 200 Zeichen lang sein'),
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be at most 200 characters'),
 
   description: z
     .string()
-    .max(2000, 'Beschreibung darf maximal 2000 Zeichen lang sein')
+    .max(2000, 'Description must be at most 2000 characters')
     .optional()
     .nullable(),
 
   instructions: z
     .string()
-    .max(5000, 'Anleitung darf maximal 5000 Zeichen lang sein')
+    .max(5000, 'Instructions must be at most 5000 characters')
     .optional()
     .nullable(),
 
@@ -48,15 +45,15 @@ export const taskSchema = z.object({
 
   schedule_human: z
     .string()
-    .max(200, 'Zeitplan-Beschreibung darf maximal 200 Zeichen lang sein')
+    .max(200, 'Schedule description must be at most 200 characters')
     .optional()
     .nullable(),
 
   category: z.enum(TASK_CATEGORY_OPTIONS as unknown as [string, ...string[]]),
 
   tags: z
-    .array(z.string().max(50, 'Tag darf maximal 50 Zeichen lang sein'))
-    .max(10, 'Maximal 10 Tags erlaubt')
+    .array(z.string().max(50, 'Tag must be at most 50 characters'))
+    .max(10, 'Maximum 10 tags allowed')
     .optional()
     .default([]),
 
@@ -67,12 +64,12 @@ export const taskSchema = z.object({
   estimated_minutes: z
     .number()
     .int()
-    .min(1, 'Mindestens 1 Minute')
-    .max(480, 'Maximal 480 Minuten (8 Stunden)')
+    .min(1, 'Minimum 1 minute')
+    .max(480, 'Maximum 480 minutes (8 hours)')
     .optional()
     .nullable(),
 
-  project_id: z.string().uuid('Ungültige Projekt-ID').optional().nullable(),
+  project_id: z.string().uuid('Invalid project ID').optional().nullable(),
 });
 
 /**
@@ -89,17 +86,13 @@ export const taskUpdateSchema = taskSchema.partial().extend({
  * Schema for recording a task completion
  */
 export const taskCompletionSchema = z.object({
-  notes: z
-    .string()
-    .max(1000, 'Notizen dürfen maximal 1000 Zeichen lang sein')
-    .optional()
-    .nullable(),
+  notes: z.string().max(1000, 'Notes must be at most 1000 characters').optional().nullable(),
 
   duration_minutes: z
     .number()
     .int()
-    .min(1, 'Mindestens 1 Minute')
-    .max(480, 'Maximal 480 Minuten (8 Stunden)')
+    .min(1, 'Minimum 1 minute')
+    .max(480, 'Maximum 480 minutes (8 hours)')
     .optional()
     .nullable(),
 });
@@ -110,11 +103,7 @@ export const taskCompletionSchema = z.object({
  * Schema for flagging a task as needing attention
  */
 export const attentionFlagSchema = z.object({
-  message: z
-    .string()
-    .max(500, 'Nachricht darf maximal 500 Zeichen lang sein')
-    .optional()
-    .nullable(),
+  message: z.string().max(500, 'Message must be at most 500 characters').optional().nullable(),
 });
 
 // ==================== REQUEST SCHEMAS ====================
@@ -124,12 +113,8 @@ export const attentionFlagSchema = z.object({
  * requested_user_id = null means broadcast to all staff
  */
 export const taskRequestSchema = z.object({
-  requested_user_id: z.string().uuid('Ungültige Benutzer-ID').optional().nullable(),
-  message: z
-    .string()
-    .max(500, 'Nachricht darf maximal 500 Zeichen lang sein')
-    .optional()
-    .nullable(),
+  requested_user_id: z.string().uuid('Invalid user ID').optional().nullable(),
+  message: z.string().max(500, 'Message must be at most 500 characters').optional().nullable(),
 });
 
 /**
@@ -139,7 +124,7 @@ export const requestResponseSchema = z.object({
   status: z.enum([REQUEST_STATUSES.ACCEPTED, REQUEST_STATUSES.DECLINED] as [string, string]),
   response_message: z
     .string()
-    .max(500, 'Antwort darf maximal 500 Zeichen lang sein')
+    .max(500, 'Response must be at most 500 characters')
     .optional()
     .nullable(),
 });
@@ -150,14 +135,11 @@ export const requestResponseSchema = z.object({
  * Schema for creating/updating a task project
  */
 export const taskProjectSchema = z.object({
-  title: z
-    .string()
-    .min(1, 'Titel ist erforderlich')
-    .max(200, 'Titel darf maximal 200 Zeichen lang sein'),
+  title: z.string().min(1, 'Title is required').max(200, 'Title must be at most 200 characters'),
 
   description: z
     .string()
-    .max(2000, 'Beschreibung darf maximal 2000 Zeichen lang sein')
+    .max(2000, 'Description must be at most 2000 characters')
     .optional()
     .nullable(),
 

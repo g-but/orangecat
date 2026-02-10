@@ -31,15 +31,15 @@ export type TaskType = (typeof TASK_TYPES)[keyof typeof TASK_TYPES];
 export const TASK_TYPE_OPTIONS = Object.values(TASK_TYPES);
 
 export const TASK_TYPE_LABELS: Record<TaskType, string> = {
-  one_time: 'Einmalig',
-  recurring_scheduled: 'Wiederkehrend (geplant)',
-  recurring_as_needed: 'Wiederkehrend (bei Bedarf)',
+  one_time: 'One-time',
+  recurring_scheduled: 'Recurring (scheduled)',
+  recurring_as_needed: 'Recurring (as needed)',
 };
 
 export const TASK_TYPE_DESCRIPTIONS: Record<TaskType, string> = {
-  one_time: 'Eine einmalige Aufgabe, die nach Erledigung abgeschlossen ist',
-  recurring_scheduled: 'Wiederkehrende Aufgabe nach festem Zeitplan (z.B. wöchentliche Reinigung)',
-  recurring_as_needed: 'Wiederkehrende Aufgabe ohne festen Zeitplan (z.B. Lager auffüllen)',
+  one_time: 'A one-time task that is done once completed',
+  recurring_scheduled: 'Recurring task on a fixed schedule (e.g., weekly cleaning)',
+  recurring_as_needed: 'Recurring task without a fixed schedule (e.g., restocking)',
 };
 
 // ==================== TASK STATUSES ====================
@@ -63,10 +63,10 @@ export type TaskStatus = (typeof TASK_STATUSES)[keyof typeof TASK_STATUSES];
 export const TASK_STATUS_OPTIONS = Object.values(TASK_STATUSES);
 
 export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
-  idle: 'Bereit',
-  needs_attention: 'Braucht Aufmerksamkeit',
-  requested: 'Angefragt',
-  in_progress: 'In Bearbeitung',
+  idle: 'Ready',
+  needs_attention: 'Needs Attention',
+  requested: 'Requested',
+  in_progress: 'In Progress',
 };
 
 export interface TaskStatusInfo {
@@ -78,28 +78,28 @@ export interface TaskStatusInfo {
 
 export const TASK_STATUS_CONFIG: Record<TaskStatus, TaskStatusInfo> = {
   idle: {
-    label: 'Bereit',
+    label: 'Ready',
     className: 'bg-gray-100 text-gray-700',
     color: '#6b7280',
-    description: 'Aufgabe ist bereit und wartet',
+    description: 'Task is ready and waiting',
   },
   needs_attention: {
-    label: 'Braucht Aufmerksamkeit',
+    label: 'Needs Attention',
     className: 'bg-amber-100 text-amber-700',
     color: '#d97706',
-    description: 'Jemand hat diese Aufgabe als dringend markiert',
+    description: 'Someone flagged this task as urgent',
   },
   requested: {
-    label: 'Angefragt',
+    label: 'Requested',
     className: 'bg-blue-100 text-blue-700',
     color: '#2563eb',
-    description: 'Jemand wurde gebeten, diese Aufgabe zu erledigen',
+    description: 'Someone has been asked to complete this task',
   },
   in_progress: {
-    label: 'In Bearbeitung',
+    label: 'In Progress',
     className: 'bg-purple-100 text-purple-700',
     color: '#7c3aed',
-    description: 'Jemand arbeitet gerade daran',
+    description: 'Someone is currently working on this',
   },
 };
 
@@ -125,15 +125,15 @@ export type TaskCategory = (typeof TASK_CATEGORIES)[keyof typeof TASK_CATEGORIES
 export const TASK_CATEGORY_OPTIONS = Object.values(TASK_CATEGORIES);
 
 export const TASK_CATEGORY_LABELS: Record<TaskCategory, string> = {
-  cleaning: 'Reinigung',
-  maintenance: 'Instandhaltung',
-  admin: 'Verwaltung',
-  inventory: 'Inventar',
+  cleaning: 'Cleaning',
+  maintenance: 'Maintenance',
+  admin: 'Administration',
+  inventory: 'Inventory',
   it: 'IT',
-  kitchen: 'Küche',
-  workshop: 'Werkstatt',
-  logistics: 'Logistik',
-  other: 'Sonstiges',
+  kitchen: 'Kitchen',
+  workshop: 'Workshop',
+  logistics: 'Logistics',
+  other: 'Other',
 };
 
 export const TASK_CATEGORY_ICONS: Record<TaskCategory, string> = {
@@ -165,10 +165,10 @@ export type Priority = (typeof PRIORITIES)[keyof typeof PRIORITIES];
 export const PRIORITY_OPTIONS = Object.values(PRIORITIES);
 
 export const PRIORITY_LABELS: Record<Priority, string> = {
-  low: 'Niedrig',
+  low: 'Low',
   normal: 'Normal',
-  high: 'Hoch',
-  urgent: 'Dringend',
+  high: 'High',
+  urgent: 'Urgent',
 };
 
 export interface PriorityInfo {
@@ -180,7 +180,7 @@ export interface PriorityInfo {
 
 export const PRIORITY_CONFIG: Record<Priority, PriorityInfo> = {
   low: {
-    label: 'Niedrig',
+    label: 'Low',
     className: 'bg-slate-100 text-slate-600',
     color: '#64748b',
     order: 1,
@@ -192,13 +192,13 @@ export const PRIORITY_CONFIG: Record<Priority, PriorityInfo> = {
     order: 2,
   },
   high: {
-    label: 'Hoch',
+    label: 'High',
     className: 'bg-orange-100 text-orange-700',
     color: '#ea580c',
     order: 3,
   },
   urgent: {
-    label: 'Dringend',
+    label: 'Urgent',
     className: 'bg-red-100 text-red-700',
     color: '#dc2626',
     order: 4,
@@ -223,32 +223,32 @@ export type ProjectStatus = (typeof PROJECT_STATUSES)[keyof typeof PROJECT_STATU
 export const PROJECT_STATUS_OPTIONS = Object.values(PROJECT_STATUSES);
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-  planning: 'In Planung',
-  active: 'Aktiv',
-  on_hold: 'Pausiert',
-  completed: 'Abgeschlossen',
-  cancelled: 'Abgebrochen',
+  planning: 'Planning',
+  active: 'Active',
+  on_hold: 'On Hold',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
 };
 
 export const PROJECT_STATUS_CONFIG: Record<ProjectStatus, { label: string; className: string }> = {
   planning: {
-    label: 'In Planung',
+    label: 'Planning',
     className: 'bg-gray-100 text-gray-700',
   },
   active: {
-    label: 'Aktiv',
+    label: 'Active',
     className: 'bg-green-100 text-green-700',
   },
   on_hold: {
-    label: 'Pausiert',
+    label: 'On Hold',
     className: 'bg-yellow-100 text-yellow-700',
   },
   completed: {
-    label: 'Abgeschlossen',
+    label: 'Completed',
     className: 'bg-blue-100 text-blue-700',
   },
   cancelled: {
-    label: 'Abgebrochen',
+    label: 'Cancelled',
     className: 'bg-red-100 text-red-700',
   },
 };
@@ -270,27 +270,27 @@ export type RequestStatus = (typeof REQUEST_STATUSES)[keyof typeof REQUEST_STATU
 export const REQUEST_STATUS_OPTIONS = Object.values(REQUEST_STATUSES);
 
 export const REQUEST_STATUS_LABELS: Record<RequestStatus, string> = {
-  pending: 'Ausstehend',
-  accepted: 'Akzeptiert',
-  declined: 'Abgelehnt',
-  completed: 'Erledigt',
+  pending: 'Pending',
+  accepted: 'Accepted',
+  declined: 'Declined',
+  completed: 'Completed',
 };
 
 export const REQUEST_STATUS_CONFIG: Record<RequestStatus, { label: string; className: string }> = {
   pending: {
-    label: 'Ausstehend',
+    label: 'Pending',
     className: 'bg-yellow-100 text-yellow-700',
   },
   accepted: {
-    label: 'Akzeptiert',
+    label: 'Accepted',
     className: 'bg-blue-100 text-blue-700',
   },
   declined: {
-    label: 'Abgelehnt',
+    label: 'Declined',
     className: 'bg-red-100 text-red-700',
   },
   completed: {
-    label: 'Erledigt',
+    label: 'Completed',
     className: 'bg-green-100 text-green-700',
   },
 };
@@ -318,7 +318,7 @@ export type TaskNotificationType =
 export function getTaskStatusInfo(status: string | null | undefined): TaskStatusInfo {
   if (!status) {
     return {
-      label: 'Unbekannt',
+      label: 'Unknown',
       className: 'bg-gray-100 text-gray-700',
       color: '#6b7280',
     };
@@ -351,7 +351,7 @@ export function getPriorityInfo(priority: string | null | undefined): PriorityIn
  */
 export function getCategoryLabel(category: string | null | undefined): string {
   if (!category) {
-    return 'Unbekannt';
+    return 'Unknown';
   }
   return TASK_CATEGORY_LABELS[category as TaskCategory] || category;
 }

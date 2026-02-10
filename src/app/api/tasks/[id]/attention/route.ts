@@ -67,7 +67,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     if (taskError) {
       if (taskError.code === 'PGRST116') {
-        return ApiResponses.notFound('Aufgabe');
+        return ApiResponses.notFound('Task');
       }
       logger.error('Failed to fetch task', { error: taskError, taskId }, 'TasksAPI');
       return ApiResponses.internalServerError();
@@ -118,14 +118,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .single();
 
     const flaggerProfile = profileData as ProfileRow | null;
-    const flaggerName = flaggerProfile?.display_name || flaggerProfile?.username || 'Jemand';
+    const flaggerName = flaggerProfile?.display_name || flaggerProfile?.username || 'Someone';
 
     // Notify task creator if different from flagger
     if (task.created_by !== user.id) {
       await notificationService.createNotification({
         recipientUserId: task.created_by,
         type: 'task_attention',
-        title: `${flaggerName} sagt: "${task.title}" braucht Aufmerksamkeit`,
+        title: `${flaggerName} says: "${task.title}" needs attention`,
         message: flagData.message || null,
         actionUrl: `/dashboard/tasks/${taskId}`,
         sourceEntityType: 'task',
@@ -137,14 +137,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
     await notificationService.createBroadcastNotification({
       excludeUserId: user.id,
       type: 'task_attention',
-      title: `Aufgabe braucht Aufmerksamkeit: "${task.title}"`,
+      title: `Task needs attention: "${task.title}"`,
       message: flagData.message || null,
       actionUrl: `/dashboard/tasks/${taskId}`,
       sourceEntityType: 'task',
       sourceEntityId: taskId,
     });
 
-    return createSuccessResponse({ flag }, HttpStatus.CREATED, 'Aufgabe als dringend markiert');
+    return createSuccessResponse({ flag }, HttpStatus.CREATED, 'Task flagged as urgent');
   } catch (err) {
     logger.error('Exception in POST /api/tasks/[id]/attention', { error: err }, 'TasksAPI');
     return ApiResponses.internalServerError();

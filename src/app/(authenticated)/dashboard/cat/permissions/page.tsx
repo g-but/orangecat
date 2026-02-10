@@ -14,7 +14,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import {
   ArrowLeft,
@@ -82,19 +82,13 @@ const RISK_ICONS = {
 };
 
 export default function CatPermissionsPage() {
-  const { user, isLoading: authLoading, hydrated } = useAuth();
+  const { user, isLoading: authLoading, hydrated } = useRequireAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
   const [data, setData] = useState<PermissionData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (hydrated && !authLoading && !user) {
-      router.push('/auth');
-    }
-  }, [hydrated, authLoading, user, router]);
 
   useEffect(() => {
     if (user) {
@@ -213,7 +207,7 @@ export default function CatPermissionsPage() {
     });
   };
 
-  if (!hydrated || authLoading) {
+  if (authLoading) {
     return <Loading fullScreen message="Loading..." />;
   }
 

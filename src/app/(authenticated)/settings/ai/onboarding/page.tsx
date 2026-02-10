@@ -1,14 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import { useAISettings } from '@/hooks/useAISettings';
 import Loading from '@/components/Loading';
 import { AIOnboarding } from '@/components/ai/AIOnboarding';
 import { logger } from '@/utils/logger';
 
 export default function AIOnboardingPage() {
-  const { user, hydrated, isLoading: authLoading } = useAuth();
+  const { user, hydrated, isLoading: authLoading } = useRequireAuth();
   const router = useRouter();
 
   const {
@@ -23,10 +23,8 @@ export default function AIOnboardingPage() {
     return <Loading fullScreen />;
   }
 
-  // Redirect if not authenticated
   if (!user) {
-    router.push('/auth');
-    return <Loading fullScreen />;
+    return null;
   }
 
   const handleComplete = async () => {

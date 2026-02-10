@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Button from '@/components/ui/Button';
 import Loading from '@/components/Loading';
 import EntityListShell from '@/components/entity/EntityListShell';
@@ -34,7 +34,7 @@ import loansService from '@/services/loans';
  * Last Modified Summary: Refactored to use modular EntityList pattern, removed non-actionable stats cards
  */
 export default function LoansPage() {
-  const { user, isLoading, hydrated } = useAuth();
+  const { user, isLoading, hydrated } = useRequireAuth();
   const router = useRouter();
   const { selectedIds, toggleSelect, toggleSelectAll, clearSelection } = useBulkSelection();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -100,12 +100,6 @@ export default function LoansPage() {
       loadAvailableLoans();
     }
   }, [activeTab, user?.id, loadOffers, loadAvailableLoans]);
-
-  useEffect(() => {
-    if (hydrated && !isLoading && !user) {
-      router.push('/auth');
-    }
-  }, [user, hydrated, isLoading, router]);
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) {

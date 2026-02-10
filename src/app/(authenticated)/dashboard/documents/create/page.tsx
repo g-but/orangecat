@@ -15,7 +15,7 @@
 import { useEffect, useState, Suspense, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { useAuth } from '@/hooks/useAuth';
+import { useRequireAuth } from '@/hooks/useAuth';
 import Loading from '@/components/Loading';
 import { EntityForm } from '@/components/create/EntityForm';
 import { documentFormConfig } from '@/config/entity-configs/document-form-config';
@@ -34,7 +34,7 @@ interface ExtractedContent {
 }
 
 function DocumentPageContent() {
-  const { user, isLoading: authLoading, hydrated } = useAuth();
+  const { user, isLoading: authLoading, hydrated } = useRequireAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams?.get('edit') || null;
@@ -46,13 +46,6 @@ function DocumentPageContent() {
   const [isLoadingDocument, setIsLoadingDocument] = useState(!!editId);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string | null>(null);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (hydrated && !authLoading && !user) {
-      router.push('/auth?from=documents/create');
-    }
-  }, [user, hydrated, authLoading, router]);
 
   // Fetch existing document if in edit mode
   useEffect(() => {
@@ -117,7 +110,7 @@ function DocumentPageContent() {
     logger.error('Upload error', { message: error }, 'Documents');
   }, []);
 
-  if (!hydrated || authLoading || isLoadingDocument) {
+  if (authLoading || isLoadingDocument) {
     return <Loading fullScreen message={editId ? 'Loading document...' : 'Loading...'} />;
   }
 

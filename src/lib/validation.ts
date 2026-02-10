@@ -441,6 +441,110 @@ export function normalizeProfileData(data: unknown): ProfileData {
   return normalized as unknown as ProfileData;
 }
 
+// =============================================================================
+// REUSABLE SUB-SCHEMAS FOR JSON FIELDS
+// =============================================================================
+
+/**
+ * Availability schedule for services.
+ * Matches AvailabilitySchedule interface in domain/commerce/service.ts.
+ * Stored as JSONB in the database.
+ *
+ * Uses .passthrough() to allow additional fields without breaking existing data.
+ */
+export const availabilityScheduleSchema = z
+  .object({
+    days: z
+      .array(z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']))
+      .optional(),
+    hours: z
+      .array(
+        z.object({
+          start: z.string().max(10),
+          end: z.string().max(10),
+        })
+      )
+      .optional(),
+    timezone: z.string().max(100).optional(),
+  })
+  .passthrough();
+
+/**
+ * Distribution rules for causes.
+ * Matches DistributionRules interface in domain/commerce/service.ts.
+ * Stored as JSONB in the database.
+ *
+ * Uses .passthrough() to allow additional fields without breaking existing data.
+ */
+export const distributionRulesSchema = z
+  .object({
+    type: z.enum(['equal', 'weighted', 'custom']).optional(),
+    allocations: z.record(z.string(), z.number()).optional(),
+  })
+  .passthrough();
+
+/**
+ * Beneficiary in a cause.
+ * Matches Beneficiary interface in domain/commerce/service.ts.
+ * Stored as JSONB array in the database.
+ *
+ * Uses .passthrough() to allow additional fields without breaking existing data.
+ */
+export const beneficiarySchema = z
+  .object({
+    id: z.string().optional(),
+    name: z.string().max(200).optional(),
+    address: z.string().max(500).optional(),
+    share: z.number().min(0).max(100).optional(),
+  })
+  .passthrough();
+
+/**
+ * Collateral item for loans.
+ * Matches CollateralItem interface in components/create/collateral/CollateralSelector.tsx
+ * and the shape used in domain/loans/service.ts.
+ * Stored as JSONB array in the database.
+ *
+ * Uses .passthrough() to allow additional fields without breaking existing data.
+ */
+export const collateralItemSchema = z
+  .object({
+    id: z.string().optional(),
+    type: z.string().max(50).optional(),
+    name: z.string().max(200).optional(),
+    value: z.number().min(0).optional(),
+    currency: z.string().max(10).optional(),
+    description: z.string().max(500).optional(),
+    metadata: z
+      .object({
+        verification_status: z.string().optional(),
+        balance_btc: z.number().optional(),
+      })
+      .passthrough()
+      .optional(),
+  })
+  .passthrough();
+
+/**
+ * Recurrence pattern for events.
+ * Standard iCalendar-style recurrence rule stored as JSONB in the database.
+ *
+ * Uses .passthrough() to allow additional fields without breaking existing data.
+ */
+export const recurrencePatternSchema = z
+  .object({
+    frequency: z.enum(['daily', 'weekly', 'biweekly', 'monthly', 'yearly']).optional(),
+    interval: z.number().int().positive().max(365).optional(),
+    end_date: z.string().optional().nullable(),
+    count: z.number().int().positive().max(1000).optional().nullable(),
+    days_of_week: z
+      .array(z.enum(['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']))
+      .optional(),
+    day_of_month: z.number().int().min(1).max(31).optional().nullable(),
+    month_of_year: z.number().int().min(1).max(12).optional().nullable(),
+  })
+  .passthrough();
+
 // Personal Economy validation schemas
 export const userProductSchema = z.object({
   title: z.string().min(1, 'Title is required').max(100, 'Title must be at most 100 characters'),
@@ -509,7 +613,7 @@ export const userServiceSchema = z
     fixed_price: z.number().positive().optional().nullable(),
     currency: z.enum(CURRENCY_CODES).optional(),
     duration_minutes: z.number().positive().optional().nullable(),
-    availability_schedule: z.any().optional(), // JSON object for complex scheduling
+    availability_schedule: availabilityScheduleSchema.optional().nullable(),
     service_location_type: z.enum(['remote', 'onsite', 'both']).default('remote'),
     service_area: z.string().max(200).optional().nullable().or(z.literal('')),
     images: z.array(z.string().url()).optional().default([]),
@@ -529,8 +633,8 @@ export const userCauseSchema = z.object({
   currency: z.enum(CURRENCY_CODES).optional(),
   bitcoin_address: z.string().optional().nullable().or(z.literal('')),
   lightning_address: lightningAddressSchema,
-  distribution_rules: z.any().optional(), // JSON object for distribution rules
-  beneficiaries: z.array(z.any()).optional().default([]), // Array of beneficiary objects
+  distribution_rules: distributionRulesSchema.optional().nullable(),
+  beneficiaries: z.array(beneficiarySchema).optional().default([]),
   status: z.enum(['draft', 'active', 'completed', 'paused']).default('draft'),
 });
 
@@ -732,7 +836,7 @@ export const loanSchema = z.object({
   desired_rate: z.number().min(0).max(100).optional().nullable(),
 
   // Collateral (array of collateral items)
-  collateral: z.array(z.any()).optional().default([]),
+  collateral: z.array(collateralItemSchema).optional().default([]),
 });
 
 // Event validation
@@ -781,7 +885,7 @@ export const eventSchema = z
     timezone: z.string().default('UTC'),
     is_all_day: z.boolean().default(false),
     is_recurring: z.boolean().default(false),
-    recurrence_pattern: z.any().optional(), // JSON object for recurrence
+    recurrence_pattern: recurrencePatternSchema.optional().nullable(),
 
     // Location
     venue_name: z.string().max(200).optional().nullable().or(z.literal('')),
@@ -967,6 +1071,13 @@ export type WishlistItemFormData = z.infer<typeof wishlistItemSchema>;
 export type WishlistContributionFormData = z.infer<typeof wishlistContributionSchema>;
 export type WishlistFulfillmentProofFormData = z.infer<typeof wishlistFulfillmentProofSchema>;
 export type WishlistFeedbackFormData = z.infer<typeof wishlistFeedbackSchema>;
+
+// Sub-schema types for external use
+export type AvailabilityScheduleData = z.infer<typeof availabilityScheduleSchema>;
+export type DistributionRulesData = z.infer<typeof distributionRulesSchema>;
+export type BeneficiaryData = z.infer<typeof beneficiarySchema>;
+export type CollateralItemData = z.infer<typeof collateralItemSchema>;
+export type RecurrencePatternData = z.infer<typeof recurrencePatternSchema>;
 
 // =============================================================================
 // DOCUMENT VALIDATION (My Cat Context)
