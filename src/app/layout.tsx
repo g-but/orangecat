@@ -33,7 +33,6 @@ import { AuthProvider } from '@/components/providers/AuthProvider';
 import { QueryProvider } from '@/components/providers/QueryProvider';
 import { AppShell } from '@/components/layout/AppShell';
 import { Toaster } from '@/components/ui/sonner';
-import Loading from '@/components/Loading';
 import { Suspense } from 'react';
 
 export const metadata = {
@@ -53,7 +52,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <QueryProvider>
           <AuthProvider>
             <AppShell>
-              <Suspense fallback={<Loading />}>{children}</Suspense>
+              <Suspense>{children}</Suspense>
             </AppShell>
           </AuthProvider>
         </QueryProvider>
